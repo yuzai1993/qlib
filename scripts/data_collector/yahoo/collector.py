@@ -42,8 +42,6 @@ from data_collector.utils import (
     calc_adjusted_price,
 )
 
-INDEX_BENCH_URL = "http://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.{index_code}&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58&klt=101&fqt=0&beg={begin}&end={end}"
-
 
 class YahooCollector(BaseCollector):
     retry = 5  # Configuration attribute.  How many times will it try to re-request the data if the network fails.
@@ -221,35 +219,62 @@ class YahooCollectorCN(YahooCollector, ABC):
 
 class YahooCollectorCN1d(YahooCollectorCN):
     def download_index_data(self):
-        # TODO: from MSN
+        """Download CSI300/CSI100/CSI500 index daily data from Tushare Pro.
+
+        Requires the TUSHARE_TOKEN environment variable.
+        API doc: https://tushare.pro/document/2?doc_id=95
+        """
+        import os  # pylint: disable=C0415
+        import tushare as ts  # pylint: disable=C0415
+
+        token = os.environ.get("TUSHARE_TOKEN", "")
+        if not token:
+            raise ValueError(
+                "TUSHARE_TOKEN environment variable is not set. "
+                "Please set it to your Tushare Pro API token. "
+                "Get your token at https://tushare.pro/user/token"
+            )
+
+        pro = ts.pro_api(token)
         _format = "%Y%m%d"
         _begin = self.start_datetime.strftime(_format)
         _end = self.end_datetime.strftime(_format)
+
         for _index_name, _index_code in {"csi300": "000300", "csi100": "000903", "csi500": "000905"}.items():
             logger.info(f"get bench data: {_index_name}({_index_code})......")
             try:
-                df = pd.DataFrame(
-                    map(
-                        lambda x: x.split(","),
-                        requests.get(
-                            INDEX_BENCH_URL.format(index_code=_index_code, begin=_begin, end=_end), timeout=None
-                        ).json()["data"]["klines"],
-                    )
-                )
+                ts_code = f"{_index_code}.SH"
+                df = pro.index_daily(ts_code=ts_code, start_date=_begin, end_date=_end)
+
+                if df is None or df.empty:
+                    logger.warning(f"{_index_name} returned empty data")
+                    continue
+
+                df = df.drop(columns=["change"], errors="ignore")
+                df = df.rename(columns={
+                    "trade_date": "date",
+                    "vol": "volume",
+                    "amount": "money",
+                    "pct_chg": "change",
+                })
+                df["date"] = pd.to_datetime(df["date"])
+                df = df.sort_values("date")
+                df["adjclose"] = df["close"]
+                df["symbol"] = f"sh{_index_code}"
+                df = df[["date", "open", "close", "high", "low", "volume", "money", "change", "adjclose", "symbol"]]
+
+                _path = self.save_dir.joinpath(f"sh{_index_code}.csv")
+                if _path.exists():
+                    _old_df = pd.read_csv(_path)
+                    _old_df["date"] = pd.to_datetime(_old_df["date"])
+                    df = pd.concat([_old_df, df], sort=False)
+                df.drop_duplicates(subset=["date"], keep="last", inplace=True)
+                df.sort_values("date", inplace=True)
+                df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+                df.to_csv(_path, index=False)
             except Exception as e:
                 logger.warning(f"get {_index_name} error: {e}")
                 continue
-            df.columns = ["date", "open", "close", "high", "low", "volume", "money", "change"]
-            df["date"] = pd.to_datetime(df["date"])
-            df = df.astype(float, errors="ignore")
-            df["adjclose"] = df["close"]
-            df["symbol"] = f"sh{_index_code}"
-            _path = self.save_dir.joinpath(f"sh{_index_code}.csv")
-            if _path.exists():
-                _old_df = pd.read_csv(_path)
-                df = pd.concat([_old_df, df], sort=False)
-            df.to_csv(_path, index=False)
-            time.sleep(5)
 
 
 class YahooCollectorCN1min(YahooCollectorCN):
@@ -392,8 +417,8 @@ class YahooNormalize(BaseNormalize):
         columns = copy.deepcopy(YahooNormalize.COLUMNS)
         df = df.copy()
         df.set_index(date_field_name, inplace=True)
-        df.index = pd.to_datetime(df.index)
-        df.index = df.index.tz_localize(None)
+        df.index = pd.to_datetime(df.index, format="mixed", utc=True).tz_convert(None)
+        df.index = df.index.normalize()
         df = df[~df.index.duplicated(keep="first")]
         if calendar_list is not None:
             df = df.reindex(
@@ -933,6 +958,7 @@ class Run(BaseRun):
     def update_data_to_bin(
         self,
         qlib_data_1d_dir: str,
+        trading_date: str = None,
         end_date: str = None,
         check_data_length: int = None,
         delay: float = 1,
@@ -973,8 +999,9 @@ class Run(BaseRun):
             )
 
         # start/end date
-        calendar_df = pd.read_csv(Path(qlib_data_1d_dir).joinpath("calendars/day.txt"))
-        trading_date = (pd.Timestamp(calendar_df.iloc[-1, 0]) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+        if trading_date is None:
+            calendar_df = pd.read_csv(Path(qlib_data_1d_dir).joinpath("calendars/day.txt"))
+            trading_date = (pd.Timestamp(calendar_df.iloc[-1, 0]) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
 
         if end_date is None:
             end_date = (pd.Timestamp(trading_date) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")

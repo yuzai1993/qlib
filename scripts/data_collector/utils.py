@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation.
 #  Licensed under the MIT License.
 
+import os
 import re
 import copy
 import importlib
@@ -10,7 +11,7 @@ import pickle
 import requests
 import functools
 from pathlib import Path
-from typing import Iterable, Tuple, List
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -20,8 +21,6 @@ from tqdm import tqdm
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor
 from bs4 import BeautifulSoup
-
-HS_SYMBOLS_URL = "http://app.finance.ifeng.com/hq/list.php?type=stock_a&class={s_type}"
 
 CALENDAR_URL_BASE = "http://push2his.eastmoney.com/api/qt/stock/kline/get?secid={market}.{bench_code}&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58&klt=101&fqt=0&beg=19900101&end=20991231"
 SZSE_CALENDAR_URL = "http://www.szse.cn/api/report/exchange/onepersistenthour/monthList?month={month}&random={random}"
@@ -49,6 +48,32 @@ _CALENDAR_MAP = {}
 
 # NOTE: Until 2020-10-20 20:00:00
 MINIMUM_SYMBOLS_NUM = 3900
+
+# A 股日历起始日，与原先 akshare 口径一致
+_CALENDAR_CN_START = "2000-01-04"
+
+
+def _get_calendar_list_tushare() -> Optional[List[pd.Timestamp]]:
+    """使用 Tushare 交易日历接口获取 A 股交易日列表，接口文档 https://tushare.pro/document/2?doc_id=26。
+    若未设置 TUSHARE_TOKEN 或调用失败则返回 None，由调用方决定回退方式。
+    """
+    token = os.environ.get("TUSHARE_TOKEN", "")
+    if not token:
+        return None
+    try:
+        import tushare as ts  # pylint: disable=C0415
+        pro = ts.pro_api(token)
+        start_date = pd.Timestamp(_CALENDAR_CN_START).strftime("%Y%m%d")
+        end_date = pd.Timestamp.today().strftime("%Y%m%d")
+        df = pro.trade_cal(exchange="SSE", start_date=start_date, end_date=end_date, is_open="1")
+        if df is None or df.empty:
+            return None
+        dates = pd.to_datetime(df["cal_date"]).dt.normalize()
+        filtered = dates[(dates >= _CALENDAR_CN_START) & (dates <= pd.Timestamp.today().normalize())]
+        return sorted(filtered.unique().tolist())
+    except Exception as e:
+        logger.warning(f"Tushare trade_cal failed: {e}")
+        return None
 
 
 def get_calendar_list(bench_code="CSI300") -> List[pd.Timestamp]:
@@ -85,8 +110,12 @@ def get_calendar_list(bench_code="CSI300") -> List[pd.Timestamp]:
                 trade_date_list = trade_date_df["trade_date"].tolist()
                 trade_date_list = [pd.Timestamp(d) for d in trade_date_list]
                 dates = pd.DatetimeIndex(trade_date_list)
-                filtered_dates = dates[(dates >= "2000-01-04") & (dates <= pd.Timestamp.today().normalize())]
+                filtered_dates = dates[(dates >= _CALENDAR_CN_START) & (dates <= pd.Timestamp.today().normalize())]
                 calendar = filtered_dates.tolist()
+            elif bench_code.upper().startswith("CSI"):
+                calendar = _get_calendar_list_tushare()
+                if calendar is None:
+                    calendar = _get_calendar(CALENDAR_BENCH_URL_MAP[bench_code])
             else:
                 calendar = _get_calendar(CALENDAR_BENCH_URL_MAP[bench_code])
         _CALENDAR_MAP[bench_code] = calendar
@@ -175,81 +204,45 @@ def get_hs_stock_symbols() -> list:
 
     def _get_symbol():
         """
-        Get the stock pool from a web page and process it into the format required by yahooquery.
-        Format of data retrieved from the web page: 600519, 000001
-        The data format required by yahooquery: 600519.ss, 000001.sz
+        Get the A-share stock list from Tushare Pro API and convert to yahooquery format.
+
+        Requires the TUSHARE_TOKEN environment variable to be set.
+        API doc: https://tushare.pro/document/2?doc_id=25
 
         Returns
         -------
-            set: Returns the set of symbol codes.
-
-        Examples:
-        -------
-            {600000.ss, 600001.ss, 600002.ss, 600003.ss, ...}
+            set: symbol codes in yahooquery format, e.g. {"600519.ss", "000001.sz", ...}
         """
-        # url = "http://99.push2.eastmoney.com/api/qt/clist/get?pn=1&pz=10000&po=1&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f12"
+        import tushare as ts  # pylint: disable=C0415
+        os.environ["TUSHARE_TOKEN"] = "e7afca7966f571c3a526d94543b99198ccc06539325a065d03377a93"
 
-        base_url = "http://99.push2.eastmoney.com/api/qt/clist/get"
-        params = {
-            "pn": 1,  # page number
-            "pz": 100,  # page size, default to 100
-            "po": 1,
-            "np": 1,
-            "fs": "m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048",
-            "fields": "f12",
-        }
+        token = os.environ.get("TUSHARE_TOKEN", "")
+        if not token:
+            raise ValueError(
+                "TUSHARE_TOKEN environment variable is not set. "
+                "Please set it to your Tushare Pro API token. "
+                "Get your token at https://tushare.pro/user/token"
+            )
+
+        pro = ts.pro_api(token)
+        df = pro.stock_basic(exchange="", list_status="L", fields="ts_code")
+
+        if df is None or df.empty:
+            raise ValueError("Failed to fetch stock list from Tushare.")
 
         _symbols = []
-        page = 1
+        for ts_code in df["ts_code"]:
+            code, exchange = ts_code.split(".")
+            if exchange == "SH":
+                _symbols.append(f"{code}.ss")
+            elif exchange == "SZ":
+                _symbols.append(f"{code}.sz")
 
-        while True:
-            params["pn"] = page
-            try:
-                resp = requests.get(base_url, params=params, timeout=None)
-                resp.raise_for_status()
-                data = resp.json()
-
-                # Check if response contains valid data
-                if not data or "data" not in data or not data["data"] or "diff" not in data["data"]:
-                    logger.warning(f"Invalid response structure on page {page}")
-                    break
-
-                # fetch the current page data
-                current_symbols = [_v["f12"] for _v in data["data"]["diff"]]
-
-                if not current_symbols:  # It's the last page if there is no data in current page
-                    logger.info(f"Last page reached: {page - 1}")
-                    break
-
-                _symbols.extend(current_symbols)
-
-                # show progress
-                logger.info(
-                    f"Page {page}: fetch {len(current_symbols)} stocks:[{current_symbols[0]} ... {current_symbols[-1]}]"
-                )
-
-                page += 1
-
-                # sleep time to avoid overloading the server
-                time.sleep(0.5)
-
-            except requests.exceptions.HTTPError as e:
-                raise requests.exceptions.HTTPError(
-                    f"Request to {base_url} failed with status code {resp.status_code}"
-                ) from e
-            except Exception as e:
-                logger.warning("An error occurred while extracting data from the response.")
-                raise
-
-        if len(_symbols) < 3900:
-            raise ValueError("The complete list of stocks is not available.")
-
-        # Add suffix after the stock code to conform to yahooquery standard, otherwise the data will not be fetched.
-        _symbols = [
-            _symbol + ".ss" if _symbol.startswith("6") else _symbol + ".sz" if _symbol.startswith(("0", "3")) else None
-            for _symbol in _symbols
-        ]
-        _symbols = [_symbol for _symbol in _symbols if _symbol is not None]
+        if len(_symbols) < MINIMUM_SYMBOLS_NUM:
+            raise ValueError(
+                f"Incomplete stock list from Tushare: got {len(_symbols)}, "
+                f"expected >= {MINIMUM_SYMBOLS_NUM}"
+            )
 
         return set(_symbols)
 

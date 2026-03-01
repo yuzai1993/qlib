@@ -169,7 +169,12 @@ class BaseCollector(abc.ABC):
         df["symbol"] = symbol
         if instrument_path.exists():
             _old_df = pd.read_csv(instrument_path)
+            _old_df["date"] = pd.to_datetime(_old_df["date"], format="mixed", utc=True)
+            df["date"] = pd.to_datetime(df["date"], format="mixed", utc=True)
             df = pd.concat([_old_df, df], sort=False)
+        df.drop_duplicates(subset=["date"], keep="last", inplace=True)
+        df.sort_values("date", inplace=True)
+        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         df.to_csv(instrument_path, index=False)
 
     def cache_small_data(self, symbol, df):

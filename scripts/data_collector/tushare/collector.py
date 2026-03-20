@@ -140,6 +140,8 @@ class TushareCollectorCN(BaseCollector):
             limit_nums=limit_nums,
         )
 
+    INDEX_LIST = {"csi300": "000300", "csi100": "000903", "csi500": "000905"}
+
     def get_instrument_list(self) -> List[str]:
         logger.info("get HS stock symbols (Tushare)...")
         symbols = get_hs_stock_symbols()
@@ -206,6 +208,55 @@ class TushareCollectorCN(BaseCollector):
         out = daily[keep].copy()
         out["symbol"] = symbol
         return out
+
+    def download_index_data(self):
+        """通过 Tushare index_daily 接口下载 CSI300/CSI100/CSI500 指数日线数据。"""
+        pro = self._get_pro()
+        _format = "%Y%m%d"
+        _begin = self.start_datetime.strftime(_format)
+        _end = self.end_datetime.strftime(_format)
+
+        for _index_name, _index_code in self.INDEX_LIST.items():
+            logger.info(f"get bench data: {_index_name}({_index_code})......")
+            try:
+                self.sleep()
+                ts_code = f"{_index_code}.SH"
+                df = pro.index_daily(ts_code=ts_code, start_date=_begin, end_date=_end)
+                if df is None or df.empty:
+                    logger.warning(f"{_index_name} returned empty data")
+                    continue
+
+                df = df.rename(columns={"trade_date": "date", "vol": "volume"})
+                df["date"] = pd.to_datetime(df["date"])
+                df = df.sort_values("date")
+                df["adj_factor"] = 1.0
+                if "pct_chg" in df.columns:
+                    df["pct_chg"] = df["pct_chg"].astype(float)
+                else:
+                    df["pct_chg"] = np.nan
+
+                symbol = f"sh{_index_code}"
+                out_cols = ["date", "open", "high", "low", "close", "volume", "adj_factor", "pct_chg"]
+                out = df[[c for c in out_cols if c in df.columns]].copy()
+                out["symbol"] = symbol
+
+                _path = self.save_dir.joinpath(f"{symbol}.csv")
+                if _path.exists():
+                    _old = pd.read_csv(_path)
+                    _old["date"] = pd.to_datetime(_old["date"])
+                    out = pd.concat([_old, out], sort=False)
+                out.drop_duplicates(subset=["date"], keep="last", inplace=True)
+                out.sort_values("date", inplace=True)
+                out.to_csv(_path, index=False)
+                logger.info(f"{_index_name} saved to {_path}, rows={len(out)}")
+            except Exception as e:
+                logger.warning(f"get {_index_name} error: {e}")
+                continue
+
+    def collector_data(self):
+        """先采集个股数据，再采集指数数据。"""
+        super().collector_data()
+        self.download_index_data()
 
 
 # --------------- Normalize：前复权、factor、change（前复权涨跌幅） ---------------
@@ -303,7 +354,7 @@ class Run(BaseRun):
         self,
         source_dir=None,
         normalize_dir=None,
-        max_workers=1,
+        max_workers=4,
         interval="1d",
         region=REGION_CN,
     ):
@@ -392,6 +443,8 @@ class Run(BaseRun):
             start_date = _default_start_date_from_calendars(qlib_dir)
         if end_date is None:
             end_date = pd.Timestamp(datetime.date.today()).strftime("%Y-%m-%d")
+        logger.info("start_time: ", start_date)
+        logger.info("end_time: ", end_date)
         download_success = self.download_data(delay=delay, start=start_date, end=end_date, check_data_length=check_data_length)
         if not download_success:
             logger.info("download_data failed, skip normalize and dump.")

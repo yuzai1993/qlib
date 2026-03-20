@@ -4,6 +4,7 @@
 import re
 import abc
 import sys
+import time
 from io import BytesIO
 from typing import List, Iterable
 from pathlib import Path
@@ -141,6 +142,7 @@ class CSIIndex(IndexBase):
             _df = self._read_change_from_url(_url)
             if not _df.empty:
                 res.append(_df)
+            time.sleep(10)
         logger.info("get companies changes finish")
         return pd.concat(res, sort=False)
 

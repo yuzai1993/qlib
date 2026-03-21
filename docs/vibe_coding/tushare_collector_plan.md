@@ -12,17 +12,16 @@
 
 ### 2.1 价格与复权
 
-- **close**：仅存放**真实收盘价**（Tushare daily 的 `close`），不做复权。
-- **adjclose（前复权收盘价）**：`adjclose = close / adj_factor`，复权因子来自 `adj_factor` 接口。
-- **涨跌幅**：使用 **Tushare 接口返回的 pct_chg**（日线接口的涨跌幅字段），不再用前复权价格计算。Normalize 阶段将 pct_chg（%）转为小数作为 change。
+- **close**：**前复权收盘价**（与 open/high/low 保持一致），`close = raw_close × factor`。
+- **涨跌幅**：使用 **Tushare 接口返回的 pct_chg**（日线接口的涨跌幅字段），不再用复权价格计算。Normalize 阶段将 pct_chg（%）转为小数作为 change。
+- ~~adjclose 已移除~~：close 本身已做前复权，adjclose 字段冗余，不再输出。
 
 ### 2.2 归一化后写入 qlib 的字段（与 dump_bin 一致）
 
 - 与现有日线一致：`date, symbol, open, high, low, close, volume, factor, change`。
-- **close**：真实收盘价（见上）。
-- **open / high / low**：前复权价格，即 `open/adj_factor`、`high/adj_factor`、`low/adj_factor`。
-- **volume**：前复权成交量，与价格口径一致，即 `vol * adj_factor`（使前复权下 price×volume 口径一致）。
-- **factor**：`factor = 1 / adj_factor`，满足 `adjclose = close * factor`，便于与现有 qlib 因子逻辑兼容。
+- **open / high / low / close**：均为前复权价格，`价格 = 原始价格 × factor`。
+- **volume**：前复权成交量，与价格口径一致，即 `volume = raw_volume / factor`（使前复权下 price×volume 口径一致）。
+- **factor**：`factor = adj_factor / adj_factor_last`（当日复权因子 / 最后一天复权因子），满足 `前复权价 = 原始价 × factor`。
 - **change**：Tushare 接口返回的 pct_chg（%），转为小数写入，即 `change = pct_chg / 100`。
 
 ### 2.3 存储格式
@@ -58,7 +57,7 @@
 
 ### 4.3 复权因子与涨跌幅
 
-- 复权因子：每次拉取日线时同时拉取同区间的 `adj_factor`，落盘到 CSV；归一化时用 `adjclose = close / adj_factor`，对 open/high/low/volume 做前复权，**close 保持真实价**。
+- 复权因子：每次拉取日线时同时拉取同区间的 `adj_factor`，落盘到 CSV；归一化时对 open/high/low/close 统一做前复权（乘以 factor），volume 做反向调整（除以 factor）。
 - 涨跌幅：**直接使用 Tushare 日线接口返回的 pct_chg**，在 Normalize 中转为 `change = pct_chg / 100`，不再用前复权价格计算。
 
 ## 5. Normalize 设计（参考 YahooNormalize1d）
@@ -67,10 +66,10 @@
 - **_get_calendar_list**：父类 `BaseNormalize` 中为抽象方法，子类必须实现；TushareNormalize1d 保留实现，调用 `get_calendar_list("ALL")`。
 - **步骤**：
   1. 按 date 排序，与交易日历对齐（可复用 `get_calendar_list("ALL")` 或 Tushare 交易日历）。
-  2. 计算 `adjclose = close / adj_factor`，`factor = 1 / adj_factor`。
-  3. 前复权：`open = open/adj_factor`，`high = high/adj_factor`，`low = low/adj_factor`，`volume = vol*adj_factor`；**close 原样**。
+  2. 计算 `factor = adj_factor / adj_factor_last`（当日复权因子 / 最后一天复权因子）。
+  3. 前复权：`open/high/low/close` 均乘以 factor，`volume = volume / factor`。
   4. 涨跌幅：使用接口返回的 pct_chg，`change = pct_chg / 100`（pct_chg 为 %）。
-  5. 可选：与 Yahoo 一致做「首日 close 标准化」；若不做，需在文档说明与 Yahoo 的差异。
+  5. 首日 close 标准化：所有价格除以首日 close，volume 乘以首日 close。
   6. 输出列：`date, symbol, open, high, low, close, volume, factor, change`，供 dump_bin 使用。
 
 ## 6. 天级增量更新与 bin 更新
@@ -104,18 +103,18 @@
 ## 8. 实现顺序建议
 
 1. **目录与占位**：新建 `tushare/`，`collector.py` 中实现 `TushareCollectorCN`（仅日线）、`TushareNormalize1d`、`Run`，先保证能跑通全量采集 + 归一化 + dump_all。
-2. **采集**：实现按 ts_code 拉 daily + adj_factor，合并为带 adj_factor 的 CSV，close 存真实价，adjclose 或延到 Normalize 算。
-3. **归一化**：实现前复权、factor、change（前复权涨跌幅），输出列与 dump_bin 约定一致。
+2. **采集**：实现按 ts_code 拉 daily + adj_factor，合并为带 adj_factor 的 CSV。
+3. **归一化**：所有价格（含 close）统一前复权、factor、change，输出列与 dump_bin 约定一致。
 4. **Run 与 CLI**：`download_data`、`normalize_data`、`update_data_to_bin(qlib_dir, start_date=..., end_date=...)`（调用 dump_update）；start_date 默认由 day_future/day 日历差集取最早日。
 
 ## 9. 与 Yahoo 的差异小结
 
 | 项目         | Yahoo 日线           | Tushare 日线（本方案）        |
 |--------------|----------------------|-------------------------------|
-| close        | 复权后（adjclose 等） | **真实收盘价**                |
-| adjclose     | 来自 Yahoo           | **close / adj_factor**        |
+| close        | 复权后（adjclose 等） | **前复权收盘价（与 open/high/low 一致）** |
+| adjclose     | 来自 Yahoo           | **已移除（close 本身即前复权）** |
 | 涨跌幅       | 基于 close           | **Tushare 接口 pct_chg**      |
 | 复权因子来源 | Yahoo 接口           | **Tushare adj_factor 接口**  |
-| 增量回溯     | 无复权因子回溯       | **按 adj_factor 回溯更新价格与成交量，close 不变** |
+| 增量回溯     | 无复权因子回溯       | **按 adj_factor 回溯更新所有价格与成交量** |
 
-按此计划可实现：adjclose 为前复权、close 为真实价、qlib bin 存储、天级增量、涨跌幅使用 Tushare 接口 pct_chg；Collector 复用基类 save_instrument/_simple_collector/collector_data；update_data_to_bin 使用 start_date，默认由 day_future/day 日历取。
+按此计划可实现：所有价格统一前复权、qlib bin 存储、天级增量、涨跌幅使用 Tushare 接口 pct_chg；Collector 复用基类 save_instrument/_simple_collector/collector_data；update_data_to_bin 使用 start_date，默认由 day_future/day 日历取。

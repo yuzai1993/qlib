@@ -4,9 +4,9 @@
 
 ## 约定
 
-- **close**：真实收盘价（未复权）
-- **adjclose**：前复权收盘价 = close / adj_factor，复权因子来自 [复权因子接口](https://tushare.pro/document/2?doc_id=28)
+- **close**：前复权收盘价（与 open/high/low 保持一致，均为前复权价格）
 - **涨跌幅**：使用 Tushare 接口返回的 pct_chg（不再用复权价计算）
+- 所有价格字段（open/high/low/close）统一前复权后再按首日 close 标准化
 - 支持**天级增量更新**
 
 ## 环境

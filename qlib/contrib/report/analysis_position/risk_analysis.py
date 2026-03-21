@@ -32,9 +32,14 @@ def _get_risk_analysis_data_with_report(
     #     analysis["pred_long_short"] = risk_analysis(report_long_short_df["long_short"])
 
     if not report_normal_df.empty:
-        analysis["excess_return_without_cost"] = risk_analysis(report_normal_df["return"] - report_normal_df["bench"])
+        # Use geometric/compound accumulation ("product") so that annualized_return is based on compounding.
+        analysis["excess_return_without_cost"] = risk_analysis(
+            report_normal_df["return"] - report_normal_df["bench"],
+            mode="product",
+        )
         analysis["excess_return_with_cost"] = risk_analysis(
-            report_normal_df["return"] - report_normal_df["bench"] - report_normal_df["cost"]
+            report_normal_df["return"] - report_normal_df["bench"] - report_normal_df["cost"],
+            mode="product",
         )
     analysis_df = pd.concat(analysis)  # type: pd.DataFrame
     analysis_df["date"] = date
@@ -223,10 +228,12 @@ def risk_analysis_graph(
                 report_normal_df, positions_normal = portfolio_metric_dict.get(analysis_freq)
                 analysis = dict()
                 analysis["excess_return_without_cost"] = risk_analysis(
-                    report_normal_df["return"] - report_normal_df["bench"], freq=analysis_freq
+                    report_normal_df["return"] - report_normal_df["bench"], freq=analysis_freq, mode="product"
                 )
                 analysis["excess_return_with_cost"] = risk_analysis(
-                    report_normal_df["return"] - report_normal_df["bench"] - report_normal_df["cost"], freq=analysis_freq
+                    report_normal_df["return"] - report_normal_df["bench"] - report_normal_df["cost"],
+                    freq=analysis_freq,
+                    mode="product",
                 )
 
                 analysis_df = pd.concat(analysis)  # type: pd.DataFrame

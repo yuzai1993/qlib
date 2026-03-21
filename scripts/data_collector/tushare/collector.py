@@ -3,8 +3,8 @@
 
 """
 Tushare Pro 日线采集与归一化，产出 qlib bin 格式。
-- close 存真实收盘价；adjclose = close/adj_factor（前复权）；涨跌幅使用 Tushare 接口返回的 pct_chg。
-- 支持天级增量更新，并根据复权因子回溯更新历史价格、成交量（close 不变）。
+- 所有价格（open/high/low/close）统一前复权；涨跌幅使用 Tushare 接口返回的 pct_chg。
+- 支持天级增量更新，并根据复权因子回溯更新历史价格与成交量。
 """
 
 import os
@@ -263,7 +263,7 @@ class TushareCollectorCN(BaseCollector):
 
 
 class TushareNormalize1d(BaseNormalize):
-    """Tushare 日线归一化：factor=当日复权因子/最后一天复权因子，复权价格=价格*factor，复权成交量=volume/factor；close 与其余价格按首日 adjclose 标准化。"""
+    """Tushare 日线归一化：factor=当日复权因子/最后一天复权因子，所有价格（含close）前复权=价格*factor，复权成交量=volume/factor；按首日 close 标准化。"""
 
     DAILY_FORMAT = "%Y-%m-%d"
     COLUMNS = ["open", "high", "low", "close", "volume"]
@@ -271,31 +271,31 @@ class TushareNormalize1d(BaseNormalize):
     def _get_calendar_list(self) -> Iterable[pd.Timestamp]:
         return get_calendar_list("ALL")
 
-    def _get_first_adjclose(self, df: pd.DataFrame) -> float:
-        """取首个有效（非 NaN）adjclose，用于 _manual_adj_data 标准化。"""
-        if df.empty or "adjclose" not in df.columns:
+    def _get_first_close(self, df: pd.DataFrame) -> float:
+        """取首个有效（非 NaN）close（已前复权），用于 _manual_adj_data 标准化。"""
+        if df.empty or "close" not in df.columns:
             return 1.0
-        idx = df["adjclose"].first_valid_index()
+        idx = df["close"].first_valid_index()
         if idx is None:
             return 1.0
-        return float(df.loc[df["adjclose"].first_valid_index() :, "adjclose"].iloc[0])
+        return float(df.loc[idx:, "close"].iloc[0])
 
     def _manual_adj_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """按首日 adjclose 标准化：除 symbol/change 外，价格类（含 close、adjclose）除以首日 adjclose，volume 乘以首日 adjclose。"""
+        """按首日 close（已前复权）标准化：价格类除以首日 close，volume 乘以首日 close。"""
         if df.empty:
             return df
         df = df.copy()
         date_col = self._date_field_name
         sym_col = self._symbol_field_name
         df = df.sort_values(date_col).set_index(date_col)
-        _adjclose = self._get_first_adjclose(df.reset_index())
+        _first_close = self._get_first_close(df.reset_index())
         for _col in df.columns:
             if _col in (sym_col, "change", "factor"):
                 continue
             if _col == "volume":
-                df[_col] = df[_col] * _adjclose
+                df[_col] = df[_col] * _first_close
             else:
-                df[_col] = df[_col] / _adjclose
+                df[_col] = df[_col] / _first_close
         return df.reset_index()
 
     def normalize(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -315,8 +315,7 @@ class TushareNormalize1d(BaseNormalize):
         adj_series = df["adj_factor"].replace(0, np.nan).ffill().bfill().fillna(1.0)
         adj_last = float(adj_series.iloc[-1])
         df["factor"] = adj_series / adj_last
-        df["adjclose"] = df["close"] * df["factor"]
-        for c in ["open", "high", "low"]:
+        for c in ["open", "high", "low", "close"]:
             if c in df.columns:
                 df[c] = df[c] * df["factor"]
         if "volume" in df.columns:
@@ -342,7 +341,7 @@ class TushareNormalize1d(BaseNormalize):
                 df[sym_col] = symbol
                 df = df.reset_index()
         df = self._manual_adj_data(df)
-        out_cols = [date_col, sym_col, "open", "high", "low", "close", "adjclose", "volume", "factor", "change"]
+        out_cols = [date_col, sym_col, "open", "high", "low", "close", "volume", "factor", "change"]
         return df[[c for c in out_cols if c in df.columns]]
 
 

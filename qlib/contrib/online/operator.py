@@ -302,9 +302,9 @@ class Operator:
         portfolio_metrics["bench"] = bench
         analysis_result = {}
         r = (portfolio_metrics["return"] - portfolio_metrics["bench"]).dropna()
-        analysis_result["excess_return_without_cost"] = risk_analysis(r)
+        analysis_result["excess_return_without_cost"] = risk_analysis(r, mode="product")
         r = (portfolio_metrics["return"] - portfolio_metrics["bench"] - portfolio_metrics["cost"]).dropna()
-        analysis_result["excess_return_with_cost"] = risk_analysis(r)
+        analysis_result["excess_return_with_cost"] = risk_analysis(r, mode="product")
         print("Result:")
         print("excess_return_without_cost:")
         print(analysis_result["excess_return_without_cost"])

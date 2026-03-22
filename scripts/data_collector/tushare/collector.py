@@ -263,40 +263,13 @@ class TushareCollectorCN(BaseCollector):
 
 
 class TushareNormalize1d(BaseNormalize):
-    """Tushare 日线归一化：factor=当日复权因子/最后一天复权因子，所有价格（含close）前复权=价格*factor，复权成交量=volume/factor；按首日 close 标准化。"""
+    """Tushare 日线归一化：factor=当日复权因子/最后一天复权因子，所有价格（含close）前复权=价格*factor，复权成交量=volume/factor。价格保持真实前复权 CNY，不做首日标准化。"""
 
     DAILY_FORMAT = "%Y-%m-%d"
     COLUMNS = ["open", "high", "low", "close", "volume"]
 
     def _get_calendar_list(self) -> Iterable[pd.Timestamp]:
         return get_calendar_list("ALL")
-
-    def _get_first_close(self, df: pd.DataFrame) -> float:
-        """取首个有效（非 NaN）close（已前复权），用于 _manual_adj_data 标准化。"""
-        if df.empty or "close" not in df.columns:
-            return 1.0
-        idx = df["close"].first_valid_index()
-        if idx is None:
-            return 1.0
-        return float(df.loc[idx:, "close"].iloc[0])
-
-    def _manual_adj_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """按首日 close（已前复权）标准化：价格类除以首日 close，volume 乘以首日 close。"""
-        if df.empty:
-            return df
-        df = df.copy()
-        date_col = self._date_field_name
-        sym_col = self._symbol_field_name
-        df = df.sort_values(date_col).set_index(date_col)
-        _first_close = self._get_first_close(df.reset_index())
-        for _col in df.columns:
-            if _col in (sym_col, "change", "factor"):
-                continue
-            if _col == "volume":
-                df[_col] = df[_col] * _first_close
-            else:
-                df[_col] = df[_col] / _first_close
-        return df.reset_index()
 
     def normalize(self, df: pd.DataFrame) -> pd.DataFrame:
         if df.empty:
@@ -340,7 +313,6 @@ class TushareNormalize1d(BaseNormalize):
                 df.index.name = date_col
                 df[sym_col] = symbol
                 df = df.reset_index()
-        df = self._manual_adj_data(df)
         out_cols = [date_col, sym_col, "open", "high", "low", "close", "volume", "factor", "change"]
         return df[[c for c in out_cols if c in df.columns]]
 

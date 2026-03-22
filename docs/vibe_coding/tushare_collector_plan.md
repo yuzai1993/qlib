@@ -69,7 +69,7 @@
   2. 计算 `factor = adj_factor / adj_factor_last`（当日复权因子 / 最后一天复权因子）。
   3. 前复权：`open/high/low/close` 均乘以 factor，`volume = volume / factor`。
   4. 涨跌幅：使用接口返回的 pct_chg，`change = pct_chg / 100`（pct_chg 为 %）。
-  5. 首日 close 标准化：所有价格除以首日 close，volume 乘以首日 close。
+  5. ~~首日 close 标准化~~：**已移除**，价格保持真实前复权 CNY，不做首日标准化。
   6. 输出列：`date, symbol, open, high, low, close, volume, factor, change`，供 dump_bin 使用。
 
 ## 6. 天级增量更新与 bin 更新

@@ -1,0 +1,70 @@
+# paper_trading/config.yaml
+
+# ========== 基本设置 ==========
+paper_trading:
+  name: "CSI300_TopkDropout_100w"
+  start_date: "2026-03-11"
+  initial_cash: 1000000
+
+# ========== 数据设置 ==========
+data:
+  qlib_dir: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi300"
+  benchmark: "SH000300"
+
+# ========== 模型设置 ==========
+model:
+  experiment_name: "train_model"
+  experiment_id: "745738095260835211"
+  recorder_id: "d3f5db20d9af4e70addfefc62fafdf54"
+  model_class: "qlib.contrib.model.gbdt.LGBModel"
+  mlruns_dir: "examples/mlruns"
+
+# ========== 特征设置 ==========
+handler:
+  class: "Alpha158"
+  module: "qlib.contrib.data.handler"
+  start_time: "2003-01-02"
+
+# ========== 股票名称映射 ==========
+stock_names:
+  source: "tushare"
+  update_interval_days: 7
+
+# ========== 策略设置 ==========
+strategy:
+  class: "TopkDropoutStrategy"
+  topk: 10
+  n_drop: 2
+
+# ========== 交易设置 ==========
+exchange:
+  freq: "day"
+  deal_price: "close"
+  limit_threshold: 0.095
+  open_cost: 0.0005
+  close_cost: 0.0015
+  min_cost: 5
+  trade_unit: 100
+
+# ========== 存储设置 ==========
+storage:
+  db_path: "paper_trading/data/paper_trading.db"
+  log_dir: "paper_trading/logs"
+  report_dir: "paper_trading/reports"
+
+# ========== 告警设置 ==========
+alert:
+  enabled: true
+  email: "xqyu1993@126.com"
+  daily_loss_threshold: -0.03
+  max_drawdown_threshold: -0.10
+  consecutive_loss_days: 5
+
+# ========== Web 设置 ==========
+web:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8000
+  auto_refresh: 60

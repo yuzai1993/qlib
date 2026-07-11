@@ -49,6 +49,37 @@ def _as_figure_list(figs: Union[FigureLike, Sequence[FigureLike], None]) -> list
     return [figs]
 
 
+def _json_safe(obj: Any) -> Any:
+    """把 pandas Timestamp / numpy 标量等转成 kaleido/orjson 可序列化的类型。"""
+    if isinstance(obj, dict):
+        return {k: _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_json_safe(v) for v in obj]
+    if isinstance(obj, pd.Timestamp):
+        return obj.isoformat()
+    if hasattr(obj, "isoformat") and not isinstance(obj, (str, bytes)):
+        try:
+            return obj.isoformat()
+        except Exception:
+            pass
+    # numpy scalar
+    if hasattr(obj, "item") and callable(obj.item):
+        try:
+            return obj.item()
+        except Exception:
+            pass
+    return obj
+
+
+def _sanitize_figure(fig: FigureLike) -> FigureLike:
+    """复制 figure 并清洗 data，规避 kaleido>=1.3 对 Timestamp 的序列化 bug。"""
+    import plotly.graph_objects as go
+
+    if hasattr(fig, "to_dict"):
+        return go.Figure(_json_safe(fig.to_dict()))
+    return fig
+
+
 def save_plotly_pngs(figures: Iterable[FigureLike], out_dir: Path, basename: str, width: int = 1200, height: int = 700) -> list[Path]:
     """将 Plotly figure(s) 写成 PNG，多图时加序号后缀。"""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -57,7 +88,8 @@ def save_plotly_pngs(figures: Iterable[FigureLike], out_dir: Path, basename: str
     for i, fig in enumerate(fig_list, start=1):
         name = f"{basename}.png" if len(fig_list) == 1 else f"{basename}_{i:02d}.png"
         path = out_dir / name
-        fig.write_image(str(path), format="png", width=width, height=height, scale=1)
+        safe_fig = _sanitize_figure(fig)
+        safe_fig.write_image(str(path), format="png", width=width, height=height, scale=1)
         paths.append(path)
     return paths
 
@@ -93,26 +125,27 @@ def generate_run_figures(
     figures_dir.mkdir(parents=True, exist_ok=True)
     saved: dict[str, list[str]] = {}
 
-    # 1) 净值报告
-    figs = analysis_position.report_graph(report_normal_df, show_notebook=False)
-    paths = save_plotly_pngs(figs, figures_dir, "report_graph")
-    saved["report_graph"] = [p.name for p in paths]
+    def _try_save(key: str, factory) -> None:
+        try:
+            figs = factory()
+            paths = save_plotly_pngs(figs, figures_dir, key)
+            saved[key] = [p.name for p in paths]
+        except Exception as e:
+            print(f"[report_utils] 出图失败 {key}: {e}")
+            saved[key] = []
 
-    # 2) 风险分析
-    figs = analysis_position.risk_analysis_graph(analysis_df, report_normal_df, show_notebook=False)
-    paths = save_plotly_pngs(figs, figures_dir, "risk_analysis")
-    saved["risk_analysis"] = [p.name for p in paths]
+    _try_save("report_graph", lambda: analysis_position.report_graph(report_normal_df, show_notebook=False))
+    _try_save(
+        "risk_analysis",
+        lambda: analysis_position.risk_analysis_graph(analysis_df, report_normal_df, show_notebook=False),
+    )
 
     if pred_label is not None and not pred_label.empty:
-        # 3) IC
-        figs = analysis_position.score_ic_graph(pred_label, show_notebook=False)
-        paths = save_plotly_pngs(figs, figures_dir, "score_ic")
-        saved["score_ic"] = [p.name for p in paths]
-
-        # 4) 模型表现（可能多图）
-        figs = analysis_model.model_performance_graph(pred_label, show_notebook=False)
-        paths = save_plotly_pngs(figs, figures_dir, "model_performance")
-        saved["model_performance"] = [p.name for p in paths]
+        _try_save("score_ic", lambda: analysis_position.score_ic_graph(pred_label, show_notebook=False))
+        _try_save(
+            "model_performance",
+            lambda: analysis_model.model_performance_graph(pred_label, show_notebook=False),
+        )
     else:
         saved["score_ic"] = []
         saved["model_performance"] = []

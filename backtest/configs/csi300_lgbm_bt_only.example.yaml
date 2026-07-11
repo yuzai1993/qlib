@@ -1,0 +1,64 @@
+# 免重训回测示例：复制后改 run 段即可
+# python backtest/scripts/run_backtest.py --config csi300_lgbm_bt_only.example.yaml
+
+run:
+  mode: backtest_only
+  note: "bt_only_2024起"
+  n_runs: 1
+  from_session: "20260711_141113_report_archive_vwap_ready"  # 相对 backtest/result/ 或绝对路径
+  from_run: 1
+  test_start: "2024-01-01"
+  test_end: "2026-03-10"
+
+data:
+  provider_uri: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi300"
+  benchmark: "SH000300"
+  handler:
+    # class 在 backtest_only 时被源 session meta.handler 覆盖
+    class: "Alpha158NoVWAP"
+    module_path: "qlib.contrib.data.handler"
+    start_time: "2003-01-02"
+    end_time: "2026-03-10"
+    fit_start_time: "2003-01-02"
+    fit_end_time: "2020-01-10"
+    infer_processors:
+      - class: ProcessInf
+
+segments:
+  train: ["2003-01-02", "2020-01-10"]
+  valid: ["2020-01-13", "2023-09-15"]
+  test: ["2023-09-18", "2026-03-10"]
+
+model:
+  class: "LGBModel"
+  module_path: "qlib.contrib.model.gbdt"
+  kwargs:
+    loss: "mse"
+    colsample_bytree: 0.8879
+    learning_rate: 0.2
+    subsample: 0.8789
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    max_depth: 8
+    num_leaves: 210
+    num_threads: 20
+
+strategy:
+  class: "TopkDropoutStrategy"
+  module_path: "qlib.contrib.strategy.signal_strategy"
+  topk: 50
+  n_drop: 5
+
+backtest:
+  start_time: "2023-09-18"
+  end_time: "2026-03-10"
+  account: 1000000
+  exchange_kwargs:
+    freq: "day"
+    limit_threshold: 0.095
+    deal_price: "close"
+    open_cost: 0.0005
+    close_cost: 0.0015
+    min_cost: 5

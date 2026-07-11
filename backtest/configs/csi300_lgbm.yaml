@@ -1,0 +1,64 @@
+# CSI300 LightGBM 训练+回测默认配置
+# 用法: python backtest/scripts/run_backtest.py [--config csi300_lgbm.yaml]
+
+run:
+  mode: train_backtest          # train_backtest | backtest_only
+  note: ""
+  n_runs: 1
+  from_session: null            # backtest_only 时必填
+  from_run: 1
+  test_start: null              # 可选；同时覆盖 segments.test 与 backtest 起止
+  test_end: null
+
+data:
+  provider_uri: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi300"
+  benchmark: "SH000300"
+  handler:
+    class: "Alpha158NoVWAP"
+    module_path: "qlib.contrib.data.handler"
+    start_time: "2003-01-02"
+    end_time: "2026-03-10"
+    fit_start_time: "2003-01-02"
+    fit_end_time: "2020-01-10"
+    # ProcessInf：除法 inf → 当日截面均值；PTYPE_A 下训练/推理共用
+    infer_processors:
+      - class: ProcessInf
+
+segments:
+  train: ["2003-01-02", "2020-01-10"]
+  valid: ["2020-01-13", "2023-09-15"]
+  test: ["2023-09-18", "2026-03-10"]
+
+model:
+  class: "LGBModel"
+  module_path: "qlib.contrib.model.gbdt"
+  kwargs:
+    loss: "mse"
+    colsample_bytree: 0.8879
+    learning_rate: 0.2
+    subsample: 0.8789
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    max_depth: 8
+    num_leaves: 210
+    num_threads: 20
+
+strategy:
+  class: "TopkDropoutStrategy"
+  module_path: "qlib.contrib.strategy.signal_strategy"
+  topk: 50
+  n_drop: 5
+
+backtest:
+  start_time: "2023-09-18"
+  end_time: "2026-03-10"
+  account: 1000000
+  exchange_kwargs:
+    freq: "day"
+    limit_threshold: 0.095
+    deal_price: "close"
+    open_cost: 0.0005
+    close_cost: 0.0015
+    min_cost: 5

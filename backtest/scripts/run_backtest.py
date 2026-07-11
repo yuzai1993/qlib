@@ -1,22 +1,31 @@
 """
-20次训练+回测实验脚本
+训练+回测实验脚本
 基于 examples/workflow_by_code_230915.ipynb 的配置
-结果保存至 backtest/result/ 目录
+
+用法:
+  python backtest/scripts/run_backtest.py
+  python backtest/scripts/run_backtest.py --note "157维+ProcessInf"
+  python backtest/scripts/run_backtest.py --note "baseline" --n-runs 3
+
+结果写入 backtest/result/YYYYMMDD_HHMMSS[_note]/，含 HTML 报告与 PNG 图，
+并在 meta / mlruns_link 中记录与根目录 mlruns/ 的对应关系。
 """
 
+from __future__ import annotations
+
+import argparse
 import json
-import os
 import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
-# 确保能找到 qlib 包
+# 确保能找到 qlib 包与同目录 report_utils
 QLIB_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(QLIB_ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import qlib
 from qlib.constant import REG_CN
@@ -24,23 +33,25 @@ from qlib.utils import exists_qlib_data, init_instance_by_config, flatten_dict
 from qlib.workflow import R
 from qlib.workflow.record_temp import SignalRecord, PortAnaRecord
 
+from report_utils import (
+    build_pred_label,
+    generate_run_figures,
+    make_session_dir,
+    write_index_html,
+    write_json,
+    write_run_html,
+)
+
 # ─────────────────────────────────────────────
 # 配置
 # ─────────────────────────────────────────────
-N_RUNS = 1
 PROVIDER_URI = "~/.qlib/qlib_data/cn_data"
 MARKET = "csi300"
 BENCHMARK = "SH000300"
 
-RESULT_DIR = Path(__file__).resolve().parents[1] / "result"
-RESULT_DIR.mkdir(parents=True, exist_ok=True)
+RESULT_ROOT = Path(__file__).resolve().parents[1] / "result"
+RESULT_ROOT.mkdir(parents=True, exist_ok=True)
 
-RUNS_RESULT_FILE = RESULT_DIR / "all_runs_results.csv"
-SUMMARY_FILE = RESULT_DIR / "summary.json"
-
-# ─────────────────────────────────────────────
-# 数据与任务配置（与 notebook 保持一致）
-# ─────────────────────────────────────────────
 DATA_HANDLER_CONFIG = {
     "start_time": "2003-01-02",
     "end_time": "2026-03-10",
@@ -99,7 +110,6 @@ PORT_ANALYSIS_CONFIG = {
         "class": "TopkDropoutStrategy",
         "module_path": "qlib.contrib.strategy.signal_strategy",
         "kwargs": {
-            # model/dataset 在运行时注入
             "topk": 50,
             "n_drop": 5,
         },
@@ -121,22 +131,11 @@ PORT_ANALYSIS_CONFIG = {
 }
 
 
-# ─────────────────────────────────────────────
-# 工具函数：从 analysis_df 提取关键指标
-# ─────────────────────────────────────────────
 def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -> dict:
-    """
-    从 port_analysis 和 report_normal 中提取常用回测指标。
-    analysis_df 可能是 (freq, metric_group, metric) 或 (metric_group, metric)。
-
-    注意：report_normal_df["return"] 是持仓视角收益率（分子加回了当日手续费），
-    累乘后会高估真实收益。portfolio_cum_return 应直接用 account 首尾值计算。
-    benchmark_cum_return 同理用 bench 列累乘（bench 是基准日收益率，可直接累乘）。
-    """
+    """从 port_analysis / report_normal 提取常用回测指标。"""
     metrics = {}
 
     def _excess_section(key: str):
-        # 兼容带 freq 层（"1day"）与不带 freq 层两种结构
         if isinstance(analysis_df.index, pd.MultiIndex) and "1day" in analysis_df.index.get_level_values(0):
             return analysis_df.loc["1day"][key]
         return analysis_df.loc[key]
@@ -158,15 +157,10 @@ def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -
         pass
 
     try:
-        # portfolio_cum_return: 用 account 首尾值计算，避免 return 列高估问题
-        # account 列是每日账户总价值（持仓市值 + 现金），首尾相除即为真实累计收益率
         account = report_normal_df["account"].dropna()
         metrics["portfolio_cum_return"] = float(account.iloc[-1] / account.iloc[0] - 1)
-
-        # benchmark_cum_return: bench 列是基准日收益率，可以直接累乘
         bench = report_normal_df["bench"].dropna()
         metrics["benchmark_cum_return"] = float((1 + bench).prod() - 1)
-
         metrics["excess_cum_return"] = metrics["portfolio_cum_return"] - metrics["benchmark_cum_return"]
     except Exception:
         pass
@@ -174,46 +168,47 @@ def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -
     return metrics
 
 
-# ─────────────────────────────────────────────
-# 单次训练+回测
-# ─────────────────────────────────────────────
-def run_single(run_idx: int) -> dict:
+def run_single(run_idx: int, n_runs: int, session_dir: Path, session_name: str, note: str) -> dict:
     print(f"\n{'='*60}")
-    print(f"  Run {run_idx}/{N_RUNS}  [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]")
+    print(f"  Run {run_idx}/{n_runs}  [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]")
     print(f"{'='*60}")
+
+    run_dir = session_dir / f"run_{run_idx:02d}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    figures_dir = run_dir / "figures"
+
+    # 实验名带 session，便于与结果目录对应
+    train_exp = f"train_{session_name}_run{run_idx:02d}"
+    backtest_exp = f"backtest_{session_name}_run{run_idx:02d}"
 
     result = {"run": run_idx, "status": "failed"}
 
     try:
-        # ---------- 训练 ----------
         model = init_instance_by_config(TASK["model"])
         dataset = init_instance_by_config(TASK["dataset"])
 
-        with R.start(experiment_name=f"train_model_run{run_idx:02d}"):
+        with R.start(experiment_name=train_exp):
             R.log_params(**flatten_dict(TASK))
             model.fit(dataset)
             R.save_objects(trained_model=model)
-            train_rid = R.get_recorder().id
+            train_rec = R.get_recorder()
+            train_rid = train_rec.id
+            train_eid = train_rec.experiment_id
 
-        print(f"[Run {run_idx}] 训练完成，recorder_id={train_rid}")
+        print(f"[Run {run_idx}] 训练完成，experiment_id={train_eid}, recorder_id={train_rid}")
 
-        # ---------- 回测 ----------
-        # 将 model/dataset 注入 strategy kwargs
-        port_cfg = json.loads(json.dumps(PORT_ANALYSIS_CONFIG))  # deep copy
+        port_cfg = json.loads(json.dumps(PORT_ANALYSIS_CONFIG))
         port_cfg["strategy"]["kwargs"]["model"] = model
         port_cfg["strategy"]["kwargs"]["dataset"] = dataset
 
-        with R.start(experiment_name=f"backtest_analysis_run{run_idx:02d}"):
-            # 重新加载已保存的模型（与 notebook 流程一致）
-            recorder = R.get_recorder(
-                recorder_id=train_rid,
-                experiment_name=f"train_model_run{run_idx:02d}",
-            )
+        with R.start(experiment_name=backtest_exp):
+            recorder = R.get_recorder(recorder_id=train_rid, experiment_name=train_exp)
             model = recorder.load_object("trained_model")
             port_cfg["strategy"]["kwargs"]["model"] = model
 
             recorder = R.get_recorder()
             ba_rid = recorder.id
+            ba_eid = recorder.experiment_id
 
             sr = SignalRecord(model, dataset, recorder)
             sr.generate()
@@ -221,42 +216,89 @@ def run_single(run_idx: int) -> dict:
             par = PortAnaRecord(recorder, port_cfg, "day")
             par.generate()
 
-        print(f"[Run {run_idx}] 回测完成，recorder_id={ba_rid}")
+        print(f"[Run {run_idx}] 回测完成，experiment_id={ba_eid}, recorder_id={ba_rid}")
 
-        # ---------- 读取结果 ----------
-        recorder = R.get_recorder(
-            recorder_id=ba_rid,
-            experiment_name=f"backtest_analysis_run{run_idx:02d}",
-        )
+        recorder = R.get_recorder(recorder_id=ba_rid, experiment_name=backtest_exp)
         report_normal_df = recorder.load_object("portfolio_analysis/report_normal_1day.pkl")
         analysis_df = recorder.load_object("portfolio_analysis/port_analysis_1day.pkl")
+        pred = recorder.load_object("pred.pkl")
+        label = recorder.load_object("label.pkl")
+        pred_label = build_pred_label(pred, label)
 
         metrics = extract_metrics(analysis_df, report_normal_df)
         result.update(metrics)
         result["status"] = "success"
         result["train_recorder_id"] = train_rid
         result["backtest_recorder_id"] = ba_rid
+        result["train_experiment_id"] = train_eid
+        result["backtest_experiment_id"] = ba_eid
+        result["train_experiment_name"] = train_exp
+        result["backtest_experiment_name"] = backtest_exp
 
-        # 将本次 report_normal_df 单独保存
-        run_report_path = RESULT_DIR / f"run_{run_idx:02d}_report_normal.csv"
-        report_normal_df.to_csv(run_report_path)
-        print(f"[Run {run_idx}] 单次报告已保存至 {run_report_path}")
+        mlruns_link = {
+            "train_experiment_name": train_exp,
+            "train_experiment_id": train_eid,
+            "train_recorder_id": train_rid,
+            "train_artifacts": f"mlruns/{train_eid}/{train_rid}",
+            "backtest_experiment_name": backtest_exp,
+            "backtest_experiment_id": ba_eid,
+            "backtest_recorder_id": ba_rid,
+            "backtest_artifacts": f"mlruns/{ba_eid}/{ba_rid}",
+        }
+        write_json(run_dir / "mlruns_link.json", mlruns_link)
+        write_json(run_dir / "metrics.json", {k: v for k, v in result.items() if k != "traceback"})
+
+        report_csv = run_dir / "report_normal.csv"
+        report_normal_df.to_csv(report_csv)
+
+        print(f"[Run {run_idx}] 生成分析图...")
+        try:
+            figure_files = generate_run_figures(
+                report_normal_df=report_normal_df,
+                analysis_df=analysis_df,
+                pred_label=pred_label,
+                figures_dir=figures_dir,
+            )
+        except Exception as fig_err:
+            print(f"[Run {run_idx}] 出图失败（继续写 HTML）: {fig_err}")
+            traceback.print_exc()
+            figure_files = {}
+
+        write_json(run_dir / "figures_manifest.json", figure_files)
+        write_run_html(
+            run_dir / "report.html",
+            title=f"{session_name} / run_{run_idx:02d}",
+            metrics={k: v for k, v in result.items() if k not in ("traceback",)},
+            figure_files=figure_files,
+            mlruns_link=mlruns_link,
+            note=note,
+        )
+
+        print(f"[Run {run_idx}] 报告已保存至 {run_dir}")
         print(f"[Run {run_idx}] 主要指标: {metrics}")
 
     except Exception as e:
         result["error"] = str(e)
         result["traceback"] = traceback.format_exc()
+        write_json(run_dir / "metrics.json", {k: v for k, v in result.items() if k != "traceback"})
         print(f"[Run {run_idx}] 出错: {e}")
         traceback.print_exc()
 
     return result
 
 
-# ─────────────────────────────────────────────
-# 主流程
-# ─────────────────────────────────────────────
+def parse_args():
+    p = argparse.ArgumentParser(description="训练+回测，结果归档到带时间戳的目录")
+    p.add_argument("--note", type=str, default="", help="本次回测说明，写入目录名与 HTML")
+    p.add_argument("--n-runs", type=int, default=1, help="训练+回测重复次数（默认 1）")
+    return p.parse_args()
+
+
 def main():
-    # 初始化 qlib
+    args = parse_args()
+    n_runs = max(1, int(args.n_runs))
+    note = args.note or ""
+
     if not exists_qlib_data(PROVIDER_URI):
         raise RuntimeError(
             f"Qlib 数据未找到: {PROVIDER_URI}\n"
@@ -264,54 +306,112 @@ def main():
         )
     qlib.init(provider_uri=PROVIDER_URI, region=REG_CN)
 
+    session_dir = make_session_dir(RESULT_ROOT, note=note)
+    session_name = session_dir.name
+    print(f"结果目录: {session_dir}")
+
+    meta = {
+        "session_name": session_name,
+        "note": note,
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "n_runs": n_runs,
+        "provider_uri": PROVIDER_URI,
+        "market": MARKET,
+        "benchmark": BENCHMARK,
+        "handler": TASK["dataset"]["kwargs"]["handler"]["class"],
+        "segments": TASK["dataset"]["kwargs"]["segments"],
+        "backtest": PORT_ANALYSIS_CONFIG["backtest"],
+        "strategy": {
+            "class": PORT_ANALYSIS_CONFIG["strategy"]["class"],
+            "topk": PORT_ANALYSIS_CONFIG["strategy"]["kwargs"]["topk"],
+            "n_drop": PORT_ANALYSIS_CONFIG["strategy"]["kwargs"]["n_drop"],
+        },
+        "runs": [],
+    }
+    write_json(session_dir / "meta.json", meta)
+
     all_results = []
     start_time = datetime.now()
 
-    for i in range(1, N_RUNS + 1):
-        result = run_single(i)
+    for i in range(1, n_runs + 1):
+        result = run_single(i, n_runs, session_dir, session_name, note)
         all_results.append(result)
 
-        # 每次运行后立即保存（防止中途中断丢数据）
         df = pd.DataFrame(all_results)
-        df.to_csv(RUNS_RESULT_FILE, index=False)
-        print(f"[Run {i}] 结果已追加写入 {RUNS_RESULT_FILE}")
+        df.to_csv(session_dir / "all_runs_results.csv", index=False)
 
-    # ── 计算汇总统计 ──
+        meta["runs"] = [
+            {
+                "run": r.get("run"),
+                "status": r.get("status"),
+                "train_experiment_name": r.get("train_experiment_name"),
+                "train_experiment_id": r.get("train_experiment_id"),
+                "train_recorder_id": r.get("train_recorder_id"),
+                "backtest_experiment_name": r.get("backtest_experiment_name"),
+                "backtest_experiment_id": r.get("backtest_experiment_id"),
+                "backtest_recorder_id": r.get("backtest_recorder_id"),
+            }
+            for r in all_results
+        ]
+        write_json(session_dir / "meta.json", meta)
+        print(f"[Run {i}] 结果已追加写入 {session_dir / 'all_runs_results.csv'}")
+
     df = pd.DataFrame(all_results)
     success_df = df[df["status"] == "success"]
-
-    metric_cols = [c for c in df.columns if c not in ("run", "status", "error", "traceback", "train_recorder_id", "backtest_recorder_id")]
+    skip_cols = {
+        "run", "status", "error", "traceback",
+        "train_recorder_id", "backtest_recorder_id",
+        "train_experiment_id", "backtest_experiment_id",
+        "train_experiment_name", "backtest_experiment_name",
+    }
+    metric_cols = [c for c in df.columns if c not in skip_cols]
 
     summary = {
-        "total_runs": N_RUNS,
+        "session_name": session_name,
+        "note": note,
+        "total_runs": n_runs,
         "success_runs": int(len(success_df)),
-        "failed_runs": int(N_RUNS - len(success_df)),
+        "failed_runs": int(n_runs - len(success_df)),
         "elapsed_seconds": (datetime.now() - start_time).total_seconds(),
         "metrics_mean": {},
         "metrics_std": {},
         "metrics_per_run": df[["run", "status"] + metric_cols].to_dict(orient="records"),
     }
-
     for col in metric_cols:
         vals = pd.to_numeric(success_df[col], errors="coerce").dropna()
         if not vals.empty:
             summary["metrics_mean"][col] = float(vals.mean())
-            summary["metrics_std"][col] = float(vals.std())
+            summary["metrics_std"][col] = float(vals.std()) if len(vals) > 1 else 0.0
 
-    with open(SUMMARY_FILE, "w", encoding="utf-8") as f:
-        json.dump(summary, f, ensure_ascii=False, indent=2, default=str)
+    write_json(session_dir / "summary.json", summary)
+
+    index_runs = []
+    for r in all_results:
+        idx = int(r["run"])
+        row = dict(r)
+        if r.get("status") == "success":
+            row["report_href"] = f"run_{idx:02d}/report.html"
+        index_runs.append(row)
+
+    write_index_html(
+        session_dir / "index.html",
+        session_name=session_name,
+        note=note,
+        summary=summary,
+        runs=index_runs,
+    )
 
     print("\n" + "=" * 60)
     print("  全部实验完成")
     print("=" * 60)
-    print(f"  成功: {summary['success_runs']} / {N_RUNS}")
+    print(f"  成功: {summary['success_runs']} / {n_runs}")
     print(f"  总耗时: {summary['elapsed_seconds']:.1f} 秒")
+    print(f"  结果目录: {session_dir}")
+    print(f"  汇总 HTML: {session_dir / 'index.html'}")
     print(f"\n  关键指标均值:")
     for k, v in summary["metrics_mean"].items():
         std = summary["metrics_std"].get(k, float("nan"))
         print(f"    {k}: {v:.6f}  ±  {std:.6f}")
-    print(f"\n  详细结果: {RUNS_RESULT_FILE}")
-    print(f"  汇总统计: {SUMMARY_FILE}")
 
 
 if __name__ == "__main__":

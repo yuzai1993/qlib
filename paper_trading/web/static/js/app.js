@@ -2,12 +2,19 @@
 
 const API = '/api';
 let currentPage = 'dashboard';
+let currentInstance = '';
 let chartInstances = {};
 
 // ==================== Utility ====================
 
+function instanceParam() {
+    return currentInstance ? `instance=${encodeURIComponent(currentInstance)}` : '';
+}
+
 async function fetchJSON(url) {
-    const resp = await fetch(url);
+    const sep = url.includes('?') ? '&' : '?';
+    const fullUrl = currentInstance ? `${url}${sep}${instanceParam()}` : url;
+    const resp = await fetch(fullUrl);
     return resp.json();
 }
 
@@ -31,9 +38,41 @@ function colorClass(val) {
 }
 
 function disposeCharts() {
-    Object.values(chartInstances).forEach(c => c.dispose());
+    Object.values(chartInstances).forEach(c => { try { c.dispose(); } catch(e) {} });
     chartInstances = {};
 }
+
+// ==================== Instance Selector ====================
+
+async function loadInstances() {
+    try {
+        const resp = await fetch(`${API}/instances`);
+        const instances = await resp.json();
+        const sel = document.getElementById('instance-selector');
+        if (!instances.length) {
+            sel.innerHTML = '';
+            return;
+        }
+        if (instances.length === 1) {
+            currentInstance = instances[0].id;
+            sel.innerHTML = `<div class="instance-name">${instances[0].name}</div>`;
+            return;
+        }
+        const options = instances.map(i =>
+            `<option value="${i.id}" ${i.id === currentInstance ? 'selected' : ''}>${i.name}</option>`
+        ).join('');
+        sel.innerHTML = `<select id="instance-select" onchange="switchInstance(this.value)">${options}</select>`;
+        if (!currentInstance) currentInstance = instances[0].id;
+    } catch (e) {
+        console.warn('Failed to load instances', e);
+    }
+}
+
+window.switchInstance = function(id) {
+    currentInstance = id;
+    disposeCharts();
+    renderPage(currentPage);
+};
 
 // ==================== Navigation ====================
 
@@ -57,6 +96,7 @@ async function renderPage(page) {
         case 'dashboard': return renderDashboard(el);
         case 'positions': return renderPositions(el);
         case 'orders': return renderOrders(el);
+        case 'stockpnl': return renderStockPnl(el);
         case 'predictions': return renderPredictions(el);
         case 'performance': return renderPerformance(el);
         case 'system': return renderSystem(el);
@@ -199,12 +239,14 @@ function renderPnlChart(data) {
 // ==================== Positions Page ====================
 
 async function renderPositions(el) {
-    const [positions, dates] = await Promise.all([
+    const [positions, dates, summaryResp] = await Promise.all([
         fetchJSON(`${API}/positions/current`),
         fetchJSON(`${API}/positions/dates`),
+        fetchJSON(`${API}/overview`),
     ]);
 
     const dateOptions = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+    const cash = summaryResp.summary ? summaryResp.summary.cash : 0;
 
     el.innerHTML = `
         <div class="page-header"><h2>持仓管理</h2></div>
@@ -222,16 +264,20 @@ async function renderPositions(el) {
         </div>
 
         <div class="chart-container">
-            <h3>持仓分布</h3>
+            <h3>持仓分布（含现金）</h3>
             <div class="chart-box" id="chart-pie"></div>
         </div>
     `;
 
-    renderPositionTable(positions);
-    renderPieChart(positions);
+    renderPositionTable(positions, cash);
+    renderPieChart(positions, cash);
 }
 
-function renderPositionTable(data) {
+function renderPositionTable(data, cash) {
+    const totalMV = data.reduce((s, p) => s + (p.market_value || 0), 0);
+    const totalValue = totalMV + (cash || 0);
+    const cashWeight = totalValue > 0 ? cash / totalValue : 0;
+
     const tbody = data.map(p => `
         <tr>
             <td>${p.instrument}</td>
@@ -247,6 +293,21 @@ function renderPositionTable(data) {
         </tr>
     `).join('');
 
+    const cashRow = `
+        <tr class="cash-row">
+            <td>💰</td>
+            <td>现金</td>
+            <td class="text-right">—</td>
+            <td class="text-right">—</td>
+            <td class="text-right">—</td>
+            <td class="text-right">${fmt(cash, 'money')}</td>
+            <td class="text-right">—</td>
+            <td class="text-right">—</td>
+            <td class="text-right">${fmt(cashWeight, 'pct')}</td>
+            <td class="text-right">—</td>
+        </tr>
+    `;
+
     document.getElementById('pos-table-body').innerHTML = `
         <table>
             <thead><tr>
@@ -256,21 +317,32 @@ function renderPositionTable(data) {
                 <th class="text-right">盈亏%</th><th class="text-right">占比</th>
                 <th class="text-right">持有天数</th>
             </tr></thead>
-            <tbody>${tbody || '<tr><td colspan="10" style="text-align:center;color:#8b8fa3">暂无持仓</td></tr>'}</tbody>
+            <tbody>
+                ${tbody || ''}
+                ${cashRow}
+                ${!tbody && !cash ? '<tr><td colspan="10" style="text-align:center;color:#8b8fa3">暂无持仓</td></tr>' : ''}
+            </tbody>
         </table>
     `;
 }
 
-function renderPieChart(data) {
-    if (!data.length) return;
+function renderPieChart(data, cash) {
     const chart = echarts.init(document.getElementById('chart-pie'));
     chartInstances['pie'] = chart;
+
+    const pieData = data.map(p => ({ name: (p.name || p.instrument), value: p.market_value || 0 }));
+    if (cash > 0) {
+        pieData.push({ name: '现金', value: cash, itemStyle: { color: '#64748b' } });
+    }
+
+    if (!pieData.length) return;
+
     chart.setOption({
         tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
         series: [{
             type: 'pie', radius: ['40%', '70%'],
             label: { color: '#8b8fa3', fontSize: 12 },
-            data: data.map(p => ({ name: (p.name || p.instrument), value: p.market_value })),
+            data: pieData,
         }]
     });
 }
@@ -278,10 +350,14 @@ function renderPieChart(data) {
 window.loadPositions = async function() {
     const date = document.getElementById('pos-date').value;
     const url = date ? `${API}/positions?date=${date}` : `${API}/positions/current`;
-    const data = await fetchJSON(url);
-    renderPositionTable(data);
+    const [data, summaryResp] = await Promise.all([
+        fetchJSON(url),
+        fetchJSON(`${API}/overview`),
+    ]);
+    const cash = summaryResp.summary ? summaryResp.summary.cash : 0;
+    renderPositionTable(data, cash);
     disposeCharts();
-    renderPieChart(data);
+    renderPieChart(data, cash);
 };
 
 // ==================== Orders Page ====================
@@ -345,24 +421,288 @@ window.loadOrders = async function() {
     `;
 };
 
-// ==================== Predictions Page ====================
+// ==================== Stock P&L Page ====================
 
-async function renderPredictions(el) {
-    const data = await fetchJSON(`${API}/predictions`);
+let stockPnlData = [];
+let stockPnlSortCol = 'total_pnl';
+let stockPnlSortDir = 'desc';
+
+async function renderStockPnl(el) {
+    stockPnlData = await fetchJSON(`${API}/stock-pnl`);
 
     el.innerHTML = `
-        <div class="page-header"><h2>预测信号</h2></div>
+        <div class="page-header"><h2>个股盈亏</h2></div>
+        <div class="card-grid" id="stockpnl-summary"></div>
         <div class="table-container">
-            <h3>最新预测排名 (${data.length > 0 ? data[0].date : '—'})</h3>
-            <div id="pred-table-body"></div>
+            <div id="stockpnl-table-body"><div class="loading">加载中...</div></div>
         </div>
     `;
 
-    const tbody = data.slice(0, 50).map(p => `
+    renderStockPnlSummary();
+    renderStockPnlTable();
+}
+
+function renderStockPnlSummary() {
+    const data = stockPnlData;
+    if (!data.length) return;
+
+    const totalPnl = data.reduce((s, d) => s + (d.total_pnl || 0), 0);
+    const totalCommission = data.reduce((s, d) => s + (d.total_commission || 0), 0);
+    const totalRealized = data.reduce((s, d) => s + (d.realized_pnl || 0), 0);
+    const totalUnrealized = data.reduce((s, d) => s + (d.unrealized_pnl || 0), 0);
+    const winners = data.filter(d => d.total_pnl > 0).length;
+    const losers = data.filter(d => d.total_pnl < 0).length;
+
+    document.getElementById('stockpnl-summary').innerHTML = `
+        <div class="card">
+            <div class="card-label">总盈亏</div>
+            <div class="card-value ${colorClass(totalPnl)}">${fmt(totalPnl, 'money')}</div>
+        </div>
+        <div class="card">
+            <div class="card-label">已实现盈亏</div>
+            <div class="card-value ${colorClass(totalRealized)}">${fmt(totalRealized, 'money')}</div>
+        </div>
+        <div class="card">
+            <div class="card-label">未实现盈亏</div>
+            <div class="card-value ${colorClass(totalUnrealized)}">${fmt(totalUnrealized, 'money')}</div>
+        </div>
+        <div class="card">
+            <div class="card-label">总佣金</div>
+            <div class="card-value">${fmt(totalCommission, 'money')}</div>
+        </div>
+        <div class="card">
+            <div class="card-label">交易标的数</div>
+            <div class="card-value">${data.length}</div>
+        </div>
+        <div class="card">
+            <div class="card-label">盈利 / 亏损</div>
+            <div class="card-value"><span class="positive">${winners}</span> / <span class="negative">${losers}</span></div>
+        </div>
+    `;
+}
+
+function renderStockPnlTable() {
+    const data = [...stockPnlData];
+    data.sort((a, b) => {
+        let va = a[stockPnlSortCol] || 0, vb = b[stockPnlSortCol] || 0;
+        if (typeof va === 'string') va = va.toLowerCase();
+        if (typeof vb === 'string') vb = vb.toLowerCase();
+        if (va < vb) return stockPnlSortDir === 'asc' ? -1 : 1;
+        if (va > vb) return stockPnlSortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    function sortIcon(col) {
+        if (stockPnlSortCol !== col) return '';
+        return stockPnlSortDir === 'asc' ? ' ▲' : ' ▼';
+    }
+
+    const tbody = data.map(d => `
+        <tr>
+            <td>${d.instrument}</td>
+            <td>${d.name || ''}</td>
+            <td><span class="tag ${d.status === '持有中' ? 'tag-filled' : 'tag-rejected'}">${d.status}</span></td>
+            <td class="text-right">${fmt(d.total_buy_amount, 'money')}</td>
+            <td class="text-right">${fmt(d.total_sell_amount, 'money')}</td>
+            <td class="text-right">${fmt(d.total_commission, 'money')}</td>
+            <td class="text-right ${colorClass(d.realized_pnl)}"><b>${fmt(d.realized_pnl, 'money')}</b></td>
+            <td class="text-right ${colorClass(d.unrealized_pnl)}"><b>${fmt(d.unrealized_pnl, 'money')}</b></td>
+            <td class="text-right ${colorClass(d.total_pnl)}"><b>${fmt(d.total_pnl, 'money')}</b></td>
+            <td class="text-right ${colorClass(d.return_rate)}"><b>${fmt(d.return_rate, 'pct_sign')}</b></td>
+            <td class="text-right">${d.trade_days || 0}</td>
+            <td>${d.first_trade_date || ''}</td>
+            <td>${d.last_trade_date || ''}</td>
+        </tr>
+    `).join('');
+
+    document.getElementById('stockpnl-table-body').innerHTML = `
+        <table>
+            <thead><tr>
+                <th class="sortable" data-col="instrument">代码${sortIcon('instrument')}</th>
+                <th>名称</th>
+                <th>状态</th>
+                <th class="text-right sortable" data-col="total_buy_amount">买入总额${sortIcon('total_buy_amount')}</th>
+                <th class="text-right sortable" data-col="total_sell_amount">卖出总额${sortIcon('total_sell_amount')}</th>
+                <th class="text-right sortable" data-col="total_commission">佣金${sortIcon('total_commission')}</th>
+                <th class="text-right sortable" data-col="realized_pnl">已实现盈亏${sortIcon('realized_pnl')}</th>
+                <th class="text-right sortable" data-col="unrealized_pnl">未实现盈亏${sortIcon('unrealized_pnl')}</th>
+                <th class="text-right sortable" data-col="total_pnl">总盈亏${sortIcon('total_pnl')}</th>
+                <th class="text-right sortable" data-col="return_rate">收益率${sortIcon('return_rate')}</th>
+                <th class="text-right sortable" data-col="trade_days">交易天数${sortIcon('trade_days')}</th>
+                <th>首次交易</th>
+                <th>最近交易</th>
+            </tr></thead>
+            <tbody>${tbody || '<tr><td colspan="13" style="text-align:center;color:#8b8fa3">暂无交易数据</td></tr>'}</tbody>
+        </table>
+    `;
+
+    document.querySelectorAll('#stockpnl-table-body .sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (stockPnlSortCol === col) {
+                stockPnlSortDir = stockPnlSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                stockPnlSortCol = col;
+                stockPnlSortDir = 'desc';
+            }
+            renderStockPnlTable();
+        });
+    });
+}
+
+// ==================== Predictions Page ====================
+
+let predStockList = [];
+let predCurrentPage = 0;
+let predSortBy = 'rank';
+let predSortOrder = 'asc';
+const PRED_PAGE_SIZE = 50;
+
+async function renderPredictions(el) {
+    const [datesData, instrumentsData] = await Promise.all([
+        fetchJSON(`${API}/predictions/dates`),
+        fetchJSON(`${API}/predictions/instruments`),
+    ]);
+
+    predStockList = instrumentsData || [];
+    predCurrentPage = 0;
+
+    const dateOptions = (datesData || []).map(d => `<option value="${d}">${d}</option>`).join('');
+
+    el.innerHTML = `
+        <div class="page-header"><h2>预测信号</h2></div>
+
+        <div class="table-container">
+            <div class="filters">
+                <label>日期:</label>
+                <select id="pred-date">
+                    <option value="">最新</option>
+                    ${dateOptions}
+                </select>
+                <label>股票代码:</label>
+                <div class="autocomplete-wrap">
+                    <input type="text" id="pred-instrument" placeholder="如 SH600000" autocomplete="off">
+                    <div class="autocomplete-list" id="pred-instrument-ac"></div>
+                </div>
+                <label>股票名称:</label>
+                <div class="autocomplete-wrap">
+                    <input type="text" id="pred-name" placeholder="如 浦发银行" autocomplete="off">
+                    <div class="autocomplete-list" id="pred-name-ac"></div>
+                </div>
+                <button onclick="searchPredictions(0)">查询</button>
+            </div>
+            <div id="pred-info" style="padding:8px 20px;color:var(--text-muted);font-size:13px;"></div>
+            <div id="pred-table-body"><div class="loading">加载中...</div></div>
+            <div class="pagination" id="pred-pagination"></div>
+        </div>
+
+        <div class="chart-container">
+            <h3>天级预测信号均值</h3>
+            <div class="filters" style="border:none;padding:8px 0;">
+                <label>筛选股票:</label>
+                <div class="autocomplete-wrap" style="min-width:300px;">
+                    <input type="text" id="mean-instruments" placeholder="输入代码/名称搜索，多只用逗号分隔" autocomplete="off" style="width:100%">
+                    <div class="autocomplete-list" id="mean-instruments-ac"></div>
+                </div>
+                <button onclick="loadDailyMean()">刷新</button>
+            </div>
+            <div class="chart-box" id="chart-daily-mean"></div>
+        </div>
+    `;
+
+    setupAutocomplete('pred-instrument', 'pred-instrument-ac', 'instrument');
+    setupAutocomplete('pred-name', 'pred-name-ac', 'name');
+    setupAutocomplete('mean-instruments', 'mean-instruments-ac', 'both');
+
+    await Promise.all([
+        searchPredictions(0),
+        loadDailyMean(),
+    ]);
+}
+
+function setupAutocomplete(inputId, listId, mode) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+    if (!input || !list) return;
+
+    let debounceTimer;
+    input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const val = input.value.trim().toLowerCase();
+            if (!val || val.length < 1) { list.innerHTML = ''; list.style.display = 'none'; return; }
+
+            const lastPart = val.includes(',') ? val.split(',').pop().trim() : val;
+            if (!lastPart) { list.innerHTML = ''; list.style.display = 'none'; return; }
+
+            const matches = predStockList.filter(s => {
+                if (mode === 'instrument') return s.instrument && s.instrument.toLowerCase().includes(lastPart);
+                if (mode === 'name') return s.name && s.name.toLowerCase().includes(lastPart);
+                return (s.instrument && s.instrument.toLowerCase().includes(lastPart)) ||
+                       (s.name && s.name.toLowerCase().includes(lastPart));
+            }).slice(0, 10);
+
+            if (!matches.length) { list.innerHTML = ''; list.style.display = 'none'; return; }
+
+            list.innerHTML = matches.map(s =>
+                `<div class="ac-item" data-instrument="${s.instrument}" data-name="${s.name || ''}">${s.instrument} ${s.name || ''}</div>`
+            ).join('');
+            list.style.display = 'block';
+
+            list.querySelectorAll('.ac-item').forEach(item => {
+                item.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    const selected = mode === 'name' ? item.dataset.name : item.dataset.instrument;
+                    if (val.includes(',')) {
+                        const parts = input.value.split(',');
+                        parts[parts.length - 1] = selected;
+                        input.value = parts.join(',') + ',';
+                    } else {
+                        input.value = selected;
+                    }
+                    list.innerHTML = '';
+                    list.style.display = 'none';
+                });
+            });
+        }, 200);
+    });
+
+    input.addEventListener('blur', () => {
+        setTimeout(() => { list.innerHTML = ''; list.style.display = 'none'; }, 200);
+    });
+}
+
+window.searchPredictions = async function(page) {
+    predCurrentPage = page || 0;
+    const date = document.getElementById('pred-date').value;
+    const instrument = document.getElementById('pred-instrument').value.trim();
+    const name = document.getElementById('pred-name').value.trim();
+    const offset = predCurrentPage * PRED_PAGE_SIZE;
+
+    let url = `${API}/predictions?limit=${PRED_PAGE_SIZE}&offset=${offset}`;
+    url += `&sort_by=${predSortBy}&sort_order=${predSortOrder}`;
+    if (date) url += `&date=${date}`;
+    if (instrument) url += `&instrument=${encodeURIComponent(instrument)}`;
+    if (name) url += `&name=${encodeURIComponent(name)}`;
+
+    const result = await fetchJSON(url);
+    const data = result.data || [];
+    const total = result.total || 0;
+
+    document.getElementById('pred-info').textContent =
+        `共 ${total} 条记录，显示第 ${offset + 1} - ${Math.min(offset + PRED_PAGE_SIZE, total)} 条`;
+
+    function predSortIcon(col) {
+        if (predSortBy !== col) return '';
+        return predSortOrder === 'asc' ? ' ▲' : ' ▼';
+    }
+
+    const tbody = data.map(p => `
         <tr>
             <td class="text-center">${p.rank}</td>
             <td>${p.instrument}</td>
             <td>${p.name || ''}</td>
+            <td>${p.date}</td>
             <td class="text-right">${Number(p.score).toFixed(6)}</td>
         </tr>
     `).join('');
@@ -370,26 +710,103 @@ async function renderPredictions(el) {
     document.getElementById('pred-table-body').innerHTML = `
         <table>
             <thead><tr>
-                <th class="text-center">排名</th><th>代码</th><th>名称</th>
-                <th class="text-right">预测分数</th>
+                <th class="text-center sortable" data-sortcol="rank">排名${predSortIcon('rank')}</th>
+                <th class="sortable" data-sortcol="instrument">代码${predSortIcon('instrument')}</th>
+                <th>名称</th>
+                <th>日期</th>
+                <th class="text-right sortable" data-sortcol="score">预测分数${predSortIcon('score')}</th>
             </tr></thead>
-            <tbody>${tbody || '<tr><td colspan="4" style="text-align:center;color:#8b8fa3">暂无预测数据</td></tr>'}</tbody>
+            <tbody>${tbody || '<tr><td colspan="5" style="text-align:center;color:#8b8fa3">暂无预测数据</td></tr>'}</tbody>
         </table>
     `;
-}
+
+    document.querySelectorAll('#pred-table-body .sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.sortcol;
+            if (predSortBy === col) {
+                predSortOrder = predSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                predSortBy = col;
+                predSortOrder = col === 'score' ? 'desc' : 'asc';
+            }
+            searchPredictions(0);
+        });
+    });
+
+    const totalPages = Math.ceil(total / PRED_PAGE_SIZE);
+    let pagHtml = '';
+    if (totalPages > 1) {
+        if (predCurrentPage > 0) pagHtml += `<button onclick="searchPredictions(${predCurrentPage - 1})">上一页</button>`;
+        pagHtml += `<span>第 ${predCurrentPage + 1} / ${totalPages} 页</span>`;
+        if (predCurrentPage < totalPages - 1) pagHtml += `<button onclick="searchPredictions(${predCurrentPage + 1})">下一页</button>`;
+    }
+    document.getElementById('pred-pagination').innerHTML = pagHtml;
+};
+
+window.loadDailyMean = async function() {
+    const instrumentsInput = document.getElementById('mean-instruments');
+    const val = instrumentsInput ? instrumentsInput.value.trim() : '';
+    let url = `${API}/predictions/daily-mean`;
+    if (val) {
+        const codes = val.split(',').map(s => s.trim()).filter(Boolean);
+        if (codes.length) url += `?instruments=${encodeURIComponent(codes.join(','))}`;
+    }
+
+    const data = await fetchJSON(url);
+
+    const container = document.getElementById('chart-daily-mean');
+    if (!container) return;
+    if (chartInstances['dailyMean']) {
+        try { chartInstances['dailyMean'].dispose(); } catch(e) {}
+    }
+
+    if (!data.length) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">暂无数据</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+    const chart = echarts.init(container);
+    chartInstances['dailyMean'] = chart;
+    chart.setOption({
+        tooltip: { trigger: 'axis', formatter: p => `${p[0].name}<br/>均值: ${Number(p[0].value).toFixed(6)}` },
+        grid: { left: 80, right: 20, top: 20, bottom: 40 },
+        xAxis: { type: 'category', data: data.map(d => d.date), axisLabel: { color: '#8b8fa3' }, axisLine: { lineStyle: { color: '#2a2e45' }} },
+        yAxis: { type: 'value', axisLabel: { color: '#8b8fa3' }, splitLine: { lineStyle: { color: '#2a2e45' } } },
+        series: [{
+            type: 'line', data: data.map(d => d.mean_score), smooth: true, showSymbol: false,
+            lineStyle: { color: '#6366f1', width: 2 }, itemStyle: { color: '#6366f1' },
+            areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{offset:0,color:'rgba(99,102,241,0.2)'},{offset:1,color:'rgba(99,102,241,0)'}] } },
+        }]
+    });
+};
 
 // ==================== Performance Page ====================
 
 async function renderPerformance(el) {
-    const [perf, monthly] = await Promise.all([
+    const [perf, monthly, yearly, daily] = await Promise.all([
         fetchJSON(`${API}/performance`),
         fetchJSON(`${API}/performance/monthly`),
+        fetchJSON(`${API}/performance/yearly`),
+        fetchJSON(`${API}/performance/daily`),
     ]);
 
     if (!perf || !perf.cumulative_return) {
         el.innerHTML = '<div class="loading">暂无足够数据生成绩效报告</div>';
         return;
     }
+
+    const yearlyRows = (yearly || []).map(y => `
+        <tr>
+            <td>${y.year}</td>
+            <td class="text-right ${colorClass(y.return)}">${fmt(y.return, 'pct_sign')}</td>
+            <td class="text-right">${y.trading_days}</td>
+            <td class="text-right">${fmt(y.win_rate, 'pct')}</td>
+            <td class="text-right negative">${fmt(y.max_drawdown, 'pct')}</td>
+            <td class="text-right">${fmt(y.start_value, 'money')}</td>
+            <td class="text-right">${fmt(y.end_value, 'money')}</td>
+        </tr>
+    `).join('');
 
     el.innerHTML = `
         <div class="page-header"><h2>绩效分析</h2></div>
@@ -408,11 +825,54 @@ async function renderPerformance(el) {
             <div class="perf-item"><span class="label">最终资产</span><span class="value">${fmt(perf.final_value, 'money')}</span></div>
         </div>
 
+        ${yearlyRows ? `
+        <div class="table-container">
+            <h3>年度绩效</h3>
+            <table>
+                <thead><tr>
+                    <th>年份</th><th class="text-right">收益率</th><th class="text-right">交易天数</th>
+                    <th class="text-right">胜率</th><th class="text-right">最大回撤</th>
+                    <th class="text-right">期初资产</th><th class="text-right">期末资产</th>
+                </tr></thead>
+                <tbody>${yearlyRows}</tbody>
+            </table>
+        </div>
+        ` : ''}
+
+        <div class="table-container">
+            <h3>日度绩效明细</h3>
+            <div style="max-height:400px;overflow-y:auto;">
+                <table>
+                    <thead><tr>
+                        <th>日期</th><th class="text-right">日收益</th><th class="text-right">累计收益</th>
+                        <th class="text-right">总资产</th><th class="text-right">基准日收益</th>
+                        <th class="text-right">基准累计</th><th class="text-right">超额收益</th>
+                    </tr></thead>
+                    <tbody id="daily-perf-body"></tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="chart-container">
             <h3>月度收益</h3>
             <div class="chart-box" id="chart-monthly"></div>
         </div>
     `;
+
+    if (daily && daily.length) {
+        const dailyTbody = daily.slice().reverse().map(d => `
+            <tr>
+                <td>${d.date}</td>
+                <td class="text-right ${colorClass(d.daily_return)}">${fmt(d.daily_return, 'pct_sign')}</td>
+                <td class="text-right ${colorClass(d.cumulative_return)}">${fmt(d.cumulative_return, 'pct_sign')}</td>
+                <td class="text-right">${fmt(d.total_value, 'money')}</td>
+                <td class="text-right ${colorClass(d.benchmark_return)}">${fmt(d.benchmark_return, 'pct_sign')}</td>
+                <td class="text-right ${colorClass(d.benchmark_cumulative_return)}">${fmt(d.benchmark_cumulative_return, 'pct_sign')}</td>
+                <td class="text-right ${colorClass(d.excess_return)}">${fmt(d.excess_return, 'pct_sign')}</td>
+            </tr>
+        `).join('');
+        document.getElementById('daily-perf-body').innerHTML = dailyTbody;
+    }
 
     if (monthly.length > 0) renderMonthlyChart(monthly);
 }
@@ -489,8 +949,13 @@ async function renderSystem(el) {
 }
 
 // ==================== Init ====================
-renderPage('dashboard');
+
+async function init() {
+    await loadInstances();
+    renderPage('dashboard');
+}
+init();
 
 window.addEventListener('resize', () => {
-    Object.values(chartInstances).forEach(c => c.resize());
+    Object.values(chartInstances).forEach(c => { try { c.resize(); } catch(e) {} });
 });

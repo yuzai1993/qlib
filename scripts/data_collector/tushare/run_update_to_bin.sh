@@ -94,8 +94,7 @@ NORMALIZE_DIR="scripts/data_collector/tushare/normalize"
   exit $status
 }
 
-# 指数成分改由 csindex_v2（300/500/1000）+ 聚宽（2000 + 交叉校验）日更
-# 失败只告警，不阻断个股更新成功状态
+# 指数成分由 csindex_v2 日更：公告增量 + 官网四指数成分快照（不再使用聚宽）
 echo "===== index instruments daily update ====="
 if /opt/anaconda3/envs/qlib/bin/python -m scripts.data_collector.update_indices_daily; then
   echo "index instruments update OK"

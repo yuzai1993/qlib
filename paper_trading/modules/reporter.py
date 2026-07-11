@@ -117,8 +117,13 @@ class Reporter:
         annual_factor = 252 / n_days if n_days > 0 else 0
         annualized_return = (1 + cumulative_return) ** annual_factor - 1 if annual_factor > 0 else 0
 
-        peak = total_value.expanding().max()
-        drawdown = (total_value - peak) / peak
+        # Max drawdown: include initial_cash as the starting point
+        values_with_init = pd.concat([
+            pd.Series([self.initial_cash]),
+            total_value.reset_index(drop=True)
+        ]).reset_index(drop=True)
+        peak = values_with_init.expanding().max()
+        drawdown = (values_with_init - peak) / peak
         max_drawdown = drawdown.min()
 
         rf_daily = 0.03 / 252
@@ -163,6 +168,68 @@ class Reporter:
             "benchmark_cumulative_return": df["benchmark_cumulative_return"].iloc[-1],
             "excess_return": df["excess_return"].iloc[-1],
         }
+
+    def daily_returns(self, start: str = None, end: str = None) -> list[dict]:
+        """Calculate daily performance metrics for each trading day."""
+        df = self.recorder.get_account_summary(start=start, end=end)
+        if df.empty:
+            return []
+
+        results = []
+        for _, row in df.iterrows():
+            results.append({
+                "date": row["date"],
+                "daily_return": _f(row["daily_return"]),
+                "cumulative_return": _f(row["cumulative_return"]),
+                "total_value": _f(row["total_value"]),
+                "benchmark_return": _f(row["benchmark_return"]),
+                "benchmark_cumulative_return": _f(row["benchmark_cumulative_return"]),
+                "excess_return": _f(row["excess_return"]),
+            })
+        return results
+
+    def yearly_returns(self, start: str = None, end: str = None) -> list[dict]:
+        """Calculate yearly performance metrics."""
+        df = self.recorder.get_account_summary(start=start, end=end)
+        if df.empty:
+            return []
+
+        df["date"] = pd.to_datetime(df["date"])
+        df["year"] = df["date"].dt.year
+
+        yearly = []
+        for year, group in df.groupby("year"):
+            start_val = group["total_value"].iloc[0]
+            end_val = group["total_value"].iloc[-1]
+            prev_rows = df[df["date"] < group["date"].iloc[0]]
+            base_val = prev_rows["total_value"].iloc[-1] if not prev_rows.empty else self.initial_cash
+
+            year_return = (end_val - base_val) / base_val
+            n_days = len(group)
+
+            year_returns = group["daily_return"].dropna()
+            year_win_days = (year_returns > 0).sum()
+            year_total_days = (year_returns != 0).sum()
+            year_win_rate = year_win_days / year_total_days if year_total_days > 0 else 0
+
+            values_with_base = pd.concat([
+                pd.Series([base_val]),
+                group["total_value"].reset_index(drop=True)
+            ]).reset_index(drop=True)
+            peak = values_with_base.expanding().max()
+            drawdown = (values_with_base - peak) / peak
+            year_max_drawdown = drawdown.min()
+
+            yearly.append({
+                "year": int(year),
+                "return": year_return,
+                "trading_days": n_days,
+                "win_rate": year_win_rate,
+                "max_drawdown": year_max_drawdown,
+                "start_value": base_val,
+                "end_value": end_val,
+            })
+        return yearly
 
     def monthly_returns(self, start: str = None, end: str = None) -> list[dict]:
         """Calculate monthly returns for heatmap."""

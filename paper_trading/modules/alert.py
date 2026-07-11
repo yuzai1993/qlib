@@ -21,6 +21,7 @@ class AlertManager:
         self.daily_loss_threshold = alert_cfg.get("daily_loss_threshold", -0.03)
         self.max_drawdown_threshold = alert_cfg.get("max_drawdown_threshold", -0.10)
         self.consecutive_loss_days = alert_cfg.get("consecutive_loss_days", 5)
+        self.initial_cash = config.get("paper_trading", {}).get("initial_cash", 1000000)
         self.recorder = recorder
 
     def check_alerts(self, date_str: str, summary: dict) -> list[str]:
@@ -37,9 +38,13 @@ class AlertManager:
         df = self.recorder.get_account_summary()
         df = df[df["date"] != "init"]
         if not df.empty:
-            total_value = df["total_value"]
-            peak = total_value.expanding().max()
-            drawdown = ((total_value - peak) / peak).min()
+            import pandas as pd
+            values_with_init = pd.concat([
+                pd.Series([self.initial_cash]),
+                df["total_value"].reset_index(drop=True)
+            ]).reset_index(drop=True)
+            peak = values_with_init.expanding().max()
+            drawdown = ((values_with_init - peak) / peak).min()
             if drawdown < self.max_drawdown_threshold:
                 alerts.append(
                     f"[最大回撤告警] {date_str}: 最大回撤 {drawdown*100:.2f}% "
@@ -67,9 +72,10 @@ class AlertManager:
         """Send alert email. Fails silently if SMTP is not configured."""
         try:
             smtp_host = os.environ.get("SMTP_HOST", "smtp.126.com")
-            smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+            smtp_port = int(os.environ.get("SMTP_PORT", "465"))
             smtp_user = os.environ.get("SMTP_USER", "xqyu1993@126.com")
             smtp_pass = os.environ.get("SMTP_PASS", "Yxq199304203615$")
+            use_ssl = os.environ.get("SMTP_SSL", "1") != "0"
 
             if not smtp_host or not smtp_user:
                 logger.warning("SMTP not configured, skipping email alert")
@@ -81,10 +87,15 @@ class AlertManager:
             msg["From"] = smtp_user
             msg["To"] = self.email
 
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
-                server.starttls()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, [self.email], msg.as_string())
+            if use_ssl:
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30) as server:
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, [self.email], msg.as_string())
+            else:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, [self.email], msg.as_string())
             logger.info("Alert email sent to %s", self.email)
         except Exception as e:
             logger.error("Failed to send alert email: %s", e)

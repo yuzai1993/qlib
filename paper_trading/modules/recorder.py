@@ -322,6 +322,102 @@ class Recorder:
         with self._conn() as conn:
             return pd.read_sql_query(query, conn, params=params)
 
+    def get_predictions_search(self, date_str: str = None,
+                               instrument: str = None,
+                               name: str = None,
+                               sort_by: str = "rank",
+                               sort_order: str = "asc",
+                               limit: int = 300, offset: int = 0) -> tuple[list[dict], int]:
+        """Search predictions with filters, returns (records, total_count)."""
+        base_where = []
+        params = []
+
+        if date_str:
+            base_where.append("p.date = ?")
+            params.append(date_str)
+        else:
+            base_where.append("p.date = (SELECT MAX(date) FROM predictions)")
+
+        if instrument:
+            base_where.append("p.instrument LIKE ?")
+            params.append(f"%{instrument.upper()}%")
+
+        if name:
+            base_where.append("s.name LIKE ?")
+            params.append(f"%{name}%")
+
+        where_clause = " AND ".join(base_where) if base_where else "1=1"
+
+        allowed_sort = {"rank": "p.rank", "score": "p.score", "instrument": "p.instrument"}
+        order_col = allowed_sort.get(sort_by, "p.rank")
+        order_dir = "DESC" if sort_order.lower() == "desc" else "ASC"
+
+        count_query = f"""
+            SELECT COUNT(*) as cnt FROM predictions p
+            LEFT JOIN stock_names s ON p.instrument = s.instrument
+            WHERE {where_clause}
+        """
+
+        data_query = f"""
+            SELECT p.*, s.name FROM predictions p
+            LEFT JOIN stock_names s ON p.instrument = s.instrument
+            WHERE {where_clause}
+            ORDER BY {order_col} {order_dir}
+            LIMIT ? OFFSET ?
+        """
+
+        with self._conn() as conn:
+            count_row = conn.execute(count_query, params).fetchone()
+            total = count_row["cnt"] if count_row else 0
+
+            data_params = params + [limit, offset]
+            rows = conn.execute(data_query, data_params).fetchall()
+            records = [dict(r) for r in rows]
+
+        return records, total
+
+    def get_prediction_dates(self) -> list[str]:
+        """Return all distinct prediction dates."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT date FROM predictions ORDER BY date DESC"
+            ).fetchall()
+            return [r["date"] for r in rows]
+
+    def get_prediction_daily_mean(self, instruments: list[str] = None) -> list[dict]:
+        """Get daily mean prediction score, optionally filtered by instruments."""
+        if instruments:
+            placeholders = ",".join("?" for _ in instruments)
+            query = f"""
+                SELECT date, AVG(score) as mean_score, COUNT(*) as count
+                FROM predictions
+                WHERE instrument IN ({placeholders})
+                GROUP BY date ORDER BY date
+            """
+            params = instruments
+        else:
+            query = """
+                SELECT date, AVG(score) as mean_score, COUNT(*) as count
+                FROM predictions
+                GROUP BY date ORDER BY date
+            """
+            params = []
+        with self._conn() as conn:
+            rows = conn.execute(query, params).fetchall()
+            return [dict(r) for r in rows]
+
+    def get_prediction_instrument_list(self) -> list[dict]:
+        """Get all instruments that have prediction data, with names."""
+        query = """
+            SELECT DISTINCT p.instrument, s.name
+            FROM predictions p
+            LEFT JOIN stock_names s ON p.instrument = s.instrument
+            ORDER BY p.instrument
+        """
+        with self._conn() as conn:
+            rows = conn.execute(query).fetchall()
+            return [dict(r) for r in rows]
+
     def get_latest_prediction_scores(self) -> Optional[pd.Series]:
         """Return the latest prediction as Series {instrument: score}."""
         with self._conn() as conn:
@@ -360,6 +456,14 @@ class Recorder:
             rows = conn.execute("SELECT instrument, name FROM stock_names").fetchall()
             return {r["instrument"]: r["name"] for r in rows}
 
+    def get_stock_names_list(self) -> list[dict]:
+        """Return list of {instrument, name} for autocomplete."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT instrument, name FROM stock_names ORDER BY instrument"
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     def get_stock_names_updated_at(self) -> Optional[str]:
         with self._conn() as conn:
             row = conn.execute("SELECT MAX(updated_at) as t FROM stock_names").fetchone()
@@ -390,6 +494,79 @@ class Recorder:
             conn.execute("DELETE FROM positions WHERE date = ?", (date_str,))
             conn.execute("DELETE FROM orders WHERE date = ?", (date_str,))
             conn.execute("DELETE FROM trade_summary WHERE date = ?", (date_str,))
+
+    def get_stock_pnl_summary(self) -> list[dict]:
+        """Aggregate per-stock P&L from all filled orders.
+
+        For each instrument that was ever traded:
+        - total buy amount, total sell amount, total commission
+        - realized P&L = sell_amount - buy_amount - commission (for closed portion)
+        - if still held, unrealized P&L from latest position snapshot
+        - total P&L = realized + unrealized
+        """
+        with self._conn() as conn:
+            rows = conn.execute("""
+                SELECT
+                    o.instrument,
+                    s.name,
+                    SUM(CASE WHEN o.direction='BUY'  AND o.status IN ('FILLED','PARTIAL') THEN o.amount ELSE 0 END) AS total_buy_amount,
+                    SUM(CASE WHEN o.direction='SELL'  AND o.status IN ('FILLED','PARTIAL') THEN o.amount ELSE 0 END) AS total_sell_amount,
+                    SUM(CASE WHEN o.direction='BUY'  AND o.status IN ('FILLED','PARTIAL') THEN o.filled_shares ELSE 0 END) AS total_buy_shares,
+                    SUM(CASE WHEN o.direction='SELL'  AND o.status IN ('FILLED','PARTIAL') THEN o.filled_shares ELSE 0 END) AS total_sell_shares,
+                    SUM(CASE WHEN o.status IN ('FILLED','PARTIAL') THEN o.commission ELSE 0 END) AS total_commission,
+                    COUNT(DISTINCT o.date) AS trade_days,
+                    MIN(o.date) AS first_trade_date,
+                    MAX(o.date) AS last_trade_date
+                FROM orders o
+                LEFT JOIN stock_names s ON o.instrument = s.instrument
+                GROUP BY o.instrument
+                ORDER BY o.instrument
+            """).fetchall()
+
+            latest_pos = {}
+            pos_rows = conn.execute("""
+                SELECT instrument, shares, current_price, cost_price, market_value, profit
+                FROM positions
+                WHERE date = (SELECT MAX(date) FROM positions)
+            """).fetchall()
+            for pr in pos_rows:
+                latest_pos[pr["instrument"]] = dict(pr)
+
+        results = []
+        for r in rows:
+            d = dict(r)
+            inst = d["instrument"]
+            buy_amt = d["total_buy_amount"] or 0
+            sell_amt = d["total_sell_amount"] or 0
+            commission = d["total_commission"] or 0
+
+            pos = latest_pos.get(inst)
+            if pos and pos["shares"] and pos["shares"] > 0:
+                d["holding_shares"] = pos["shares"]
+                d["holding_market_value"] = pos["market_value"] or 0
+                d["unrealized_pnl"] = pos["profit"] or 0
+                d["status"] = "持有中"
+            else:
+                d["holding_shares"] = 0
+                d["holding_market_value"] = 0
+                d["unrealized_pnl"] = 0
+                d["status"] = "已清仓"
+
+            d["realized_pnl"] = sell_amt - buy_amt + d["holding_market_value"] - commission
+            if d["holding_shares"] > 0:
+                closed_sell = sell_amt
+                closed_buy_portion = buy_amt - (d["holding_market_value"] - d["unrealized_pnl"]) if buy_amt > 0 else 0
+                d["realized_pnl"] = closed_sell - closed_buy_portion - commission
+                d["total_pnl"] = d["realized_pnl"] + d["unrealized_pnl"]
+            else:
+                d["realized_pnl"] = sell_amt - buy_amt - commission
+                d["total_pnl"] = d["realized_pnl"]
+
+            d["total_cost"] = buy_amt + commission
+            d["return_rate"] = d["total_pnl"] / buy_amt if buy_amt > 0 else 0
+
+            results.append(d)
+        return results
 
     def export_table(self, table: str, output_path: str):
         with self._conn() as conn:

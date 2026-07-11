@@ -1,0 +1,7 @@
+jqdatasdk>=1.8.0
+pandas>=1.5.0
+pyarrow>=10.0.0        # parquet 支持
+loguru>=0.6.0
+fire>=0.5.0
+openpyxl>=3.0.0        # 解析 .xlsx 旧缓存
+xlrd>=2.0.0            # 解析 .xls 旧缓存（xlrd 只支持 xls，>=2.0 不支持 xlsx）

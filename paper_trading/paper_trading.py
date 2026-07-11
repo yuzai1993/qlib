@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Paper trading system - main CLI entry point."""
+"""Paper trading system - main CLI entry point.
+
+Supports multiple paper trading instances via --config flag.
+Each instance has its own config file under configs/ directory.
+"""
 
 import argparse
 import logging
@@ -18,11 +22,50 @@ logger = logging.getLogger("paper_trading")
 
 os.environ["TUSHARE_TOKEN"] = "e7afca7966f571c3a526d94543b99198ccc06539325a065d03377a93"
 
+CONFIGS_DIR = Path(__file__).parent / "configs"
 
-def load_config() -> dict:
-    config_path = Path(__file__).parent / "config.yaml"
+
+def list_instances() -> list[dict]:
+    """List all available paper trading instances."""
+    instances = []
+    if not CONFIGS_DIR.exists():
+        return instances
+    for f in sorted(CONFIGS_DIR.glob("*.yaml")):
+        try:
+            with open(f) as fh:
+                cfg = yaml.safe_load(fh)
+            instances.append({
+                "id": f.stem,
+                "name": cfg.get("paper_trading", {}).get("name", f.stem),
+                "config_file": str(f),
+            })
+        except Exception:
+            continue
+    return instances
+
+
+def load_config(config_id: str = None) -> dict:
+    """Load config by instance ID or fall back to default."""
+    if config_id:
+        config_path = CONFIGS_DIR / f"{config_id}.yaml"
+        if not config_path.exists():
+            old_path = Path(__file__).parent / "config.yaml"
+            if config_id == "default" and old_path.exists():
+                config_path = old_path
+            else:
+                raise FileNotFoundError(
+                    f"Config not found: {config_path}. "
+                    f"Available: {[i['id'] for i in list_instances()]}"
+                )
+    else:
+        config_path = CONFIGS_DIR / "csi300_topk10.yaml"
+        if not config_path.exists():
+            config_path = Path(__file__).parent / "config.yaml"
     with open(config_path) as f:
-        return yaml.safe_load(f)
+        cfg = yaml.safe_load(f)
+    cfg["_config_id"] = config_id or config_path.stem
+    cfg["_config_path"] = str(config_path)
+    return cfg
 
 
 def setup_logging(config: dict, date_str: str = None):
@@ -105,7 +148,6 @@ def fetch_stock_names(recorder):
 
 
 def check_data_ready(date_str: str, config: dict) -> bool:
-    """Check if data for the given date is available in qlib."""
     from qlib.data import D
     try:
         cal = D.calendar(start_time=date_str, end_time=date_str)
@@ -181,7 +223,12 @@ def cmd_daily(args, config):
 
 
 def cmd_run(args, config):
-    """Run for a specific date or date range."""
+    """Run for a specific date or date range.
+
+    Optimized: loads model and data handler once, reuses across days.
+    """
+    from modules.signal_generator import SignalGenerator
+
     init_qlib(config)
     calendar = get_trading_calendar()
 
@@ -194,15 +241,25 @@ def cmd_run(args, config):
         logger.error("Must specify --date or --start")
         return
 
+    signal_gen = SignalGenerator(config, PROJECT_ROOT)
+    last_date = dates[-1] if dates else None
+    if last_date:
+        signal_gen.prepare_for_dates(last_date)
+    logger.info("Model and data loaded once for batch run (%d dates)", len(dates))
+
     for date_str in dates:
         if not is_trading_day(date_str, calendar):
             logger.info("%s is not a trading day, skipping", date_str)
             continue
-        _run_single_day(date_str, config, calendar)
+        _run_single_day(date_str, config, calendar, signal_gen=signal_gen)
 
 
-def _run_single_day(date_str: str, config: dict, calendar: list[str]):
-    """Core daily routine for a single trading day."""
+def _run_single_day(date_str: str, config: dict, calendar: list[str],
+                    signal_gen=None):
+    """Core daily routine for a single trading day.
+
+    If signal_gen is provided, reuse it (batch mode optimization).
+    """
     from modules.recorder import Recorder
     from modules.signal_generator import SignalGenerator
     from modules.execution_engine import ExecutionEngine
@@ -227,7 +284,8 @@ def _run_single_day(date_str: str, config: dict, calendar: list[str]):
 
     logger.info("===== Processing %s =====", date_str)
 
-    signal_gen = SignalGenerator(config, PROJECT_ROOT)
+    if signal_gen is None:
+        signal_gen = SignalGenerator(config, PROJECT_ROOT)
     exec_engine = ExecutionEngine(config)
     account = AccountManager(config, recorder)
     order_mgr = OrderManager(config)
@@ -436,8 +494,20 @@ def cmd_export(args, config):
     print(f"Exported {args.table} to {args.output}")
 
 
+def cmd_list(args, config):
+    """List all paper trading instances."""
+    instances = list_instances()
+    if not instances:
+        print("No paper trading instances found. Create a config in configs/ directory.")
+        return
+    print(f"\n{'ID':<25} {'名称':<35} {'配置文件'}")
+    print("-" * 80)
+    for inst in instances:
+        print(f"{inst['id']:<25} {inst['name']:<35} {inst['config_file']}")
+
+
 def cmd_web(args, config):
-    """Start the web dashboard."""
+    """Start the web dashboard with multi-instance support."""
     from web.app import create_app
     import uvicorn
 
@@ -451,6 +521,7 @@ def cmd_web(args, config):
 
 def main():
     parser = argparse.ArgumentParser(description="Paper Trading System")
+    parser.add_argument("--config", "-c", help="Config instance ID (filename without .yaml in configs/)")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     subparsers.add_parser("init", help="Initialize paper trading system")
@@ -478,6 +549,8 @@ def main():
     exp_parser.add_argument("--table", required=True, help="Table name")
     exp_parser.add_argument("--output", required=True, help="Output CSV path")
 
+    subparsers.add_parser("list", help="List all paper trading instances")
+
     web_parser = subparsers.add_parser("web", help="Start web dashboard")
     web_parser.add_argument("--port", type=int, help="Port number")
 
@@ -486,7 +559,11 @@ def main():
         parser.print_help()
         return
 
-    config = load_config()
+    if args.command == "list":
+        cmd_list(args, None)
+        return
+
+    config = load_config(args.config)
 
     date_str = None
     if hasattr(args, "date") and args.date:

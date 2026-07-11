@@ -1,0 +1,25 @@
+{
+  "total_runs": 1,
+  "success_runs": 1,
+  "failed_runs": 0,
+  "elapsed_seconds": 73.206643,
+  "metrics_mean": {
+    "portfolio_cum_return": 1.0474724505349475,
+    "benchmark_cum_return": 0.2604557275772095,
+    "excess_cum_return": 0.7870167229577381
+  },
+  "metrics_std": {
+    "portfolio_cum_return": NaN,
+    "benchmark_cum_return": NaN,
+    "excess_cum_return": NaN
+  },
+  "metrics_per_run": [
+    {
+      "run": 1,
+      "status": "success",
+      "portfolio_cum_return": 1.0474724505349475,
+      "benchmark_cum_return": 0.2604557275772095,
+      "excess_cum_return": 0.7870167229577381
+    }
+  ]
+}

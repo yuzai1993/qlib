@@ -127,7 +127,7 @@ PORT_ANALYSIS_CONFIG = {
 def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -> dict:
     """
     从 port_analysis 和 report_normal 中提取常用回测指标。
-    analysis_df 的层级索引结构: (freq, metric_group, metric)
+    analysis_df 可能是 (freq, metric_group, metric) 或 (metric_group, metric)。
 
     注意：report_normal_df["return"] 是持仓视角收益率（分子加回了当日手续费），
     累乘后会高估真实收益。portfolio_cum_return 应直接用 account 首尾值计算。
@@ -135,9 +135,14 @@ def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -
     """
     metrics = {}
 
+    def _excess_section(key: str):
+        # 兼容带 freq 层（"1day"）与不带 freq 层两种结构
+        if isinstance(analysis_df.index, pd.MultiIndex) and "1day" in analysis_df.index.get_level_values(0):
+            return analysis_df.loc["1day"][key]
+        return analysis_df.loc[key]
+
     try:
-        # excess_return_with_cost 对应扣费后超额收益
-        section = analysis_df.loc["1day"]["excess_return_with_cost"]
+        section = _excess_section("excess_return_with_cost")
         for key in ["mean", "std", "annualized_return", "information_ratio", "max_drawdown"]:
             if key in section.index:
                 metrics[f"excess_with_cost_{key}"] = float(section.loc[key, "risk"])
@@ -145,7 +150,7 @@ def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -
         pass
 
     try:
-        section = analysis_df.loc["1day"]["excess_return_without_cost"]
+        section = _excess_section("excess_return_without_cost")
         for key in ["mean", "std", "annualized_return", "information_ratio", "max_drawdown"]:
             if key in section.index:
                 metrics[f"excess_no_cost_{key}"] = float(section.loc[key, "risk"])

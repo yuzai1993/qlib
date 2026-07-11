@@ -16,12 +16,14 @@ data:
   benchmark: "SH000300"
 
 # ========== 模型设置 ==========
+# 切换日 2026-07-11：157维 Alpha158NoVWAP + ProcessInf 重训
+# 旧模型: examples/mlruns/418161825478917845/e984aba430c341b9bbf3052a82734d00
 model:
-  experiment_name: "train_model"
-  experiment_id: "418161825478917845"
-  recorder_id: "e984aba430c341b9bbf3052a82734d00"
+  experiment_name: "train_model_run02"
+  experiment_id: "329272370075998619"
+  recorder_id: "78ac8cd0e27e4f93b366f04f2096f9a4"
   model_class: "qlib.contrib.model.gbdt.LGBModel"
-  mlruns_dir: "examples/mlruns"
+  mlruns_dir: "mlruns"
 
 # ========== 特征设置 ==========
 handler:

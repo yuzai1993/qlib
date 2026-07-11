@@ -155,3 +155,22 @@ class Alpha158(DataHandlerLP):
 class Alpha158vwap(Alpha158):
     def get_label_config(self):
         return ["Ref($vwap, -2)/Ref($vwap, -1) - 1"], ["LABEL0"]
+
+
+class Alpha158NoVWAP(Alpha158):
+    """Alpha158 去掉 VWAP0（157 维）。
+
+    本仓库数据管线（scripts/data_collector/tushare）未产出 vwap.day.bin，
+    VWAP0 恒为 NaN，训练无贡献且在推理侧引入缺失值处理分歧，故剔除。
+    """
+
+    def get_feature_config(self):
+        conf = {
+            "kbar": {},
+            "price": {
+                "windows": [0],
+                "feature": ["OPEN", "HIGH", "LOW"],
+            },
+            "rolling": {},
+        }
+        return Alpha158DL.get_feature_config(conf)

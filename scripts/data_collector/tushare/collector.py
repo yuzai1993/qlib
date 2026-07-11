@@ -10,7 +10,6 @@ Tushare Pro 日线采集与归一化，产出 qlib bin 格式。
 import os
 import sys
 import datetime
-import importlib
 from pathlib import Path
 from typing import Iterable, List
 
@@ -203,7 +202,7 @@ class TushareCollectorCN(BaseCollector):
             daily = daily.merge(adj[["date", "adj_factor"]], on="date", how="left")
             daily["adj_factor"] = daily["adj_factor"].ffill().bfill().fillna(1.0)
 
-        cols = ["date", "open", "high", "low", "close", "volume", "adj_factor", "pct_chg"]
+        cols = ["date", "open", "high", "low", "close", "volume", "amount", "adj_factor", "pct_chg"]
         keep = [c for c in cols if c in daily.columns]
         out = daily[keep].copy()
         out["symbol"] = symbol
@@ -236,7 +235,7 @@ class TushareCollectorCN(BaseCollector):
                     df["pct_chg"] = np.nan
 
                 symbol = f"sh{_index_code}"
-                out_cols = ["date", "open", "high", "low", "close", "volume", "adj_factor", "pct_chg"]
+                out_cols = ["date", "open", "high", "low", "close", "volume", "amount", "adj_factor", "pct_chg"]
                 out = df[[c for c in out_cols if c in df.columns]].copy()
                 out["symbol"] = symbol
 
@@ -263,7 +262,8 @@ class TushareCollectorCN(BaseCollector):
 
 
 class TushareNormalize1d(BaseNormalize):
-    """Tushare 日线归一化：factor=当日复权因子/最后一天复权因子，所有价格（含close）前复权=价格*factor，复权成交量=volume/factor。价格保持真实前复权 CNY，不做首日标准化。"""
+    """Tushare 日线归一化：factor=当日复权因子/最后一天复权因子，所有价格（含close）前复权=价格*factor，复权成交量=volume/factor。
+    vwap=amount*1000/(volume*100)*factor（元/股，前复权；无 amount 或停牌为 NaN）。价格保持真实前复权 CNY，不做首日标准化。"""
 
     DAILY_FORMAT = "%Y-%m-%d"
     COLUMNS = ["open", "high", "low", "close", "volume"]
@@ -288,6 +288,16 @@ class TushareNormalize1d(BaseNormalize):
         adj_series = df["adj_factor"].replace(0, np.nan).ffill().bfill().fillna(1.0)
         adj_last = float(adj_series.iloc[-1])
         df["factor"] = adj_series / adj_last
+        # vwap：Tushare amount 单位千元、volume 单位手 → 元/股，再前复权
+        if "amount" in df.columns:
+            raw_vol_shares = df["volume"] * 100.0
+            df["vwap"] = np.where(
+                raw_vol_shares > 0,
+                df["amount"] * 1000.0 / raw_vol_shares * df["factor"],
+                np.nan,
+            )
+        else:
+            df["vwap"] = np.nan
         for c in ["open", "high", "low", "close"]:
             if c in df.columns:
                 df[c] = df[c] * df["factor"]
@@ -299,7 +309,7 @@ class TushareNormalize1d(BaseNormalize):
             df["change"] = df["pct_chg"].astype(float) / 100.0
         else:
             df["change"] = np.nan
-        df.loc[(df["volume"] <= 0) | df["volume"].isna(), self.COLUMNS + ["change"]] = np.nan
+        df.loc[(df["volume"] <= 0) | df["volume"].isna(), self.COLUMNS + ["change", "vwap"]] = np.nan
         df[sym_col] = symbol
         df = df.reset_index()
         # 与日历对齐
@@ -313,7 +323,7 @@ class TushareNormalize1d(BaseNormalize):
                 df.index.name = date_col
                 df[sym_col] = symbol
                 df = df.reset_index()
-        out_cols = [date_col, sym_col, "open", "high", "low", "close", "volume", "factor", "change"]
+        out_cols = [date_col, sym_col, "open", "high", "low", "close", "volume", "vwap", "factor", "change"]
         return df[[c for c in out_cols if c in df.columns]]
 
 
@@ -414,8 +424,8 @@ class Run(BaseRun):
             start_date = _default_start_date_from_calendars(qlib_dir)
         if end_date is None:
             end_date = pd.Timestamp(datetime.date.today()).strftime("%Y-%m-%d")
-        logger.info("start_time: ", start_date)
-        logger.info("end_time: ", end_date)
+        logger.info(f"start_time: {start_date}")
+        logger.info(f"end_time: {end_date}")
         download_success = self.download_data(delay=delay, start=start_date, end=end_date, check_data_length=check_data_length)
         if not download_success:
             logger.info("download_data failed, skip normalize and dump.")
@@ -428,11 +438,7 @@ class Run(BaseRun):
             max_workers=max(getattr(self, "max_workers", 1), 16),
         )
         _dump.dump()
-        _region = getattr(self, "region", "cn").lower()
-        if _region == "cn":
-            index_mod = importlib.import_module("data_collector.cn_index.collector")
-            for _index in ["CSI100", "CSI300"]:
-                getattr(index_mod, "get_instruments")(qlib_dir, _index, market_index="cn_index")
+        # 指数成分（csi300/500/1000/2000）由 csindex_v2 维护；csi100 暂不更新
 
 
 if __name__ == "__main__":

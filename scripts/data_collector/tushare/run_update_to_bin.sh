@@ -94,7 +94,22 @@ NORMALIZE_DIR="scripts/data_collector/tushare/normalize"
   exit $status
 }
 
-# 指数成分改由 csindex_v2 维护，定时任务不再跑 cn_index parse_instruments
+# 指数成分改由 csindex_v2（300/500/1000）+ 聚宽（2000 + 交叉校验）日更
+# 失败只告警，不阻断个股更新成功状态
+echo "===== index instruments daily update ====="
+if /opt/anaconda3/envs/qlib/bin/python -m scripts.data_collector.update_indices_daily; then
+  echo "index instruments update OK"
+else
+  idx_status=$?
+  echo "WARNING: index instruments update failed (exit=$idx_status), stock dump already succeeded"
+  if [[ -n "$ALERT_EMAIL" ]]; then
+    host_name=$(hostname)
+    send_alert_email \
+      "[qlib] 指数成分日更失败 (exit=$idx_status, host=$host_name)" \
+      "$(echo "指数成分更新失败，个股 dump 已成功，请检查日志。"; echo "时间：$(date '+%Y-%m-%d %H:%M:%S')"; echo; tail -n 80 "$logfile")" \
+      || true
+  fi
+fi
 
 # vwap 巡检：最新一行的 vwap 必须非空（捕捉“增量更新没产出 vwap”的回归）
 vwap_check_output="$(/opt/anaconda3/envs/qlib/bin/python - "$NORMALIZE_DIR/sh600000.csv" <<'PYEOF'
@@ -124,5 +139,13 @@ PYEOF
 请检查 source 目录是否含 amount 列、collector 代码是否为最新。" || true
 }
 echo "$vwap_check_output"
+
+# 前复权回溯完整性巡检（近 90 天）
+ADJ_START="$(date -v-90d +%Y-%m-%d 2>/dev/null || date -d '90 days ago' +%Y-%m-%d)"
+echo "===== adjust integrity check (start=$ADJ_START) ====="
+PYTHONPATH="$QLIB_ROOT" /opt/anaconda3/envs/qlib/bin/python \
+  "$QLIB_ROOT/scripts/data_collector/tushare/check_adjust_integrity.py" \
+  --instruments csi300 --start "$ADJ_START" \
+  || echo "[WARN] 复权回溯巡检未通过，请人工检查"
 
 echo "===== end $(date '+%Y-%m-%d %H:%M:%S') ====="

@@ -47,6 +47,9 @@ DATA_HANDLER_CONFIG = {
     "fit_start_time": "2003-01-02",
     "fit_end_time": "2020-01-10",
     "instruments": MARKET,
+    # ProcessInf 处理除法产生的 inf（替换为当日截面均值）。
+    # Alpha158 为 PTYPE_A，infer_processors 同时作用于训练(DK_L)与推理(DK_I)，两边口径一致。
+    "infer_processors": [{"class": "ProcessInf"}],
 }
 
 TASK = {
@@ -70,7 +73,7 @@ TASK = {
         "module_path": "qlib.data.dataset",
         "kwargs": {
             "handler": {
-                "class": "Alpha158",
+                "class": "Alpha158NoVWAP",
                 "module_path": "qlib.contrib.data.handler",
                 "kwargs": DATA_HANDLER_CONFIG,
             },

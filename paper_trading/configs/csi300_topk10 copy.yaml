@@ -1,4 +1,6 @@
-# paper_trading/config.yaml
+# 模拟盘实例: CSI300 TopkDropout 100万
+# 文件名（不含.yaml）即为模拟盘ID
+# LGBModel，TopkDropoutStrategy，topk=10，n_drop=2
 
 # ========== 基本设置 ==========
 paper_trading:
@@ -16,8 +18,8 @@ data:
 # ========== 模型设置 ==========
 model:
   experiment_name: "train_model"
-  experiment_id: "745738095260835211"
-  recorder_id: "d3f5db20d9af4e70addfefc62fafdf54"
+  experiment_id: "418161825478917845"
+  recorder_id: "e984aba430c341b9bbf3052a82734d00"
   model_class: "qlib.contrib.model.gbdt.LGBModel"
   mlruns_dir: "examples/mlruns"
 
@@ -31,7 +33,7 @@ handler:
 # ========== 股票名称映射 ==========
 stock_names:
   source: "tushare"
-  update_interval_days: 7
+  update_interval_days: 1
 
 # ========== 策略设置 ==========
 strategy:
@@ -51,7 +53,7 @@ exchange:
 
 # ========== 存储设置 ==========
 storage:
-  db_path: "paper_trading/data/paper_trading.db"
+  db_path: "paper_trading/data/csi300_topk10.db"
   log_dir: "paper_trading/logs"
   report_dir: "paper_trading/reports"
 
@@ -67,5 +69,5 @@ alert:
 web:
   enabled: true
   host: "0.0.0.0"
-  port: 8000
+  port: 8080
   auto_refresh: 60

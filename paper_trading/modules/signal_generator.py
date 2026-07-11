@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import qlib
 from qlib.data import D
-from qlib.contrib.data.handler import Alpha158
+from qlib.utils import init_instance_by_config
 from qlib.data.dataset.handler import DataHandlerLP
 
 logger = logging.getLogger("paper_trading.signal")
@@ -17,7 +17,7 @@ logger = logging.getLogger("paper_trading.signal")
 class SignalGenerator:
     """Loads a trained model and generates prediction scores.
 
-    Caches the Alpha158 handler across calls so that batch runs
+    Caches the handler across calls so that batch runs
     (multiple dates) only load and process data once.
     """
 
@@ -60,14 +60,22 @@ class SignalGenerator:
         handler_cfg = self.config["handler"]
         data_cfg = self.config["data"]
 
-        logger.info("Initializing Alpha158 handler (end_date=%s)...", end_date)
-        self._handler = Alpha158(
-            instruments=data_cfg["instruments"],
-            start_time=handler_cfg["start_time"],
-            end_time=end_date,
-            fit_start_time=handler_cfg["start_time"],
-            fit_end_time="2020-01-10",
+        logger.info(
+            "Initializing %s handler (end_date=%s)...", handler_cfg["class"], end_date
         )
+        self._handler = init_instance_by_config({
+            "class": handler_cfg["class"],
+            "module_path": handler_cfg["module"],
+            "kwargs": {
+                "instruments": data_cfg["instruments"],
+                "start_time": handler_cfg["start_time"],
+                "end_time": end_date,
+                "fit_start_time": handler_cfg["start_time"],
+                "fit_end_time": handler_cfg["fit_end_time"],
+                # 必须与训练侧 run_backtest.py 完全一致
+                "infer_processors": [{"class": "ProcessInf"}],
+            },
+        })
         self._features = self._handler.fetch(
             col_set="feature", data_key=DataHandlerLP.DK_I
         )

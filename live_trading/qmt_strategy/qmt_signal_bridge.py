@@ -1,0 +1,518 @@
+#coding:gbk
+# qmt_signal_bridge -- QMT built-in strategy that consumes qlib signal batches.
+#
+# Protocol: docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md
+# Runtime:  QMT built-in Python 3.6. ASCII only (file declares gbk; ascii is a
+#           strict subset, so it is valid in both encodings).
+#
+# Flow per batch:
+#   inbox/signal_{batch}.jsonl + .done
+#     -> claim to processing/ (skip if expired / duplicate / bad checksum)
+#     -> phase SELL: passorder all sells, wait terminal (or timeout)
+#     -> phase BUY : check available cash, passorder buys
+#     -> poll order status by remark (client_order_id)
+#     -> 14:50 cancel pending, mark EXPIRED; write outbound/fills_{batch}.done
+#
+# LIVE double switch: header.mode == "LIVE" AND state/LIVE_OK_{trade_date} exists.
+# Otherwise orders are simulated: fill status SKIPPED, message "simulated".
+
+import json
+import os
+import time
+import datetime
+import traceback
+
+# ======================= user settings =======================
+
+BRIDGE_ROOT = r"D:\qmt_bridge"
+ACCOUNT_ID = ""            # override header.account_id if non-empty
+ACCOUNT_TYPE = "STOCK"
+STRATEGY_NAME = "qlib_bridge"
+
+POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
+SELL_WAIT_TIMEOUT_SEC = 30 * 60   # max wait for sells before starting buys
+TRADE_START = "09:25:00"   # do not submit before
+CANCEL_AT = "14:50:00"     # cancel all pending orders
+FINALIZE_AT = "14:52:00"   # force-write fills .done
+
+# order status values (see design doc / QMT docs)
+STATUS_PART_CANCEL = 53
+STATUS_CANCELED = 54
+STATUS_PART_SUCC = 55
+STATUS_SUCCEEDED = 56
+STATUS_JUNK = 57
+TERMINAL_ORDER_STATUS = (STATUS_PART_CANCEL, STATUS_CANCELED,
+                         STATUS_SUCCEEDED, STATUS_JUNK)
+
+# ======================= state =======================
+
+
+class Batch(object):
+    def __init__(self, header, orders):
+        self.header = header
+        self.orders = orders          # list of dicts, sells first (priority asc)
+        self.phase = "SELL"           # SELL -> BUY -> DONE
+        self.phase_started = time.time()
+        self.submitted = {}           # client_order_id -> True
+        self.fills = {}               # client_order_id -> fill dict (latest)
+        self.finalized = False
+
+    def batch_id(self):
+        return self.header["batch_id"]
+
+
+class State(object):
+    def __init__(self):
+        self.last_poll = 0.0
+        self.batch = None             # current Batch or None
+        self.processed = set()        # batch ids finished (persisted)
+        self.loaded = False
+
+
+g = State()
+
+# ======================= small utils =======================
+
+
+def _log(msg):
+    print("[qlib_bridge] " + str(msg))
+
+
+def _now_hms():
+    return datetime.datetime.now().strftime("%H:%M:%S")
+
+
+def _today():
+    return datetime.date.today().strftime("%Y-%m-%d")
+
+
+def _path(*parts):
+    return os.path.join(BRIDGE_ROOT, *parts)
+
+
+def _ensure_dirs():
+    for d in ("inbox", "processing", "outbound", "archive", "state", "logs"):
+        p = _path(d)
+        if not os.path.isdir(p):
+            os.makedirs(p)
+
+
+def _state_file():
+    return _path("state", "processed_batches.txt")
+
+
+def _load_processed():
+    if os.path.isfile(_state_file()):
+        with open(_state_file(), "r") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    g.processed.add(line)
+
+
+def _mark_processed(batch_id):
+    g.processed.add(batch_id)
+    with open(_state_file(), "a") as f:
+        f.write(batch_id + "\n")
+
+
+def _sha256_of_lines(lines):
+    import hashlib
+    h = hashlib.sha256()
+    for line in lines:
+        h.update(line.encode("utf-8"))
+    return "sha256:" + h.hexdigest()
+
+
+def _live_ok(trade_date):
+    return os.path.isfile(_path("state", "LIVE_OK_" + trade_date))
+
+# ======================= fills output =======================
+
+
+def _fills_path(batch_id):
+    return _path("outbound", "fills_" + batch_id + ".jsonl")
+
+
+def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, message):
+    mode = batch.header.get("mode", "SIMULATE")
+    event = {
+        "type": "fill_event",
+        "batch_id": batch.batch_id(),
+        "client_order_id": order["client_order_id"],
+        "mode": mode,
+        "stock_code": order["stock_code"],
+        "side": order["side"],
+        "status": status,
+        "requested_qty": order["quantity"],
+        "filled_qty": int(filled_qty),
+        "avg_price": float(avg_price),
+        "qmt_order_id": str(qmt_order_id),
+        "message": message,
+        "ts": datetime.datetime.now().isoformat(),
+    }
+    prev = batch.fills.get(order["client_order_id"])
+    if prev is not None and prev["status"] == status \
+            and prev["filled_qty"] == event["filled_qty"]:
+        return  # no change, do not spam the file
+    batch.fills[order["client_order_id"]] = event
+    with open(_fills_path(batch.batch_id()), "a") as f:
+        f.write(json.dumps(event, sort_keys=True) + "\n")
+
+
+def _finalize_batch(batch):
+    if batch.finalized:
+        return
+    done = _fills_path(batch.batch_id()).replace(".jsonl", ".done")
+    with open(done, "w") as f:
+        f.write("done\n")
+    _mark_processed(batch.batch_id())
+    batch.finalized = True
+    g.batch = None
+    _log("batch %s finalized (%d fills)" % (batch.batch_id(), len(batch.fills)))
+
+# ======================= batch claiming =======================
+
+
+def _peek_trade_date(jsonl_path):
+    """Read only the header line to get trade_date. None if unreadable."""
+    try:
+        with open(jsonl_path, "r") as f:
+            first = f.readline().strip()
+        return json.loads(first).get("trade_date")
+    except Exception:
+        return None
+
+
+def _claim_new_batch():
+    if g.batch is not None:
+        return
+    inbox = _path("inbox")
+    if not os.path.isdir(inbox):
+        return
+    done_files = sorted([f for f in os.listdir(inbox) if f.endswith(".done")])
+    for done_name in done_files:
+        jsonl_name = done_name[:-5] + ".jsonl"
+        jsonl_src = os.path.join(inbox, jsonl_name)
+        done_src = os.path.join(inbox, done_name)
+        if not os.path.isfile(jsonl_src):
+            continue
+        # future batch (T-1 evening publish): leave in inbox until trade_date
+        trade_date = _peek_trade_date(jsonl_src)
+        if trade_date is not None and trade_date > _today():
+            continue
+        # claim: move both to processing/
+        jsonl_dst = _path("processing", jsonl_name)
+        done_dst = _path("processing", done_name)
+        os.rename(jsonl_src, jsonl_dst)
+        os.rename(done_src, done_dst)
+        batch = _parse_and_check(jsonl_dst, done_dst)
+        _archive_processing(jsonl_dst, done_dst)
+        if batch is not None:
+            g.batch = batch
+            _log("claimed batch %s: %d orders, mode=%s"
+                 % (batch.batch_id(), len(batch.orders), batch.header.get("mode")))
+            return  # one batch at a time
+
+
+def _archive_processing(jsonl_path, done_path):
+    for p in (jsonl_path, done_path):
+        dst = _path("archive", os.path.basename(p))
+        if os.path.isfile(dst):
+            os.remove(dst)
+        os.rename(p, dst)
+
+
+def _parse_and_check(jsonl_path, done_path):
+    """Return Batch or None (rejected batches get a fills file + done)."""
+    with open(jsonl_path, "r") as f:
+        lines = [l.strip() for l in f.read().splitlines() if l.strip()]
+    if not lines:
+        _log("empty batch file: " + jsonl_path)
+        return None
+    header = json.loads(lines[0])
+    order_lines = lines[1:]
+    orders = [json.loads(l) for l in order_lines]
+    batch = Batch(header, orders)
+    batch_id = header.get("batch_id", "unknown")
+
+    def reject(reason):
+        _log("reject batch %s: %s" % (batch_id, reason))
+        for o in orders:
+            _write_fill(batch, o, "SKIPPED", 0, 0.0, "", reason)
+        _finalize_batch(batch)
+        return None
+
+    if batch_id in g.processed:
+        return reject("duplicate batch")
+    if header.get("trade_date") != _today():
+        return reject("expired: trade_date=%s today=%s"
+                      % (header.get("trade_date"), _today()))
+    with open(done_path, "r") as f:
+        expected = f.read().strip()
+    actual = _sha256_of_lines(order_lines)
+    if expected and expected != actual:
+        return reject("checksum mismatch")
+    if header.get("order_count") != len(orders):
+        return reject("order_count mismatch")
+
+    # sells first by priority, stable by client_order_id
+    orders.sort(key=lambda o: (o.get("priority", 99), o.get("client_order_id", "")))
+    batch.orders = orders
+    return batch
+
+# ======================= QMT API wrappers =======================
+# All QMT built-in API usage is isolated below so the pure logic above
+# stays testable / reviewable.
+
+
+def _account_id(batch):
+    return ACCOUNT_ID or batch.header.get("account_id", "")
+
+
+def _get_orders_by_remark(account_id):
+    """remark -> order detail object."""
+    result = {}
+    try:
+        details = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ORDER")
+    except Exception:
+        _log("get_trade_detail_data ORDER failed:\n" + traceback.format_exc())
+        return result
+    for d in details:
+        remark = getattr(d, "m_strRemark", "")
+        if remark:
+            result[remark] = d
+    return result
+
+
+def _get_can_use_volume(account_id, stock_code):
+    symbol = stock_code.split(".")[0]
+    try:
+        positions = get_trade_detail_data(account_id, ACCOUNT_TYPE, "POSITION")
+    except Exception:
+        _log("get_trade_detail_data POSITION failed:\n" + traceback.format_exc())
+        return 0
+    for p in positions:
+        if getattr(p, "m_strInstrumentID", "") == symbol:
+            return int(getattr(p, "m_nCanUseVolume", 0))
+    return 0
+
+
+def _get_available_cash(account_id):
+    try:
+        accounts = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ACCOUNT")
+    except Exception:
+        _log("get_trade_detail_data ACCOUNT failed:\n" + traceback.format_exc())
+        return 0.0
+    for a in accounts:
+        return float(getattr(a, "m_dAvailable", 0.0))
+    return 0.0
+
+
+def _submit(ContextInfo, batch, order, live):
+    """Submit one order. Returns True if submitted (or simulated)."""
+    coid = order["client_order_id"]
+    if coid in batch.submitted:
+        return True
+    if not live:
+        batch.submitted[coid] = True
+        _write_fill(batch, order, "SKIPPED", 0, 0.0, "", "simulated")
+        return True
+
+    op_type = 23 if order["side"] == "BUY" else 24
+    try:
+        # orderType=1101 single stock by shares; prType=11 fixed price;
+        # quickTrade=2 submit immediately; userOrderId -> m_strRemark
+        passorder(op_type, 1101, _account_id(batch), order["stock_code"],
+                  11, float(order["limit_price"]), int(order["quantity"]),
+                  STRATEGY_NAME, 2, coid, ContextInfo)
+        batch.submitted[coid] = True
+        _write_fill(batch, order, "ACCEPTED", 0, 0.0, "", "submitted")
+        _log("passorder %s %s x%d @ %s (%s)"
+             % (order["side"], order["stock_code"], order["quantity"],
+                order["limit_price"], coid))
+        return True
+    except Exception:
+        _write_fill(batch, order, "ERROR", 0, 0.0, "",
+                    "passorder exception: " + traceback.format_exc()[-200:])
+        batch.submitted[coid] = True
+        return False
+
+
+def _cancel_by_detail(detail, account_id, ContextInfo):
+    try:
+        order_id = getattr(detail, "m_strOrderSysID", "")
+        if order_id and can_cancel_order(order_id, account_id, ACCOUNT_TYPE):
+            cancel(order_id, account_id, ACCOUNT_TYPE, ContextInfo)
+    except Exception:
+        _log("cancel failed:\n" + traceback.format_exc())
+
+# ======================= per-poll processing =======================
+
+
+def _order_is_terminal(batch, coid):
+    fill = batch.fills.get(coid)
+    return fill is not None and fill["status"] in (
+        "FILLED", "PARTIAL", "REJECTED", "SKIPPED", "EXPIRED", "ERROR")
+
+
+def _poll_status(batch):
+    """Update fills from broker order details (LIVE only)."""
+    live = batch.header.get("mode") == "LIVE"
+    if not live:
+        return
+    details = _get_orders_by_remark(_account_id(batch))
+    for order in batch.orders:
+        coid = order["client_order_id"]
+        if coid not in batch.submitted or _order_is_terminal(batch, coid):
+            continue
+        d = details.get(coid)
+        if d is None:
+            continue
+        status = int(getattr(d, "m_nOrderStatus", -1))
+        traded = int(getattr(d, "m_nVolumeTraded", 0))
+        price = float(getattr(d, "m_dTradedPrice", 0.0))
+        sysid = getattr(d, "m_strOrderSysID", "")
+        if status == STATUS_SUCCEEDED:
+            _write_fill(batch, order, "FILLED", traded, price, sysid, "")
+        elif status in (STATUS_PART_CANCEL, STATUS_CANCELED):
+            if traded > 0:
+                _write_fill(batch, order, "PARTIAL", traded, price, sysid, "canceled")
+            else:
+                _write_fill(batch, order, "EXPIRED", 0, 0.0, sysid, "canceled")
+        elif status == STATUS_JUNK:
+            _write_fill(batch, order, "REJECTED", 0, 0.0, sysid, "junk order")
+        elif status == STATUS_PART_SUCC and traded > 0:
+            # intermediate partial; record progress, stays non-terminal via ACCEPTED
+            _write_fill(batch, order, "ACCEPTED", traded, price, sysid, "partial in progress")
+
+
+def _process_batch(ContextInfo, batch):
+    now = _now_hms()
+    if now < TRADE_START:
+        return
+
+    mode_live = (batch.header.get("mode") == "LIVE"
+                 and _live_ok(batch.header.get("trade_date", "")))
+    if batch.header.get("mode") == "LIVE" and not mode_live:
+        _log("LIVE batch but LIVE_OK switch missing -> simulate/skip")
+
+    account_id = _account_id(batch)
+    sells = [o for o in batch.orders if o["side"] == "SELL"]
+    buys = [o for o in batch.orders if o["side"] == "BUY"]
+
+    if batch.phase == "SELL":
+        for order in sells:
+            if order["client_order_id"] in batch.submitted:
+                continue
+            if mode_live:
+                can_use = _get_can_use_volume(account_id, order["stock_code"])
+                if can_use < order["quantity"]:
+                    if can_use >= 100:
+                        order["quantity"] = (can_use // 100) * 100
+                        _log("shrink sell %s to can_use %d"
+                             % (order["stock_code"], order["quantity"]))
+                    else:
+                        _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                                    "insufficient sellable volume: %d" % can_use)
+                        batch.submitted[order["client_order_id"]] = True
+                        continue
+            _submit(ContextInfo, batch, order, mode_live)
+
+        _poll_status(batch)
+        sells_done = all(_order_is_terminal(batch, o["client_order_id"])
+                         for o in sells) if sells else True
+        timed_out = (time.time() - batch.phase_started) > SELL_WAIT_TIMEOUT_SEC
+        if sells_done or timed_out or not sells:
+            batch.phase = "BUY"
+            batch.phase_started = time.time()
+            if timed_out and not sells_done:
+                _log("sell phase timeout, starting buys with actual cash")
+
+    if batch.phase == "BUY":
+        for order in buys:
+            if order["client_order_id"] in batch.submitted:
+                continue
+            if mode_live:
+                cash = _get_available_cash(account_id)
+                need = order["quantity"] * order["limit_price"]
+                if need > cash:
+                    lots = int(cash / order["limit_price"] // 100)
+                    if lots >= 1:
+                        order["quantity"] = lots * 100
+                        _log("shrink buy %s to %d shares (cash %.2f)"
+                             % (order["stock_code"], order["quantity"], cash))
+                    else:
+                        _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                                    "insufficient cash: %.2f" % cash)
+                        batch.submitted[order["client_order_id"]] = True
+                        continue
+            _submit(ContextInfo, batch, order, mode_live)
+
+        _poll_status(batch)
+        all_done = all(_order_is_terminal(batch, o["client_order_id"])
+                       for o in batch.orders)
+        if all_done:
+            _finalize_batch(batch)
+
+
+def _force_finalize_if_near_close(ContextInfo, batch):
+    now = _now_hms()
+    if now < CANCEL_AT:
+        return
+    live = (batch.header.get("mode") == "LIVE"
+            and _live_ok(batch.header.get("trade_date", "")))
+    if live:
+        details = _get_orders_by_remark(_account_id(batch))
+        for order in batch.orders:
+            coid = order["client_order_id"]
+            if coid in batch.submitted and not _order_is_terminal(batch, coid):
+                d = details.get(coid)
+                if d is not None:
+                    _cancel_by_detail(d, _account_id(batch), ContextInfo)
+        _poll_status(batch)
+
+    if now >= FINALIZE_AT:
+        for order in batch.orders:
+            coid = order["client_order_id"]
+            if not _order_is_terminal(batch, coid):
+                fill = batch.fills.get(coid)
+                traded = fill["filled_qty"] if fill else 0
+                price = fill["avg_price"] if fill else 0.0
+                if traded > 0:
+                    _write_fill(batch, order, "PARTIAL", traded, price, "",
+                                "expired at close")
+                else:
+                    _write_fill(batch, order, "EXPIRED", 0, 0.0, "",
+                                "expired at close")
+        _finalize_batch(batch)
+
+# ======================= QMT entry points =======================
+
+
+def init(ContextInfo):
+    _ensure_dirs()
+    _load_processed()
+    g.loaded = True
+    _log("initialized, bridge_root=%s, %d processed batches"
+         % (BRIDGE_ROOT, len(g.processed)))
+
+
+def handlebar(ContextInfo):
+    try:
+        if not ContextInfo.is_last_bar():
+            return
+        if not g.loaded:
+            init(ContextInfo)
+        now = time.time()
+        if now - g.last_poll < POLL_SECONDS:
+            return
+        g.last_poll = now
+
+        _claim_new_batch()
+        if g.batch is not None:
+            _force_finalize_if_near_close(ContextInfo, g.batch)
+        if g.batch is not None:
+            _process_batch(ContextInfo, g.batch)
+    except Exception:
+        _log("handlebar error:\n" + traceback.format_exc())

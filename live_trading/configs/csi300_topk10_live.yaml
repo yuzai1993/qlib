@@ -1,0 +1,25 @@
+# 实盘信号桥接配置：CSI300 TopkDropout topk=10 / n_drop=2
+# 模型/策略/交易参数继承 paper_trading 配置（单一事实源），本文件只加执行层参数。
+# 当前基线模型：train_start_2006 Alpha158（见 base 内 model / handler）
+
+base_config: "paper_trading/configs/csi300_topk10.yaml"
+
+live:
+  # 共享目录：Mac 侧挂载点；Windows 侧对应 D:\qmt_bridge
+  bridge_root: "/Volumes/qmt_bridge"
+  strategy_id: "csi300_topk10"
+  # 资金账号不进 git：留空则要求通过环境变量 QMT_ACCOUNT_ID 提供
+  account_id: ""
+  account_type: "STOCK"
+  default_mode: "SIMULATE"
+  buy_slippage: 0.01
+  sell_slippage: 0.01
+  max_orders_per_day: 20
+
+storage:
+  db_path: "live_trading/data/csi300_topk10_live.db"
+  log_dir: "live_trading/logs"
+
+schedule:
+  publish_after: "21:00"
+  import_after: "15:30"

@@ -1,14 +1,13 @@
-# CSI300 LightGBM 训练+回测默认配置
-# 用法: python backtest/scripts/run_backtest.py [--config csi300_lgbm.yaml]
+# 训练起点 2016-01-02（终点 2020-01-10），对应结果 session: 20260711_225328_train_start_2016
+# python backtest/scripts/run_backtest.py --config csi300_lgbm_train_start_2016.yaml
 
 run:
-  mode: train_backtest          # train_backtest | backtest_only
-  note: ""
+  mode: train_backtest
+  note: "train_start_2016"
   n_runs: 1
-  from_session: null            # backtest_only 时必填
+  from_session: null
   from_run: 1
-  test_start: null              # 可选；同时覆盖 segments.test 与 backtest 起止
-  test_end: null
+  generate_figures: false
 
 data:
   provider_uri: "~/.qlib/qlib_data/cn_data"
@@ -16,20 +15,19 @@ data:
   instruments: "csi300"
   benchmark: "SH000300"
   handler:
-    class: "Alpha158NoVWAP"
+    class: "Alpha158"
     module_path: "qlib.contrib.data.handler"
     start_time: "2003-01-02"
-    end_time: "2026-03-10"
-    fit_start_time: "2003-01-02"
+    end_time: "2026-07-10"
+    fit_start_time: "2016-01-02"
     fit_end_time: "2020-01-10"
-    # ProcessInf：除法 inf → 当日截面均值；PTYPE_A 下训练/推理共用
     infer_processors:
       - class: ProcessInf
 
 segments:
-  train: ["2003-01-02", "2020-01-10"]
+  train: ["2016-01-02", "2020-01-10"]
   valid: ["2020-01-13", "2023-09-15"]
-  test: ["2023-09-18", "2026-03-10"]
+  test: ["2023-09-18", "2026-07-10"]
 
 model:
   class: "LGBModel"
@@ -48,17 +46,15 @@ model:
 strategy:
   class: "TopkDropoutStrategy"
   module_path: "qlib.contrib.strategy.signal_strategy"
-  topk: 50
+  topk: 20
   n_drop: 5
 
 backtest:
-  start_time: "2023-09-18"
-  end_time: "2026-03-10"
   account: 1000000
   exchange_kwargs:
     freq: "day"
     limit_threshold: 0.095
     deal_price: "close"
-    open_cost: 0.0005
-    close_cost: 0.0015
+    open_cost: 0.0000954
+    close_cost: 0.0005954
     min_cost: 5

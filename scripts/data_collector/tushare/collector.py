@@ -139,7 +139,7 @@ class TushareCollectorCN(BaseCollector):
             limit_nums=limit_nums,
         )
 
-    INDEX_LIST = {"csi300": "000300", "csi100": "000903", "csi500": "000905"}
+    INDEX_LIST = {"csi300": "000300", "csi100": "000903", "csi500": "000905", "csi1000": "000852"}
 
     def get_instrument_list(self) -> List[str]:
         logger.info("get HS stock symbols (Tushare)...")

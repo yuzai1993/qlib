@@ -1,34 +1,32 @@
-# 免重训回测示例：复制后改 run.from_session 与 segments.test 即可
-# python backtest/scripts/run_backtest.py --config csi300_lgbm_bt_only.example.yaml
+# 以 train_start_2016 为基线，股票池 CSI1000，基准 SH000852
+# python backtest/scripts/run_backtest.py --config csi1000_lgbm_train_start_2016.yaml
 
 run:
-  mode: backtest_only
-  note: "bt_only_top20_5drop"
+  mode: train_backtest
+  note: "train_start_2016_csi1000"
   n_runs: 1
-  from_session: "20260711_141651_158_with_vwap"  # 相对 backtest/result/ 或绝对路径
+  from_session: null
   from_run: 1
-  generate_figures: false       # true 时写 PNG 分析图（较慢）
+  generate_figures: false
 
 data:
   provider_uri: "~/.qlib/qlib_data/cn_data"
   region: "cn"
-  instruments: "csi300"
-  benchmark: "SH000300"
+  instruments: "csi1000"
+  benchmark: "SH000852"
   handler:
-    # class 在 backtest_only 时被源 session meta.handler 覆盖
-    class: "Alpha158NoVWAP"
+    class: "Alpha158"
     module_path: "qlib.contrib.data.handler"
     start_time: "2003-01-02"
-    end_time: "2026-03-10"
-    fit_start_time: "2003-01-02"
+    end_time: "2026-07-10"
+    fit_start_time: "2016-01-02"
     fit_end_time: "2020-01-10"
     infer_processors:
       - class: ProcessInf
 
 segments:
-  train: ["2003-01-02", "2020-01-10"]
+  train: ["2016-01-02", "2020-01-10"]
   valid: ["2020-01-13", "2023-09-15"]
-  # 免重训时主要改这里；backtest 起止自动对齐
   test: ["2023-09-18", "2026-07-10"]
 
 model:

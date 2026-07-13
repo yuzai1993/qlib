@@ -1,0 +1,72 @@
+# TopkDropout + 指数双均线择时动态仓位（方案 B）
+# 与 csi300_lgbm_train_start_2016.yaml 同数据/模型，仅策略换为 TopkDropoutTimingStrategy：
+#   bull    (close > MA20 > MA60): 仓位 0.95
+#   neutral (均线纠缠/暖机)      : 仓位 0.70
+#   bear    (close < MA20 < MA60): 仓位 0.40
+# python backtest/scripts/run_backtest.py --config csi300_lgbm_timing_train_start_2016.yaml
+
+run:
+  mode: train_backtest
+  note: "timing_train_start_2016"
+  n_runs: 1
+  from_session: null
+  from_run: 1
+  generate_figures: false
+
+data:
+  provider_uri: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi300"
+  benchmark: "SH000300"
+  handler:
+    class: "Alpha158"
+    module_path: "qlib.contrib.data.handler"
+    start_time: "2003-01-02"
+    end_time: "2026-07-10"
+    fit_start_time: "2016-01-02"
+    fit_end_time: "2020-01-10"
+    infer_processors:
+      - class: ProcessInf
+
+segments:
+  train: ["2016-01-02", "2020-01-10"]
+  valid: ["2020-01-13", "2023-09-15"]
+  test: ["2023-09-18", "2026-07-10"]
+
+model:
+  class: "LGBModel"
+  module_path: "qlib.contrib.model.gbdt"
+  kwargs:
+    loss: "mse"
+    colsample_bytree: 0.8879
+    learning_rate: 0.2
+    subsample: 0.8789
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    max_depth: 8
+    num_leaves: 210
+    num_threads: 20
+
+strategy:
+  class: "TopkDropoutTimingStrategy"
+  module_path: "qlib.contrib.strategy.dynamic_position"
+  topk: 20
+  n_drop: 5
+  kwargs:
+    timing_benchmark: "SH000300"
+    fast_window: 20
+    slow_window: 60
+    risk_bull: 0.95
+    risk_neutral: 0.70
+    risk_bear: 0.40
+    rebalance_tolerance: 0.02
+
+backtest:
+  account: 1000000
+  exchange_kwargs:
+    freq: "day"
+    limit_threshold: 0.095
+    deal_price: "close"
+    open_cost: 0.0000954
+    close_cost: 0.0005954
+    min_cost: 5

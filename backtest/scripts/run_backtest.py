@@ -3,7 +3,7 @@
 
 用法:
   python backtest/scripts/run_backtest.py
-  python backtest/scripts/run_backtest.py --config csi300_lgbm.yaml
+  python backtest/scripts/run_backtest.py --config csi300_lgbm_bt_only_2006_top10.yaml
   python backtest/scripts/run_backtest.py --config csi300_lgbm_bt_only.example.yaml
 
 配置见 backtest/configs/；结果写入 backtest/result/YYYYMMDD_HHMMSS[_note]/。
@@ -54,7 +54,13 @@ RESULT_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -> dict:
-    """从 port_analysis / report_normal 提取常用回测指标。"""
+    """从 port_analysis / report_normal 提取常用回测指标。
+
+    含：超额（相对基准）、组合绝对收益、基准绝对收益。
+    跨指数对比时必须看绝对收益，因基准不同。
+    """
+    from qlib.contrib.evaluate import risk_analysis
+
     metrics = {}
 
     def _excess_section(key: str):
@@ -87,6 +93,25 @@ def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -
     except Exception:
         pass
 
+    # 绝对收益：组合日收益 / 基准日收益（与 excess 同用 risk_analysis product 模式）
+    try:
+        port_ret = report_normal_df["return"].dropna()
+        if len(port_ret) > 1:
+            ra = risk_analysis(port_ret, freq="day")
+            for key in ["mean", "std", "annualized_return", "information_ratio", "max_drawdown"]:
+                metrics[f"portfolio_{key}"] = float(ra.loc[key, "risk"])
+    except Exception:
+        pass
+
+    try:
+        bench_ret = report_normal_df["bench"].dropna()
+        if len(bench_ret) > 1:
+            ra = risk_analysis(bench_ret, freq="day")
+            for key in ["mean", "std", "annualized_return", "information_ratio", "max_drawdown"]:
+                metrics[f"benchmark_{key}"] = float(ra.loc[key, "risk"])
+    except Exception:
+        pass
+
     return metrics
 
 
@@ -101,24 +126,29 @@ def _save_run_report(
     report_normal_df: pd.DataFrame,
     analysis_df: pd.DataFrame,
     pred_label: pd.DataFrame | None,
+    generate_figures: bool = False,
 ) -> None:
     figures_dir = run_dir / "figures"
     write_json(run_dir / "mlruns_link.json", mlruns_link)
     write_json(run_dir / "metrics.json", {k: v for k, v in result.items() if k != "traceback"})
     report_normal_df.to_csv(run_dir / "report_normal.csv")
 
-    print(f"[Run {run_idx}] 生成分析图...")
-    try:
-        figure_files = generate_run_figures(
-            report_normal_df=report_normal_df,
-            analysis_df=analysis_df,
-            pred_label=pred_label,
-            figures_dir=figures_dir,
-        )
-    except Exception as fig_err:
-        print(f"[Run {run_idx}] 出图失败（继续写 HTML）: {fig_err}")
-        traceback.print_exc()
-        figure_files = {}
+    figure_files: dict = {}
+    if generate_figures:
+        print(f"[Run {run_idx}] 生成分析图...")
+        try:
+            figure_files = generate_run_figures(
+                report_normal_df=report_normal_df,
+                analysis_df=analysis_df,
+                pred_label=pred_label,
+                figures_dir=figures_dir,
+            )
+        except Exception as fig_err:
+            print(f"[Run {run_idx}] 出图失败（继续写 HTML）: {fig_err}")
+            traceback.print_exc()
+            figure_files = {}
+    else:
+        print(f"[Run {run_idx}] 跳过出图（run.generate_figures=false）")
 
     write_json(run_dir / "figures_manifest.json", figure_files)
     write_run_html(
@@ -139,6 +169,7 @@ def run_train_backtest_once(
     note: str,
     task: dict,
     port_analysis_config: dict,
+    generate_figures: bool = False,
 ) -> dict:
     print(f"\n{'='*60}")
     print(f"  Run {run_idx}/{n_runs}  [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]")
@@ -220,6 +251,7 @@ def run_train_backtest_once(
             report_normal_df=report_normal_df,
             analysis_df=analysis_df,
             pred_label=pred_label,
+            generate_figures=generate_figures,
         )
         print(f"[Run {run_idx}] 报告已保存至 {run_dir}")
         print(f"[Run {run_idx}] 主要指标: {metrics}")
@@ -326,6 +358,7 @@ def run_backtest_only_once(
             report_normal_df=report_normal_df,
             analysis_df=analysis_df,
             pred_label=pred_label,
+            generate_figures=bool(cfg["run"].get("generate_figures", False)),
         )
         print(f"[Run {run_idx}] 报告已保存至 {run_dir}")
         print(f"[Run {run_idx}] 主要指标: {metrics}")
@@ -403,7 +436,7 @@ def parse_args():
         "--config",
         type=str,
         default=None,
-        help="YAML 路径或 backtest/configs/ 下文件名（默认 csi300_lgbm.yaml）",
+        help="YAML 路径或 backtest/configs/ 下文件名（默认 csi300_lgbm_bt_only_2006_top10.yaml）",
     )
     return p.parse_args()
 
@@ -462,9 +495,9 @@ def main():
             "topk": port_analysis_config["strategy"]["kwargs"]["topk"],
             "n_drop": port_analysis_config["strategy"]["kwargs"]["n_drop"],
         },
+        "generate_figures": bool(run.get("generate_figures", False)),
         "overrides": {
-            "test_start": run.get("test_start"),
-            "test_end": run.get("test_end"),
+            "segments_test": cfg["segments"]["test"],
         },
         "runs": [],
     }
@@ -491,7 +524,14 @@ def main():
     else:
         for i in range(1, n_runs + 1):
             result = run_train_backtest_once(
-                i, n_runs, session_dir, session_name, note, task, port_analysis_config
+                i,
+                n_runs,
+                session_dir,
+                session_name,
+                note,
+                task,
+                port_analysis_config,
+                generate_figures=bool(run.get("generate_figures", False)),
             )
             all_results.append(result)
             print(f"[Run {i}] 结果已追加写入 {session_dir / 'all_runs_results.csv'}")

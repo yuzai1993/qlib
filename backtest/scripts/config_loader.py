@@ -14,7 +14,7 @@ CONFIGS_DIR = BACKTEST_ROOT / "configs"
 RESULT_ROOT = BACKTEST_ROOT / "result"
 
 VALID_MODES = ("train_backtest", "backtest_only")
-DEFAULT_CONFIG_NAME = "csi300_lgbm.yaml"
+DEFAULT_CONFIG_NAME = "csi300_lgbm_bt_only_2006_top10.yaml"
 
 
 class ConfigError(ValueError):
@@ -66,40 +66,27 @@ def _require(cfg: dict, *keys: str) -> Any:
     return cur
 
 
-def apply_test_overrides(cfg: dict) -> dict:
-    """应用 run.test_start/end：覆盖 segments.test 与 backtest 起止；必要时延长 handler.end_time。
+def align_dates_from_segments(cfg: dict) -> dict:
+    """用 segments.test 对齐 backtest 起止；必要时延长 handler.end_time。
 
-    handler.start_time 保持不变（滚动特征需要测试区间之前的历史）。
+    只改 YAML 的 segments.test 即可；handler.start_time 保持不变（滚动特征需要测试区间之前的历史）。
     """
     cfg = copy.deepcopy(cfg)
-    run = cfg.setdefault("run", {})
-    test_start = run.get("test_start")
-    test_end = run.get("test_end")
-
     segments = _require(cfg, "segments")
     backtest = _require(cfg, "backtest")
     handler = _require(cfg, "data", "handler")
 
-    # 基准区间：已有 segments.test，若缺则用 backtest
-    test = list(segments.get("test") or [backtest.get("start_time"), backtest.get("end_time")])
+    test = list(segments.get("test") or [])
     if len(test) != 2:
         raise ConfigError("segments.test 必须是 [start, end]")
-
-    if test_start:
-        test[0] = test_start
-    if test_end:
-        test[1] = test_end
-
     if not test[0] or not test[1]:
-        raise ConfigError("测试区间起止不能为空")
+        raise ConfigError("segments.test 起止不能为空")
     if str(test[0]) > str(test[1]):
         raise ConfigError(f"测试区间非法: {test[0]} > {test[1]}")
 
-    segments["test"] = test
     backtest["start_time"] = test[0]
     backtest["end_time"] = test[1]
 
-    # 延长 handler.end_time，不收窄 start_time
     h_end = handler.get("end_time")
     if h_end is None or str(test[1]) > str(h_end):
         handler["end_time"] = test[1]
@@ -117,8 +104,10 @@ def validate_run_section(cfg: dict) -> dict:
     run.setdefault("n_runs", 1)
     run.setdefault("from_run", 1)
     run.setdefault("from_session", None)
-    run.setdefault("test_start", None)
-    run.setdefault("test_end", None)
+    run["generate_figures"] = bool(run.get("generate_figures", False))
+    # 兼容旧 YAML：忽略已废弃的 test_start/test_end
+    run.pop("test_start", None)
+    run.pop("test_end", None)
 
     if mode == "backtest_only":
         if not run.get("from_session"):
@@ -145,14 +134,14 @@ def validate_run_section(cfg: dict) -> dict:
 
 
 def load_config(config: Optional[str] = None) -> dict:
-    """加载 YAML → 校验 → 应用日期覆盖。返回深拷贝后的配置，并附 `_config_path`。"""
+    """加载 YAML → 校验 → 按 segments.test 对齐日期。返回配置，并附 `_config_path`。"""
     path = resolve_config_path(config)
     with open(path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     if not isinstance(raw, dict):
         raise ConfigError(f"配置必须是 mapping: {path}")
     cfg = validate_run_section(raw)
-    cfg = apply_test_overrides(cfg)
+    cfg = align_dates_from_segments(cfg)
     cfg["_config_path"] = str(path)
     return cfg
 
@@ -214,6 +203,8 @@ def build_port_analysis_config(cfg: dict) -> dict:
             "kwargs": {
                 "topk": strategy["topk"],
                 "n_drop": strategy["n_drop"],
+                # 其余策略参数（如择时窗口、目标仓位档位）原样透传
+                **(strategy.get("kwargs") or {}),
             },
         },
         "backtest": backtest,

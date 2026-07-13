@@ -8,10 +8,12 @@
 # Flow per batch:
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
-#     -> phase SELL: passorder all sells, wait terminal (or timeout)
-#     -> phase BUY : check available cash, passorder buys
+#     -> 14:45 late-session window (execute near close, align w/ backtest):
+#        phase SELL: passorder all sells, wait terminal (or timeout)
+#        phase BUY : check available cash, passorder buys
+#     -> price: realtime last +/- small buffer, bounded by Mac limit_price
 #     -> poll order status by remark (client_order_id)
-#     -> 14:50 cancel pending, mark EXPIRED; write outbound/fills_{batch}.done
+#     -> 14:56 cancel pending, mark EXPIRED; write outbound/fills_{batch}.done
 #
 # LIVE double switch: header.mode == "LIVE" AND state/LIVE_OK_{trade_date} exists.
 # Otherwise orders are simulated: fill status SKIPPED, message "simulated".
@@ -30,10 +32,15 @@ ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
-SELL_WAIT_TIMEOUT_SEC = 30 * 60   # max wait for sells before starting buys
-TRADE_START = "09:25:00"   # do not submit before
-CANCEL_AT = "14:50:00"     # cancel all pending orders
-FINALIZE_AT = "14:52:00"   # force-write fills .done
+SELL_WAIT_TIMEOUT_SEC = 4 * 60    # max wait for sells before starting buys
+TRADE_START = "14:45:00"   # late-session window: execute near close price
+CANCEL_AT = "14:56:00"     # cancel all pending orders
+FINALIZE_AT = "14:57:00"   # force-write fills .done
+
+# intraday repricing: quote realtime last price with a small buffer, still
+# bounded by the Mac-side limit_price (prev_close +/- 1%) as risk control.
+INTRADAY_BUY_SLIPPAGE = 0.003
+INTRADAY_SELL_SLIPPAGE = 0.003
 
 # order status values (see design doc / QMT docs)
 STATUS_PART_CANCEL = 53
@@ -53,6 +60,7 @@ class Batch(object):
         self.orders = orders          # list of dicts, sells first (priority asc)
         self.phase = "SELL"           # SELL -> BUY -> DONE
         self.phase_started = time.time()
+        self.trading_started = False  # phase timer resets on first trade pass
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
         self.finalized = False
@@ -309,6 +317,37 @@ def _get_available_cash(account_id):
     return 0.0
 
 
+def _get_last_price(ContextInfo, stock_code):
+    """Realtime last price via full tick. 0.0 if unavailable."""
+    try:
+        ticks = ContextInfo.get_full_tick([stock_code])
+        tick = ticks.get(stock_code) if ticks else None
+        if tick is None:
+            return 0.0
+        last = tick.get("lastPrice") if isinstance(tick, dict) \
+            else getattr(tick, "lastPrice", 0.0)
+        return float(last or 0.0)
+    except Exception:
+        _log("get_full_tick failed for %s:\n%s"
+             % (stock_code, traceback.format_exc()))
+        return 0.0
+
+
+def _effective_price(ContextInfo, order):
+    """Order price for passorder: realtime last +/- small buffer, bounded by
+    the Mac-side limit_price (risk control). Falls back to limit_price when
+    no realtime quote is available."""
+    mac_limit = float(order["limit_price"])
+    last = _get_last_price(ContextInfo, order["stock_code"])
+    if last <= 0.0:
+        return mac_limit
+    if order["side"] == "BUY":
+        # never pay more than mac_limit (prev_close * (1+slippage))
+        return round(min(last * (1.0 + INTRADAY_BUY_SLIPPAGE), mac_limit), 2)
+    # SELL: never sell below mac_limit (prev_close * (1-slippage))
+    return round(max(last * (1.0 - INTRADAY_SELL_SLIPPAGE), mac_limit), 2)
+
+
 def _submit(ContextInfo, batch, order, live):
     """Submit one order. Returns True if submitted (or simulated)."""
     coid = order["client_order_id"]
@@ -320,17 +359,18 @@ def _submit(ContextInfo, batch, order, live):
         return True
 
     op_type = 23 if order["side"] == "BUY" else 24
+    price = _effective_price(ContextInfo, order)
     try:
         # orderType=1101 single stock by shares; prType=11 fixed price;
         # quickTrade=2 submit immediately; userOrderId -> m_strRemark
         passorder(op_type, 1101, _account_id(batch), order["stock_code"],
-                  11, float(order["limit_price"]), int(order["quantity"]),
+                  11, price, int(order["quantity"]),
                   STRATEGY_NAME, 2, coid, ContextInfo)
         batch.submitted[coid] = True
         _write_fill(batch, order, "ACCEPTED", 0, 0.0, "", "submitted")
-        _log("passorder %s %s x%d @ %s (%s)"
+        _log("passorder %s %s x%d @ %s (mac_limit %s) (%s)"
              % (order["side"], order["stock_code"], order["quantity"],
-                order["limit_price"], coid))
+                price, order["limit_price"], coid))
         return True
     except Exception:
         _write_fill(batch, order, "ERROR", 0, 0.0, "",
@@ -391,6 +431,11 @@ def _process_batch(ContextInfo, batch):
     now = _now_hms()
     if now < TRADE_START:
         return
+    if not batch.trading_started:
+        # batch may have been claimed hours before the trade window opens;
+        # restart the sell-wait timer at the first real trading pass
+        batch.trading_started = True
+        batch.phase_started = time.time()
 
     mode_live = (batch.header.get("mode") == "LIVE"
                  and _live_ok(batch.header.get("trade_date", "")))

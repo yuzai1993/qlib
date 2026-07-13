@@ -145,6 +145,33 @@ def test_no_done_no_claim(bridge):
     assert (inbox / ("signal_%s.jsonl" % BATCH_ID)).exists()
 
 
+class _TickCtx:
+    """Fake ContextInfo exposing get_full_tick."""
+    def __init__(self, last_price):
+        self._last = last_price
+
+    def get_full_tick(self, codes):
+        return {c: {"lastPrice": self._last} for c in codes}
+
+
+def test_effective_price_buy_uses_realtime_within_limit(bridge):
+    order = {"stock_code": "000001.SZ", "side": "BUY", "limit_price": 10.41}
+    # last=10.00 -> 10.00*1.003=10.03, below mac limit 10.41
+    assert bridge._effective_price(_TickCtx(10.00), order) == 10.03
+    # last=10.50 -> 10.53 capped by mac limit 10.41
+    assert bridge._effective_price(_TickCtx(10.50), order) == 10.41
+
+
+def test_effective_price_sell_floor_and_fallback(bridge):
+    order = {"stock_code": "000001.SZ", "side": "SELL", "limit_price": 9.90}
+    # last=10.20 -> 10.20*0.997=10.17, above floor 9.90
+    assert bridge._effective_price(_TickCtx(10.20), order) == 10.17
+    # last=9.50 -> floored at mac limit 9.90 (won't chase a big drop)
+    assert bridge._effective_price(_TickCtx(9.50), order) == 9.90
+    # no quote -> fall back to mac limit
+    assert bridge._effective_price(_TickCtx(0.0), order) == 9.90
+
+
 def test_simulate_batch_processes_without_qmt_api(bridge):
     """SIMULATE 模式下全流程不触碰 QMT API，直接产出 simulated 回执。"""
     class FakeCtx:

@@ -16,9 +16,12 @@ from .rule_strategy import (
 
 from .cost_control import SoftTopkStrategy
 
+from .dynamic_position import TopkDropoutTimingStrategy
+
 
 __all__ = [
     "TopkDropoutStrategy",
+    "TopkDropoutTimingStrategy",
     "WeightStrategyBase",
     "EnhancedIndexingStrategy",
     "TWAPStrategy",

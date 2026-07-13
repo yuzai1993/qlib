@@ -14,6 +14,7 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
+from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
 from live_trading.modules.signal_schema import (
     FillEvent,
     TERMINAL_FILL_STATUS,
@@ -25,13 +26,19 @@ logger = logging.getLogger("live_trading.fill_importer")
 # 会改变持仓的终态
 _POSITION_STATUS = {"FILLED", "PARTIAL"}
 
+# 计入外部出入金（日收益计算时剔除）的流水类型
+EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW", "CORRECTION"}
+
 
 class LiveRecorder:
-    """实盘账簿 SQLite 存储（batches / fills / positions）。"""
+    """实盘账簿 SQLite 存储（batches / fills / positions / cash_flows）。"""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, fees: dict = None):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.fees = dict(DEFAULT_FEES)
+        if fees:
+            self.fees.update(fees)
         self._init_db()
 
     @contextmanager
@@ -72,7 +79,8 @@ class LiveRecorder:
                     qmt_order_id TEXT,
                     message TEXT,
                     ts TEXT,
-                    applied_qty INTEGER NOT NULL DEFAULT 0
+                    applied_qty INTEGER NOT NULL DEFAULT 0,
+                    applied_fee REAL NOT NULL DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS positions (
@@ -87,8 +95,48 @@ class LiveRecorder:
                     value REAL NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS signal_orders (
+                    client_order_id TEXT PRIMARY KEY,
+                    batch_id TEXT NOT NULL,
+                    stock_code TEXT NOT NULL,
+                    instrument_qlib TEXT,
+                    side TEXT NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    price_type TEXT,
+                    limit_price REAL NOT NULL,
+                    priority INTEGER,
+                    reason TEXT
+                );
+
+                CREATE TABLE IF NOT EXISTS stock_names (
+                    stock_code TEXT PRIMARY KEY,
+                    instrument TEXT,
+                    name TEXT NOT NULL,
+                    updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+                );
+
+                CREATE TABLE IF NOT EXISTS cash_flows (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    trade_date TEXT NOT NULL,
+                    flow_type TEXT NOT NULL,
+                    stock_code TEXT,
+                    amount REAL NOT NULL,
+                    note TEXT,
+                    dedup_key TEXT UNIQUE,
+                    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+                );
+                CREATE INDEX IF NOT EXISTS idx_cash_flows_date
+                    ON cash_flows(trade_date);
+
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
+                CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id);
             """)
+            # 旧库迁移：fills 补 applied_fee 列
+            cols = {r["name"] for r in conn.execute("PRAGMA table_info(fills)")}
+            if "applied_fee" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN applied_fee REAL NOT NULL DEFAULT 0"
+                )
 
     # ---------- batches ----------
 
@@ -108,6 +156,74 @@ class LiveRecorder:
             ).fetchone()
             return dict(row) if row else None
 
+    # ---------- signal_orders（发布时写入，回执前可看执行计划）----------
+
+    def record_orders(self, batch_id: str, orders: list) -> None:
+        """写入批次执行计划。orders 为 SignalOrder 或同名字段 dict。
+
+        client_order_id 按日唯一（协议不含 batch seq），同日重发会覆盖旧计划行。
+        """
+        rows = []
+        for o in orders:
+            get = o.get if isinstance(o, dict) else lambda k, d=None: getattr(o, k, d)
+            rows.append((
+                get("client_order_id"),
+                batch_id,
+                get("stock_code"),
+                get("instrument_qlib"),
+                get("side"),
+                int(get("quantity")),
+                get("price_type"),
+                float(get("limit_price")),
+                get("priority"),
+                get("reason"),
+            ))
+        with self._conn() as conn:
+            conn.execute("DELETE FROM signal_orders WHERE batch_id=?", (batch_id,))
+            if rows:
+                ids = [r[0] for r in rows]
+                marks = ",".join("?" for _ in ids)
+                conn.execute(
+                    f"DELETE FROM signal_orders WHERE client_order_id IN ({marks})",
+                    ids,
+                )
+            conn.executemany(
+                """INSERT INTO signal_orders
+                   (client_order_id, batch_id, stock_code, instrument_qlib,
+                    side, quantity, price_type, limit_price, priority, reason)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                rows,
+            )
+
+    def get_orders(self, batch_id: str) -> list:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT * FROM signal_orders WHERE batch_id=? "
+                "ORDER BY priority ASC, client_order_id ASC",
+                (batch_id,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    # ---------- stock_names ----------
+
+    def save_stock_names(self, rows: list) -> None:
+        """rows: [{stock_code, instrument, name}, ...]"""
+        with self._conn() as conn:
+            conn.executemany(
+                "INSERT OR REPLACE INTO stock_names "
+                "(stock_code, instrument, name, updated_at) "
+                "VALUES (?,?,?, datetime('now', 'localtime'))",
+                [(r["stock_code"], r.get("instrument"), r["name"]) for r in rows],
+            )
+
+    def get_stock_names(self) -> dict:
+        """{stock_code(QMT): name}"""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT stock_code, name FROM stock_names"
+            ).fetchall()
+            return {r["stock_code"]: r["name"] for r in rows}
+
     # ---------- fills ----------
 
     def get_fills(self, batch_id: str) -> list:
@@ -119,28 +235,31 @@ class LiveRecorder:
             return [dict(r) for r in rows]
 
     def apply_fill(self, fill: FillEvent) -> None:
-        """upsert 回执；LIVE 终态成交按增量更新持仓（幂等）。"""
+        """upsert 回执；LIVE 终态成交按增量更新持仓与现金（含费用，幂等）。"""
         with self._conn() as conn:
             row = conn.execute(
-                "SELECT applied_qty FROM fills WHERE client_order_id=?",
+                "SELECT applied_qty, applied_fee FROM fills WHERE client_order_id=?",
                 (fill.client_order_id,),
             ).fetchone()
             applied_qty = row["applied_qty"] if row else 0
+            applied_fee = row["applied_fee"] if row else 0.0
 
             delta = 0
+            fee_delta = 0.0
             if fill.mode == "LIVE" and fill.status in _POSITION_STATUS:
                 delta = int(fill.filled_qty) - applied_qty
                 if delta > 0:
                     self._apply_position_delta(conn, fill, delta)
                     self._apply_cash_delta(conn, fill, delta)
+                    fee_delta = self._apply_fee_delta(conn, fill, applied_fee)
                 else:
                     delta = 0
 
             conn.execute(
                 """INSERT INTO fills (client_order_id, batch_id, mode, stock_code,
                        side, status, requested_qty, filled_qty, avg_price,
-                       qmt_order_id, message, ts, applied_qty)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       qmt_order_id, message, ts, applied_qty, applied_fee)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON CONFLICT(client_order_id) DO UPDATE SET
                        status=excluded.status,
                        filled_qty=excluded.filled_qty,
@@ -148,11 +267,12 @@ class LiveRecorder:
                        qmt_order_id=excluded.qmt_order_id,
                        message=excluded.message,
                        ts=excluded.ts,
-                       applied_qty=excluded.applied_qty""",
+                       applied_qty=excluded.applied_qty,
+                       applied_fee=excluded.applied_fee""",
                 (fill.client_order_id, fill.batch_id, fill.mode, fill.stock_code,
                  fill.side, fill.status, fill.requested_qty, fill.filled_qty,
                  fill.avg_price, fill.qmt_order_id, fill.message, fill.ts,
-                 applied_qty + delta),
+                 applied_qty + delta, applied_fee + fee_delta),
             )
 
     @staticmethod
@@ -189,7 +309,7 @@ class LiveRecorder:
 
     @staticmethod
     def _apply_cash_delta(conn, fill: FillEvent, delta: int) -> None:
-        """按成交额近似调整现金（不含手续费，盘后对账时人工校正）。"""
+        """按本次成交额调整现金（费用另由 _apply_fee_delta 扣减）。"""
         amount = delta * fill.avg_price
         change = amount if fill.side == "SELL" else -amount
         conn.execute(
@@ -197,6 +317,96 @@ class LiveRecorder:
             "ON CONFLICT(key) DO UPDATE SET value = value + ?",
             (change, change),
         )
+
+    def _apply_fee_delta(self, conn, fill: FillEvent, applied_fee: float) -> float:
+        """按订单累计成交额计费，扣减增量部分；返回本次扣减额（幂等）。
+
+        最低佣金对整个订单只收一次：每次回执重算「订单累计应计费用」，
+        与已扣 applied_fee 的差额即本次入账额。
+        """
+        cum_amount = float(fill.filled_qty) * float(fill.avg_price)
+        total_fee = order_total_fee(fill.side, cum_amount, self.fees)
+        fee_delta = total_fee - applied_fee
+        if fee_delta <= 0:
+            return 0.0
+        conn.execute(
+            "INSERT INTO account_state (key, value) VALUES ('cash', ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = value + ?",
+            (-fee_delta, -fee_delta),
+        )
+        return fee_delta
+
+    # ---------- cash_flows ----------
+
+    def record_cash_flow(self, trade_date: str, flow_type: str, amount: float,
+                         stock_code: str = None, note: str = "",
+                         dedup_key: str = None) -> bool:
+        """记录资金流水并同步调整现金。
+
+        Args:
+            flow_type: DEPOSIT / WITHDRAW / CORRECTION（外部出入金，日收益剔除）
+                       DIVIDEND / DIVIDEND_TAX / BONUS_SHARES（公司行为，计入收益）
+            amount: 正数入金、负数出金（BONUS_SHARES 记 0，仅留痕）
+            dedup_key: 幂等键；已存在时直接返回 False，不重复入账
+
+        Returns:
+            是否实际入账。
+        """
+        with self._conn() as conn:
+            cur = conn.execute(
+                "INSERT OR IGNORE INTO cash_flows "
+                "(trade_date, flow_type, stock_code, amount, note, dedup_key) "
+                "VALUES (?,?,?,?,?,?)",
+                (trade_date, flow_type, stock_code, amount, note, dedup_key),
+            )
+            if cur.rowcount == 0:
+                return False
+            if amount:
+                conn.execute(
+                    "INSERT INTO account_state (key, value) VALUES ('cash', ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = value + ?",
+                    (amount, amount),
+                )
+            return True
+
+    def get_cash_flows(self, start: str = None, end: str = None,
+                       limit: int = 200) -> list:
+        sql = "SELECT * FROM cash_flows"
+        conds, params = [], []
+        if start:
+            conds.append("trade_date >= ?")
+            params.append(start)
+        if end:
+            conds.append("trade_date <= ?")
+            params.append(end)
+        if conds:
+            sql += " WHERE " + " AND ".join(conds)
+        sql += " ORDER BY trade_date DESC, id DESC LIMIT ?"
+        params.append(limit)
+        with self._conn() as conn:
+            return [dict(r) for r in conn.execute(sql, params).fetchall()]
+
+    def sum_external_flows(self, trade_date: str) -> float:
+        """当日外部出入金净额（快照日收益剔除用）。"""
+        marks = ",".join("?" for _ in EXTERNAL_FLOW_TYPES)
+        with self._conn() as conn:
+            row = conn.execute(
+                f"SELECT COALESCE(SUM(amount), 0) AS s FROM cash_flows "
+                f"WHERE trade_date=? AND flow_type IN ({marks})",
+                [trade_date, *EXTERNAL_FLOW_TYPES],
+            ).fetchone()
+            return float(row["s"])
+
+    def sum_fees_by_date(self, trade_date: str) -> float:
+        """当日已扣交易费用合计（按 batches.trade_date 关联）。"""
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT COALESCE(SUM(f.applied_fee), 0) AS s
+                   FROM fills f JOIN batches b ON f.batch_id = b.batch_id
+                   WHERE b.trade_date=? AND f.mode='LIVE'""",
+                (trade_date,),
+            ).fetchone()
+            return float(row["s"])
 
     # ---------- account ----------
 
@@ -222,6 +432,27 @@ class LiveRecorder:
             ).fetchall()
             return [dict(r) for r in rows]
 
+    def get_batches_by_date(self, trade_date: str) -> list:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT * FROM batches WHERE trade_date=? ORDER BY batch_id",
+                (trade_date,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def get_fills_by_dates(self, trade_dates: list) -> list:
+        """按 batches.trade_date 关联取回执（监控用）。"""
+        if not trade_dates:
+            return []
+        marks = ",".join("?" for _ in trade_dates)
+        with self._conn() as conn:
+            rows = conn.execute(
+                f"""SELECT f.* FROM fills f JOIN batches b ON f.batch_id = b.batch_id
+                    WHERE b.trade_date IN ({marks}) ORDER BY f.client_order_id""",
+                trade_dates,
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     # ---------- positions ----------
 
     def upsert_position(self, stock_code: str, shares: int, avg_cost: float) -> None:
@@ -237,6 +468,26 @@ class LiveRecorder:
                 conn.execute(
                     "DELETE FROM positions WHERE stock_code=?", (stock_code,)
                 )
+
+    def apply_bonus_shares(self, stock_code: str, bonus_shares: int) -> bool:
+        """送股/转增到账：股数增加、成本摊薄（总成本不变）。无持仓返回 False。"""
+        if bonus_shares <= 0:
+            return False
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT shares, avg_cost FROM positions WHERE stock_code=?",
+                (stock_code,),
+            ).fetchone()
+            if not row:
+                return False
+            new_shares = row["shares"] + bonus_shares
+            new_cost = row["shares"] * row["avg_cost"] / new_shares
+            conn.execute(
+                "UPDATE positions SET shares=?, avg_cost=?, "
+                "updated_at=datetime('now', 'localtime') WHERE stock_code=?",
+                (new_shares, new_cost, stock_code),
+            )
+            return True
 
     def get_positions(self) -> dict:
         with self._conn() as conn:

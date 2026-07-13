@@ -13,6 +13,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from live_trading.modules.fees import fees_from_config
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
 from live_trading.modules.live_config import load_live_config
 
@@ -29,7 +30,8 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
     config = load_live_config(CONFIGS_DIR / f"{args.config}.yaml", PROJECT_ROOT)
-    recorder = LiveRecorder(str(PROJECT_ROOT / config["storage"]["db_path"]))
+    recorder = LiveRecorder(str(PROJECT_ROOT / config["storage"]["db_path"]),
+                            fees=fees_from_config(config))
     importer = FillImporter(config["live"]["bridge_root"], recorder)
 
     n = importer.import_fills()

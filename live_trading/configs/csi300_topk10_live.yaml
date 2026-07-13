@@ -11,7 +11,7 @@ live:
   # 资金账号不进 git：留空则要求通过环境变量 QMT_ACCOUNT_ID 提供
   account_id: ""
   account_type: "STOCK"
-  default_mode: "SIMULATE"
+  default_mode: "LIVE"
   buy_slippage: 0.01
   sell_slippage: 0.01
   max_orders_per_day: 20
@@ -23,3 +23,27 @@ storage:
 schedule:
   publish_after: "21:00"
   import_after: "15:30"
+
+# 交易费用与红利税（现行规则 2026；佣金请按开户实际费率修改）
+fees:
+  commission_rate: 0.00025     # 佣金 万2.5，双向，已含规费
+  min_commission: 5.0          # 单笔最低佣金（元）
+  stamp_duty_rate: 0.0005      # 印花税 0.05%，仅卖出
+  transfer_fee_rate: 0.00001   # 过户费 0.001%，双向
+  dividend_tax_rate: 0.20      # 红利税预提（短持有期策略按 20% 估，卖出时券商实扣）
+
+# 监控平台（docs/superpowers/specs/2026-07-13-live-monitor-platform-design.md）
+monitor:
+  benchmark: "SH000300"
+  notify:
+    channel: "serverchan"        # serverchan | pushplus | none；密钥走环境变量
+    daily_report: true           # report 阶段无告警也推日报
+  thresholds:
+    daily_loss: -0.03
+    max_drawdown: -0.10
+    consecutive_loss_days: 5
+    reject_rate: 0.5
+
+web:
+  host: "0.0.0.0"
+  port: 8081

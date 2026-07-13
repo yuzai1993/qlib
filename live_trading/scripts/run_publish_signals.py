@@ -183,6 +183,7 @@ def main():
     publisher = SignalPublisher(live_cfg["bridge_root"])
     path = publisher.publish(header, orders)
     recorder.record_batch(batch_id, trade_date, mode, planned_orders=len(orders))
+    recorder.record_orders(batch_id, orders)
     logger.info("published %d orders to %s", len(orders), path)
 
 

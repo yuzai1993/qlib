@@ -34,13 +34,14 @@
 | 每笔订单有唯一编号 | 同一笔绝不重复下单，重复投递自动跳过 |
 | 模拟/实盘双开关 | 文件里 `mode=LIVE` **且** Windows 上有当日 `LIVE_OK` 文件，才碰真钱 |
 | 先卖后买 | 卖出资金到账后才买入，避免资金不足 |
-| 14:50 强制收尾 | 没成交的单子统一撤掉、写回执，绝不留悬案 |
+| 14:56 强制收尾 | 没成交的单子统一撤掉、写回执，绝不留悬案 |
 
 ### 每天钱和股票怎么记账
 
 - Mac 侧有一个本地账本（SQLite：`live_trading/data/*.db`），记录每批信号、每笔回执、当前持仓和现金；
 - 账本**只认 LIVE 回执**——模拟回执只留档，不改持仓；
-- 账本是"推算值"（按回执累计），所以要**定期和 QMT 界面里的真实持仓人工核对**（见下文周检）。
+- 每笔成交**自动扣交易费用**（佣金/印花税/过户费，费率见配置 `fees` 段）；持仓股除息日**自动入账分红和送股**（红利税按 20% 预提）；出入金用 `record_cash_flow.py` 登记（见 §7.5）；
+- 账本是"推算值"（按回执累计），所以要**定期和 QMT 界面里的真实持仓人工核对**（见下文周检），差额用 `record_cash_flow.py --type CORRECTION` 校正。
 
 ---
 
@@ -144,18 +145,21 @@ ls /Volumes/qmt_bridge/inbox/
 
 SIMULATE 批次回执应为每单一条 `SKIPPED simulated`，且导入后持仓/现金**不变**——这说明隔离正确。
 
-### 2.6 定时任务（可选，跑顺后再加）
+### 2.6 定时任务（crontab）
+
+本机当前约定（工作日）：
 
 ```cron
-# 数据更新（已有，沿用模拟盘）
-0 18 * * 1-5  <数据更新脚本>
-# 发布次日信号（等数据更新完成；注意 date 计算下一交易日由脚本内日历处理，传明天即可，非交易日会报错跳过）
-30 21 * * 1-5 cd /Users/yuxianqi/Project/qlib && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_publish_signals.py --config csi300_topk10_live --trade-date $(date -v+1d +\%Y-\%m-\%d) --mode SIMULATE >> live_trading/logs/publish_cron.log 2>&1
-# 导入回执
-0 16 * * 1-5  cd /Users/yuxianqi/Project/qlib && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_import_fills.py --config csi300_topk10_live >> live_trading/logs/import_cron.log 2>&1
+# 17:30  Tushare→qlib 日线增量
+30 17 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
+# 16:00  导入 QMT 回执（实盘）
+0 16 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_import_cron.sh
+# 21:30  发布次日 SIMULATE 信号（依赖 17:30 数据已完成）
+30 21 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_publish_cron.sh
 ```
 
-> 建议前两周手动执行、人工检查，再逐步交给 crontab；LIVE 模式**不建议**放进 crontab（保留每晚人工确认这道闸）。
+包装脚本会 `source ~/.zshrc` 读取 `QMT_ACCOUNT_ID`，日志写到 `live_trading/logs/{publish,import}_cron.log`。  
+LIVE 模式**不要**进 crontab；人工确认后再手动 `--mode LIVE`。
 
 ---
 
@@ -191,7 +195,7 @@ python live_trading/scripts/run_publish_signals.py \
 
 ### 盘中（T 日，可选）
 
-不需要盯盘。9:25 后策略自动消费信号：先卖后买，14:50 自动撤未成单，14:55 前回执文件必然写完。想看进度就看 QMT 策略输出日志或 `outbound/fills_*.jsonl`。
+不需要盯盘。策略在 **14:45 尾盘窗口**消费信号（贴近回测的收盘价成交口径）：先卖后买，报单价用实时最新价加小缓冲（买 +0.3% / 卖 -0.3%），并以信号里的 `limit_price`（昨收 ±1%）为硬边界；14:56 自动撤未成单，14:57 强制写回执。想看进度就看 QMT 策略输出日志或 `outbound/fills_*.jsonl`。
 
 ### 下午（T 日，Mac，15:30 后，约 2 分钟）
 
@@ -309,7 +313,86 @@ r.set_cash(123456.78)
 
 ---
 
-## 七、关键路径与文件速查
+## 七、监控平台
+
+> 设计文档：[`docs/superpowers/specs/2026-07-13-live-monitor-platform-design.md`](../docs/superpowers/specs/2026-07-13-live-monitor-platform-design.md)
+
+监控平台自动盯三件事：**账户**（每日净值快照、收益 vs 沪深300）、**流程**（发布/回执/数据更新是否按时完成）、**告警**（微信推送 + 每日日报）。数据写入实盘账本同一个 db 的新增表（`daily_snapshot` / `position_snapshot` / `pipeline_events` / `alerts`），Web 仪表盘只读展示。
+
+### 7.1 一次性配置
+
+微信推送用 Server酱：到 <https://sct.ftqq.com> 微信扫码登录，复制 SendKey，加入 `~/.zshrc`（不进 git）：
+
+```bash
+export SERVERCHAN_SENDKEY="SCT..."
+```
+
+不想推微信就把配置 `monitor.notify.channel` 改为 `none`（告警仍会记入 db 和 Web 告警页）。也支持 `pushplus`（env `PUSHPLUS_TOKEN`）。
+
+### 7.2 三个检查时点（cron）
+
+| stage | 时点 | 盯什么 |
+|-------|------|--------|
+| `postmarket` | 16:00 导入回执后 | 当日批次对账 missing=0？拒单率？卖超持仓？ |
+| `report` | 20:30 数据更新后 | 数据已含今日 → 建净值快照 → 日亏/回撤/连亏 → 推日报 |
+| `evening` | 22:00 发布信号后 | 明日批次已入库且 inbox 文件齐全？ |
+
+```cron
+0  16 * * 1-5  cd /Users/yuxianqi/Project/qlib && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_import_fills.py --config csi300_topk10_live >> live_trading/logs/import_cron.log 2>&1 && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_monitor.py --config csi300_topk10_live --stage postmarket >> live_trading/logs/monitor_cron.log 2>&1
+30 20 * * 1-5  cd /Users/yuxianqi/Project/qlib && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_monitor.py --config csi300_topk10_live --stage report >> live_trading/logs/monitor_cron.log 2>&1
+0  22 * * 1-5  cd /Users/yuxianqi/Project/qlib && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_monitor.py --config csi300_topk10_live --stage evening >> live_trading/logs/monitor_cron.log 2>&1
+```
+
+> import 与 postmarket 用 `&&` 串联，确保先导入后检查。非交易日 monitor 自动跳过。
+> 补历史某天的快照：`run_monitor.py --stage report --date YYYY-MM-DD`（重跑覆盖，天然幂等）。
+
+### 7.3 Web 仪表盘
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_web.py --config csi300_topk10_live
+# 浏览器打开 http://127.0.0.1:8081
+```
+
+六个页面：概览（净值曲线 + 今日流程状态灯）、持仓（当前 + 按日回看）、批次与成交、资金流水（出入金/分红/税费）、流程健康矩阵、告警历史。只读，随开随关，不影响交易链路。
+
+### 7.4 注意事项
+
+- 出入金请用 `record_cash_flow.py` 登记（而不是直接 `set_cash`），快照日收益会自动剔除出入金影响，不再失真；
+- 告警同日同规则只推一次微信，重跑 monitor 不会重复轰炸；全部告警记录在 `alerts` 表和 Web 告警页；
+- 微信推送失败不影响监控本身（db 里照记），连续收不到日报时检查 `SERVERCHAN_SENDKEY` 和网络。
+
+### 7.5 交易费用、分红与红利税
+
+**费用规则（2026 现行，自动扣减）**：每笔 LIVE 成交入账时同步扣费——
+
+| 项目 | 费率 | 方向 | 说明 |
+|------|------|------|------|
+| 佣金 | 万 2.5（配置 `fees.commission_rate`，按开户实际改） | 双向 | 单笔最低 5 元，已含规费 |
+| 印花税 | 0.05% | 仅卖出 | 2023-08-28 起减半 |
+| 过户费 | 0.001% | 双向 | 沪深统一 |
+
+部分成交多次回执时按订单累计额重算费用、只扣增量，最低佣金全订单只收一次，重复导入不重复扣（幂等）。每笔费用记在 `fills.applied_fee`，当日合计进快照 `fees` 字段和日报。
+
+**分红/送股（report 阶段自动处理）**：每天 20:30 monitor 会查持仓股当日是否除息（tushare `dividend` 接口，需 `TUSHARE_TOKEN`，已写入 `~/.qlib_live_env`）。现金红利按**税前**入账 + 按 20% 预提红利税（两条 `cash_flows` 流水）；送股/转增自动加股数、摊薄成本。查询失败会发 `CORP_ACTION_FAILED` 告警提醒手工补录。
+
+**红利税规则（财税〔2015〕101号）**：派息时不扣税；卖出时券商按持股期限补扣——持股 ≤1 个月 20%、1 个月~1 年 10%、>1 年免税（先进先出）。本策略平均持有期一周左右，基本都按 20% 补扣，所以预提 20% 最接近真实；与券商实扣有差额时（对账见 QMT 资金流水），用 CORRECTION 校正。
+
+**出入金与校正（手工 CLI）**：
+
+```bash
+# 入金 / 出金（出金用负数）
+python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --type DEPOSIT --amount 500000
+# 与 QMT 对账后的现金校正（差额正负均可）
+python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --type CORRECTION --amount -12.35 --note "红利税实扣差额"
+# 查看流水
+python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --list
+```
+
+DEPOSIT / WITHDRAW / CORRECTION 算外部出入金，快照日收益自动剔除；DIVIDEND / DIVIDEND_TAX / BONUS_SHARES 是公司行为，计入投资收益。全部流水在 Web「资金流水」页可看。
+
+---
+
+## 八、关键路径与文件速查
 
 | 东西 | 位置 |
 |------|------|
@@ -319,5 +402,5 @@ r.set_cash(123456.78)
 | 发布/导入脚本 | `live_trading/scripts/run_publish_signals.py` / `run_import_fills.py` |
 | QMT 策略源码 | `live_trading/qmt_strategy/qmt_signal_bridge.py` |
 | QMT 策略日志 | QMT 安装目录 `userdata\log\XtClient_FormulaOutput_*.log` |
-| 策略内时间参数 | 9:25 开始下单；卖单最多等 30 分钟后开始买入；14:50 撤单；14:52 强制写回执 |
+| 策略内时间参数 | 14:45 尾盘窗口开始下单；卖单最多等 4 分钟后开始买入；14:56 撤单；14:57 强制写回执 |
 | LIVE 双开关 | 信号 `mode=LIVE`（需 env `LIVE_TRADING_CONFIRM=YES`）+ `state\LIVE_OK_<日期>` |

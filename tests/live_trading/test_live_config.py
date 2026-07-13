@@ -31,7 +31,8 @@ def test_load_real_live_config_merges_base():
     assert cfg["exchange"]["trade_unit"] == 100
     # 来自 live 配置
     assert cfg["live"]["strategy_id"] == "csi300_topk10"
-    assert cfg["live"]["default_mode"] == "SIMULATE"
+    assert cfg["live"]["default_mode"] == "LIVE"  # 2026-07-14 起实盘开关打开
+    assert cfg["fees"]["stamp_duty_rate"] == 0.0005
     # live 的 storage 覆盖 base 的 storage
     assert "live_trading" in cfg["storage"]["db_path"]
     assert cfg["_config_id"] == "csi300_topk10_live"

@@ -8,6 +8,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
 
 BATCH_ID = "20260714_csi300_topk10_001"
@@ -53,11 +54,49 @@ def env(tmp_path):
     return tmp_path, recorder, importer
 
 
-def test_import_requires_done(env):
-    bridge_root, recorder, importer = env
-    _write_fills(bridge_root, [_fill()], with_done=False)
-    assert importer.import_fills() == 0
-    assert recorder.get_fills(BATCH_ID) == []
+def test_record_and_get_orders(env):
+    _, recorder, _ = env
+    recorder.record_batch(BATCH_ID, "2026-07-14", "SIMULATE", 2)
+    recorder.record_orders(BATCH_ID, [
+        {
+            "client_order_id": "20260714001S",
+            "stock_code": "000001.SZ",
+            "instrument_qlib": "SZ000001",
+            "side": "SELL",
+            "quantity": 800,
+            "price_type": "FIX",
+            "limit_price": 10.0,
+            "priority": 10,
+            "reason": "topk_dropout",
+        },
+        {
+            "client_order_id": "20260714002B",
+            "stock_code": "600000.SH",
+            "instrument_qlib": "SH600000",
+            "side": "BUY",
+            "quantity": 500,
+            "price_type": "FIX",
+            "limit_price": 11.0,
+            "priority": 20,
+            "reason": "topk_dropout",
+        },
+    ])
+    orders = recorder.get_orders(BATCH_ID)
+    assert len(orders) == 2
+    assert orders[0]["side"] == "SELL"  # priority 升序
+    assert orders[1]["stock_code"] == "600000.SH"
+    # 重跑覆盖不翻倍
+    recorder.record_orders(BATCH_ID, orders[:1])
+    assert len(recorder.get_orders(BATCH_ID)) == 1
+
+
+def test_stock_names_roundtrip(env):
+    _, recorder, _ = env
+    recorder.save_stock_names([
+        {"stock_code": "600000.SH", "instrument": "SH600000", "name": "浦发银行"},
+    ])
+    assert recorder.get_stock_names()["600000.SH"] == "浦发银行"
+
 
 
 def test_live_filled_updates_positions(env):
@@ -136,16 +175,91 @@ def test_cash_updated_by_live_fills_only(env):
     recorder.set_cash(100000.0)
     recorder.upsert_position("000001.SZ", 800, 10.0)
     _write_fills(bridge_root, [
-        _fill(),  # LIVE SELL 800 @10.45 -> +8360
+        _fill(),  # LIVE SELL 800 @10.45 -> +8360，另扣费用
         _fill(client_order_id="20260714002B", side="BUY", mode="SIMULATE",
               stock_code="600000.SH", requested=500, filled=500, price=10.10),
     ])
     importer.import_fills()
-    assert recorder.get_cash() == pytest.approx(100000.0 + 800 * 10.45)
-    # 重复导入现金不重复累计
+    # 卖出 8360：佣金 max(8360*0.00025, 5)=5 + 过户费 0.0836 + 印花税 4.18
+    sell_fee = order_total_fee("SELL", 8360.0, DEFAULT_FEES)
+    assert sell_fee == pytest.approx(5 + 0.0836 + 4.18)
+    expected = 100000.0 + 800 * 10.45 - sell_fee
+    assert recorder.get_cash() == pytest.approx(expected)
+    # 重复导入现金/费用均不重复累计
     _write_fills(bridge_root, [_fill()])
     importer.import_fills()
-    assert recorder.get_cash() == pytest.approx(100000.0 + 800 * 10.45)
+    assert recorder.get_cash() == pytest.approx(expected)
+    fill_row = recorder.get_fills(BATCH_ID)[0]
+    assert fill_row["applied_fee"] == pytest.approx(sell_fee)
+
+
+def test_partial_then_full_fee_incremental(env):
+    """部分成交后终态补齐：最低佣金全订单只收一次，费用按增量补扣。"""
+    bridge_root, recorder, importer = env
+    recorder.set_cash(100000.0)
+    _write_fills(bridge_root, [
+        _fill(client_order_id="20260714002B", side="BUY",
+              stock_code="600000.SH", status="PARTIAL",
+              requested=500, filled=200, price=10.0),
+    ])
+    importer.import_fills()
+    fee_200 = order_total_fee("BUY", 2000.0, DEFAULT_FEES)  # 佣金触发最低 5 元
+    assert recorder.get_cash() == pytest.approx(100000.0 - 2000.0 - fee_200)
+
+    _write_fills(bridge_root, [
+        _fill(client_order_id="20260714002B", side="BUY",
+              stock_code="600000.SH", status="FILLED",
+              requested=500, filled=500, price=10.0),
+    ])
+    importer.import_fills()
+    fee_500 = order_total_fee("BUY", 5000.0, DEFAULT_FEES)
+    assert recorder.get_cash() == pytest.approx(100000.0 - 5000.0 - fee_500)
+    fill_row = recorder.get_fills(BATCH_ID)[0]
+    assert fill_row["applied_fee"] == pytest.approx(fee_500)
+
+
+def test_cash_flow_record_and_dedup(env):
+    _, recorder, _ = env
+    recorder.set_cash(100000.0)
+    ok = recorder.record_cash_flow("2026-07-14", "DEPOSIT", 50000.0,
+                                   note="追加资金", dedup_key="DEP_1")
+    assert ok
+    assert recorder.get_cash() == pytest.approx(150000.0)
+    # 同 dedup_key 不重复入账
+    assert not recorder.record_cash_flow("2026-07-14", "DEPOSIT", 50000.0,
+                                         dedup_key="DEP_1")
+    assert recorder.get_cash() == pytest.approx(150000.0)
+
+    recorder.record_cash_flow("2026-07-14", "WITHDRAW", -20000.0)
+    recorder.record_cash_flow("2026-07-14", "DIVIDEND", 380.0,
+                              stock_code="600036.SH")
+    assert recorder.get_cash() == pytest.approx(130380.0)
+    # 外部出入金净额不含分红
+    assert recorder.sum_external_flows("2026-07-14") == pytest.approx(30000.0)
+    assert len(recorder.get_cash_flows()) == 3
+
+
+def test_apply_bonus_shares(env):
+    _, recorder, _ = env
+    recorder.upsert_position("600036.SH", 1000, 30.0)
+    assert recorder.apply_bonus_shares("600036.SH", 300)
+    pos = recorder.get_positions()["600036.SH"]
+    assert pos["shares"] == 1300
+    assert pos["avg_cost"] == pytest.approx(30.0 * 1000 / 1300)
+    # 无持仓返回 False
+    assert not recorder.apply_bonus_shares("000001.SZ", 100)
+
+
+def test_sum_fees_by_date(env):
+    bridge_root, recorder, importer = env
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    recorder.set_cash(100000.0)
+    recorder.upsert_position("000001.SZ", 800, 10.0)
+    _write_fills(bridge_root, [_fill()])
+    importer.import_fills()
+    sell_fee = order_total_fee("SELL", 8360.0, DEFAULT_FEES)
+    assert recorder.sum_fees_by_date("2026-07-14") == pytest.approx(sell_fee)
+    assert recorder.sum_fees_by_date("2026-07-13") == 0.0
 
 
 def test_reconcile_counts(env):

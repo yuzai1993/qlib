@@ -21,6 +21,7 @@ from live_trading.modules.signal_schema import (
     FillEvent,
     SchemaError,
     TERMINAL_FILL_STATUS,
+    compute_checksum,
     validate_fill,
 )
 
@@ -92,6 +93,11 @@ class LiveRecorder:
                     trade_date TEXT NOT NULL,
                     mode TEXT NOT NULL,
                     planned_orders INTEGER NOT NULL DEFAULT 0,
+                    strategy_id TEXT,
+                    signal_date TEXT,
+                    account_id TEXT,
+                    account_type TEXT,
+                    order_checksum TEXT,
                     created_at TEXT DEFAULT (datetime('now', 'localtime'))
                 );
 
@@ -188,7 +194,16 @@ class LiveRecorder:
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
                 CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id);
             """)
-            # 旧库迁移：先补费用列，再把按 client_order_id 的单主键改为联合主键。
+            # 旧库迁移：补批次发布语义与费用列，再迁移订单联合主键。
+            batch_cols = {
+                r["name"] for r in conn.execute("PRAGMA table_info(batches)")
+            }
+            for col in (
+                "strategy_id", "signal_date", "account_id", "account_type",
+                "order_checksum",
+            ):
+                if col not in batch_cols:
+                    conn.execute(f"ALTER TABLE batches ADD COLUMN {col} TEXT")
             cols = {r["name"] for r in conn.execute("PRAGMA table_info(fills)")}
             if "applied_fee" not in cols:
                 conn.execute(
@@ -283,9 +298,26 @@ class LiveRecorder:
     def record_batch(self, batch_id: str, trade_date: str, mode: str,
                      planned_orders: int) -> None:
         with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
+            ).fetchone()
+            if existing is not None and existing["order_checksum"]:
+                if (
+                    existing["trade_date"] == trade_date
+                    and existing["mode"] == mode
+                    and existing["planned_orders"] == planned_orders
+                ):
+                    return
+                raise SchemaError(
+                    f"batch {batch_id!r} has an immutable durable plan"
+                )
             conn.execute(
-                "INSERT OR REPLACE INTO batches "
-                "(batch_id, trade_date, mode, planned_orders) VALUES (?,?,?,?)",
+                """INSERT INTO batches
+                   (batch_id, trade_date, mode, planned_orders) VALUES (?,?,?,?)
+                   ON CONFLICT(batch_id) DO UPDATE SET
+                       trade_date=excluded.trade_date,
+                       mode=excluded.mode,
+                       planned_orders=excluded.planned_orders""",
                 (batch_id, trade_date, mode, planned_orders),
             )
 
@@ -319,10 +351,99 @@ class LiveRecorder:
                 get("reason"),
             ))
         with self._conn() as conn:
+            durable = conn.execute(
+                "SELECT order_checksum FROM batches WHERE batch_id=?",
+                (batch_id,),
+            ).fetchone()
+            if durable is not None and durable["order_checksum"]:
+                raise SchemaError(
+                    f"batch {batch_id!r} has an immutable durable plan"
+                )
             conn.execute("DELETE FROM signal_orders WHERE batch_id=?", (batch_id,))
             conn.executemany(
                 """INSERT INTO signal_orders
                    (client_order_id, batch_id, stock_code, instrument_qlib,
+                    side, quantity, price_type, limit_price, priority, reason)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                rows,
+            )
+
+    def record_publish_plan(
+        self, header, orders: list,
+    ) -> None:
+        """Atomically persist an immutable plan before exposing it to QMT.
+
+        A retry may reuse the exact same plan (for example after a crash between
+        the database commit and shared-file publication), but it may never
+        replace a plan for an existing batch id.
+        """
+        batch_id = header.batch_id
+        order_checksum = compute_checksum([
+            order.to_json_line() for order in orders
+        ])
+        rows = []
+        for order in orders:
+            get = (
+                order.get if isinstance(order, dict)
+                else lambda key, default=None: getattr(order, key, default)
+            )
+            rows.append((
+                batch_id,
+                get("client_order_id"),
+                get("stock_code"),
+                get("instrument_qlib"),
+                get("side"),
+                int(get("quantity")),
+                get("price_type"),
+                float(get("limit_price")),
+                get("priority"),
+                get("reason"),
+            ))
+        rows.sort(key=lambda row: row[1])
+
+        with self._conn() as conn:
+            existing_batch = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
+            ).fetchone()
+            if existing_batch is not None:
+                batch_matches = (
+                    existing_batch["trade_date"] == header.trade_date
+                    and existing_batch["mode"] == header.mode
+                    and existing_batch["planned_orders"] == len(rows)
+                    and existing_batch["strategy_id"] == header.strategy_id
+                    and existing_batch["signal_date"] == header.signal_date
+                    and existing_batch["account_id"] == header.account_id
+                    and existing_batch["account_type"] == header.account_type
+                    and existing_batch["order_checksum"] == order_checksum
+                )
+                existing_rows = [tuple(row) for row in conn.execute(
+                    """SELECT batch_id, client_order_id, stock_code,
+                              instrument_qlib, side, quantity, price_type,
+                              limit_price, priority, reason
+                       FROM signal_orders WHERE batch_id=?
+                       ORDER BY client_order_id""",
+                    (batch_id,),
+                ).fetchall()]
+                if not batch_matches or existing_rows != rows:
+                    raise SchemaError(
+                        f"batch {batch_id!r} conflicts with durable plan"
+                    )
+                return
+
+            conn.execute(
+                """INSERT INTO batches
+                   (batch_id, trade_date, mode, planned_orders, strategy_id,
+                    signal_date, account_id, account_type, order_checksum)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (
+                    batch_id, header.trade_date, header.mode, len(rows),
+                    header.strategy_id, header.signal_date, header.account_id,
+                    header.account_type, order_checksum,
+                ),
+            )
+            conn.executemany(
+                """INSERT INTO signal_orders
+                   (batch_id, client_order_id, stock_code, instrument_qlib,
                     side, quantity, price_type, limit_price, priority, reason)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 rows,

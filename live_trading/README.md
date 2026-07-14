@@ -150,16 +150,19 @@ SIMULATE 批次回执应为每单一条 `SKIPPED simulated`，且导入后持仓
 本机当前约定（工作日）：
 
 ```cron
-# 17:30  Tushare→qlib 日线增量
+# live: Tushare→qlib 日线增量（信号与收盘价依赖）
 30 17 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
-# 16:00  导入 QMT 回执（实盘）
-0 16 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_import_cron.sh
-# 21:30  发布次日 SIMULATE 信号（依赖 17:30 数据已完成）
+# live: 导入 QMT 回执 + 盘后对账监控
+0 16 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_import_cron.sh && /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh postmarket
+# live: 快照 + 微信日报
+30 20 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh report
+# live: 发布下一交易日 LIVE 信号
 30 21 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_publish_cron.sh
+# live: 下一交易日信号发布检查
+0 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh evening
 ```
 
-包装脚本会 `source ~/.zshrc` 读取 `QMT_ACCOUNT_ID`，日志写到 `live_trading/logs/{publish,import}_cron.log`。  
-LIVE 模式**不要**进 crontab；人工确认后再手动 `--mode LIVE`。
+包装脚本会读取 `~/.qlib_live_env`，日志写到 `live_trading/logs/`。发布脚本通过 Tushare 交易日历解析下一开市日，并要求 Mac 侧 `LIVE_TRADING_CONFIRM=YES`；QMT 侧仍必须有当日 `LIVE_OK_<trade_date>` 才会真报单。
 
 ---
 
@@ -172,14 +175,13 @@ LIVE 模式**不要**进 crontab；人工确认后再手动 `--mode LIVE`。
 ```bash
 # 1.（确认当日 Tushare→qlib 数据已更新，与模拟盘同一条 crontab）
 
-# 2. 发布信号（先用模拟模式；实盘时改 --mode LIVE）
-python live_trading/scripts/run_publish_signals.py \
-    --config csi300_topk10_live \
-    --trade-date <明天的日期> \
-    --mode SIMULATE
+# 2. 正常由 21:30 定时任务发布；手工补跑时用同一包装脚本
+bash live_trading/run_publish_cron.sh
 
-# 建议先 --dry-run 看一眼订单再正式发布
+# 需要预览时再显式指定下一交易日并加 --dry-run
 ```
+
+发布前会先把不可变订单计划原子写入本地账本，再把 `.done` 暴露给 QMT；同一 `batch_id` 的冲突重试会拒绝覆盖，避免产生“已下单但账本不知道”的回执孤儿。
 
 **发布后自查（1 分钟）：**
 
@@ -276,7 +278,7 @@ r.set_cash(123456.78)
 |------|------|
 | `imported 0 fill events` | `outbound/` 没有 `.done`——QMT 侧没跑完或没跑；确认策略当天在运行。若 14:55 后仍无 done，说明盘中策略挂了，需人工去 QMT 界面核对当日委托，手工补记账本 |
 | `missing > 0` | 个别订单无终态回执，对照 QMT 界面委托记录，手工确认后用 `upsert_position` / `set_cash` 校正 |
-| 持仓出现负数警告日志 | 账本与实际严重漂移，立即停止次日发布，全量人工核对后校正 |
+| 导入报 `SELL fill ... exceeds ledger position` | 账本与实际严重漂移；该回执事务已回滚，立即停止次日发布，按 QMT 实际持仓/现金全量校正后重导 |
 
 ### 5. 紧急停止
 
@@ -335,7 +337,7 @@ export SERVERCHAN_SENDKEY="SCT..."
 |-------|------|--------|
 | `postmarket` | 16:00 导入回执后 | 当日批次对账 missing=0？拒单率？卖超持仓？ |
 | `report` | 20:30 数据更新后 | 数据已含今日 → 建净值快照 → 日亏/回撤/连亏 → 推日报 |
-| `evening` | 22:00 发布信号后 | 明日批次已入库且 inbox 文件齐全？ |
+| `evening` | 22:00 发布信号后 | Tushare 下一开市日批次已入库且 inbox 文件齐全？ |
 
 ```cron
 0  16 * * 1-5  cd /Users/yuxianqi/Project/qlib && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_import_fills.py --config csi300_topk10_live >> live_trading/logs/import_cron.log 2>&1 && /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_monitor.py --config csi300_topk10_live --stage postmarket >> live_trading/logs/monitor_cron.log 2>&1

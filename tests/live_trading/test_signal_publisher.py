@@ -1,4 +1,5 @@
 """SignalPublisher：原子写 jsonl + done 标记。"""
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -9,11 +10,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.signal_publisher import SignalPublisher, PublishError
+from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.signal_schema import (
     BatchHeader,
+    SchemaError,
     SignalOrder,
     compute_checksum,
 )
+from live_trading.scripts.run_publish_signals import publish_recorded_plan
 
 BATCH_ID = "20260714_csi300_topk10_001"
 
@@ -93,3 +97,69 @@ def test_no_tmp_files_left(tmp_path):
 def test_empty_orders_rejected(tmp_path):
     with pytest.raises(PublishError):
         SignalPublisher(tmp_path).publish(_header(), [])
+
+
+def test_plan_is_durable_before_signal_becomes_visible(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+
+    class InspectingPublisher:
+        def ensure_available(self, batch_id):
+            assert batch_id == BATCH_ID
+
+        def publish(self, header, orders):
+            assert recorder.get_batch(BATCH_ID)["planned_orders"] == 2
+            assert len(recorder.get_orders(BATCH_ID)) == 2
+            return tmp_path / "inbox" / f"signal_{BATCH_ID}.jsonl"
+
+    path = publish_recorded_plan(
+        recorder, InspectingPublisher(), _header(), _orders(),
+    )
+    assert path.name == f"signal_{BATCH_ID}.jsonl"
+
+
+def test_existing_shared_batch_does_not_create_unverified_db_plan(tmp_path):
+    publisher = SignalPublisher(tmp_path)
+    publisher.publish(_header(), _orders())
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+
+    with pytest.raises(PublishError, match="already published"):
+        publish_recorded_plan(recorder, publisher, _header(), _orders())
+
+    assert recorder.get_batch(BATCH_ID) is None
+    assert recorder.get_orders(BATCH_ID) == []
+
+
+def test_conflicting_publish_retry_preserves_original_plan(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    recorder.record_publish_plan(_header(), _orders())
+    changed = [
+        SignalOrder(**{**order.__dict__, "limit_price": order.limit_price + 1.0})
+        for order in _orders()
+    ]
+
+    with pytest.raises(SchemaError, match="conflicts with durable plan"):
+        recorder.record_publish_plan(_header(), changed)
+
+    assert [row["limit_price"] for row in recorder.get_orders(BATCH_ID)] == [
+        19.80, 10.10,
+    ]
+
+
+def test_publish_retry_cannot_change_account_or_signal_date(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    recorder.record_publish_plan(_header(), _orders())
+
+    for changed in (
+        dataclasses.replace(_header(), account_id="DIFFERENT"),
+        dataclasses.replace(_header(), signal_date="2026-07-10"),
+    ):
+        with pytest.raises(SchemaError, match="conflicts with durable plan"):
+            recorder.record_publish_plan(changed, _orders())
+
+    batch = recorder.get_batch(BATCH_ID)
+    assert batch["account_id"] == "123456"
+    assert batch["signal_date"] == "2026-07-11"
+    with pytest.raises(SchemaError, match="immutable durable plan"):
+        recorder.record_orders(BATCH_ID, _orders())
+    with pytest.raises(SchemaError, match="immutable durable plan"):
+        recorder.record_batch(BATCH_ID, "2026-07-15", "LIVE", 2)

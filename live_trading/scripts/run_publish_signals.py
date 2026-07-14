@@ -13,6 +13,7 @@
 """
 
 import argparse
+import dataclasses
 import logging
 import os
 import sys
@@ -27,11 +28,29 @@ from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.order_planner import OrderPlanner
 from live_trading.modules.signal_publisher import SignalPublisher
-from live_trading.modules.signal_schema import BatchHeader
+from live_trading.modules.signal_schema import (
+    BatchHeader,
+    compute_checksum,
+    validate_batch,
+)
 
 logger = logging.getLogger("live_trading.publish")
 
 CONFIGS_DIR = PROJECT_ROOT / "live_trading" / "configs"
+
+
+def publish_recorded_plan(recorder, publisher, header, orders):
+    """Validate, durably record, then make a batch visible to QMT."""
+    order_lines = [order.to_json_line() for order in orders]
+    validated_header = dataclasses.replace(
+        header,
+        order_count=len(orders),
+        checksum=compute_checksum(order_lines),
+    )
+    validate_batch(validated_header, orders)
+    publisher.ensure_available(header.batch_id)
+    recorder.record_publish_plan(validated_header, orders)
+    return publisher.publish(validated_header, orders)
 
 
 def parse_args():
@@ -183,9 +202,7 @@ def main():
         checksum="",     # publisher 填充
     )
     publisher = SignalPublisher(live_cfg["bridge_root"])
-    path = publisher.publish(header, orders)
-    recorder.record_batch(batch_id, trade_date, mode, planned_orders=len(orders))
-    recorder.record_orders(batch_id, orders)
+    path = publish_recorded_plan(recorder, publisher, header, orders)
     logger.info("published %d orders to %s", len(orders), path)
 
 

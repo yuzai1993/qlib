@@ -105,13 +105,17 @@ reserved = quantity * price + max(commission, min_commission) + transfer_fee
 
 ## 5. 发布安全与交易日
 
+### 5.0 先落账本再发布
+
+发布前先校验完整批次，并在单个 SQLite 事务中写入不可变的 batch 与 orders；随后才把共享目录 `.done` 暴露给 QMT。同一 `batch_id` 只允许完全相同的计划重试，任何字段变化都拒绝覆盖。发布前若共享目录已有同批文件，也在写账本前拒绝，避免用重算计划冒充未知的已发布内容。
+
 ### 5.1 严格特征日期
 
 `SignalGenerator.predict` 增加 `allow_stale` 参数。paper 场景默认保持兼容；live 发布显式传 `False`。如果目标 `signal_date` 不在特征索引中，发布立即失败，不再用更早日期静默替代。
 
 ### 5.2 下一个交易日
 
-夜间发布不能使用自然日 `+1`。新增小型日期解析脚本，通过 Tushare `trade_cal` 查询今天之后首个开市日；缺少 token、查询失败或没有结果时拒绝发布。手工传入日期时仍支持显式覆盖。
+夜间发布和 22:00 检查都不能使用自然日 `+1`。日期解析脚本通过 Tushare `trade_cal` 查询今天之后首个开市日；缺少 token、查询失败或没有结果时拒绝发布/检查失败。手工传入日期时仍支持显式覆盖。
 
 cron 继续显式传 `--mode LIVE`，同时保留 Mac 环境变量 `LIVE_TRADING_CONFIRM=YES` 与 QMT `LIVE_OK_<trade_date>` 双开关。
 

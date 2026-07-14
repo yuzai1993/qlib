@@ -42,3 +42,25 @@ def test_next_open_date_fails_closed_when_calendar_empty():
 
     with pytest.raises(RuntimeError, match="no open trading day"):
         next_open_date("2026-07-17", pro=FakePro([]))
+
+
+def test_evening_monitor_does_not_hide_failed_friday_publish(monkeypatch, tmp_path):
+    from live_trading.scripts import run_monitor
+
+    class EmptyRecorder:
+        @staticmethod
+        def list_batches(limit=20):
+            return []
+
+    monkeypatch.setattr(
+        run_monitor, "next_open_date", lambda date: "2026-07-20",
+        raising=False,
+    )
+    findings = run_monitor.run_evening(
+        "2026-07-17", EmptyRecorder(),
+        {"live": {"bridge_root": str(tmp_path)}},
+    )
+
+    assert len(findings) == 1
+    assert findings[0].rule == "PUBLISH_MISSING"
+    assert "2026-07-20" in findings[0].message

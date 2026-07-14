@@ -36,6 +36,7 @@ from live_trading.modules.pipeline_monitor import (
     check_report,
 )
 from live_trading.modules.snapshot import build_snapshot, sum_live_fills_amount
+from live_trading.scripts.next_trade_date import next_open_date
 
 logger = logging.getLogger("live_trading.monitor")
 
@@ -98,23 +99,17 @@ def fetch_benchmark_close(benchmark: str, date: str):
 # ---------- stage 实现 ----------
 
 def run_evening(date, recorder, config) -> list:
-    """检查今晚是否已为下一交易日发布批次（qlib 日历不含未来日，
-    以 batches 表 trade_date > date 为准）。"""
-    from datetime import datetime, timedelta
-    future = [b for b in recorder.list_batches(limit=20) if b["trade_date"] > date]
-    if not future:
-        tomorrow = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
-        if tomorrow.weekday() >= 5:  # 明天是周末，本就无需发布
-            logger.info("no future batch, but %s is weekend — skip",
-                        tomorrow.strftime("%Y-%m-%d"))
-            return []
-        f = check_evening(tomorrow.strftime("%Y-%m-%d"), None, [])
-        return [Finding(f[0].rule, f[0].level,
-                        f[0].message + "（若明日为节假日请忽略本条）")]
-    # 最近一个未来交易日的最新批次（batch_id 含 seq，字典序即最新）
-    future.sort(key=lambda b: (b["trade_date"], b["batch_id"]))
-    next_day = future[0]["trade_date"]
-    batch = [b for b in future if b["trade_date"] == next_day][-1]
+    """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
+    next_day = next_open_date(date)
+    candidates = [
+        batch for batch in recorder.list_batches(limit=20)
+        if batch["trade_date"] == next_day
+    ]
+    if not candidates:
+        return check_evening(next_day, None, [])
+    # 同一交易日取最新 seq（batch_id 结尾为三位 seq）。
+    candidates.sort(key=lambda batch: batch["batch_id"])
+    batch = candidates[-1]
 
     inbox = Path(config["live"]["bridge_root"]) / "inbox"
     inbox_files = None

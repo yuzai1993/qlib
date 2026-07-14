@@ -30,6 +30,13 @@ class SignalPublisher:
         self.bridge_root = Path(bridge_root)
         self.inbox = self.bridge_root / "inbox"
 
+    def ensure_available(self, batch_id: str) -> None:
+        """Fail before any durable ledger write when a batch is already visible."""
+        jsonl_path = self.inbox / f"signal_{batch_id}.jsonl"
+        done_path = self.inbox / f"signal_{batch_id}.done"
+        if jsonl_path.exists() or done_path.exists():
+            raise PublishError(f"batch {batch_id} already published")
+
     def publish(self, header: BatchHeader, orders: list) -> Path:
         """校验并原子写出批次文件，返回 jsonl 路径。
 
@@ -49,8 +56,7 @@ class SignalPublisher:
         self.inbox.mkdir(parents=True, exist_ok=True)
         jsonl_path = self.inbox / f"signal_{header.batch_id}.jsonl"
         done_path = self.inbox / f"signal_{header.batch_id}.done"
-        if jsonl_path.exists() or done_path.exists():
-            raise PublishError(f"batch {header.batch_id} already published")
+        self.ensure_available(header.batch_id)
 
         self._atomic_write(jsonl_path, "\n".join([header.to_json_line()] + order_lines) + "\n")
         self._atomic_write(done_path, header.checksum + "\n")

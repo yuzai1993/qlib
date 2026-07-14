@@ -13,10 +13,11 @@ from fastapi.testclient import TestClient
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.monitor_store import MonitorStore
-from live_trading.modules.signal_schema import FillEvent
+from live_trading.modules.signal_schema import BatchHeader, FillEvent, SignalOrder
 from live_trading.web.app import create_app
 
 BATCH = "20260713_csi300_topk10_001"
+OLD_BATCH = "20260713_csi300_topk10_000"
 
 
 def _fill_event(coid, status="FILLED", side="BUY", code="600000.SH",
@@ -33,9 +34,9 @@ def client(tmp_path):
     db = tmp_path / "live.db"
     recorder = LiveRecorder(str(db))
     recorder.set_cash(100000.0)
-    recorder.record_batch(BATCH, "2026-07-13", "LIVE", planned_orders=2)
-    recorder.record_orders(BATCH, [
+    order_dicts = [
         {
+            "batch_id": BATCH,
             "client_order_id": "20260713001B",
             "stock_code": "600000.SH",
             "instrument_qlib": "SH600000",
@@ -47,6 +48,7 @@ def client(tmp_path):
             "reason": "topk_dropout",
         },
         {
+            "batch_id": BATCH,
             "client_order_id": "20260713002B",
             "stock_code": "000001.SZ",
             "instrument_qlib": "SZ000001",
@@ -57,7 +59,23 @@ def client(tmp_path):
             "priority": 20,
             "reason": "topk_dropout",
         },
-    ])
+    ]
+    orders = [SignalOrder(**row) for row in order_dicts]
+    header = BatchHeader(
+        batch_id=BATCH,
+        strategy_id="csi300_topk10",
+        trade_date="2026-07-13",
+        signal_date="2026-07-12",
+        account_id="88813528",
+        account_type="STOCK",
+        mode="LIVE",
+        created_at="2026-07-12T20:00:00+08:00",
+        order_count=len(orders),
+        checksum="",
+    )
+    recorder.record_publish_plan(header, orders)
+    recorder.record_batch(OLD_BATCH, "2026-07-13", "LIVE", planned_orders=3)
+    recorder.supersede_batch(OLD_BATCH, BATCH)
     recorder.apply_fill(_fill_event("20260713001B"))
     recorder.apply_fill(_fill_event("20260713002B", code="000001.SZ", qty=500,
                                     price=12.0))
@@ -119,6 +137,12 @@ def test_overview(client):
     assert len(data["recent_alerts"]) == 1
 
 
+def test_overview_exposes_active_account_and_batch(client):
+    data = client.get("/api/overview").json()
+    assert data["account_id"] == "88813528"
+    assert data["active_batch_id"] == BATCH
+
+
 def test_nav(client):
     r = client.get("/api/nav")
     assert r.status_code == 200
@@ -147,9 +171,20 @@ def test_positions_history(client):
 def test_batches_with_reconcile(client):
     r = client.get("/api/batches")
     assert r.status_code == 200
-    b = r.json()[0]
+    b = next(row for row in r.json() if row["batch_id"] == BATCH)
     assert b["batch_id"] == BATCH
     assert b["planned"] == 2 and b["terminal"] == 2 and b["missing"] == 0
+
+
+def test_batches_mark_superseded_rows_without_operational_missing(client):
+    rows = {row["batch_id"]: row for row in client.get("/api/batches").json()}
+    old = rows[OLD_BATCH]
+    assert old["lifecycle_status"] == "SUPERSEDED"
+    assert old["superseded_by"] == BATCH
+    assert old["raw_missing"] == old["planned"]
+    assert old["missing"] == 0
+    assert rows[BATCH]["lifecycle_status"] == "ACTIVE"
+    assert rows[BATCH]["account_id"] == "88813528"
 
 
 def test_batch_detail_includes_plan_and_names(client):

@@ -48,6 +48,7 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
     @router.get("/overview")
     def overview():
         latest = store.get_latest_snapshot()
+        active = recorder.get_latest_active_batch("LIVE")
         today = _date.today().strftime("%Y-%m-%d")
         events = store.get_pipeline_events(trade_date=today)
         stage_status = {}
@@ -66,6 +67,8 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             "recent_alerts": alerts,
             "strategy_id": config["live"].get("strategy_id", ""),
             "mode": config["live"].get("default_mode", ""),
+            "account_id": active.get("account_id", "") if active else "",
+            "active_batch_id": active.get("batch_id", "") if active else "",
         }
 
     @router.get("/nav")
@@ -114,7 +117,17 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
         result = []
         for b in recorder.list_batches(limit=limit):
             r = importer.reconcile(b["batch_id"])
-            result.append({**b, **r})
+            raw_missing = r["missing"]
+            superseded = bool(b.get("superseded_by"))
+            result.append({
+                **b,
+                **r,
+                "raw_missing": raw_missing,
+                "missing": 0 if superseded else raw_missing,
+                "lifecycle_status": (
+                    "SUPERSEDED" if superseded else "ACTIVE"
+                ),
+            })
         return result
 
     @router.get("/batches/{batch_id}")

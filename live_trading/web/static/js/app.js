@@ -39,10 +39,11 @@ async function renderDashboard() {
     const [ov, nav] = await Promise.all([api('/overview'), api('/nav')]);
     const s = ov.snapshot;
 
-    document.getElementById('strategy-badge').textContent =
-        `${ov.strategy_id} · ${ov.mode}`;
+    document.getElementById('strategy-badge').innerHTML =
+        `${esc(ov.strategy_id)} · ${esc(ov.mode)}<br>账号 ${esc(ov.account_id || '—')}`;
 
-    let html = `<h2>概览 <span class="card-sub">快照日 ${s ? esc(s.date) : '—'}</span></h2>`;
+    let html = `<h2>概览 <span class="card-sub">快照日 ${s ? esc(s.date) : '—'} · `
+        + `有效批次 ${esc(ov.active_batch_id || '—')}</span></h2>`;
 
     html += '<div class="stage-lights">';
     for (const st of ['postmarket', 'report', 'evening']) {
@@ -181,18 +182,24 @@ async function renderBatches() {
         return;
     }
     html += `<table><thead><tr>
-        <th>批次</th><th>交易日</th><th>模式</th>
+        <th>批次</th><th>交易日</th><th>模式</th><th>账号</th><th>状态</th>
         <th>计划</th><th>终态</th><th>缺失</th><th>发布于</th></tr></thead><tbody>`;
     for (const b of batches) {
-        const missCls = b.missing > 0 ? 'neg' : 'pos';
-        html += `<tr class="clickable" data-batch="${esc(b.batch_id)}">
+        const isSuperseded = b.lifecycle_status === 'SUPERSEDED';
+        const status = isSuperseded
+            ? `<span class="badge badge-muted">已废弃 → ${esc(b.superseded_by || '—')}</span>`
+            : '<span class="badge badge-ok">有效</span>';
+        const missing = isSuperseded ? '—' : b.missing;
+        const missCls = isSuperseded ? '' : (b.missing > 0 ? 'neg' : 'pos');
+        html += `<tr class="clickable ${isSuperseded ? 'row-muted' : ''}" data-batch="${esc(b.batch_id)}">
             <td>${esc(b.batch_id)}</td><td>${esc(b.trade_date)}</td>
             <td>${modeBadge(b.mode)}</td>
+            <td>${esc(b.account_id || '—')}</td><td>${status}</td>
             <td>${b.planned}</td><td>${b.terminal}</td>
-            <td class="${missCls}">${b.missing}</td>
+            <td class="${missCls}">${missing}</td>
             <td>${esc(b.created_at || '')}</td></tr>`;
         html += `<tr class="fills-row" id="fills-${esc(b.batch_id)}" style="display:none">
-            <td colspan="7"></td></tr>`;
+            <td colspan="9"></td></tr>`;
     }
     html += '</tbody></table>';
     content.innerHTML = html;

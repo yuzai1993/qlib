@@ -238,3 +238,14 @@ def test_cashflows(client):
     assert flow["amount"] == 380.0
     assert flow["name"] == "浦发银行"
     assert data["cash"] > 0
+
+
+def test_spa_renders_account_and_batch_lifecycle():
+    js = (REPO_ROOT / "live_trading/web/static/js/app.js").read_text(
+        encoding="utf-8",
+    )
+    assert "ov.account_id" in js
+    assert "ov.active_batch_id" in js
+    assert "lifecycle_status" in js
+    assert "已废弃" in js
+    assert "账号" in js

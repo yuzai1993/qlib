@@ -158,7 +158,9 @@ def main():
         "max_orders_per_day": live_cfg["max_orders_per_day"],
         "trade_unit": config["exchange"]["trade_unit"],
     })
-    orders = planner.plan(intents, prev_close, batch_id, trade_date)
+    orders = planner.plan(
+        intents, prev_close, batch_id, trade_date, batch_seq=args.seq,
+    )
 
     if args.dry_run:
         print(f"[dry-run] batch {batch_id} mode={mode} ({len(orders)} orders):")

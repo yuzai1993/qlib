@@ -47,6 +47,25 @@ def test_fees_from_config_merges_defaults():
     assert fees_from_config({}) == DEFAULT_FEES
 
 
+@pytest.mark.parametrize("side", ["HOLD", "", None])
+def test_order_fee_rejects_unknown_side(side):
+    with pytest.raises(ValueError, match="side"):
+        order_total_fee(side, 1000.0, DEFAULT_FEES)
+
+
+@pytest.mark.parametrize("amount", [-1.0, float("nan"), float("inf")])
+def test_order_fee_rejects_invalid_amount(amount):
+    with pytest.raises(ValueError, match="cum_amount"):
+        order_total_fee("BUY", amount, DEFAULT_FEES)
+
+
+def test_fees_from_config_rejects_negative_or_non_finite_rates():
+    with pytest.raises(ValueError, match="commission_rate"):
+        fees_from_config({"fees": {"commission_rate": -0.1}})
+    with pytest.raises(ValueError, match="min_commission"):
+        fees_from_config({"fees": {"min_commission": float("nan")}})
+
+
 # ---------- corporate actions ----------
 
 @pytest.fixture

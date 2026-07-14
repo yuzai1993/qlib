@@ -11,12 +11,14 @@ import json
 import logging
 import os
 import sqlite3
+from datetime import datetime
 from contextlib import contextmanager
 from pathlib import Path
 
-from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
+from live_trading.modules.fees import DEFAULT_FEES, order_total_fee, validate_fees
 from live_trading.modules.signal_schema import (
     FillEvent,
+    SchemaError,
     TERMINAL_FILL_STATUS,
     validate_fill,
 )
@@ -39,7 +41,33 @@ class LiveRecorder:
         self.fees = dict(DEFAULT_FEES)
         if fees:
             self.fees.update(fees)
+        self.fees = validate_fees(self.fees)
+        self._backup_legacy_db()
         self._init_db()
+
+    def _backup_legacy_db(self) -> None:
+        """首次联合主键迁移前保留一个一致的 SQLite 备份。"""
+        if not self.db_path.exists() or self.db_path.stat().st_size == 0:
+            return
+        with sqlite3.connect(str(self.db_path)) as conn:
+            table = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='fills'"
+            ).fetchone()
+            if not table:
+                return
+            pk = [
+                row[1] for row in conn.execute("PRAGMA table_info(fills)")
+                if row[5]
+            ]
+            if pk != ["client_order_id"]:
+                return
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup = self.db_path.with_name(
+                f"{self.db_path.name}.pre_hardening_{stamp}.bak"
+            )
+            with sqlite3.connect(str(backup)) as dst:
+                conn.backup(dst)
+            logger.info("backed up legacy live db to %s", backup)
 
     @contextmanager
     def _conn(self):
@@ -67,8 +95,8 @@ class LiveRecorder:
                 );
 
                 CREATE TABLE IF NOT EXISTS fills (
-                    client_order_id TEXT PRIMARY KEY,
                     batch_id TEXT NOT NULL,
+                    client_order_id TEXT NOT NULL,
                     mode TEXT NOT NULL,
                     stock_code TEXT NOT NULL,
                     side TEXT NOT NULL,
@@ -80,7 +108,9 @@ class LiveRecorder:
                     message TEXT,
                     ts TEXT,
                     applied_qty INTEGER NOT NULL DEFAULT 0,
-                    applied_fee REAL NOT NULL DEFAULT 0
+                    applied_amount REAL NOT NULL DEFAULT 0,
+                    applied_fee REAL NOT NULL DEFAULT 0,
+                    PRIMARY KEY (batch_id, client_order_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS positions (
@@ -96,8 +126,8 @@ class LiveRecorder:
                 );
 
                 CREATE TABLE IF NOT EXISTS signal_orders (
-                    client_order_id TEXT PRIMARY KEY,
                     batch_id TEXT NOT NULL,
+                    client_order_id TEXT NOT NULL,
                     stock_code TEXT NOT NULL,
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
@@ -105,7 +135,8 @@ class LiveRecorder:
                     price_type TEXT,
                     limit_price REAL NOT NULL,
                     priority INTEGER,
-                    reason TEXT
+                    reason TEXT,
+                    PRIMARY KEY (batch_id, client_order_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS stock_names (
@@ -131,12 +162,95 @@ class LiveRecorder:
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
                 CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id);
             """)
-            # 旧库迁移：fills 补 applied_fee 列
+            # 旧库迁移：先补费用列，再把按 client_order_id 的单主键改为联合主键。
             cols = {r["name"] for r in conn.execute("PRAGMA table_info(fills)")}
             if "applied_fee" not in cols:
                 conn.execute(
                     "ALTER TABLE fills ADD COLUMN applied_fee REAL NOT NULL DEFAULT 0"
                 )
+            self._migrate_composite_keys(conn)
+
+    @staticmethod
+    def _primary_key_columns(conn, table: str) -> list:
+        rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+        return [r["name"] for r in sorted(rows, key=lambda r: r["pk"]) if r["pk"]]
+
+    def _migrate_composite_keys(self, conn) -> None:
+        if self._primary_key_columns(conn, "fills") == ["client_order_id"]:
+            conn.executescript("""
+                ALTER TABLE fills RENAME TO fills_legacy;
+                CREATE TABLE fills (
+                    batch_id TEXT NOT NULL,
+                    client_order_id TEXT NOT NULL,
+                    mode TEXT NOT NULL,
+                    stock_code TEXT NOT NULL,
+                    side TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    requested_qty INTEGER,
+                    filled_qty INTEGER,
+                    avg_price REAL,
+                    qmt_order_id TEXT,
+                    message TEXT,
+                    ts TEXT,
+                    applied_qty INTEGER NOT NULL DEFAULT 0,
+                    applied_amount REAL NOT NULL DEFAULT 0,
+                    applied_fee REAL NOT NULL DEFAULT 0,
+                    PRIMARY KEY (batch_id, client_order_id)
+                );
+                INSERT INTO fills (
+                    batch_id, client_order_id, mode, stock_code, side, status,
+                    requested_qty, filled_qty, avg_price, qmt_order_id, message,
+                    ts, applied_qty, applied_amount, applied_fee
+                )
+                SELECT batch_id, client_order_id, mode, stock_code, side, status,
+                       requested_qty, filled_qty, avg_price, qmt_order_id, message,
+                       ts, applied_qty,
+                       applied_qty * COALESCE(avg_price, 0), applied_fee
+                FROM fills_legacy;
+                DROP TABLE fills_legacy;
+            """)
+        else:
+            cols = {r["name"] for r in conn.execute("PRAGMA table_info(fills)")}
+            if "applied_amount" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN applied_amount "
+                    "REAL NOT NULL DEFAULT 0"
+                )
+                conn.execute(
+                    "UPDATE fills SET applied_amount = "
+                    "applied_qty * COALESCE(avg_price, 0)"
+                )
+
+        if self._primary_key_columns(conn, "signal_orders") == ["client_order_id"]:
+            conn.executescript("""
+                ALTER TABLE signal_orders RENAME TO signal_orders_legacy;
+                CREATE TABLE signal_orders (
+                    batch_id TEXT NOT NULL,
+                    client_order_id TEXT NOT NULL,
+                    stock_code TEXT NOT NULL,
+                    instrument_qlib TEXT,
+                    side TEXT NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    price_type TEXT,
+                    limit_price REAL NOT NULL,
+                    priority INTEGER,
+                    reason TEXT,
+                    PRIMARY KEY (batch_id, client_order_id)
+                );
+                INSERT INTO signal_orders (
+                    batch_id, client_order_id, stock_code, instrument_qlib,
+                    side, quantity, price_type, limit_price, priority, reason
+                )
+                SELECT batch_id, client_order_id, stock_code, instrument_qlib,
+                       side, quantity, price_type, limit_price, priority, reason
+                FROM signal_orders_legacy;
+                DROP TABLE signal_orders_legacy;
+            """)
+
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id)"
+        )
 
     # ---------- batches ----------
 
@@ -161,7 +275,7 @@ class LiveRecorder:
     def record_orders(self, batch_id: str, orders: list) -> None:
         """写入批次执行计划。orders 为 SignalOrder 或同名字段 dict。
 
-        client_order_id 按日唯一（协议不含 batch seq），同日重发会覆盖旧计划行。
+        订单身份是 ``(batch_id, client_order_id)``；不同批次互不覆盖。
         """
         rows = []
         for o in orders:
@@ -180,13 +294,6 @@ class LiveRecorder:
             ))
         with self._conn() as conn:
             conn.execute("DELETE FROM signal_orders WHERE batch_id=?", (batch_id,))
-            if rows:
-                ids = [r[0] for r in rows]
-                marks = ",".join("?" for _ in ids)
-                conn.execute(
-                    f"DELETE FROM signal_orders WHERE client_order_id IN ({marks})",
-                    ids,
-                )
             conn.executemany(
                 """INSERT INTO signal_orders
                    (client_order_id, batch_id, stock_code, instrument_qlib,
@@ -237,30 +344,85 @@ class LiveRecorder:
     def apply_fill(self, fill: FillEvent) -> None:
         """upsert 回执；LIVE 终态成交按增量更新持仓与现金（含费用，幂等）。"""
         with self._conn() as conn:
+            batch = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?", (fill.batch_id,),
+            ).fetchone()
+            if batch is None:
+                raise SchemaError(f"unknown fill batch_id: {fill.batch_id!r}")
+            if fill.mode != batch["mode"]:
+                raise SchemaError(
+                    f"fill mode mismatch: {fill.mode!r} != {batch['mode']!r}"
+                )
+            order = conn.execute(
+                "SELECT * FROM signal_orders WHERE batch_id=? AND client_order_id=?",
+                (fill.batch_id, fill.client_order_id),
+            ).fetchone()
+            if order is None:
+                raise SchemaError(
+                    "unknown fill order: "
+                    f"{fill.batch_id!r}/{fill.client_order_id!r}"
+                )
+            if fill.stock_code != order["stock_code"]:
+                raise SchemaError(
+                    f"fill stock_code mismatch: {fill.stock_code!r} "
+                    f"!= {order['stock_code']!r}"
+                )
+            if fill.side != order["side"]:
+                raise SchemaError(
+                    f"fill side mismatch: {fill.side!r} != {order['side']!r}"
+                )
+            if (
+                fill.requested_qty <= 0
+                or fill.requested_qty > order["quantity"]
+                or fill.requested_qty % 100 != 0
+            ):
+                raise SchemaError(
+                    f"fill requested_qty invalid for plan: {fill.requested_qty!r} "
+                    f"> planned {order['quantity']!r} or not a whole lot"
+                )
+
             row = conn.execute(
-                "SELECT applied_qty, applied_fee FROM fills WHERE client_order_id=?",
-                (fill.client_order_id,),
+                "SELECT * FROM fills WHERE batch_id=? AND client_order_id=?",
+                (fill.batch_id, fill.client_order_id),
             ).fetchone()
             applied_qty = row["applied_qty"] if row else 0
+            applied_amount = row["applied_amount"] if row else 0.0
             applied_fee = row["applied_fee"] if row else 0.0
+            cumulative_amount = float(fill.filled_qty) * float(fill.avg_price)
+            if row is not None:
+                for field in ("mode", "stock_code", "side", "requested_qty"):
+                    if fill.__dict__[field] != row[field]:
+                        raise SchemaError(
+                            f"fill {field} changed: {fill.__dict__[field]!r} "
+                            f"!= {row[field]!r}"
+                        )
+                if fill.filled_qty < row["filled_qty"]:
+                    raise SchemaError("fill filled_qty cannot decrease")
+                if cumulative_amount + 1e-9 < applied_amount:
+                    raise SchemaError("fill cumulative amount cannot decrease")
 
-            delta = 0
+            delta_qty = 0
+            delta_amount = 0.0
             fee_delta = 0.0
             if fill.mode == "LIVE" and fill.status in _POSITION_STATUS:
-                delta = int(fill.filled_qty) - applied_qty
-                if delta > 0:
-                    self._apply_position_delta(conn, fill, delta)
-                    self._apply_cash_delta(conn, fill, delta)
+                delta_qty = int(fill.filled_qty) - applied_qty
+                delta_amount = cumulative_amount - applied_amount
+                if delta_qty < 0 or delta_amount < -1e-9:
+                    raise SchemaError("fill applied quantity/amount cannot decrease")
+                if delta_qty > 0 or delta_amount > 1e-9:
+                    self._apply_position_delta(
+                        conn, fill, delta_qty, delta_amount,
+                    )
+                    self._apply_cash_delta(conn, fill, delta_amount)
                     fee_delta = self._apply_fee_delta(conn, fill, applied_fee)
-                else:
-                    delta = 0
 
             conn.execute(
                 """INSERT INTO fills (client_order_id, batch_id, mode, stock_code,
                        side, status, requested_qty, filled_qty, avg_price,
-                       qmt_order_id, message, ts, applied_qty, applied_fee)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                   ON CONFLICT(client_order_id) DO UPDATE SET
+                       qmt_order_id, message, ts, applied_qty, applied_amount,
+                       applied_fee)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                   ON CONFLICT(batch_id, client_order_id) DO UPDATE SET
                        status=excluded.status,
                        filled_qty=excluded.filled_qty,
                        avg_price=excluded.avg_price,
@@ -268,15 +430,19 @@ class LiveRecorder:
                        message=excluded.message,
                        ts=excluded.ts,
                        applied_qty=excluded.applied_qty,
+                       applied_amount=excluded.applied_amount,
                        applied_fee=excluded.applied_fee""",
                 (fill.client_order_id, fill.batch_id, fill.mode, fill.stock_code,
                  fill.side, fill.status, fill.requested_qty, fill.filled_qty,
                  fill.avg_price, fill.qmt_order_id, fill.message, fill.ts,
-                 applied_qty + delta, applied_fee + fee_delta),
+                 applied_qty + delta_qty, applied_amount + delta_amount,
+                 applied_fee + fee_delta),
             )
 
     @staticmethod
-    def _apply_position_delta(conn, fill: FillEvent, delta: int) -> None:
+    def _apply_position_delta(
+        conn, fill: FillEvent, delta_qty: int, delta_amount: float,
+    ) -> None:
         row = conn.execute(
             "SELECT shares, avg_cost FROM positions WHERE stock_code=?",
             (fill.stock_code,),
@@ -285,10 +451,12 @@ class LiveRecorder:
         old_cost = row["avg_cost"] if row else 0.0
 
         if fill.side == "BUY":
-            new_shares = old_shares + delta
-            new_cost = (old_shares * old_cost + delta * fill.avg_price) / new_shares
+            new_shares = old_shares + delta_qty
+            if new_shares <= 0:
+                raise SchemaError("BUY fill did not produce a positive position")
+            new_cost = (old_shares * old_cost + delta_amount) / new_shares
         else:  # SELL
-            new_shares = old_shares - delta
+            new_shares = old_shares - delta_qty
             new_cost = old_cost
 
         if new_shares > 0:
@@ -308,10 +476,9 @@ class LiveRecorder:
             )
 
     @staticmethod
-    def _apply_cash_delta(conn, fill: FillEvent, delta: int) -> None:
+    def _apply_cash_delta(conn, fill: FillEvent, delta_amount: float) -> None:
         """按本次成交额调整现金（费用另由 _apply_fee_delta 扣减）。"""
-        amount = delta * fill.avg_price
-        change = amount if fill.side == "SELL" else -amount
+        change = delta_amount if fill.side == "SELL" else -delta_amount
         conn.execute(
             "INSERT INTO account_state (key, value) VALUES ('cash', ?) "
             "ON CONFLICT(key) DO UPDATE SET value = value + ?",

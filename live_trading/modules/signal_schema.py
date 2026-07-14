@@ -105,16 +105,20 @@ class FillEvent:
         return _from_dict(cls, d)
 
 
-def make_client_order_id(trade_date: str, seq: int, side: str) -> str:
-    """``2026-07-14, 1, SELL`` -> ``20260714001S``（≤24 字符，QMT remark 兼容）。"""
+def make_client_order_id(
+    trade_date: str, batch_seq: int, order_seq: int, side: str,
+) -> str:
+    """生成包含批次序号的全局唯一 QMT remark（≤24 字符）。"""
     if side not in VALID_SIDES:
         raise ValueError(f"invalid side: {side!r}")
-    if not (1 <= seq <= 999):
-        raise ValueError(f"seq out of range [1, 999]: {seq}")
+    if not (1 <= batch_seq <= 999):
+        raise ValueError(f"batch_seq out of range [1, 999]: {batch_seq}")
+    if not (1 <= order_seq <= 999):
+        raise ValueError(f"order_seq out of range [1, 999]: {order_seq}")
     compact = trade_date.replace("-", "")
     if len(compact) != 8 or not compact.isdigit():
         raise ValueError(f"invalid trade_date: {trade_date!r}")
-    coid = f"{compact}{seq:03d}{side[0]}"
+    coid = f"{compact}{batch_seq:03d}{order_seq:03d}{side[0]}"
     assert len(coid) <= CLIENT_ORDER_ID_MAX_LEN
     return coid
 
@@ -176,3 +180,27 @@ def validate_fill(fill: FillEvent) -> None:
         raise SchemaError(f"invalid fill status: {fill.status!r}")
     if fill.side not in VALID_SIDES:
         raise SchemaError(f"invalid fill side: {fill.side!r}")
+    if not isinstance(fill.requested_qty, int) or fill.requested_qty < 0:
+        raise SchemaError(
+            f"requested_qty must be a non-negative int: {fill.requested_qty!r}"
+        )
+    if (
+        not isinstance(fill.filled_qty, int)
+        or fill.filled_qty < 0
+        or fill.filled_qty > fill.requested_qty
+    ):
+        raise SchemaError(
+            "filled_qty must be a non-negative int no greater than "
+            f"requested_qty: {fill.filled_qty!r}/{fill.requested_qty!r}"
+        )
+    if fill.avg_price < 0 or (fill.filled_qty > 0 and fill.avg_price <= 0):
+        raise SchemaError(
+            f"avg_price must be positive when filled_qty > 0: {fill.avg_price!r}"
+        )
+    from live_trading.modules.code_map import qmt_to_qlib
+    try:
+        qmt_to_qlib(fill.stock_code)
+    except ValueError as e:
+        raise SchemaError(
+            f"fill stock_code must be QMT format: {fill.stock_code!r}"
+        ) from e

@@ -31,16 +31,26 @@ def test_sell_before_buy_with_priority_and_seq():
         {"instrument": "SZ000001", "direction": "SELL", "target_shares": 800},
     ]
     prev_close = {"SH600000": 10.00, "SZ000001": 20.00}
-    orders = _planner().plan(intents, prev_close, BATCH_ID, TRADE_DATE)
+    orders = _planner().plan(intents, prev_close, BATCH_ID, TRADE_DATE, batch_seq=1)
 
     assert [o.side for o in orders] == ["SELL", "BUY"]
     sell, buy = orders
     assert sell.priority < buy.priority
-    assert sell.client_order_id == "20260714001S"
-    assert buy.client_order_id == "20260714002B"
+    assert sell.client_order_id == "20260714001001S"
+    assert buy.client_order_id == "20260714001002B"
     assert sell.stock_code == "000001.SZ"
     assert buy.stock_code == "600000.SH"
     assert sell.instrument_qlib == "SZ000001"
+
+
+def test_same_day_batches_have_distinct_client_order_ids():
+    intents = [{"instrument": "SH600000", "direction": "BUY", "target_shares": 100}]
+    prev_close = {"SH600000": 10.0}
+    first = _planner().plan(intents, prev_close, BATCH_ID, TRADE_DATE, batch_seq=1)
+    second = _planner().plan(
+        intents, prev_close, "20260714_csi300_topk10_002", TRADE_DATE, batch_seq=2,
+    )
+    assert first[0].client_order_id != second[0].client_order_id
 
 
 def test_limit_price_with_slippage():

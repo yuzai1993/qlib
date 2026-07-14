@@ -41,6 +41,7 @@ class OrderPlanner:
         prev_close: dict,
         batch_id: str,
         trade_date: str,
+        batch_seq: int = 1,
         reason: str = "topk_dropout",
     ) -> list:
         """生成 SignalOrder 列表（卖单在前）。
@@ -84,7 +85,9 @@ class OrderPlanner:
 
                 orders.append(SignalOrder(
                     batch_id=batch_id,
-                    client_order_id=make_client_order_id(trade_date, seq, side),
+                    client_order_id=make_client_order_id(
+                        trade_date, batch_seq, seq, side,
+                    ),
                     stock_code=qlib_to_qmt(inst),
                     side=side,
                     quantity=quantity,

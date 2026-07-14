@@ -1,5 +1,6 @@
 """FillImporter：回执导入、SIMULATE 隔离、幂等、对账。"""
 import json
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -10,16 +11,17 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
+from live_trading.modules.signal_schema import FillEvent, SchemaError
 
 BATCH_ID = "20260714_csi300_topk10_001"
 
 
 def _fill(client_order_id="20260714001S", mode="LIVE", status="FILLED",
           side="SELL", stock_code="000001.SZ", requested=800, filled=800,
-          price=10.45):
+          price=10.45, batch_id=BATCH_ID):
     return {
         "type": "fill_event",
-        "batch_id": BATCH_ID,
+        "batch_id": batch_id,
         "client_order_id": client_order_id,
         "mode": mode,
         "stock_code": stock_code,
@@ -46,12 +48,169 @@ def _write_fills(bridge_root: Path, fills: list, batch_id=BATCH_ID, with_done=Tr
         (outbound / f"fills_{batch_id}.done").write_text("ok\n", encoding="utf-8")
 
 
+def _record_plan(recorder, fills, batch_id=BATCH_ID, mode=None, planned_orders=None):
+    """为回执测试写入对应的原始计划，模拟正常发布链路。"""
+    mode = mode or fills[0]["mode"]
+    recorder.record_batch(
+        batch_id, "2026-07-14", mode,
+        planned_orders if planned_orders is not None else len(fills),
+    )
+    recorder.record_orders(batch_id, [
+        {
+            "client_order_id": f["client_order_id"],
+            "stock_code": f["stock_code"],
+            "instrument_qlib": "",
+            "side": f["side"],
+            "quantity": f["requested_qty"],
+            "price_type": "FIX",
+            "limit_price": max(float(f["avg_price"]), 1.0),
+            "priority": 10 if f["side"] == "SELL" else 20,
+            "reason": "test",
+        }
+        for f in fills
+    ])
+
+
 @pytest.fixture
 def env(tmp_path):
     db_path = tmp_path / "live.db"
     recorder = LiveRecorder(str(db_path))
     importer = FillImporter(tmp_path, recorder)
     return tmp_path, recorder, importer
+
+
+def test_same_client_order_id_can_exist_in_two_batches(env):
+    _, recorder, _ = env
+    first = _fill()
+    second = dict(first, batch_id="20260714_csi300_topk10_002")
+    _record_plan(recorder, [first], batch_id=first["batch_id"])
+    _record_plan(recorder, [second], batch_id=second["batch_id"])
+
+    assert len(recorder.get_orders(first["batch_id"])) == 1
+    assert len(recorder.get_orders(second["batch_id"])) == 1
+
+
+def test_legacy_single_key_database_migrates_without_changing_balances(tmp_path):
+    db = tmp_path / "legacy.db"
+    with sqlite3.connect(db) as conn:
+        conn.executescript("""
+            CREATE TABLE batches (
+                batch_id TEXT PRIMARY KEY, trade_date TEXT NOT NULL,
+                mode TEXT NOT NULL, planned_orders INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT
+            );
+            CREATE TABLE fills (
+                client_order_id TEXT PRIMARY KEY, batch_id TEXT NOT NULL,
+                mode TEXT NOT NULL, stock_code TEXT NOT NULL, side TEXT NOT NULL,
+                status TEXT NOT NULL, requested_qty INTEGER, filled_qty INTEGER,
+                avg_price REAL, qmt_order_id TEXT, message TEXT, ts TEXT,
+                applied_qty INTEGER NOT NULL DEFAULT 0,
+                applied_fee REAL NOT NULL DEFAULT 0
+            );
+            CREATE TABLE signal_orders (
+                client_order_id TEXT PRIMARY KEY, batch_id TEXT NOT NULL,
+                stock_code TEXT NOT NULL, instrument_qlib TEXT, side TEXT NOT NULL,
+                quantity INTEGER NOT NULL, price_type TEXT, limit_price REAL NOT NULL,
+                priority INTEGER, reason TEXT
+            );
+            CREATE TABLE positions (
+                stock_code TEXT PRIMARY KEY, shares INTEGER NOT NULL,
+                avg_cost REAL NOT NULL, updated_at TEXT
+            );
+            CREATE TABLE account_state (key TEXT PRIMARY KEY, value REAL NOT NULL);
+            INSERT INTO batches VALUES ('b1', '2026-07-14', 'LIVE', 1, NULL);
+            INSERT INTO fills VALUES (
+                'old1', 'b1', 'LIVE', '600000.SH', 'BUY', 'FILLED',
+                100, 100, 10.0, 'q1', '', '', 100, 5.1
+            );
+            INSERT INTO signal_orders VALUES (
+                'old1', 'b1', '600000.SH', 'SH600000', 'BUY', 100,
+                'FIX', 10.0, 20, 'legacy'
+            );
+            INSERT INTO positions VALUES ('600000.SH', 100, 10.0, NULL);
+            INSERT INTO account_state VALUES ('cash', 98994.9);
+        """)
+
+    recorder = LiveRecorder(str(db))
+
+    assert recorder.get_cash() == pytest.approx(98994.9)
+    assert recorder.get_positions()["600000.SH"]["shares"] == 100
+    assert recorder.get_fills("b1")[0]["applied_amount"] == pytest.approx(1000.0)
+    assert list(tmp_path.glob("legacy.db.pre_hardening_*.bak"))
+    with sqlite3.connect(db) as conn:
+        fill_pk = [r[1] for r in conn.execute("PRAGMA table_info(fills)") if r[5]]
+        order_pk = [r[1] for r in conn.execute("PRAGMA table_info(signal_orders)") if r[5]]
+    assert fill_pk == ["batch_id", "client_order_id"]
+    assert order_pk == ["batch_id", "client_order_id"]
+
+
+def test_fill_must_match_recorded_order_before_mutating_ledger(env):
+    _, recorder, _ = env
+    recorder.set_cash(100000.0)
+    planned = _fill(side="BUY", stock_code="600000.SH", requested=200, filled=200)
+    _record_plan(recorder, [planned])
+    wrong = FillEvent.from_dict(dict(planned, stock_code="000001.SZ"))
+
+    with pytest.raises(SchemaError, match="stock_code"):
+        recorder.apply_fill(wrong)
+
+    assert recorder.get_cash() == pytest.approx(100000.0)
+    assert recorder.get_positions() == {}
+
+
+@pytest.mark.parametrize(("changes", "message"), [
+    ({"mode": "SIMULATE"}, "mode"),
+    ({"side": "SELL"}, "side"),
+    ({"requested_qty": 300, "filled_qty": 200}, "requested_qty"),
+])
+def test_fill_rejects_batch_and_order_mismatches(env, changes, message):
+    _, recorder, _ = env
+    recorder.set_cash(100000.0)
+    planned = _fill(side="BUY", stock_code="600000.SH", requested=200, filled=200)
+    _record_plan(recorder, [planned])
+    fill = FillEvent.from_dict(dict(planned, **changes))
+
+    with pytest.raises(SchemaError, match=message):
+        recorder.apply_fill(fill)
+
+    assert recorder.get_cash() == pytest.approx(100000.0)
+    assert recorder.get_positions() == {}
+
+
+def test_fill_rejects_decreasing_cumulative_quantity(env):
+    _, recorder, _ = env
+    recorder.set_cash(100000.0)
+    partial = _fill(
+        side="BUY", stock_code="600000.SH", requested=500,
+        filled=200, price=10.0, status="PARTIAL",
+    )
+    _record_plan(recorder, [partial])
+    recorder.apply_fill(FillEvent.from_dict(partial))
+
+    with pytest.raises(SchemaError, match="decrease"):
+        recorder.apply_fill(FillEvent.from_dict(dict(partial, filled_qty=100)))
+
+    assert recorder.get_positions()["600000.SH"]["shares"] == 200
+
+
+def test_partial_fill_average_change_uses_cumulative_amount_delta(env):
+    _, recorder, _ = env
+    recorder.set_cash(100000.0)
+    planned = _fill(
+        side="BUY", stock_code="600000.SH", requested=200,
+        filled=100, price=10.0, status="PARTIAL",
+    )
+    _record_plan(recorder, [planned])
+    recorder.apply_fill(FillEvent.from_dict(planned))
+    final = dict(planned, status="FILLED", filled_qty=200, avg_price=11.0)
+    recorder.apply_fill(FillEvent.from_dict(final))
+
+    expected_fee = order_total_fee("BUY", 2200.0, DEFAULT_FEES)
+    assert recorder.get_cash() == pytest.approx(100000.0 - 2200.0 - expected_fee)
+    assert recorder.get_positions()["600000.SH"] == {
+        "shares": 200,
+        "avg_cost": pytest.approx(11.0),
+    }
 
 
 def test_record_and_get_orders(env):
@@ -103,11 +262,13 @@ def test_live_filled_updates_positions(env):
     bridge_root, recorder, importer = env
     # 账簿统一用 QMT 格式 stock_code；预置持仓，卖出后减少
     recorder.upsert_position("000001.SZ", 800, 10.0)
-    _write_fills(bridge_root, [
+    fills = [
         _fill(),  # SELL 800 @10.45
         _fill(client_order_id="20260714002B", side="BUY",
               stock_code="600000.SH", requested=500, filled=500, price=10.10),
-    ])
+    ]
+    _record_plan(recorder, fills)
+    _write_fills(bridge_root, fills)
     n = importer.import_fills()
     assert n == 2
 
@@ -118,10 +279,12 @@ def test_live_filled_updates_positions(env):
 
 def test_simulate_fills_do_not_touch_positions(env):
     bridge_root, recorder, importer = env
-    _write_fills(bridge_root, [
+    fills = [
         _fill(mode="SIMULATE", client_order_id="20260714002B", side="BUY",
               stock_code="600000.SH", requested=500, filled=500),
-    ])
+    ]
+    _record_plan(recorder, fills)
+    _write_fills(bridge_root, fills)
     importer.import_fills()
     assert recorder.get_positions() == {}
     # 但 fills 表中有记录（用于链路验证）
@@ -132,16 +295,15 @@ def test_simulate_fills_do_not_touch_positions(env):
 
 def test_reimport_is_idempotent(env):
     bridge_root, recorder, importer = env
-    _write_fills(bridge_root, [
+    fills = [
         _fill(client_order_id="20260714002B", side="BUY",
               stock_code="600000.SH", requested=500, filled=500),
-    ])
+    ]
+    _record_plan(recorder, fills)
+    _write_fills(bridge_root, fills)
     importer.import_fills()
     # 再写同一批次同内容（模拟重复投递），持仓不能翻倍
-    _write_fills(bridge_root, [
-        _fill(client_order_id="20260714002B", side="BUY",
-              stock_code="600000.SH", requested=500, filled=500),
-    ])
+    _write_fills(bridge_root, fills)
     importer.import_fills()
     assert recorder.get_positions()["600000.SH"]["shares"] == 500
 
@@ -149,11 +311,13 @@ def test_reimport_is_idempotent(env):
 def test_non_terminal_and_rejected_do_not_change_positions(env):
     bridge_root, recorder, importer = env
     recorder.upsert_position("000001.SZ", 800, 10.0)
-    _write_fills(bridge_root, [
+    fills = [
         _fill(status="ACCEPTED", filled=0),
         _fill(client_order_id="20260714002B", side="BUY",
               stock_code="600000.SH", status="REJECTED", requested=500, filled=0),
-    ])
+    ]
+    _record_plan(recorder, fills)
+    _write_fills(bridge_root, fills)
     importer.import_fills()
     positions = recorder.get_positions()
     assert positions["000001.SZ"]["shares"] == 800
@@ -162,10 +326,12 @@ def test_non_terminal_and_rejected_do_not_change_positions(env):
 
 def test_partial_fill_updates_by_filled_qty(env):
     bridge_root, recorder, importer = env
-    _write_fills(bridge_root, [
+    fills = [
         _fill(client_order_id="20260714002B", side="BUY",
               stock_code="600000.SH", status="PARTIAL", requested=500, filled=200),
-    ])
+    ]
+    _record_plan(recorder, fills)
+    _write_fills(bridge_root, fills)
     importer.import_fills()
     assert recorder.get_positions()["600000.SH"]["shares"] == 200
 
@@ -174,11 +340,17 @@ def test_cash_updated_by_live_fills_only(env):
     bridge_root, recorder, importer = env
     recorder.set_cash(100000.0)
     recorder.upsert_position("000001.SZ", 800, 10.0)
-    _write_fills(bridge_root, [
-        _fill(),  # LIVE SELL 800 @10.45 -> +8360，另扣费用
-        _fill(client_order_id="20260714002B", side="BUY", mode="SIMULATE",
-              stock_code="600000.SH", requested=500, filled=500, price=10.10),
-    ])
+    live_fill = _fill()  # LIVE SELL 800 @10.45 -> +8360，另扣费用
+    simulate_batch = "20260714_csi300_topk10_002"
+    simulate_fill = _fill(
+        client_order_id="20260714002001B", side="BUY", mode="SIMULATE",
+        stock_code="600000.SH", requested=500, filled=500, price=10.10,
+        batch_id=simulate_batch,
+    )
+    _record_plan(recorder, [live_fill])
+    _record_plan(recorder, [simulate_fill], batch_id=simulate_batch)
+    _write_fills(bridge_root, [live_fill])
+    _write_fills(bridge_root, [simulate_fill], batch_id=simulate_batch)
     importer.import_fills()
     # 卖出 8360：佣金 max(8360*0.00025, 5)=5 + 过户费 0.0836 + 印花税 4.18
     sell_fee = order_total_fee("SELL", 8360.0, DEFAULT_FEES)
@@ -197,11 +369,11 @@ def test_partial_then_full_fee_incremental(env):
     """部分成交后终态补齐：最低佣金全订单只收一次，费用按增量补扣。"""
     bridge_root, recorder, importer = env
     recorder.set_cash(100000.0)
-    _write_fills(bridge_root, [
-        _fill(client_order_id="20260714002B", side="BUY",
-              stock_code="600000.SH", status="PARTIAL",
-              requested=500, filled=200, price=10.0),
-    ])
+    partial = _fill(client_order_id="20260714002B", side="BUY",
+                    stock_code="600000.SH", status="PARTIAL",
+                    requested=500, filled=200, price=10.0)
+    _record_plan(recorder, [partial])
+    _write_fills(bridge_root, [partial])
     importer.import_fills()
     fee_200 = order_total_fee("BUY", 2000.0, DEFAULT_FEES)  # 佣金触发最低 5 元
     assert recorder.get_cash() == pytest.approx(100000.0 - 2000.0 - fee_200)
@@ -252,10 +424,11 @@ def test_apply_bonus_shares(env):
 
 def test_sum_fees_by_date(env):
     bridge_root, recorder, importer = env
-    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
     recorder.set_cash(100000.0)
     recorder.upsert_position("000001.SZ", 800, 10.0)
-    _write_fills(bridge_root, [_fill()])
+    fills = [_fill()]
+    _record_plan(recorder, fills)
+    _write_fills(bridge_root, fills)
     importer.import_fills()
     sell_fee = order_total_fee("SELL", 8360.0, DEFAULT_FEES)
     assert recorder.sum_fees_by_date("2026-07-14") == pytest.approx(sell_fee)
@@ -264,12 +437,13 @@ def test_sum_fees_by_date(env):
 
 def test_reconcile_counts(env):
     bridge_root, recorder, importer = env
-    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", planned_orders=3)
-    _write_fills(bridge_root, [
+    fills = [
         _fill(),
         _fill(client_order_id="20260714002B", side="BUY",
               stock_code="600000.SH", status="REJECTED", requested=500, filled=0),
-    ])
+    ]
+    _record_plan(recorder, fills, planned_orders=3)
+    _write_fills(bridge_root, fills)
     importer.import_fills()
     result = importer.reconcile(BATCH_ID)
     assert result["planned"] == 3

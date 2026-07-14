@@ -8,6 +8,8 @@
   >1年 免）。本系统在派息入账时按 dividend_tax_rate 预提估算。
 """
 
+import math
+
 DEFAULT_FEES = {
     "commission_rate": 0.00025,    # 万2.5，请按开户实际费率修改
     "min_commission": 5.0,         # 单笔最低佣金（元）
@@ -21,7 +23,23 @@ def fees_from_config(config: dict) -> dict:
     """从 live 配置取 fees 段，与默认值合并。"""
     merged = dict(DEFAULT_FEES)
     merged.update((config or {}).get("fees") or {})
-    return merged
+    return validate_fees(merged)
+
+
+def validate_fees(fees: dict) -> dict:
+    """返回数值化后的合法费率；拒绝负数、NaN、无穷值和缺失项。"""
+    result = {}
+    for key in DEFAULT_FEES:
+        if key not in fees:
+            raise ValueError(f"missing fee setting: {key}")
+        try:
+            value = float(fees[key])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{key} must be a finite non-negative number") from exc
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"{key} must be a finite non-negative number")
+        result[key] = value
+    return result
 
 
 def order_total_fee(side: str, cum_amount: float, fees: dict) -> float:
@@ -30,7 +48,16 @@ def order_total_fee(side: str, cum_amount: float, fees: dict) -> float:
     按订单整体计费：最低佣金对整个订单只收一次，部分成交多次回执时
     调用方用「本次总应计 - 已计费用」得到增量，天然幂等。
     """
-    if cum_amount <= 0:
+    if side not in {"BUY", "SELL"}:
+        raise ValueError(f"invalid side: {side!r}")
+    try:
+        cum_amount = float(cum_amount)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("cum_amount must be a finite non-negative number") from exc
+    if not math.isfinite(cum_amount) or cum_amount < 0:
+        raise ValueError("cum_amount must be a finite non-negative number")
+    fees = validate_fees(fees)
+    if cum_amount == 0:
         return 0.0
     commission = max(cum_amount * fees["commission_rate"], fees["min_commission"])
     transfer = cum_amount * fees["transfer_fee_rate"]

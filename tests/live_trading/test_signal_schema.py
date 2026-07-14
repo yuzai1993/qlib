@@ -1,4 +1,5 @@
 """信号文件协议：数据对象、校验、checksum、client_order_id。"""
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -58,17 +59,23 @@ def _header(**kwargs) -> BatchHeader:
 # ---------- client_order_id ----------
 
 def test_make_client_order_id_format_and_length():
-    coid = make_client_order_id("2026-07-14", 1, "SELL")
-    assert coid == "20260714001S"
+    coid = make_client_order_id("2026-07-14", 1, 1, "SELL")
+    assert coid == "20260714001001S"
     assert len(coid) <= 24
-    assert make_client_order_id("2026-07-14", 23, "BUY") == "20260714023B"
+    assert make_client_order_id("2026-07-14", 23, 7, "BUY") == "20260714023007B"
+
+
+def test_make_client_order_id_differs_across_same_day_batches():
+    first = make_client_order_id("2026-07-14", 1, 1, "BUY")
+    second = make_client_order_id("2026-07-14", 2, 1, "BUY")
+    assert first != second
 
 
 def test_make_client_order_id_rejects_bad_seq():
     with pytest.raises(ValueError):
-        make_client_order_id("2026-07-14", 0, "BUY")
+        make_client_order_id("2026-07-14", 0, 1, "BUY")
     with pytest.raises(ValueError):
-        make_client_order_id("2026-07-14", 1000, "BUY")
+        make_client_order_id("2026-07-14", 1, 1000, "BUY")
 
 
 # ---------- checksum ----------
@@ -163,10 +170,35 @@ def test_validate_fill_requires_mode():
     )
     validate_fill(f)
 
-    import dataclasses
     with pytest.raises(SchemaError):
         validate_fill(dataclasses.replace(f, mode="PROD"))
     with pytest.raises(SchemaError):
         validate_fill(dataclasses.replace(f, status="DONE"))
     # EXPIRED 是合法终态
     validate_fill(dataclasses.replace(f, status="EXPIRED", filled_qty=0))
+
+
+@pytest.mark.parametrize("changes", [
+    {"requested_qty": -1},
+    {"filled_qty": -1},
+    {"requested_qty": 100, "filled_qty": 200},
+    {"filled_qty": 1, "avg_price": 0.0},
+    {"filled_qty": 0, "avg_price": -1.0},
+])
+def test_validate_fill_rejects_bad_quantities_and_prices(changes):
+    f = FillEvent(
+        batch_id="20260714_csi300_topk10_001",
+        client_order_id="20260714001001S",
+        mode="LIVE",
+        stock_code="600000.SH",
+        side="SELL",
+        status="FILLED",
+        requested_qty=800,
+        filled_qty=800,
+        avg_price=10.45,
+        qmt_order_id="1",
+        message="",
+        ts="2026-07-14T09:31:12+08:00",
+    )
+    with pytest.raises(SchemaError):
+        validate_fill(dataclasses.replace(f, **changes))

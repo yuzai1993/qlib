@@ -58,9 +58,16 @@ python collector.py update_data_to_bin --qlib_dir ~/.qlib/qlib_data/cn_data --st
 
 若需**手动分步**做增量：先在本目录执行 `download_data` 和 `normalize_data`，再在仓库根目录执行 `python scripts/dump_bin.py dump_update --data_path scripts/data_collector/tushare/normalize --qlib_dir <qlib_dir> ...`（参数同上面 dump_all，仅把 `dump_all` 改为 `dump_update`）。
 
-### 5. 定时任务（每周一至五 18:00，日志按日期写入 logs/data）
+### 5. 定时任务（工作日，日志按日期写入 logs/data）
 
-已提供脚本 `run_update_to_bin.sh`，会执行 `update_data_to_bin` 并将 stdout/stderr 追加到 **qlib 根目录** 下 `logs/data/YYYY-MM-DD.log`。
+已提供脚本 `run_update_to_bin.sh`，顺序执行：
+
+1. `update_data_to_bin`（日线采集 + 归一化 + dump）
+2. 指数成分日更
+3. vwap 巡检
+4. 前复权回溯完整性巡检（CSI300，近 90 天）
+
+**原则：** 每一步都会跑完（单步失败不阻断后续）；任一步失败通过 Server酱推微信（环境变量 `SERVERCHAN_SENDKEY`，建议放在 `~/.qlib_live_env`）；任一步失败则脚本最终以非 0 退出。stdout/stderr 追加到 **qlib 根目录** 下 `logs/data/YYYY-MM-DD.log`。
 
 **一次性设置 crontab**（在终端执行）：
 
@@ -68,18 +75,18 @@ python collector.py update_data_to_bin --qlib_dir ~/.qlib/qlib_data/cn_data --st
 crontab -e
 ```
 
-在打开的编辑器中加入一行（路径按你本机 qlib 根目录修改）：
+在打开的编辑器中加入一行（路径按你本机 qlib 根目录修改；与实盘约定一致时用 17:30）：
 
 ```
-0 18 * * 1-5 /home/yuzai/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
+30 17 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 ```
 
-保存退出即可。含义：每周一至周五 18:00 执行该脚本，日志自动写入 `logs/data/` 下以当天日期命名的文件。
+保存退出即可。
 
 **手动执行脚本**（不依赖 cron）：
 
 ```bash
-/home/yuzai/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
+/Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 ```
 
 ## 修改计划

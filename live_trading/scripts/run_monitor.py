@@ -101,10 +101,7 @@ def fetch_benchmark_close(benchmark: str, date: str):
 def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
-    candidates = [
-        batch for batch in recorder.list_batches(limit=20)
-        if batch["trade_date"] == next_day
-    ]
+    candidates = recorder.get_active_batches_by_date(next_day)
     if not candidates:
         return check_evening(next_day, None, [])
     # 同一交易日取最新 seq（batch_id 结尾为三位 seq）。
@@ -119,7 +116,7 @@ def run_evening(date, recorder, config) -> list:
 
 
 def run_postmarket(date, recorder, store, config) -> list:
-    batches = recorder.get_batches_by_date(date)
+    batches = recorder.get_active_batches_by_date(date)
     importer = FillImporter(config["live"]["bridge_root"], recorder)
     reconciles = {b["batch_id"]: importer.reconcile(b["batch_id"]) for b in batches}
     fills = recorder.get_fills_by_dates([date])
@@ -343,7 +340,7 @@ def main():
     calendar = get_calendar_dates()
     if date not in calendar:
         # 区分节假日与数据过期：当日有批次说明是交易日，日历却没有 → 数据未更新
-        if recorder.get_batches_by_date(date):
+        if recorder.get_active_batches_by_date(date):
             findings = [Finding(
                 "DATA_STALE", "CRIT",
                 f"{date} 有信号批次但 qlib 日历最新为 {calendar[-1] if calendar else None}："

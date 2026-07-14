@@ -49,7 +49,8 @@ def test_evening_monitor_does_not_hide_failed_friday_publish(monkeypatch, tmp_pa
 
     class EmptyRecorder:
         @staticmethod
-        def list_batches(limit=20):
+        def get_active_batches_by_date(trade_date):
+            assert trade_date == "2026-07-20"
             return []
 
     monkeypatch.setattr(
@@ -64,3 +65,30 @@ def test_evening_monitor_does_not_hide_failed_friday_publish(monkeypatch, tmp_pa
     assert len(findings) == 1
     assert findings[0].rule == "PUBLISH_MISSING"
     assert "2026-07-20" in findings[0].message
+
+
+def test_evening_monitor_ignores_superseded_higher_sequence(monkeypatch, tmp_path):
+    from live_trading.modules.fill_importer import LiveRecorder
+    from live_trading.scripts import run_monitor
+
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    active = "20260720_csi300_topk10_003"
+    superseded = "20260720_csi300_topk10_004"
+    recorder.record_batch(active, "2026-07-20", "LIVE", 10)
+    recorder.record_batch(superseded, "2026-07-20", "LIVE", 10)
+    recorder.supersede_batch(superseded, active)
+    inbox = tmp_path / "inbox"
+    inbox.mkdir()
+    (inbox / f"signal_{active}.jsonl").write_text("test\n", encoding="utf-8")
+    (inbox / f"signal_{active}.done").write_text("ok\n", encoding="utf-8")
+    monkeypatch.setattr(
+        run_monitor, "next_open_date", lambda date: "2026-07-20",
+        raising=False,
+    )
+
+    findings = run_monitor.run_evening(
+        "2026-07-17", recorder,
+        {"live": {"bridge_root": str(tmp_path)}},
+    )
+
+    assert findings == []

@@ -11,6 +11,9 @@ from live_trading.modules.pipeline_monitor import (
     check_postmarket,
     check_report,
 )
+from live_trading.modules.fill_importer import LiveRecorder
+from live_trading.modules.monitor_store import MonitorStore
+from live_trading.scripts import run_monitor
 
 BATCH = {"batch_id": "20260714_csi300_topk10_001", "trade_date": "2026-07-14"}
 FILES_OK = ["signal_20260714_csi300_topk10_001.jsonl",
@@ -127,6 +130,31 @@ def test_postmarket_oversell_skipped_without_baseline():
         fills, prev_positions=None,
     )
     assert "NEGATIVE_POSITION" not in _rules(f)
+
+
+def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db))
+    store = MonitorStore(str(db))
+    old = "20260715_csi300_topk10_001"
+    active = "20260715_csi300_topk10_003"
+    recorder.record_batch(old, "2026-07-15", "LIVE", 10)
+    recorder.record_batch(active, "2026-07-15", "LIVE", 10)
+    recorder.supersede_batch(old, active)
+    reconciled = []
+
+    def fake_reconcile(_importer, batch_id):
+        reconciled.append(batch_id)
+        return {"planned": 10, "terminal": 10, "missing": 0}
+
+    monkeypatch.setattr(run_monitor.FillImporter, "reconcile", fake_reconcile)
+    findings = run_monitor.run_postmarket(
+        "2026-07-15", recorder, store,
+        {"live": {"bridge_root": str(tmp_path)}},
+    )
+
+    assert findings == []
+    assert reconciled == [active]
 
 
 # ---------- report ----------

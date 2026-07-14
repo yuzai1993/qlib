@@ -103,7 +103,7 @@ class SignalGenerator:
         )
         return scores
 
-    def predict(self, target_date: str) -> pd.Series:
+    def predict(self, target_date: str, allow_stale: bool = True) -> pd.Series:
         """Generate prediction scores for all instruments on target_date.
 
         Reuses cached handler/features when available.
@@ -118,6 +118,11 @@ class SignalGenerator:
             day_features = self._features.loc[target_ts]
         else:
             last_date = date_index.max()
+            if not allow_stale:
+                raise ValueError(
+                    f"Target date {target_date} not in features; "
+                    f"last available is {last_date}"
+                )
             logger.warning(
                 "Target date %s not in features, using last available: %s",
                 target_date, last_date,

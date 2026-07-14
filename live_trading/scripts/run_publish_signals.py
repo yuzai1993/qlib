@@ -83,7 +83,7 @@ def get_signal_date_and_scores(config, trade_date: str):
 
     from paper_trading.modules.signal_generator import SignalGenerator
     gen = SignalGenerator(config, PROJECT_ROOT)
-    scores = gen.predict(signal_date)
+    scores = gen.predict(signal_date, allow_stale=False)
     return signal_date, scores
 
 

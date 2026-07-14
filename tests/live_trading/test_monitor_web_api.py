@@ -34,6 +34,30 @@ def client(tmp_path):
     recorder = LiveRecorder(str(db))
     recorder.set_cash(100000.0)
     recorder.record_batch(BATCH, "2026-07-13", "LIVE", planned_orders=2)
+    recorder.record_orders(BATCH, [
+        {
+            "client_order_id": "20260713001B",
+            "stock_code": "600000.SH",
+            "instrument_qlib": "SH600000",
+            "side": "BUY",
+            "quantity": 800,
+            "price_type": "FIX",
+            "limit_price": 10.6,
+            "priority": 20,
+            "reason": "topk_dropout",
+        },
+        {
+            "client_order_id": "20260713002B",
+            "stock_code": "000001.SZ",
+            "instrument_qlib": "SZ000001",
+            "side": "BUY",
+            "quantity": 500,
+            "price_type": "FIX",
+            "limit_price": 12.1,
+            "priority": 20,
+            "reason": "topk_dropout",
+        },
+    ])
     recorder.apply_fill(_fill_event("20260713001B"))
     recorder.apply_fill(_fill_event("20260713002B", code="000001.SZ", qty=500,
                                     price=12.0))
@@ -68,30 +92,6 @@ def client(tmp_path):
     recorder.save_stock_names([
         {"stock_code": "600000.SH", "instrument": "SH600000", "name": "浦发银行"},
         {"stock_code": "000001.SZ", "instrument": "SZ000001", "name": "平安银行"},
-    ])
-    recorder.record_orders(BATCH, [
-        {
-            "client_order_id": "20260713001B",
-            "stock_code": "600000.SH",
-            "instrument_qlib": "SH600000",
-            "side": "BUY",
-            "quantity": 800,
-            "price_type": "FIX",
-            "limit_price": 10.6,
-            "priority": 20,
-            "reason": "topk_dropout",
-        },
-        {
-            "client_order_id": "20260713002B",
-            "stock_code": "000001.SZ",
-            "instrument_qlib": "SZ000001",
-            "side": "BUY",
-            "quantity": 500,
-            "price_type": "FIX",
-            "limit_price": 12.1,
-            "priority": 20,
-            "reason": "topk_dropout",
-        },
     ])
 
     recorder.record_cash_flow("2026-07-13", "DIVIDEND", 380.0,

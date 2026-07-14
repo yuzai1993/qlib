@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 发布次日 SIMULATE 信号（工作日晚间由 crontab 调用）
+# 发布下一交易日 LIVE 信号（工作日晚间由 crontab 调用）
 # 用法：
-#   bash live_trading/run_publish_cron.sh              # trade_date = 明天
+#   bash live_trading/run_publish_cron.sh              # Tushare 下一开市日
 #   bash live_trading/run_publish_cron.sh 2026-07-14   # 指定交易日
 
 set -euo pipefail
@@ -24,7 +24,8 @@ fi
 if [[ -n "${1:-}" ]]; then
     TRADE_DATE="$1"
 else
-    TRADE_DATE="$(date -v+1d +%Y-%m-%d)"
+    TRADE_DATE="$("$PYTHON" "$PROJECT_ROOT/live_trading/scripts/next_trade_date.py" \
+        --after "$(date +%Y-%m-%d)")"
 fi
 
 mkdir -p "${SCRIPT_DIR}/logs"

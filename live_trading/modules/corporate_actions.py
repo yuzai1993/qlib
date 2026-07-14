@@ -1,96 +1,64 @@
-"""公司行为（分红/送股/转增）自动入账。
+"""Tushare corporate-action event normalization.
 
-规则（2026 现行）：
-- 除息日（ex_date）股价除权除息，现金红利与送转股按当日入账，账户净值连续；
-  实际到账日（pay_date）通常晚 0~3 天，差异忽略。
-- 红利税差别化征收（财税〔2015〕101号）：持股 ≤1 月 20%、1月~1年 10%、
-  >1 年免税；派发时不预扣，卖出时由券商按先进先出补扣。
-  本策略平均持有期短，入账时按 dividend_tax_rate（默认 20%）预提估算；
-  与券商实扣的差额用 CORRECTION 流水校正。
-- 数据源 tushare ``dividend`` 接口（div_proc=实施），ts_code 与 QMT 代码同格式。
+Entitlement and settlement are handled transactionally by ``LiveRecorder``.
 """
 
-import logging
 import os
 
-logger = logging.getLogger("live_trading.corporate_actions")
+
+def _date(value) -> str:
+    if value is None or value != value:
+        return ""
+    raw = str(value).replace("-", "")
+    if len(raw) != 8 or not raw.isdigit():
+        return ""
+    return f"{raw[:4]}-{raw[4:6]}-{raw[6:]}"
 
 
-def fetch_dividend_events(date: str, stock_codes: list) -> list:
-    """取除息日为 date、且在持仓列表内的实施分红事件。
+def _number(value) -> float:
+    if value is None or value != value:
+        return 0.0
+    return float(value)
 
-    Returns:
-        [{stock_code, cash_div_tax(每股税前), stk_div(每股送转)}, ...]
-        TUSHARE_TOKEN 未设置或接口异常时抛 RuntimeError。
-    """
-    if not stock_codes:
-        return []
-    token = os.environ.get("TUSHARE_TOKEN", "")
-    if not token:
-        raise RuntimeError("TUSHARE_TOKEN 未设置，无法查询分红事件")
-    import tushare as ts
-    pro = ts.pro_api(token)
+
+def fetch_dividend_events(date: str, pro=None) -> list:
+    """Return implemented dividend events whose ex-date is ``date``."""
+    if pro is None:
+        token = os.environ.get("TUSHARE_TOKEN", "")
+        if not token:
+            raise RuntimeError("TUSHARE_TOKEN 未设置，无法查询分红事件")
+        import tushare as ts
+        pro = ts.pro_api(token)
     df = pro.dividend(
         ex_date=date.replace("-", ""),
-        fields="ts_code,div_proc,stk_div,cash_div_tax",
+        fields=("ts_code,div_proc,stk_div,cash_div_tax,record_date,ex_date,"
+                "pay_date,div_listdate,end_date"),
     )
-    held = set(stock_codes)
     events = []
     for _, row in df.iterrows():
-        if row["ts_code"] not in held or row["div_proc"] != "实施":
+        if row["div_proc"] != "实施":
             continue
+        stock_code = row["ts_code"]
+        record_date = _date(row.get("record_date"))
+        ex_date = _date(row.get("ex_date")) or date
+        # Missing settlement dates must stay unknown. Falling back to ex-date
+        # would make unreceived cash or unlisted shares tradable too early.
+        pay_date = _date(row.get("pay_date"))
+        div_listdate = _date(row.get("div_listdate"))
+        end_date = _date(row.get("end_date"))
+        event_key = "_".join(
+            [stock_code, end_date.replace("-", ""),
+             record_date.replace("-", ""), ex_date.replace("-", "")]
+        )
         events.append({
-            "stock_code": row["ts_code"],
-            "cash_div_tax": float(row["cash_div_tax"] or 0.0),
-            "stk_div": float(row["stk_div"] or 0.0),
+            "event_key": event_key,
+            "stock_code": stock_code,
+            "end_date": end_date,
+            "record_date": record_date,
+            "ex_date": ex_date,
+            "pay_date": pay_date,
+            "div_listdate": div_listdate,
+            "cash_div_tax": _number(row.get("cash_div_tax")),
+            "stk_div": _number(row.get("stk_div")),
         })
     return events
-
-
-def apply_corporate_actions(recorder, date: str, events: list,
-                            dividend_tax_rate: float = 0.20) -> list:
-    """将分红事件入账（幂等，dedup_key 去重）。
-
-    Args:
-        recorder: LiveRecorder
-        events: fetch_dividend_events 的返回
-        dividend_tax_rate: 红利税预提税率
-
-    Returns:
-        实际入账的描述列表（重复调用返回空）。
-    """
-    applied = []
-    positions = recorder.get_positions()
-    for ev in events:
-        code = ev["stock_code"]
-        pos = positions.get(code)
-        if not pos:
-            continue
-        shares = pos["shares"]
-
-        gross = round(shares * ev["cash_div_tax"], 2)
-        if gross > 0:
-            if recorder.record_cash_flow(
-                    date, "DIVIDEND", gross, stock_code=code,
-                    note=f"每股派 {ev['cash_div_tax']:.4f} x {shares} 股（税前）",
-                    dedup_key=f"DIV_{code}_{date}"):
-                applied.append(f"DIVIDEND {code} +{gross:.2f}")
-            tax = round(gross * dividend_tax_rate, 2)
-            if tax > 0 and recorder.record_cash_flow(
-                    date, "DIVIDEND_TAX", -tax, stock_code=code,
-                    note=f"红利税预提 {dividend_tax_rate*100:.0f}%（券商卖出时实扣，差额用 CORRECTION 校正）",
-                    dedup_key=f"DIVTAX_{code}_{date}"):
-                applied.append(f"DIVIDEND_TAX {code} -{tax:.2f}")
-
-        bonus = int(shares * ev["stk_div"])
-        if bonus > 0:
-            if recorder.record_cash_flow(
-                    date, "BONUS_SHARES", 0.0, stock_code=code,
-                    note=f"送转 {ev['stk_div']:.4f}/股 到账 {bonus} 股",
-                    dedup_key=f"BONUS_{code}_{date}"):
-                recorder.apply_bonus_shares(code, bonus)
-                applied.append(f"BONUS_SHARES {code} +{bonus}股")
-
-    for msg in applied:
-        logger.info("corporate action applied: %s", msg)
-    return applied

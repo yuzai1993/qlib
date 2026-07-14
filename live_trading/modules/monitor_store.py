@@ -10,7 +10,8 @@ from pathlib import Path
 
 # daily_snapshot 的全部列（upsert 时按此顺序取值）
 _SNAPSHOT_COLS = [
-    "date", "cash", "market_value", "total_value",
+    "date", "cash", "market_value", "receivables",
+    "pending_market_value", "tax_provision", "total_value",
     "daily_return", "cumulative_return",
     "benchmark_close", "benchmark_daily_return", "benchmark_cumulative_return",
     "excess_return", "position_count", "turnover",
@@ -52,6 +53,9 @@ class MonitorStore:
                     date TEXT PRIMARY KEY,
                     cash REAL NOT NULL,
                     market_value REAL NOT NULL,
+                    receivables REAL NOT NULL DEFAULT 0,
+                    pending_market_value REAL NOT NULL DEFAULT 0,
+                    tax_provision REAL NOT NULL DEFAULT 0,
                     total_value REAL NOT NULL,
                     daily_return REAL,
                     cumulative_return REAL,
@@ -101,9 +105,12 @@ class MonitorStore:
                     UNIQUE (trade_date, rule)
                 );
             """)
-            # 旧库迁移：daily_snapshot 补 fees / external_flow 列
+            # 旧库迁移：daily_snapshot 补新增估值与资金流列。
             cols = {r["name"] for r in conn.execute("PRAGMA table_info(daily_snapshot)")}
-            for col in ("fees", "external_flow"):
+            for col in (
+                "fees", "external_flow", "receivables",
+                "pending_market_value", "tax_provision",
+            ):
                 if col not in cols:
                     conn.execute(
                         f"ALTER TABLE daily_snapshot ADD COLUMN {col} "
@@ -116,9 +123,18 @@ class MonitorStore:
         cols = ", ".join(_SNAPSHOT_COLS)
         marks = ", ".join("?" for _ in _SNAPSHOT_COLS)
         with self._conn() as conn:
+            zero_default = {
+                "receivables", "pending_market_value", "tax_provision",
+                "fees", "external_flow",
+            }
+            values = [
+                (row.get(c) if row.get(c) is not None else 0.0)
+                if c in zero_default else row.get(c)
+                for c in _SNAPSHOT_COLS
+            ]
             conn.execute(
                 f"INSERT OR REPLACE INTO daily_snapshot ({cols}) VALUES ({marks})",
-                [row.get(c) for c in _SNAPSHOT_COLS],
+                values,
             )
 
     def get_snapshots(self, start: str = None, end: str = None) -> list:
@@ -184,6 +200,14 @@ class MonitorStore:
                 (limit,),
             ).fetchall()
             return [r["date"] for r in rows]
+
+    def get_historical_position_codes(self) -> set:
+        """Return every stock code ever persisted in a position snapshot."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT stock_code FROM position_snapshot"
+            ).fetchall()
+            return {r["stock_code"] for r in rows}
 
     # ---------- pipeline_events ----------
 

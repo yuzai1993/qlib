@@ -150,4 +150,11 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
         rows = [_with_name(r) for r in recorder.get_cash_flows(limit=limit)]
         return {"flows": rows, "cash": recorder.get_cash()}
 
+    @router.get("/corporate-actions")
+    def corporate_actions(limit: int = Query(100)):
+        return {
+            "events": recorder.get_corporate_actions(limit=limit),
+            "balances": recorder.get_corporate_balances(),
+        }
+
     return router

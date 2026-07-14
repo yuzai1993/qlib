@@ -20,7 +20,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.corporate_actions import (
-    apply_corporate_actions,
     fetch_dividend_events,
 )
 from live_trading.modules.fees import fees_from_config
@@ -141,22 +140,75 @@ def run_postmarket(date, recorder, store, config) -> list:
                             prev_positions, reject_rate=reject_rate)
 
 
-def run_corporate_actions(date, recorder, config) -> tuple:
+def run_corporate_actions(date, recorder, store, config) -> tuple:
     """分红/送股入账（快照前执行）。返回 (入账描述列表, findings)。"""
-    positions = recorder.get_positions()
-    if not positions:
-        return [], []
+    applied = recorder.settle_due_corporate_actions(date)
     try:
-        events = fetch_dividend_events(date, list(positions))
+        events = fetch_dividend_events(date)
     except Exception as e:
         logger.error("fetch dividend events failed: %s", e)
-        return [], [Finding(
+        return applied, [Finding(
             "CORP_ACTION_FAILED", "WARN",
             f"{date} 分红事件查询失败（{e}），若当日有持仓股除息请用 "
             "record_cash_flow.py 手工补录")]
+
+    historical_codes = (
+        set(recorder.get_positions()) | store.get_historical_position_codes()
+    )
+
     tax_rate = fees_from_config(config)["dividend_tax_rate"]
-    applied = apply_corporate_actions(recorder, date, events, tax_rate)
-    return applied, []
+    findings = []
+    snapshots = {}
+    for event in events:
+        code = event["stock_code"]
+        record_date = event.get("record_date")
+        record_snapshot = store.get_snapshot(record_date) if record_date else None
+        if record_snapshot is None:
+            # The API returns market-wide events. Missing local history only
+            # matters for a stock the account has held at some point.
+            if code not in historical_codes:
+                continue
+            findings.append(Finding(
+                "CORP_ACTION_ENTITLEMENT_MISSING", "WARN",
+                f"{code} {event.get('ex_date')} 除息，但缺少股权登记日 "
+                f"{record_date or 'UNKNOWN'} 持仓快照；未自动入账",
+            ))
+            continue
+        if record_date not in snapshots:
+            snapshots[record_date] = {
+                row["stock_code"]: row
+                for row in store.get_position_snapshots(record_date)
+            }
+        position = snapshots[record_date].get(code)
+        if not position or position["shares"] <= 0:
+            continue
+        shares = int(position["shares"])
+        if recorder.accrue_corporate_action(event, shares, tax_rate):
+            gross = round(shares * event["cash_div_tax"], 2)
+            tax = round(gross * tax_rate, 2)
+            parts = []
+            if gross > 0:
+                parts.extend([
+                    f"DIVIDEND_RECEIVABLE {code} +{gross:.2f}",
+                    f"TAX_PROVISION -{tax:.2f}",
+                ])
+                if not event.get("pay_date"):
+                    findings.append(Finding(
+                        "CORP_ACTION_SETTLEMENT_DATE_MISSING", "WARN",
+                        f"{code} {event.get('ex_date')} 现金分红缺少派息日；"
+                        "已挂应收但不会自动转为现金",
+                    ))
+            bonus = int(shares * event["stk_div"])
+            if bonus > 0:
+                parts.append(f"PENDING_BONUS +{bonus}股")
+                if not event.get("div_listdate"):
+                    findings.append(Finding(
+                        "CORP_ACTION_LIST_DATE_MISSING", "WARN",
+                        f"{code} {event.get('ex_date')} 送转股缺少上市日；"
+                        "已挂待上市股但不会自动转为普通持仓",
+                    ))
+            applied.append("; ".join(parts))
+    return applied, findings
 
 
 def run_report(date, calendar, recorder, store, config, notifier) -> list:
@@ -165,13 +217,17 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
     if any(f.level == "CRIT" for f in findings):
         return findings  # 数据未更新，快照不可信，不落库
 
-    corp_applied, corp_findings = run_corporate_actions(date, recorder, config)
+    corp_applied, corp_findings = run_corporate_actions(
+        date, recorder, store, config,
+    )
     findings += corp_findings
 
     positions = recorder.get_positions()   # {qmt_code: {shares, avg_cost}}
     cash = recorder.get_cash()
+    corporate = recorder.get_corporate_balances()
 
-    qlib_by_qmt = {code: qmt_to_qlib(code) for code in positions}
+    price_codes = set(positions) | set(corporate["pending_shares"])
+    qlib_by_qmt = {code: qmt_to_qlib(code) for code in price_codes}
     prices_qlib = fetch_close_prices(list(qlib_by_qmt.values()), date)
     prices = {qmt: prices_qlib.get(ql) for qmt, ql in qlib_by_qmt.items()
               if prices_qlib.get(ql) is not None}
@@ -190,6 +246,9 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
         prev_snapshot, fills_amount,
         external_flow=recorder.sum_external_flows(date),
         fees=recorder.sum_fees_by_date(date),
+        receivables=corporate["receivables"],
+        pending_shares=corporate["pending_shares"],
+        tax_provision=corporate["tax_provision"],
     )
     store.upsert_daily_snapshot(daily_row)
     store.upsert_position_snapshots(date, position_rows)
@@ -221,7 +280,9 @@ def _daily_report_md(date, snap, fills, findings, corp_applied=None) -> str:
     traded = [f for f in fills if f["mode"] == "LIVE"
               and f["status"] in {"FILLED", "PARTIAL"}]
     lines = [
-        f"**总资产** {snap['total_value']:,.2f}（现金 {snap['cash']:,.2f}）",
+        f"**总资产** {snap['total_value']:,.2f}（现金 {snap['cash']:,.2f}，"
+        f"应收 {snap.get('receivables', 0):,.2f}，"
+        f"红利税准备 {snap.get('tax_provision', 0):,.2f}）",
         f"**日收益** {_fmt_pct(snap['daily_return'])}"
         f"　累计 {_fmt_pct(snap['cumulative_return'])}"
         f"　超额 {_fmt_pct(snap['excess_return'])}",

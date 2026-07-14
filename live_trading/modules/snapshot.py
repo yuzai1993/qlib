@@ -3,7 +3,7 @@
 设计文档 §4.3：
 - 缺价股票按 avg_cost 保守估值（close_price/profit 记 None/0），缺价列表由
   调用方转成 PRICE_MISSING 告警；
-- 日收益剔除当日外部出入金（external_flow：DEPOSIT/WITHDRAW/CORRECTION 净额），
+- 日收益剔除当日外部出入金（external_flow：DEPOSIT/WITHDRAW 净额），
   分红派息计入收益；累计收益按日收益链式累乘，不受出入金扭曲。
 """
 
@@ -22,7 +22,8 @@ def sum_live_fills_amount(fills: list) -> float:
 
 def build_snapshot(date, positions, cash, prices, bench_close,
                    prev_snapshot, fills_amount, external_flow=0.0,
-                   fees=0.0):
+                   fees=0.0, receivables=0.0, pending_shares=None,
+                   tax_provision=0.0):
     """构建每日快照。
 
     Args:
@@ -42,6 +43,7 @@ def build_snapshot(date, positions, cash, prices, bench_close,
     position_rows = []
     missing = []
     market_value = 0.0
+    pending_market_value = 0.0
 
     for code in sorted(positions):
         p = positions[code]
@@ -65,7 +67,18 @@ def build_snapshot(date, positions, cash, prices, bench_close,
             "weight": None,  # 需 total_value，下面回填
         })
 
-    total_value = cash + market_value
+    for code, shares in sorted((pending_shares or {}).items()):
+        close = prices.get(code)
+        if close is None:
+            if code not in missing:
+                missing.append(code)
+            continue
+        pending_market_value += int(shares) * close
+
+    total_value = (
+        cash + market_value + float(receivables) + pending_market_value
+        - float(tax_provision)
+    )
     for row in position_rows:
         row["weight"] = (row["market_value"] / total_value) if total_value else None
 
@@ -104,6 +117,9 @@ def build_snapshot(date, positions, cash, prices, bench_close,
         "date": date,
         "cash": cash,
         "market_value": market_value,
+        "receivables": float(receivables),
+        "pending_market_value": pending_market_value,
+        "tax_provision": float(tax_provision),
         "total_value": total_value,
         "daily_return": daily_return,
         "cumulative_return": cumulative_return,

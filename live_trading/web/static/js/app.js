@@ -64,7 +64,8 @@ async function renderDashboard() {
     html += `<div class="card-grid">
         <div class="card"><div class="card-label">总资产</div>
             <div class="card-value">${fmtMoney(s.total_value)}</div>
-            <div class="card-sub">现金 ${fmtMoney(s.cash)}</div></div>
+            <div class="card-sub">现金 ${fmtMoney(s.cash)} · 应收 ${fmtMoney(s.receivables ?? 0)}<br>
+            待上市 ${fmtMoney(s.pending_market_value ?? 0)} · 红利税准备 ${fmtMoney(s.tax_provision ?? 0)}</div></div>
         <div class="card"><div class="card-label">日收益</div>
             <div class="card-value ${pctClass(s.daily_return)}">${fmtPct(s.daily_return)}</div></div>
         <div class="card"><div class="card-label">累计收益</div>

@@ -40,7 +40,7 @@
 
 - Mac 侧有一个本地账本（SQLite：`live_trading/data/*.db`），记录每批信号、每笔回执、当前持仓和现金；
 - 账本**只认 LIVE 回执**——模拟回执只留档，不改持仓；
-- 每笔成交**自动扣交易费用**（佣金/印花税/过户费，费率见配置 `fees` 段）；持仓股除息日**自动入账分红和送股**（红利税按 20% 预提）；出入金用 `record_cash_flow.py` 登记（见 §7.5）；
+- 每笔成交**自动扣交易费用**（佣金/印花税/过户费，费率见配置 `fees` 段）；公司行为按**登记日权益、派息日现金、红股上市日持仓**分阶段入账，红利税按 20% 记准备金；出入金用 `record_cash_flow.py` 登记（见 §7.5）；
 - 账本是"推算值"（按回执累计），所以要**定期和 QMT 界面里的真实持仓人工核对**（见下文周检），差额用 `record_cash_flow.py --type CORRECTION` 校正。
 
 ---
@@ -226,7 +226,7 @@ r.upsert_position("600000.SH", 800, 10.52)   # 以 QMT 界面为准
 r.set_cash(123456.78)
 ```
 
-2. **现金核对**：Mac 账本现金是"不含手续费的近似值"，和 QMT 可用资金差异会随时间累积，每周校正一次；
+2. **现金核对**：Mac 账本已自动计交易费、分红到账和已结算红利税，但仍是按回执推算值；和 QMT 可用资金有差异时查明原因后用带备注的 `CORRECTION` 校正；
 3. **归档清理**：`archive/` 目录只增不减，超过几百个文件可打包移走；
 4. **磁盘与共享**：Mac 上 `ls /Volumes/qmt_bridge/inbox` 确认 SMB 挂载还活着。
 
@@ -373,22 +373,32 @@ export SERVERCHAN_SENDKEY="SCT..."
 
 部分成交多次回执时按订单累计额重算费用、只扣增量，最低佣金全订单只收一次，重复导入不重复扣（幂等）。每笔费用记在 `fills.applied_fee`，当日合计进快照 `fees` 字段和日报。
 
-**分红/送股（report 阶段自动处理）**：每天 20:30 monitor 会查持仓股当日是否除息（tushare `dividend` 接口，需 `TUSHARE_TOKEN`，已写入 `~/.qlib_live_env`）。现金红利按**税前**入账 + 按 20% 预提红利税（两条 `cash_flows` 流水）；送股/转增自动加股数、摊薄成本。查询失败会发 `CORP_ACTION_FAILED` 告警提醒手工补录。
+**分红/送股（report 阶段自动处理）**：每天 20:30 monitor 查询当日实施的除权除息事件（tushare `dividend`，需 `TUSHARE_TOKEN`）。权益股数只认**股权登记日收盘快照**：除息日卖出仍有权益，除息日买入没有权益。缺少登记日快照时发 `CORP_ACTION_ENTITLEMENT_MISSING`，不会用当前持仓猜测。
 
-**红利税规则（财税〔2015〕101号）**：派息时不扣税；卖出时券商按持股期限补扣——持股 ≤1 个月 20%、1 个月~1 年 10%、>1 年免税（先进先出）。本策略平均持有期一周左右，基本都按 20% 补扣，所以预提 20% 最接近真实；与券商实扣有差额时（对账见 QMT 资金流水），用 CORRECTION 校正。
+- 除息日：确认税前现金红利应收、待上市送转股，并按 20% 确认红利税准备；不增加可交易现金或普通持仓；
+- 派息日 `pay_date`：应收转为现金，写 `DIVIDEND` 流水；
+- 红股上市日 `div_listdate`：待上市股数转入普通持仓并摊薄剩余持仓成本；
+- 派息日或红股上市日缺失：只挂应收/待上市并告警，不回退到除息日提前结算；
+- 快照总资产口径：现金 + 已上市市值 + 应收红利 + 待上市股市值 - 红利税准备。
+
+**红利税规则（财税〔2015〕101号）**：派息时不扣税；卖出时券商按持股期限补扣——持股 ≤1 个月 20%、1 个月~1 年 10%、>1 年免税（先进先出）。系统的 20% 是保守**准备金**，不是已扣现金。券商实际扣税后，用对应 `event_key` 结算准备金；实际税少于准备金时，差额会自然回到当日净值。
 
 **出入金与校正（手工 CLI）**：
 
 ```bash
 # 入金 / 出金（出金用负数）
 python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --type DEPOSIT --amount 500000
-# 与 QMT 对账后的现金校正（差额正负均可）
-python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --type CORRECTION --amount -12.35 --note "红利税实扣差额"
+# 与 QMT 对账后的投资相关现金校正（差额正负均可，必须写原因）
+python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --type CORRECTION --amount -12.35 --note "成交费用对账差额"
+# 查看分红事件及 event_key
+python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --list-events
+# 券商实际扣红利税 50 元（金额传正数，程序实际扣现金并释放准备）
+python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --type DIVIDEND_TAX_SETTLEMENT --event-key <event_key> --amount 50
 # 查看流水
 python live_trading/scripts/record_cash_flow.py --config csi300_topk10_live --list
 ```
 
-DEPOSIT / WITHDRAW / CORRECTION 算外部出入金，快照日收益自动剔除；DIVIDEND / DIVIDEND_TAX / BONUS_SHARES 是公司行为，计入投资收益。全部流水在 Web「资金流水」页可看。
+只有 DEPOSIT / WITHDRAW 算外部出入金并从快照日收益剔除；CORRECTION、DIVIDEND、DIVIDEND_TAX、BONUS_SHARES 都计入投资损益。全部流水在 Web「资金流水」页可看，公司行为状态也可通过 `GET /api/corporate-actions` 查询。
 
 ---
 

@@ -9,6 +9,7 @@
 
 import json
 import logging
+import math
 import os
 import sqlite3
 from datetime import datetime
@@ -29,7 +30,7 @@ logger = logging.getLogger("live_trading.fill_importer")
 _POSITION_STATUS = {"FILLED", "PARTIAL"}
 
 # 计入外部出入金（日收益计算时剔除）的流水类型
-EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW", "CORRECTION"}
+EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW"}
 
 
 class LiveRecorder:
@@ -158,6 +159,31 @@ class LiveRecorder:
                 );
                 CREATE INDEX IF NOT EXISTS idx_cash_flows_date
                     ON cash_flows(trade_date);
+
+                CREATE TABLE IF NOT EXISTS corporate_actions (
+                    event_key TEXT PRIMARY KEY,
+                    stock_code TEXT NOT NULL,
+                    end_date TEXT,
+                    record_date TEXT NOT NULL,
+                    ex_date TEXT NOT NULL,
+                    pay_date TEXT NOT NULL,
+                    div_listdate TEXT NOT NULL,
+                    entitled_shares INTEGER NOT NULL,
+                    cash_div_tax REAL NOT NULL,
+                    stk_div REAL NOT NULL,
+                    gross_cash REAL NOT NULL,
+                    tax_provision REAL NOT NULL,
+                    bonus_shares INTEGER NOT NULL,
+                    cash_settled INTEGER NOT NULL DEFAULT 0,
+                    bonus_settled INTEGER NOT NULL DEFAULT 0,
+                    tax_settled INTEGER NOT NULL DEFAULT 0,
+                    actual_tax REAL,
+                    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+                );
+                CREATE INDEX IF NOT EXISTS idx_corp_pay_date
+                    ON corporate_actions(pay_date, cash_settled);
+                CREATE INDEX IF NOT EXISTS idx_corp_list_date
+                    ON corporate_actions(div_listdate, bonus_settled);
 
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
                 CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id);
@@ -456,6 +482,11 @@ class LiveRecorder:
                 raise SchemaError("BUY fill did not produce a positive position")
             new_cost = (old_shares * old_cost + delta_amount) / new_shares
         else:  # SELL
+            if delta_qty > old_shares:
+                raise SchemaError(
+                    f"SELL fill quantity {delta_qty} exceeds ledger position "
+                    f"{old_shares} for {fill.stock_code}"
+                )
             new_shares = old_shares - delta_qty
             new_cost = old_cost
 
@@ -466,11 +497,6 @@ class LiveRecorder:
                 (fill.stock_code, new_shares, new_cost),
             )
         else:
-            if new_shares < 0:
-                logger.warning(
-                    "position %s went negative (%d), clamping to 0 — check fills",
-                    fill.stock_code, new_shares,
-                )
             conn.execute(
                 "DELETE FROM positions WHERE stock_code=?", (fill.stock_code,)
             )
@@ -511,14 +537,29 @@ class LiveRecorder:
         """记录资金流水并同步调整现金。
 
         Args:
-            flow_type: DEPOSIT / WITHDRAW / CORRECTION（外部出入金，日收益剔除）
-                       DIVIDEND / DIVIDEND_TAX / BONUS_SHARES（公司行为，计入收益）
-            amount: 正数入金、负数出金（BONUS_SHARES 记 0，仅留痕）
+            flow_type: DEPOSIT / WITHDRAW（外部出入金，日收益剔除）；
+                       CORRECTION / DIVIDEND（投资相关现金变化，计入收益）。
+                       DIVIDEND_TAX / BONUS_SHARES 只能走公司行为事务接口。
+            amount: 正数入金、负数出金；类型另有符号约束。
             dedup_key: 幂等键；已存在时直接返回 False，不重复入账
 
         Returns:
             是否实际入账。
         """
+        if flow_type not in {"DEPOSIT", "WITHDRAW", "CORRECTION", "DIVIDEND"}:
+            raise ValueError(f"flow_type is internal or unsupported: {flow_type!r}")
+        amount = float(amount)
+        if not math.isfinite(amount):
+            raise ValueError("cash flow amount must be finite")
+        if flow_type == "DEPOSIT" and amount <= 0:
+            raise ValueError("DEPOSIT amount must be positive")
+        if flow_type == "WITHDRAW" and amount >= 0:
+            raise ValueError("WITHDRAW amount must be negative")
+        if flow_type == "CORRECTION" and not note.strip():
+            raise ValueError("CORRECTION requires a note")
+        if flow_type == "DIVIDEND" and amount <= 0:
+            raise ValueError("DIVIDEND amount must be positive")
+
         with self._conn() as conn:
             cur = conn.execute(
                 "INSERT OR IGNORE INTO cash_flows "
@@ -552,6 +593,180 @@ class LiveRecorder:
         params.append(limit)
         with self._conn() as conn:
             return [dict(r) for r in conn.execute(sql, params).fetchall()]
+
+    # ---------- corporate actions ----------
+
+    def accrue_corporate_action(
+        self, event: dict, entitled_shares: int, tax_rate: float,
+    ) -> bool:
+        """Lock record-date entitlement without changing spendable cash."""
+        entitled_shares = int(entitled_shares)
+        if entitled_shares <= 0:
+            return False
+        event_key = str(event.get("event_key") or "")
+        if not event_key:
+            raise ValueError("corporate action event_key is required")
+        gross = round(entitled_shares * float(event.get("cash_div_tax") or 0), 2)
+        provision = round(gross * float(tax_rate), 2)
+        bonus = int(entitled_shares * float(event.get("stk_div") or 0))
+        if gross <= 0 and bonus <= 0:
+            return False
+        with self._conn() as conn:
+            cur = conn.execute(
+                """INSERT OR IGNORE INTO corporate_actions (
+                       event_key, stock_code, end_date, record_date, ex_date,
+                       pay_date, div_listdate, entitled_shares, cash_div_tax,
+                       stk_div, gross_cash, tax_provision, bonus_shares,
+                       cash_settled, bonus_settled, tax_settled)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    event_key, event["stock_code"], event.get("end_date"),
+                    event["record_date"], event["ex_date"], event["pay_date"],
+                    event["div_listdate"], entitled_shares,
+                    float(event.get("cash_div_tax") or 0),
+                    float(event.get("stk_div") or 0), gross, provision, bonus,
+                    1 if gross <= 0 else 0,
+                    1 if bonus <= 0 else 0,
+                    1 if provision <= 0 else 0,
+                ),
+            )
+            return cur.rowcount > 0
+
+    def settle_due_corporate_actions(self, date: str) -> list:
+        """Move due receivables to cash and due bonus shares to positions."""
+        applied = []
+        with self._conn() as conn:
+            cash_rows = conn.execute(
+                """SELECT * FROM corporate_actions
+                   WHERE cash_settled=0 AND pay_date<>'' AND pay_date<=?
+                   ORDER BY pay_date, event_key""",
+                (date,),
+            ).fetchall()
+            for row in cash_rows:
+                amount = float(row["gross_cash"])
+                conn.execute(
+                    "INSERT INTO account_state (key, value) VALUES ('cash', ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = value + ?",
+                    (amount, amount),
+                )
+                conn.execute(
+                    """INSERT OR IGNORE INTO cash_flows
+                       (trade_date, flow_type, stock_code, amount, note, dedup_key)
+                       VALUES (?,?,?,?,?,?)""",
+                    (
+                        date, "DIVIDEND", row["stock_code"], amount,
+                        "record-date entitlement %d shares; gross dividend"
+                        % row["entitled_shares"],
+                        "DIVPAY_" + row["event_key"],
+                    ),
+                )
+                conn.execute(
+                    "UPDATE corporate_actions SET cash_settled=1 WHERE event_key=?",
+                    (row["event_key"],),
+                )
+                applied.append(
+                    "DIVIDEND %s +%.2f" % (row["stock_code"], amount)
+                )
+
+            bonus_rows = conn.execute(
+                """SELECT * FROM corporate_actions
+                   WHERE bonus_settled=0 AND div_listdate<>'' AND div_listdate<=?
+                   ORDER BY div_listdate, event_key""",
+                (date,),
+            ).fetchall()
+            for row in bonus_rows:
+                bonus = int(row["bonus_shares"])
+                self._apply_bonus_shares_conn_impl(
+                    conn, row["stock_code"], bonus, create_if_missing=True,
+                )
+                conn.execute(
+                    """INSERT OR IGNORE INTO cash_flows
+                       (trade_date, flow_type, stock_code, amount, note, dedup_key)
+                       VALUES (?,?,?,?,?,?)""",
+                    (
+                        date, "BONUS_SHARES", row["stock_code"], 0.0,
+                        "bonus/listed shares +%d" % bonus,
+                        "BONUS_" + row["event_key"],
+                    ),
+                )
+                conn.execute(
+                    "UPDATE corporate_actions SET bonus_settled=1 WHERE event_key=?",
+                    (row["event_key"],),
+                )
+                applied.append(
+                    "BONUS_SHARES %s +%d股" % (row["stock_code"], bonus)
+                )
+        return applied
+
+    def get_corporate_balances(self) -> dict:
+        with self._conn() as conn:
+            totals = conn.execute(
+                """SELECT
+                       COALESCE(SUM(CASE WHEN cash_settled=0 THEN gross_cash ELSE 0 END), 0)
+                           AS receivables,
+                       COALESCE(SUM(CASE WHEN tax_settled=0 THEN tax_provision ELSE 0 END), 0)
+                           AS tax_provision
+                   FROM corporate_actions"""
+            ).fetchone()
+            rows = conn.execute(
+                """SELECT stock_code, SUM(bonus_shares) AS shares
+                   FROM corporate_actions WHERE bonus_settled=0
+                   GROUP BY stock_code HAVING SUM(bonus_shares)>0"""
+            ).fetchall()
+            return {
+                "receivables": float(totals["receivables"]),
+                "tax_provision": float(totals["tax_provision"]),
+                "pending_shares": {r["stock_code"]: int(r["shares"]) for r in rows},
+            }
+
+    def get_corporate_actions(self, limit: int = 100) -> list:
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT * FROM corporate_actions
+                   ORDER BY ex_date DESC, event_key DESC LIMIT ?""",
+                (limit,),
+            ).fetchall()
+            return [dict(row) for row in rows]
+
+    def settle_dividend_tax(
+        self, event_key: str, date: str, actual_tax: float,
+    ) -> bool:
+        """Apply the broker's actual tax debit and release its provision."""
+        actual_tax = float(actual_tax)
+        if not math.isfinite(actual_tax) or actual_tax < 0:
+            raise ValueError("actual_tax must be a finite non-negative number")
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM corporate_actions WHERE event_key=?",
+                (event_key,),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"unknown corporate action: {event_key!r}")
+            if row["tax_settled"]:
+                return False
+            if actual_tax:
+                conn.execute(
+                    "INSERT INTO account_state (key, value) VALUES ('cash', ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = value + ?",
+                    (-actual_tax, -actual_tax),
+                )
+            conn.execute(
+                """INSERT INTO cash_flows
+                   (trade_date, flow_type, stock_code, amount, note, dedup_key)
+                   VALUES (?,?,?,?,?,?)""",
+                (
+                    date, "DIVIDEND_TAX", row["stock_code"], -actual_tax,
+                    "actual broker tax %.2f; released provision %.2f"
+                    % (actual_tax, row["tax_provision"]),
+                    "DIVTAX_" + event_key,
+                ),
+            )
+            conn.execute(
+                """UPDATE corporate_actions
+                   SET tax_settled=1, actual_tax=? WHERE event_key=?""",
+                (actual_tax, event_key),
+            )
+            return True
 
     def sum_external_flows(self, trade_date: str) -> float:
         """当日外部出入金净额（快照日收益剔除用）。"""
@@ -641,12 +856,25 @@ class LiveRecorder:
         if bonus_shares <= 0:
             return False
         with self._conn() as conn:
-            row = conn.execute(
-                "SELECT shares, avg_cost FROM positions WHERE stock_code=?",
-                (stock_code,),
-            ).fetchone()
-            if not row:
-                return False
+            return self._apply_bonus_shares_conn(conn, stock_code, bonus_shares)
+
+    @staticmethod
+    def _apply_bonus_shares_conn(conn, stock_code: str, bonus_shares: int) -> bool:
+        return LiveRecorder._apply_bonus_shares_conn_impl(
+            conn, stock_code, bonus_shares, create_if_missing=False,
+        )
+
+    @staticmethod
+    def _apply_bonus_shares_conn_impl(
+        conn, stock_code: str, bonus_shares: int, create_if_missing: bool,
+    ) -> bool:
+        if bonus_shares <= 0:
+            return False
+        row = conn.execute(
+            "SELECT shares, avg_cost FROM positions WHERE stock_code=?",
+            (stock_code,),
+        ).fetchone()
+        if row:
             new_shares = row["shares"] + bonus_shares
             new_cost = row["shares"] * row["avg_cost"] / new_shares
             conn.execute(
@@ -654,7 +882,16 @@ class LiveRecorder:
                 "updated_at=datetime('now', 'localtime') WHERE stock_code=?",
                 (new_shares, new_cost, stock_code),
             )
-            return True
+        elif create_if_missing:
+            # Entitlement survives an ex-date sale. With no remaining listed
+            # position, create the listed bonus shares at zero carried cost.
+            conn.execute(
+                "INSERT INTO positions (stock_code, shares, avg_cost) VALUES (?,?,0)",
+                (stock_code, bonus_shares),
+            )
+        else:
+            return False
+        return True
 
     def get_positions(self) -> dict:
         with self._conn() as conn:

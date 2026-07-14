@@ -108,6 +108,23 @@ def test_fees_passthrough():
     assert daily["fees"] == pytest.approx(123.45)
 
 
+def test_corporate_assets_and_tax_provision_affect_nav_not_cash():
+    daily, _, missing = build_snapshot(
+        "2026-07-15", POSITIONS, 10000.0,
+        {**PRICES, "600036.SH": 30.0}, 4000.0, None,
+        fills_amount=0.0, receivables=500.0,
+        pending_shares={"600036.SH": 100}, tax_provision=100.0,
+    )
+    assert missing == []
+    assert daily["cash"] == pytest.approx(10000.0)
+    assert daily["receivables"] == pytest.approx(500.0)
+    assert daily["pending_market_value"] == pytest.approx(3000.0)
+    assert daily["tax_provision"] == pytest.approx(100.0)
+    assert daily["total_value"] == pytest.approx(
+        10000.0 + 15050.0 + 500.0 + 3000.0 - 100.0
+    )
+
+
 def test_missing_price_degrades_to_cost():
     daily, rows, missing = build_snapshot(
         "2026-07-13", POSITIONS, 10000.0,

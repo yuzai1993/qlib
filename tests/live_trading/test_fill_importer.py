@@ -193,6 +193,21 @@ def test_fill_rejects_decreasing_cumulative_quantity(env):
     assert recorder.get_positions()["600000.SH"]["shares"] == 200
 
 
+def test_sell_fill_cannot_credit_cash_beyond_ledger_position(env):
+    _, recorder, _ = env
+    recorder.set_cash(100000.0)
+    recorder.upsert_position("000001.SZ", 100, 10.0)
+    sell = _fill(requested=200, filled=200)
+    _record_plan(recorder, [sell])
+
+    with pytest.raises(SchemaError, match="exceeds ledger position"):
+        recorder.apply_fill(FillEvent.from_dict(sell))
+
+    assert recorder.get_cash() == pytest.approx(100000.0)
+    assert recorder.get_positions()["000001.SZ"]["shares"] == 100
+    assert recorder.get_fills(BATCH_ID) == []
+
+
 def test_partial_fill_average_change_uses_cumulative_amount_delta(env):
     _, recorder, _ = env
     recorder.set_cash(100000.0)
@@ -411,6 +426,32 @@ def test_cash_flow_record_and_dedup(env):
     assert len(recorder.get_cash_flows()) == 3
 
 
+@pytest.mark.parametrize(("flow_type", "amount", "note"), [
+    ("DEPOSIT", -1.0, "bad sign"),
+    ("WITHDRAW", 1.0, "bad sign"),
+    ("CORRECTION", -1.0, ""),
+    ("BONUS_SHARES", 0.0, "manual internal event"),
+])
+def test_manual_cash_flow_rejects_invalid_signs_and_internal_bonus(
+    env, flow_type, amount, note,
+):
+    _, recorder, _ = env
+    with pytest.raises(ValueError):
+        recorder.record_cash_flow(
+            "2026-07-14", flow_type, amount, note=note,
+        )
+
+
+def test_correction_is_investment_adjustment_not_external_flow(env):
+    _, recorder, _ = env
+    recorder.set_cash(1000.0)
+    recorder.record_cash_flow(
+        "2026-07-14", "CORRECTION", -10.0, note="broker reconciliation",
+    )
+    assert recorder.get_cash() == pytest.approx(990.0)
+    assert recorder.sum_external_flows("2026-07-14") == 0.0
+
+
 def test_apply_bonus_shares(env):
     _, recorder, _ = env
     recorder.upsert_position("600036.SH", 1000, 30.0)
@@ -437,6 +478,7 @@ def test_sum_fees_by_date(env):
 
 def test_reconcile_counts(env):
     bridge_root, recorder, importer = env
+    recorder.upsert_position("000001.SZ", 800, 10.0)
     fills = [
         _fill(),
         _fill(client_order_id="20260714002B", side="BUY",

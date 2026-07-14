@@ -42,14 +42,17 @@ def _order(coid="20260714001S", side="SELL", priority=10):
     }
 
 
-def _write_batch(bridge, trade_date, orders, checksum=None, batch_id=BATCH_ID):
+def _write_batch(
+    bridge, trade_date, orders, checksum=None, batch_id=BATCH_ID,
+    mode="SIMULATE",
+):
     order_lines = [json.dumps(o, sort_keys=True, separators=(",", ":")) for o in orders]
     if checksum is None:
         checksum = compute_checksum(order_lines)
     header = {
         "type": "batch_header", "schema_version": "1.0", "batch_id": batch_id,
         "strategy_id": "s", "trade_date": trade_date, "signal_date": trade_date,
-        "account_id": "1", "account_type": "STOCK", "mode": "SIMULATE",
+        "account_id": "1", "account_type": "STOCK", "mode": mode,
         "created_at": "t", "order_count": len(orders), "checksum": checksum,
     }
     inbox = Path(bridge.BRIDGE_ROOT) / "inbox"
@@ -129,11 +132,69 @@ def test_valid_batch_claimed_sells_first(bridge):
     batch = bridge.g.batch
     assert batch is not None
     assert [o["side"] for o in batch.orders] == ["SELL", "BUY"]
-    # 文件已从 inbox 认领并归档
+    # 文件从 inbox 认领后保留在 processing，直到批次完成才归档
     inbox = Path(bridge.BRIDGE_ROOT) / "inbox"
     assert list(inbox.glob("*")) == []
+    processing = Path(bridge.BRIDGE_ROOT) / "processing"
+    assert len(list(processing.glob("signal_*"))) == 2
     archive = Path(bridge.BRIDGE_ROOT) / "archive"
-    assert len(list(archive.glob("signal_*"))) == 2
+    assert list(archive.glob("signal_*")) == []
+
+
+def test_restart_recovers_active_processing_batch(bridge):
+    _write_batch(bridge, bridge._today(), [_order()])
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.phase = "BUY"
+    batch.submitted[_order()["client_order_id"]] = True
+    batch.remaining_cash = 1234.5
+    bridge._save_active_state(batch)
+
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+
+    recovered = bridge.g.batch
+    assert recovered is not None
+    assert recovered.phase == "BUY"
+    assert recovered.remaining_cash == pytest.approx(1234.5)
+    assert _order()["client_order_id"] in recovered.submitted
+
+
+def test_max_affordable_quantity_includes_buy_fees(bridge):
+    assert bridge._max_affordable_quantity(10000.0, 10.0, 1600) == 900
+    assert bridge._max_affordable_quantity(1000.0, 10.0, 1600) == 0
+
+
+def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
+    bridge, monkeypatch,
+):
+    first = _order(coid="20260714001001B", side="BUY", priority=20)
+    second = _order(coid="20260714001002B", side="BUY", priority=20)
+    first.update(quantity=800, limit_price=10.0)
+    second.update(quantity=800, limit_price=10.0, stock_code="600000.SH")
+    _write_batch(bridge, bridge._today(), [first, second], mode="LIVE")
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    bridge.TRADE_START = "00:00:00"
+
+    cash_reads = []
+    monkeypatch.setattr(
+        bridge, "_get_available_cash",
+        lambda account_id: cash_reads.append(account_id) or 10000.0,
+    )
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+
+    def fake_passorder(*args):
+        submitted.append({"price": args[5], "quantity": args[6]})
+
+    monkeypatch.setattr(bridge, "passorder", fake_passorder, raising=False)
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert len(cash_reads) == 1
+    assert [row["quantity"] for row in submitted] == [800, 100]
+    assert sum(row["price"] * row["quantity"] for row in submitted) < 10000.0
 
 
 def test_no_done_no_claim(bridge):
@@ -195,3 +256,5 @@ def test_simulate_batch_processes_without_qmt_api(bridge):
     assert bridge.g.batch is None  # finalized
     done = Path(bridge.BRIDGE_ROOT) / "outbound" / ("fills_%s.done" % BATCH_ID)
     assert done.exists()
+    assert not list((Path(bridge.BRIDGE_ROOT) / "processing").glob("signal_*"))
+    assert len(list((Path(bridge.BRIDGE_ROOT) / "archive").glob("signal_*"))) == 2

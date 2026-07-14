@@ -13,7 +13,7 @@ D:\qmt_bridge\
   processing\
   outbound\
   archive\
-  state\
+  state\         # processed_batches、当日 LIVE_OK、执行中 active_*.json
   logs\
 ```
 
@@ -107,6 +107,8 @@ python live_trading/scripts/run_publish_signals.py \
 ```
 
 2. 观察 QMT 策略输出日志（`[qlib_bridge]` 前缀）：应看到 claimed batch
+   - 批次执行期间信号保留在 `processing`；完成后才移入 `archive`
+   - QMT/策略重启后会从 `processing` 和 `state/active_*.json` 恢复，已标记提交的订单不会重提
 3. 检查 `outbound\fills_*.jsonl`：每单一条 `SKIPPED simulated`，且有 `.done`
 4. 研究机导入：`python live_trading/scripts/run_import_fills.py --config csi300_topk10_live`
 5. 验证幂等：把 archive 里的信号文件复制回 inbox → 应整批 `SKIPPED duplicate`
@@ -123,12 +125,16 @@ python live_trading/scripts/run_publish_signals.py \
 
 首次实盘建议：手工构造只含 1 只股票 100 股的批次，确认委托、成交、回执、导入全链路后再放开。
 
+进入买入阶段时，策略只读取一次可用资金，并逐单预占委托金额、最低佣金和过户费；这用于隔离
+QMT 本地资金缓存的刷新延迟。预算不足时按整手缩单，不足一手则跳过。
+
 ## 6. 日常排障
 
 | 现象 | 排查 |
 |------|------|
 | 策略无输出 | 是否有行情 tick（非交易时间 handlebar 不触发）；`is_last_bar` |
 | 批次不消费 | inbox 是否有 `.done`；`trade_date` 是否为当日；state 里是否已 processed |
+| 重启后批次未恢复 | `processing` 中信号对是否完整；`state/active_<batch>.json` 是否可读 |
 | 下单无委托 | LIVE_OK 文件是否存在；QMT 界面消息栏被拒原因；账号资金是否在所选柜台 |
 | 回执缺失 | 14:55 前策略必须在运行且有 tick；查 `XtClient_FormulaOutput_*.log` |
 | 中文乱码 | 策略文件必须 GBK；本文件内策略源码为纯 ASCII 可避免 |

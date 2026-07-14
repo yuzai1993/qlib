@@ -42,6 +42,11 @@ FINALIZE_AT = "14:57:00"   # force-write fills .done
 INTRADAY_BUY_SLIPPAGE = 0.003
 INTRADAY_SELL_SLIPPAGE = 0.003
 
+# Conservative BUY-side fee estimate used only for local cash reservation.
+COMMISSION_RATE = 0.00025
+MIN_COMMISSION = 5.0
+TRANSFER_FEE_RATE = 0.00001
+
 # order status values (see design doc / QMT docs)
 STATUS_PART_CANCEL = 53
 STATUS_CANCELED = 54
@@ -63,6 +68,9 @@ class Batch(object):
         self.trading_started = False  # phase timer resets on first trade pass
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
+        self.remaining_cash = None    # one broker cash snapshot for BUY phase
+        self.processing_jsonl = None
+        self.processing_done = None
         self.finalized = False
 
     def batch_id(self):
@@ -135,6 +143,56 @@ def _sha256_of_lines(lines):
 def _live_ok(trade_date):
     return os.path.isfile(_path("state", "LIVE_OK_" + trade_date))
 
+
+def _active_state_path(batch_id):
+    return _path("state", "active_" + batch_id + ".json")
+
+
+def _save_active_state(batch):
+    payload = {
+        "batch_id": batch.batch_id(),
+        "phase": batch.phase,
+        "trading_started": batch.trading_started,
+        "submitted": sorted(batch.submitted.keys()),
+        "fills": batch.fills,
+        "remaining_cash": batch.remaining_cash,
+        "orders": batch.orders,
+    }
+    path = _active_state_path(batch.batch_id())
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(payload, f, sort_keys=True)
+        f.flush()
+        try:
+            os.fsync(f.fileno())
+        except Exception:
+            pass
+    os.replace(tmp, path)
+
+
+def _load_active_state(batch):
+    path = _active_state_path(batch.batch_id())
+    if not os.path.isfile(path):
+        return
+    with open(path, "r") as f:
+        payload = json.load(f)
+    if payload.get("batch_id") != batch.batch_id():
+        raise ValueError("active state batch_id mismatch")
+    batch.phase = payload.get("phase", "SELL")
+    batch.trading_started = bool(payload.get("trading_started", False))
+    batch.submitted = dict((coid, True) for coid in payload.get("submitted", []))
+    batch.fills = payload.get("fills", {})
+    batch.remaining_cash = payload.get("remaining_cash")
+    if payload.get("orders"):
+        batch.orders = payload["orders"]
+    batch.phase_started = time.time()
+
+
+def _remove_active_state(batch_id):
+    path = _active_state_path(batch_id)
+    if os.path.isfile(path):
+        os.remove(path)
+
 # ======================= fills output =======================
 
 
@@ -166,6 +224,7 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
     batch.fills[order["client_order_id"]] = event
     with open(_fills_path(batch.batch_id()), "a") as f:
         f.write(json.dumps(event, sort_keys=True) + "\n")
+    _save_active_state(batch)
 
 
 def _finalize_batch(batch):
@@ -175,6 +234,9 @@ def _finalize_batch(batch):
     with open(done, "w") as f:
         f.write("done\n")
     _mark_processed(batch.batch_id())
+    if batch.processing_jsonl and batch.processing_done:
+        _archive_processing(batch.processing_jsonl, batch.processing_done)
+    _remove_active_state(batch.batch_id())
     batch.finalized = True
     g.batch = None
     _log("batch %s finalized (%d fills)" % (batch.batch_id(), len(batch.fills)))
@@ -215,9 +277,9 @@ def _claim_new_batch():
         os.rename(jsonl_src, jsonl_dst)
         os.rename(done_src, done_dst)
         batch = _parse_and_check(jsonl_dst, done_dst)
-        _archive_processing(jsonl_dst, done_dst)
         if batch is not None:
             g.batch = batch
+            _save_active_state(batch)
             _log("claimed batch %s: %d orders, mode=%s"
                  % (batch.batch_id(), len(batch.orders), batch.header.get("mode")))
             return  # one batch at a time
@@ -242,6 +304,8 @@ def _parse_and_check(jsonl_path, done_path):
     order_lines = lines[1:]
     orders = [json.loads(l) for l in order_lines]
     batch = Batch(header, orders)
+    batch.processing_jsonl = jsonl_path
+    batch.processing_done = done_path
     batch_id = header.get("batch_id", "unknown")
 
     def reject(reason):
@@ -268,6 +332,40 @@ def _parse_and_check(jsonl_path, done_path):
     orders.sort(key=lambda o: (o.get("priority", 99), o.get("client_order_id", "")))
     batch.orders = orders
     return batch
+
+
+def _recover_processing_batch():
+    if g.batch is not None:
+        return
+    processing = _path("processing")
+    if not os.path.isdir(processing):
+        return
+    done_files = sorted([f for f in os.listdir(processing)
+                         if f.startswith("signal_") and f.endswith(".done")])
+    for done_name in done_files:
+        jsonl_name = done_name[:-5] + ".jsonl"
+        jsonl_path = os.path.join(processing, jsonl_name)
+        done_path = os.path.join(processing, done_name)
+        if not os.path.isfile(jsonl_path):
+            continue
+        try:
+            with open(jsonl_path, "r") as f:
+                header = json.loads(f.readline().strip())
+            batch_id = header.get("batch_id", "")
+        except Exception:
+            batch_id = ""
+        if batch_id in g.processed:
+            _archive_processing(jsonl_path, done_path)
+            _remove_active_state(batch_id)
+            continue
+        batch = _parse_and_check(jsonl_path, done_path)
+        if batch is None:
+            continue
+        _load_active_state(batch)
+        g.batch = batch
+        _log("recovered batch %s: phase=%s submitted=%d"
+             % (batch.batch_id(), batch.phase, len(batch.submitted)))
+        return
 
 # ======================= QMT API wrappers =======================
 # All QMT built-in API usage is isolated below so the pure logic above
@@ -348,25 +446,48 @@ def _effective_price(ContextInfo, order):
     return round(max(last * (1.0 - INTRADAY_SELL_SLIPPAGE), mac_limit), 2)
 
 
-def _submit(ContextInfo, batch, order, live):
+def _estimated_buy_cost(quantity, price):
+    amount = float(quantity) * float(price)
+    commission = max(amount * COMMISSION_RATE, MIN_COMMISSION)
+    return amount + commission + amount * TRANSFER_FEE_RATE
+
+
+def _max_affordable_quantity(cash, price, requested_qty):
+    if cash <= 0 or price <= 0 or requested_qty < 100:
+        return 0
+    lots = min(int(requested_qty) // 100, int(float(cash) / float(price)) // 100)
+    while lots > 0:
+        quantity = lots * 100
+        if _estimated_buy_cost(quantity, price) <= float(cash) + 1e-9:
+            return quantity
+        lots -= 1
+    return 0
+
+
+def _submit(ContextInfo, batch, order, live, price=None):
     """Submit one order. Returns True if submitted (or simulated)."""
     coid = order["client_order_id"]
     if coid in batch.submitted:
         return True
     if not live:
         batch.submitted[coid] = True
+        _save_active_state(batch)
         _write_fill(batch, order, "SKIPPED", 0, 0.0, "", "simulated")
         return True
 
     op_type = 23 if order["side"] == "BUY" else 24
-    price = _effective_price(ContextInfo, order)
+    if price is None:
+        price = _effective_price(ContextInfo, order)
+    # Persist before passorder. On a crash, an uncertain order is never
+    # submitted twice; the safer failure direction is a missed order.
+    batch.submitted[coid] = True
+    _save_active_state(batch)
     try:
         # orderType=1101 single stock by shares; prType=11 fixed price;
         # quickTrade=2 submit immediately; userOrderId -> m_strRemark
         passorder(op_type, 1101, _account_id(batch), order["stock_code"],
                   11, price, int(order["quantity"]),
                   STRATEGY_NAME, 2, coid, ContextInfo)
-        batch.submitted[coid] = True
         _write_fill(batch, order, "ACCEPTED", 0, 0.0, "", "submitted")
         _log("passorder %s %s x%d @ %s (mac_limit %s) (%s)"
              % (order["side"], order["stock_code"], order["quantity"],
@@ -375,7 +496,6 @@ def _submit(ContextInfo, batch, order, live):
     except Exception:
         _write_fill(batch, order, "ERROR", 0, 0.0, "",
                     "passorder exception: " + traceback.format_exc()[-200:])
-        batch.submitted[coid] = True
         return False
 
 
@@ -461,6 +581,7 @@ def _process_batch(ContextInfo, batch):
                         _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
                                     "insufficient sellable volume: %d" % can_use)
                         batch.submitted[order["client_order_id"]] = True
+                        _save_active_state(batch)
                         continue
             _submit(ContextInfo, batch, order, mode_live)
 
@@ -471,28 +592,39 @@ def _process_batch(ContextInfo, batch):
         if sells_done or timed_out or not sells:
             batch.phase = "BUY"
             batch.phase_started = time.time()
+            _save_active_state(batch)
             if timed_out and not sells_done:
                 _log("sell phase timeout, starting buys with actual cash")
 
     if batch.phase == "BUY":
+        if mode_live and batch.remaining_cash is None:
+            batch.remaining_cash = _get_available_cash(account_id)
+            _save_active_state(batch)
         for order in buys:
             if order["client_order_id"] in batch.submitted:
                 continue
             if mode_live:
-                cash = _get_available_cash(account_id)
-                need = order["quantity"] * order["limit_price"]
-                if need > cash:
-                    lots = int(cash / order["limit_price"] // 100)
-                    if lots >= 1:
-                        order["quantity"] = lots * 100
-                        _log("shrink buy %s to %d shares (cash %.2f)"
-                             % (order["stock_code"], order["quantity"], cash))
-                    else:
-                        _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
-                                    "insufficient cash: %.2f" % cash)
-                        batch.submitted[order["client_order_id"]] = True
-                        continue
-            _submit(ContextInfo, batch, order, mode_live)
+                price = _effective_price(ContextInfo, order)
+                quantity = _max_affordable_quantity(
+                    batch.remaining_cash, price, order["quantity"])
+                if quantity <= 0:
+                    batch.submitted[order["client_order_id"]] = True
+                    _save_active_state(batch)
+                    _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                                "insufficient reserved cash: %.2f"
+                                % batch.remaining_cash)
+                    continue
+                if quantity < order["quantity"]:
+                    order["quantity"] = quantity
+                    _log("shrink buy %s to %d shares (reserved cash %.2f)"
+                         % (order["stock_code"], quantity,
+                            batch.remaining_cash))
+                reserved = _estimated_buy_cost(order["quantity"], price)
+                batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
+                _save_active_state(batch)
+                _submit(ContextInfo, batch, order, True, price=price)
+            else:
+                _submit(ContextInfo, batch, order, False)
 
         _poll_status(batch)
         all_done = all(_order_is_terminal(batch, o["client_order_id"])
@@ -538,6 +670,7 @@ def _force_finalize_if_near_close(ContextInfo, batch):
 def init(ContextInfo):
     _ensure_dirs()
     _load_processed()
+    _recover_processing_batch()
     g.loaded = True
     _log("initialized, bridge_root=%s, %d processed batches"
          % (BRIDGE_ROOT, len(g.processed)))

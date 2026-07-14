@@ -160,6 +160,23 @@ def test_restart_recovers_active_processing_batch(bridge):
     assert _order()["client_order_id"] in recovered.submitted
 
 
+def test_restart_repairs_claim_interrupted_between_two_file_moves(bridge):
+    _write_batch(bridge, bridge._today(), [_order()])
+    inbox = Path(bridge.BRIDGE_ROOT) / "inbox"
+    processing = Path(bridge.BRIDGE_ROOT) / "processing"
+    jsonl_name = "signal_%s.jsonl" % BATCH_ID
+    done_name = "signal_%s.done" % BATCH_ID
+    (inbox / jsonl_name).rename(processing / jsonl_name)
+    assert (inbox / done_name).exists()
+
+    bridge._recover_processing_batch()
+
+    assert bridge.g.batch is not None
+    assert (processing / jsonl_name).exists()
+    assert (processing / done_name).exists()
+    assert not list(inbox.glob("signal_*"))
+
+
 def test_max_affordable_quantity_includes_buy_fees(bridge):
     assert bridge._max_affordable_quantity(10000.0, 10.0, 1600) == 900
     assert bridge._max_affordable_quantity(1000.0, 10.0, 1600) == 0
@@ -177,6 +194,7 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
      ("LIVE_OK_" + bridge._today())).write_text("")
     bridge._claim_new_batch()
     bridge.TRADE_START = "00:00:00"
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:45:00")
 
     cash_reads = []
     monkeypatch.setattr(
@@ -195,6 +213,66 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
     assert len(cash_reads) == 1
     assert [row["quantity"] for row in submitted] == [800, 100]
     assert sum(row["price"] * row["quantity"] for row in submitted) < 10000.0
+
+
+def test_removing_live_switch_still_cancels_already_submitted_orders(
+    bridge, monkeypatch,
+):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.submitted[order["client_order_id"]] = True
+    batch.fills[order["client_order_id"]] = {
+        "status": "ACCEPTED", "filled_qty": 0, "avg_price": 0.0,
+    }
+
+    class Detail:
+        m_strOrderSysID = "qmt-order-1"
+        m_nOrderStatus = -1
+        m_nVolumeTraded = 0
+        m_dTradedPrice = 0.0
+
+    canceled = []
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:56:30")
+    monkeypatch.setattr(
+        bridge, "_get_orders_by_remark",
+        lambda account_id: {order["client_order_id"]: Detail()},
+    )
+    monkeypatch.setattr(bridge, "can_cancel_order", lambda *args: True, raising=False)
+    monkeypatch.setattr(
+        bridge, "cancel", lambda *args: canceled.append(args), raising=False,
+    )
+
+    # There is intentionally no LIVE_OK file: it was removed after submission.
+    bridge._force_finalize_if_near_close(object(), batch)
+
+    assert len(canceled) == 1
+
+
+def test_no_new_orders_are_submitted_after_cancel_cutoff(bridge, monkeypatch):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.phase = "BUY"
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:56:30")
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 100000.0)
+
+    bridge._process_batch(_TickCtx(10.0), batch)
+
+    assert submitted == []
+    assert order["client_order_id"] not in batch.submitted
 
 
 def test_no_done_no_claim(bridge):
@@ -233,13 +311,14 @@ def test_effective_price_sell_floor_and_fallback(bridge):
     assert bridge._effective_price(_TickCtx(0.0), order) == 9.90
 
 
-def test_simulate_batch_processes_without_qmt_api(bridge):
+def test_simulate_batch_processes_without_qmt_api(bridge, monkeypatch):
     """SIMULATE 模式下全流程不触碰 QMT API，直接产出 simulated 回执。"""
     class FakeCtx:
         def is_last_bar(self):
             return True
 
     bridge.TRADE_START = "00:00:00"  # 允许任何时间提交
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:45:00")
     _write_batch(bridge, bridge._today(), [
         _order(coid="20260714001S", side="SELL", priority=10),
         _order(coid="20260714002B", side="BUY", priority=20),

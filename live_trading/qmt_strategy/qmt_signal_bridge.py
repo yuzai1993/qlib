@@ -340,6 +340,22 @@ def _recover_processing_batch():
     processing = _path("processing")
     if not os.path.isdir(processing):
         return
+    # Claiming uses two renames. Repair the only possible split states before
+    # scanning processing so a crash between those renames cannot strand a
+    # batch forever.
+    inbox = _path("inbox")
+    for name in list(os.listdir(processing)):
+        counterpart = None
+        if name.startswith("signal_") and name.endswith(".jsonl"):
+            counterpart = name[:-6] + ".done"
+        elif name.startswith("signal_") and name.endswith(".done"):
+            counterpart = name[:-5] + ".jsonl"
+        if counterpart is None:
+            continue
+        src = os.path.join(inbox, counterpart)
+        dst = os.path.join(processing, counterpart)
+        if os.path.isfile(src) and not os.path.isfile(dst):
+            os.rename(src, dst)
     done_files = sorted([f for f in os.listdir(processing)
                          if f.startswith("signal_") and f.endswith(".done")])
     for done_name in done_files:
@@ -551,6 +567,10 @@ def _process_batch(ContextInfo, batch):
     now = _now_hms()
     if now < TRADE_START:
         return
+    if now >= CANCEL_AT:
+        # _force_finalize_if_near_close owns polling/cancel from this point.
+        # Never place a fresh order after the cancellation cutoff.
+        return
     if not batch.trading_started:
         # batch may have been claimed hours before the trade window opens;
         # restart the sell-wait timer at the first real trading pass
@@ -637,9 +657,9 @@ def _force_finalize_if_near_close(ContextInfo, batch):
     now = _now_hms()
     if now < CANCEL_AT:
         return
-    live = (batch.header.get("mode") == "LIVE"
-            and _live_ok(batch.header.get("trade_date", "")))
-    if live:
+    # LIVE_OK gates *new* submissions only. Once a LIVE order was submitted,
+    # removing the switch must not disable status polling or close-time cancel.
+    if batch.header.get("mode") == "LIVE":
         details = _get_orders_by_remark(_account_id(batch))
         for order in batch.orders:
             coid = order["client_order_id"]
@@ -687,6 +707,7 @@ def handlebar(ContextInfo):
             return
         g.last_poll = now
 
+        _recover_processing_batch()
         _claim_new_batch()
         if g.batch is not None:
             _force_finalize_if_near_close(ContextInfo, g.batch)

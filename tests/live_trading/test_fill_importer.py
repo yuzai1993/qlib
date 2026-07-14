@@ -140,8 +140,69 @@ def test_legacy_single_key_database_migrates_without_changing_balances(tmp_path)
     with sqlite3.connect(db) as conn:
         fill_pk = [r[1] for r in conn.execute("PRAGMA table_info(fills)") if r[5]]
         order_pk = [r[1] for r in conn.execute("PRAGMA table_info(signal_orders)") if r[5]]
+        batch_cols = {r[1] for r in conn.execute("PRAGMA table_info(batches)")}
     assert fill_pk == ["batch_id", "client_order_id"]
     assert order_pk == ["batch_id", "client_order_id"]
+    assert {"superseded_by", "superseded_at"} <= batch_cols
+
+
+def test_supersede_batch_is_idempotent_and_active_queries_exclude_old(env):
+    _, recorder, _ = env
+    batch_ids = [
+        "20260715_csi300_topk10_001",
+        "20260715_csi300_topk10_002",
+        "20260715_csi300_topk10_003",
+    ]
+    for batch_id in batch_ids:
+        recorder.record_batch(batch_id, "2026-07-15", "LIVE", 10)
+
+    assert recorder.supersede_batch(batch_ids[0], batch_ids[2])
+    assert not recorder.supersede_batch(batch_ids[0], batch_ids[2])
+    assert recorder.supersede_batch(batch_ids[1], batch_ids[2])
+
+    active = recorder.get_active_batches_by_date("2026-07-15")
+    assert [row["batch_id"] for row in active] == [batch_ids[2]]
+    assert recorder.get_latest_active_batch("LIVE")["batch_id"] == batch_ids[2]
+
+    history = {row["batch_id"]: row for row in recorder.list_batches()}
+    assert history[batch_ids[0]]["superseded_by"] == batch_ids[2]
+    assert history[batch_ids[0]]["superseded_at"]
+    assert history[batch_ids[1]]["superseded_by"] == batch_ids[2]
+    assert history[batch_ids[2]]["superseded_by"] is None
+
+
+def test_supersede_batch_rejects_invalid_or_conflicting_relationships(env):
+    _, recorder, _ = env
+    old = "20260715_csi300_topk10_001"
+    replacement = "20260715_csi300_topk10_003"
+    alternate = "20260715_csi300_topk10_004"
+    recorder.record_batch(old, "2026-07-15", "LIVE", 10)
+    recorder.record_batch(replacement, "2026-07-15", "LIVE", 10)
+    recorder.record_batch(alternate, "2026-07-15", "LIVE", 10)
+    recorder.record_batch(
+        "20260716_csi300_topk10_001", "2026-07-16", "LIVE", 10,
+    )
+    recorder.record_batch(
+        "20260715_csi300_topk10_005", "2026-07-15", "SIMULATE", 10,
+    )
+    recorder.record_batch("20260715_other_001", "2026-07-15", "LIVE", 10)
+
+    with pytest.raises(SchemaError, match="same batch"):
+        recorder.supersede_batch(old, old)
+    with pytest.raises(SchemaError, match="unknown source"):
+        recorder.supersede_batch("missing", replacement)
+    with pytest.raises(SchemaError, match="unknown replacement"):
+        recorder.supersede_batch(old, "missing")
+    with pytest.raises(SchemaError, match="trade_date"):
+        recorder.supersede_batch(old, "20260716_csi300_topk10_001")
+    with pytest.raises(SchemaError, match="mode"):
+        recorder.supersede_batch(old, "20260715_csi300_topk10_005")
+    with pytest.raises(SchemaError, match="strategy"):
+        recorder.supersede_batch(old, "20260715_other_001")
+
+    assert recorder.supersede_batch(old, replacement)
+    with pytest.raises(SchemaError, match="already superseded"):
+        recorder.supersede_batch(old, alternate)
 
 
 def test_fill_must_match_recorded_order_before_mutating_ledger(env):

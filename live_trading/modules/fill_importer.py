@@ -98,6 +98,8 @@ class LiveRecorder:
                     account_id TEXT,
                     account_type TEXT,
                     order_checksum TEXT,
+                    superseded_by TEXT,
+                    superseded_at TEXT,
                     created_at TEXT DEFAULT (datetime('now', 'localtime'))
                 );
 
@@ -200,7 +202,7 @@ class LiveRecorder:
             }
             for col in (
                 "strategy_id", "signal_date", "account_id", "account_type",
-                "order_checksum",
+                "order_checksum", "superseded_by", "superseded_at",
             ):
                 if col not in batch_cols:
                     conn.execute(f"ALTER TABLE batches ADD COLUMN {col} TEXT")
@@ -327,6 +329,68 @@ class LiveRecorder:
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,)
             ).fetchone()
             return dict(row) if row else None
+
+    @staticmethod
+    def _batch_strategy_key(batch) -> str:
+        """Return durable strategy id, falling back to the legacy batch id."""
+        strategy_id = batch["strategy_id"]
+        if strategy_id:
+            return strategy_id
+        parts = batch["batch_id"].split("_")
+        return "_".join(parts[1:-1]) if len(parts) >= 3 else ""
+
+    def supersede_batch(self, batch_id: str, replacement_batch_id: str) -> bool:
+        """Mark one batch as historical while retaining its full audit trail.
+
+        The relationship is deliberately restricted to the same trading
+        session, mode and strategy. Replaying the same relationship is
+        idempotent; redirecting it to another replacement is rejected.
+        """
+        if batch_id == replacement_batch_id:
+            raise SchemaError("a batch cannot supersede the same batch")
+
+        with self._conn() as conn:
+            source = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
+            ).fetchone()
+            if source is None:
+                raise SchemaError(f"unknown source batch: {batch_id!r}")
+            replacement = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?", (replacement_batch_id,),
+            ).fetchone()
+            if replacement is None:
+                raise SchemaError(
+                    f"unknown replacement batch: {replacement_batch_id!r}"
+                )
+
+            if source["superseded_by"]:
+                if source["superseded_by"] == replacement_batch_id:
+                    return False
+                raise SchemaError(
+                    f"batch {batch_id!r} already superseded by "
+                    f"{source['superseded_by']!r}"
+                )
+            if replacement["superseded_by"]:
+                raise SchemaError(
+                    f"replacement batch {replacement_batch_id!r} is superseded"
+                )
+            if source["trade_date"] != replacement["trade_date"]:
+                raise SchemaError("superseding batches must share trade_date")
+            if source["mode"] != replacement["mode"]:
+                raise SchemaError("superseding batches must share mode")
+            if self._batch_strategy_key(source) != self._batch_strategy_key(
+                replacement
+            ):
+                raise SchemaError("superseding batches must share strategy")
+
+            conn.execute(
+                """UPDATE batches
+                   SET superseded_by=?,
+                       superseded_at=datetime('now', 'localtime')
+                   WHERE batch_id=?""",
+                (replacement_batch_id, batch_id),
+            )
+            return True
 
     # ---------- signal_orders（发布时写入，回执前可看执行计划）----------
 
@@ -931,7 +995,8 @@ class LiveRecorder:
     def list_batches(self, limit: int = 10) -> list:
         with self._conn() as conn:
             rows = conn.execute(
-                "SELECT * FROM batches ORDER BY trade_date DESC LIMIT ?", (limit,)
+                "SELECT * FROM batches "
+                "ORDER BY trade_date DESC, batch_id DESC LIMIT ?", (limit,)
             ).fetchall()
             return [dict(r) for r in rows]
 
@@ -942,6 +1007,27 @@ class LiveRecorder:
                 (trade_date,),
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def get_active_batches_by_date(self, trade_date: str) -> list:
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT * FROM batches
+                   WHERE trade_date=? AND superseded_by IS NULL
+                   ORDER BY batch_id""",
+                (trade_date,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def get_latest_active_batch(self, mode: str = None):
+        query = "SELECT * FROM batches WHERE superseded_by IS NULL"
+        params = []
+        if mode is not None:
+            query += " AND mode=?"
+            params.append(mode)
+        query += " ORDER BY trade_date DESC, batch_id DESC LIMIT 1"
+        with self._conn() as conn:
+            row = conn.execute(query, params).fetchone()
+            return dict(row) if row else None
 
     def get_fills_by_dates(self, trade_dates: list) -> list:
         """按 batches.trade_date 关联取回执（监控用）。"""

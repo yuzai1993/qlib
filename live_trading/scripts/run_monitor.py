@@ -264,6 +264,11 @@ def _thresholds(config) -> dict:
     return th
 
 
+def _may_run_with_stale_calendar(stage, active_batches) -> bool:
+    """Postmarket reconciliation needs receipts, not same-day qlib prices."""
+    return stage == "postmarket" and bool(active_batches)
+
+
 def _fmt_pct(v):
     return f"{v*100:+.2f}%" if v is not None else "—"
 
@@ -338,17 +343,24 @@ def main():
 
     init_qlib(config)
     calendar = get_calendar_dates()
+    active_batches = recorder.get_active_batches_by_date(date)
     if date not in calendar:
+        if _may_run_with_stale_calendar(args.stage, active_batches):
+            logger.warning(
+                "%s absent from qlib calendar; running postmarket for active batch",
+                date,
+            )
         # 区分节假日与数据过期：当日有批次说明是交易日，日历却没有 → 数据未更新
-        if recorder.get_active_batches_by_date(date):
+        elif active_batches:
             findings = [Finding(
                 "DATA_STALE", "CRIT",
                 f"{date} 有信号批次但 qlib 日历最新为 {calendar[-1] if calendar else None}："
                 "数据未更新，请先跑数据更新再重跑 monitor")]
             dispatch_findings(findings, args.stage, date, store, notifier)
             return 2
-        logger.info("%s is not a trading day, nothing to do", date)
-        return 0
+        else:
+            logger.info("%s is not a trading day, nothing to do", date)
+            return 0
 
     try:
         if args.stage == "evening":

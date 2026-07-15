@@ -48,9 +48,10 @@ def test_evening_inbox_unavailable():
 
 # ---------- postmarket ----------
 
-def _fill(status="FILLED", side="BUY", code="600000.SH", qty=100, mode="LIVE"):
-    return {"mode": mode, "status": status, "side": side,
-            "stock_code": code, "filled_qty": qty}
+def _fill(status="FILLED", side="BUY", code="600000.SH", qty=100, mode="LIVE",
+          batch_id=BATCH["batch_id"], message=""):
+    return {"batch_id": batch_id, "mode": mode, "status": status, "side": side,
+            "stock_code": code, "filled_qty": qty, "message": message}
 
 
 def test_postmarket_ok():
@@ -130,6 +131,35 @@ def test_postmarket_oversell_skipped_without_baseline():
         fills, prev_positions=None,
     )
     assert "NEGATIVE_POSITION" not in _rules(f)
+
+
+def test_postmarket_all_live_orders_skipped_is_critical():
+    fills = [
+        _fill(status="SKIPPED", qty=0, message="account unavailable"),
+        _fill(status="SKIPPED", code="000001.SZ", qty=0,
+              message="account unavailable"),
+    ]
+    findings = check_postmarket(
+        "2026-07-15",
+        [{**BATCH, "mode": "LIVE", "planned_orders": 2}],
+        {BATCH["batch_id"]: {"planned": 2, "terminal": 2, "missing": 0}},
+        fills, prev_positions={},
+    )
+
+    finding = next(f for f in findings if f.rule == "ALL_ORDERS_SKIPPED")
+    assert finding.level == "CRIT"
+    assert "account unavailable" in finding.message
+
+
+def test_postmarket_live_fill_does_not_report_all_skipped():
+    findings = check_postmarket(
+        "2026-07-15",
+        [{**BATCH, "mode": "LIVE", "planned_orders": 2}],
+        {BATCH["batch_id"]: {"planned": 2, "terminal": 2, "missing": 0}},
+        [_fill(), _fill(status="SKIPPED", code="000001.SZ", qty=0)],
+        prev_positions={},
+    )
+    assert "ALL_ORDERS_SKIPPED" not in _rules(findings)
 
 
 def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):

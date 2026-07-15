@@ -73,6 +73,38 @@ def check_postmarket(trade_date, batches, reconciles, fills,
                 "请对照 QMT 界面委托记录人工核对"))
             break  # 同日一条即可（alerts 表也会按规则去重）
 
+    live_batches = [b for b in batches if b.get("mode") == "LIVE"]
+    live_batch_ids = {b["batch_id"] for b in live_batches}
+    planned_live = sum(
+        int(reconciles.get(b["batch_id"], {}).get(
+            "planned", b.get("planned_orders", 0),
+        ))
+        for b in live_batches
+    )
+    live_fills = [
+        f for f in fills
+        if f.get("mode") == "LIVE" and f.get("batch_id") in live_batch_ids
+    ]
+    if (
+        planned_live > 0
+        and len(live_fills) >= planned_live
+        and all(
+            f.get("status") == "SKIPPED"
+            and int(f.get("filled_qty") or 0) == 0
+            for f in live_fills
+        )
+    ):
+        reasons = sorted({
+            f.get("message", "").strip()
+            for f in live_fills if f.get("message", "").strip()
+        })
+        suffix = f"；原因：{'；'.join(reasons)}" if reasons else ""
+        findings.append(Finding(
+            "ALL_ORDERS_SKIPPED", CRIT,
+            f"{trade_date} 活动 LIVE 批次全部 {planned_live} 笔订单被跳过，"
+            f"没有产生委托或成交{suffix}",
+        ))
+
     total = len(fills)
     if total:
         rejected = sum(1 for f in fills if f.get("status") in _REJECT_STATUS)

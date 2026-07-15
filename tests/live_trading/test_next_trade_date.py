@@ -92,3 +92,13 @@ def test_evening_monitor_ignores_superseded_higher_sequence(monkeypatch, tmp_pat
     )
 
     assert findings == []
+
+
+def test_postmarket_with_active_batch_may_run_before_calendar_update():
+    from live_trading.scripts import run_monitor
+
+    assert run_monitor._may_run_with_stale_calendar("postmarket", [{"batch_id": "b"}])
+    assert not run_monitor._may_run_with_stale_calendar("postmarket", [])
+    assert not run_monitor._may_run_with_stale_calendar(
+        "report", [{"batch_id": "b"}],
+    )

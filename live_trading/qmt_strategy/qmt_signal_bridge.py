@@ -19,6 +19,7 @@
 # Otherwise orders are simulated: fill status SKIPPED, message "simulated".
 
 import json
+import math
 import os
 import time
 import datetime
@@ -425,10 +426,29 @@ def _get_available_cash(account_id):
         accounts = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ACCOUNT")
     except Exception:
         _log("get_trade_detail_data ACCOUNT failed:\n" + traceback.format_exc())
-        return 0.0
-    for a in accounts:
-        return float(getattr(a, "m_dAvailable", 0.0))
-    return 0.0
+        return None
+    if not accounts:
+        _log("ACCOUNT query returned no rows for account %s type %s"
+             % (account_id, ACCOUNT_TYPE))
+        return None
+    account = accounts[0]
+    returned_id = str(getattr(account, "m_strAccountID", "") or "")
+    if returned_id and returned_id != str(account_id):
+        _log("ACCOUNT query id mismatch: requested %s returned %s"
+             % (account_id, returned_id))
+        return None
+    raw = getattr(account, "m_dAvailable", None)
+    try:
+        available = float(raw)
+    except (TypeError, ValueError):
+        _log("ACCOUNT query missing available cash for account %s"
+             % account_id)
+        return None
+    if not math.isfinite(available) or available < 0.0:
+        _log("ACCOUNT query invalid available cash for account %s: %s"
+             % (account_id, raw))
+        return None
+    return available
 
 
 def _get_last_price(ContextInfo, stock_code):
@@ -618,7 +638,10 @@ def _process_batch(ContextInfo, batch):
 
     if batch.phase == "BUY":
         if mode_live and batch.remaining_cash is None:
-            batch.remaining_cash = _get_available_cash(account_id)
+            cash = _get_available_cash(account_id)
+            if cash is None:
+                return
+            batch.remaining_cash = cash
             _save_active_state(batch)
         for order in buys:
             if order["client_order_id"] in batch.submitted:
@@ -670,13 +693,20 @@ def _force_finalize_if_near_close(ContextInfo, batch):
         _poll_status(batch)
 
     if now >= FINALIZE_AT:
+        cash_unavailable = (
+            batch.phase == "BUY" and batch.remaining_cash is None
+        )
         for order in batch.orders:
             coid = order["client_order_id"]
             if not _order_is_terminal(batch, coid):
                 fill = batch.fills.get(coid)
                 traded = fill["filled_qty"] if fill else 0
                 price = fill["avg_price"] if fill else 0.0
-                if traded > 0:
+                if (cash_unavailable and order["side"] == "BUY"
+                        and coid not in batch.submitted):
+                    _write_fill(batch, order, "ERROR", 0, 0.0, "",
+                                "account cash unavailable at close")
+                elif traded > 0:
                     _write_fill(batch, order, "PARTIAL", traded, price, "",
                                 "expired at close")
                 else:

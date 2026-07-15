@@ -215,6 +215,69 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
     assert sum(row["price"] * row["quantity"] for row in submitted) < 10000.0
 
 
+def test_available_cash_distinguishes_empty_query_from_real_zero(
+    bridge, monkeypatch,
+):
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", lambda *args: [], raising=False,
+    )
+    assert bridge._get_available_cash("8881352838") is None
+
+    class Account:
+        m_strAccountID = "8881352838"
+        m_dAvailable = 0.0
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", lambda *args: [Account()],
+        raising=False,
+    )
+    assert bridge._get_available_cash("8881352838") == 0.0
+
+
+def test_buy_phase_waits_when_account_cash_unavailable(bridge, monkeypatch):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    bridge.TRADE_START = "00:00:00"
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:45:00")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: None)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("unavailable cash must not submit"),
+        raising=False,
+    )
+
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert bridge.g.batch.submitted == {}
+    assert bridge.g.batch.remaining_cash is None
+    assert _read_fills(bridge) == []
+
+
+def test_cash_unavailable_at_close_writes_explicit_error(bridge, monkeypatch):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8881352838",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.phase = "BUY"
+    batch.trading_started = True
+    bridge.g.batch = batch
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:00")
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+
+    bridge._force_finalize_if_near_close(object(), batch)
+
+    fills = _read_fills(bridge)
+    assert len(fills) == 1
+    assert fills[0]["status"] == "ERROR"
+    assert fills[0]["message"] == "account cash unavailable at close"
+
+
 def test_removing_live_switch_still_cancels_already_submitted_orders(
     bridge, monkeypatch,
 ):

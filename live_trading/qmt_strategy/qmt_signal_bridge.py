@@ -11,7 +11,8 @@
 #     -> 14:45 late-session window (execute near close, align w/ backtest):
 #        phase SELL: passorder all sells, wait terminal (or timeout)
 #        phase BUY : check available cash, passorder buys
-#     -> price: realtime last +/- small buffer, bounded by Mac limit_price
+#     -> price: ask-one / bid-one +/- buffer, clamped to daily price limits
+#        (signal limit_price is used only when realtime data is unavailable)
 #     -> poll order status by remark (client_order_id)
 #     -> 14:56 cancel pending, mark EXPIRED; write outbound/fills_{batch}.done
 #
@@ -38,8 +39,8 @@ TRADE_START = "14:45:00"   # late-session window: execute near close price
 CANCEL_AT = "14:56:00"     # cancel all pending orders
 FINALIZE_AT = "14:57:00"   # force-write fills .done
 
-# intraday repricing: quote realtime last price with a small buffer, still
-# bounded by the Mac-side limit_price (prev_close +/- 1%) as risk control.
+# First-order pricing: cross the current opposing quote with a small buffer.
+# QMT daily stop prices are the hard bounds; the signal price is a fallback.
 INTRADAY_BUY_SLIPPAGE = 0.003
 INTRADAY_SELL_SLIPPAGE = 0.003
 
@@ -451,35 +452,82 @@ def _get_available_cash(account_id):
     return available
 
 
-def _get_last_price(ContextInfo, stock_code):
-    """Realtime last price via full tick. 0.0 if unavailable."""
+def _positive_price(value):
+    try:
+        price = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    if not math.isfinite(price) or price <= 0.0:
+        return 0.0
+    return price
+
+
+def _tick_field(tick, name, default=None):
+    if isinstance(tick, dict):
+        return tick.get(name, default)
+    return getattr(tick, name, default)
+
+
+def _get_tick(ContextInfo, stock_code):
     try:
         ticks = ContextInfo.get_full_tick([stock_code])
-        tick = ticks.get(stock_code) if ticks else None
-        if tick is None:
-            return 0.0
-        last = tick.get("lastPrice") if isinstance(tick, dict) \
-            else getattr(tick, "lastPrice", 0.0)
-        return float(last or 0.0)
+        return ticks.get(stock_code) if ticks else None
     except Exception:
         _log("get_full_tick failed for %s:\n%s"
              % (stock_code, traceback.format_exc()))
+        return None
+
+
+def _first_book_price(tick, field):
+    levels = _tick_field(tick, field, [])
+    if not isinstance(levels, (list, tuple)) or not levels:
         return 0.0
+    return _positive_price(levels[0])
+
+
+def _get_price_limits(ContextInfo, stock_code):
+    try:
+        detail = ContextInfo.get_instrumentdetail(stock_code)
+    except Exception:
+        _log("get_instrumentdetail failed for %s:\n%s"
+             % (stock_code, traceback.format_exc()))
+        return 0.0, 0.0
+    if detail is None:
+        return 0.0, 0.0
+    if isinstance(detail, dict):
+        upper = detail.get("UpStopPrice")
+        lower = detail.get("DownStopPrice")
+    else:
+        upper = getattr(detail, "UpStopPrice", None)
+        lower = getattr(detail, "DownStopPrice", None)
+    return _positive_price(upper), _positive_price(lower)
 
 
 def _effective_price(ContextInfo, order):
-    """Order price for passorder: realtime last +/- small buffer, bounded by
-    the Mac-side limit_price (risk control). Falls back to limit_price when
-    no realtime quote is available."""
-    mac_limit = float(order["limit_price"])
-    last = _get_last_price(ContextInfo, order["stock_code"])
-    if last <= 0.0:
-        return mac_limit
+    """Marketable first-order price with the signal price as data fallback."""
+    fallback_price = float(order["limit_price"])
+    tick = _get_tick(ContextInfo, order["stock_code"])
+    if tick is None:
+        return fallback_price
+
+    last = _positive_price(_tick_field(tick, "lastPrice"))
     if order["side"] == "BUY":
-        # never pay more than mac_limit (prev_close * (1+slippage))
-        return round(min(last * (1.0 + INTRADAY_BUY_SLIPPAGE), mac_limit), 2)
-    # SELL: never sell below mac_limit (prev_close * (1-slippage))
-    return round(max(last * (1.0 - INTRADAY_SELL_SLIPPAGE), mac_limit), 2)
+        reference = _first_book_price(tick, "askPrice") or last
+    else:
+        reference = _first_book_price(tick, "bidPrice") or last
+    if reference <= 0.0:
+        return fallback_price
+
+    upper, lower = _get_price_limits(ContextInfo, order["stock_code"])
+    if order["side"] == "BUY":
+        price = round(reference * (1.0 + INTRADAY_BUY_SLIPPAGE), 2)
+        if upper > 0.0:
+            price = min(price, upper)
+    else:
+        price = round(reference * (1.0 - INTRADAY_SELL_SLIPPAGE), 2)
+        if lower > 0.0:
+            price = max(price, lower)
+    return round(price, 2)
 
 
 def _estimated_buy_cost(quantity, price):
@@ -525,7 +573,7 @@ def _submit(ContextInfo, batch, order, live, price=None):
                   11, price, int(order["quantity"]),
                   STRATEGY_NAME, 2, coid, ContextInfo)
         _write_fill(batch, order, "ACCEPTED", 0, 0.0, "", "submitted")
-        _log("passorder %s %s x%d @ %s (mac_limit %s) (%s)"
+        _log("passorder %s %s x%d @ %s (fallback_price %s) (%s)"
              % (order["side"], order["stock_code"], order["quantity"],
                 price, order["limit_price"], coid))
         return True

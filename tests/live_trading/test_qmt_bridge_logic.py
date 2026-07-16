@@ -348,30 +348,96 @@ def test_no_done_no_claim(bridge):
 
 
 class _TickCtx:
-    """Fake ContextInfo exposing get_full_tick."""
-    def __init__(self, last_price):
+    """Fake ContextInfo exposing QMT tick and instrument-detail fields."""
+    def __init__(
+        self, last_price, ask_price=None, bid_price=None,
+        up_stop=0.0, down_stop=0.0, detail_error=False,
+    ):
         self._last = last_price
+        self._ask = [] if ask_price is None else [ask_price]
+        self._bid = [] if bid_price is None else [bid_price]
+        self._up_stop = up_stop
+        self._down_stop = down_stop
+        self._detail_error = detail_error
 
     def get_full_tick(self, codes):
-        return {c: {"lastPrice": self._last} for c in codes}
+        return {
+            c: {
+                "lastPrice": self._last,
+                "askPrice": self._ask,
+                "bidPrice": self._bid,
+            }
+            for c in codes
+        }
+
+    def get_instrumentdetail(self, stock_code):
+        if self._detail_error:
+            raise RuntimeError("instrument detail unavailable")
+        return {
+            "UpStopPrice": self._up_stop,
+            "DownStopPrice": self._down_stop,
+        }
 
 
-def test_effective_price_buy_uses_realtime_within_limit(bridge):
-    order = {"stock_code": "000001.SZ", "side": "BUY", "limit_price": 10.41}
-    # last=10.00 -> 10.00*1.003=10.03, below mac limit 10.41
-    assert bridge._effective_price(_TickCtx(10.00), order) == 10.03
-    # last=10.50 -> 10.53 capped by mac limit 10.41
-    assert bridge._effective_price(_TickCtx(10.50), order) == 10.41
+def test_effective_price_buy_uses_ask_without_signal_cap(bridge):
+    order = {"stock_code": "000001.SZ", "side": "BUY", "limit_price": 10.10}
+    ctx = _TickCtx(10.50, ask_price=10.51, bid_price=10.49, up_stop=11.00)
+
+    assert bridge._effective_price(ctx, order) == 10.54
 
 
-def test_effective_price_sell_floor_and_fallback(bridge):
+def test_effective_price_sell_uses_bid_without_signal_floor(bridge):
     order = {"stock_code": "000001.SZ", "side": "SELL", "limit_price": 9.90}
-    # last=10.20 -> 10.20*0.997=10.17, above floor 9.90
-    assert bridge._effective_price(_TickCtx(10.20), order) == 10.17
-    # last=9.50 -> floored at mac limit 9.90 (won't chase a big drop)
-    assert bridge._effective_price(_TickCtx(9.50), order) == 9.90
-    # no quote -> fall back to mac limit
-    assert bridge._effective_price(_TickCtx(0.0), order) == 9.90
+    ctx = _TickCtx(9.50, ask_price=9.51, bid_price=9.49, down_stop=9.00)
+
+    assert bridge._effective_price(ctx, order) == 9.46
+
+
+@pytest.mark.parametrize(
+    "side,ctx,expected",
+    [
+        (
+            "BUY",
+            _TickCtx(10.99, ask_price=10.99, bid_price=10.98, up_stop=11.00),
+            11.00,
+        ),
+        (
+            "SELL",
+            _TickCtx(9.01, ask_price=9.02, bid_price=9.01, down_stop=9.00),
+            9.00,
+        ),
+    ],
+)
+def test_effective_price_clamps_to_daily_price_limit(bridge, side, ctx, expected):
+    order = {"stock_code": "000001.SZ", "side": side, "limit_price": 10.00}
+
+    assert bridge._effective_price(ctx, order) == expected
+
+
+@pytest.mark.parametrize(
+    "side,expected",
+    [("BUY", 10.03), ("SELL", 9.97)],
+)
+def test_effective_price_falls_back_from_empty_book_to_last(
+    bridge, side, expected,
+):
+    order = {"stock_code": "000001.SZ", "side": side, "limit_price": 8.88}
+
+    assert bridge._effective_price(_TickCtx(10.00), order) == expected
+
+
+def test_effective_price_falls_back_to_signal_price_without_live_reference(bridge):
+    order = {"stock_code": "000001.SZ", "side": "BUY", "limit_price": 10.10}
+    ctx = _TickCtx(0.0, ask_price=0.0, bid_price=float("nan"))
+
+    assert bridge._effective_price(ctx, order) == 10.10
+
+
+def test_effective_price_survives_missing_instrument_detail(bridge):
+    order = {"stock_code": "000001.SZ", "side": "BUY", "limit_price": 10.10}
+    ctx = _TickCtx(10.50, ask_price=10.51, detail_error=True)
+
+    assert bridge._effective_price(ctx, order) == 10.54
 
 
 def test_simulate_batch_processes_without_qmt_api(bridge, monkeypatch):

@@ -174,3 +174,57 @@ def test_sum_live_fills_amount():
         {"mode": "SIMULATE", "status": "FILLED", "filled_qty": 100, "avg_price": 10.0},
     ]
     assert sum_live_fills_amount(fills) == pytest.approx(1000.0 + 1000.0)
+
+
+PERFORMANCE_CONFIG = {
+    "monitor": {"performance_baseline": {
+        "first_snapshot_date": "2026-07-16",
+        "opening_total_value": 10_000_000.0,
+        "benchmark_close": 4786.78271484375,
+    }}
+}
+
+
+def test_performance_baseline_selected_only_for_first_snapshot_date():
+    from live_trading.scripts.run_monitor import _previous_performance_snapshot
+
+    baseline = _previous_performance_snapshot(
+        "2026-07-16", [], PERFORMANCE_CONFIG,
+    )
+    assert baseline == {
+        "total_value": 10_000_000.0,
+        "cumulative_return": 0.0,
+        "benchmark_close": 4786.78271484375,
+        "benchmark_cumulative_return": 0.0,
+    }
+    assert _previous_performance_snapshot(
+        "2026-07-17", [], PERFORMANCE_CONFIG,
+    ) is None
+    assert _previous_performance_snapshot("2026-07-16", [], {}) is None
+
+
+def test_real_previous_snapshot_takes_precedence_over_baseline():
+    from live_trading.scripts.run_monitor import _previous_performance_snapshot
+
+    previous = {"date": "2026-07-15", "total_value": 9_900_000.0}
+    assert _previous_performance_snapshot(
+        "2026-07-16", [previous], PERFORMANCE_CONFIG,
+    ) is previous
+
+
+def test_performance_baseline_populates_first_day_returns():
+    from live_trading.scripts.run_monitor import _previous_performance_snapshot
+
+    previous = _previous_performance_snapshot(
+        "2026-07-16", [], PERFORMANCE_CONFIG,
+    )
+    daily, _, _ = build_snapshot(
+        "2026-07-16", {}, cash=10_053_288.441536663, prices={},
+        bench_close=4698.4345703125, prev_snapshot=previous,
+        fills_amount=0.0,
+    )
+    assert daily["daily_return"] == pytest.approx(0.0053288441536663)
+    assert daily["cumulative_return"] == pytest.approx(0.0053288441536663)
+    assert daily["benchmark_daily_return"] == pytest.approx(-0.018456686)
+    assert daily["benchmark_cumulative_return"] == pytest.approx(-0.018456686)
+    assert daily["excess_return"] == pytest.approx(0.023785530)

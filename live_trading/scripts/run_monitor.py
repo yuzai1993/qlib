@@ -203,6 +203,20 @@ def run_corporate_actions(date, recorder, store, config) -> tuple:
     return applied, findings
 
 
+def _previous_performance_snapshot(date, previous, config):
+    if previous:
+        return previous[-1]
+    baseline = config.get("monitor", {}).get("performance_baseline")
+    if not baseline or date != baseline["first_snapshot_date"]:
+        return None
+    return {
+        "total_value": float(baseline["opening_total_value"]),
+        "cumulative_return": 0.0,
+        "benchmark_close": float(baseline["benchmark_close"]),
+        "benchmark_cumulative_return": 0.0,
+    }
+
+
 def run_report(date, calendar, recorder, store, config, notifier) -> list:
     latest_cal = calendar[-1] if calendar else None
     findings = check_report(date, latest_cal, [])
@@ -228,7 +242,7 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
     bench_close = fetch_benchmark_close(benchmark, date)
 
     prev_snaps = [s for s in store.get_snapshots(end=date) if s["date"] < date]
-    prev_snapshot = prev_snaps[-1] if prev_snaps else None
+    prev_snapshot = _previous_performance_snapshot(date, prev_snaps, config)
 
     fills = recorder.get_fills_by_dates([date])
     fills_amount = sum_live_fills_amount(fills)

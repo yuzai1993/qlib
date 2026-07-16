@@ -35,6 +35,11 @@ fees:
 # 监控平台（docs/superpowers/specs/2026-07-13-live-monitor-platform-design.md）
 monitor:
   benchmark: "SH000300"
+  # 仅用于首个正式交易日收益计算，不会生成或展示 2026-07-16 前的快照。
+  performance_baseline:
+    first_snapshot_date: "2026-07-16"
+    opening_total_value: 10000000.0
+    benchmark_close: 4786.78271484375
   notify:
     channel: "serverchan"        # serverchan | pushplus | none；密钥走环境变量
     daily_report: true           # report 阶段无告警也推日报

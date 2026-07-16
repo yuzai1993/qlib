@@ -26,7 +26,7 @@ schedule:
 
 # 交易费用与红利税（现行规则 2026；佣金请按开户实际费率修改）
 fees:
-  commission_rate: 0.00025     # 佣金 万2.5，双向，已含规费
+  commission_rate: 0.00020     # 佣金 万2，双向，按 QMT 2026-07-16 实际费用校准
   min_commission: 5.0          # 单笔最低佣金（元）
   stamp_duty_rate: 0.0005      # 印花税 0.05%，仅卖出
   transfer_fee_rate: 0.00001   # 过户费 0.001%，双向

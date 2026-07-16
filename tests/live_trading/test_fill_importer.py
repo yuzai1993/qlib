@@ -537,6 +537,34 @@ def test_sum_fees_by_date(env):
     assert recorder.sum_fees_by_date("2026-07-13") == 0.0
 
 
+def test_reprice_fees_refunds_lower_rate_and_is_idempotent(env):
+    _, recorder, _ = env
+    recorder.set_cash(200000.0)
+    buy = _fill(
+        side="BUY", stock_code="600000.SH", requested=1000,
+        filled=1000, price=100.0,
+    )
+    _record_plan(recorder, [buy])
+    recorder.apply_fill(FillEvent.from_dict(buy))
+
+    old_fee = order_total_fee("BUY", 100000.0, DEFAULT_FEES)
+    lower_fees = {**DEFAULT_FEES, "commission_rate": 0.00020}
+    new_fee = order_total_fee("BUY", 100000.0, lower_fees)
+    cash_before = recorder.get_cash()
+
+    repricer = LiveRecorder(recorder.db_path, fees=lower_fees)
+    adjustment = repricer.reprice_fees_by_date("2026-07-14")
+
+    assert adjustment == pytest.approx(new_fee - old_fee)
+    assert repricer.get_cash() == pytest.approx(cash_before + old_fee - new_fee)
+    assert repricer.sum_fees_by_date("2026-07-14") == pytest.approx(new_fee)
+    assert repricer.get_fills(BATCH_ID)[0]["applied_fee"] == pytest.approx(new_fee)
+
+    cash_after = repricer.get_cash()
+    assert repricer.reprice_fees_by_date("2026-07-14") == pytest.approx(0.0)
+    assert repricer.get_cash() == pytest.approx(cash_after)
+
+
 def test_reconcile_counts(env):
     bridge_root, recorder, importer = env
     recorder.upsert_position("000001.SZ", 800, 10.0)

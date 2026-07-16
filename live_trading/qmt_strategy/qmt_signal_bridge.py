@@ -43,8 +43,8 @@ FINALIZE_AT = "14:57:00"   # force-write fills .done
 INTRADAY_BUY_SLIPPAGE = 0.003
 INTRADAY_SELL_SLIPPAGE = 0.003
 
-# Conservative BUY-side fee estimate used only for local cash reservation.
-COMMISSION_RATE = 0.00025
+# BUY-side fee estimate used only for local cash reservation.
+COMMISSION_RATE = 0.00020
 MIN_COMMISSION = 5.0
 TRANSFER_FEE_RATE = 0.00001
 

@@ -975,6 +975,47 @@ class LiveRecorder:
             ).fetchone()
             return float(row["s"])
 
+    def reprice_fees_by_date(self, trade_date: str) -> float:
+        """按当前费率重算当日已入账费用，并同步修正现金。
+
+        返回新费用减旧费用的差额；负数表示费率下降、现金应退回。
+        每次均以已应用成交额重算，重复调用不会重复调整。
+        """
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT f.batch_id, f.client_order_id, f.side,
+                          f.applied_amount, f.applied_fee
+                   FROM fills f JOIN batches b ON f.batch_id = b.batch_id
+                   WHERE b.trade_date=? AND f.mode='LIVE'
+                         AND f.applied_amount > 0""",
+                (trade_date,),
+            ).fetchall()
+            total_delta = 0.0
+            for row in rows:
+                target = order_total_fee(
+                    row["side"], row["applied_amount"], self.fees,
+                )
+                delta = target - float(row["applied_fee"])
+                if abs(delta) <= 1e-9:
+                    continue
+                conn.execute(
+                    """UPDATE fills SET applied_fee=?
+                       WHERE batch_id=? AND client_order_id=?""",
+                    (target, row["batch_id"], row["client_order_id"]),
+                )
+                total_delta += delta
+            if abs(total_delta) > 1e-9:
+                cash = conn.execute(
+                    "SELECT value FROM account_state WHERE key='cash'",
+                ).fetchone()
+                if cash is None:
+                    raise SchemaError("cannot reprice fees before cash is initialized")
+                conn.execute(
+                    "UPDATE account_state SET value = value - ? WHERE key='cash'",
+                    (total_delta,),
+                )
+            return total_delta
+
     # ---------- account ----------
 
     def set_cash(self, cash: float) -> None:

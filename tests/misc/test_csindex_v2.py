@@ -212,6 +212,103 @@ def test_interval_errors_check_structure_overlap_and_snapshot():
     assert any("终局快照" in error for error in errors)
 
 
+def _instruments_df(rows):
+    return pd.DataFrame(rows, columns=["symbol", "start_date", "end_date"])
+
+
+def test_diff_snapshot_identical_membership_is_ok():
+    from scripts.data_collector.csindex_v2.updater import diff_snapshot
+
+    df = _instruments_df(
+        [
+            ("SH600000", "2020-01-01", "2099-12-31"),
+            ("SZ000001", "2020-01-01", "2099-12-31"),
+        ]
+    )
+    result = diff_snapshot(df, "2026-07-16", {"SH600000", "SZ000001"})
+
+    assert result["ok"]
+    assert result["pending_add"] == []
+    assert result["pending_drop"] == []
+    assert result["unexplained_local"] == []
+    assert result["unexplained_snap"] == []
+
+
+def test_diff_snapshot_announce_lead_is_expected_not_drift():
+    """公告日口径的提前量（已公告未生效）不算漂移，且绝不应触发回写。
+
+    场景：7-10 公告 SH601001 调入 / SH600000 调出，生效日在快照日 7-16 之后：
+    在册已切换到新名单，官网快照仍是旧名单。
+    """
+    from scripts.data_collector.csindex_v2.updater import diff_snapshot
+
+    df = _instruments_df(
+        [
+            ("SH600000", "2020-01-01", "2026-07-10"),   # 公告调出，未生效
+            ("SH601001", "2026-07-10", "2099-12-31"),   # 公告调入，未生效
+            ("SZ000001", "2020-01-01", "2099-12-31"),
+        ]
+    )
+    snapshot = {"SH600000", "SZ000001"}  # 官网仍是旧名单
+
+    result = diff_snapshot(df, "2026-07-16", snapshot)
+
+    assert result["ok"]
+    assert result["pending_add"] == ["SH601001"]
+    assert result["pending_drop"] == ["SH600000"]
+    assert result["unexplained_local"] == []
+    assert result["unexplained_snap"] == []
+
+
+def test_diff_snapshot_flags_unexplained_drift():
+    """差异股票近期无区间边界 → 漏公告/解析错，必须报失败。"""
+    from scripts.data_collector.csindex_v2.updater import diff_snapshot
+
+    df = _instruments_df(
+        [
+            ("SH600000", "2020-01-01", "2099-12-31"),   # 在册但快照没有（无近期边界）
+            ("SZ000001", "2020-01-01", "2099-12-31"),
+        ]
+    )
+    snapshot = {"SZ000001", "SZ300750"}  # SZ300750 从未出现在区间里
+
+    result = diff_snapshot(df, "2026-07-16", snapshot)
+
+    assert not result["ok"]
+    assert result["unexplained_local"] == ["SH600000"]
+    assert result["unexplained_snap"] == ["SZ300750"]
+    assert result["pending_add"] == []
+    assert result["pending_drop"] == []
+
+
+def test_diff_snapshot_lag_window_expires():
+    """公告边界超出滞后窗口后，差异升级为漂移（生效日早该过了）。"""
+    from scripts.data_collector.csindex_v2.updater import diff_snapshot
+
+    df = _instruments_df(
+        [
+            ("SH601001", "2026-05-01", "2099-12-31"),   # 两个多月前调入
+            ("SZ000001", "2020-01-01", "2099-12-31"),
+        ]
+    )
+    snapshot = {"SZ000001"}  # 官网仍没有 SH601001
+
+    result = diff_snapshot(df, "2026-07-16", snapshot)
+
+    assert not result["ok"]
+    assert result["unexplained_local"] == ["SH601001"]
+
+
+def test_updater_never_writes_instruments_from_snapshot():
+    """回归守卫：快照对齐（回写 instruments）逻辑必须保持删除状态。"""
+    from scripts.data_collector.csindex_v2 import updater
+
+    assert not hasattr(updater, "apply_snapshot_diff")
+    assert not hasattr(updater, "sync_from_official_snapshots")
+    source = (CSINDEX_V2_DIR / "updater.py").read_text()
+    assert "_write_instruments_df" not in source
+
+
 def test_change_errors_detect_event_key_and_calendar_problems():
     from scripts.data_collector.csindex_v2.validator import change_errors
 

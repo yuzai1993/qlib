@@ -39,6 +39,7 @@ from config_loader import (
     build_task,
     load_config,
     load_session_model_info,
+    normalize_exchange_kwargs,
     resolve_session_dir,
 )
 from report_utils import (
@@ -197,6 +198,10 @@ def run_train_backtest_once(
         print(f"[Run {run_idx}] 训练完成，experiment_id={train_eid}, recorder_id={train_rid}")
 
         port_cfg = json.loads(json.dumps(port_analysis_config))
+        # json 往返会把 limit_threshold tuple 变成 list，需再规范化
+        port_cfg["backtest"]["exchange_kwargs"] = normalize_exchange_kwargs(
+            port_cfg["backtest"].get("exchange_kwargs")
+        )
         port_cfg["strategy"]["kwargs"]["model"] = model
         port_cfg["strategy"]["kwargs"]["dataset"] = dataset
 
@@ -308,6 +313,9 @@ def run_backtest_only_once(
         dataset = init_instance_by_config(task["dataset"])
 
         port_cfg = json.loads(json.dumps(port_analysis_config))
+        port_cfg["backtest"]["exchange_kwargs"] = normalize_exchange_kwargs(
+            port_cfg["backtest"].get("exchange_kwargs")
+        )
         port_cfg["strategy"]["kwargs"]["model"] = model
         port_cfg["strategy"]["kwargs"]["dataset"] = dataset
 

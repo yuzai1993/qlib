@@ -182,12 +182,25 @@ def build_task(cfg: dict, handler_class: Optional[str] = None) -> dict:
     }
 
 
+def normalize_exchange_kwargs(exchange_kwargs: Optional[dict]) -> dict:
+    """规范化 exchange_kwargs：表达式限价必须是 tuple（JSON 往返后会变成 list）。"""
+    if not exchange_kwargs:
+        return {}
+    out = copy.deepcopy(exchange_kwargs)
+    lt = out.get("limit_threshold")
+    if isinstance(lt, list) and len(lt) == 2:
+        out["limit_threshold"] = tuple(lt)
+    return out
+
+
 def build_port_analysis_config(cfg: dict) -> dict:
     """组装 PortAnaRecord 配置（不含 model/dataset 运行时对象）。"""
     strategy = cfg["strategy"]
     backtest = copy.deepcopy(cfg["backtest"])
     if "benchmark" not in backtest:
         backtest["benchmark"] = cfg["data"]["benchmark"]
+    if "exchange_kwargs" in backtest:
+        backtest["exchange_kwargs"] = normalize_exchange_kwargs(backtest["exchange_kwargs"])
     return {
         "executor": {
             "class": "SimulatorExecutor",

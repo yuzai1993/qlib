@@ -46,8 +46,8 @@ model:
 strategy:
   class: "TopkDropoutStrategy"
   module_path: "qlib.contrib.strategy.signal_strategy"
-  topk: 20
-  n_drop: 5
+  topk: 10
+  n_drop: 2
 
 backtest:
   account: 1000000

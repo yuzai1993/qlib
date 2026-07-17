@@ -1,33 +1,34 @@
-# 以 train_start_2016 为基线，股票池 CSI500，基准 SH000905
-# python backtest/scripts/run_backtest.py --config csi500_lgbm_train_start_2016.yaml
+# 基线模型免重训：测试/回测 2020-01-13 ~ 2026-07-10，出图
+# python backtest/scripts/run_backtest.py --config csi300_lgbm_bt_only_2006_top10_from2020.yaml
 
 run:
-  mode: train_backtest
-  note: "train_start_2016_csi500"
+  mode: backtest_only
+  note: "bt_only_2006_top10_from2020"
   n_runs: 1
-  from_session: null
+  from_session: "20260711_223223_train_start_2006"
   from_run: 1
-  generate_figures: false
+  generate_figures: true
 
 data:
   provider_uri: "~/.qlib/qlib_data/cn_data"
   region: "cn"
-  instruments: "csi500"
-  benchmark: "SH000905"
+  instruments: "csi300"
+  benchmark: "SH000300"
   handler:
     class: "Alpha158"
     module_path: "qlib.contrib.data.handler"
     start_time: "2003-01-02"
     end_time: "2026-07-10"
-    fit_start_time: "2016-01-02"
+    fit_start_time: "2006-01-02"
     fit_end_time: "2020-01-10"
     infer_processors:
       - class: ProcessInf
 
 segments:
-  train: ["2016-01-02", "2020-01-10"]
+  train: ["2006-01-02", "2020-01-10"]
   valid: ["2020-01-13", "2023-09-15"]
-  test: ["2023-09-18", "2026-07-10"]
+  # 含原 valid+test
+  test: ["2020-01-13", "2026-07-10"]
 
 model:
   class: "LGBModel"

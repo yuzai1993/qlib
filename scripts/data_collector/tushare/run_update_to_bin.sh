@@ -7,7 +7,7 @@
 #   3. 任一失败则最终以非 0 退出
 #
 # 用法：可直接执行，或由 crontab 在工作日调用
-#   30 17 * * 1-5 /path/to/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
+#   30 16 * * 1-5 /path/to/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 
 set -uo pipefail
 
@@ -19,19 +19,25 @@ PYTHON="/opt/anaconda3/envs/qlib/bin/python"
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
 
+# 日志重定向后 tqdm 会用 \r 刷屏，关闭进度条；关键节点仍有 loguru/INFO
+export TQDM_DISABLE=1
+
 mkdir -p logs/data
 logfile="logs/data/$(date +%Y-%m-%d).log"
 exec >>"$logfile" 2>&1
-echo "===== $(date '+%Y-%m-%d %H:%M:%S') ====="
+
+ts() { date '+%Y-%m-%d %H:%M:%S'; }
+log() { echo "[$(ts)] $*"; }
 
 FAILED=0
 FAILURES=()
+log "===== start ====="
 
 send_wechat() {
   local title="$1"
   local body="$2"
   if [[ -z "${SERVERCHAN_SENDKEY:-}" ]]; then
-    echo "ERROR: SERVERCHAN_SENDKEY unset，无法推送：$title"
+    log "ERROR: SERVERCHAN_SENDKEY unset，无法推送：$title"
     return 1
   fi
   TITLE="$title" BODY="$body" "$PYTHON" -c '
@@ -43,7 +49,7 @@ ok = ServerChanNotifier(os.environ["SERVERCHAN_SENDKEY"]).send(
 )
 sys.exit(0 if ok else 1)
 ' && return 0
-  echo "WARNING: 微信告警发送失败：$title"
+  log "WARNING: 微信告警发送失败：$title"
   return 1
 }
 
@@ -52,13 +58,13 @@ alert_fail() {
   local detail="$2"
   FAILED=1
   FAILURES+=("$step")
-  echo "FAIL: $step"
+  log "FAIL: $step"
   local host_name
   host_name="$(hostname)"
   send_wechat "[qlib] ${step}失败 (host=${host_name})" \
     "${detail}
 
-时间：$(date '+%Y-%m-%d %H:%M:%S')
+时间：$(ts)
 主机：${host_name}
 日志：${QLIB_ROOT}/${logfile}" || true
 }
@@ -69,13 +75,13 @@ SOURCE_DIR="scripts/data_collector/tushare/source"
 NORMALIZE_DIR="scripts/data_collector/tushare/normalize"
 
 # ---------- 1) 个股/指数日线增量 dump ----------
-echo "===== update_data_to_bin ====="
+log "===== update_data_to_bin ====="
 if "$PYTHON" scripts/data_collector/tushare/collector.py update_data_to_bin \
   --qlib_dir ~/.qlib/qlib_data/cn_data \
   --source_dir "$SOURCE_DIR" \
   --normalize_dir "$NORMALIZE_DIR"
 then
-  echo "update_data_to_bin OK"
+  log "update_data_to_bin OK"
 else
   status=$?
   alert_fail "Tushare日线入库" \
@@ -87,10 +93,10 @@ $(tail -n 200 "$logfile" || echo "无法读取日志")"
 fi
 
 # ---------- 2) 指数成分日更 ----------
-echo "===== index instruments daily update ====="
+log "===== index instruments daily update ====="
 if "$PYTHON" -m scripts.data_collector.update_indices_daily
 then
-  echo "index instruments update OK"
+  log "index instruments update OK"
 else
   status=$?
   alert_fail "指数成分日更" \
@@ -102,7 +108,7 @@ $(tail -n 80 "$logfile" || echo "无法读取日志")"
 fi
 
 # ---------- 3) vwap 巡检 ----------
-echo "===== vwap check ====="
+log "===== vwap check ====="
 vwap_check_output="$("$PYTHON" - "$NORMALIZE_DIR/sh600000.csv" <<'PYEOF'
 import sys
 import pandas as pd
@@ -123,7 +129,7 @@ if recent.empty or pd.isna(recent["vwap"].iloc[0]):
 print("OK: vwap 正常")
 PYEOF
 )" && vwap_status=0 || vwap_status=$?
-echo "$vwap_check_output"
+log "$vwap_check_output"
 if [[ "$vwap_status" -ne 0 ]]; then
   alert_fail "Tushare vwap巡检" \
     "${vwap_check_output}
@@ -133,7 +139,7 @@ fi
 
 # ---------- 4) 前复权回溯完整性巡检（近 90 天）----------
 ADJ_START="$(date -v-90d +%Y-%m-%d 2>/dev/null || date -d '90 days ago' +%Y-%m-%d)"
-echo "===== adjust integrity check (start=$ADJ_START) ====="
+log "===== adjust integrity check (start=$ADJ_START) ====="
 adj_output="$(
   PYTHONPATH="$QLIB_ROOT" "$PYTHON" \
     "$QLIB_ROOT/scripts/data_collector/tushare/check_adjust_integrity.py" \
@@ -149,11 +155,11 @@ fi
 
 # ---------- 汇总 ----------
 if [[ "$FAILED" -ne 0 ]]; then
-  echo "===== FAILED steps: ${FAILURES[*]} ====="
-  echo "===== end $(date '+%Y-%m-%d %H:%M:%S') (FAILED) ====="
+  log "===== FAILED steps: ${FAILURES[*]} ====="
+  log "===== end (FAILED) ====="
   exit 1
 fi
 
-echo "===== all steps OK ====="
-echo "===== end $(date '+%Y-%m-%d %H:%M:%S') ====="
+log "===== all steps OK ====="
+log "===== end ====="
 exit 0

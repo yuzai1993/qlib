@@ -75,10 +75,10 @@ python collector.py update_data_to_bin --qlib_dir ~/.qlib/qlib_data/cn_data --st
 crontab -e
 ```
 
-在打开的编辑器中加入一行（路径按你本机 qlib 根目录修改；与实盘约定一致时用 17:30）：
+在打开的编辑器中加入一行（路径按你本机 qlib 根目录修改；与实盘约定一致时用 16:30）：
 
 ```
-30 17 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
+30 16 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 ```
 
 保存退出即可。

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import abc
+import sys
 import shutil
 import traceback
 from pathlib import Path
@@ -15,6 +16,13 @@ import pandas as pd
 from tqdm import tqdm
 from loguru import logger
 from qlib.utils import fname_to_code, code_to_fname
+
+
+def _tqdm(*args, **kwargs):
+    """非 TTY（如 cron 重定向日志）时关闭进度条，避免 \\r 刷屏。"""
+    kwargs.setdefault("disable", not sys.stderr.isatty())
+    kwargs.setdefault("mininterval", 30.0)
+    return tqdm(*args, **kwargs)
 
 
 def read_as_df(file_path: Union[str, Path], **kwargs) -> pd.DataFrame:
@@ -308,7 +316,7 @@ class DumpDataAll(DumpDataBase):
         all_datetime = set()
         date_range_list = []
         _fun = partial(self._get_date, as_set=True, is_begin_end=True)
-        with tqdm(total=len(self.df_files)) as p_bar:
+        with _tqdm(total=len(self.df_files)) as p_bar:
             with ProcessPoolExecutor(max_workers=self.works) as executor:
                 for file_path, ((_begin_time, _end_time), _set_calendars) in zip(
                     self.df_files, executor.map(_fun, self.df_files)
@@ -339,7 +347,7 @@ class DumpDataAll(DumpDataBase):
     def _dump_features(self):
         logger.info("start dump features......")
         _dump_func = partial(self._dump_bin, calendar_list=self._calendars_list)
-        with tqdm(total=len(self.df_files)) as p_bar:
+        with _tqdm(total=len(self.df_files)) as p_bar:
             with ProcessPoolExecutor(max_workers=self.works) as executor:
                 for _ in executor.map(_dump_func, self.df_files):
                     p_bar.update()
@@ -363,7 +371,7 @@ class DumpDataFix(DumpDataAll):
                 self.df_files,
             )
         )
-        with tqdm(total=len(new_stock_files)) as p_bar:
+        with _tqdm(total=len(new_stock_files)) as p_bar:
             with ProcessPoolExecutor(max_workers=self.works) as execute:
                 for file_path, (_begin_time, _end_time) in zip(new_stock_files, execute.map(_fun, new_stock_files)):
                     if isinstance(_begin_time, pd.Timestamp) and isinstance(_end_time, pd.Timestamp):
@@ -474,7 +482,7 @@ class DumpDataUpdate(DumpDataBase):
                 _df[self.symbol_field_name] = self.get_symbol_from_file(file_path)
             return _df
 
-        with tqdm(total=len(self.df_files)) as p_bar:
+        with _tqdm(total=len(self.df_files)) as p_bar:
             with ThreadPoolExecutor(max_workers=self.works) as executor:
                 for df in executor.map(_read_df, self.df_files):
                     if not df.empty:
@@ -519,7 +527,7 @@ class DumpDataUpdate(DumpDataBase):
                     _dt_range[self.INSTRUMENTS_END_FIELD] = self._format_datetime(_end)
                     futures[executor.submit(self._dump_bin, _df, self._new_calendar_list)] = _code
 
-            with tqdm(total=len(futures)) as p_bar:
+            with _tqdm(total=len(futures)) as p_bar:
                 for _future in as_completed(futures):
                     try:
                         _future.result()

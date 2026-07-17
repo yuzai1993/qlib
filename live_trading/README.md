@@ -150,10 +150,10 @@ SIMULATE 批次回执应为每单一条 `SKIPPED simulated`，且导入后持仓
 本机当前约定（工作日）：
 
 ```cron
-# live: Tushare→qlib 日线增量（信号与收盘价依赖）
-30 17 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 # live: 导入 QMT 回执 + 盘后对账监控
 0 16 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_import_cron.sh && /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh postmarket
+# live: Tushare→qlib 日线增量（信号与收盘价依赖；约 1.5–2h，赶在 20:30 日报前完成）
+30 16 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 # live: 快照 + 微信日报
 30 20 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh report
 # live: 发布下一交易日 LIVE 信号

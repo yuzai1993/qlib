@@ -53,6 +53,21 @@ def publish_recorded_plan(recorder, publisher, header, orders):
     return publisher.publish(validated_header, orders)
 
 
+def ensure_prior_live_batches_terminal(recorder, trade_date: str) -> None:
+    """Refuse a new LIVE plan while an earlier live batch is unreconciled."""
+    blockers = recorder.get_unreconciled_active_live_batches_before(trade_date)
+    if not blockers:
+        return
+    details = ", ".join(
+        f"{batch['batch_id']} "
+        f"({batch['planned_orders'] - batch['terminal_orders']} missing)"
+        for batch in blockers
+    )
+    raise SystemExit(
+        "refusing LIVE publish: import/reconcile prior fills first: " + details
+    )
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Publish QMT signal batch")
     p.add_argument("--config", required=True, help="live config id (configs/*.yaml)")
@@ -136,6 +151,9 @@ def main():
     batch_id = f"{trade_date.replace('-', '')}_{live_cfg['strategy_id']}_{args.seq:03d}"
 
     recorder = LiveRecorder(str(PROJECT_ROOT / config["storage"]["db_path"]))
+
+    if mode == "LIVE":
+        ensure_prior_live_batches_terminal(recorder, trade_date)
 
     # 1. 预测分数
     signal_date, scores = get_signal_date_and_scores(config, trade_date)

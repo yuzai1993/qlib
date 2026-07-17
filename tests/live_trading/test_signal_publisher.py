@@ -17,6 +17,7 @@ from live_trading.modules.signal_schema import (
     SignalOrder,
     compute_checksum,
 )
+from live_trading.scripts import run_publish_signals
 from live_trading.scripts.run_publish_signals import publish_recorded_plan
 
 BATCH_ID = "20260714_csi300_topk10_001"
@@ -163,3 +164,15 @@ def test_publish_retry_cannot_change_account_or_signal_date(tmp_path):
         recorder.record_orders(BATCH_ID, _orders())
     with pytest.raises(SchemaError, match="immutable durable plan"):
         recorder.record_batch(BATCH_ID, "2026-07-15", "LIVE", 2)
+
+
+def test_publish_guard_refuses_unreconciled_prior_live_batch(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    recorder.record_batch(
+        "20260716_csi300_topk10_001", "2026-07-16", "LIVE", 2,
+    )
+
+    with pytest.raises(SystemExit, match=r"20260716_csi300_topk10_001.*2 missing"):
+        run_publish_signals.ensure_prior_live_batches_terminal(
+            recorder, "2026-07-17",
+        )

@@ -1070,6 +1070,28 @@ class LiveRecorder:
             row = conn.execute(query, params).fetchone()
             return dict(row) if row else None
 
+    def get_unreconciled_active_live_batches_before(
+        self, trade_date: str,
+    ) -> list:
+        """Return earlier active LIVE batches lacking terminal fill events."""
+        statuses = sorted(TERMINAL_FILL_STATUS)
+        marks = ",".join("?" for _ in statuses)
+        with self._conn() as conn:
+            rows = conn.execute(
+                f"""SELECT b.*,
+                            COUNT(f.client_order_id) AS terminal_orders
+                     FROM batches b
+                     LEFT JOIN fills f
+                       ON f.batch_id=b.batch_id AND f.status IN ({marks})
+                     WHERE b.mode='LIVE' AND b.trade_date < ?
+                           AND b.superseded_by IS NULL
+                     GROUP BY b.batch_id
+                     HAVING terminal_orders < b.planned_orders
+                     ORDER BY b.trade_date, b.batch_id""",
+                [*statuses, trade_date],
+            ).fetchall()
+            return [dict(row) for row in rows]
+
     def get_fills_by_dates(self, trade_dates: list) -> list:
         """按 batches.trade_date 关联取回执（监控用）。"""
         if not trade_dates:

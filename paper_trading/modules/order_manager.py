@@ -37,15 +37,21 @@ class OrderManager:
             List of order dicts [{instrument, direction, target_shares}, ...]
         """
         scores = scores.dropna().sort_values(ascending=False)
+        if scores.empty:
+            logger.warning("No effective scores available; refusing to generate orders")
+            return []
+
         current_stock_list = list(current_positions)
         last = scores.reindex(current_stock_list).sort_values(ascending=False).index
-        gap = max(self.topk - len(last), 0)
+        position_delta = self.topk - len(last)
 
-        today = scores[~scores.index.isin(last)].head(self.n_drop + gap).index
+        today_count = max(self.n_drop + position_delta, 0)
+        today = scores[~scores.index.isin(last)].head(today_count).index
         combined = scores.reindex(last.union(today)).sort_values(ascending=False).index
         bottom = set(combined[-self.n_drop:]) if self.n_drop > 0 else set()
         sell_from_candidates = [instrument for instrument in last if instrument in bottom]
-        buy_list = list(today[:len(sell_from_candidates) + gap])
+        buy_count = max(len(sell_from_candidates) + position_delta, 0)
+        buy_list = list(today[:buy_count])
 
         orders = []
 

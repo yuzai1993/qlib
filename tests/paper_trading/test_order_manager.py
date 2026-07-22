@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from paper_trading.modules.order_manager import OrderManager
 
@@ -46,6 +47,10 @@ def test_full_portfolio_rotates_two_positions():
 
     assert set(_instruments(orders, "SELL")) == set(scores.index[10:12])
     assert _instruments(orders, "BUY") == list(scores.index[8:10])
+    assert [order["target_shares"] for order in orders if order["direction"] == "BUY"] == [
+        500,
+        500,
+    ]
 
 
 def test_underfilled_portfolio_rotates_and_fills_gap():
@@ -94,6 +99,55 @@ def test_buy_orders_keep_price_filter_and_board_lot_rounding():
 
     buys = [order for order in orders if order["direction"] == "BUY"]
     assert scores.index[1] not in _instruments(orders, "BUY")
-    assert buys
-    assert all(order["target_shares"] > 0 for order in buys)
-    assert all(order["target_shares"] % 100 == 0 for order in buys)
+    assert len(buys) == 9
+    assert [order["target_shares"] for order in buys] == [900] * 9
+
+
+@pytest.mark.parametrize(
+    "scores",
+    [
+        pd.Series({"SH600000": float("nan")}),
+        pd.Series(dtype=float),
+    ],
+    ids=["all_nan", "empty"],
+)
+def test_empty_effective_scores_with_positions_generate_no_orders(scores):
+    orders = _manager().generate_orders(
+        scores,
+        _positions(["SH600000", "SH600001"]),
+        10_000.0,
+        {"SH600000": 10.0, "SH600001": 10.0},
+        12_000.0,
+    )
+
+    assert orders == []
+
+
+def test_eleven_positions_sell_two_and_buy_one_to_reach_topk():
+    scores = _scores()
+    held = list(scores.index[:9]) + list(scores.index[10:12])
+
+    orders = _manager().generate_orders(
+        scores, _positions(held), 10_000.0, _prices(scores), 21_000.0,
+    )
+
+    sells = _instruments(orders, "SELL")
+    buys = _instruments(orders, "BUY")
+    assert set(sells) == set(scores.index[10:12])
+    assert buys == [scores.index[9]]
+    assert len(held) - len(sells) + len(buys) == 10
+
+
+def test_twelve_positions_sell_two_and_buy_none_to_reach_topk():
+    scores = _scores()
+    held = list(scores.index[:8]) + list(scores.index[10:14])
+
+    orders = _manager().generate_orders(
+        scores, _positions(held), 10_000.0, _prices(scores), 22_000.0,
+    )
+
+    sells = _instruments(orders, "SELL")
+    buys = _instruments(orders, "BUY")
+    assert set(sells) == set(scores.index[12:14])
+    assert buys == []
+    assert len(held) - len(sells) + len(buys) == 10

@@ -74,7 +74,45 @@ def test_predict_strict_rejects_stale_feature_date():
         gen.predict("2026-07-15", allow_stale=False)
 
 
-def test_predict_default_keeps_paper_stale_fallback():
+def test_predict_default_keeps_stale_fallback():
     gen = _generator_with_features()
     scores = gen.predict("2026-07-15")
     assert list(scores.index) == ["SH600000"]
+
+
+def test_handler_uses_explicit_training_fit_window(monkeypatch):
+    captured = {}
+
+    class DummyHandler:
+        def fetch(self, **kwargs):
+            return pd.DataFrame()
+
+    def fake_init(config):
+        captured.update(config)
+        return DummyHandler()
+
+    monkeypatch.setattr(
+        "live_trading.modules.signal_generator.init_instance_by_config",
+        fake_init,
+    )
+    gen = SignalGenerator(
+        config={
+            "data": {"instruments": "csi300"},
+            "handler": {
+                "class": "Alpha158",
+                "module": "qlib.contrib.data.handler",
+                "start_time": "2003-01-02",
+                "fit_start_time": "2006-01-02",
+                "fit_end_time": "2020-01-10",
+                "infer_processors": [{"class": "ProcessInf"}],
+            },
+        },
+        project_root=Path("."),
+    )
+
+    gen._ensure_handler("2026-07-22")
+
+    kwargs = captured["kwargs"]
+    assert kwargs["fit_start_time"] == "2006-01-02"
+    assert kwargs["fit_end_time"] == "2020-01-10"
+    assert kwargs["infer_processors"] == [{"class": "ProcessInf"}]

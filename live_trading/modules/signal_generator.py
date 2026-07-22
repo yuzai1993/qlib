@@ -70,10 +70,9 @@ class SignalGenerator:
                 "instruments": data_cfg["instruments"],
                 "start_time": handler_cfg["start_time"],
                 "end_time": end_date,
-                "fit_start_time": handler_cfg["start_time"],
+                "fit_start_time": handler_cfg["fit_start_time"],
                 "fit_end_time": handler_cfg["fit_end_time"],
-                # 必须与训练侧 run_backtest.py 完全一致
-                "infer_processors": [{"class": "ProcessInf"}],
+                "infer_processors": handler_cfg["infer_processors"],
             },
         })
         self._features = self._handler.fetch(

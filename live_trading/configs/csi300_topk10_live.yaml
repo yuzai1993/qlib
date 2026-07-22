@@ -1,8 +1,49 @@
 # 实盘信号桥接配置：CSI300 TopkDropout topk=10 / n_drop=2
-# 模型/策略/交易参数继承 paper_trading 配置（单一事实源），本文件只加执行层参数。
-# 当前基线模型：train_start_2006 Alpha158（见 base 内 model / handler）
+# 当前基线模型：train_start_2006 Alpha158。
+# 本文件是实盘完整配置；不得通过其他交易系统配置隐式继承关键参数。
 
-base_config: "paper_trading/configs/csi300_topk10.yaml"
+data:
+  qlib_dir: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi300"
+  benchmark: "SH000300"
+
+model:
+  experiment_name: "train_20260711_223223_train_start_2006_run01"
+  experiment_id: "265134483362085141"
+  recorder_id: "40a17c74aa7b4d97a4caa35015aaead5"
+  model_class: "qlib.contrib.model.gbdt.LGBModel"
+  mlruns_dir: "mlruns"
+
+handler:
+  class: "Alpha158"
+  module: "qlib.contrib.data.handler"
+  start_time: "2003-01-02"
+  fit_start_time: "2006-01-02"
+  fit_end_time: "2020-01-10"
+  infer_processors:
+    - class: "ProcessInf"
+
+stock_names:
+  source: "tushare"
+
+strategy:
+  class: "TopkDropoutStrategy"
+  topk: 10
+  n_drop: 2
+  risk_degree: 0.95
+  hold_thresh: 1
+  only_tradable: false
+  forbid_all_trade_at_limit: false
+
+exchange:
+  freq: "day"
+  deal_price: "close"
+  limit_threshold: 0.095
+  open_cost: 0.00021
+  close_cost: 0.00071
+  min_cost: 5.0
+  trade_unit: 100
 
 live:
   # 共享目录：Mac 侧挂载点；Windows 侧对应 D:\qmt_bridge

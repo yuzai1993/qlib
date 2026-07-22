@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""一次性回补：从 bridge archive/inbox 导入历史 signal 订单 + 同步股票名称。
+"""一次性回补：从 bridge archive/inbox 导入历史 signal 订单。
 
 用法：
-    python live_trading/scripts/backfill_orders_and_names.py --config csi300_topk10_live
+    python live_trading/scripts/backfill_orders.py --config csi300_topk10_live
 """
 
 import argparse
@@ -16,10 +16,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.signal_schema import SignalOrder
-from live_trading.modules.stock_names import (
-    resolve_paper_db,
-    sync_stock_names_from_paper,
-)
 
 
 def parse_signal_orders(jsonl_path: Path) -> list:
@@ -46,10 +42,6 @@ def main():
     )
     recorder = LiveRecorder(str(PROJECT_ROOT / config["storage"]["db_path"]))
     bridge = Path(config["live"]["bridge_root"])
-
-    n_names = sync_stock_names_from_paper(
-        recorder, resolve_paper_db(config, PROJECT_ROOT))
-    print(f"stock names synced: {n_names}")
 
     found = 0
     for folder in ("archive", "inbox", "processing"):

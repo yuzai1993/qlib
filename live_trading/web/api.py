@@ -13,10 +13,6 @@ from fastapi import APIRouter, Query
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
 from live_trading.modules.monitor_store import MonitorStore
-from live_trading.modules.stock_names import (
-    resolve_paper_db,
-    sync_stock_names_from_paper,
-)
 
 MONITOR_STAGES = ["postmarket", "report", "evening"]
 
@@ -26,14 +22,6 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
     recorder = LiveRecorder(db_path)
     store = MonitorStore(db_path)
     importer = FillImporter(config["live"]["bridge_root"], recorder)
-
-    # 启动时若 live 无名称表，从 paper 同步一次（失败不影响服务）
-    try:
-        if not recorder.get_stock_names():
-            sync_stock_names_from_paper(
-                recorder, resolve_paper_db(config, project_root))
-    except Exception:
-        pass
 
     def _names() -> dict:
         return recorder.get_stock_names()

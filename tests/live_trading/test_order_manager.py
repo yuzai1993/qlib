@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from paper_trading.modules.order_manager import OrderManager
+from live_trading.modules.order_manager import OrderManager
 
 
 def _manager():

@@ -11,7 +11,7 @@ from qlib.data import D
 from qlib.utils import init_instance_by_config
 from qlib.data.dataset.handler import DataHandlerLP
 
-logger = logging.getLogger("paper_trading.signal")
+logger = logging.getLogger("live_trading.signal")
 
 
 class SignalGenerator:

@@ -115,7 +115,7 @@ def get_signal_date_and_scores(config, trade_date: str):
         raise SystemExit(f"no trading day before {trade_date} in calendar")
     signal_date = prior[-1].strftime("%Y-%m-%d")
 
-    from paper_trading.modules.signal_generator import SignalGenerator
+    from live_trading.modules.signal_generator import SignalGenerator
     gen = SignalGenerator(config, PROJECT_ROOT)
     scores = gen.predict(signal_date, allow_stale=False)
     return signal_date, scores
@@ -180,8 +180,8 @@ def main():
     need_price = sorted(set(top_candidates) | set(current_positions.keys()))
     prev_close = get_prev_close(config, need_price, signal_date)
 
-    # 4. TopkDropout 意图（复用 paper_trading OrderManager）
-    from paper_trading.modules.order_manager import OrderManager
+    # 4. TopkDropout 意图
+    from live_trading.modules.order_manager import OrderManager
     total_value = cash + sum(
         p["shares"] * prev_close.get(inst, 0)
         for inst, p in current_positions.items()

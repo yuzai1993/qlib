@@ -9,7 +9,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from paper_trading.modules.signal_generator import SignalGenerator
+from live_trading.modules.signal_generator import SignalGenerator
 
 
 class DummyLGB:

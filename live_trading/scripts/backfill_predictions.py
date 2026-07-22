@@ -75,7 +75,7 @@ def main():
         region=config["data"]["region"],
     )
 
-    from paper_trading.modules.signal_generator import SignalGenerator
+    from live_trading.modules.signal_generator import SignalGenerator
     gen = SignalGenerator(config, PROJECT_ROOT)
     gen.prepare_for_dates(max(dates))
 

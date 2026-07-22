@@ -4,7 +4,7 @@ import logging
 
 import pandas as pd
 
-logger = logging.getLogger("paper_trading.order")
+logger = logging.getLogger("live_trading.order")
 
 
 class OrderManager:

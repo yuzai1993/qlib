@@ -1,6 +1,6 @@
 """把 TopkDropout 买卖意图转换为可执行的 SignalOrder 列表。
 
-输入沿用 paper_trading OrderManager 的输出格式：
+输入沿用 Live OrderManager 的输出格式：
 ``[{"instrument": "SH600000", "direction": "BUY", "target_shares": 500}, ...]``
 
 规则（设计文档 §4.2/§4.3 定稿）：

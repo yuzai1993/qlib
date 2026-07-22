@@ -13,11 +13,14 @@ dist/
 *.pkl
 *.hd5
 *.csv
+!scripts/data_collector/csindex_v2/manual_fixes.csv
 
 .env
+**/jq_credentials.env
 .vim
 .nvimrc
 .vscode
+.DS_Store
 
 qlib/VERSION.txt
 qlib/data/_libs/expanding.cpp
@@ -39,6 +42,7 @@ test-output.xml
 
 # special software
 mlruns/
+ideas/
 
 tags
 
@@ -50,4 +54,11 @@ tags
 
 ./pretrain
 .idea/
+.cursor/
 .aider*
+
+logs/
+
+backtest/result/
+paper_trading/data/
+live_trading/data/

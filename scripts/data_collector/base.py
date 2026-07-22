@@ -3,6 +3,7 @@
 
 
 import abc
+import sys
 import time
 import datetime
 import importlib
@@ -15,6 +16,13 @@ from tqdm import tqdm
 from loguru import logger
 from joblib import Parallel, delayed
 from qlib.utils import code_to_fname
+
+
+def _tqdm(iterable=None, **kwargs):
+    """非 TTY（如 cron 重定向日志）时关闭进度条，避免 \\r 刷屏。"""
+    kwargs.setdefault("disable", not sys.stderr.isatty())
+    kwargs.setdefault("mininterval", 30.0)
+    return tqdm(iterable, **kwargs)
 
 
 class BaseCollector(abc.ABC):
@@ -169,7 +177,12 @@ class BaseCollector(abc.ABC):
         df["symbol"] = symbol
         if instrument_path.exists():
             _old_df = pd.read_csv(instrument_path)
+            _old_df["date"] = pd.to_datetime(_old_df["date"], format="mixed", utc=True)
+            df["date"] = pd.to_datetime(df["date"], format="mixed", utc=True)
             df = pd.concat([_old_df, df], sort=False)
+        df.drop_duplicates(subset=["date"], keep="last", inplace=True)
+        df.sort_values("date", inplace=True)
+        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         df.to_csv(instrument_path, index=False)
 
     def cache_small_data(self, symbol, df):
@@ -186,7 +199,7 @@ class BaseCollector(abc.ABC):
     def _collector(self, instrument_list):
         error_symbol = []
         res = Parallel(n_jobs=self.max_workers)(
-            delayed(self._simple_collector)(_inst) for _inst in tqdm(instrument_list)
+            delayed(self._simple_collector)(_inst) for _inst in _tqdm(instrument_list)
         )
         for _symbol, _result in zip(instrument_list, res):
             if _result != self.NORMAL_FLAG:
@@ -314,7 +327,7 @@ class Normalize:
 
         with ProcessPoolExecutor(max_workers=self._max_workers) as worker:
             file_list = list(self._source_dir.glob("*.csv"))
-            with tqdm(total=len(file_list)) as p_bar:
+            with _tqdm(total=len(file_list)) as p_bar:
                 for _ in worker.map(self._executor, file_list):
                     p_bar.update()
 

@@ -13,6 +13,14 @@ def create_app(config: dict, project_root: Path) -> FastAPI:
 
     app.include_router(create_router(config, project_root), prefix="/api")
 
+    @app.middleware("http")
+    async def no_stale_static(request, call_next):
+        """静态资源强制走 etag 协商缓存，避免改版后浏览器用旧 JS/CSS。"""
+        response = await call_next(request)
+        if not request.url.path.startswith("/api"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
     static_dir = Path(__file__).parent / "static"
     if static_dir.exists():
         app.mount("/", StaticFiles(directory=str(static_dir), html=True),

@@ -193,6 +193,14 @@ class LiveRecorder:
                 CREATE INDEX IF NOT EXISTS idx_corp_list_date
                     ON corporate_actions(div_listdate, bonus_settled);
 
+                CREATE TABLE IF NOT EXISTS predictions (
+                    date TEXT NOT NULL,
+                    instrument TEXT NOT NULL,
+                    score REAL NOT NULL,
+                    rank INTEGER NOT NULL,
+                    PRIMARY KEY (date, instrument)
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
                 CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id);
             """)
@@ -541,6 +549,153 @@ class LiveRecorder:
                 "SELECT stock_code, name FROM stock_names"
             ).fetchall()
             return {r["stock_code"]: r["name"] for r in rows}
+
+    # ---------- predictions ----------
+
+    def save_predictions(self, date_str: str, scores) -> int:
+        """保存某个 signal_date 的全市场预测分数（覆盖式，幂等）。
+
+        Args:
+            scores: {instrument(qlib): score} 映射（dict / pd.Series 均可）。
+                    rank 按分数降序计算（1 = 最高分）。
+
+        Returns:
+            写入条数。
+        """
+        items = [
+            (str(inst), float(score))
+            for inst, score in scores.items()
+            if score is not None and math.isfinite(float(score))
+        ]
+        items.sort(key=lambda kv: kv[1], reverse=True)
+        rows = [
+            (date_str, inst, score, rank)
+            for rank, (inst, score) in enumerate(items, start=1)
+        ]
+        with self._conn() as conn:
+            conn.execute("DELETE FROM predictions WHERE date=?", (date_str,))
+            conn.executemany(
+                "INSERT INTO predictions (date, instrument, score, rank) "
+                "VALUES (?,?,?,?)",
+                rows,
+            )
+        return len(rows)
+
+    def get_prediction_dates(self) -> list:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT date FROM predictions ORDER BY date DESC"
+            ).fetchall()
+            return [r["date"] for r in rows]
+
+    def get_predictions_by_date(self, date_str: str) -> dict:
+        """{instrument(qlib): {"score": float, "rank": int}}"""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT instrument, score, rank FROM predictions WHERE date=?",
+                (date_str,),
+            ).fetchall()
+            return {
+                r["instrument"]: {"score": r["score"], "rank": r["rank"]}
+                for r in rows
+            }
+
+    def get_predictions_search(self, date_str: str = None,
+                               instrument: str = None, name: str = None,
+                               sort_by: str = "rank", sort_order: str = "asc",
+                               limit: int = 50, offset: int = 0):
+        """按日期/代码/名称检索预测，返回 (records, total)。"""
+        where = []
+        params = []
+        if date_str:
+            where.append("p.date=?")
+            params.append(date_str)
+        else:
+            where.append("p.date=(SELECT MAX(date) FROM predictions)")
+        if instrument:
+            where.append("p.instrument LIKE ?")
+            params.append(f"%{instrument.upper()}%")
+        if name:
+            where.append("s.name LIKE ?")
+            params.append(f"%{name}%")
+        where_clause = " AND ".join(where)
+
+        allowed_sort = {
+            "rank": "p.rank", "score": "p.score", "instrument": "p.instrument",
+        }
+        order_col = allowed_sort.get(sort_by, "p.rank")
+        order_dir = "DESC" if sort_order.lower() == "desc" else "ASC"
+
+        with self._conn() as conn:
+            total = conn.execute(
+                f"""SELECT COUNT(*) AS cnt FROM predictions p
+                    LEFT JOIN stock_names s ON p.instrument = s.instrument
+                    WHERE {where_clause}""",
+                params,
+            ).fetchone()["cnt"]
+            rows = conn.execute(
+                f"""SELECT p.date, p.instrument, p.score, p.rank,
+                           s.stock_code, s.name
+                    FROM predictions p
+                    LEFT JOIN stock_names s ON p.instrument = s.instrument
+                    WHERE {where_clause}
+                    ORDER BY {order_col} {order_dir}
+                    LIMIT ? OFFSET ?""",
+                params + [limit, offset],
+            ).fetchall()
+            return [dict(r) for r in rows], total
+
+    def get_prediction_daily_mean(self, instruments: list = None) -> list:
+        """每日预测分数均值，可选按标的过滤。"""
+        if instruments:
+            marks = ",".join("?" for _ in instruments)
+            sql = (
+                "SELECT date, AVG(score) AS mean_score, COUNT(*) AS count "
+                f"FROM predictions WHERE instrument IN ({marks}) "
+                "GROUP BY date ORDER BY date"
+            )
+            params = list(instruments)
+        else:
+            sql = (
+                "SELECT date, AVG(score) AS mean_score, COUNT(*) AS count "
+                "FROM predictions GROUP BY date ORDER BY date"
+            )
+            params = []
+        with self._conn() as conn:
+            return [dict(r) for r in conn.execute(sql, params).fetchall()]
+
+    def get_prediction_extremes(self, date_str: str, n: int = 3) -> dict:
+        """某日 top N / bottom N 预测标的（含名称）。"""
+        with self._conn() as conn:
+            top = conn.execute(
+                """SELECT p.instrument, p.score, p.rank, s.stock_code, s.name
+                   FROM predictions p
+                   LEFT JOIN stock_names s ON p.instrument = s.instrument
+                   WHERE p.date=? ORDER BY p.rank ASC LIMIT ?""",
+                (date_str, n),
+            ).fetchall()
+            bottom = conn.execute(
+                """SELECT p.instrument, p.score, p.rank, s.stock_code, s.name
+                   FROM predictions p
+                   LEFT JOIN stock_names s ON p.instrument = s.instrument
+                   WHERE p.date=? ORDER BY p.rank DESC LIMIT ?""",
+                (date_str, n),
+            ).fetchall()
+            return {
+                "top": [dict(r) for r in top],
+                "bottom": [dict(r) for r in reversed(bottom)],
+            }
+
+    def get_prediction_instrument_list(self) -> list:
+        """有预测数据的全部标的（供前端联想），含 QMT 代码与名称。"""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT DISTINCT p.instrument, s.stock_code, s.name
+                   FROM predictions p
+                   LEFT JOIN stock_names s ON p.instrument = s.instrument
+                   ORDER BY p.instrument""",
+            ).fetchall()
+            return [dict(r) for r in rows]
 
     # ---------- fills ----------
 

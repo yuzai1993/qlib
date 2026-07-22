@@ -156,13 +156,17 @@ SIMULATE 批次回执应为每单一条 `SKIPPED simulated`，且导入后持仓
 30 16 * * 1-5 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 # live: 快照 + 微信日报
 30 20 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh report
-# live: 发布下一交易日 LIVE 信号
+# live: 发布下一交易日 LIVE 信号（脚本内 caffeinate，防中途休眠）
 30 21 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_publish_cron.sh
-# live: 下一交易日信号发布检查
-0 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh evening
+# live: 漏发兜底（Idle Sleep 导致 21:30 未触发时补发；已有批次则 skip）
+5 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_publish_catchup_cron.sh
+# live: 下一交易日信号发布检查（catchup 之后）
+15 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh evening
 ```
 
 包装脚本会读取 `~/.qlib_live_env`，日志写到 `live_trading/logs/`。发布脚本通过 Tushare 交易日历解析下一开市日，并要求 Mac 侧 `LIVE_TRADING_CONFIRM=YES`；QMT 侧仍必须有当日 `LIVE_OK_<trade_date>` 才会真报单。
+
+> **休眠注意**：macOS 在 Idle Sleep 时会**跳过**到期 cron（不会醒来补跑）。接电源并关闭「电池/节能 → 闲置时自动进入睡眠」，或在系统设置里保持夜间醒着，否则仍可能整段漏发（catchup 也救不了「整晚都在睡」的情况）。
 
 ---
 
@@ -355,7 +359,14 @@ export SERVERCHAN_SENDKEY="SCT..."
 # 浏览器打开 http://127.0.0.1:8081
 ```
 
-六个页面：概览（净值曲线 + 今日流程状态灯）、持仓（当前 + 按日回看）、批次与成交、资金流水（出入金/分红/税费）、流程健康矩阵、告警历史。只读，随开随关，不影响交易链路。
+七个页面：概览（净值曲线 + 今日流程状态灯）、持仓（当前 + 按日回看，含现金占比与最新预测分）、批次与成交（执行计划附 signal_date 预测分）、预测信号（每日均值曲线、top3/bottom3、按日期 + 标的查询，代码/名称联想）、资金流水（出入金/分红/税费）、流程健康矩阵、告警历史。只读，随开随关，不影响交易链路。
+
+预测分数由 `run_publish_signals.py` 发布时自动写入 `predictions` 表（dry-run 不落库）。补历史信号日的分数：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python live_trading/scripts/backfill_predictions.py --config csi300_topk10_live
+# 默认回填 batches 表中缺失的全部 signal_date；--dates 指定日期，--force 覆盖重算
+```
 
 ### 7.4 注意事项
 

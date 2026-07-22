@@ -65,7 +65,7 @@ async function renderDashboard() {
     html += `<div class="card-grid">
         <div class="card"><div class="card-label">总资产</div>
             <div class="card-value">${fmtMoney(s.total_value)}</div>
-            <div class="card-sub">现金 ${fmtMoney(s.cash)} · 应收 ${fmtMoney(s.receivables ?? 0)}<br>
+            <div class="card-sub">现金 ${fmtMoney(s.cash)}${s.total_value ? `（${fmtPct(s.cash / s.total_value)}）` : ''} · 应收 ${fmtMoney(s.receivables ?? 0)}<br>
             待上市 ${fmtMoney(s.pending_market_value ?? 0)} · 红利税准备 ${fmtMoney(s.tax_provision ?? 0)}</div></div>
         <div class="card"><div class="card-label">日收益</div>
             <div class="card-value ${pctClass(s.daily_return)}">${fmtPct(s.daily_return)}</div></div>
@@ -125,7 +125,7 @@ async function renderPositions() {
     const data = await api('/positions');
     let html = '<h2>持仓</h2>';
     html += `<div>回看日期：<select id="pos-date"><option value="">当前（最新快照）</option></select></div>`;
-    html += '<div id="pos-table">' + positionsTable(data.positions, data.cash) + '</div>';
+    html += '<div id="pos-table">' + positionsTable(data) + '</div>';
     content.innerHTML = html;
 
     const hist = await api('/positions/history?date=' +
@@ -140,11 +140,11 @@ async function renderPositions() {
         const box = document.getElementById('pos-table');
         if (!sel.value) {
             const cur = await api('/positions');
-            box.innerHTML = positionsTable(cur.positions, cur.cash);
+            box.innerHTML = positionsTable(cur);
             return;
         }
         const h = await api('/positions/history?date=' + sel.value);
-        box.innerHTML = positionsTable(h.positions, null);
+        box.innerHTML = positionsTable(h);
     };
 }
 
@@ -153,11 +153,23 @@ function codeCell(code, name) {
     return `${esc(code)} <span class="card-sub">${esc(name)}</span>`;
 }
 
-function positionsTable(rows, cash) {
-    if (!rows.length) return '<div class="empty">无持仓</div>';
+function scoreCell(score, rank) {
+    if (score == null) return '—';
+    const rankStr = rank != null ? ` <span class="card-sub">#${rank}</span>` : '';
+    return `${Number(score).toFixed(4)}${rankStr}`;
+}
+
+function positionsTable(data) {
+    const rows = data.positions || [];
+    const cash = data.cash;
+    const cashWeight = data.cash_weight;
+    const predDate = data.prediction_date;
+    if (!rows.length && cash == null) return '<div class="empty">无持仓</div>';
     let html = `<table><thead><tr>
         <th>代码 / 名称</th><th>数量</th><th>成本</th><th>现价</th>
-        <th>市值</th><th>盈亏</th><th>权重</th></tr></thead><tbody>`;
+        <th>市值</th><th>盈亏</th><th>权重</th>
+        <th>预测分${predDate ? ` <span class="card-sub">${esc(predDate)}</span>` : ''}</th>
+        </tr></thead><tbody>`;
     for (const p of rows) {
         html += `<tr><td style="text-align:left">${codeCell(p.stock_code, p.name)}</td>
             <td>${fmtNum(p.shares)}</td>
@@ -165,10 +177,17 @@ function positionsTable(rows, cash) {
             <td>${p.close_price?.toFixed(2) ?? '—'}</td>
             <td>${fmtMoney(p.market_value)}</td>
             <td class="${pctClass(p.profit)}">${fmtMoney(p.profit)}</td>
-            <td>${fmtPct(p.weight)}</td></tr>`;
+            <td>${fmtPct(p.weight)}</td>
+            <td>${scoreCell(p.score, p.score_rank)}</td></tr>`;
+    }
+    if (cash != null) {
+        html += `<tr class="cash-row"><td style="text-align:left">现金</td>
+            <td>—</td><td>—</td><td>—</td>
+            <td>${fmtMoney(cash)}</td><td>—</td>
+            <td>${cashWeight != null ? fmtPct(cashWeight) : '—'}</td>
+            <td>—</td></tr>`;
     }
     html += '</tbody></table>';
-    if (cash != null) html += `<h3>现金 ${fmtMoney(cash)}</h3>`;
     return html;
 }
 
@@ -217,13 +236,15 @@ async function toggleBatchDetail(batchId) {
     const fills = detail.fills || [];
     const fillById = Object.fromEntries(fills.map(f => [f.client_order_id, f]));
 
-    let html = '<h3 style="margin:8px 0">执行计划</h3>';
+    const signalDate = detail.signal_date;
+    let html = `<h3 style="margin:8px 0">执行计划${signalDate
+        ? ` <span class="card-sub">信号日 ${esc(signalDate)}</span>` : ''}</h3>`;
     if (!orders.length) {
         html += '<div class="empty" style="padding:16px">无执行计划（历史批次未入库；新发布的批次会自动保存）</div>';
     } else {
         html += `<table><thead><tr>
             <th>订单号</th><th>代码 / 名称</th><th>方向</th><th>数量</th>
-            <th>限价</th><th>优先级</th><th>回执</th></tr></thead><tbody>`;
+            <th>限价</th><th>优先级</th><th>预测分</th><th>回执</th></tr></thead><tbody>`;
         for (const o of orders) {
             const f = fillById[o.client_order_id];
             let fillCell = '<span class="card-sub">等待回执</span>';
@@ -242,6 +263,7 @@ async function toggleBatchDetail(batchId) {
                 <td>${fmtNum(o.quantity)}</td>
                 <td>${o.limit_price?.toFixed(2) ?? '—'}</td>
                 <td>${o.priority ?? '—'}</td>
+                <td>${scoreCell(o.score, o.score_rank)}</td>
                 <td style="text-align:left">${fillCell}</td></tr>`;
         }
         html += '</tbody></table>';
@@ -270,6 +292,292 @@ async function toggleBatchDetail(batchId) {
     row.children[0].innerHTML = html;
     row.style.display = '';
 }
+
+/* ---------- 预测信号 ---------- */
+
+let predInstruments = [];
+let predPage = 0;
+let predSortBy = 'rank';
+let predSortOrder = 'asc';
+const PRED_PAGE_SIZE = 50;
+
+function predDisplayCode(s) {
+    return s.stock_code || s.instrument || '';
+}
+
+async function renderPredictions() {
+    const [dates, instruments] = await Promise.all([
+        api('/predictions/dates'),
+        api('/predictions/instruments'),
+    ]);
+    predInstruments = instruments || [];
+    predPage = 0;
+    predSortBy = 'rank';
+    predSortOrder = 'asc';
+
+    let html = '<h2>预测信号</h2>';
+    if (!dates.length) {
+        content.innerHTML = html + `<div class="empty">暂无预测数据。
+            新发布的批次会自动落库；历史数据可运行
+            backfill_predictions.py 回填</div>`;
+        return;
+    }
+
+    const dateOptions = dates.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+    html += `<div class="filters">
+        <label>信号日期</label>
+        <select id="pred-date">${dateOptions}</select>
+        <label>标的（代码或名称）</label>
+        <div class="autocomplete-wrap">
+            <input type="text" id="pred-query" placeholder="如 600000.SH / 浦发银行" autocomplete="off">
+            <div class="autocomplete-list" id="pred-query-ac"></div>
+        </div>
+        <button id="pred-search-btn">查询</button>
+        <button id="pred-reset-btn" class="btn-muted">重置</button>
+    </div>`;
+
+    html += '<div id="pred-summary"></div>';
+    html += `<h3>每日预测信号均值
+        <span class="card-sub" id="pred-mean-sub">全市场</span></h3>
+        <div class="chart" id="pred-mean-chart" style="height:300px"></div>`;
+    html += '<h3>预测明细</h3>';
+    html += '<div id="pred-info" class="card-sub" style="margin-bottom:8px"></div>';
+    html += '<div id="pred-table"><div class="loading">加载中...</div></div>';
+    html += '<div id="pred-pagination" style="margin-top:10px"></div>';
+    content.innerHTML = html;
+
+    setupPredAutocomplete();
+    document.getElementById('pred-search-btn').onclick = () => {
+        predSearch(0);
+        loadPredMeanChart();
+    };
+    document.getElementById('pred-reset-btn').onclick = () => {
+        document.getElementById('pred-query').value = '';
+        predSearch(0);
+        loadPredMeanChart();
+    };
+    document.getElementById('pred-date').onchange = () => {
+        loadPredSummary();
+        predSearch(0);
+    };
+    document.getElementById('pred-query').addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') {
+            predSearch(0);
+            loadPredMeanChart();
+        }
+    });
+
+    await Promise.all([loadPredSummary(), loadPredMeanChart(), predSearch(0)]);
+}
+
+function setupPredAutocomplete() {
+    const input = document.getElementById('pred-query');
+    const list = document.getElementById('pred-query-ac');
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const q = input.value.trim().toLowerCase();
+            if (!q) { list.innerHTML = ''; list.style.display = 'none'; return; }
+            const matches = predInstruments.filter(s =>
+                (s.instrument && s.instrument.toLowerCase().includes(q)) ||
+                (s.stock_code && s.stock_code.toLowerCase().includes(q)) ||
+                (s.name && s.name.toLowerCase().includes(q))
+            ).slice(0, 10);
+            if (!matches.length) { list.innerHTML = ''; list.style.display = 'none'; return; }
+            list.innerHTML = matches.map(s =>
+                `<div class="ac-item" data-code="${esc(predDisplayCode(s))}">
+                    ${esc(predDisplayCode(s))} <span class="card-sub">${esc(s.name || '')}</span></div>`
+            ).join('');
+            list.style.display = 'block';
+            list.querySelectorAll('.ac-item').forEach(item => {
+                item.addEventListener('mousedown', ev => {
+                    ev.preventDefault();
+                    input.value = item.dataset.code;
+                    list.innerHTML = '';
+                    list.style.display = 'none';
+                    predSearch(0);
+                    loadPredMeanChart();
+                });
+            });
+        }, 150);
+    });
+    input.addEventListener('blur', () => {
+        setTimeout(() => { list.innerHTML = ''; list.style.display = 'none'; }, 200);
+    });
+}
+
+function predQueryParams() {
+    const q = (document.getElementById('pred-query')?.value || '').trim();
+    if (!q) return {};
+    // 含中日韩字符按名称查，否则按代码查
+    return /[\u4e00-\u9fff]/.test(q) ? { name: q } : { instrument: q };
+}
+
+async function loadPredSummary() {
+    const date = document.getElementById('pred-date').value;
+    const box = document.getElementById('pred-summary');
+    const s = await api(`/predictions/summary?date=${encodeURIComponent(date)}&n=3`);
+    const item = (p, cls) => `<tr>
+        <td>#${p.rank}</td>
+        <td style="text-align:left">${codeCell(predDisplayCode(p), p.name)}</td>
+        <td class="${cls}">${Number(p.score).toFixed(4)}</td></tr>`;
+    box.innerHTML = `<div class="card-grid">
+        <div class="card"><div class="card-label">信号日 ${esc(s.date || '—')}</div>
+            <div class="card-value">${s.mean_score != null ? Number(s.mean_score).toFixed(4) : '—'}</div>
+            <div class="card-sub">全市场均值 · ${fmtNum(s.count)} 只</div></div>
+        <div class="card"><div class="card-label">Top 3</div>
+            <table class="mini-table"><tbody>${(s.top || []).map(p => item(p, 'pos')).join('')}</tbody></table></div>
+        <div class="card"><div class="card-label">Bottom 3</div>
+            <table class="mini-table"><tbody>${(s.bottom || []).map(p => item(p, 'neg')).join('')}</tbody></table></div>
+    </div>`;
+}
+
+function resolvePredInstrument(q) {
+    /* 输入（QMT/qlib 代码或中文名）→ 唯一标的；解析失败返回 null。 */
+    if (!q) return null;
+    const lower = q.toLowerCase();
+    return predInstruments.find(s =>
+            (s.stock_code && s.stock_code.toLowerCase() === lower) ||
+            (s.instrument && s.instrument.toLowerCase() === lower) ||
+            s.name === q)
+        || predInstruments.find(s =>
+            (s.stock_code && s.stock_code.toLowerCase().includes(lower)) ||
+            (s.instrument && s.instrument.toLowerCase().includes(lower)) ||
+            (s.name && s.name.includes(q)))
+        || null;
+}
+
+async function loadPredMeanChart() {
+    const q = (document.getElementById('pred-query')?.value || '').trim();
+    const hit = resolvePredInstrument(q);
+
+    const meanReq = api('/predictions/daily-mean');
+    const stockReq = hit
+        ? api(`/predictions/daily-mean?instruments=${encodeURIComponent(hit.instrument)}`)
+        : Promise.resolve(null);
+    const [meanData, stockData] = await Promise.all([meanReq, stockReq]);
+
+    const stockLabel = hit
+        ? `${predDisplayCode(hit)}${hit.name ? ' ' + hit.name : ''}` : '';
+    const subEl = document.getElementById('pred-mean-sub');
+    if (subEl) subEl.textContent = hit ? `全市场均值 vs ${stockLabel}` : '全市场';
+
+    const el = document.getElementById('pred-mean-chart');
+    if (!el) return;
+    const prev = echarts.getInstanceByDom(el);
+    if (prev) prev.dispose();
+    if (!meanData.length) {
+        el.innerHTML = '<div class="loading">暂无数据</div>';
+        return;
+    }
+    el.innerHTML = '';
+
+    const dates = meanData.map(d => d.date);
+    const series = [{
+        name: '全市场均值', type: 'line', smooth: true,
+        showSymbol: dates.length < 30,
+        data: meanData.map(d => d.mean_score),
+        lineStyle: { width: 2 },
+    }];
+    if (hit && stockData) {
+        const byDate = Object.fromEntries(
+            stockData.map(d => [d.date, d.mean_score]));
+        series.push({
+            name: stockLabel, type: 'line', smooth: true,
+            showSymbol: dates.length < 30, connectNulls: true,
+            data: dates.map(d => byDate[d] ?? null),
+            lineStyle: { width: 2 },
+        });
+    }
+
+    const chart = echarts.init(el, 'dark');
+    chart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: {
+            trigger: 'axis',
+            valueFormatter: v => v == null ? '—' : Number(v).toFixed(6),
+        },
+        legend: series.length > 1
+            ? { data: series.map(s => s.name), top: 0 } : undefined,
+        grid: { left: 70, right: 20, top: series.length > 1 ? 36 : 20, bottom: 30 },
+        xAxis: { type: 'category', data: dates },
+        yAxis: { type: 'value', scale: true,
+                 axisLabel: { formatter: v => Number(v).toFixed(4) } },
+        series,
+    });
+    window.addEventListener('resize', () => chart.resize(), { once: true });
+}
+
+window.predSearch = async function (page) {
+    predPage = page || 0;
+    const date = document.getElementById('pred-date').value;
+    const params = new URLSearchParams({
+        limit: PRED_PAGE_SIZE,
+        offset: predPage * PRED_PAGE_SIZE,
+        sort_by: predSortBy,
+        sort_order: predSortOrder,
+    });
+    if (date) params.set('date', date);
+    const extra = predQueryParams();
+    if (extra.instrument) params.set('instrument', extra.instrument);
+    if (extra.name) params.set('name', extra.name);
+
+    const result = await api('/predictions?' + params.toString());
+    const rows = result.data || [];
+    const total = result.total || 0;
+    const offset = predPage * PRED_PAGE_SIZE;
+
+    document.getElementById('pred-info').textContent = total
+        ? `共 ${total} 条，显示 ${offset + 1} - ${Math.min(offset + PRED_PAGE_SIZE, total)}`
+        : '';
+
+    const sortIcon = col => predSortBy !== col ? ''
+        : (predSortOrder === 'asc' ? ' ▲' : ' ▼');
+
+    let html;
+    if (!rows.length) {
+        html = '<div class="empty">无匹配的预测记录</div>';
+    } else {
+        html = `<table><thead><tr>
+            <th class="sortable" data-col="rank">排名${sortIcon('rank')}</th>
+            <th class="sortable" data-col="instrument">代码 / 名称${sortIcon('instrument')}</th>
+            <th>信号日期</th>
+            <th class="sortable" data-col="score">预测分数${sortIcon('score')}</th>
+            </tr></thead><tbody>`;
+        for (const p of rows) {
+            html += `<tr><td>#${p.rank}</td>
+                <td style="text-align:left">${codeCell(predDisplayCode(p), p.name)}</td>
+                <td>${esc(p.date)}</td>
+                <td>${Number(p.score).toFixed(6)}</td></tr>`;
+        }
+        html += '</tbody></table>';
+    }
+    document.getElementById('pred-table').innerHTML = html;
+
+    document.querySelectorAll('#pred-table .sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.onclick = () => {
+            const col = th.dataset.col;
+            if (predSortBy === col) {
+                predSortOrder = predSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                predSortBy = col;
+                predSortOrder = col === 'score' ? 'desc' : 'asc';
+            }
+            predSearch(0);
+        };
+    });
+
+    const totalPages = Math.ceil(total / PRED_PAGE_SIZE);
+    let pag = '';
+    if (totalPages > 1) {
+        if (predPage > 0) pag += `<button onclick="predSearch(${predPage - 1})">上一页</button> `;
+        pag += `<span class="card-sub">第 ${predPage + 1} / ${totalPages} 页</span>`;
+        if (predPage < totalPages - 1) pag += ` <button onclick="predSearch(${predPage + 1})">下一页</button>`;
+    }
+    document.getElementById('pred-pagination').innerHTML = pag;
+};
 
 /* ---------- 资金流水 ---------- */
 
@@ -357,6 +665,7 @@ const PAGES = {
     dashboard: renderDashboard,
     positions: renderPositions,
     batches: renderBatches,
+    predictions: renderPredictions,
     cashflows: renderCashflows,
     pipeline: renderPipeline,
     alerts: renderAlerts,

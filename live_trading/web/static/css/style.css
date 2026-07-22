@@ -197,3 +197,74 @@ select, input[type="date"] {
 
 .fills-row td { background: var(--bg); padding: 0 12px 12px; }
 .fills-row table { font-size: 12px; }
+
+/* 预测信号页 */
+.filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.filters label { font-size: 13px; color: var(--text-muted); }
+.filters select { margin-bottom: 0; }
+.filters input[type="text"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    min-width: 220px;
+}
+.filters button {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+.filters button:hover { background: var(--accent-light); }
+.filters button.btn-muted { background: var(--surface-hover); color: var(--text-muted); }
+.filters button.btn-muted:hover { color: var(--text); }
+
+.autocomplete-wrap { position: relative; }
+.autocomplete-list {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    z-index: 50;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.ac-item {
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ac-item:hover { background: var(--surface-hover); }
+
+.mini-table { border: none; background: none; font-size: 12px; }
+.mini-table td { padding: 3px 6px; border-bottom: none; }
+
+#pred-pagination button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+#pred-pagination button:hover { background: var(--surface-hover); }
+
+tr.cash-row td { background: var(--surface-hover); font-weight: 600; }

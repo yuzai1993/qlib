@@ -159,6 +159,11 @@ def main():
     signal_date, scores = get_signal_date_and_scores(config, trade_date)
     logger.info("signal_date=%s, scored %d instruments", signal_date, len(scores))
 
+    # 持久化全市场分数供监控查询（dry-run 不落库）
+    if not args.dry_run:
+        saved = recorder.save_predictions(signal_date, scores)
+        logger.info("saved %d prediction scores for %s", saved, signal_date)
+
     # 2. 当前 live 持仓（QMT code → qlib instrument）
     qmt_positions = recorder.get_positions()
     current_positions = {

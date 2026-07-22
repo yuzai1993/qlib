@@ -1,6 +1,6 @@
 # Qlib → QMT 实盘信号桥：通俗说明与运维手册
 
-> 设计文档：[`docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md`](../docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md)  
+> 设计文档：[`docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md`](../docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md)
 > QMT 侧部署：[`qmt_strategy/README_QMT.md`](qmt_strategy/README_QMT.md)
 
 ---
@@ -17,7 +17,7 @@
 
 ```
 【Mac，每晚】                 【共享文件夹】              【Windows + QMT，次日盘中】
- qlib 数据更新                                             
+ qlib 数据更新
  模型打分            ──►      inbox/   信号文件    ──►      内置策略轮询读取
  生成买卖清单                                               校验 → passorder 下单
                                                             盘中盯委托状态

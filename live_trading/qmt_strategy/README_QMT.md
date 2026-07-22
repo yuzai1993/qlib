@@ -1,6 +1,6 @@
 # QMT 内置桥接策略部署说明（Windows）
 
-对应设计：`docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md`  
+对应设计：`docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md`
 Mac 侧部署与日常运维：`live_trading/README.md` 第二节（建议先完成本文件的 Windows 侧，再做 Mac 侧）
 
 ## 1. 目录准备

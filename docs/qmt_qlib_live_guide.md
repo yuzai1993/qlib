@@ -1,6 +1,6 @@
 # QMT × Qlib 实盘对接指南（通俗版）
 
-> 面向本仓库后续「qlib 研究/回测 → QMT 实盘」的能力地图。  
+> 面向本仓库后续「qlib 研究/回测 → QMT 实盘」的能力地图。
 > 资料来源：[QMT 新人教程](https://dict.thinktrader.net/freshman/rookie.html)、[迅投知识库](https://dict.thinktrader.net/)、[XtQuant 快速开始](https://dict.thinktrader.net/nativeApi/start_now.html)。
 
 ---
@@ -45,7 +45,7 @@
 └─────────────────────────────────────────────────────────┘
 ```
 
-**结论：配合 qlib 实盘，用路线 B（XtQuant）。**  
+**结论：配合 qlib 实盘，用路线 B（XtQuant）。**
 路线 A 的 `passorder` 了解即可，不必作为主架构。
 
 ---
@@ -118,7 +118,7 @@
 | 财务 | `download_financial_data` / `get_financial_data` | 一般研究仍走 qlib；实盘少用 |
 | 指数权重 | `download_index_weight` / `get_index_weight` | 组合归因可选 |
 
-常用周期：`tick`、`1m`、`5m`、`1d` 等。  
+常用周期：`tick`、`1m`、`5m`、`1d` 等。
 复权：`dividend_type`（`none` / `front` / `back`…），**实盘下单用未复权价**。
 
 最小可用示例：
@@ -327,15 +327,15 @@ def qmt_to_qlib(code: str) -> str:
 
 ## 9. 常见坑（按出现频率）
 
-1. **没开 MiniQMT 就 import/connect** → 连接失败。  
-2. **path 指错**：券商要用 `userdata_mini`，投研用 `userdata`。  
-3. **无 API 权限**：没有 `up_queue_xtquant`。  
-4. **C 盘权限**：设置不生效、数据写不进。  
-5. **同一 session 重连间隔 < 3 秒**。  
-6. **代码格式混用**：Qlib 的 `SH600000` 直接下单必废。  
-7. **先 get 后发现没数据**：忘记 `download_history_data`。  
-8. **订阅超限**：行情不更新或 OHLC 全一样。  
-9. **pandas 报错**：客户端 Python 库损坏，删 `bin.x64/Lib` 重下。  
+1. **没开 MiniQMT 就 import/connect** → 连接失败。
+2. **path 指错**：券商要用 `userdata_mini`，投研用 `userdata`。
+3. **无 API 权限**：没有 `up_queue_xtquant`。
+4. **C 盘权限**：设置不生效、数据写不进。
+5. **同一 session 重连间隔 < 3 秒**。
+6. **代码格式混用**：Qlib 的 `SH600000` 直接下单必废。
+7. **先 get 后发现没数据**：忘记 `download_history_data`。
+8. **订阅超限**：行情不更新或 OHLC 全一样。
+9. **pandas 报错**：客户端 Python 库损坏，删 `bin.x64/Lib` 重下。
 10. **仿真当实盘测市价**：市价多数只在实盘生效。
 
 ---
@@ -359,13 +359,13 @@ def qmt_to_qlib(code: str) -> str:
 
 ## 11. 和本仓库的下一步建议
 
-> **当前主方案（无 MiniQMT）**：设计见  
-> [`docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md`](superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md)  
-> —— qlib 产信号 → 文件桥 → 大 QMT 内置策略 `passorder`。  
+> **当前主方案（无 MiniQMT）**：设计见
+> [`docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md`](superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md)
+> —— qlib 产信号 → 文件桥 → 大 QMT 内置策略 `passorder`。
 > **代码已落地**：`live_trading/`（研究机侧模块与 CLI）+ `live_trading/qmt_strategy/`（QMT 内置策略与部署说明 `README_QMT.md`），测试在 `tests/live_trading/`。
 
 1. **当前**：运行 `live_trading/` 信号发布、参数对齐门禁和 QMT 桥接策略。
 2. **运维**：每天导入回执并对账，部分成交或拒单由下一交易日真实持仓恢复。
-3. **可选**：MiniQMT 权限恢复后再加 `XtQuantBroker`，信号协议保持不变。  
+3. **可选**：MiniQMT 权限恢复后再加 `XtQuantBroker`，信号协议保持不变。
 
 不必用 QMT 重做 Alpha158；**QMT 只承接「最后一公里」的行情确认与报单。**

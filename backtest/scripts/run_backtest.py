@@ -438,6 +438,11 @@ def _finalize_session(
     return summary
 
 
+def exit_code_for_summary(summary: dict, expected_runs: int) -> int:
+    """Return a failing process status unless every requested run succeeded."""
+    return 0 if summary.get("success_runs") == expected_runs else 1
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="训练+回测 / 免重训回测（配置见 YAML）")
     p.add_argument(
@@ -572,7 +577,8 @@ def main():
     for k, v in summary["metrics_mean"].items():
         std = summary["metrics_std"].get(k, float("nan"))
         print(f"    {k}: {v:.6f}  ±  {std:.6f}")
+    return exit_code_for_summary(summary, n_runs)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

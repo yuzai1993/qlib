@@ -79,10 +79,12 @@ def _get_cum_return_data_with_position(
         )
 
     r_df = pd.DataFrame(data=result_list)
-    r_df["cum_hold"] = r_df["hold_mean"].cumsum()
-    r_df["cum_buy"] = r_df["buy_mean"].cumsum()
-    r_df["cum_sell"] = r_df["sell_mean"].cumsum()
-    r_df["cum_buy_minus_sell"] = r_df["buy_minus_sell_mean"].cumsum()
+    # Use geometric accumulation for cumulative returns:
+    # cumulative_return = (1 + daily_return).cumprod() - 1
+    r_df["cum_hold"] = (1 + r_df["hold_mean"]).cumprod() - 1
+    r_df["cum_buy"] = (1 + r_df["buy_mean"]).cumprod() - 1
+    r_df["cum_sell"] = (1 + r_df["sell_mean"]).cumprod() - 1
+    r_df["cum_buy_minus_sell"] = (1 + r_df["buy_minus_sell_mean"]).cumprod() - 1
     return r_df
 
 

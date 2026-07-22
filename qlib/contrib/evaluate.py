@@ -24,13 +24,8 @@ from ..data.dataset.utils import get_level_index
 logger = get_module_logger("Evaluate")
 
 
-def risk_analysis(r, N: int = None, freq: str = "day", mode: Literal["sum", "product"] = "sum"):
+def risk_analysis(r, N: int = None, freq: str = "day", mode: Literal["sum", "product"] = "product"):
     """Risk Analysis
-    NOTE:
-    The calculation of annualized return is different from the definition of annualized return.
-    It is implemented by design.
-    Qlib tries to cumulate returns by summation instead of production to avoid the cumulated curve being skewed exponentially.
-    All the calculation of annualized returns follows this principle in Qlib.
 
     Parameters
     ----------
@@ -42,8 +37,12 @@ def risk_analysis(r, N: int = None, freq: str = "day", mode: Literal["sum", "pro
         analysis frequency used for calculating the scaler, at least one of `N` and `freq` should exist
     mode: Literal["sum", "product"]
         the method by which returns are accumulated:
+        - "product" (default): Geometric accumulation (compounded returns).
+          - annualized_return = (1 + cumulative_return) ^ (N / len(r)) - 1  (CAGR)
+          - max_drawdown: maximum percentage drawdown from the peak of the cumulative product curve.
         - "sum": Arithmetic accumulation (linear returns).
-        - "product": Geometric accumulation (compounded returns).
+          - annualized_return = mean(r) * N
+          - max_drawdown: minimum of (cumsum - cummax of cumsum).
     """
 
     def cal_risk_analysis_scaler(freq):

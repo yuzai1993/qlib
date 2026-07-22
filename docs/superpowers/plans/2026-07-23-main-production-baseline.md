@@ -4,7 +4,7 @@
 
 **Goal:** Build a reviewable branch from `main` that contains only the production data pipeline, reusable backtest framework, CSI300 live baseline, full live-trading schedule, diagnostics, and tests.
 
-**Architecture:** Reconstruct the branch from committed snapshots instead of merging `dev`. The data and generic backtest slices come from `a4299b66`; the self-contained Live slice comes from the clean, verified head of `codex/remove-paper-live-parity`. Each slice is audited and committed independently, followed by an integrated cron and baseline-backtest verification.
+**Architecture:** Reconstruct the branch from committed snapshots instead of merging `dev`. The data and generic backtest slices come from `a4299b66`; the self-contained Live slice comes from verified commit `4976c8b1`. Each slice is audited and committed independently, followed by an integrated cron and baseline-backtest verification.
 
 **Tech Stack:** Python 3.12, Qlib, pandas, LightGBM, PyYAML, SQLite, pytest, Bash, Tushare Pro, QMT file bridge.
 
@@ -31,6 +31,7 @@
 - Modify: `scripts/data_collector/utils.py`
 - Modify: `scripts/data_collector/cn_index/collector.py`
 - Create: `scripts/data_collector/csindex_v2/`
+- Create: `scripts/data_collector/csindex_v2/manual_fixes.csv`
 - Create: `scripts/data_collector/tushare/README.md`
 - Create: `scripts/data_collector/tushare/check_adjust_integrity.py`
 - Create: `scripts/data_collector/tushare/check_index_coverage.py`
@@ -148,18 +149,18 @@ git add .gitignore qlib/data/dataset/processor.py scripts tests/misc/test_csinde
 git commit -m "feat(data): add production collection and daily update pipeline"
 ```
 
+The repository-wide `*.csv` ignore rule must have the narrow exception
+`!scripts/data_collector/csindex_v2/manual_fixes.csv`; otherwise a clean clone cannot run the csindex tests or reproduce index membership.
+
 ### Task 2: YAML Backtest Framework and CSI300 Baseline
 
 **Files:**
 - Create: `backtest/configs/csi300_lgbm_train_start_2006.yaml`
-- Create: `backtest/configs/csi300_lgbm_bt_only_2006_top10.yaml`
-- Create: `backtest/configs/csi300_lgbm_bt_only_2006_top10_from2020.yaml`
+- Create: `backtest/configs/csi300_live_parity.yaml`
 - Create: `backtest/scripts/config_loader.py`
 - Create: `backtest/scripts/report_utils.py`
 - Create: `backtest/scripts/run_backtest.py`
 - Modify: `qlib/contrib/evaluate.py`
-- Modify: `qlib/contrib/online/operator.py`
-- Modify: `qlib/contrib/online/user.py`
 - Modify: `qlib/contrib/report/analysis_position/cumulative_return.py`
 - Modify: `qlib/contrib/report/analysis_position/report.py`
 - Modify: `qlib/contrib/report/analysis_position/risk_analysis.py`
@@ -179,14 +180,12 @@ git restore --source=a4299b66 -- \
   backtest/scripts/config_loader.py backtest/scripts/report_utils.py \
   backtest/scripts/run_backtest.py \
   backtest/configs/csi300_lgbm_train_start_2006.yaml \
-  backtest/configs/csi300_lgbm_bt_only_2006_top10.yaml \
-  backtest/configs/csi300_lgbm_bt_only_2006_top10_from2020.yaml \
-  qlib/contrib/evaluate.py qlib/contrib/online/operator.py \
-  qlib/contrib/online/user.py \
+  qlib/contrib/evaluate.py \
   qlib/contrib/report/analysis_position/cumulative_return.py \
   qlib/contrib/report/analysis_position/report.py \
   qlib/contrib/report/analysis_position/risk_analysis.py \
   qlib/workflow/record_temp.py tests/misc/test_backtest_config_loader.py
+git restore --source=4976c8b1 -- backtest/configs/csi300_live_parity.yaml
 ```
 
 Expected: no sweep script, timing config, dynamic strategy, CSI500 config, or CSI1000 config is created.
@@ -208,7 +207,7 @@ Append to `tests/misc/test_backtest_config_loader.py`:
 
 ```python
 def test_production_baseline_identity():
-    cfg = load_config("csi300_lgbm_train_start_2006.yaml")
+    cfg = load_config()
     assert cfg["data"]["instruments"] == "csi300"
     assert cfg["data"]["benchmark"] == "SH000300"
     assert cfg["data"]["handler"]["class"] == "Alpha158"
@@ -216,6 +215,7 @@ def test_production_baseline_identity():
     assert cfg["strategy"]["class"] == "TopkDropoutStrategy"
     assert cfg["strategy"]["topk"] == 10
     assert cfg["strategy"]["n_drop"] == 2
+    assert cfg["backtest"]["account"] == 10_000_000
 ```
 
 - [ ] **Step 4: Run the baseline-scope test**
@@ -227,7 +227,7 @@ Expected: all configuration tests pass.
 - [ ] **Step 5: Commit the backtest slice**
 
 ```bash
-git add backtest qlib/contrib/evaluate.py qlib/contrib/online \
+git add backtest qlib/contrib/evaluate.py \
   qlib/contrib/report/analysis_position qlib/workflow/record_temp.py \
   tests/misc/test_backtest_config_loader.py
 git commit -m "feat(backtest): add yaml framework and csi300 baseline"
@@ -241,7 +241,7 @@ git commit -m "feat(backtest): add yaml framework and csi300 baseline"
 - Modify: `qlib/contrib/strategy/signal_strategy.py`
 - Create: `qlib/contrib/strategy/topk_dropout.py`
 - Create: `tests/backtest/test_topk_dropout_selection.py`
-- Create: `backtest/configs/csi300_live_parity.yaml`
+- Use: `backtest/configs/csi300_live_parity.yaml`
 - Create: `docs/qmt_qlib_live_guide.md`
 
 **Interfaces:**
@@ -257,14 +257,14 @@ test -z "$(git -C /private/tmp/qlib-live-parity status --porcelain)"
 git rev-parse codex/remove-paper-live-parity
 ```
 
-Expected: the first command exits 0 and the second prints the verified source commit.
+Expected: the first command exits 0 and the second prints `4976c8b1` (or its full hash).
 
 - [ ] **Step 2: Restore the verified Live snapshot**
 
 Run:
 
 ```bash
-git restore --source=codex/remove-paper-live-parity -- \
+git restore --source=4976c8b1 -- \
   live_trading tests/live_trading \
   qlib/contrib/strategy/signal_strategy.py \
   qlib/contrib/strategy/topk_dropout.py \

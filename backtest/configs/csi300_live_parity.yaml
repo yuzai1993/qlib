@@ -1,0 +1,73 @@
+# 唯一允许用于对照 csi300_topk10_live 的回测配置。
+# 日线 close 是实盘 14:45 近收盘执行的代理，不表示逐笔成交必然相同。
+
+run:
+  mode: backtest_only
+  note: "csi300_live_parity"
+  n_runs: 1
+  from_session: "20260711_223223_train_start_2006"
+  from_run: 1
+  generate_figures: false
+
+parity:
+  live_config: "live_trading/configs/csi300_topk10_live.yaml"
+  model_experiment_name: "train_20260711_223223_train_start_2006_run01"
+  model_experiment_id: "265134483362085141"
+  model_recorder_id: "40a17c74aa7b4d97a4caa35015aaead5"
+  execution_price_proxy: "close"
+
+data:
+  provider_uri: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi300"
+  benchmark: "SH000300"
+  handler:
+    class: "Alpha158"
+    module_path: "qlib.contrib.data.handler"
+    start_time: "2003-01-02"
+    end_time: "2026-07-22"
+    fit_start_time: "2006-01-02"
+    fit_end_time: "2020-01-10"
+    infer_processors:
+      - class: "ProcessInf"
+
+segments:
+  train: ["2006-01-02", "2020-01-10"]
+  valid: ["2020-01-13", "2023-09-15"]
+  test: ["2023-09-18", "2026-07-22"]
+
+model:
+  class: "LGBModel"
+  module_path: "qlib.contrib.model.gbdt"
+  kwargs:
+    loss: "mse"
+    colsample_bytree: 0.8879
+    learning_rate: 0.2
+    subsample: 0.8789
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    max_depth: 8
+    num_leaves: 210
+    num_threads: 20
+
+strategy:
+  class: "TopkDropoutStrategy"
+  module_path: "qlib.contrib.strategy.signal_strategy"
+  topk: 10
+  n_drop: 2
+  kwargs:
+    risk_degree: 0.95
+    hold_thresh: 1
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+
+backtest:
+  account: 10000000
+  exchange_kwargs:
+    freq: "day"
+    limit_threshold: 0.095
+    deal_price: "close"
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5.0
+    trade_unit: 100

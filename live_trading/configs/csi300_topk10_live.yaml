@@ -45,6 +45,9 @@ exchange:
   min_cost: 5.0
   trade_unit: 100
 
+parity:
+  backtest_config: "backtest/configs/csi300_live_parity.yaml"
+
 live:
   # 共享目录：Mac 侧挂载点；Windows 侧对应 D:\qmt_bridge
   bridge_root: "/Volumes/qmt_bridge"

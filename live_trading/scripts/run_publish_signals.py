@@ -24,6 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from live_trading.modules.code_map import qmt_to_qlib
+from live_trading.modules.backtest_parity import validate_configured_backtest
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.order_planner import OrderPlanner
@@ -143,6 +144,8 @@ def main():
 
     config_path = CONFIGS_DIR / f"{args.config}.yaml"
     config = load_live_config(config_path, PROJECT_ROOT)
+    parity_path = validate_configured_backtest(config, PROJECT_ROOT)
+    logger.info("Live/Backtest parity gate passed: %s", parity_path)
     live_cfg = config["live"]
 
     mode = resolve_mode(args, config)

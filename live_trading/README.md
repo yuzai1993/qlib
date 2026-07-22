@@ -177,7 +177,7 @@ SIMULATE 批次回执应为每单一条 `SKIPPED simulated`，且导入后持仓
 数据更新完成后发布次日信号：
 
 ```bash
-# 1.（确认当日 Tushare→qlib 数据已更新，与模拟盘同一条 crontab）
+# 1.（确认当日 Tushare→qlib 数据已更新）
 
 # 2. 正常由 21:30 定时任务发布；手工补跑时用同一包装脚本
 bash live_trading/run_publish_cron.sh
@@ -240,7 +240,7 @@ r.set_cash(123456.78)
 
 - 成交质量回顾：比较 `fills.avg_price` 与下单日志中的最终报单价；如果成交率仍偏低，再单独评估撤单追价，不要通过收紧昨收边界控制风险；
 - 拒单/过期率：`EXPIRED`、`REJECTED` 占比高说明限价太保守或流动性有问题；
-- 与模拟盘对比：同一 `signal_date` 下 `paper_trading` 与实盘买卖标的应基本一致，长期偏离说明持仓漂移，需要校正。
+- 对齐门禁：运行 `python live_trading/scripts/check_backtest_parity.py --config csi300_topk10_live`；只有 `csi300_live_parity` 是实盘正式对照回测，任一关键参数漂移都会阻止发布。
 
 ---
 

@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 
 from qlib.contrib.strategy.topk_dropout import select_topk_dropout
+from live_trading.modules.fees import fees_from_config, order_total_fee
 
 logger = logging.getLogger("live_trading.order")
 
@@ -16,7 +17,9 @@ class OrderManager:
         strategy = config["strategy"]
         self.topk = strategy.get("topk", 10)
         self.n_drop = strategy.get("n_drop", 2)
+        self.risk_degree = float(strategy.get("risk_degree", 0.95))
         self.trade_unit = config["exchange"].get("trade_unit", 100)
+        self.fees = fees_from_config(config)
 
     def generate_orders(
         self,
@@ -61,16 +64,19 @@ class OrderManager:
                 })
 
         if buy_list:
-            estimated_sell_proceeds = 0
+            estimated_sell_proceeds = 0.0
             for inst in sell_from_candidates:
                 if inst in current_positions and inst in close_prices:
-                    estimated_sell_proceeds += (
+                    gross_proceeds = (
                         current_positions[inst]["shares"] * close_prices[inst]
+                    )
+                    estimated_sell_proceeds += gross_proceeds - order_total_fee(
+                        "SELL", gross_proceeds, self.fees,
                     )
 
             available_cash = cash + estimated_sell_proceeds
             n_positions = max(len(buy_list), 1)
-            per_stock_budget = available_cash / n_positions * 0.95
+            per_stock_budget = available_cash / n_positions * self.risk_degree
 
             for inst in buy_list:
                 price = close_prices.get(inst)

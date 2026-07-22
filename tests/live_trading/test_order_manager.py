@@ -198,3 +198,49 @@ def test_tied_boundary_is_independent_of_signal_and_position_order():
     assert _instruments(first, "BUY") == ["SH600000"]
     assert _instruments(second, "SELL") == ["SZ000002"]
     assert _instruments(second, "BUY") == ["SH600000"]
+
+
+def test_buy_budget_uses_configured_risk_degree():
+    scores = pd.Series({"SH600000": 1.0})
+    manager = OrderManager({
+        "strategy": {"topk": 1, "n_drop": 0, "risk_degree": 0.5},
+        "exchange": {"trade_unit": 100},
+        "fees": {},
+    })
+
+    orders = manager.generate_orders(
+        scores, {}, 10_000.0, {"SH600000": 10.0}, 10_000.0,
+    )
+
+    assert orders == [{
+        "instrument": "SH600000",
+        "direction": "BUY",
+        "target_shares": 500,
+    }]
+
+
+def test_sell_fees_are_deducted_before_sizing_replacement():
+    scores = pd.Series({"SH600000": 2.0, "SZ000001": 1.0})
+    manager = OrderManager({
+        "strategy": {"topk": 1, "n_drop": 1, "risk_degree": 1.0},
+        "exchange": {"trade_unit": 1},
+        "fees": {
+            "commission_rate": 0.00020,
+            "min_commission": 5.0,
+            "stamp_duty_rate": 0.0005,
+            "transfer_fee_rate": 0.00001,
+            "dividend_tax_rate": 0.20,
+        },
+    })
+
+    orders = manager.generate_orders(
+        scores,
+        _positions(["SZ000001"]),
+        0.0,
+        {"SH600000": 10.0, "SZ000001": 10.0},
+        1_000.0,
+    )
+
+    buy = next(order for order in orders if order["direction"] == "BUY")
+    # Gross proceeds are 1,000; fees are 5 commission + 0.5 stamp + 0.01 transfer.
+    assert buy["target_shares"] == 99

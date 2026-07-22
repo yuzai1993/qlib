@@ -166,3 +166,35 @@ def test_twelve_positions_sell_two_and_buy_none_to_reach_topk():
     assert set(sells) == set(scores.index[12:14])
     assert buys == []
     assert len(held) - len(sells) + len(buys) == 10
+
+
+def test_tied_boundary_is_independent_of_signal_and_position_order():
+    scores = pd.Series(
+        [1.0, 1.0, 1.0],
+        index=["SZ000002", "SH600001", "SH600000"],
+    )
+    manager = OrderManager({
+        "strategy": {"topk": 2, "n_drop": 1},
+        "exchange": {"trade_unit": 100},
+    })
+    prices = {instrument: 10.0 for instrument in scores.index}
+
+    first = manager.generate_orders(
+        scores,
+        _positions(["SZ000002", "SH600001"]),
+        1_000.0,
+        prices,
+        3_000.0,
+    )
+    second = manager.generate_orders(
+        scores.iloc[::-1],
+        _positions(["SH600001", "SZ000002"]),
+        1_000.0,
+        prices,
+        3_000.0,
+    )
+
+    assert _instruments(first, "SELL") == ["SZ000002"]
+    assert _instruments(first, "BUY") == ["SH600000"]
+    assert _instruments(second, "SELL") == ["SZ000002"]
+    assert _instruments(second, "BUY") == ["SH600000"]

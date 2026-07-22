@@ -303,4 +303,3 @@ Expected: zero whitespace errors, no runtime Paper references, and only scoped b
 - [ ] **Step 6: Review commits and final branch diff**
 
 Confirm the branch contains no user's unrelated main-worktree changes and all new behavior is backed by a red/green test cycle.
-

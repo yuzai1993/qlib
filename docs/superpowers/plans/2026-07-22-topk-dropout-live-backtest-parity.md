@@ -137,7 +137,7 @@ def test_buy_orders_keep_price_filter_and_board_lot_rounding():
     assert [order["target_shares"] for order in buys] == [900] * 9
 
 
-def test_full_portfolio_rotates_two_positions():
+def test_full_portfolio_sizing_includes_estimated_sell_proceeds():
     scores = _scores()
     held = list(scores.index[:8]) + list(scores.index[10:12])
 

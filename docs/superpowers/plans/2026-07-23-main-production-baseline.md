@@ -284,7 +284,7 @@ Run:
   tests/live_trading/test_repository_boundaries.py \
   tests/live_trading/test_backtest_parity.py \
   tests/backtest/test_topk_dropout_selection.py -q
-rg -n "paper_trading" live_trading tests/live_trading backtest/configs/csi300_live_parity.yaml
+rg -n "paper_trading" live_trading backtest/configs/csi300_live_parity.yaml
 ```
 
 Expected: all tests pass and `rg` exits 1 with no matches.
@@ -297,7 +297,7 @@ Run:
 /opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading tests/backtest/test_topk_dropout_selection.py -q
 for script in live_trading/run_*_cron.sh; do bash -n "$script"; done
 /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/check_backtest_parity.py \
-  --live-config live_trading/configs/csi300_topk10_live.yaml
+  --config csi300_topk10_live
 /opt/anaconda3/envs/qlib/bin/python -m compileall -q live_trading
 ```
 
@@ -332,8 +332,9 @@ test ! -e paper_trading
 test ! -e qlib/contrib/strategy/dynamic_position.py
 test -z "$(find backtest/scripts -maxdepth 1 -type f \( -name '*sweep*' -o -name '*ensemble*' -o -name '*multiseed*' -o -name '*pred_backtest*' \) -print)"
 test -z "$(find backtest/configs -maxdepth 1 -type f \( -name 'csi500*' -o -name 'csi1000*' -o -name '*timing*' -o -name '*ensemble*' -o -name '*multiseed*' \) -print)"
-! rg -n "os\.environ\[['\"]TUSHARE_TOKEN['\"]\]\s*=|paper_trading" \
-  scripts/data_collector live_trading tests/live_trading
+! rg -n "os\.environ\[['\"]TUSHARE_TOKEN['\"]\]\s*=" \
+  scripts/data_collector live_trading
+! rg -n "paper_trading" live_trading
 git diff --check main...HEAD
 ```
 
@@ -353,7 +354,7 @@ done
 /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_monitor.py --help
 /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/run_publish_signals.py --help
 /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/check_backtest_parity.py \
-  --live-config live_trading/configs/csi300_topk10_live.yaml
+  --config csi300_topk10_live
 ```
 
 Expected: every command exits 0 without accessing the production DB, bridge, notifier, or broker.

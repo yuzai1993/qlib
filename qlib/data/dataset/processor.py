@@ -165,8 +165,16 @@ class ProcessInf(Processor):
         def replace_inf(data):
             def process_inf(df):
                 for col in df.columns:
-                    # FIXME: Such behavior is very weird
-                    df[col] = df[col].replace([np.inf, -np.inf], df[col][~np.isinf(df[col])].mean())
+                    # Use ndarray masks — Series boolean indexing here can fail
+                    # under newer pandas (MultiIndex / all-inf edge cases).
+                    vals = df[col].to_numpy(dtype="float64", copy=True)
+                    inf_mask = np.isinf(vals)
+                    if not inf_mask.any():
+                        continue
+                    finite = vals[np.isfinite(vals)]
+                    fill = float(finite.mean()) if finite.size else np.nan
+                    vals[inf_mask] = fill
+                    df[col] = vals
                 return df
 
             data = datetime_groupby_apply(data, process_inf)

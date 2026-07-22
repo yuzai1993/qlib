@@ -19,14 +19,15 @@
 
 ---
 
-### Task 1: Add TopkDropout parity regression coverage
+### Task 1: Implement TopkDropout parity with TDD
 
 **Files:**
 - Create: `tests/paper_trading/test_order_manager.py`
+- Modify: `paper_trading/modules/order_manager.py:39-104`
 
 **Interfaces:**
 - Consumes: `OrderManager.generate_orders(scores, current_positions, cash, close_prices, total_value) -> list[dict]`
-- Produces: Regression expectations for selected BUY/SELL instruments and existing sizing rules.
+- Produces: Qlib-equivalent default BUY/SELL selection for normal and underfilled portfolios, with regression coverage for selection and existing sizing rules.
 
 - [ ] **Step 1: Write shared test helpers and four selection tests**
 
@@ -146,17 +147,7 @@ Run:
 Expected: `test_underfilled_portfolio_rotates_and_fills_gap` and
 `test_underfilled_top_ranked_portfolio_only_fills_gap` fail because the current implementation only buys as many stocks as it sells. Baseline full-portfolio, empty-portfolio, and sizing tests pass.
 
-### Task 2: Port Qlib's TopkDropout selection calculation
-
-**Files:**
-- Modify: `paper_trading/modules/order_manager.py:39-104`
-- Test: `tests/paper_trading/test_order_manager.py`
-
-**Interfaces:**
-- Consumes: Sorted `pd.Series` scores, current position keys, configured `topk` and `n_drop`.
-- Produces: `sell_from_candidates: list[str]` and `buy_list: list[str]` with Qlib-equivalent default selection behavior.
-
-- [ ] **Step 1: Replace top-10 set-difference selection with the Qlib calculation**
+- [ ] **Step 4: Replace top-10 set-difference selection with the Qlib calculation**
 
 After sorting and dropping missing scores, use this selection block:
 
@@ -176,7 +167,7 @@ Delete the old `top_instruments`, `sell_candidates`, `held_in_top`,
 `not_held_in_top`, `n_sell`, `n_buy`, and empty-position special-case branches.
 Keep order construction and budget calculation unchanged.
 
-- [ ] **Step 2: Run the focused tests and verify green**
+- [ ] **Step 5: Run the focused tests and verify green**
 
 Run:
 
@@ -186,7 +177,7 @@ Run:
 
 Expected: `5 passed`.
 
-- [ ] **Step 3: Run the existing paper/live unit suites**
+- [ ] **Step 6: Run the existing paper/live unit suites**
 
 Run:
 
@@ -196,7 +187,7 @@ Run:
 
 Expected: all collected tests pass with zero failures. If `tests/paper_trading` contains only the new file, pytest still runs the shared regression tests plus the complete live-trading suite.
 
-- [ ] **Step 4: Verify formatting and inspect the exact diff**
+- [ ] **Step 7: Verify formatting and inspect the exact diff**
 
 Run:
 
@@ -207,7 +198,7 @@ git diff -- paper_trading/modules/order_manager.py tests/paper_trading/test_orde
 
 Expected: `git diff --check` prints nothing; the diff contains only the selection change and its tests.
 
-- [ ] **Step 5: Commit only the implementation and regression test**
+- [ ] **Step 8: Commit only the implementation and regression test**
 
 ```bash
 git add paper_trading/modules/order_manager.py tests/paper_trading/test_order_manager.py
@@ -216,7 +207,7 @@ git commit -m "fix: align live TopkDropout with backtest"
 
 Expected: commit succeeds without staging unrelated workspace files.
 
-### Task 3: Fresh post-commit verification
+### Task 2: Fresh post-commit verification
 
 **Files:**
 - Verify: `paper_trading/modules/order_manager.py`

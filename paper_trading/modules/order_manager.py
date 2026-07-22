@@ -37,31 +37,15 @@ class OrderManager:
             List of order dicts [{instrument, direction, target_shares}, ...]
         """
         scores = scores.dropna().sort_values(ascending=False)
-        top_instruments = list(scores.head(self.topk).index)
-        held_instruments = set(current_positions.keys())
+        current_stock_list = list(current_positions)
+        last = scores.reindex(current_stock_list).sort_values(ascending=False).index
+        gap = max(self.topk - len(last), 0)
 
-        sell_candidates = held_instruments - set(top_instruments)
-
-        held_in_top = [s for s in top_instruments if s in held_instruments]
-        not_held_in_top = [s for s in top_instruments if s not in held_instruments]
-
-        if len(sell_candidates) == 0 and len(not_held_in_top) == 0:
-            return []
-
-        if len(held_instruments) > 0:
-            held_scores = scores.reindex(list(held_instruments)).dropna()
-            held_scores_sorted = held_scores.sort_values(ascending=True)
-            n_sell = min(self.n_drop, len(sell_candidates), len(not_held_in_top))
-            if n_sell > 0 and len(sell_candidates) > 0:
-                sell_from_candidates = list(
-                    held_scores_sorted[held_scores_sorted.index.isin(sell_candidates)]
-                    .head(n_sell).index
-                )
-            else:
-                sell_from_candidates = []
-        else:
-            sell_from_candidates = []
-            n_sell = 0
+        today = scores[~scores.index.isin(last)].head(self.n_drop + gap).index
+        combined = scores.reindex(last.union(today)).sort_values(ascending=False).index
+        bottom = set(combined[-self.n_drop:]) if self.n_drop > 0 else set()
+        sell_from_candidates = [instrument for instrument in last if instrument in bottom]
+        buy_list = list(today[:len(sell_from_candidates) + gap])
 
         orders = []
 
@@ -72,12 +56,6 @@ class OrderManager:
                     "direction": "SELL",
                     "target_shares": current_positions[inst]["shares"],
                 })
-
-        n_buy = len(sell_from_candidates)
-        if len(current_positions) == 0:
-            buy_list = not_held_in_top[:self.topk]
-        else:
-            buy_list = not_held_in_top[:n_buy]
 
         if buy_list:
             estimated_sell_proceeds = 0

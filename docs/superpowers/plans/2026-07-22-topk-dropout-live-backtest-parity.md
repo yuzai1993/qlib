@@ -133,9 +133,24 @@ def test_buy_orders_keep_price_filter_and_board_lot_rounding():
 
     buys = [order for order in orders if order["direction"] == "BUY"]
     assert scores.index[1] not in _instruments(orders, "BUY")
-    assert buys
-    assert all(order["target_shares"] > 0 for order in buys)
-    assert all(order["target_shares"] % 100 == 0 for order in buys)
+    assert len(buys) == 9
+    assert [order["target_shares"] for order in buys] == [900] * 9
+
+
+def test_full_portfolio_rotates_two_positions():
+    scores = _scores()
+    held = list(scores.index[:8]) + list(scores.index[10:12])
+
+    orders = _manager().generate_orders(
+        scores, _positions(held), 10_000.0, _prices(scores), 20_000.0,
+    )
+
+    assert set(_instruments(orders, "SELL")) == set(scores.index[10:12])
+    assert _instruments(orders, "BUY") == list(scores.index[8:10])
+    assert [order["target_shares"] for order in orders if order["direction"] == "BUY"] == [
+        500,
+        500,
+    ]
 ```
 
 - [ ] **Step 3: Run the focused tests and verify the regression is red**
@@ -146,7 +161,7 @@ Run:
 /opt/anaconda3/envs/qlib/bin/python -m pytest tests/paper_trading/test_order_manager.py -q
 ```
 
-Expected: the new empty-effective-score and 11/12-stock convergence tests fail:
+Expected: the new empty-effective-score and overfilled-portfolio convergence tests fail:
 the current implementation can create sell-only orders from empty effective scores,
 limits an 11-stock portfolio to one sell, and keeps a 12-stock portfolio at 12 by
 buying two replacements. Existing full-portfolio, empty-portfolio, and precise
@@ -171,10 +186,11 @@ buy_count = max(len(sell_from_candidates) + position_delta, 0)
 buy_list = list(today[:buy_count])
 ```
 
-`today_count` and `buy_count` remain non-negative. With 11 stocks,
-`position_delta=-1` produces two sells and one buy; with 12 stocks,
-`position_delta=-2` produces two sells and zero buys. Keep order construction
-and budget calculation unchanged.
+`today_count` and `buy_count` remain non-negative. For overfilled portfolios,
+the combined ranking determines the sell and buy counts, while `position_delta`
+guarantees the net reduction needed to converge to `topk`: an 11-stock portfolio
+with low-ranked holdings may sell two and buy one, whereas 11 top-ranked holdings
+may sell one and buy none. Keep order construction and budget calculation unchanged.
 
 - [ ] **Step 5: Run the focused tests and verify green**
 

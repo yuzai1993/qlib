@@ -138,6 +138,21 @@ def test_eleven_positions_sell_two_and_buy_one_to_reach_topk():
     assert len(held) - len(sells) + len(buys) == 10
 
 
+def test_eleven_top_ranked_positions_sell_one_and_buy_none_to_reach_topk():
+    scores = _scores()
+    held = list(scores.index[:11])
+
+    orders = _manager().generate_orders(
+        scores, _positions(held), 10_000.0, _prices(scores), 21_000.0,
+    )
+
+    sells = _instruments(orders, "SELL")
+    buys = _instruments(orders, "BUY")
+    assert sells == [scores.index[10]]
+    assert buys == []
+    assert len(held) - len(sells) + len(buys) == 10
+
+
 def test_twelve_positions_sell_two_and_buy_none_to_reach_topk():
     scores = _scores()
     held = list(scores.index[:8]) + list(scores.index[10:14])

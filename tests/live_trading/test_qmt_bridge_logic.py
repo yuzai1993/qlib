@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
@@ -31,6 +32,17 @@ def bridge(tmp_path, monkeypatch):
     mod._ensure_dirs()
     mod._load_processed()
     return mod
+
+
+def test_qmt_cash_reservation_fees_match_live_config(bridge):
+    config_path = (
+        REPO_ROOT / "live_trading" / "configs" / "csi300_topk10_live.yaml"
+    )
+    fees = yaml.safe_load(config_path.read_text(encoding="utf-8"))["fees"]
+
+    assert bridge.COMMISSION_RATE == pytest.approx(fees["commission_rate"])
+    assert bridge.MIN_COMMISSION == pytest.approx(fees["min_commission"])
+    assert bridge.TRANSFER_FEE_RATE == pytest.approx(fees["transfer_fee_rate"])
 
 
 def _order(coid="20260714001S", side="SELL", priority=10):

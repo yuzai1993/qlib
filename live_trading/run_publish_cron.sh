@@ -37,7 +37,8 @@ mkdir -p "$MPLCONFIGDIR"
 {
     echo "===== $(date '+%Y-%m-%d %H:%M:%S') publish trade_date=${TRADE_DATE} ====="
     cd "$PROJECT_ROOT"
-    "$PYTHON" live_trading/scripts/run_publish_signals.py \
+    # caffeinate -i：发布约 15–20min，避免中途 Idle Sleep 被掐断
+    caffeinate -i "$PYTHON" live_trading/scripts/run_publish_signals.py \
         --config "$CONFIG_ID" \
         --trade-date "$TRADE_DATE" \
         --mode LIVE

@@ -333,6 +333,24 @@ def test_stock_names_roundtrip(env):
     assert recorder.get_stock_names()["600000.SH"] == "浦发银行"
 
 
+def test_prediction_ranks_break_score_ties_by_instrument(env):
+    _, recorder, _ = env
+    recorder.save_predictions(
+        "2026-07-22",
+        {
+            "SZ000002": 1.0,
+            "SH600001": 1.0,
+            "SH600000": 1.0,
+        },
+    )
+
+    rows = recorder.get_predictions_by_date("2026-07-22")
+
+    assert rows["SH600000"]["rank"] == 1
+    assert rows["SH600001"]["rank"] == 2
+    assert rows["SZ000002"]["rank"] == 3
+
+
 
 def test_live_filled_updates_positions(env):
     bridge_root, recorder, importer = env

@@ -567,7 +567,7 @@ class LiveRecorder:
             for inst, score in scores.items()
             if score is not None and math.isfinite(float(score))
         ]
-        items.sort(key=lambda kv: kv[1], reverse=True)
+        items.sort(key=lambda kv: (-kv[1], kv[0]))
         rows = [
             (date_str, inst, score, rank)
             for rank, (inst, score) in enumerate(items, start=1)

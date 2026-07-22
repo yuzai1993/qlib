@@ -109,3 +109,22 @@ def test_publish_checks_parity_before_account_or_durable_side_effects(monkeypatc
 
     with pytest.raises(ParityError, match="drift"):
         publish.main()
+
+
+def test_publish_price_universe_uses_same_stable_tie_break_as_strategy():
+    import pandas as pd
+
+    from live_trading.scripts.run_publish_signals import get_price_instruments
+
+    scores = pd.Series(
+        [1.0, 1.0, 1.0, 0.5],
+        index=["SZ000002", "SH600001", "SH600000", "SH600003"],
+    )
+
+    instruments = get_price_instruments(
+        scores,
+        current_positions={"SZ000002": {"shares": 100}},
+        topk=1,
+    )
+
+    assert instruments == ["SH600000", "SH600001", "SZ000002"]

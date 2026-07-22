@@ -34,10 +34,17 @@ from live_trading.modules.signal_schema import (
     compute_checksum,
     validate_batch,
 )
+from qlib.contrib.strategy.topk_dropout import stable_rank_scores
 
 logger = logging.getLogger("live_trading.publish")
 
 CONFIGS_DIR = PROJECT_ROOT / "live_trading" / "configs"
+
+
+def get_price_instruments(scores, current_positions: dict, topk: int) -> list:
+    """Return the deterministic candidate/holding universe needing prices."""
+    candidates = stable_rank_scores(scores).head(topk * 2).index
+    return sorted(set(candidates) | set(current_positions))
 
 
 def publish_recorded_plan(recorder, publisher, header, orders):
@@ -178,9 +185,9 @@ def main():
 
     # 3. 昨收价（含持仓与候选 topk）
     strategy_cfg = config["strategy"]
-    top_candidates = list(scores.sort_values(ascending=False).head(
-        strategy_cfg["topk"] * 2).index)
-    need_price = sorted(set(top_candidates) | set(current_positions.keys()))
+    need_price = get_price_instruments(
+        scores, current_positions, strategy_cfg["topk"],
+    )
     prev_close = get_prev_close(config, need_price, signal_date)
 
     # 4. TopkDropout 意图

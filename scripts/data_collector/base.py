@@ -3,6 +3,7 @@
 
 
 import abc
+import sys
 import time
 import datetime
 import importlib
@@ -15,6 +16,13 @@ from tqdm import tqdm
 from loguru import logger
 from joblib import Parallel, delayed
 from qlib.utils import code_to_fname
+
+
+def _tqdm(iterable=None, **kwargs):
+    """非 TTY（如 cron 重定向日志）时关闭进度条，避免 \\r 刷屏。"""
+    kwargs.setdefault("disable", not sys.stderr.isatty())
+    kwargs.setdefault("mininterval", 30.0)
+    return tqdm(iterable, **kwargs)
 
 
 class BaseCollector(abc.ABC):
@@ -169,7 +177,12 @@ class BaseCollector(abc.ABC):
         df["symbol"] = symbol
         if instrument_path.exists():
             _old_df = pd.read_csv(instrument_path)
+            _old_df["date"] = pd.to_datetime(_old_df["date"], format="mixed", utc=True)
+            df["date"] = pd.to_datetime(df["date"], format="mixed", utc=True)
             df = pd.concat([_old_df, df], sort=False)
+        df.drop_duplicates(subset=["date"], keep="last", inplace=True)
+        df.sort_values("date", inplace=True)
+        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         df.to_csv(instrument_path, index=False)
 
     def cache_small_data(self, symbol, df):
@@ -186,7 +199,7 @@ class BaseCollector(abc.ABC):
     def _collector(self, instrument_list):
         error_symbol = []
         res = Parallel(n_jobs=self.max_workers)(
-            delayed(self._simple_collector)(_inst) for _inst in tqdm(instrument_list)
+            delayed(self._simple_collector)(_inst) for _inst in _tqdm(instrument_list)
         )
         for _symbol, _result in zip(instrument_list, res):
             if _result != self.NORMAL_FLAG:
@@ -280,10 +293,19 @@ class Normalize:
         self._symbol_field_name = symbol_field_name
         self._end_date = kwargs.get("end_date", None)
         self._max_workers = max_workers
+        self.interval = kwargs.get("interval", "1d")
 
         self._normalize_obj = normalize_class(
             date_field_name=date_field_name, symbol_field_name=symbol_field_name, **kwargs
         )
+
+    def format_data(self, df: pd.DataFrame):
+        if self.interval == "1d":
+            try:
+                pd.to_datetime(df.iloc[-1]["date"], format="%Y-%m-%d", errors="raise")
+            except Exception:
+                df = df.iloc[:-1]
+        return df
 
     def _executor(self, file_path: Path):
         file_path = Path(file_path)
@@ -300,21 +322,25 @@ class Normalize:
             keep_default_na=False,
             na_values={col: symbol_na if col == self._symbol_field_name else default_na for col in columns},
         )
+        df = self.format_data(df=df)
 
-        # NOTE: It has been reported that there may be some problems here, and the specific issues will be dealt with when they are identified.
-        df = self._normalize_obj.normalize(df)
-        if df is not None and not df.empty:
-            if self._end_date is not None:
-                _mask = pd.to_datetime(df[self._date_field_name]) <= pd.Timestamp(self._end_date)
-                df = df[_mask]
-            df.to_csv(self._target_dir.joinpath(file_path.name), index=False)
+        if not df.empty:
+            # NOTE: It has been reported that there may be some problems here, and the specific issues will be dealt with when they are identified.
+            df = self._normalize_obj.normalize(df)
+            if df is not None and not df.empty:
+                if self._end_date is not None:
+                    _mask = pd.to_datetime(df[self._date_field_name]) <= pd.Timestamp(self._end_date)
+                    df = df[_mask]
+                df.to_csv(self._target_dir.joinpath(file_path.name), index=False)
+        else:
+            logger.warning(f"{file_path.stem} source data is empty and will not undergo normalization processing.")
 
     def normalize(self):
         logger.info("normalize data......")
 
         with ProcessPoolExecutor(max_workers=self._max_workers) as worker:
             file_list = list(self._source_dir.glob("*.csv"))
-            with tqdm(total=len(file_list)) as p_bar:
+            with _tqdm(total=len(file_list)) as p_bar:
                 for _ in worker.map(self._executor, file_list):
                     p_bar.update()
 

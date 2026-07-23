@@ -23,13 +23,15 @@ def _calculate_maximum(df: pd.DataFrame, is_ex: bool = False):
 
 
 def _calculate_mdd(series):
-    """
-    Calculate mdd
+    """Calculate drawdown from the running peak of the wealth curve.
 
-    :param series:
-    :return:
+    ``series`` contains cumulative returns, so the corresponding wealth curve
+    is ``1 + series``.  Include the initial wealth of 1.0 as a possible peak
+    so a loss at the beginning of the series is reported as a drawdown.
     """
-    return series - series.cummax()
+    wealth = 1 + series
+    running_peak = wealth.cummax().clip(lower=1.0)
+    return wealth / running_peak - 1
 
 
 def _calculate_report_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -43,17 +45,24 @@ def _calculate_report_data(df: pd.DataFrame) -> pd.DataFrame:
 
     report_df = pd.DataFrame()
 
-    report_df["cum_bench"] = df["bench"].cumsum()
-    report_df["cum_return_wo_cost"] = df["return"].cumsum()
-    report_df["cum_return_w_cost"] = (df["return"] - df["cost"]).cumsum()
+    # Use geometric accumulation (compound return) instead of arithmetic cumsum:
+    # cumulative_return = (1 + daily_return).cumprod() - 1
+    bench_daily = df["bench"]
+    return_daily = df["return"]
+    net_return_daily = df["return"] - df["cost"]
+
+    report_df["cum_bench"] = (1 + bench_daily).cumprod() - 1
+    report_df["cum_return_wo_cost"] = (1 + return_daily).cumprod() - 1
+    report_df["cum_return_w_cost"] = (1 + net_return_daily).cumprod() - 1
     # report_df['cum_return'] - report_df['cum_return'].cummax()
     report_df["return_wo_mdd"] = _calculate_mdd(report_df["cum_return_wo_cost"])
-    report_df["return_w_cost_mdd"] = _calculate_mdd((df["return"] - df["cost"]).cumsum())
+    report_df["return_w_cost_mdd"] = _calculate_mdd(report_df["cum_return_w_cost"])
 
-    report_df["cum_ex_return_wo_cost"] = (df["return"] - df["bench"]).cumsum()
-    report_df["cum_ex_return_w_cost"] = (df["return"] - df["bench"] - df["cost"]).cumsum()
-    report_df["cum_ex_return_wo_cost_mdd"] = _calculate_mdd((df["return"] - df["bench"]).cumsum())
-    report_df["cum_ex_return_w_cost_mdd"] = _calculate_mdd((df["return"] - df["cost"] - df["bench"]).cumsum())
+    benchmark_wealth = 1 + report_df["cum_bench"]
+    report_df["cum_ex_return_wo_cost"] = (1 + report_df["cum_return_wo_cost"]) / benchmark_wealth - 1
+    report_df["cum_ex_return_w_cost"] = (1 + report_df["cum_return_w_cost"]) / benchmark_wealth - 1
+    report_df["cum_ex_return_wo_cost_mdd"] = _calculate_mdd(report_df["cum_ex_return_wo_cost"])
+    report_df["cum_ex_return_w_cost_mdd"] = _calculate_mdd(report_df["cum_ex_return_w_cost"])
     # return_wo_mdd , return_w_cost_mdd,  cum_ex_return_wo_cost_mdd, cum_ex_return_w
 
     report_df["turnover"] = df["turnover"]

@@ -20,6 +20,7 @@ from qlib.log import get_module_logger
 from qlib.utils import get_pre_trading_date, load_dataset
 from qlib.contrib.strategy.order_generator import OrderGenerator, OrderGenWOInteract
 from qlib.contrib.strategy.optimizer import EnhancedIndexingOptimizer
+from qlib.contrib.strategy.topk_dropout import select_topk_dropout
 
 
 class BaseSignalStrategy(BaseStrategy, ABC):
@@ -193,42 +194,50 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         # load score
         cash = current_temp.get_cash()
         current_stock_list = current_temp.get_stock_list()
-        # last position (sorted by score)
-        last = pred_score.reindex(current_stock_list).sort_values(ascending=False).index
-        # The new stocks today want to buy **at most**
-        if self.method_buy == "top":
-            today = get_first_n(
-                pred_score[~pred_score.index.isin(last)].sort_values(ascending=False).index,
-                self.n_drop + self.topk - len(last),
+        if (
+            not self.only_tradable
+            and self.method_buy == "top"
+            and self.method_sell == "bottom"
+        ):
+            selection = select_topk_dropout(
+                pred_score,
+                current_stock_list,
+                topk=self.topk,
+                n_drop=self.n_drop,
             )
-        elif self.method_buy == "random":
-            topk_candi = get_first_n(pred_score.sort_values(ascending=False).index, self.topk)
-            candi = list(filter(lambda x: x not in last, topk_candi))
-            n = self.n_drop + self.topk - len(last)
-            try:
-                today = np.random.choice(candi, n, replace=False)
-            except ValueError:
-                today = candi
+            sell = selection.sell
+            buy = selection.buy
         else:
-            raise NotImplementedError(f"This type of input is not supported")
-        # combine(new stocks + last stocks),  we will drop stocks from this list
-        # In case of dropping higher score stock and buying lower score stock.
-        comb = pred_score.reindex(last.union(pd.Index(today))).sort_values(ascending=False).index
+            # Preserve the configurable random/tradability-filtered behavior.
+            last = pred_score.reindex(current_stock_list).sort_values(ascending=False).index
+            if self.method_buy == "top":
+                today = get_first_n(
+                    pred_score[~pred_score.index.isin(last)].sort_values(ascending=False).index,
+                    self.n_drop + self.topk - len(last),
+                )
+            elif self.method_buy == "random":
+                topk_candi = get_first_n(pred_score.sort_values(ascending=False).index, self.topk)
+                candi = list(filter(lambda x: x not in last, topk_candi))
+                n = self.n_drop + self.topk - len(last)
+                try:
+                    today = np.random.choice(candi, n, replace=False)
+                except ValueError:
+                    today = candi
+            else:
+                raise NotImplementedError(f"This type of input is not supported")
+            comb = pred_score.reindex(last.union(pd.Index(today))).sort_values(ascending=False).index
 
-        # Get the stock list we really want to sell (After filtering the case that we sell high and buy low)
-        if self.method_sell == "bottom":
-            sell = last[last.isin(get_last_n(comb, self.n_drop))]
-        elif self.method_sell == "random":
-            candi = filter_stock(last)
-            try:
-                sell = pd.Index(np.random.choice(candi, self.n_drop, replace=False) if len(last) else [])
-            except ValueError:  # No enough candidates
-                sell = candi
-        else:
-            raise NotImplementedError(f"This type of input is not supported")
-
-        # Get the stock list we really want to buy
-        buy = today[: len(sell) + self.topk - len(last)]
+            if self.method_sell == "bottom":
+                sell = last[last.isin(get_last_n(comb, self.n_drop))]
+            elif self.method_sell == "random":
+                candi = filter_stock(last)
+                try:
+                    sell = pd.Index(np.random.choice(candi, self.n_drop, replace=False) if len(last) else [])
+                except ValueError:  # No enough candidates
+                    sell = candi
+            else:
+                raise NotImplementedError(f"This type of input is not supported")
+            buy = today[: len(sell) + self.topk - len(last)]
         for code in current_stock_list:
             if not self.trade_exchange.is_stock_tradable(
                 stock_id=code,

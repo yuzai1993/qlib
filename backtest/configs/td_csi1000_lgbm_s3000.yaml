@@ -1,0 +1,67 @@
+# EXPERIMENT_STANDARD v1.0 | exp: train-data/csi1000 | seed 3000
+# python backtest/scripts/run_backtest.py --config td_csi1000_lgbm_s3000.yaml
+run:
+  mode: train_backtest
+  note: td_csi1000_lgbm_s3000
+  n_runs: 1
+  from_session: null
+  from_run: 1
+  generate_figures: false
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: csi1000
+  benchmark: SH000852
+  handler:
+    class: Alpha158
+    module_path: qlib.contrib.data.handler
+    start_time: '2003-01-02'
+    end_time: '2026-07-16'
+    fit_start_time: '2016-01-02'
+    fit_end_time: '2020-01-10'
+    infer_processors:
+    - class: ProcessInf
+segments:
+  train:
+  - '2016-01-02'
+  - '2020-01-10'
+  valid:
+  - '2020-01-13'
+  - '2021-07-15'
+  test:
+  - '2021-07-16'
+  - '2026-07-16'
+model:
+  class: LGBModel
+  module_path: qlib.contrib.model.gbdt
+  kwargs:
+    loss: mse
+    colsample_bytree: 0.8879
+    learning_rate: 0.2
+    subsample: 0.8789
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    max_depth: 8
+    num_leaves: 210
+    num_threads: 8
+    seed: 3000
+strategy:
+  class: TopkDropoutStrategy
+  module_path: qlib.contrib.strategy.signal_strategy
+  topk: 10
+  n_drop: 2
+  kwargs:
+    hold_thresh: 1
+    risk_degree: 0.95
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+backtest:
+  account: 1000000
+  exchange_kwargs:
+    freq: day
+    deal_price: close
+    limit_threshold: 0.095
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5
+    trade_unit: 100

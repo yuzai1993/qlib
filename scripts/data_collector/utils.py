@@ -21,6 +21,9 @@ from tqdm import tqdm
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor
 from bs4 import BeautifulSoup
+import baostock as bs
+
+from qlib.utils.pickle_utils import restricted_pickle_load
 
 CALENDAR_URL_BASE = "http://push2his.eastmoney.com/api/qt/stock/kline/get?secid={market}.{bench_code}&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58&klt=101&fqt=0&beg=19900101&end=20991231"
 SZSE_CALENDAR_URL = "http://www.szse.cn/api/report/exchange/onepersistenthour/monthList?month={month}&random={random}"
@@ -91,9 +94,16 @@ def get_calendar_list(bench_code="CSI300") -> List[pd.Timestamp]:
 
     logger.info(f"get calendar list: {bench_code}......")
 
-    def _get_calendar(url):
-        _value_list = requests.get(url, timeout=None).json()["data"]["klines"]
-        return sorted(map(lambda x: pd.Timestamp(x.split(",")[0]), _value_list))
+    def _get_calendar(end_date):
+        bs.login()
+        rs = bs.query_trade_dates(start_date="2005-01-01", end_date=end_date)
+        data_list = []
+        while (rs.error_code == "0") & rs.next():
+            data_list.append(rs.get_row_data())
+        bs.logout()
+        df = pd.DataFrame(data_list, columns=rs.fields)
+        trade_days = df[df["is_trading_day"] == "1"]["calendar_date"]
+        return sorted(map(pd.Timestamp, trade_days.to_list()))
 
     calendar = _CALENDAR_MAP.get(bench_code, None)
     if calendar is None:
@@ -117,7 +127,8 @@ def get_calendar_list(bench_code="CSI300") -> List[pd.Timestamp]:
                 if calendar is None:
                     calendar = _get_calendar(CALENDAR_BENCH_URL_MAP[bench_code])
             else:
-                calendar = _get_calendar(CALENDAR_BENCH_URL_MAP[bench_code])
+                end_date = time.strftime("%Y-%m-%d", time.localtime())
+                calendar = _get_calendar(end_date=end_date)
         _CALENDAR_MAP[bench_code] = calendar
     logger.info(f"end of get calendar list: {bench_code}.")
     return calendar
@@ -253,7 +264,7 @@ def get_hs_stock_symbols() -> list:
         symbol_cache_path.parent.mkdir(parents=True, exist_ok=True)
         if symbol_cache_path.exists():
             with symbol_cache_path.open("rb") as fp:
-                cache_symbols = pickle.load(fp)
+                cache_symbols = restricted_pickle_load(fp)
                 symbols |= cache_symbols
         with symbol_cache_path.open("wb") as fp:
             pickle.dump(symbols, fp)

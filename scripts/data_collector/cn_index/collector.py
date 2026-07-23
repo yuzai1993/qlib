@@ -32,8 +32,9 @@ from data_collector.index import IndexBase
 from data_collector.utils import get_calendar_list, get_trading_date_by_shift
 from data_collector.utils import get_instruments
 
-WEIGHT_CACHE_FILE = "index_weight_cache.pkl"
-CHANGES_CACHE_FILE = "changes_cache.json"
+NEW_COMPANIES_URL = (
+    "https://oss-ch.csindex.com.cn/static/html/csindex/public/uploads/file/autofile/cons/{index_code}cons.xls"
+)
 
 
 def _get_tushare_pro():

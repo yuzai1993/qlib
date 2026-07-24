@@ -1,0 +1,209 @@
+{
+  "date": "2026-07-25",
+  "data_version": "2026-07-24",
+  "baseline_data_version": "2026-07-23",
+  "liquidity_expression": "Ref(Mean($vwap*$volume, 20), 1)",
+  "train_only_filter": true,
+  "arms": {
+    "csi1000-full-v2": {
+      "metrics_summary": {
+        "csi300": {
+          "ic_mean": 0.01843,
+          "icir": 0.13593,
+          "rank_ic_mean": 0.0209,
+          "rank_icir": 0.15718,
+          "rank_ic_mean_std": 0.00111
+        },
+        "csi500": {
+          "ic_mean": 0.02061,
+          "icir": 0.17347,
+          "rank_ic_mean": 0.02012,
+          "rank_icir": 0.17913,
+          "rank_ic_mean_std": 0.00156
+        },
+        "csi1000": {
+          "ic_mean": 0.02958,
+          "icir": 0.2698,
+          "rank_ic_mean": 0.02885,
+          "rank_icir": 0.26669,
+          "rank_ic_mean_std": 0.00068
+        }
+      },
+      "pairwise_csi300_rankic_vs_b0": {
+        "n": 5,
+        "wins": 5,
+        "diff_mean": 0.010853537424588378,
+        "diffs": [
+          0.010694647284474825,
+          0.013744377783129138,
+          0.006960590627574606,
+          0.010477251203651654,
+          0.01239082022411166
+        ]
+      },
+      "hypothesis": "同一数据版本重跑完整 CSI1000 五种子，预期复现其跨池 RankIC 优势，并作为流动性分层的完整样本对照",
+      "conclusion": "improve",
+      "note": "完整 CSI1000 在三池保持本轮最高或并列最高，提升为 B1-M 五种子组；实盘单模型仅按 valid 选择"
+    },
+    "csi1000-random-third": {
+      "metrics_summary": {
+        "csi300": {
+          "ic_mean": 0.01525,
+          "icir": 0.11514,
+          "rank_ic_mean": 0.0195,
+          "rank_icir": 0.14884,
+          "rank_ic_mean_std": 0.00047
+        },
+        "csi500": {
+          "ic_mean": 0.01778,
+          "icir": 0.15089,
+          "rank_ic_mean": 0.02013,
+          "rank_icir": 0.17738,
+          "rank_ic_mean_std": 0.00104
+        },
+        "csi1000": {
+          "ic_mean": 0.02548,
+          "icir": 0.23765,
+          "rank_ic_mean": 0.02814,
+          "rank_icir": 0.25595,
+          "rank_ic_mean_std": 0.00119
+        }
+      },
+      "pairwise_csi300_rankic_vs_b0": {
+        "n": 5,
+        "wins": 5,
+        "diff_mean": 0.00945725040266915,
+        "diffs": [
+          0.010071369025934461,
+          0.010206086972490801,
+          0.0059296616921433384,
+          0.009072847934928869,
+          0.01200628638784828
+        ]
+      },
+      "hypothesis": "每日确定性随机保留约三分之一 CSI1000 样本；若 RankIC 仍接近 full，说明 CSI1000 优势主要来自跨流动性样本结构而非绝对截面数量",
+      "conclusion": "improve",
+      "note": "仅约三分之一训练样本仍接近 full：CSI300/500/1000 RankIC 分别保留约93%/100%/98%，样本结构是主要贡献，截面数量有次要增益"
+    },
+    "csi1000-liquidity-high": {
+      "metrics_summary": {
+        "csi300": {
+          "ic_mean": 0.01507,
+          "icir": 0.11499,
+          "rank_ic_mean": 0.01625,
+          "rank_icir": 0.13062,
+          "rank_ic_mean_std": 0.00082
+        },
+        "csi500": {
+          "ic_mean": 0.01449,
+          "icir": 0.12598,
+          "rank_ic_mean": 0.01454,
+          "rank_icir": 0.13084,
+          "rank_ic_mean_std": 0.00202
+        },
+        "csi1000": {
+          "ic_mean": 0.01995,
+          "icir": 0.19108,
+          "rank_ic_mean": 0.02082,
+          "rank_icir": 0.19714,
+          "rank_ic_mean_std": 0.00164
+        }
+      },
+      "pairwise_csi300_rankic_vs_b0": {
+        "n": 5,
+        "wins": 5,
+        "diff_mean": 0.006204047732028336,
+        "diffs": [
+          0.006593216284318889,
+          0.007956220031395804,
+          0.0017324744402546916,
+          0.006573194279524505,
+          0.008165133624647793
+        ]
+      },
+      "hypothesis": "只保留历史20日滞后一日成交额代理最高三分之一；若优于随机三分之一，说明高流动性样本信息质量更高",
+      "conclusion": "improve",
+      "note": "三池均高于 B0 但明显低于随机三分之一和 full；高流动性单层不是 CSI1000 优势主因"
+    },
+    "csi1000-liquidity-mid": {
+      "metrics_summary": {
+        "csi300": {
+          "ic_mean": 0.01318,
+          "icir": 0.10482,
+          "rank_ic_mean": 0.01338,
+          "rank_icir": 0.10405,
+          "rank_ic_mean_std": 0.00113
+        },
+        "csi500": {
+          "ic_mean": 0.01337,
+          "icir": 0.12845,
+          "rank_ic_mean": 0.01344,
+          "rank_icir": 0.12675,
+          "rank_ic_mean_std": 0.00134
+        },
+        "csi1000": {
+          "ic_mean": 0.01866,
+          "icir": 0.19551,
+          "rank_ic_mean": 0.02193,
+          "rank_icir": 0.22097,
+          "rank_ic_mean_std": 0.00063
+        }
+      },
+      "pairwise_csi300_rankic_vs_b0": {
+        "n": 5,
+        "wins": 4,
+        "diff_mean": 0.003339697461389397,
+        "diffs": [
+          0.0024719162708022532,
+          0.00597886308533839,
+          -0.0001237143520131708,
+          0.002071574638734799,
+          0.006299847664084715
+        ]
+      },
+      "hypothesis": "只保留历史20日滞后一日成交额代理中间三分之一；若优于高/低层，说明中等流动性是 Alpha158 的有效样本甜点区",
+      "conclusion": "improve",
+      "note": "三池高于 B0，但明显低于随机三分之一和 full；CSI1000 测试略高于 high，未形成跨池甜点区"
+    },
+    "csi1000-liquidity-low": {
+      "metrics_summary": {
+        "csi300": {
+          "ic_mean": 0.00779,
+          "icir": 0.06012,
+          "rank_ic_mean": 0.0004,
+          "rank_icir": 0.00289,
+          "rank_ic_mean_std": 0.0014
+        },
+        "csi500": {
+          "ic_mean": 0.01026,
+          "icir": 0.09186,
+          "rank_ic_mean": 0.00105,
+          "rank_icir": 0.00844,
+          "rank_ic_mean_std": 0.00104
+        },
+        "csi1000": {
+          "ic_mean": 0.01763,
+          "icir": 0.17991,
+          "rank_ic_mean": 0.00988,
+          "rank_icir": 0.08549,
+          "rank_ic_mean_std": 0.00148
+        }
+      },
+      "pairwise_csi300_rankic_vs_b0": {
+        "n": 5,
+        "wins": 0,
+        "diff_mean": -0.00964591883452154,
+        "diffs": [
+          -0.010613026980966972,
+          -0.007355345024253946,
+          -0.014376963996530647,
+          -0.008795067797897696,
+          -0.007089190372958437
+        ]
+      },
+      "hypothesis": "只保留历史20日滞后一日成交额代理最低三分之一；若 IC 较高但 RankICIR 下降，说明低流动性样本信号强但不稳定",
+      "conclusion": "regress",
+      "note": "CSI300/500 RankIC 接近零且低于 B0，CSI1000 也远低于 random/full；低流动性单层训练不可取"
+    }
+  }
+}

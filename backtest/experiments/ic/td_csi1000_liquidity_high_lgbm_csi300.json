@@ -1,0 +1,96 @@
+{
+  "generated_at": "2026-07-25T01:32:10",
+  "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-liquidity-high/td_csi1000_liquidity_high_lgbm_s42.yaml",
+  "eval_label": "Ref($close, -2)/Ref($close, -1) - 1",
+  "eval_segment_name": "test",
+  "eval_segment": [
+    "2021-07-16",
+    "2026-07-16"
+  ],
+  "sessions": [
+    {
+      "session": "20260725_010531_td_csi1000_liquidity_high_lgbm_s42",
+      "seed": 42
+    },
+    {
+      "session": "20260725_005820_td_csi1000_liquidity_high_lgbm_s1000",
+      "seed": 1000
+    },
+    {
+      "session": "20260725_010008_td_csi1000_liquidity_high_lgbm_s2000",
+      "seed": 2000
+    },
+    {
+      "session": "20260725_010156_td_csi1000_liquidity_high_lgbm_s3000",
+      "seed": 3000
+    },
+    {
+      "session": "20260725_010343_td_csi1000_liquidity_high_lgbm_s4000",
+      "seed": 4000
+    }
+  ],
+  "data_version": "2026-07-24",
+  "st_filter": "unavailable（未剔除 ST）",
+  "pools": {
+    "csi300": {
+      "seeds": {
+        "42": {
+          "n_days": 1211,
+          "ic_mean": 0.013801790369038391,
+          "ic_std": 0.13288423025760568,
+          "icir": 0.10386326761484507,
+          "rank_ic_mean": 0.015542868087477065,
+          "rank_ic_std": 0.1270106622920916,
+          "rank_icir": 0.1223745141312034
+        },
+        "1000": {
+          "n_days": 1211,
+          "ic_mean": 0.015424694818497203,
+          "ic_std": 0.13222712922584456,
+          "icir": 0.11665302656727691,
+          "rank_ic_mean": 0.01578274133429872,
+          "rank_ic_std": 0.12467287671285186,
+          "rank_icir": 0.12659322340535809
+        },
+        "2000": {
+          "n_days": 1211,
+          "ic_mean": 0.015280627225162609,
+          "ic_std": 0.1296624575177397,
+          "icir": 0.11784927971978318,
+          "rank_ic_mean": 0.016650727090858682,
+          "rank_ic_std": 0.12335819206980597,
+          "rank_icir": 0.1349786893880251
+        },
+        "3000": {
+          "n_days": 1211,
+          "ic_mean": 0.015358046222838989,
+          "ic_std": 0.1297509687056875,
+          "icir": 0.11836556116721912,
+          "rank_ic_mean": 0.015751588786033877,
+          "rank_ic_std": 0.12303224696838758,
+          "rank_icir": 0.1280281322512232
+        },
+        "4000": {
+          "n_days": 1211,
+          "ic_mean": 0.015466876703711373,
+          "ic_std": 0.1308194505301223,
+          "icir": 0.11823071141970583,
+          "rank_ic_mean": 0.017503076226799624,
+          "rank_ic_std": 0.12402056882056277,
+          "rank_icir": 0.14113043016375515
+        }
+      },
+      "seed_mean": {
+        "ic_mean": 0.015066407067849712,
+        "icir": 0.11499236929776602,
+        "rank_ic_mean": 0.016246200305093595,
+        "rank_icir": 0.13062099786791298,
+        "rank_ic_mean_std": 0.0008212018606438985
+      }
+    }
+  },
+  "test_segment": [
+    "2021-07-16",
+    "2026-07-16"
+  ]
+}

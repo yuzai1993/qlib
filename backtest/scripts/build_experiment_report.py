@@ -1,9 +1,9 @@
 """从 backtest/experiments/registry.jsonl 生成标准实验 HTML 报告。
 
 registry 是唯一数据源（backtest/EXPERIMENT_STANDARD.md 第 6/7 节）：
-- 报告顶部为目录（各实验方向锚点）；
+- 报告顶部为目录 + Phase M 指标说明；
 - 每个实验方向（direction）一张独立表格；
-- metrics_summary 按测试集展开为嵌套单元格，Phase M/S 指标字段可不同。
+- 表格列仅含：实验名、实验内容、各指标（一指标一列）。
 
 用法：
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_experiment_report.py \
@@ -24,41 +24,95 @@ BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = BACKTEST_ROOT / "experiments" / "registry.jsonl"
 DEFAULT_OUTPUT = BACKTEST_ROOT / "experiments" / "report.html"
 
-METRIC_LABELS = {
-    "rankic_mean": "RankIC均值",
-    "rankic_std": "RankIC标准差",
-    "rankic_delta_vs_b0": "ΔRankIC vs B0",
-    "ic_mean": "IC均值",
-    "icir": "ICIR",
+# Phase M：4 指标 × 3 指数（默认不含全A）；表头两行：指标 / 指数
+PHASE_M_METRIC_KEYS = ("rank_ic_mean", "rank_icir", "ic_mean", "icir")
+PHASE_M_METRIC_LABELS = {
+    "rank_ic_mean": "RankIC",
     "rank_icir": "RankICIR",
+    "ic_mean": "IC",
+    "icir": "ICIR",
+}
+DEFAULT_TEST_POOLS = ("csi300", "csi500", "csi1000")
+POOL_DISPLAY = {
+    "csi300": "CSI300",
+    "csi500": "CSI500",
+    "csi1000": "CSI1000",
+    "all": "全A",
+}
+
+# Phase S：扁平指标列
+PHASE_S_METRIC_KEYS = ("ir", "ann", "mdd")
+PHASE_S_METRIC_LABELS = {
     "ir": "扣费超额IR",
     "ann": "扣费超额年化",
     "mdd": "扣费最大回撤",
-    "ir_delta_vs_b0": "ΔIR vs B0",
-    "pairwise_wins": "成对胜出",
 }
 
 CSS = """
 body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-       margin: 24px auto; max-width: 1280px; color: #1a1a2e; background: #fafafa; }
+       margin: 24px auto; max-width: 1400px; color: #1a1a2e; background: #fafafa; }
 h1 { font-size: 22px; } h2 { font-size: 18px; margin-top: 36px;
      border-bottom: 2px solid #4a6fa5; padding-bottom: 6px; }
+h3 { font-size: 15px; margin: 16px 0 8px; color: #333; }
 .meta { color: #666; font-size: 13px; }
-nav { background: #fff; border: 1px solid #ddd; border-radius: 8px;
+nav, .legend { background: #fff; border: 1px solid #ddd; border-radius: 8px;
       padding: 12px 20px; margin: 16px 0; }
 nav ul { margin: 6px 0; padding-left: 20px; }
 nav a { color: #2a5aa0; text-decoration: none; } nav a:hover { text-decoration: underline; }
-table { border-collapse: collapse; width: 100%; background: #fff; font-size: 13px;
+.legend table { margin: 8px 0 0; font-size: 13px; }
+.legend th { text-align: left; }
+.priority { color: #b45309; font-weight: 600; }
+.priority-tag { display: inline-block; background: #fff7ed; color: #b45309;
+                border: 1px solid #fdba74; border-radius: 3px; padding: 0 6px;
+                font-size: 11px; margin-left: 6px; vertical-align: middle; }
+table.exp { border-collapse: collapse; width: 100%; background: #fff; font-size: 13px;
         margin: 12px 0; }
-th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: top; }
-th { background: #eef2f7; white-space: nowrap; }
-tr:nth-child(even) { background: #f7f9fb; }
-.metrics { white-space: nowrap; }
-.metrics b { color: #4a6fa5; }
-.paths { font-size: 11px; color: #555; word-break: break-all; }
-.concl-improve { color: #1a7f37; font-weight: 600; }
-.concl-regress { color: #c62828; font-weight: 600; }
-.concl-neutral { color: #8a6d00; font-weight: 600; }
+table.exp th, table.exp td { border: 1px solid #ddd; padding: 6px 8px;
+        vertical-align: top; }
+table.exp th { background: #eef2f7; white-space: nowrap; text-align: center; }
+table.exp td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.exp td.name { white-space: nowrap; font-weight: 600; }
+table.exp td.content { max-width: 360px; font-size: 12px; color: #333; }
+table.exp tr:nth-child(even) { background: #f7f9fb; }
+table.exp th.primary { background: #dbeafe; }
+table.exp td.primary { background: #f0f7ff; }
+.best { color: #1a7f37; font-weight: 600; }
+.empty { color: #999; }
+"""
+
+PHASE_M_LEGEND_HTML = """
+<section class="legend" id="phase-m-metrics">
+<h3>Phase M 指标说明</h3>
+<p class="meta">评测标签固定为次日可交易收益
+<code>Ref($close,-2)/Ref($close,-1)-1</code>，与训练标签无关；数值均为 test 段逐日截面相关的时间均值，再对 5 种子取平均。</p>
+<table>
+<thead><tr><th>指标</th><th>含义</th><th>关注优先级</th></tr></thead>
+<tbody>
+<tr>
+  <td class="priority">RankIC</td>
+  <td>预测分数与真实收益的<strong>截面 Spearman 秩相关</strong>时间均值。对异常值稳健，直接对应选股排序能力（Topk 策略吃的就是排序）。</td>
+  <td><span class="priority-tag">最高优先</span> 主指标：先看各测试集 RankIC 是否相对基线整体抬升</td>
+</tr>
+<tr>
+  <td class="priority">RankICIR</td>
+  <td>RankIC 均值 / RankIC 标准差。衡量排序信号的<strong>时间稳定性</strong>（高均值但波动大 → RankICIR 低）。</td>
+  <td><span class="priority-tag">次优先</span> 与 RankIC 一起看：均值升但 RankICIR 明显下降说明信号不稳</td>
+</tr>
+<tr>
+  <td>IC</td>
+  <td>预测分数与真实收益的截面 Pearson 相关时间均值。对极端值更敏感，作辅助对照。</td>
+  <td>参考</td>
+</tr>
+<tr>
+  <td>ICIR</td>
+  <td>IC 均值 / IC 标准差。Pearson 口径下的时间稳定性。</td>
+  <td>参考</td>
+</tr>
+</tbody>
+</table>
+<<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注实盘目标池 <b>CSI300</b>，再看 CSI500 / CSI1000 是否同步改善（防过拟合单一市场）。
+默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。</p>
+</section>
 """
 
 
@@ -85,77 +139,193 @@ def _slug(direction: str) -> str:
     return "direction-" + "".join(c if c.isalnum() else "-" for c in direction.lower())
 
 
-def _fmt_num(v: Any) -> str:
-    if isinstance(v, float):
-        return f"{v:.4f}"
-    return _esc(v)
+def _fmt_metric(v: Any) -> str:
+    if v is None or v == "":
+        return '<span class="empty">—</span>'
+    try:
+        return f"{float(v):.4f}"
+    except (TypeError, ValueError):
+        return _esc(v)
 
 
-def _metrics_cell(metrics_summary: Any) -> str:
-    """metrics_summary = {pool: {metric: value}} → 每池一行的嵌套展示。"""
-    if not isinstance(metrics_summary, dict) or not metrics_summary:
-        return ""
-    parts = []
-    for pool, m in metrics_summary.items():
-        if isinstance(m, dict):
-            kv = ", ".join(
-                f"{METRIC_LABELS.get(k, k)}={_fmt_num(v)}" for k, v in m.items()
+def _phase_of(row: dict) -> str:
+    return str(row.get("phase") or "M").upper()
+
+
+def _test_pools(_rows: Sequence[dict] | None = None) -> list[str]:
+    """报告默认固定三指数；registry 里的 all 不展示（除非日后改 DEFAULT_TEST_POOLS）。"""
+    return list(DEFAULT_TEST_POOLS)
+
+
+def _metric_columns_m(pools: Sequence[str]) -> list[tuple[str, str, str, bool]]:
+    """返回 [(col_key, metric_label, pool, is_primary), ...]。"""
+    cols: list[tuple[str, str, str, bool]] = []
+    for metric in PHASE_M_METRIC_KEYS:
+        primary = metric in ("rank_ic_mean", "rank_icir")
+        label = PHASE_M_METRIC_LABELS[metric]
+        for pool in pools:
+            cols.append((f"{metric}@{pool}", label, pool, primary))
+    return cols
+
+
+def _metric_columns_s() -> list[tuple[str, str, bool]]:
+    return [
+        (k, PHASE_S_METRIC_LABELS[k], k == "ir") for k in PHASE_S_METRIC_KEYS
+    ]
+
+
+def _get_pool_metric(row: dict, pool: str, key: str) -> Any:
+    ms = row.get("metrics_summary") or {}
+    pool_m = ms.get(pool) if isinstance(ms, dict) else None
+    if not isinstance(pool_m, dict):
+        return None
+    # 兼容旧字段名
+    aliases = {
+        "rank_ic_mean": ("rank_ic_mean", "rankic_mean"),
+        "rank_icir": ("rank_icir", "rank_icir"),
+        "ic_mean": ("ic_mean",),
+        "icir": ("icir",),
+    }
+    for cand in aliases.get(key, (key,)):
+        if cand in pool_m:
+            return pool_m[cand]
+    return None
+
+
+def _get_flat_metric(row: dict, key: str) -> Any:
+    """Phase S：优先 metrics_summary 扁平或主池字段，其次 strategy_baseline_b0s。"""
+    ms = row.get("metrics_summary") or {}
+    if isinstance(ms, dict):
+        if key in ms and not isinstance(ms[key], dict):
+            return ms[key]
+        # 常见写法：{"csi300": {"ir": ...}}
+        for pool in row.get("test_pools") or ("csi300",):
+            pool_m = ms.get(pool)
+            if isinstance(pool_m, dict) and key in pool_m:
+                return pool_m[key]
+    b0s = row.get("strategy_baseline_b0s") or {}
+    alias = {"ir": "ir_mean", "ann": "ann_mean", "mdd": "mdd_mean"}
+    return b0s.get(alias.get(key, key))
+
+
+def _best_indices(values: Sequence[Optional[float]], *, higher_better: bool) -> set[int]:
+    nums = [(i, v) for i, v in enumerate(values) if v is not None]
+    if not nums:
+        return set()
+    best = max(v for _, v in nums) if higher_better else min(v for _, v in nums)
+    return {i for i, v in nums if v == best}
+
+
+def _build_phase_m_table(rows: Sequence[dict]) -> str:
+    pools = _test_pools(rows)
+    cols = _metric_columns_m(pools)
+
+    # 预取数值，标记每列最优
+    col_vals: list[list[Optional[float]]] = []
+    for col_key, _, pool, _ in cols:
+        metric = col_key.split("@", 1)[0]
+        vals: list[Optional[float]] = []
+        for r in rows:
+            v = _get_pool_metric(r, pool, metric)
+            try:
+                vals.append(float(v) if v is not None else None)
+            except (TypeError, ValueError):
+                vals.append(None)
+        col_vals.append(vals)
+
+    best_sets = [_best_indices(vals, higher_better=True) for vals in col_vals]
+
+    n_pools = len(pools)
+    # 两行表头：第一行指标（colspan），第二行指数
+    row1 = [
+        '<th rowspan="2">实验名</th>',
+        '<th rowspan="2">实验内容</th>',
+    ]
+    for metric in PHASE_M_METRIC_KEYS:
+        primary = metric in ("rank_ic_mean", "rank_icir")
+        cls = ' class="primary"' if primary else ""
+        row1.append(
+            f'<th{cls} colspan="{n_pools}">{_esc(PHASE_M_METRIC_LABELS[metric])}</th>'
+        )
+    row2 = []
+    for metric in PHASE_M_METRIC_KEYS:
+        primary = metric in ("rank_ic_mean", "rank_icir")
+        cls = ' class="primary"' if primary else ""
+        for pool in pools:
+            row2.append(
+                f"<th{cls}>{_esc(POOL_DISPLAY.get(pool, pool))}</th>"
             )
-        else:
-            kv = _fmt_num(m)
-        parts.append(f"<b>{_esc(pool)}</b>: {kv}")
-    return "<div class='metrics'>" + "<br>".join(parts) + "</div>"
+
+    body_rows = []
+    for ri, r in enumerate(rows):
+        name = _esc(r.get("exp_id") or "")
+        content = _esc(r.get("hypothesis") or r.get("note") or "")
+        cells = [f'<td class="name">{name}</td>', f'<td class="content">{content}</td>']
+        for (_, _, _, primary), vals, best in zip(cols, col_vals, best_sets):
+            v = vals[ri]
+            cls = ["num"]
+            if primary:
+                cls.append("primary")
+            if ri in best and v is not None:
+                cls.append("best")
+            cells.append(f'<td class="{" ".join(cls)}">{_fmt_metric(v)}</td>')
+        body_rows.append("<tr>" + "".join(cells) + "</tr>")
+
+    return (
+        '<table class="exp"><thead>'
+        f"<tr>{''.join(row1)}</tr><tr>{''.join(row2)}</tr>"
+        "</thead><tbody>"
+        + "".join(body_rows)
+        + "</tbody></table>"
+    )
 
 
-def _paths_cell(row: dict) -> str:
-    items = list(row.get("configs") or []) + list(row.get("result_dirs") or [])
-    if not items:
-        return ""
-    return "<div class='paths'>" + "<br>".join(_esc(p) for p in items) + "</div>"
+def _build_phase_s_table(rows: Sequence[dict]) -> str:
+    cols = _metric_columns_s()
+    col_vals: list[list[Optional[float]]] = []
+    for key, _, _ in cols:
+        vals = []
+        for r in rows:
+            v = _get_flat_metric(r, key)
+            try:
+                vals.append(float(v) if v is not None else None)
+            except (TypeError, ValueError):
+                vals.append(None)
+        col_vals.append(vals)
 
+    # IR/ann 越高越好；mdd（通常为负）越高（越接近 0）越好
+    best_sets = [
+        _best_indices(vals, higher_better=True) for vals in col_vals
+    ]
 
-def _conclusion_cell(row: dict) -> str:
-    c = row.get("conclusion") or row.get("gate") or ""
-    cls = {
-        "improve": "concl-improve",
-        "pass": "concl-improve",
-        "regress": "concl-regress",
-        "fail": "concl-regress",
-        "neutral": "concl-neutral",
-    }.get(str(c).lower(), "")
-    return f"<span class='{cls}'>{_esc(c)}</span>" if cls else _esc(c)
+    header = ['<th>实验名</th>', '<th>实验内容</th>']
+    for _, label, primary in cols:
+        cls = ' class="primary"' if primary else ""
+        header.append(f"<th{cls}>{_esc(label)}</th>")
 
+    body_rows = []
+    for ri, r in enumerate(rows):
+        cells = [
+            f'<td class="name">{_esc(r.get("exp_id") or "")}</td>',
+            f'<td class="content">{_esc(r.get("hypothesis") or r.get("note") or "")}</td>',
+        ]
+        for ci, ((_, _, primary), vals, best) in enumerate(zip(cols, col_vals, best_sets)):
+            v = vals[ri]
+            cls = ["num"]
+            if primary:
+                cls.append("primary")
+            if ri in best and v is not None:
+                cls.append("best")
+            cells.append(f'<td class="{" ".join(cls)}">{_fmt_metric(v)}</td>')
+        body_rows.append("<tr>" + "".join(cells) + "</tr>")
 
-COLUMNS = [
-    ("exp_id", "实验"),
-    ("phase", "Phase"),
-    ("date", "日期"),
-    ("hypothesis", "假设"),
-    ("train_pool", "训练池"),
-    ("seeds", "种子"),
-    ("data_version", "数据版本"),
-    ("metrics", "指标（按测试集）"),
-    ("conclusion", "结论"),
-    ("note", "备注"),
-    ("paths", "配置 / 结果路径"),
-]
-
-
-def _row_html(row: dict) -> str:
-    cells = []
-    for key, _ in COLUMNS:
-        if key == "metrics":
-            cells.append(_metrics_cell(row.get("metrics_summary")))
-        elif key == "paths":
-            cells.append(_paths_cell(row))
-        elif key == "conclusion":
-            cells.append(_conclusion_cell(row))
-        elif key == "seeds":
-            seeds = row.get("seeds") or []
-            cells.append(_esc(f"{len(seeds)}个" if seeds else ""))
-        else:
-            cells.append(_esc(row.get(key)))
-    return "<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>"
+    return (
+        '<table class="exp"><thead><tr>'
+        + "".join(header)
+        + "</tr></thead><tbody>"
+        + "".join(body_rows)
+        + "</tbody></table>"
+    )
 
 
 def build_html(rows: Sequence[dict]) -> str:
@@ -163,19 +333,29 @@ def build_html(rows: Sequence[dict]) -> str:
     for r in rows:
         by_direction.setdefault(r.get("direction") or "uncategorized", []).append(r)
 
-    toc_items = []
+    toc_items = [
+        '<li><a href="#phase-m-metrics">Phase M 指标说明</a></li>'
+    ]
     sections = []
-    header = "".join(f"<th>{label}</th>" for _, label in COLUMNS)
     for direction in sorted(by_direction):
         group = sorted(by_direction[direction], key=lambda r: str(r.get("date") or ""))
         anchor = _slug(direction)
         toc_items.append(
             f"<li><a href='#{anchor}'>{_esc(direction)}</a>（{len(group)} 个实验）</li>"
         )
-        body = "".join(_row_html(r) for r in group)
+        phases = {_phase_of(r) for r in group}
+        if phases == {"S"}:
+            table = _build_phase_s_table(group)
+        else:
+            # 混合或纯 M：用 Phase M 宽表（S 行指标列为空）
+            table = _build_phase_m_table(group)
+            if "S" in phases:
+                table += "<p class='meta'>本组含 Phase S 实验，策略指标见独立 strategy 方向表。</p>"
+                s_rows = [r for r in group if _phase_of(r) == "S"]
+                if s_rows:
+                    table += _build_phase_s_table(s_rows)
         sections.append(
-            f"<h2 id='{anchor}'>{_esc(direction)}</h2>\n"
-            f"<table><thead><tr>{header}</tr></thead><tbody>{body}</tbody></table>"
+            f"<h2 id='{anchor}'>{_esc(direction)}</h2>\n{table}"
         )
 
     generated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -197,6 +377,7 @@ def build_html(rows: Sequence[dict]) -> str:
 数据源 <code>backtest/experiments/registry.jsonl</code> ·
 规范 <code>backtest/EXPERIMENT_STANDARD.md</code></p>
 {toc}
+{PHASE_M_LEGEND_HTML}
 {"".join(sections)}
 </body>
 </html>

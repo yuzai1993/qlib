@@ -12,7 +12,7 @@
 1. 基线（B0）固定，见第 1 节；任何实验必须与 B0 对比。
 2. 模型与策略**分开迭代**：一期只改模型（Phase M），策略冻结为 B0-S；确定更优模型后才进入策略迭代（Phase S），此时模型冻结。
 3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
-4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI300）训练**（共 5 次训练），训练好的模型在 **4 个测试集**（csi300/csi500/csi1000/全A）上评估 IC/RankIC。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
+4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI300）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi300/csi500/csi1000）上评估 IC/RankIC。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
 5. 时间划分固定（第 3 节）：测试集 2021-07-16 ~ 2026-07-16；评估集 2020-01-13 ~ 2021-07-15。**禁止用测试集调参**。
 6. 每个实验必须登记到 `backtest/experiments/registry.jsonl`（配置路径 + 结果路径），并更新 HTML 报告（每个实验方向一张独立表格）。
 
@@ -34,7 +34,7 @@
 | 超参 | loss=mse, learning_rate=0.2, colsample_bytree=0.8879, subsample=0.8789, lambda_l1=205.6999, lambda_l2=580.9768, max_depth=8, num_leaves=210（即 qlib 官方 benchmark 参数，见现有 configs） |
 | 数据处理 | infer_processors 含 ProcessInf，与实盘配置一致 |
 
-注：实盘模型是单种子产物。做 Phase M 对比时，B0-M 指"用上表配置在基线训练池（CSI300）按 5 种子重训、并在 4 个测试集上打分得到的基线组"，而非直接复用实盘那一个 recorder。基线组只需跑一次，结果登记后供后续所有实验复用。
+注：实盘模型是单种子产物。做 Phase M 对比时，B0-M 指"用上表配置在基线训练池（CSI300）按 5 种子重训、并在默认 3 个测试集上打分得到的基线组"，而非直接复用实盘那一个 recorder。基线组只需跑一次，结果登记后供后续所有实验复用。
 
 ### 1.2 策略基线 B0-S
 
@@ -90,8 +90,8 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 | CSI1000 | `csi1000` | 2016-01-02 | 2020-01-10 | SH000852 |
 | 全A | `all` | 2006-01-02 | 2020-01-10 | 中证全指 SH000985 本地无数据，训练/回测配置暂用 SH000300 占位（Phase M 只看 IC/RankIC 不受影响；全A 策略回测结论仅供参考） |
 
-- **默认训练池 = 基线训练池 CSI300**（train 2006-01-02 ~ 2020-01-10）；4 个池均作为测试集，用同一个训练好的模型分别打分评估（跨池推理只需取数打分，无需重训）。
-- **全A 测试集口径**：剔除评估日距该股数据起始不足 60 个交易日的股票（次新股）；ST 股在股票名称缓存可用时一并剔除（`eval_ic_multi_pool.py --st-names`），不可用时在结果中注明"未剔除 ST"。
+- **默认训练池 = 基线训练池 CSI300**（train 2006-01-02 ~ 2020-01-10）；**默认测试集 = csi300 / csi500 / csi1000**，用同一个训练好的模型分别打分评估（跨池推理只需取数打分，无需重训）。
+- **全A**：暂不纳入默认测试矩阵；若实验显式要求评估全A，剔除评估日距该股数据起始不足 60 个交易日的股票（次新股）；ST 股在股票名称缓存可用时一并剔除（`eval_ic_multi_pool.py --st-names`），不可用时在结果中注明"未剔除 ST"。
 - 上表中其余池的训练配置仅用于**训练样本类实验**（direction 如 `train-data`：更换训练池、调整训练起点、样本加权等）；此类实验须在 registry 中注明所用训练池，并与相同训练池的基线组对比。
 - Phase S 默认在**实盘目标池**（当前 CSI300）上执行，其余池作稳健性参考。
 
@@ -103,10 +103,10 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 ## 4. 运行矩阵
 
-一个模型变体的默认评估 = 基线训练池（CSI300）× 5 种子训练（5 次训练），训练好的模型在**全部 4 个测试集**上打分评估（仅推理，无需重训）。
+一个模型变体的默认评估 = 基线训练池（CSI300）× 5 种子训练（5 次训练），训练好的模型在**默认 3 个测试集**（csi300/csi500/csi1000）上打分评估（仅推理，无需重训）。
 
-- 除非实验设计中**事先明确**只评估特定测试集，否则不得省略任何测试集。
-- 训练样本类实验：训练池由实验设计决定，种子数（5）与测试集（4）要求不变。
+- 除非实验设计中**事先明确**只评估特定测试集，否则不得省略默认三指数中的任何一个；全A 默认不跑。
+- 训练样本类实验：训练池由实验设计决定，种子数（5）与默认测试集（3 指数）要求不变。
 
 ---
 
@@ -120,13 +120,19 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 **统一计算入口**：所有 IC/RankIC 一律通过 `backtest/scripts/eval_ic_multi_pool.py` 计算（内部调用 `eval_protocol.daily_ic`），不得各自手写实现。评测标签固定为默认 `Ref($close, -2)/Ref($close, -1) - 1`，**与训练标签无关**——这样不同标签设计的实验在同一把尺子下可比。
 
-| 角色 | 指标 |
-|---|---|
-| 主指标 | RankIC 均值（5 种子平均） |
-| 副指标 | IC 均值、ICIR、RankICIR |
+#### 指标含义与关注优先级
+
+| 优先级 | 指标 | 含义 | 怎么用 |
+|---|---|---|---|
+| **最高优先（主指标）** | **RankIC** | 预测分数与真实收益的截面 Spearman 秩相关时间均值 | 直接对应选股排序能力（Topk 吃的是排序）；先看各测试集 RankIC 是否相对 B0 整体抬升 |
+| **次优先** | **RankICIR** | RankIC 均值 / RankIC 标准差 | 排序信号的时间稳定性；均值升但 RankICIR 明显下降说明信号不稳 |
+| 参考 | IC | 截面 Pearson 相关时间均值 | 对极端值更敏感，作辅助对照 |
+| 参考 | ICIR | IC 均值 / IC 标准差 | Pearson 口径下的时间稳定性 |
+
+读表顺序：同一方向内横向对比各测试集 **RankIC** → 再看 **RankICIR** 是否同步改善 → 优先关注实盘目标池 **csi300**，再用 CSI500 / CSI1000 确认不是过拟合单一市场。
 
 **报告要求**：
-1. 每个测试集给出 5 种子均值 ± 标准差，以及相对 B0-M 的 Δ；
+1. 每个测试集给出 5 种子均值（HTML 以一指标一列展示，便于横向对比）；
 2. 附实盘目标池（CSI300）测试集上的逐种子成对比较结果（`backtest/scripts/eval_protocol.py: pairwise_win_count`）作为稳健性参考；
 3. 不得只报最优种子或只报表现好的测试集。
 
@@ -152,9 +158,12 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 ### 6.1 命名
 
-- 实验方向（direction）：短横线小写，如 `label-design`、`feature-ablation`、`model-arch`、`strategy-sweep`。
-- 实验 ID（exp_id）：`<direction>/<变体名>`，如 `label-design/cum_h10`。
-- 配置文件：放 `backtest/configs/`，文件名含 exp 变体与池、种子，如 `csi300_lgbm_cum_h10_s42.yaml`；配置头部注释写明 exp_id 与运行命令。
+- 实验方向（direction）：短横线小写，如 `label-design`、`feature-ablation`、`model-arch`、`strategy-sweep`、`train-data`。
+- 实验 ID（exp_id）：`<direction>/<变体名>`，如 `label-design/cum_h10`、`baseline/b0-m`、`train-data/csi1000`。
+- 配置文件：**按 exp_id 建目录**，放在 `backtest/configs/<exp_id>/` 下，例如：
+  - `backtest/configs/baseline/b0-m/b0_csi300_lgbm_s42.yaml`
+  - `backtest/configs/train-data/csi1000/td_csi1000_lgbm_s42.yaml`
+  文件名含变体与种子；配置头部注释写明 exp_id 与运行命令（`--config baseline/b0-m/b0_csi300_lgbm_s42.yaml`）。`config_loader` 支持相对 `configs/` 的子路径，也支持仅文件名（唯一匹配时）。
 - 结果目录：`backtest/result/<时间戳>_<变体名>/`（run_backtest.py 默认行为，note 字段填变体名）。
 
 ### 6.2 registry（必填）
@@ -171,11 +180,11 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
   "baseline_ref": "B0 v1.0",
   "seeds": [42, 1000, 2000, 3000, 4000],
   "train_pool": "csi300",
-  "test_pools": ["csi300", "csi500", "csi1000", "all"],
+  "test_pools": ["csi300", "csi500", "csi1000"],
   "data_version": "2026-07-16",
-  "configs": ["backtest/configs/csi500_lgbm_ms_cum_h10_s42.yaml"],
+  "configs": ["backtest/configs/label-design/cum_h10/csi300_lgbm_cum_h10_s42.yaml"],
   "result_dirs": ["backtest/result/20260718_122513_ms_cum_h10_s42"],
-  "metrics_summary": {"csi500": {"rankic_mean": 0.061, "rankic_delta_vs_b0": 0.004}},
+  "metrics_summary": {"csi500": {"rank_ic_mean": 0.061, "rank_icir": 0.45}},
   "conclusion": "regress",
   "note": "RankIC 全测试集低于 B0，判负"
 }
@@ -195,10 +204,10 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 ## 7. HTML 报告规范
 
 - 报告由 `backtest/scripts/build_experiment_report.py` 从 `registry.jsonl` **自动生成**（`backtest/experiments/report.html`，自包含单文件）。**registry 是唯一数据源**，禁止手工编辑 HTML；登记新行后重跑脚本即可。
-- 报告顶部自动生成**目录**（各实验方向的锚点链接）。
+- 报告顶部自动生成**目录**，并含 Phase M 指标说明（含义 + 关注优先级）。
 - **每个实验方向一张独立表格**（一个 direction 一张表），由脚本按 registry 的 `direction` 字段自动分组。
-- 指标列由 `metrics_summary` 按测试集展开；Phase M 填 RankIC/IC/RankICIR 及 Δ vs B0，Phase S 填扣费超额 IR/年化/最大回撤及 Δ vs B0-S。
-- 无效实验也要登记并保留在表格中（`conclusion` 标注），避免重复试错。
+- 表格列精简为：**实验名**、**实验内容**（hypothesis）、**指标列**。Phase M 为 4 指标（RankIC / RankICIR / IC / ICIR）× 3 指数，**两行表头**（第一行指标、第二行指数）；Phase S 为扣费超额 IR/年化/最大回撤。同列最优值高亮。
+- 无效实验也要登记并保留在表格中，避免重复试错。
 - 历史报告 `build_benchmark_html.py` 仅作为规范生效前旧实验的存档，不再新增内容。
 
 ---
@@ -209,7 +218,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 [ ] 1. 读本文件，确认当前 Phase（M 或 S）与 B0 版本
 [ ] 2. 写实验假设与变体设计（即 registry 的 hypothesis 字段，开跑前定稿，不得事后修改）
 [ ] 3. 生成配置（复用现有 config 模板，只改实验变量；时间/种子/费率不得动）
-[ ] 4. 基线训练池（CSI300）× 5 种子训练，在全部 4 个测试集上打分评估
+[ ] 4. 基线训练池（CSI300）× 5 种子训练，在默认 3 个测试集（csi300/csi500/csi1000）上打分评估
 [ ] 5. 按第 5 节口径汇总指标，与 B0 对比
 [ ] 6. 登记 registry.jsonl，并重跑 build_experiment_report.py 生成 HTML
 [ ] 7. 将对比数据报告用户，由用户决定是否采纳/提升基线；不自行改 B0
@@ -228,7 +237,6 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 | `backtest/scripts/run_strategy_sweep.py` | 策略扫参（Phase S 用） |
 | `backtest/scripts/ensemble_preds.py` | 多种子预测集成（截面 z-score 等权） |
 | `backtest/scripts/build_experiment_report.py` | **registry.jsonl → 标准实验 HTML 报告**（含目录，唯一渲染入口） |
-| `backtest/scripts/build_benchmark_html.py` | 旧实验存档报告（规范生效前，只读） |
 
 ## 附录 B：环境注意事项
 

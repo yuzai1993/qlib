@@ -1,7 +1,8 @@
 """跨池 IC/RankIC 评估：加载已训练模型，在多个测试池上打分并按统一口径计算 IC。
 
 规范（backtest/EXPERIMENT_STANDARD.md）第 4/5 节的配套工具：
-- 模型只在基线训练池训练一次（每种子一个 session），本脚本负责在 4 个测试集上推理评估；
+- 模型只在基线训练池训练一次（每种子一个 session），本脚本默认在 3 个测试集
+  （csi300/csi500/csi1000）上推理评估；全A 需显式 --pools ... all；
 - 评测标签固定为默认 `Ref($close, -2)/Ref($close, -1) - 1`，与训练标签无关，
   保证不同标签实验的 IC 可比；
 - 全A 池（all）自动剔除上市不足 --min-listing-days 个交易日的股票；
@@ -9,9 +10,9 @@
 
 用法示例：
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/eval_ic_multi_pool.py \
-        --config csi300_lgbm_base_s42.yaml \
+        --config baseline/b0-m/b0_csi300_lgbm_s42.yaml \
         --sessions 20260801_xxx_base_s42:42 20260801_xxx_base_s1000:1000 \
-        --pools csi300 csi500 csi1000 all \
+        --pools csi300 csi500 csi1000 \
         --output backtest/result/20260801_xxx/ic_eval.json
 """
 
@@ -41,7 +42,7 @@ from config_loader import (  # noqa: E402
 from eval_protocol import daily_ic, summarize_ic  # noqa: E402
 
 EVAL_LABEL_EXPR = "Ref($close, -2)/Ref($close, -1) - 1"
-DEFAULT_POOLS = ("csi300", "csi500", "csi1000", "all")
+DEFAULT_POOLS = ("csi300", "csi500", "csi1000")  # 默认不含全A；需评估时显式 --pools ... all
 POOLS_NEED_LISTING_FILTER = {"all"}
 
 

@@ -1,5 +1,5 @@
 # EXPERIMENT_STANDARD v1.0 | exp: train-data/csi1000 | seed 42
-# python backtest/scripts/run_backtest.py --config td_csi1000_lgbm_s42.yaml
+# python backtest/scripts/run_backtest.py --config train-data/csi1000/td_csi1000_lgbm_s42.yaml
 run:
   mode: train_backtest
   note: td_csi1000_lgbm_s42

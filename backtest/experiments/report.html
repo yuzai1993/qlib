@@ -5,35 +5,78 @@
 <title>实验报告 — EXPERIMENT_STANDARD</title>
 <style>
 body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-       margin: 24px auto; max-width: 1280px; color: #1a1a2e; background: #fafafa; }
+       margin: 24px auto; max-width: 1400px; color: #1a1a2e; background: #fafafa; }
 h1 { font-size: 22px; } h2 { font-size: 18px; margin-top: 36px;
      border-bottom: 2px solid #4a6fa5; padding-bottom: 6px; }
+h3 { font-size: 15px; margin: 16px 0 8px; color: #333; }
 .meta { color: #666; font-size: 13px; }
-nav { background: #fff; border: 1px solid #ddd; border-radius: 8px;
+nav, .legend { background: #fff; border: 1px solid #ddd; border-radius: 8px;
       padding: 12px 20px; margin: 16px 0; }
 nav ul { margin: 6px 0; padding-left: 20px; }
 nav a { color: #2a5aa0; text-decoration: none; } nav a:hover { text-decoration: underline; }
-table { border-collapse: collapse; width: 100%; background: #fff; font-size: 13px;
+.legend table { margin: 8px 0 0; font-size: 13px; }
+.legend th { text-align: left; }
+.priority { color: #b45309; font-weight: 600; }
+.priority-tag { display: inline-block; background: #fff7ed; color: #b45309;
+                border: 1px solid #fdba74; border-radius: 3px; padding: 0 6px;
+                font-size: 11px; margin-left: 6px; vertical-align: middle; }
+table.exp { border-collapse: collapse; width: 100%; background: #fff; font-size: 13px;
         margin: 12px 0; }
-th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: top; }
-th { background: #eef2f7; white-space: nowrap; }
-tr:nth-child(even) { background: #f7f9fb; }
-.metrics { white-space: nowrap; }
-.metrics b { color: #4a6fa5; }
-.paths { font-size: 11px; color: #555; word-break: break-all; }
-.concl-improve { color: #1a7f37; font-weight: 600; }
-.concl-regress { color: #c62828; font-weight: 600; }
-.concl-neutral { color: #8a6d00; font-weight: 600; }
+table.exp th, table.exp td { border: 1px solid #ddd; padding: 6px 8px;
+        vertical-align: top; }
+table.exp th { background: #eef2f7; white-space: nowrap; text-align: center; }
+table.exp td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.exp td.name { white-space: nowrap; font-weight: 600; }
+table.exp td.content { max-width: 360px; font-size: 12px; color: #333; }
+table.exp tr:nth-child(even) { background: #f7f9fb; }
+table.exp th.primary { background: #dbeafe; }
+table.exp td.primary { background: #f0f7ff; }
+.best { color: #1a7f37; font-weight: 600; }
+.empty { color: #999; }
 </style>
 </head>
 <body>
 <h1>实验报告</h1>
-<p class="meta">生成时间 2026-07-24 02:22:41 ·
+<p class="meta">生成时间 2026-07-24 21:00:18 ·
 数据源 <code>backtest/experiments/registry.jsonl</code> ·
 规范 <code>backtest/EXPERIMENT_STANDARD.md</code></p>
-<nav><b>目录</b><ul><li><a href='#direction-baseline'>baseline</a>（1 个实验）</li><li><a href='#direction-train-data'>train-data</a>（3 个实验）</li></ul></nav>
+<nav><b>目录</b><ul><li><a href="#phase-m-metrics">Phase M 指标说明</a></li><li><a href='#direction-baseline'>baseline</a>（1 个实验）</li><li><a href='#direction-train-data'>train-data</a>（3 个实验）</li></ul></nav>
+
+<section class="legend" id="phase-m-metrics">
+<h3>Phase M 指标说明</h3>
+<p class="meta">评测标签固定为次日可交易收益
+<code>Ref($close,-2)/Ref($close,-1)-1</code>，与训练标签无关；数值均为 test 段逐日截面相关的时间均值，再对 5 种子取平均。</p>
+<table>
+<thead><tr><th>指标</th><th>含义</th><th>关注优先级</th></tr></thead>
+<tbody>
+<tr>
+  <td class="priority">RankIC</td>
+  <td>预测分数与真实收益的<strong>截面 Spearman 秩相关</strong>时间均值。对异常值稳健，直接对应选股排序能力（Topk 策略吃的就是排序）。</td>
+  <td><span class="priority-tag">最高优先</span> 主指标：先看各测试集 RankIC 是否相对基线整体抬升</td>
+</tr>
+<tr>
+  <td class="priority">RankICIR</td>
+  <td>RankIC 均值 / RankIC 标准差。衡量排序信号的<strong>时间稳定性</strong>（高均值但波动大 → RankICIR 低）。</td>
+  <td><span class="priority-tag">次优先</span> 与 RankIC 一起看：均值升但 RankICIR 明显下降说明信号不稳</td>
+</tr>
+<tr>
+  <td>IC</td>
+  <td>预测分数与真实收益的截面 Pearson 相关时间均值。对极端值更敏感，作辅助对照。</td>
+  <td>参考</td>
+</tr>
+<tr>
+  <td>ICIR</td>
+  <td>IC 均值 / IC 标准差。Pearson 口径下的时间稳定性。</td>
+  <td>参考</td>
+</tr>
+</tbody>
+</table>
+<<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注实盘目标池 <b>CSI300</b>，再看 CSI500 / CSI1000 是否同步改善（防过拟合单一市场）。
+默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。</p>
+</section>
+
 <h2 id='direction-baseline'>baseline</h2>
-<table><thead><tr><th>实验</th><th>Phase</th><th>日期</th><th>假设</th><th>训练池</th><th>种子</th><th>数据版本</th><th>指标（按测试集）</th><th>结论</th><th>备注</th><th>配置 / 结果路径</th></tr></thead><tbody><tr><td>baseline/b0-m</td><td>M</td><td>2026-07-24</td><td>基线锚点：实盘配置（Alpha158+LGBM，csi300 训练）按规范 5 种子重训、4 测试集评估，作为后续所有实验的对比基准</td><td>csi300</td><td>5个</td><td>2026-07-23</td><td><div class='metrics'><b>csi300</b>: IC均值=0.0136, ICIR=0.1014, rank_ic_mean=0.0100, RankICIR=0.0742, rank_ic_mean_std=0.0026<br><b>csi500</b>: IC均值=0.0098, ICIR=0.0852, rank_ic_mean=0.0021, RankICIR=0.0176, rank_ic_mean_std=0.0024<br><b>csi1000</b>: IC均值=0.0144, ICIR=0.1444, rank_ic_mean=0.0076, RankICIR=0.0693, rank_ic_mean_std=0.0026<br><b>all</b>: IC均值=0.0181, ICIR=0.2222, rank_ic_mean=0.0118, RankICIR=0.1217, rank_ic_mean_std=0.0031</div></td><td>baseline</td><td>IC 统一口径（eval_ic_multi_pool，固定评测标签）；全A 未剔除 ST（名称缓存未提供）</td><td><div class='paths'>backtest/configs/b0_csi300_lgbm_s42.yaml<br>backtest/configs/b0_csi300_lgbm_s1000.yaml<br>backtest/configs/b0_csi300_lgbm_s2000.yaml<br>backtest/configs/b0_csi300_lgbm_s3000.yaml<br>backtest/configs/b0_csi300_lgbm_s4000.yaml<br>backtest/result/20260724_012203_b0_csi300_lgbm_s42<br>backtest/result/20260724_012558_b0_csi300_lgbm_s1000<br>backtest/result/20260724_012721_b0_csi300_lgbm_s2000<br>backtest/result/20260724_012838_b0_csi300_lgbm_s3000<br>backtest/result/20260724_012954_b0_csi300_lgbm_s4000<br>backtest/experiments/ic/b0_csi300_lgbm_csi300.json<br>backtest/experiments/ic/b0_csi300_lgbm_csi500.json<br>backtest/experiments/ic/b0_csi300_lgbm_csi1000.json<br>backtest/experiments/ic/b0_csi300_lgbm_all.json</div></td></tr></tbody></table><h2 id='direction-train-data'>train-data</h2>
-<table><thead><tr><th>实验</th><th>Phase</th><th>日期</th><th>假设</th><th>训练池</th><th>种子</th><th>数据版本</th><th>指标（按测试集）</th><th>结论</th><th>备注</th><th>配置 / 结果路径</th></tr></thead><tbody><tr><td>train-data/csi500</td><td>M</td><td>2026-07-24</td><td>csi500 训练分布更贴近中小盘，预期在 csi500/csi1000 测试集 RankIC 高于 csi300 训练的基线，csi300 测试集可能持平或更低</td><td>csi500</td><td>5个</td><td>2026-07-23</td><td><div class='metrics'><b>csi300</b>: IC均值=0.0156, ICIR=0.1240, rank_ic_mean=0.0153, RankICIR=0.1216, rank_ic_mean_std=0.0003, ΔRankIC vs B0=0.0053<br><b>csi500</b>: IC均值=0.0177, ICIR=0.1611, rank_ic_mean=0.0149, RankICIR=0.1370, rank_ic_mean_std=0.0011, ΔRankIC vs B0=0.0128<br><b>csi1000</b>: IC均值=0.0263, ICIR=0.2621, rank_ic_mean=0.0216, RankICIR=0.2132, rank_ic_mean_std=0.0015, ΔRankIC vs B0=0.0140<br><b>all</b>: IC均值=0.0294, ICIR=0.3714, rank_ic_mean=0.0303, RankICIR=0.3459, rank_ic_mean_std=0.0018, ΔRankIC vs B0=0.0186</div></td><td><span class='concl-improve'>improve</span></td><td>4/4 测试集 RankIC 均超基线（含 csi300 测试集，超出假设预期）</td><td><div class='paths'>backtest/configs/td_csi500_lgbm_s42.yaml<br>backtest/configs/td_csi500_lgbm_s1000.yaml<br>backtest/configs/td_csi500_lgbm_s2000.yaml<br>backtest/configs/td_csi500_lgbm_s3000.yaml<br>backtest/configs/td_csi500_lgbm_s4000.yaml<br>backtest/result/20260724_013743_td_csi500_lgbm_s42<br>backtest/result/20260724_013856_td_csi500_lgbm_s1000<br>backtest/result/20260724_014006_td_csi500_lgbm_s2000<br>backtest/result/20260724_014118_td_csi500_lgbm_s3000<br>backtest/result/20260724_014231_td_csi500_lgbm_s4000<br>backtest/experiments/ic/td_csi500_lgbm_csi300.json<br>backtest/experiments/ic/td_csi500_lgbm_csi500.json<br>backtest/experiments/ic/td_csi500_lgbm_csi1000.json<br>backtest/experiments/ic/td_csi500_lgbm_all.json</div></td></tr><tr><td>train-data/csi1000</td><td>M</td><td>2026-07-24</td><td>csi1000 训练分布更贴近中小盘，预期在 csi500/csi1000 测试集 RankIC 高于 csi300 训练的基线，csi300 测试集可能持平或更低</td><td>csi1000</td><td>5个</td><td>2026-07-23</td><td><div class='metrics'><b>csi300</b>: IC均值=0.0174, ICIR=0.1281, rank_ic_mean=0.0196, RankICIR=0.1475, rank_ic_mean_std=0.0023, ΔRankIC vs B0=0.0096<br><b>csi500</b>: IC均值=0.0202, ICIR=0.1696, rank_ic_mean=0.0199, RankICIR=0.1768, rank_ic_mean_std=0.0018, ΔRankIC vs B0=0.0178<br><b>csi1000</b>: IC均值=0.0291, ICIR=0.2644, rank_ic_mean=0.0285, RankICIR=0.2620, rank_ic_mean_std=0.0008, ΔRankIC vs B0=0.0209<br><b>all</b>: IC均值=0.0360, ICIR=0.4075, rank_ic_mean=0.0401, RankICIR=0.4261, rank_ic_mean_std=0.0010, ΔRankIC vs B0=0.0283</div></td><td><span class='concl-improve'>improve</span></td><td>4/4 测试集 RankIC 均超基线且为三组最高（含 csi300 测试集，超出假设预期）</td><td><div class='paths'>backtest/configs/td_csi1000_lgbm_s42.yaml<br>backtest/configs/td_csi1000_lgbm_s1000.yaml<br>backtest/configs/td_csi1000_lgbm_s2000.yaml<br>backtest/configs/td_csi1000_lgbm_s3000.yaml<br>backtest/configs/td_csi1000_lgbm_s4000.yaml<br>backtest/result/20260724_014953_td_csi1000_lgbm_s42<br>backtest/result/20260724_015141_td_csi1000_lgbm_s1000<br>backtest/result/20260724_015330_td_csi1000_lgbm_s2000<br>backtest/result/20260724_015519_td_csi1000_lgbm_s3000<br>backtest/result/20260724_015707_td_csi1000_lgbm_s4000<br>backtest/experiments/ic/td_csi1000_lgbm_csi300.json<br>backtest/experiments/ic/td_csi1000_lgbm_csi500.json<br>backtest/experiments/ic/td_csi1000_lgbm_csi1000.json<br>backtest/experiments/ic/td_csi1000_lgbm_all.json</div></td></tr><tr><td>train-data/all</td><td>M</td><td>2026-07-24</td><td>全A 训练样本量最大，预期跨池泛化最好、RankIC 整体高于 csi300 训练</td><td>all</td><td>5个</td><td>2026-07-23</td><td></td><td><span class='concl-regress'>fail</span></td><td>训练在 LGBM fit 阶段被 OOM 杀掉（16GB M1，全A 2005-2026 Alpha158 超内存）；需更大内存机器或降维方案后重试</td><td><div class='paths'>backtest/configs/td_all_lgbm_s42.yaml<br>backtest/configs/td_all_lgbm_s1000.yaml<br>backtest/configs/td_all_lgbm_s2000.yaml<br>backtest/configs/td_all_lgbm_s3000.yaml<br>backtest/configs/td_all_lgbm_s4000.yaml</div></td></tr></tbody></table>
+<table class="exp"><thead><tr><th rowspan="2">实验名</th><th rowspan="2">实验内容</th><th class="primary" colspan="3">RankIC</th><th class="primary" colspan="3">RankICIR</th><th colspan="3">IC</th><th colspan="3">ICIR</th></tr><tr><th class="primary">CSI300</th><th class="primary">CSI500</th><th class="primary">CSI1000</th><th class="primary">CSI300</th><th class="primary">CSI500</th><th class="primary">CSI1000</th><th>CSI300</th><th>CSI500</th><th>CSI1000</th><th>CSI300</th><th>CSI500</th><th>CSI1000</th></tr></thead><tbody><tr><td class="name">baseline/b0-m</td><td class="content">基线锚点：实盘配置（Alpha158+LGBM，csi300 训练）按规范 5 种子重训、4 测试集评估，作为后续所有实验的对比基准</td><td class="num primary best">0.0100</td><td class="num primary best">0.0021</td><td class="num primary best">0.0076</td><td class="num primary best">0.0742</td><td class="num primary best">0.0176</td><td class="num primary best">0.0693</td><td class="num best">0.0136</td><td class="num best">0.0098</td><td class="num best">0.0144</td><td class="num best">0.1014</td><td class="num best">0.0852</td><td class="num best">0.1444</td></tr></tbody></table><h2 id='direction-train-data'>train-data</h2>
+<table class="exp"><thead><tr><th rowspan="2">实验名</th><th rowspan="2">实验内容</th><th class="primary" colspan="3">RankIC</th><th class="primary" colspan="3">RankICIR</th><th colspan="3">IC</th><th colspan="3">ICIR</th></tr><tr><th class="primary">CSI300</th><th class="primary">CSI500</th><th class="primary">CSI1000</th><th class="primary">CSI300</th><th class="primary">CSI500</th><th class="primary">CSI1000</th><th>CSI300</th><th>CSI500</th><th>CSI1000</th><th>CSI300</th><th>CSI500</th><th>CSI1000</th></tr></thead><tbody><tr><td class="name">train-data/csi500</td><td class="content">csi500 训练分布更贴近中小盘，预期在 csi500/csi1000 测试集 RankIC 高于 csi300 训练的基线，csi300 测试集可能持平或更低</td><td class="num primary">0.0153</td><td class="num primary">0.0149</td><td class="num primary">0.0216</td><td class="num primary">0.1216</td><td class="num primary">0.1370</td><td class="num primary">0.2132</td><td class="num">0.0156</td><td class="num">0.0177</td><td class="num">0.0263</td><td class="num">0.1240</td><td class="num">0.1611</td><td class="num">0.2621</td></tr><tr><td class="name">train-data/csi1000</td><td class="content">csi1000 训练分布更贴近中小盘，预期在 csi500/csi1000 测试集 RankIC 高于 csi300 训练的基线，csi300 测试集可能持平或更低</td><td class="num primary best">0.0196</td><td class="num primary best">0.0199</td><td class="num primary best">0.0285</td><td class="num primary best">0.1475</td><td class="num primary best">0.1768</td><td class="num primary best">0.2620</td><td class="num best">0.0174</td><td class="num best">0.0202</td><td class="num best">0.0291</td><td class="num best">0.1281</td><td class="num best">0.1696</td><td class="num best">0.2644</td></tr><tr><td class="name">train-data/all</td><td class="content">全A 训练样本量最大，预期跨池泛化最好、RankIC 整体高于 csi300 训练</td><td class="num primary"><span class="empty">—</span></td><td class="num primary"><span class="empty">—</span></td><td class="num primary"><span class="empty">—</span></td><td class="num primary"><span class="empty">—</span></td><td class="num primary"><span class="empty">—</span></td><td class="num primary"><span class="empty">—</span></td><td class="num"><span class="empty">—</span></td><td class="num"><span class="empty">—</span></td><td class="num"><span class="empty">—</span></td><td class="num"><span class="empty">—</span></td><td class="num"><span class="empty">—</span></td><td class="num"><span class="empty">—</span></td></tr></tbody></table>
 </body>
 </html>

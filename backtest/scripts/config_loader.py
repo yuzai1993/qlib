@@ -22,21 +22,46 @@ class ConfigError(ValueError):
 
 
 def resolve_config_path(config: Optional[str] = None) -> Path:
-    """解析 --config：绝对/相对路径，或相对 backtest/configs/ 的文件名。"""
+    """解析 --config：绝对/相对路径，或相对 backtest/configs/ 的路径/文件名。
+
+    支持实验规范布局：`backtest/configs/<exp_id>/<name>.yaml`
+    （如 `baseline/b0-m/b0_csi300_lgbm_s42.yaml`）。若只给文件名，
+    则在 configs/ 下递归查找唯一匹配；多个匹配时报错要求写全路径。
+    """
     if not config:
         path = CONFIGS_DIR / DEFAULT_CONFIG_NAME
     else:
         p = Path(config).expanduser()
+        candidates: list[Path] = []
         if p.is_file():
-            path = p.resolve()
-        elif (CONFIGS_DIR / config).is_file():
-            path = (CONFIGS_DIR / config).resolve()
-        elif (CONFIGS_DIR / f"{config}.yaml").is_file():
-            path = (CONFIGS_DIR / f"{config}.yaml").resolve()
-        elif (CONFIGS_DIR / f"{config}.yml").is_file():
-            path = (CONFIGS_DIR / f"{config}.yml").resolve()
-        else:
+            candidates.append(p.resolve())
+        for cand in (
+            CONFIGS_DIR / config,
+            CONFIGS_DIR / f"{config}.yaml",
+            CONFIGS_DIR / f"{config}.yml",
+        ):
+            if cand.is_file():
+                candidates.append(cand.resolve())
+        if not candidates:
+            # 仅文件名：递归查找
+            name = p.name if p.suffix else f"{p.name}.yaml"
+            alt = name if name.endswith((".yaml", ".yml")) else f"{name}.yaml"
+            matches = sorted(CONFIGS_DIR.rglob(alt))
+            # 也试 .yml
+            if not matches and not alt.endswith(".yml"):
+                matches = sorted(CONFIGS_DIR.rglob(alt[:-5] + ".yml"))
+            if len(matches) == 1:
+                candidates.append(matches[0].resolve())
+            elif len(matches) > 1:
+                shown = ", ".join(str(m.relative_to(CONFIGS_DIR)) for m in matches[:5])
+                raise ConfigError(
+                    f"配置名 {config!r} 在 configs/ 下有多份匹配，请写相对路径："
+                    f" {shown}"
+                )
+        if not candidates:
             raise ConfigError(f"配置文件不存在: {config}")
+        # 去重后取第一个
+        path = candidates[0]
     if not path.is_file():
         raise ConfigError(f"配置文件不存在: {path}")
     return path
@@ -201,6 +226,24 @@ def build_port_analysis_config(cfg: dict) -> dict:
         backtest["benchmark"] = cfg["data"]["benchmark"]
     if "exchange_kwargs" in backtest:
         backtest["exchange_kwargs"] = normalize_exchange_kwargs(backtest["exchange_kwargs"])
+
+    cls = strategy["class"]
+    kwargs: dict[str, Any] = dict(strategy.get("kwargs") or {})
+    # SoftTopk 无 n_drop；TopkDropout* 透传 n_drop / hold_thresh 等
+    if "topk" in strategy and "topk" not in kwargs:
+        kwargs["topk"] = strategy["topk"]
+    is_soft = "SoftTopk" in cls
+    is_topk_dropout = cls.startswith("TopkDropout") or (
+        "TopkDropout" in cls and not is_soft
+    )
+    if is_topk_dropout and "n_drop" in strategy and "n_drop" not in kwargs:
+        kwargs["n_drop"] = strategy["n_drop"]
+    if is_topk_dropout and "hold_thresh" in strategy and "hold_thresh" not in kwargs:
+        kwargs["hold_thresh"] = strategy["hold_thresh"]
+    # 兼容旧 YAML：n_drop 写在 strategy 顶层时，非 SoftTopk 仍透传
+    if not is_soft and "n_drop" in strategy and "n_drop" not in kwargs:
+        kwargs["n_drop"] = strategy["n_drop"]
+
     return {
         "executor": {
             "class": "SimulatorExecutor",
@@ -211,14 +254,9 @@ def build_port_analysis_config(cfg: dict) -> dict:
             },
         },
         "strategy": {
-            "class": strategy["class"],
+            "class": cls,
             "module_path": strategy.get("module_path", "qlib.contrib.strategy.signal_strategy"),
-            "kwargs": {
-                "topk": strategy["topk"],
-                "n_drop": strategy["n_drop"],
-                # 其余策略参数（如择时窗口、目标仓位档位）原样透传
-                **(strategy.get("kwargs") or {}),
-            },
+            "kwargs": kwargs,
         },
         "backtest": backtest,
     }

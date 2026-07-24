@@ -1,8 +1,8 @@
-# EXPERIMENT_STANDARD v1.0 | exp: train-data/all | seed 2000
-# python backtest/scripts/run_backtest.py --config td_all_lgbm_s2000.yaml
+# EXPERIMENT_STANDARD v1.0 | exp: baseline/b0-m | seed 2000
+# python backtest/scripts/run_backtest.py --config baseline/b0-m/b0_csi300_lgbm_s2000.yaml
 run:
   mode: train_backtest
-  note: td_all_lgbm_s2000
+  note: b0_csi300_lgbm_s2000
   n_runs: 1
   from_session: null
   from_run: 1
@@ -10,12 +10,12 @@ run:
 data:
   provider_uri: ~/.qlib/qlib_data/cn_data
   region: cn
-  instruments: all
+  instruments: csi300
   benchmark: SH000300
   handler:
     class: Alpha158
     module_path: qlib.contrib.data.handler
-    start_time: '2005-06-01'
+    start_time: '2003-01-02'
     end_time: '2026-07-16'
     fit_start_time: '2006-01-02'
     fit_end_time: '2020-01-10'

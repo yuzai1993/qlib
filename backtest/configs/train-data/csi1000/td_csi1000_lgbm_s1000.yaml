@@ -1,8 +1,8 @@
-# EXPERIMENT_STANDARD v1.0 | exp: train-data/csi500 | seed 2000
-# python backtest/scripts/run_backtest.py --config td_csi500_lgbm_s2000.yaml
+# EXPERIMENT_STANDARD v1.0 | exp: train-data/csi1000 | seed 1000
+# python backtest/scripts/run_backtest.py --config train-data/csi1000/td_csi1000_lgbm_s1000.yaml
 run:
   mode: train_backtest
-  note: td_csi500_lgbm_s2000
+  note: td_csi1000_lgbm_s1000
   n_runs: 1
   from_session: null
   from_run: 1
@@ -10,8 +10,8 @@ run:
 data:
   provider_uri: ~/.qlib/qlib_data/cn_data
   region: cn
-  instruments: csi500
-  benchmark: SH000905
+  instruments: csi1000
+  benchmark: SH000852
   handler:
     class: Alpha158
     module_path: qlib.contrib.data.handler
@@ -44,7 +44,7 @@ model:
     max_depth: 8
     num_leaves: 210
     num_threads: 8
-    seed: 2000
+    seed: 1000
 strategy:
   class: TopkDropoutStrategy
   module_path: qlib.contrib.strategy.signal_strategy

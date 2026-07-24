@@ -1,8 +1,8 @@
-# EXPERIMENT_STANDARD v1.0 | exp: train-data/all | seed 3000
-# python backtest/scripts/run_backtest.py --config td_all_lgbm_s3000.yaml
+# EXPERIMENT_STANDARD v1.0 | exp: train-data/csi1000 | seed 3000
+# python backtest/scripts/run_backtest.py --config train-data/csi1000/td_csi1000_lgbm_s3000.yaml
 run:
   mode: train_backtest
-  note: td_all_lgbm_s3000
+  note: td_csi1000_lgbm_s3000
   n_runs: 1
   from_session: null
   from_run: 1
@@ -10,20 +10,20 @@ run:
 data:
   provider_uri: ~/.qlib/qlib_data/cn_data
   region: cn
-  instruments: all
-  benchmark: SH000300
+  instruments: csi1000
+  benchmark: SH000852
   handler:
     class: Alpha158
     module_path: qlib.contrib.data.handler
-    start_time: '2005-06-01'
+    start_time: '2003-01-02'
     end_time: '2026-07-16'
-    fit_start_time: '2006-01-02'
+    fit_start_time: '2016-01-02'
     fit_end_time: '2020-01-10'
     infer_processors:
     - class: ProcessInf
 segments:
   train:
-  - '2006-01-02'
+  - '2016-01-02'
   - '2020-01-10'
   valid:
   - '2020-01-13'

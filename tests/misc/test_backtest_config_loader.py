@@ -32,7 +32,9 @@ def test_load_default_config_is_live_parity_baseline():
     assert "test_start" not in cfg["run"]
     assert "test_end" not in cfg["run"]
     assert cfg["run"]["generate_figures"] is False
-    assert cfg["run"]["from_session"] == "20260711_223223_train_start_2006"
+    assert cfg["run"]["from_session"] == (
+        "20260725_004255_td_csi1000_full_v2_lgbm_s2000"
+    )
 
 
 def test_segments_test_aligns_backtest_and_extends_handler_end():
@@ -84,7 +86,7 @@ def test_build_task_structure():
     assert task["model"]["class"] == "LGBModel"
     assert task["dataset"]["kwargs"]["handler"]["class"] == "Alpha158"
     assert task["dataset"]["kwargs"]["handler"]["kwargs"]["instruments"] == "csi300"
-    assert task["dataset"]["kwargs"]["segments"]["train"][0] == "2006-01-02"
+    assert task["dataset"]["kwargs"]["segments"]["train"][0] == "2016-01-02"
 
 
 def test_build_task_override_handler_class():
@@ -117,7 +119,7 @@ def test_production_baseline_identity():
     assert cfg["data"]["instruments"] == "csi300"
     assert cfg["data"]["benchmark"] == "SH000300"
     assert cfg["data"]["handler"]["class"] == "Alpha158"
-    assert cfg["segments"]["train"] == ["2006-01-02", "2020-01-10"]
+    assert cfg["segments"]["train"] == ["2016-01-02", "2020-01-10"]
     assert cfg["strategy"]["class"] == "TopkDropoutStrategy"
     assert cfg["strategy"]["topk"] == 10
     assert cfg["strategy"]["n_drop"] == 2

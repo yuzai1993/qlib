@@ -1,4 +1,6 @@
 """SignalGenerator 推理口径测试：NaN 必须原样传给 LightGBM，不允许 fillna(0)。"""
+import hashlib
+import pickle
 import sys
 from pathlib import Path
 
@@ -21,6 +23,11 @@ class DummyLGB:
     def predict(self, X):
         self.last_X = np.asarray(X, dtype=float)
         return np.arange(len(X), dtype=float)
+
+
+class DummyQlibModel:
+    def __init__(self):
+        self.model = DummyLGB()
 
 
 def _make_generator():
@@ -116,3 +123,52 @@ def test_handler_uses_explicit_training_fit_window(monkeypatch):
     assert kwargs["fit_start_time"] == "2006-01-02"
     assert kwargs["fit_end_time"] == "2020-01-10"
     assert kwargs["infer_processors"] == [{"class": "ProcessInf"}]
+
+
+def test_load_model_from_git_tracked_relative_path(tmp_path):
+    model_path = tmp_path / "live_trading/models/b1_m/test/trained_model"
+    model_path.parent.mkdir(parents=True)
+    model_path.write_bytes(pickle.dumps(DummyQlibModel()))
+    digest = hashlib.sha256(model_path.read_bytes()).hexdigest()
+    gen = SignalGenerator(
+        config={
+            "model": {
+                "model_path": "live_trading/models/b1_m/test/trained_model",
+                "sha256": digest,
+            }
+        },
+        project_root=tmp_path,
+    )
+
+    gen.load_model()
+
+    assert isinstance(gen._model, DummyQlibModel)
+    assert isinstance(gen._lgb_model, DummyLGB)
+
+
+def test_load_model_rejects_sha256_mismatch(tmp_path):
+    model_path = tmp_path / "live_trading/models/b1_m/test/trained_model"
+    model_path.parent.mkdir(parents=True)
+    model_path.write_bytes(pickle.dumps(DummyQlibModel()))
+    gen = SignalGenerator(
+        config={
+            "model": {
+                "model_path": "live_trading/models/b1_m/test/trained_model",
+                "sha256": "0" * 64,
+            }
+        },
+        project_root=tmp_path,
+    )
+
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        gen.load_model()
+
+
+def test_load_model_requires_tracked_model_path(tmp_path):
+    gen = SignalGenerator(
+        config={"model": {"experiment_id": "legacy", "recorder_id": "legacy"}},
+        project_root=tmp_path,
+    )
+
+    with pytest.raises(ValueError, match="model_path"):
+        gen.load_model()

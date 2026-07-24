@@ -1,5 +1,6 @@
 """Signal generation: load model, prepare features, predict scores."""
 
+import hashlib
 import logging
 import pickle
 from pathlib import Path
@@ -35,22 +36,38 @@ class SignalGenerator:
             return
 
         model_cfg = self.config["model"]
-        mlruns_dir = self.project_root / model_cfg["mlruns_dir"]
-        exp_id = model_cfg["experiment_id"]
-        rec_id = model_cfg["recorder_id"]
-        model_path = mlruns_dir / exp_id / rec_id / "artifacts" / "trained_model"
-
-        if not model_path.exists():
-            raise FileNotFoundError(
-                f"Model artifact not found at {model_path}. "
-                f"Check experiment_id={exp_id}, recorder_id={rec_id}"
+        relative_path = model_cfg.get("model_path")
+        if not relative_path:
+            raise ValueError(
+                "model.model_path is required; live models must be loaded "
+                "from the Git-tracked model directory"
+            )
+        model_path = (self.project_root / relative_path).resolve()
+        project_root = self.project_root.resolve()
+        if not model_path.is_relative_to(project_root):
+            raise ValueError(
+                f"model.model_path must stay inside project root: {relative_path}"
             )
 
-        with open(model_path, "rb") as f:
-            self._model = pickle.load(f)
+        if not model_path.is_file():
+            raise FileNotFoundError(f"Model artifact not found at {model_path}")
+
+        model_bytes = model_path.read_bytes()
+        expected_sha256 = model_cfg.get("sha256")
+        if not expected_sha256:
+            raise ValueError("model.sha256 is required for live model integrity")
+        actual_sha256 = hashlib.sha256(model_bytes).hexdigest()
+        if actual_sha256 != expected_sha256:
+            raise ValueError(
+                "Model SHA-256 mismatch: "
+                f"expected={expected_sha256}, actual={actual_sha256}, "
+                f"path={model_path}"
+            )
+
+        self._model = pickle.loads(model_bytes)
 
         self._lgb_model = self._model.model
-        logger.info("Model loaded from %s", model_path)
+        logger.info("Model loaded from %s (sha256=%s)", model_path, actual_sha256)
 
     def _ensure_handler(self, end_date: str):
         """Create or extend the handler so it covers up to end_date."""

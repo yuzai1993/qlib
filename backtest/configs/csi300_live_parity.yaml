@@ -5,15 +5,17 @@ run:
   mode: backtest_only
   note: "csi300_live_parity"
   n_runs: 1
-  from_session: "20260711_223223_train_start_2006"
+  from_session: "20260725_004255_td_csi1000_full_v2_lgbm_s2000"
   from_run: 1
   generate_figures: false
 
 parity:
   live_config: "live_trading/configs/csi300_topk10_live.yaml"
-  model_experiment_name: "train_20260711_223223_train_start_2006_run01"
-  model_experiment_id: "265134483362085141"
-  model_recorder_id: "40a17c74aa7b4d97a4caa35015aaead5"
+  model_experiment_name: "train_20260725_004255_td_csi1000_full_v2_lgbm_s2000_run01"
+  model_experiment_id: "836973677275181001"
+  model_recorder_id: "7a7c592d3b764b62b78423e9b5009926"
+  model_path: "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model"
+  model_sha256: "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352"
   execution_price_proxy: "close"
 
 data:
@@ -26,13 +28,13 @@ data:
     module_path: "qlib.contrib.data.handler"
     start_time: "2003-01-02"
     end_time: "2026-07-22"
-    fit_start_time: "2006-01-02"
+    fit_start_time: "2016-01-02"
     fit_end_time: "2020-01-10"
     infer_processors:
       - class: "ProcessInf"
 
 segments:
-  train: ["2006-01-02", "2020-01-10"]
+  train: ["2016-01-02", "2020-01-10"]
   valid: ["2020-01-13", "2023-09-15"]
   test: ["2023-09-18", "2026-07-22"]
 
@@ -49,6 +51,7 @@ model:
     max_depth: 8
     num_leaves: 210
     num_threads: 20
+    seed: 2000
 
 strategy:
   class: "TopkDropoutStrategy"

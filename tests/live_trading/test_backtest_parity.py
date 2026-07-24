@@ -39,6 +39,8 @@ def test_real_live_and_designated_backtest_configs_match():
     "side,path,value,reported_path",
     [
         ("live", "model.recorder_id", "wrong", "model.recorder_id"),
+        ("live", "model.model_path", "wrong", "model.model_path"),
+        ("live", "model.sha256", "0" * 64, "model.sha256"),
         ("live", "data.instruments", "csi500", "data.instruments"),
         ("live", "handler.fit_start_time", "2007-01-01", "handler.fit_start_time"),
         ("live", "strategy.topk", 20, "strategy.topk"),

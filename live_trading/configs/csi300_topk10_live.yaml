@@ -1,5 +1,5 @@
 # 实盘信号桥接配置：CSI300 TopkDropout topk=10 / n_drop=2
-# 当前基线模型：train_start_2006 Alpha158。
+# 当前基线模型：B1-M（CSI1000-full-v2，train_start_2016，seed=2000）。
 # 本文件是实盘完整配置；不得通过其他交易系统配置隐式继承关键参数。
 
 data:
@@ -9,17 +9,18 @@ data:
   benchmark: "SH000300"
 
 model:
-  experiment_name: "train_20260711_223223_train_start_2006_run01"
-  experiment_id: "265134483362085141"
-  recorder_id: "40a17c74aa7b4d97a4caa35015aaead5"
+  experiment_name: "train_20260725_004255_td_csi1000_full_v2_lgbm_s2000_run01"
+  experiment_id: "836973677275181001"
+  recorder_id: "7a7c592d3b764b62b78423e9b5009926"
   model_class: "qlib.contrib.model.gbdt.LGBModel"
-  mlruns_dir: "mlruns"
+  model_path: "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model"
+  sha256: "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352"
 
 handler:
   class: "Alpha158"
   module: "qlib.contrib.data.handler"
   start_time: "2003-01-02"
-  fit_start_time: "2006-01-02"
+  fit_start_time: "2016-01-02"
   fit_end_time: "2020-01-10"
   infer_processors:
     - class: "ProcessInf"

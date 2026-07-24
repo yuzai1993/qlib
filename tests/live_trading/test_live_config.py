@@ -25,8 +25,10 @@ def test_load_real_live_config_is_standalone():
     assert cfg["strategy"]["n_drop"] == 2
     assert cfg["strategy"]["risk_degree"] == pytest.approx(0.95)
     assert cfg["exchange"]["trade_unit"] == 100
-    assert cfg["handler"]["fit_start_time"] == "2006-01-02"
-    assert cfg["model"]["experiment_id"] == "265134483362085141"
+    assert cfg["handler"]["fit_start_time"] == "2016-01-02"
+    assert cfg["model"]["model_path"].startswith("live_trading/models/b1_m/")
+    assert "mlruns_dir" not in cfg["model"]
+    assert cfg["model"]["experiment_id"] == "836973677275181001"
     assert cfg["live"]["strategy_id"] == "csi300_topk10"
     assert cfg["live"]["default_mode"] == "LIVE"  # 2026-07-14 起实盘开关打开
     assert cfg["fees"]["stamp_duty_rate"] == 0.0005

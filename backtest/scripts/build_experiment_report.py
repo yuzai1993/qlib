@@ -110,8 +110,8 @@ PHASE_M_LEGEND_HTML = """
 </tr>
 </tbody>
 </table>
-<<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注实盘目标池 <b>CSI300</b>，再看 CSI500 / CSI1000 是否同步改善（防过拟合单一市场）。
-默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。</p>
+<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注实盘目标池 <b>CSI300</b>，再看 CSI500 / CSI1000 是否同步改善（防过拟合单一市场）。
+默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。每个方向表格第一行为对应 <code>baseline_ref</code> 的 baseline 指标。</p>
 </section>
 """
 
@@ -150,6 +150,49 @@ def _fmt_metric(v: Any) -> str:
 
 def _phase_of(row: dict) -> str:
     return str(row.get("phase") or "M").upper()
+
+
+def _is_baseline_anchor(row: dict) -> bool:
+    """registry 中 direction=baseline 的锚点行（供各方向表首行注入）。"""
+    if str(row.get("direction") or "").lower() != "baseline":
+        return False
+    conclusion = str(row.get("conclusion") or "").lower()
+    exp_id = str(row.get("exp_id") or "").lower()
+    return conclusion == "baseline" or exp_id.startswith("baseline/")
+
+
+def _baseline_ref_of(rows: Sequence[dict]) -> str:
+    refs = [str(r.get("baseline_ref") or "").strip() for r in rows if r.get("baseline_ref")]
+    # 同一方向应只有一个版本；取首次出现
+    return refs[0] if refs else ""
+
+
+def _resolve_baseline_row(all_rows: Sequence[dict], group: Sequence[dict]) -> Optional[dict]:
+    """按方向内 baseline_ref 查找对应 baseline 锚点行。"""
+    ref = _baseline_ref_of(group)
+    anchors = [r for r in all_rows if _is_baseline_anchor(r)]
+    if not anchors:
+        return None
+    if ref:
+        matched = [r for r in anchors if str(r.get("baseline_ref") or "").strip() == ref]
+        if matched:
+            return matched[0]
+    # 回退：唯一锚点或最新锚点
+    return sorted(anchors, key=lambda r: str(r.get("date") or ""))[-1]
+
+
+def _with_baseline_first(all_rows: Sequence[dict], group: Sequence[dict]) -> tuple[list[dict], str]:
+    """确保表格第一行为 baseline；返回 (rows, baseline_ref 标注)。"""
+    ref = _baseline_ref_of(group)
+    baseline = _resolve_baseline_row(all_rows, group)
+    ordered = list(group)
+    if baseline is not None:
+        base_id = baseline.get("exp_id")
+        ordered = [r for r in ordered if r.get("exp_id") != base_id]
+        ordered.insert(0, baseline)
+        if not ref:
+            ref = str(baseline.get("baseline_ref") or "").strip()
+    return ordered, ref
 
 
 def _test_pools(_rows: Sequence[dict] | None = None) -> list[str]:
@@ -339,23 +382,33 @@ def build_html(rows: Sequence[dict]) -> str:
     sections = []
     for direction in sorted(by_direction):
         group = sorted(by_direction[direction], key=lambda r: str(r.get("date") or ""))
+        table_rows, baseline_ref = _with_baseline_first(rows, group)
+        # toc 计数不含注入的外来 baseline 行
+        n_native = len(group)
         anchor = _slug(direction)
         toc_items.append(
-            f"<li><a href='#{anchor}'>{_esc(direction)}</a>（{len(group)} 个实验）</li>"
+            f"<li><a href='#{anchor}'>{_esc(direction)}</a>（{n_native} 个实验）</li>"
         )
-        phases = {_phase_of(r) for r in group}
+        ref_note = (
+            f"<p class='meta'>对照 baseline：<b>{_esc(baseline_ref)}</b>"
+            "（表格第一行）</p>"
+            if baseline_ref
+            else "<p class='meta'>警告：本方向缺少 <code>baseline_ref</code>，"
+            "未注入 baseline 首行。</p>"
+        )
+        phases = {_phase_of(r) for r in table_rows}
         if phases == {"S"}:
-            table = _build_phase_s_table(group)
+            table = _build_phase_s_table(table_rows)
         else:
             # 混合或纯 M：用 Phase M 宽表（S 行指标列为空）
-            table = _build_phase_m_table(group)
+            table = _build_phase_m_table(table_rows)
             if "S" in phases:
                 table += "<p class='meta'>本组含 Phase S 实验，策略指标见独立 strategy 方向表。</p>"
-                s_rows = [r for r in group if _phase_of(r) == "S"]
+                s_rows = [r for r in table_rows if _phase_of(r) == "S"]
                 if s_rows:
                     table += _build_phase_s_table(s_rows)
         sections.append(
-            f"<h2 id='{anchor}'>{_esc(direction)}</h2>\n{table}"
+            f"<h2 id='{anchor}'>{_esc(direction)}</h2>\n{ref_note}\n{table}"
         )
 
     generated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

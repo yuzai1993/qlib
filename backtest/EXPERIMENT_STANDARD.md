@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v1.0（2026-07-24）
+版本：v1.1（2026-07-24）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -9,12 +9,13 @@
 
 ## 0. 硬性约束（先读这里）
 
-1. 基线（B0）固定，见第 1 节；任何实验必须与 B0 对比。
+1. 基线（B0）固定，见第 1 节；任何实验必须与 B0 对比。**每个实验方向必须写明对照的 baseline 版本**（registry 的 `baseline_ref`，如 `B0 v1.0`），HTML 该方向表格**第一行**为对应 baseline 指标行。
 2. 模型与策略**分开迭代**：一期只改模型（Phase M），策略冻结为 B0-S；确定更优模型后才进入策略迭代（Phase S），此时模型冻结。
 3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
 4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI300）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi300/csi500/csi1000）上评估 IC/RankIC。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
 5. 时间划分固定（第 3 节）：测试集 2021-07-16 ~ 2026-07-16；评估集 2020-01-13 ~ 2021-07-15。**禁止用测试集调参**。
 6. 每个实验必须登记到 `backtest/experiments/registry.jsonl`（配置路径 + 结果路径），并更新 HTML 报告（每个实验方向一张独立表格）。
+7. **实验结束后必须清理 `mlruns/`**（见第 6.3 节），只保留实盘推理与当前 baseline 训练产物，避免磁盘被打爆。
 
 ---
 
@@ -192,12 +193,25 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 字段要求：
 - **`hypothesis` 必填，且必须在实验开跑前写好**（改了什么、预期哪个指标为什么会变好）；事后只按该口径解读结果，防止"事后找亮点"。
+- **`baseline_ref` 必填**：写明对照的 baseline 版本（如 `B0 v1.0`）；同一 `direction` 内不得混用多个版本。HTML 该方向表第一行即此版本对应的 baseline 指标。
 - **`data_version` 必填**：填当时数据日历的最后交易日（`eval_ic_multi_pool.py` 输出中自动带出）。数据前复权重标定不改变 Alpha158 特征值（全部为比值形态），但历史修正/补数会轻微改变截面构成，此字段用于事后解释不同时间实验结果的差异，无需做数据快照。
 
-### 6.3 清理
+### 6.3 mlruns 清理（强制，防磁盘打爆）
 
-- 判负实验：清理 mlruns 中模型与预测大文件，保留 `metrics.json`、registry 行、配置文件。
-- 通过实验：保留完整 artifact（模型、pred.pkl、报告）。
+`mlruns/` 默认 gitignore，训练/回测会快速堆积 GB 级 artifact。**每次实验收尾（无论成败）都必须清理**，不得只登记 registry 却留下模型文件。
+
+**长期保留（信号推理必需）**：
+- 实盘模型：`live_trading/configs/csi300_topk10_live.yaml` 指向的 train 实验（含 `artifacts/trained_model`）；
+- 当前 baseline（B0-M）5 种子 train 实验（含 `artifacts/trained_model`），供对照推理与 Phase S 冻结分数。
+
+**必须删除**：
+- 非实盘、非当前 baseline 的 train/backtest 实验目录（含判负、通过但未提升为基线、中途失败的产物）；
+- `mlruns/.trash/` 内容。
+
+**可与大文件一并丢掉、但须另处保留的对照信息**：
+- `backtest/experiments/registry.jsonl` 行、配置文件、`backtest/experiments/ic/*.json`、`metrics.json` / HTML 报告摘要。
+
+清理时用显式 ID 白名单（bash 数组或一行一 ID），**禁止**在 zsh 下依赖未拆分的空格字符串做保留判断。提升基线后：删除旧 B0-M 的 mlruns，只留新基线 5 种子 + 实盘。
 
 ---
 
@@ -206,6 +220,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 - 报告由 `backtest/scripts/build_experiment_report.py` 从 `registry.jsonl` **自动生成**（`backtest/experiments/report.html`，自包含单文件）。**registry 是唯一数据源**，禁止手工编辑 HTML；登记新行后重跑脚本即可。
 - 报告顶部自动生成**目录**，并含 Phase M 指标说明（含义 + 关注优先级）。
 - **每个实验方向一张独立表格**（一个 direction 一张表），由脚本按 registry 的 `direction` 字段自动分组。
+- **每个方向必须明确 baseline 版本**：该方向内各实验的 `baseline_ref` 应一致；表格标题旁标注该版本，**第一行固定为对应 baseline 指标行**（从 registry 的 `direction=baseline` 锚点行注入；`baseline` 方向本身则以其锚点行置顶）。不得省略 baseline 行后直接罗列变体。
 - 表格列精简为：**实验名**、**实验内容**（hypothesis）、**指标列**。Phase M 为 4 指标（RankIC / RankICIR / IC / ICIR）× 3 指数，**两行表头**（第一行指标、第二行指数）；Phase S 为扣费超额 IR/年化/最大回撤。同列最优值高亮。
 - 无效实验也要登记并保留在表格中，避免重复试错。
 - 历史报告 `build_benchmark_html.py` 仅作为规范生效前旧实验的存档，不再新增内容。
@@ -215,13 +230,14 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 ## 8. 标准执行流程（checklist）
 
 ```
-[ ] 1. 读本文件，确认当前 Phase（M 或 S）与 B0 版本
+[ ] 1. 读本文件，确认当前 Phase（M 或 S）与 B0 版本；本方向 baseline_ref 写死为该版本
 [ ] 2. 写实验假设与变体设计（即 registry 的 hypothesis 字段，开跑前定稿，不得事后修改）
 [ ] 3. 生成配置（复用现有 config 模板，只改实验变量；时间/种子/费率不得动）
 [ ] 4. 基线训练池（CSI300）× 5 种子训练，在默认 3 个测试集（csi300/csi500/csi1000）上打分评估
 [ ] 5. 按第 5 节口径汇总指标，与 B0 对比
-[ ] 6. 登记 registry.jsonl，并重跑 build_experiment_report.py 生成 HTML
-[ ] 7. 将对比数据报告用户，由用户决定是否采纳/提升基线；不自行改 B0
+[ ] 6. 登记 registry.jsonl（含 baseline_ref），并重跑 build_experiment_report.py 生成 HTML（确认表首行为 baseline）
+[ ] 7. 按 6.3 清理 mlruns：删除本实验 train/backtest 大文件，仅保留实盘 + 当前 baseline
+[ ] 8. 将对比数据报告用户，由用户决定是否采纳/提升基线；不自行改 B0
 ```
 
 ---

@@ -198,16 +198,23 @@ def build_task(cfg: dict, handler_class: Optional[str] = None) -> dict:
         k: tuple(v) if isinstance(v, (list, tuple)) else v
         for k, v in cfg["segments"].items()
     }
-    return {
-        "model": copy.deepcopy(cfg["model"]),
-        "dataset": {
+    dataset_cfg = copy.deepcopy(
+        cfg.get("dataset")
+        or {
             "class": "DatasetH",
             "module_path": "qlib.data.dataset",
-            "kwargs": {
-                "handler": handler_cfg,
-                "segments": segments,
-            },
-        },
+            "kwargs": {},
+        }
+    )
+    dataset_cfg.setdefault("class", "DatasetH")
+    dataset_cfg.setdefault("module_path", "qlib.data.dataset")
+    dataset_kwargs = dataset_cfg.setdefault("kwargs", {})
+    # Handler and fixed segments always come from the validated experiment config.
+    dataset_kwargs["handler"] = handler_cfg
+    dataset_kwargs["segments"] = segments
+    return {
+        "model": copy.deepcopy(cfg["model"]),
+        "dataset": dataset_cfg,
     }
 
 

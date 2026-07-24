@@ -122,6 +122,31 @@ def test_build_task_override_handler_class():
     assert task["dataset"]["kwargs"]["handler"]["kwargs"]["fit_end_time"] == "2020-01-10"
 
 
+def test_build_task_supports_custom_dataset_with_standard_handler_and_segments():
+    cfg = cl.load_config()
+    cfg["dataset"] = {
+        "class": "LiquiditySegmentDatasetH",
+        "module_path": "backtest.sample_dataset",
+        "kwargs": {
+            "liquidity_bucket": "high",
+            "n_buckets": 3,
+            "lookback": 20,
+            "lag": 1,
+        },
+    }
+
+    task = cl.build_task(cfg)
+
+    assert task["dataset"]["class"] == "LiquiditySegmentDatasetH"
+    assert task["dataset"]["module_path"] == "backtest.sample_dataset"
+    assert task["dataset"]["kwargs"]["liquidity_bucket"] == "high"
+    assert task["dataset"]["kwargs"]["handler"]["class"] == "Alpha158"
+    assert task["dataset"]["kwargs"]["segments"]["valid"] == (
+        "2020-01-13",
+        "2023-09-15",
+    )
+
+
 def test_invalid_date_range():
     raw = yaml.safe_load(DEFAULT_YAML.read_text(encoding="utf-8"))
     raw["segments"]["test"] = ["2026-01-01", "2025-01-01"]

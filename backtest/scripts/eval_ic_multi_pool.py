@@ -64,20 +64,29 @@ def _handler_start_for_inference(test_start: str) -> str:
     return ts.strftime("%Y-%m-%d")
 
 
-def _build_dataset(cfg: dict, pool: str):
-    """按 config 的 handler 设置构建指定池的推理 DatasetH（仅 test 段被使用）。"""
+def _segment_bounds(cfg: dict, segment: str) -> tuple[str, str]:
+    if segment not in cfg["segments"]:
+        raise ValueError(f"config does not define segment: {segment}")
+    values = cfg["segments"][segment]
+    if not isinstance(values, (list, tuple)) or len(values) != 2:
+        raise ValueError(f"segment {segment!r} must contain [start, end]")
+    return str(values[0]), str(values[1])
+
+
+def _build_dataset(cfg: dict, pool: str, segment: str = "test"):
+    """按 config 的 handler 设置构建指定池、指定分段的推理 DatasetH。"""
     from qlib.utils import init_instance_by_config
 
     pool_cfg = copy.deepcopy(cfg)
     pool_cfg["data"]["instruments"] = pool
     handler = pool_cfg["data"]["handler"]
     handler.pop("instruments", None)
-    test = list(cfg["segments"]["test"])
-    handler["start_time"] = _handler_start_for_inference(str(test[0]))
-    handler["end_time"] = str(test[1])
+    start, end = _segment_bounds(cfg, segment)
+    handler["start_time"] = _handler_start_for_inference(start)
+    handler["end_time"] = end
     # ProcessInf 等 infer processors 无需拟合统计量；fit 区间仅为满足接口
     handler["fit_start_time"] = handler["start_time"]
-    handler["fit_end_time"] = str(test[0])
+    handler["fit_end_time"] = start
 
     handler_cfg = build_handler_kwargs(pool_cfg)
     dataset_cfg = {
@@ -85,7 +94,7 @@ def _build_dataset(cfg: dict, pool: str):
         "module_path": "qlib.data.dataset",
         "kwargs": {
             "handler": handler_cfg,
-            "segments": {"test": tuple(test)},
+            "segments": {segment: (start, end)},
         },
     }
     return init_instance_by_config(dataset_cfg)
@@ -139,36 +148,40 @@ def evaluate(
     min_listing_days: int = 60,
     st_symbols: Optional[set[str]] = None,
     min_count: int = 20,
+    segment: str = "test",
 ) -> dict:
     from qlib.data import D
 
-    test_start, test_end = (str(x) for x in cfg["segments"]["test"])
+    eval_start, eval_end = _segment_bounds(cfg, segment)
     models = [(seed, _load_model(session)) for session, seed in sessions]
 
     result: dict[str, Any] = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "config": cfg.get("_config_path"),
         "eval_label": EVAL_LABEL_EXPR,
-        "test_segment": [test_start, test_end],
+        "eval_segment_name": segment,
+        "eval_segment": [eval_start, eval_end],
         "sessions": [{"session": s, "seed": seed} for s, seed in sessions],
         "data_version": str(pd.Timestamp(D.calendar(start_time="2020-01-01")[-1]).date()),
         "st_filter": "enabled" if st_symbols is not None else "unavailable（未剔除 ST）",
         "pools": {},
     }
+    if segment == "test":
+        result["test_segment"] = [eval_start, eval_end]
 
     for pool in pools:
-        label = _fetch_label(pool, test_start, test_end)
+        label = _fetch_label(pool, eval_start, eval_end)
         if pool in POOLS_NEED_LISTING_FILTER:
-            mask = _listing_age_mask(label.index, pool, min_listing_days, test_end)
+            mask = _listing_age_mask(label.index, pool, min_listing_days, eval_end)
             label = label[mask]
         if st_symbols:
             keep = ~label.index.get_level_values("instrument").str.upper().isin(st_symbols)
             label = label[keep]
 
-        dataset = _build_dataset(cfg, pool)
+        dataset = _build_dataset(cfg, pool, segment=segment)
         pool_out: dict[str, Any] = {"seeds": {}}
         for seed, model in models:
-            pred = model.predict(dataset, segment="test")
+            pred = model.predict(dataset, segment=segment)
             if isinstance(pred, pd.DataFrame):
                 pred = pred.iloc[:, 0]
             pred.index = pred.index.set_names(["datetime", "instrument"])
@@ -209,6 +222,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="训练结果 session 目录（backtest/result/ 下），冒号后跟种子号",
     )
     p.add_argument("--pools", nargs="+", default=list(DEFAULT_POOLS))
+    p.add_argument(
+        "--segment",
+        choices=("train", "valid", "test"),
+        default="test",
+        help="评测分段；模型选择只能使用 valid",
+    )
     p.add_argument("--output", required=True, type=Path, help="输出 JSON 路径")
     p.add_argument("--min-listing-days", type=int, default=60, help="全A 池最短上市交易日数")
     p.add_argument("--st-names", type=Path, default=None, help="可选 symbol,name CSV 用于剔除 ST")
@@ -230,6 +249,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         min_listing_days=args.min_listing_days,
         st_symbols=st_symbols,
         min_count=args.min_count,
+        segment=args.segment,
     )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

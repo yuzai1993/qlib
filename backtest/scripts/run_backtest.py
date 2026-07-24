@@ -32,15 +32,16 @@ from qlib.utils import exists_qlib_data, init_instance_by_config, flatten_dict
 from qlib.workflow import R
 from qlib.workflow.record_temp import SignalRecord, PortAnaRecord
 
+from live_trading.modules.model_artifact import load_model_artifact
+
 from config_loader import (
     ConfigError,
     RESULT_ROOT,
     build_port_analysis_config,
     build_task,
     load_config,
-    load_session_model_info,
     normalize_exchange_kwargs,
-    resolve_session_dir,
+    resolve_backtest_model_source,
 )
 from report_utils import (
     build_pred_label,
@@ -52,6 +53,19 @@ from report_utils import (
 )
 
 RESULT_ROOT.mkdir(parents=True, exist_ok=True)
+
+
+def load_backtest_model(source_info: dict):
+    """Load the selected backtest-only model, verifying tracked artifacts."""
+    if source_info.get("model_sha256"):
+        model, _ = load_model_artifact(
+            source_info["model_path"],
+            source_info["model_sha256"],
+            project_root=QLIB_ROOT,
+        )
+        return model
+    with open(source_info["model_path"], "rb") as handle:
+        return pickle.load(handle)
 
 
 def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -> dict:
@@ -299,14 +313,22 @@ def run_backtest_only_once(
     backtest_exp = f"backtest_{session_name}_run{run_idx:02d}"
     result = {"run": run_idx, "status": "failed"}
 
-    src_link = source_info["mlruns_link"]
-    train_exp = src_link.get("train_experiment_name")
-    train_rid = src_link.get("train_recorder_id")
-    train_eid = src_link.get("train_experiment_id")
+    src_link = source_info.get("mlruns_link") or {}
+    train_exp = (
+        source_info.get("train_experiment_name")
+        or src_link.get("train_experiment_name")
+    )
+    train_rid = (
+        source_info.get("train_recorder_id")
+        or src_link.get("train_recorder_id")
+    )
+    train_eid = (
+        source_info.get("train_experiment_id")
+        or src_link.get("train_experiment_id")
+    )
 
     try:
-        with open(source_info["model_path"], "rb") as f:
-            model = pickle.load(f)
+        model = load_backtest_model(source_info)
         print(f"[Run {run_idx}] 已加载模型: {source_info['model_path']}")
         print(f"[Run {run_idx}] Handler: {handler_class}")
 
@@ -349,13 +371,19 @@ def run_backtest_only_once(
             "train_experiment_name": train_exp,
             "train_experiment_id": train_eid,
             "train_recorder_id": train_rid,
-            "train_artifacts": src_link.get("train_artifacts"),
+            "train_artifacts": (
+                source_info.get("train_artifacts")
+                or src_link.get("train_artifacts")
+            ),
+            "train_model_sha256": source_info.get("model_sha256"),
             "backtest_experiment_name": backtest_exp,
             "backtest_experiment_id": ba_eid,
             "backtest_recorder_id": ba_rid,
             "backtest_artifacts": f"mlruns/{ba_eid}/{ba_rid}",
-            "source_session": str(source_info["session_dir"]),
+            "source_kind": source_info.get("source_kind"),
         }
+        if source_info.get("session_dir"):
+            mlruns_link["source_session"] = str(source_info["session_dir"])
         _save_run_report(
             run_dir=run_dir,
             session_name=session_name,
@@ -517,12 +545,15 @@ def main():
 
     source_info = None
     if mode == "backtest_only":
-        source_dir = resolve_session_dir(run["from_session"])
-        source_info = load_session_model_info(source_dir, from_run=int(run.get("from_run") or 1))
+        source_info = resolve_backtest_model_source(cfg, project_root=QLIB_ROOT)
         # meta.handler 记录实际使用的 class
         meta["handler"] = source_info.get("handler_class") or handler_class
-        meta["source_session"] = str(source_dir)
-        meta["source_run"] = int(run.get("from_run") or 1)
+        meta["model_source_kind"] = source_info.get("source_kind")
+        meta["model_path"] = str(source_info["model_path"])
+        meta["model_sha256"] = source_info.get("model_sha256")
+        if source_info.get("session_dir"):
+            meta["source_session"] = str(source_info["session_dir"])
+            meta["source_run"] = int(run.get("from_run") or 1)
         n_runs = 1
 
     write_json(session_dir / "meta.json", meta)

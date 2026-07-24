@@ -5,8 +5,6 @@ run:
   mode: backtest_only
   note: "csi300_live_parity"
   n_runs: 1
-  from_session: "20260725_004255_td_csi1000_full_v2_lgbm_s2000"
-  from_run: 1
   generate_figures: false
 
 parity:

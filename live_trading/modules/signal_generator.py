@@ -1,8 +1,6 @@
 """Signal generation: load model, prepare features, predict scores."""
 
-import hashlib
 import logging
-import pickle
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +9,8 @@ import qlib
 from qlib.data import D
 from qlib.utils import init_instance_by_config
 from qlib.data.dataset.handler import DataHandlerLP
+
+from live_trading.modules.model_artifact import load_model_artifact
 
 logger = logging.getLogger("live_trading.signal")
 
@@ -42,32 +42,17 @@ class SignalGenerator:
                 "model.model_path is required; live models must be loaded "
                 "from the Git-tracked model directory"
             )
-        model_path = (self.project_root / relative_path).resolve()
-        project_root = self.project_root.resolve()
-        if not model_path.is_relative_to(project_root):
-            raise ValueError(
-                f"model.model_path must stay inside project root: {relative_path}"
-            )
-
-        if not model_path.is_file():
-            raise FileNotFoundError(f"Model artifact not found at {model_path}")
-
-        model_bytes = model_path.read_bytes()
         expected_sha256 = model_cfg.get("sha256")
         if not expected_sha256:
             raise ValueError("model.sha256 is required for live model integrity")
-        actual_sha256 = hashlib.sha256(model_bytes).hexdigest()
-        if actual_sha256 != expected_sha256:
-            raise ValueError(
-                "Model SHA-256 mismatch: "
-                f"expected={expected_sha256}, actual={actual_sha256}, "
-                f"path={model_path}"
-            )
-
-        self._model = pickle.loads(model_bytes)
+        self._model, model_path = load_model_artifact(
+            relative_path,
+            expected_sha256,
+            project_root=self.project_root,
+        )
 
         self._lgb_model = self._model.model
-        logger.info("Model loaded from %s (sha256=%s)", model_path, actual_sha256)
+        logger.info("Model loaded from %s (sha256=%s)", model_path, expected_sha256)
 
     def _ensure_handler(self, end_date: str):
         """Create or extend the handler so it covers up to end_date."""

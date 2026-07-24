@@ -32,9 +32,7 @@ def test_load_default_config_is_live_parity_baseline():
     assert "test_start" not in cfg["run"]
     assert "test_end" not in cfg["run"]
     assert cfg["run"]["generate_figures"] is False
-    assert cfg["run"]["from_session"] == (
-        "20260725_004255_td_csi1000_full_v2_lgbm_s2000"
-    )
+    assert cfg["run"]["from_session"] is None
 
 
 def test_segments_test_aligns_backtest_and_extends_handler_end():
@@ -59,12 +57,40 @@ def test_handler_start_not_narrowed_when_test_starts_later():
     assert cfg["data"]["handler"]["start_time"] == "2003-01-02"
 
 
-def test_backtest_only_requires_from_session():
+def test_backtest_only_requires_a_model_source():
     raw = yaml.safe_load(DEFAULT_YAML.read_text(encoding="utf-8"))
     raw["run"]["mode"] = "backtest_only"
     raw["run"]["from_session"] = None
-    with pytest.raises(cl.ConfigError, match="from_session"):
+    raw["parity"].pop("model_path", None)
+    with pytest.raises(cl.ConfigError, match="model source"):
         cl.validate_run_section(raw)
+
+
+def test_tracked_parity_model_loads_without_session_or_mlruns(monkeypatch):
+    import run_backtest as rb
+
+    raw = yaml.safe_load(DEFAULT_YAML.read_text(encoding="utf-8"))
+    raw["run"].pop("from_session", None)
+    cfg = cl.align_dates_from_segments(cl.validate_run_section(raw))
+    monkeypatch.setattr(
+        cl,
+        "resolve_session_dir",
+        lambda *_: pytest.fail("tracked source tried to resolve a result session"),
+    )
+    monkeypatch.setattr(
+        cl,
+        "load_session_model_info",
+        lambda *_args, **_kwargs: pytest.fail(
+            "tracked source tried to read mlruns metadata"
+        ),
+    )
+
+    source = cl.resolve_backtest_model_source(cfg, project_root=ROOT)
+    model = rb.load_backtest_model(source)
+
+    assert source["source_kind"] == "tracked"
+    assert source["model_path"].is_relative_to(ROOT)
+    assert model.model.num_feature() == 158
 
 
 def test_invalid_mode():

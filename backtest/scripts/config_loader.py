@@ -135,8 +135,12 @@ def validate_run_section(cfg: dict) -> dict:
     run.pop("test_end", None)
 
     if mode == "backtest_only":
-        if not run.get("from_session"):
-            raise ConfigError("backtest_only 需要 run.from_session")
+        tracked_path = (cfg.get("parity") or {}).get("model_path")
+        if not run.get("from_session") and not tracked_path:
+            raise ConfigError(
+                "backtest_only 需要 model source: run.from_session "
+                "或 parity.model_path"
+            )
         n_runs = int(run.get("n_runs") or 1)
         if n_runs > 1:
             warnings.warn(f"backtest_only 忽略 n_runs={n_runs}，强制为 1", UserWarning)
@@ -303,10 +307,54 @@ def load_session_model_info(session_dir: Path, from_run: int = 1) -> dict:
         )
 
     return {
+        "source_kind": "session",
         "meta": meta,
         "mlruns_link": link,
         "handler_class": handler,
         "model_path": model_path,
+        "model_sha256": None,
         "session_dir": session_dir,
         "run_dir": run_dir,
     }
+
+
+def resolve_backtest_model_source(
+    cfg: dict,
+    *,
+    project_root: Optional[Path] = None,
+) -> dict:
+    """Resolve a tracked parity model first, with legacy session fallback."""
+    parity = cfg.get("parity") or {}
+    tracked_path = parity.get("model_path")
+    if tracked_path:
+        expected_sha256 = parity.get("model_sha256")
+        if not expected_sha256:
+            raise ConfigError(
+                "parity.model_sha256 is required with parity.model_path"
+            )
+        root = (project_root or BACKTEST_ROOT.parent).resolve()
+        candidate = (root / tracked_path).resolve()
+        if not candidate.is_relative_to(root):
+            raise ConfigError(
+                f"parity.model_path must stay inside project root: {tracked_path}"
+            )
+        if not candidate.is_file():
+            raise ConfigError(f"tracked model does not exist: {candidate}")
+        return {
+            "source_kind": "tracked",
+            "handler_class": cfg["data"]["handler"]["class"],
+            "model_path": candidate,
+            "model_sha256": expected_sha256,
+            "train_experiment_name": parity.get("model_experiment_name"),
+            "train_experiment_id": parity.get("model_experiment_id"),
+            "train_recorder_id": parity.get("model_recorder_id"),
+            "train_artifacts": tracked_path,
+            "session_dir": None,
+        }
+
+    run = cfg["run"]
+    source_dir = resolve_session_dir(run.get("from_session"))
+    return load_session_model_info(
+        source_dir,
+        from_run=int(run.get("from_run") or 1),
+    )

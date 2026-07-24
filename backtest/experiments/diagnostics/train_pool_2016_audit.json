@@ -30,19 +30,17 @@
   },
   "all_start2016_memory_observations": {
     "raw_time_output_persisted": false,
-    "note": "Values were observed in terminal output; seed 3000 peak RSS was truncated and is intentionally omitted.",
+    "note": "Seed 42 value was observed during the recovery run; the other recovery runs were not measured with /usr/bin/time -l.",
     "runs": {
-      "42": {"maximum_resident_set_size_bytes": 10030972928, "swaps": 0},
-      "1000": {"maximum_resident_set_size_bytes": 10787782656, "swaps": 0},
-      "2000": {"maximum_resident_set_size_bytes": 8963178496, "swaps": 0},
+      "42": {"maximum_resident_set_size_bytes": 6329368576, "swaps": 0},
+      "1000": {"completed": true},
+      "2000": {"completed": true},
       "3000": {"completed": true},
-      "4000": {"maximum_resident_set_size_bytes": 8124153856, "swaps": 0}
+      "4000": {"completed": true}
     }
   },
   "sample_rows": {
-    "train_2006_to_2020": 7100707,
     "train_2016_to_2020": 2933129,
-    "handler_2005_to_2026": 14593806,
     "handler_2016_to_2026": 10261457
   },
   "universe_caveat": {

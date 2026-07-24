@@ -1,8 +1,8 @@
-# Train-Pool Controls and All-A OOM Implementation Plan
+# Train-Pool Controls and All-A 2016 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Run a controlled CSI300-2016 Phase M experiment and determine whether shortening the all-A training window to 2016 resolves the existing OOM, then register and report all outcomes.
+**Goal:** Run controlled CSI300-2016 and all-A-2016 Phase M experiments, then register and report all outcomes.
 
 **Architecture:** Add two independent config families that change only the training sample definition. Run Qlib training serially to preserve a valid memory test, evaluate successful five-seed model families through the repository's unified multi-pool evaluator, and treat registry JSONL as the sole report source.
 
@@ -16,7 +16,6 @@
 - Evaluate successful variants on `csi300`, `csi500`, and `csi1000` with `backtest/scripts/eval_ic_multi_pool.py`.
 - Do not run Qlib training through heredoc or stdin on macOS.
 - Do not run two training processes concurrently on the 16GB host.
-- Preserve the existing `train-data/all` OOM registry entry unchanged.
 
 ---
 
@@ -62,20 +61,16 @@ Expected: all configs load, seeds match filenames, and only allowed fields diffe
 - Create if required: `backtest/experiments/diagnostics/all_start2016_memory.md`
 
 **Interfaces:**
-- Consumes: Existing `backtest/configs/train-data/all/` configs.
+- Consumes: Frozen Alpha158/LGBM experiment settings.
 - Produces: A separate all-A experiment family without modifying the original failure.
 
 - [ ] **Step 1: Generate five configs**
 
-Copy the seed-matched all-A configs and change exactly the exp id, note, handler start/fit start, and train start to `2016-01-02`.
+Generate seed-matched all-A configs with the frozen model settings and set handler start/fit start and train start to `2016-01-02`.
 
 - [ ] **Step 2: Compare configs**
 
 Expected: `instruments: all`, Alpha158, model parameters, valid, test, strategy, and fee settings remain identical to the original all-A configs.
-
-- [ ] **Step 3: Record root-cause baseline**
-
-Record that the old run was killed during `model.fit`, its training window, host memory, and the absence or presence of preserved stack traces/system kill evidence. Do not claim a more specific root cause without measurements.
 
 ### Task 3: Run CSI300 2016 five-seed training
 
@@ -203,4 +198,3 @@ Compare CSI300-2016 against B0, CSI500, and CSI1000 on RankIC then RankICIR. Sta
 - [ ] **Step 3: Report OOM result**
 
 State whether 2016 alone solved all-A OOM, peak memory if observed, and the smallest evidence-backed next option if not.
-

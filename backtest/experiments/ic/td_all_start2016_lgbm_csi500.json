@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-24T22:47:40",
+  "generated_at": "2026-07-25T00:15:45",
   "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/all-start2016/td_all_start2016_lgbm_s42.yaml",
   "eval_label": "Ref($close, -2)/Ref($close, -1) - 1",
   "test_segment": [
@@ -8,23 +8,23 @@
   ],
   "sessions": [
     {
-      "session": "20260724_215315_td_all_start2016_lgbm_s42",
+      "session": "20260724_231515_td_all_start2016_lgbm_s42",
       "seed": 42
     },
     {
-      "session": "20260724_220316_td_all_start2016_lgbm_s1000",
+      "session": "20260724_232858_td_all_start2016_lgbm_s1000",
       "seed": 1000
     },
     {
-      "session": "20260724_221300_td_all_start2016_lgbm_s2000",
+      "session": "20260724_234044_td_all_start2016_lgbm_s2000",
       "seed": 2000
     },
     {
-      "session": "20260724_222351_td_all_start2016_lgbm_s3000",
+      "session": "20260724_235141_td_all_start2016_lgbm_s3000",
       "seed": 3000
     },
     {
-      "session": "20260724_223522_td_all_start2016_lgbm_s4000",
+      "session": "20260725_000231_td_all_start2016_lgbm_s4000",
       "seed": 4000
     }
   ],

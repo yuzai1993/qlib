@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v1.1（2026-07-24）
+版本：v1.2（2026-07-25）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -9,35 +9,38 @@
 
 ## 0. 硬性约束（先读这里）
 
-1. 基线（B0）固定，见第 1 节；任何实验必须与 B0 对比。**每个实验方向必须写明对照的 baseline 版本**（registry 的 `baseline_ref`，如 `B0 v1.0`），HTML 该方向表格**第一行**为对应 baseline 指标行。
-2. 模型与策略**分开迭代**：一期只改模型（Phase M），策略冻结为 B0-S；确定更优模型后才进入策略迭代（Phase S），此时模型冻结。
+1. 当前基线（B1）固定，见第 1 节；任何新实验必须与 B1 对比。**每个实验方向必须写明对照的 baseline 版本**（registry 的 `baseline_ref`，当前为 `B1 v1.0`），HTML 该方向表格**第一行**为对应 baseline 指标行。
+2. 模型与策略**分开迭代**：一期只改模型（Phase M），策略冻结为 B1-S；确定更优模型后才进入策略迭代（Phase S），此时模型冻结。
 3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
-4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI300）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi300/csi500/csi1000）上评估 IC/RankIC。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
+4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi300/csi500/csi1000）上评估 IC/RankIC。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
 5. 时间划分固定（第 3 节）：测试集 2021-07-16 ~ 2026-07-16；评估集 2020-01-13 ~ 2021-07-15。**禁止用测试集调参**。
 6. 每个实验必须登记到 `backtest/experiments/registry.jsonl`（配置路径 + 结果路径），并更新 HTML 报告（每个实验方向一张独立表格）。
 7. **实验结束后必须清理 `mlruns/`**（见第 6.3 节），只保留实盘推理与当前 baseline 训练产物，避免磁盘被打爆。
 
 ---
 
-## 1. 基线定义（B0）
+## 1. 基线定义（B1）
 
 基线取自当前实盘配置 `live_trading/configs/csi300_topk10_live.yaml`，拆为模型基线与策略基线两部分。实盘对照回测的唯一合法配置是 `backtest/configs/csi300_live_parity.yaml`。
 
-### 1.1 模型基线 B0-M
+### 1.1 模型基线 B1-M
 
 | 项 | 值 |
 |---|---|
-| 实盘模型 | mlruns 实验 `train_20260711_223223_train_start_2006_run01`（experiment_id=265134483362085141, recorder_id=40a17c74aa7b4d97a4caa35015aaead5） |
+| 基线版本 | `B1 v1.0`（2026-07-25，由用户明确批准从 B0 提升） |
+| 五种子基线组 | `train-data/csi1000-full-v2`，固定种子 `[42, 1000, 2000, 3000, 4000]` |
+| 实盘单模型 | 五种子中仅按 valid RankIC 选出的 seed=2000；Git artifact `live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model` |
+| 来源 | `train_20260725_004255_td_csi1000_full_v2_lgbm_s2000_run01`（experiment_id=836973677275181001, recorder_id=7a7c592d3b764b62b78423e9b5009926） |
 | 特征 | Alpha158（`qlib.contrib.data.handler.Alpha158`），handler start_time=2003-01-02 |
-| 训练区间 | fit 2006-01-02 ~ 2020-01-10（csi300 池） |
+| 训练区间 | fit 2016-01-02 ~ 2020-01-10（csi1000 完整样本池） |
 | 标签 | 默认 `Ref($close, -2)/Ref($close, -1) - 1` |
 | 模型 | `qlib.contrib.model.gbdt.LGBModel` |
 | 超参 | loss=mse, learning_rate=0.2, colsample_bytree=0.8879, subsample=0.8789, lambda_l1=205.6999, lambda_l2=580.9768, max_depth=8, num_leaves=210（即 qlib 官方 benchmark 参数，见现有 configs） |
 | 数据处理 | infer_processors 含 ProcessInf，与实盘配置一致 |
 
-注：实盘模型是单种子产物。做 Phase M 对比时，B0-M 指"用上表配置在基线训练池（CSI300）按 5 种子重训、并在默认 3 个测试集上打分得到的基线组"，而非直接复用实盘那一个 recorder。基线组只需跑一次，结果登记后供后续所有实验复用。
+五种子 test RankIC 均值：CSI300=0.02090、CSI500=0.02012、CSI1000=0.02885。实盘 seed=2000 的选模只使用 valid（2020-01-13 ~ 2021-07-15），valid RankIC=0.04955、RankICIR=0.54489；禁止按 test 结果改选种子。
 
-### 1.2 策略基线 B0-S
+### 1.2 策略基线 B1-S
 
 | 项 | 值 |
 |---|---|
@@ -48,9 +51,13 @@
 
 注意：历史回测配置存在多套费率口径（如 0.0005/0.0015、0.0000954/0.0005954）。**本规范下所有策略回测统一采用上表实盘费率**，与历史结果对比时需注明费率口径。
 
-### 1.3 基线变更流程
+### 1.3 历史基线 B0 v1.0
 
-只有当某实验按本规范完成完整评估（第 4/5 节）、结果对比数据经用户确认后，才可将其提升为新基线；提升时在本文件更新 B0 定义并记录版本号与日期。agent 不得自行提升基线。
+B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与当前 B1-S 相同。历史实验的 `baseline_ref: B0 v1.0` 与指标继续保留，不改写历史对照关系。
+
+### 1.4 基线变更流程
+
+只有当某实验按本规范完成完整评估（第 4/5 节）、结果对比数据经用户确认后，才可将其提升为新基线；提升时在本文件更新当前基线定义并记录版本号与日期。agent 不得自行提升基线。
 
 ---
 
@@ -59,12 +66,12 @@
 ```
 Phase M（模型迭代）            Phase S（策略迭代）
 改：特征/标签/模型/超参    →    改：策略类型/参数/调仓规则
-冻结：B0-S 策略                冻结：Phase M 选出的最优模型
+冻结：B1-S 策略                冻结：Phase M 选出的最优模型
 指标：IC / RankIC              指标：扣费超额 IR / 年化 / 最大回撤
                     ↑ 用户确认后切换 ↑
 ```
 
-- Phase M 期间**不做**策略扫参；策略仅作为参考回测（可选）时也必须用 B0-S 原样参数。
+- Phase M 期间**不做**策略扫参；策略仅作为参考回测（可选）时也必须用 B1-S 原样参数。
 - Phase S 期间**不重训模型**：使用冻结模型的 5 种子预测分数（建议经 `backtest/scripts/ensemble_preds.py` 做截面 z-score 等权集成），在同一份分数上比较策略，用 `backtest/scripts/run_pred_backtest.py` / `run_strategy_sweep.py` 执行。
 - 同时改模型和策略的实验结果**不予采信、不进 registry**。
 
@@ -91,7 +98,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 | CSI1000 | `csi1000` | 2016-01-02 | 2020-01-10 | SH000852 |
 | 全A | `all` | 2006-01-02 | 2020-01-10 | 中证全指 SH000985 本地无数据，训练/回测配置暂用 SH000300 占位（Phase M 只看 IC/RankIC 不受影响；全A 策略回测结论仅供参考） |
 
-- **默认训练池 = 基线训练池 CSI300**（train 2006-01-02 ~ 2020-01-10）；**默认测试集 = csi300 / csi500 / csi1000**，用同一个训练好的模型分别打分评估（跨池推理只需取数打分，无需重训）。
+- **默认训练池 = 基线训练池 CSI1000**（train 2016-01-02 ~ 2020-01-10）；**默认测试集 = csi300 / csi500 / csi1000**，用同一个训练好的模型分别打分评估（跨池推理只需取数打分，无需重训）。
 - **全A**：暂不纳入默认测试矩阵；若实验显式要求评估全A，剔除评估日距该股数据起始不足 60 个交易日的股票（次新股）；ST 股在股票名称缓存可用时一并剔除（`eval_ic_multi_pool.py --st-names`），不可用时在结果中注明"未剔除 ST"。
 - 上表中其余池的训练配置仅用于**训练样本类实验**（direction 如 `train-data`：更换训练池、调整训练起点、样本加权等）；此类实验须在 registry 中注明所用训练池，并与相同训练池的基线组对比。
 - Phase S 默认在**实盘目标池**（当前 CSI300）上执行，其余池作稳健性参考。
@@ -104,7 +111,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 ## 4. 运行矩阵
 
-一个模型变体的默认评估 = 基线训练池（CSI300）× 5 种子训练（5 次训练），训练好的模型在**默认 3 个测试集**（csi300/csi500/csi1000）上打分评估（仅推理，无需重训）。
+一个模型变体的默认评估 = 基线训练池（CSI1000）× 5 种子训练（5 次训练），训练好的模型在**默认 3 个测试集**（csi300/csi500/csi1000）上打分评估（仅推理，无需重训）。
 
 - 除非实验设计中**事先明确**只评估特定测试集，否则不得省略默认三指数中的任何一个；全A 默认不跑。
 - 训练样本类实验：训练池由实验设计决定，种子数（5）与默认测试集（3 指数）要求不变。
@@ -125,7 +132,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 | 优先级 | 指标 | 含义 | 怎么用 |
 |---|---|---|---|
-| **最高优先（主指标）** | **RankIC** | 预测分数与真实收益的截面 Spearman 秩相关时间均值 | 直接对应选股排序能力（Topk 吃的是排序）；先看各测试集 RankIC 是否相对 B0 整体抬升 |
+| **最高优先（主指标）** | **RankIC** | 预测分数与真实收益的截面 Spearman 秩相关时间均值 | 直接对应选股排序能力（Topk 吃的是排序）；先看各测试集 RankIC 是否相对当前基线整体抬升 |
 | **次优先** | **RankICIR** | RankIC 均值 / RankIC 标准差 | 排序信号的时间稳定性；均值升但 RankICIR 明显下降说明信号不稳 |
 | 参考 | IC | 截面 Pearson 相关时间均值 | 对极端值更敏感，作辅助对照 |
 | 参考 | ICIR | IC 均值 / IC 标准差 | Pearson 口径下的时间稳定性 |
@@ -178,7 +185,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
   "phase": "M",
   "date": "2026-07-18",
   "hypothesis": "10 日累计标签比 1 日标签信噪比更高，预期 RankIC 提升",
-  "baseline_ref": "B0 v1.0",
+  "baseline_ref": "B1 v1.0",
   "seeds": [42, 1000, 2000, 3000, 4000],
   "train_pool": "csi300",
   "test_pools": ["csi300", "csi500", "csi1000"],
@@ -187,13 +194,13 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
   "result_dirs": ["backtest/result/20260718_122513_ms_cum_h10_s42"],
   "metrics_summary": {"csi500": {"rank_ic_mean": 0.061, "rank_icir": 0.45}},
   "conclusion": "regress",
-  "note": "RankIC 全测试集低于 B0，判负"
+  "note": "RankIC 全测试集低于 B1，判负"
 }
 ```
 
 字段要求：
 - **`hypothesis` 必填，且必须在实验开跑前写好**（改了什么、预期哪个指标为什么会变好）；事后只按该口径解读结果，防止"事后找亮点"。
-- **`baseline_ref` 必填**：写明对照的 baseline 版本（如 `B0 v1.0`）；同一 `direction` 内不得混用多个版本。HTML 该方向表第一行即此版本对应的 baseline 指标。
+- **`baseline_ref` 必填**：写明对照的 baseline 版本（当前如 `B1 v1.0`）；同一 `direction` 内不得混用多个版本。HTML 该方向表第一行即此版本对应的 baseline 指标。
 - **`data_version` 必填**：填当时数据日历的最后交易日（`eval_ic_multi_pool.py` 输出中自动带出）。数据前复权重标定不改变 Alpha158 特征值（全部为比值形态），但历史修正/补数会轻微改变截面构成，此字段用于事后解释不同时间实验结果的差异，无需做数据快照。
 
 ### 6.3 mlruns 清理（强制，防磁盘打爆）
@@ -202,7 +209,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 **长期保留（信号推理必需）**：
 - 实盘模型：`live_trading/configs/csi300_topk10_live.yaml` 指向的 train 实验（含 `artifacts/trained_model`）；
-- 当前 baseline（B0-M）5 种子 train 实验（含 `artifacts/trained_model`），供对照推理与 Phase S 冻结分数。
+- 当前 baseline（B1-M）5 种子 train 实验（含 `artifacts/trained_model`），供对照推理与 Phase S 冻结分数。
 
 **必须删除**：
 - 非实盘、非当前 baseline 的 train/backtest 实验目录（含判负、通过但未提升为基线、中途失败的产物）；
@@ -211,7 +218,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 **可与大文件一并丢掉、但须另处保留的对照信息**：
 - `backtest/experiments/registry.jsonl` 行、配置文件、`backtest/experiments/ic/*.json`、`metrics.json` / HTML 报告摘要。
 
-清理时用显式 ID 白名单（bash 数组或一行一 ID），**禁止**在 zsh 下依赖未拆分的空格字符串做保留判断。提升基线后：删除旧 B0-M 的 mlruns，只留新基线 5 种子 + 实盘。
+清理时用显式 ID 白名单（bash 数组或一行一 ID），**禁止**在 zsh 下依赖未拆分的空格字符串做保留判断。提升基线后：删除旧基线的 mlruns，只留新基线 5 种子；实盘模型另存于 Git 跟踪目录，不依赖 mlruns。
 
 ---
 
@@ -230,14 +237,14 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 ## 8. 标准执行流程（checklist）
 
 ```
-[ ] 1. 读本文件，确认当前 Phase（M 或 S）与 B0 版本；本方向 baseline_ref 写死为该版本
+[ ] 1. 读本文件，确认当前 Phase（M 或 S）与当前 baseline 版本；本方向 baseline_ref 写死为该版本
 [ ] 2. 写实验假设与变体设计（即 registry 的 hypothesis 字段，开跑前定稿，不得事后修改）
 [ ] 3. 生成配置（复用现有 config 模板，只改实验变量；时间/种子/费率不得动）
-[ ] 4. 基线训练池（CSI300）× 5 种子训练，在默认 3 个测试集（csi300/csi500/csi1000）上打分评估
-[ ] 5. 按第 5 节口径汇总指标，与 B0 对比
+[ ] 4. 基线训练池（CSI1000）× 5 种子训练，在默认 3 个测试集（csi300/csi500/csi1000）上打分评估
+[ ] 5. 按第 5 节口径汇总指标，与当前 baseline 对比
 [ ] 6. 登记 registry.jsonl（含 baseline_ref），并重跑 build_experiment_report.py 生成 HTML（确认表首行为 baseline）
 [ ] 7. 按 6.3 清理 mlruns：删除本实验 train/backtest 大文件，仅保留实盘 + 当前 baseline
-[ ] 8. 将对比数据报告用户，由用户决定是否采纳/提升基线；不自行改 B0
+[ ] 8. 将对比数据报告用户，由用户决定是否采纳/提升基线；不自行改 baseline
 ```
 
 ---

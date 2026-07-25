@@ -66,6 +66,22 @@ def test_backtest_only_requires_a_model_source():
         cl.validate_run_section(raw)
 
 
+def test_train_only_does_not_require_strategy_or_backtest():
+    raw = yaml.safe_load(DEFAULT_YAML.read_text(encoding="utf-8"))
+    raw["run"]["mode"] = "train_only"
+    raw["run"]["n_runs"] = 5
+    raw.pop("strategy")
+    raw.pop("backtest")
+
+    cfg = cl.align_dates_from_segments(cl.validate_run_section(raw))
+
+    assert cfg["run"]["mode"] == "train_only"
+    assert cfg["run"]["n_runs"] == 5
+    assert "strategy" not in cfg
+    assert "backtest" not in cfg
+    assert cfg["data"]["handler"]["end_time"] == cfg["segments"]["test"][1]
+
+
 def test_tracked_parity_model_loads_without_session_or_mlruns(monkeypatch):
     import run_backtest as rb
 

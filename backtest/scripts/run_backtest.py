@@ -1,5 +1,5 @@
 """
-训练+回测 / 免重训回测
+仅训练 / 训练+回测 / 免重训回测
 
 用法:
   python backtest/scripts/run_backtest.py
@@ -174,6 +174,101 @@ def _save_run_report(
         mlruns_link=mlruns_link,
         note=note,
     )
+
+
+def _save_train_only_report(
+    *,
+    run_dir: Path,
+    session_name: str,
+    run_idx: int,
+    note: str,
+    result: dict,
+    mlruns_link: dict,
+) -> None:
+    write_json(run_dir / "mlruns_link.json", mlruns_link)
+    write_json(
+        run_dir / "metrics.json",
+        {k: v for k, v in result.items() if k != "traceback"},
+    )
+    write_json(run_dir / "figures_manifest.json", {})
+    write_run_html(
+        run_dir / "report.html",
+        title=f"{session_name} / run_{run_idx:02d}",
+        metrics={k: v for k, v in result.items() if k != "traceback"},
+        figure_files={},
+        mlruns_link=mlruns_link,
+        note=note,
+    )
+
+
+def run_train_only_once(
+    run_idx: int,
+    n_runs: int,
+    session_dir: Path,
+    session_name: str,
+    note: str,
+    task: dict,
+) -> dict:
+    print(f"\n{'='*60}")
+    print(
+        f"  Train {run_idx}/{n_runs}  "
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]"
+    )
+    print(f"{'='*60}")
+
+    run_dir = session_dir / f"run_{run_idx:02d}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    train_exp = f"train_{session_name}_run{run_idx:02d}"
+    result = {"run": run_idx, "status": "failed"}
+
+    try:
+        model = init_instance_by_config(task["model"])
+        dataset = init_instance_by_config(task["dataset"])
+        with R.start(experiment_name=train_exp):
+            R.log_params(**flatten_dict(task))
+            model.fit(dataset)
+            R.save_objects(trained_model=model)
+            recorder = R.get_recorder()
+            train_rid = recorder.id
+            train_eid = recorder.experiment_id
+
+        result.update(
+            {
+                "status": "success",
+                "train_experiment_name": train_exp,
+                "train_experiment_id": train_eid,
+                "train_recorder_id": train_rid,
+            }
+        )
+        mlruns_link = {
+            "train_experiment_name": train_exp,
+            "train_experiment_id": train_eid,
+            "train_recorder_id": train_rid,
+            "train_artifacts": f"mlruns/{train_eid}/{train_rid}",
+        }
+        _save_train_only_report(
+            run_dir=run_dir,
+            session_name=session_name,
+            run_idx=run_idx,
+            note=note,
+            result=result,
+            mlruns_link=mlruns_link,
+        )
+        print(
+            f"[Run {run_idx}] 训练完成，experiment_id={train_eid}, "
+            f"recorder_id={train_rid}"
+        )
+    except Exception as exc:
+        result["error"] = str(exc)
+        result["traceback"] = traceback.format_exc()
+        write_json(
+            run_dir / "metrics.json",
+            {k: v for k, v in result.items() if k != "traceback"},
+        )
+        print(f"[Run {run_idx}] 出错: {exc}")
+        traceback.print_exc()
+
+    return result
 
 
 def run_train_backtest_once(
@@ -472,7 +567,9 @@ def exit_code_for_summary(summary: dict, expected_runs: int) -> int:
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="训练+回测 / 免重训回测（配置见 YAML）")
+    p = argparse.ArgumentParser(
+        description="仅训练 / 训练+回测 / 免重训回测（配置见 YAML）"
+    )
     p.add_argument(
         "--config",
         type=str,
@@ -515,33 +612,36 @@ def main():
     print(f"配置: {cfg['_config_path']}")
     print(f"模式: {mode}")
 
-    port_analysis_config = build_port_analysis_config(cfg)
     task = build_task(cfg)
+    port_analysis_config = (
+        None if mode == "train_only" else build_port_analysis_config(cfg)
+    )
 
     meta = {
         "session_name": session_name,
         "note": note,
         "mode": mode,
         "created_at": datetime.now().isoformat(timespec="seconds"),
-        "n_runs": n_runs if mode == "train_backtest" else 1,
+        "n_runs": n_runs if mode != "backtest_only" else 1,
         "config_path": cfg["_config_path"],
         "provider_uri": provider_uri,
         "market": cfg["data"]["instruments"],
         "benchmark": cfg["data"]["benchmark"],
         "handler": handler_class,
         "segments": cfg["segments"],
-        "backtest": port_analysis_config["backtest"],
-        "strategy": {
-            "class": port_analysis_config["strategy"]["class"],
-            "topk": port_analysis_config["strategy"]["kwargs"]["topk"],
-            "n_drop": port_analysis_config["strategy"]["kwargs"]["n_drop"],
-        },
         "generate_figures": bool(run.get("generate_figures", False)),
         "overrides": {
             "segments_test": cfg["segments"]["test"],
         },
         "runs": [],
     }
+    if port_analysis_config is not None:
+        meta["backtest"] = port_analysis_config["backtest"]
+        meta["strategy"] = {
+            "class": port_analysis_config["strategy"]["class"],
+            "topk": port_analysis_config["strategy"]["kwargs"].get("topk"),
+            "n_drop": port_analysis_config["strategy"]["kwargs"].get("n_drop"),
+        }
 
     source_info = None
     if mode == "backtest_only":
@@ -565,7 +665,23 @@ def main():
         assert source_info is not None
         result = run_backtest_only_once(session_dir, session_name, note, cfg, source_info)
         all_results.append(result)
+    elif mode == "train_only":
+        for i in range(1, n_runs + 1):
+            result = run_train_only_once(
+                i,
+                n_runs,
+                session_dir,
+                session_name,
+                note,
+                task,
+            )
+            all_results.append(result)
+            print(
+                f"[Run {i}] 结果已追加写入 "
+                f"{session_dir / 'all_runs_results.csv'}"
+            )
     else:
+        assert port_analysis_config is not None
         for i in range(1, n_runs + 1):
             result = run_train_backtest_once(
                 i,

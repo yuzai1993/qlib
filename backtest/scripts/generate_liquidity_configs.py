@@ -29,6 +29,7 @@ def generate() -> list[Path]:
             source = SOURCE_ROOT / f"td_csi1000_lgbm_s{seed}.yaml"
             cfg = yaml.safe_load(source.read_text(encoding="utf-8"))
             cfg = copy.deepcopy(cfg)
+            cfg["run"]["mode"] = "train_only"
             note = f"td_{arm.replace('-', '_')}_lgbm_s{seed}"
             cfg["run"]["note"] = note
             if bucket is not None:

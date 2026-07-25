@@ -1,0 +1,105 @@
+# EXPERIMENT_STANDARD v1.3 | exp: label-design/survival-weighted-h60 | seed 1000
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config label-design/survival-weighted-h60/ld_survival_weighted_h60_lgbm_s1000.yaml
+run:
+  mode: train_only
+  note: ld_survival_weighted_h60_lgbm_s1000
+  n_runs: 1
+  from_session: null
+  from_run: 1
+  generate_figures: false
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: csi1000
+  benchmark: SH000852
+  handler:
+    class: Alpha158
+    module_path: qlib.contrib.data.handler
+    start_time: '2003-01-02'
+    end_time: '2026-07-16'
+    fit_start_time: '2016-01-02'
+    fit_end_time: '2020-01-10'
+    infer_processors:
+    - class: ProcessInf
+    label:
+    - - 0.039721853935*(Ref($close, -2)/Ref($close, -1)-1)+0.037342575374*(Ref($close,
+        -3)/Ref($close, -2)-1)+0.035421869007*(Ref($close, -4)/Ref($close, -3)-1)+0.033597044616*(Ref($close,
+        -5)/Ref($close, -4)-1)+0.032559847718*(Ref($close, -6)/Ref($close, -5)-1)+0.031136244133*(Ref($close,
+        -7)/Ref($close, -6)-1)+0.030157501685*(Ref($close, -8)/Ref($close, -7)-1)+0.029177433925*(Ref($close,
+        -9)/Ref($close, -8)-1)+0.028256687413*(Ref($close, -10)/Ref($close, -9)-1)+0.027476909547*(Ref($close,
+        -11)/Ref($close, -10)-1)+0.026818286996*(Ref($close, -12)/Ref($close, -11)-1)+0.025806665700*(Ref($close,
+        -13)/Ref($close, -12)-1)+0.024916780676*(Ref($close, -14)/Ref($close, -13)-1)+0.024168653817*(Ref($close,
+        -15)/Ref($close, -14)-1)+0.023605622192*(Ref($close, -16)/Ref($close, -15)-1)+0.022664742654*(Ref($close,
+        -17)/Ref($close, -16)-1)+0.022182067579*(Ref($close, -18)/Ref($close, -17)-1)+0.021571745036*(Ref($close,
+        -19)/Ref($close, -18)-1)+0.020916133177*(Ref($close, -20)/Ref($close, -19)-1)+0.020110034738*(Ref($close,
+        -21)/Ref($close, -20)-1)+0.019534853660*(Ref($close, -22)/Ref($close, -21)-1)+0.018853157567*(Ref($close,
+        -23)/Ref($close, -22)-1)+0.018340727464*(Ref($close, -24)/Ref($close, -23)-1)+0.017760868398*(Ref($close,
+        -25)/Ref($close, -24)-1)+0.017243561552*(Ref($close, -26)/Ref($close, -25)-1)+0.016724958197*(Ref($close,
+        -27)/Ref($close, -26)-1)+0.016206354842*(Ref($close, -28)/Ref($close, -27)-1)+0.015815840268*(Ref($close,
+        -29)/Ref($close, -28)-1)+0.015249432765*(Ref($close, -30)/Ref($close, -29)-1)+0.014725847091*(Ref($close,
+        -31)/Ref($close, -30)-1)+0.014068443203*(Ref($close, -32)/Ref($close, -31)-1)+0.013606822410*(Ref($close,
+        -33)/Ref($close, -32)-1)+0.013231309454*(Ref($close, -34)/Ref($close, -33)-1)+0.012765886508*(Ref($close,
+        -35)/Ref($close, -34)-1)+0.012432863382*(Ref($close, -36)/Ref($close, -35)-1)+0.012098046594*(Ref($close,
+        -37)/Ref($close, -36)-1)+0.011785550926*(Ref($close, -38)/Ref($close, -37)-1)+0.011406091900*(Ref($close,
+        -39)/Ref($close, -38)-1)+0.010980324226*(Ref($close, -40)/Ref($close, -39)-1)+0.010553685861*(Ref($close,
+        -41)/Ref($close, -40)-1)+0.010037228893*(Ref($close, -42)/Ref($close, -41)-1)+0.009744663926*(Ref($close,
+        -43)/Ref($close, -42)-1)+0.009540705844*(Ref($close, -44)/Ref($close, -43)-1)+0.009197514986*(Ref($close,
+        -45)/Ref($close, -44)-1)+0.008899341183*(Ref($close, -46)/Ref($close, -45)-1)+0.008531409765*(Ref($close,
+        -47)/Ref($close, -46)-1)+0.008346946851*(Ref($close, -48)/Ref($close, -47)-1)+0.007839673838*(Ref($close,
+        -49)/Ref($close, -48)-1)+0.007493805875*(Ref($close, -50)/Ref($close, -49)-1)+0.007238598863*(Ref($close,
+        -51)/Ref($close, -50)-1)+0.007029793127*(Ref($close, -52)/Ref($close, -51)-1)+0.006843573441*(Ref($close,
+        -53)/Ref($close, -52)-1)+0.006656078279*(Ref($close, -54)/Ref($close, -53)-1)+0.006445146221*(Ref($close,
+        -55)/Ref($close, -54)-1)+0.006280489200*(Ref($close, -56)/Ref($close, -55)-1)+0.006139354612*(Ref($close,
+        -57)/Ref($close, -56)-1)+0.005927652728*(Ref($close, -58)/Ref($close, -57)-1)+0.005762339704*(Ref($close,
+        -59)/Ref($close, -58)-1)+0.005620642826*(Ref($close, -60)/Ref($close, -59)-1)+0.005431713655*(Ref($close,
+        -61)/Ref($close, -60)-1)
+    - - LABEL0
+segments:
+  train:
+  - '2016-01-02'
+  - '2020-01-10'
+  valid:
+  - '2020-01-13'
+  - '2021-07-15'
+  test:
+  - '2021-07-16'
+  - '2026-07-16'
+model:
+  class: LGBModel
+  module_path: qlib.contrib.model.gbdt
+  kwargs:
+    loss: mse
+    colsample_bytree: 0.8879
+    learning_rate: 0.2
+    subsample: 0.8789
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    max_depth: 8
+    num_leaves: 210
+    num_threads: 8
+    seed: 1000
+strategy:
+  class: TopkDropoutStrategy
+  module_path: qlib.contrib.strategy.signal_strategy
+  topk: 10
+  n_drop: 2
+  kwargs:
+    hold_thresh: 1
+    risk_degree: 0.95
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+backtest:
+  account: 1000000
+  exchange_kwargs:
+    freq: day
+    deal_price: close
+    limit_threshold: 0.095
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5
+    trade_unit: 100
+dataset:
+  class: PurgedHorizonDataset
+  module_path: backtest.label_design.dataset
+  kwargs:
+    label_horizon: 60

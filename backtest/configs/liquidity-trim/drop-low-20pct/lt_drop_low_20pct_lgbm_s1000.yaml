@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.2 | exp: liquidity-trim/drop-low-20pct | seed 1000
 # /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config liquidity-trim/drop-low-20pct/lt_drop_low_20pct_lgbm_s1000.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: lt_drop_low_20pct_lgbm_s1000
   n_runs: 1
   from_session: null

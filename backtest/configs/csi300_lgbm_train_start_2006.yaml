@@ -2,7 +2,7 @@
 # python backtest/scripts/run_backtest.py --config csi300_lgbm_train_start_2006.yaml
 
 run:
-  mode: train_backtest
+  mode: train_only
   note: "train_start_2006"
   n_runs: 1
   from_session: null

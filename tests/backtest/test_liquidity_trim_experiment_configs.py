@@ -26,6 +26,7 @@ def test_trim_arms_have_five_frozen_b1_configs():
         assert sorted(cfg["model"]["kwargs"]["seed"] for cfg in configs) == SEEDS
 
         for cfg in configs:
+            assert cfg["run"]["mode"] == "train_only"
             seed = cfg["model"]["kwargs"]["seed"]
             source = _load(
                 CONFIG_ROOT

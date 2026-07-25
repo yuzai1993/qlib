@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.0 | exp: train-data/csi1000 | seed 2000
 # python backtest/scripts/run_backtest.py --config train-data/csi1000/td_csi1000_lgbm_s2000.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: td_csi1000_lgbm_s2000
   n_runs: 1
   from_session: null

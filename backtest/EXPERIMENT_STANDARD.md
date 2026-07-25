@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v1.2（2026-07-25）
+版本：v1.3（2026-07-25）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -15,7 +15,7 @@
 4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi300/csi500/csi1000）上评估 IC/RankIC。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
 5. 时间划分固定（第 3 节）：测试集 2021-07-16 ~ 2026-07-16；评估集 2020-01-13 ~ 2021-07-15。**禁止用测试集调参**。
 6. 每个实验必须登记到 `backtest/experiments/registry.jsonl`（配置路径 + 结果路径），并更新 HTML 报告（每个实验方向一张独立表格）。
-7. **实验结束后必须清理 `mlruns/`**（见第 6.3 节），只保留实盘推理与当前 baseline 训练产物，避免磁盘被打爆。
+7. **实验结束后必须同时清理 `mlruns/` 和 `backtest/result/`**（见第 6.3 节）。当前 Phase M 自动清理只保留模型 baseline 与超过它的最佳候选实验组，避免磁盘被打爆。
 
 ---
 
@@ -71,7 +71,7 @@ Phase M（模型迭代）            Phase S（策略迭代）
                     ↑ 用户确认后切换 ↑
 ```
 
-- Phase M 期间**不做**策略扫参；策略仅作为参考回测（可选）时也必须用 B1-S 原样参数。
+- Phase M 配置必须使用 `run.mode=train_only`，只训练并保存模型；**不得随模型训练自动运行策略回测**。如确需参考策略回测，必须在模型评估完成后使用冻结模型另行运行，且 B1-S 参数原样不变，结果不参与 Phase M 选型。
 - Phase S 期间**不重训模型**：使用冻结模型的 5 种子预测分数（建议经 `backtest/scripts/ensemble_preds.py` 做截面 z-score 等权集成），在同一份分数上比较策略，用 `backtest/scripts/run_pred_backtest.py` / `run_strategy_sweep.py` 执行。
 - 同时改模型和策略的实验结果**不予采信、不进 registry**。
 
@@ -113,6 +113,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 一个模型变体的默认评估 = 基线训练池（CSI1000）× 5 种子训练（5 次训练），训练好的模型在**默认 3 个测试集**（csi300/csi500/csi1000）上打分评估（仅推理，无需重训）。
 
+- Phase M 的 5 次训练统一使用 `backtest/scripts/run_backtest.py` 的 `train_only` 模式；该模式只创建 train recorder 和 `trained_model`，不创建 SignalRecord、PortAnaRecord 或 backtest recorder。
 - 除非实验设计中**事先明确**只评估特定测试集，否则不得省略默认三指数中的任何一个；全A 默认不跑。
 - 训练样本类实验：训练池由实验设计决定，种子数（5）与默认测试集（3 指数）要求不变。
 
@@ -203,22 +204,47 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 - **`baseline_ref` 必填**：写明对照的 baseline 版本（当前如 `B1 v1.0`）；同一 `direction` 内不得混用多个版本。HTML 该方向表第一行即此版本对应的 baseline 指标。
 - **`data_version` 必填**：填当时数据日历的最后交易日（`eval_ic_multi_pool.py` 输出中自动带出）。数据前复权重标定不改变 Alpha158 特征值（全部为比值形态），但历史修正/补数会轻微改变截面构成，此字段用于事后解释不同时间实验结果的差异，无需做数据快照。
 
-### 6.3 mlruns 清理（强制，防磁盘打爆）
+### 6.3 mlruns 与 result 清理（强制，防磁盘打爆）
 
-`mlruns/` 默认 gitignore，训练/回测会快速堆积 GB 级 artifact。**每次实验收尾（无论成败）都必须清理**，不得只登记 registry 却留下模型文件。
+`mlruns/` 与 `backtest/result/` 默认 gitignore，训练、预测和回测会持续堆积 artifact。**每次实验收尾（无论成败）都必须在 registry 和 HTML 更新后运行统一清理**：
 
-**长期保留（信号推理必需）**：
-- 实盘模型：`live_trading/configs/csi300_topk10_live.yaml` 指向的 train 实验（含 `artifacts/trained_model`）；
-- 当前 baseline（B1-M）5 种子 train 实验（含 `artifacts/trained_model`），供对照推理与 Phase S 冻结分数。
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  backtest/scripts/cleanup_experiment_artifacts.py
+# 确认 dry-run 白名单与删除列表后：
+/opt/anaconda3/envs/qlib/bin/python \
+  backtest/scripts/cleanup_experiment_artifacts.py --apply
+```
 
-**必须删除**：
-- 非实盘、非当前 baseline 的 train/backtest 实验目录（含判负、通过但未提升为基线、中途失败的产物）；
-- `mlruns/.trash/` 内容。
+清理器以 registry 为唯一选择依据，按**完整五种子实验组**保留，不得按 test 结果挑单个 seed。
 
-**可与大文件一并丢掉、但须另处保留的对照信息**：
-- `backtest/experiments/registry.jsonl` 行、配置文件、`backtest/experiments/ic/*.json`、`metrics.json` / HTML 报告摘要。
+**长期保留组**：
 
-清理时用显式 ID 白名单（bash 数组或一行一 ID），**禁止**在 zsh 下依赖未拆分的空格字符串做保留判断。提升基线后：删除旧基线的 mlruns，只留新基线 5 种子；实盘模型另存于 Git 跟踪目录，不依赖 mlruns。
+1. 当前 Phase M baseline 五种子组；
+2. 当前 baseline 下超过 baseline 的最佳 Phase M 候选五种子组，最多一个；没有合格候选则不保留候选；
+3. 实盘单模型继续存放于 Git 跟踪目录，由 `live_trading/configs/csi300_topk10_live.yaml` 引用，不依赖 result session。
+
+**Phase M 候选资格与排序**：
+
+- CSI300、CSI500、CSI1000 三池五种子平均 RankIC 必须全部严格高于当前 baseline；
+- baseline 与候选用于比较的 RankIC/RankICIR 必须是有限数值；NaN、Infinity 或缺失指标不得参与保留决策；
+- 合格候选按三池 RankIC 平均增量排序；
+- RankIC 平均增量相同时，以三池 RankICIR 平均增量作为并列规则；
+- Phase M 与 Phase S 指标不可混排。当前清理器只自动评选 Phase M；进入 Phase S 前须先为第 5.2 节三项策略指标补齐独立 baseline/候选 schema 与清理测试，不得套用 RankIC 规则。
+
+**`mlruns/` 保留内容**：
+
+- 当前 baseline 与最佳候选仍存在的 train recorder（含 `artifacts/trained_model`）；
+- 删除所有 backtest recorder、落选/失败 train recorder、未知历史实验和 `.trash/`。
+
+**`backtest/result/` 保留内容**：
+
+- 当前 baseline 与最佳候选 registry 行引用的五种子 session；
+- 删除其他所有 session，包括判负、未超过 baseline、中途失败和已被更优候选替代的目录。
+
+registry 中的历史 `result_dirs` 字符串允许指向已清理目录，它们是审计记录而非永久文件承诺。以下 Git 跟踪摘要永不参与清理：`registry.jsonl`、配置文件、`backtest/experiments/ic/*.json` 和自动生成的 HTML 报告。
+
+清理脚本默认 dry-run，只有显式 `--apply` 才删除；删除目标必须是 `mlruns/` 或 `backtest/result/` 的直接子目录。保留组必须具有规范中的完整五种子列表、五个现存 result session，且每个 session 能唯一解析到成功的 train experiment；任一条件不满足时脚本必须阻止全部删除。提升 baseline 后，旧 baseline 仅在仍是最佳候选时保留，否则由下一次清理删除。
 
 ---
 
@@ -239,11 +265,11 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 ```
 [ ] 1. 读本文件，确认当前 Phase（M 或 S）与当前 baseline 版本；本方向 baseline_ref 写死为该版本
 [ ] 2. 写实验假设与变体设计（即 registry 的 hypothesis 字段，开跑前定稿，不得事后修改）
-[ ] 3. 生成配置（复用现有 config 模板，只改实验变量；时间/种子/费率不得动）
-[ ] 4. 基线训练池（CSI1000）× 5 种子训练，在默认 3 个测试集（csi300/csi500/csi1000）上打分评估
+[ ] 3. 生成 `run.mode=train_only` 配置（复用现有 config 模板，只改实验变量；时间/种子不得动）
+[ ] 4. 基线训练池（CSI1000）× 5 种子仅训练，在默认 3 个测试集（csi300/csi500/csi1000）上打分评估
 [ ] 5. 按第 5 节口径汇总指标，与当前 baseline 对比
 [ ] 6. 登记 registry.jsonl（含 baseline_ref），并重跑 build_experiment_report.py 生成 HTML（确认表首行为 baseline）
-[ ] 7. 按 6.3 清理 mlruns：删除本实验 train/backtest 大文件，仅保留实盘 + 当前 baseline
+[ ] 7. 先 dry-run、再按 6.3 `--apply` 清理 mlruns 与 backtest/result，确认只保留当前 baseline + 最佳合格候选
 [ ] 8. 将对比数据报告用户，由用户决定是否采纳/提升基线；不自行改 baseline
 ```
 
@@ -253,13 +279,14 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 | 脚本 | 用途 |
 |---|---|
-| `backtest/scripts/run_backtest.py` | 训练 + 回测主入口 |
+| `backtest/scripts/run_backtest.py` | `train_only` 模型训练、显式 `train_backtest` 兼容模式与 `backtest_only` 入口 |
 | `backtest/scripts/eval_ic_multi_pool.py` | **Phase M 统一 IC/RankIC 跨池评估**（含全A过滤与 data_version 输出） |
 | `backtest/scripts/eval_protocol.py` | daily_ic / summarize_ic / pairwise_win_count / yearly_ir |
 | `backtest/scripts/run_pred_backtest.py` | 基于现成 pred 分数回测（Phase S 用） |
 | `backtest/scripts/run_strategy_sweep.py` | 策略扫参（Phase S 用） |
 | `backtest/scripts/ensemble_preds.py` | 多种子预测集成（截面 z-score 等权） |
 | `backtest/scripts/build_experiment_report.py` | **registry.jsonl → 标准实验 HTML 报告**（含目录，唯一渲染入口） |
+| `backtest/scripts/cleanup_experiment_artifacts.py` | registry 驱动的 mlruns/result dry-run 与统一清理 |
 
 ## 附录 B：环境注意事项
 

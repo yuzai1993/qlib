@@ -27,6 +27,7 @@ def test_each_arm_has_fixed_five_seeds_and_frozen_model_protocol():
         configs = _configs(arm)
         assert sorted(cfg["model"]["kwargs"]["seed"] for cfg in configs) == SEEDS
         for cfg in configs:
+            assert cfg["run"]["mode"] == "train_only"
             assert cfg["data"]["instruments"] == "csi1000"
             assert cfg["segments"]["train"] == ["2016-01-02", "2020-01-10"]
             assert cfg["segments"]["valid"] == ["2020-01-13", "2021-07-15"]

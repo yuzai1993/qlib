@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.1 | exp: train-data/csi1000-full-v2 | seed 1000
 # /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s1000.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: td_csi1000_full_v2_lgbm_s1000
   n_runs: 1
   from_session: null

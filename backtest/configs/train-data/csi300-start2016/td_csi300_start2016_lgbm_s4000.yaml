@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.0 | exp: train-data/csi300-start2016 | seed 4000
 # python backtest/scripts/run_backtest.py --config train-data/csi300-start2016/td_csi300_start2016_lgbm_s4000.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: td_csi300_start2016_lgbm_s4000
   n_runs: 1
   from_session: null

@@ -28,6 +28,7 @@ def generate() -> list[Path]:
         for seed in SEEDS:
             source = SOURCE_ROOT / f"td_csi1000_full_v2_lgbm_s{seed}.yaml"
             cfg = copy.deepcopy(yaml.safe_load(source.read_text(encoding="utf-8")))
+            cfg["run"]["mode"] = "train_only"
             note = f"lt_{arm_note}_lgbm_s{seed}"
             cfg["run"]["note"] = note
             cfg["dataset"] = {

@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.0 | exp: train-data/all-start2016 | seed 3000
 # python backtest/scripts/run_backtest.py --config train-data/all-start2016/td_all_start2016_lgbm_s3000.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: td_all_start2016_lgbm_s3000
   n_runs: 1
   from_session: null

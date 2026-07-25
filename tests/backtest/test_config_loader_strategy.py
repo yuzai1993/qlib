@@ -16,11 +16,13 @@ sys.path.insert(0, str(SCRIPTS))
 import config_loader as cl  # noqa: E402
 import eval_protocol as ep  # noqa: E402
 
-DEFAULT_YAML = ROOT / "backtest" / "configs" / "csi300_lgbm_bt_only_2006_top10.yaml"
+DEFAULT_YAML = ROOT / "backtest" / "configs" / "csi300_live_parity.yaml"
 
 
 def _base_cfg(**strategy_overrides):
     raw = yaml.safe_load(DEFAULT_YAML.read_text(encoding="utf-8"))
+    if "hold_thresh" in strategy_overrides:
+        raw["strategy"]["kwargs"].pop("hold_thresh", None)
     raw["strategy"].update(strategy_overrides)
     return cl.align_dates_from_segments(cl.validate_run_section(copy.deepcopy(raw)))
 

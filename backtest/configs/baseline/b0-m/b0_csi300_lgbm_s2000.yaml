@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.0 | exp: baseline/b0-m | seed 2000
 # python backtest/scripts/run_backtest.py --config baseline/b0-m/b0_csi300_lgbm_s2000.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: b0_csi300_lgbm_s2000
   n_runs: 1
   from_session: null

@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.1 | exp: feature-technical/momentum | seed 42
 # /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config feature-technical/momentum/ft_momentum_lgbm_s42.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: ft_momentum_lgbm_s42
   n_runs: 1
   from_session: null

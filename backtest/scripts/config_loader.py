@@ -13,7 +13,7 @@ BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 CONFIGS_DIR = BACKTEST_ROOT / "configs"
 RESULT_ROOT = BACKTEST_ROOT / "result"
 
-VALID_MODES = ("train_backtest", "backtest_only")
+VALID_MODES = ("train_only", "train_backtest", "backtest_only")
 DEFAULT_CONFIG_NAME = "csi300_live_parity.yaml"
 
 
@@ -98,7 +98,6 @@ def align_dates_from_segments(cfg: dict) -> dict:
     """
     cfg = copy.deepcopy(cfg)
     segments = _require(cfg, "segments")
-    backtest = _require(cfg, "backtest")
     handler = _require(cfg, "data", "handler")
 
     test = list(segments.get("test") or [])
@@ -109,8 +108,10 @@ def align_dates_from_segments(cfg: dict) -> dict:
     if str(test[0]) > str(test[1]):
         raise ConfigError(f"测试区间非法: {test[0]} > {test[1]}")
 
-    backtest["start_time"] = test[0]
-    backtest["end_time"] = test[1]
+    backtest = cfg.get("backtest")
+    if backtest is not None:
+        backtest["start_time"] = test[0]
+        backtest["end_time"] = test[1]
 
     h_end = handler.get("end_time")
     if h_end is None or str(test[1]) > str(h_end):
@@ -121,7 +122,7 @@ def align_dates_from_segments(cfg: dict) -> dict:
 
 def validate_run_section(cfg: dict) -> dict:
     run = cfg.setdefault("run", {})
-    mode = run.get("mode") or "train_backtest"
+    mode = run.get("mode") or "train_only"
     if mode not in VALID_MODES:
         raise ConfigError(f"run.mode 非法: {mode}，应为 {VALID_MODES}")
     run["mode"] = mode
@@ -156,9 +157,10 @@ def validate_run_section(cfg: dict) -> dict:
     _require(cfg, "segments", "valid")
     _require(cfg, "segments", "test")
     _require(cfg, "model", "class")
-    _require(cfg, "strategy", "class")
-    _require(cfg, "backtest", "account")
-    _require(cfg, "backtest", "exchange_kwargs")
+    if mode != "train_only":
+        _require(cfg, "strategy", "class")
+        _require(cfg, "backtest", "account")
+        _require(cfg, "backtest", "exchange_kwargs")
     return cfg
 
 

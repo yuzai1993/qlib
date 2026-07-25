@@ -1,7 +1,7 @@
 # EXPERIMENT_STANDARD v1.1 | exp: feature-technical/bollinger | seed 3000
 # /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config feature-technical/bollinger/ft_bollinger_lgbm_s3000.yaml
 run:
-  mode: train_backtest
+  mode: train_only
   note: ft_bollinger_lgbm_s3000
   n_runs: 1
   from_session: null

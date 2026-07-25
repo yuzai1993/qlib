@@ -30,7 +30,9 @@ from typing import Any, Optional, Sequence
 import numpy as np
 import pandas as pd
 
+QLIB_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(QLIB_ROOT))
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from config_loader import (  # noqa: E402

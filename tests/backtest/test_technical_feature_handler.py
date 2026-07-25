@@ -1,4 +1,8 @@
 import re
+import os
+import subprocess
+import sys
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -83,3 +87,29 @@ def test_trend_alignment_evaluates_to_numeric_regimes(monkeypatch):
     result = expression._load_internal("TEST", 0, 2)
 
     assert result.tolist() == [1.0, -1.0, 0.0]
+
+
+def test_eval_cli_bootstrap_can_import_project_feature_handler(tmp_path):
+    script = (
+        Path(__file__).resolve().parents[2]
+        / "backtest"
+        / "scripts"
+        / "eval_ic_multi_pool.py"
+    )
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    code = (
+        "import runpy; "
+        f"runpy.run_path({str(script)!r}, run_name='eval_module'); "
+        "import backtest.features.technical"
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr

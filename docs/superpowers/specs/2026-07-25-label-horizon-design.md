@@ -128,13 +128,13 @@ Train this candidate with the same five seeds.
 
 ## Leakage and Boundary Control
 
-An `H`-day future label makes the last `H` observations in train and valid
+An `H`-day future label makes the last `H+1` observations in train and valid
 depend on prices in the following segment. The experiment must preserve the
 official segment boundaries in configuration while excluding boundary samples
 whose label end lies outside their segment.
 
-- Training preparation excludes the last `H` trading dates of train.
-- Early-stopping validation excludes the last `H` trading dates of valid.
+- Training preparation excludes the last `H+1` trading dates of train.
+- Early-stopping validation excludes the last `H+1` trading dates of valid.
 - This masking is label-specific and must not alter feature availability.
 - Add automated tests proving that no retained sample's label end exceeds the
   segment end.
@@ -164,8 +164,8 @@ Only `eval_1d` is comparable to B1 and eligible for the formal Phase M decision.
 
 The `eval_1d` row uses the complete test interval. All `eval_self` rows use one
 common test end date, obtained by moving backward from 2026-07-16 by the
-largest horizon in the batch. This ensures that every self-label row uses the
-same dates and does not require post-test prices that are unavailable.
+largest horizon plus one trading date. This ensures that every self-label row
+uses the same dates and does not require post-test prices that are unavailable.
 
 ## Valid-First Execution Gate
 
@@ -209,4 +209,3 @@ For each candidate:
 
 After updating the registry and generated HTML report, run the standard
 artifact cleanup first in dry-run mode and then with `--apply`.
-

@@ -124,7 +124,7 @@ git commit -m "feat(backtest): freeze label horizon designs"
 - [ ] **Step 1: Write failing tests**
 
 Use a fake handler/calendar to prove that train and valid end dates move back
-by exactly `label_horizon` trading dates during `prepare`, test remains
+by exactly `label_horizon + 1` trading dates during `prepare`, test remains
 unchanged, direct slice preparation remains unchanged, and the stored official
 segment boundaries are not mutated.
 
@@ -137,7 +137,8 @@ segment boundaries are not mutated.
 - [ ] **Step 3: Implement the minimal subclass**
 
 Override named-segment preparation only. Obtain the calendar from Qlib, clone
-the requested slice, and replace its end with the horizon-purged date.
+the requested slice, and replace its end with the `label_horizon + 1` purged
+date, matching Qlib's own rolling-label leakage convention.
 
 - [ ] **Step 4: Run tests and verify pass**
 
@@ -372,4 +373,3 @@ then diagnostic rows.
 git add backtest/experiments/registry.jsonl backtest/experiments/report.html backtest/experiments/ic
 git commit -m "exp(backtest): evaluate label horizons"
 ```
-

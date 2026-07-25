@@ -61,7 +61,7 @@ def _trend_features() -> tuple[list[str], list[str]]:
     ma20 = "Mean($close, 20)"
     ma60 = "Mean($close, 60)"
     fields = [
-        f"({ma5}>{ma20})*({ma20}>{ma60})-({ma5}<{ma20})*({ma20}<{ma60})",
+        f"1.0*({ma5}>{ma20})*({ma20}>{ma60})-1.0*({ma5}<{ma20})*({ma20}<{ma60})",
     ]
     names = ["TREND_MA_ALIGN"]
     for window in (20, 60):

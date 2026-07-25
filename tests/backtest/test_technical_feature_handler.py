@@ -1,5 +1,6 @@
 import re
 
+import pandas as pd
 import pytest
 
 from backtest.features.technical import Alpha158Technical, technical_feature_config
@@ -62,3 +63,23 @@ def test_handler_appends_selected_features_to_alpha158():
         "MOM_RISK5",
         "MOM_RISK20",
     ]
+
+
+def test_trend_alignment_evaluates_to_numeric_regimes(monkeypatch):
+    import qlib
+    from qlib.data.data import DatasetProvider
+    from qlib.data.ops import Mean
+
+    qlib.init(provider_uri="~/.qlib/qlib_data/cn_data", region="cn")
+    fields, _ = technical_feature_config(["trend"])
+    expression = DatasetProvider.parse_fields([fields[0]])[0]
+    mean_values = {
+        5: pd.Series([3.0, 1.0, 2.0]),
+        20: pd.Series([2.0, 2.0, 2.0]),
+        60: pd.Series([1.0, 3.0, 1.0]),
+    }
+    monkeypatch.setattr(Mean, "load", lambda self, *args, **kwargs: mean_values[self.N])
+
+    result = expression._load_internal("TEST", 0, 2)
+
+    assert result.tolist() == [1.0, -1.0, 0.0]

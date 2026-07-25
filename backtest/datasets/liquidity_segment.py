@@ -1,4 +1,4 @@
-"""Train-segment-only sample filters for controlled training-pool experiments."""
+"""Liquidity-stratified, train-only DatasetH for sample experiments."""
 
 from __future__ import annotations
 
@@ -147,4 +147,3 @@ class LiquiditySegmentDatasetH(DatasetH):
                 for name, frame in zip(segments, prepared)
             ]
         return prepared
-

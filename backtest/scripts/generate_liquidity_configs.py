@@ -34,7 +34,7 @@ def generate() -> list[Path]:
             if bucket is not None:
                 cfg["dataset"] = {
                     "class": "LiquiditySegmentDatasetH",
-                    "module_path": "backtest.sample_dataset",
+                    "module_path": "backtest.datasets.liquidity_segment",
                     "kwargs": {
                         "liquidity_bucket": bucket,
                         "n_buckets": 3,

@@ -67,7 +67,7 @@ backtest:
     trade_unit: 100
 dataset:
   class: LiquiditySegmentDatasetH
-  module_path: backtest.sample_dataset
+  module_path: backtest.datasets.liquidity_segment
   kwargs:
     liquidity_bucket: low
     n_buckets: 3

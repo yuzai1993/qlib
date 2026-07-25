@@ -33,7 +33,7 @@
 ### Task 2: Train-only liquidity filtering
 
 **Files:**
-- Create: `backtest/sample_dataset.py`
+- Create: `backtest/datasets/liquidity_segment.py`
 - Modify: `backtest/scripts/config_loader.py`
 - Test: `tests/backtest/test_sample_dataset.py`
 - Test: `tests/misc/test_backtest_config_loader.py`

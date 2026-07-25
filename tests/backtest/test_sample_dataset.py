@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def _sample_dataset():
-    return importlib.import_module("backtest.sample_dataset")
+    return importlib.import_module("backtest.datasets.liquidity_segment")
 
 
 def _scores() -> pd.Series:
@@ -90,4 +90,3 @@ def test_dataset_filters_train_only(monkeypatch):
 
     assert train.index.get_level_values("instrument").tolist() == ["S1"]
     pd.testing.assert_frame_equal(valid, frame)
-

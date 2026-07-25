@@ -126,7 +126,7 @@ def test_build_task_supports_custom_dataset_with_standard_handler_and_segments()
     cfg = cl.load_config()
     cfg["dataset"] = {
         "class": "LiquiditySegmentDatasetH",
-        "module_path": "backtest.sample_dataset",
+        "module_path": "backtest.datasets.liquidity_segment",
         "kwargs": {
             "liquidity_bucket": "high",
             "n_buckets": 3,
@@ -138,7 +138,9 @@ def test_build_task_supports_custom_dataset_with_standard_handler_and_segments()
     task = cl.build_task(cfg)
 
     assert task["dataset"]["class"] == "LiquiditySegmentDatasetH"
-    assert task["dataset"]["module_path"] == "backtest.sample_dataset"
+    assert task["dataset"]["module_path"] == (
+        "backtest.datasets.liquidity_segment"
+    )
     assert task["dataset"]["kwargs"]["liquidity_bucket"] == "high"
     assert task["dataset"]["kwargs"]["handler"]["class"] == "Alpha158"
     assert task["dataset"]["kwargs"]["segments"]["valid"] == (

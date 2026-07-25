@@ -40,7 +40,9 @@ def test_each_arm_has_fixed_five_seeds_and_frozen_model_protocol():
             else:
                 dataset = cfg["dataset"]
                 assert dataset["class"] == "LiquiditySegmentDatasetH"
-                assert dataset["module_path"] == "backtest.sample_dataset"
+                assert dataset["module_path"] == (
+                    "backtest.datasets.liquidity_segment"
+                )
                 assert dataset["kwargs"] == {
                     "liquidity_bucket": bucket,
                     "n_buckets": 3,
@@ -64,4 +66,3 @@ def test_only_seed_note_and_dataset_bucket_vary_across_arms():
             assert cfg["strategy"] == full["strategy"]
             assert cfg["backtest"] == full["backtest"]
             assert cfg["run"]["note"] != full["run"]["note"] or bucket is None
-

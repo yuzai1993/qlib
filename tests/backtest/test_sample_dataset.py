@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 
 import pandas as pd
+import pytest
 
 
 def _sample_dataset():
@@ -58,6 +59,36 @@ def test_random_third_is_deterministic_balanced_and_value_independent():
     assert first.groupby(level="datetime").sum().tolist() == [2, 2]
 
 
+@pytest.mark.parametrize(
+    ("min_pct", "expected"),
+    [
+        (0.1, ["S1", "S2", "S3", "S4", "S5", "S6"]),
+        (0.2, ["S2", "S3", "S4", "S5", "S6"]),
+        (1.0 / 3.0, ["S3", "S4", "S5", "S6"]),
+    ],
+)
+def test_above_daily_quantile_removes_the_requested_low_tail(min_pct, expected):
+    module = _sample_dataset()
+
+    mask = module.select_above_daily_quantile(_scores(), min_pct=min_pct)
+
+    assert mask.groupby(level="datetime").sum().tolist() == [
+        len(expected),
+        len(expected),
+    ]
+    for dt in pd.to_datetime(["2020-01-02", "2020-01-03"]):
+        selected = mask.loc[dt]
+        assert selected[selected].index.tolist() == expected
+
+
+@pytest.mark.parametrize("min_pct", [0.0, 1.0, -0.1, 1.1])
+def test_above_daily_quantile_rejects_invalid_cutoff(min_pct):
+    module = _sample_dataset()
+
+    with pytest.raises(ValueError, match="min_pct must be between 0 and 1"):
+        module.select_above_daily_quantile(_scores(), min_pct=min_pct)
+
+
 def test_dataset_filters_train_only(monkeypatch):
     module = _sample_dataset()
     frame = pd.DataFrame(
@@ -89,4 +120,40 @@ def test_dataset_filters_train_only(monkeypatch):
     valid = dataset.prepare("valid")
 
     assert train.index.get_level_values("instrument").tolist() == ["S1"]
+    pd.testing.assert_frame_equal(valid, frame)
+
+
+def test_dataset_uses_quantile_cutoff_for_train_only(monkeypatch):
+    module = _sample_dataset()
+    frame = pd.DataFrame(
+        {"feature": range(1, 7), "label": [0.1] * 6},
+        index=pd.MultiIndex.from_product(
+            [[pd.Timestamp("2020-01-02")], [f"S{i}" for i in range(1, 7)]],
+            names=["datetime", "instrument"],
+        ),
+    )
+    scores = pd.Series(range(1, 7), index=frame.index, dtype=float)
+    monkeypatch.setattr(
+        "qlib.data.dataset.DatasetH.prepare",
+        lambda self, segments, col_set=None, data_key=None, **kwargs: frame.copy(),
+    )
+
+    dataset = module.LiquiditySegmentDatasetH.__new__(
+        module.LiquiditySegmentDatasetH
+    )
+    dataset.liquidity_bucket = None
+    dataset.min_liquidity_pct = 1.0 / 3.0
+    dataset.n_buckets = 3
+    dataset.random_salt = "fixed"
+    dataset._load_scores_for_index = lambda index: scores.reindex(index)
+
+    train = dataset.prepare("train")
+    valid = dataset.prepare("valid")
+
+    assert train.index.get_level_values("instrument").tolist() == [
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+    ]
     pd.testing.assert_frame_equal(valid, frame)

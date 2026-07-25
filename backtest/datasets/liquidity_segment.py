@@ -79,22 +79,54 @@ def select_daily_bucket(
     return mask
 
 
+def select_above_daily_quantile(
+    scores: pd.Series,
+    *,
+    min_pct: float,
+) -> pd.Series:
+    """Keep samples ranked strictly above a daily liquidity percentile."""
+    if not 0.0 < min_pct < 1.0:
+        raise ValueError("min_pct must be between 0 and 1")
+
+    scores = _normalize_index(scores)
+    eligible = scores.notna()
+    ranks = scores[eligible].groupby(level="datetime").rank(
+        method="first", pct=True
+    )
+    selected = ranks > min_pct
+    mask = pd.Series(False, index=scores.index)
+    mask.loc[selected.index] = selected.astype(bool)
+    return mask
+
+
 class LiquiditySegmentDatasetH(DatasetH):
     """DatasetH that filters only the train segment by a daily sample bucket."""
 
     def __init__(
         self,
         *args,
-        liquidity_bucket: str,
+        liquidity_bucket: str | None = None,
+        min_liquidity_pct: float | None = None,
         n_buckets: int = 3,
         lookback: int = 20,
         lag: int = 1,
         random_salt: str = "csi1000-liquidity-v1",
         **kwargs,
     ):
-        if liquidity_bucket not in LIQUIDITY_BUCKETS:
+        if liquidity_bucket is not None and liquidity_bucket not in LIQUIDITY_BUCKETS:
             raise ValueError(f"unsupported liquidity_bucket: {liquidity_bucket}")
+        if liquidity_bucket is not None and min_liquidity_pct is not None:
+            raise ValueError(
+                "liquidity_bucket and min_liquidity_pct are mutually exclusive"
+            )
+        if liquidity_bucket is None and min_liquidity_pct is None:
+            raise ValueError(
+                "one of liquidity_bucket or min_liquidity_pct is required"
+            )
+        if min_liquidity_pct is not None and not 0.0 < min_liquidity_pct < 1.0:
+            raise ValueError("min_liquidity_pct must be between 0 and 1")
         self.liquidity_bucket = liquidity_bucket
+        self.min_liquidity_pct = min_liquidity_pct
         self.n_buckets = n_buckets
         self.lookback = lookback
         self.lag = lag
@@ -127,12 +159,16 @@ class LiquiditySegmentDatasetH(DatasetH):
 
     def _filter_train(self, frame: pd.DataFrame) -> pd.DataFrame:
         scores = self._load_scores_for_index(frame.index)
-        mask = select_daily_bucket(
-            scores,
-            bucket=self.liquidity_bucket,
-            n_buckets=self.n_buckets,
-            random_salt=self.random_salt,
-        )
+        min_pct = getattr(self, "min_liquidity_pct", None)
+        if min_pct is not None:
+            mask = select_above_daily_quantile(scores, min_pct=min_pct)
+        else:
+            mask = select_daily_bucket(
+                scores,
+                bucket=self.liquidity_bucket,
+                n_buckets=self.n_buckets,
+                random_salt=self.random_salt,
+            )
         return frame.loc[mask]
 
     def prepare(self, segments, col_set="__all", data_key="infer", **kwargs):

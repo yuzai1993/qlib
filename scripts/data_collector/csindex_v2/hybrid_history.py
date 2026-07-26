@@ -110,9 +110,7 @@ def rosters_to_closed_intervals(
 
 def active_members(intervals: pd.DataFrame, date: str) -> set[str]:
     """Return members active on ``date`` using inclusive interval semantics."""
-    active = intervals[
-        (intervals["start"] <= date) & (intervals["end"] >= date)
-    ]
+    active = intervals[(intervals["start"] <= date) & (intervals["end"] >= date)]
     return set(active["symbol"])
 
 
@@ -158,9 +156,7 @@ def build_prefix_frames(
 ) -> dict[str, pd.DataFrame]:
     """Build frozen pre-cutover intervals from monthly source rosters."""
     csi500_rosters = [
-        item
-        for item in _weight_rosters(index_weights["csi500"])
-        if item[0] < CUTOVER
+        item for item in _weight_rosters(index_weights["csi500"]) if item[0] < CUTOVER
     ]
     if not csi500_rosters:
         raise ValueError("CSI500 Tushare 月末快照为空")
@@ -172,9 +168,7 @@ def build_prefix_frames(
     )
 
     direct_rosters = [
-        item
-        for item in _weight_rosters(index_weights["csi1000"])
-        if item[0] < CUTOVER
+        item for item in _weight_rosters(index_weights["csi1000"]) if item[0] < CUTOVER
     ]
     direct_start = direct_rosters[0][0] if direct_rosters else CUTOVER
 
@@ -206,9 +200,7 @@ def build_prefix_frames(
         raise ValueError("CSI1000 total_mv 代理快照为空")
 
     proxy_end = (
-        _previous_trading_day(direct_start, calendar)
-        if direct_rosters
-        else PREFIX_END
+        _previous_trading_day(direct_start, calendar) if direct_rosters else PREFIX_END
     )
     proxy = rosters_to_closed_intervals(
         proxy_rosters,
@@ -282,10 +274,8 @@ def freeze_prefixes(
     """Freeze pre-cutover prefix CSVs and their reproducibility manifest."""
     snapshot_dir = hybrid_root / "snapshots"
     input_paths = {
-        "csi500_index_weight": snapshot_dir
-        / "csi500_index_weight.parquet",
-        "csi1000_index_weight": snapshot_dir
-        / "csi1000_index_weight.parquet",
+        "csi500_index_weight": snapshot_dir / "csi500_index_weight.parquet",
+        "csi1000_index_weight": snapshot_dir / "csi1000_index_weight.parquet",
         "total_mv_monthly": snapshot_dir / "total_mv_monthly.parquet",
         "csi300_official": changes_dir / "csi300_instruments.txt",
     }
@@ -294,9 +284,7 @@ def freeze_prefixes(
         raise FileNotFoundError(f"冻结 hybrid prefix 缺少输入: {missing}")
 
     calendar = [
-        line.strip()
-        for line in calendar_path.read_text().splitlines()
-        if line.strip()
+        line.strip() for line in calendar_path.read_text().splitlines() if line.strip()
     ]
     csi300 = read_instruments(input_paths["csi300_official"])
     weights = {
@@ -323,28 +311,22 @@ def freeze_prefixes(
 
     monthly_counts = {
         "csi500_hybrid": {
-            date: len(members) for date, members in _weight_rosters(weights["csi500"])
+            date: len(members)
+            for date, members in _weight_rosters(weights["csi500"])
             if date < CUTOVER
         },
         "csi1000_hybrid": {
             date: len(active_members(frames["csi1000_hybrid"], date))
             for date in sorted(
-                {
-                    _iso_date(value)
-                    for value in total_mv["trade_date"]
-                }
-                | {
-                    date for date, _ in _weight_rosters(weights["csi1000"])
-                }
+                {_iso_date(value) for value in total_mv["trade_date"]}
+                | {date for date, _ in _weight_rosters(weights["csi1000"])}
             )
             if date < CUTOVER
         },
     }
     manifest = {
         "algorithm_version": 1,
-        "generated_at": datetime.now(timezone.utc).strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        ),
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "cutover": CUTOVER,
         "prefix_end": PREFIX_END,
         "proxy_rule": {
@@ -382,9 +364,7 @@ def validate_interval_structure(intervals: pd.DataFrame) -> None:
     if frame.duplicated().any():
         raise ValueError("存在完全重复区间")
     overlaps: list[str] = []
-    for symbol, group in frame.sort_values(["symbol", "start"]).groupby(
-        "symbol"
-    ):
+    for symbol, group in frame.sort_values(["symbol", "start"]).groupby("symbol"):
         starts = group["start"].tolist()
         ends = group["end"].tolist()
         if any(start <= previous_end for previous_end, start in zip(ends, starts[1:])):
@@ -426,7 +406,9 @@ def validate_official_suffix(
     try:
         pd.testing.assert_frame_equal(actual, expected)
     except AssertionError as error:
-        raise ValueError(f"hybrid 官方后缀与官方 instruments 不一致: {error}") from error
+        raise ValueError(
+            f"hybrid 官方后缀与官方 instruments 不一致: {error}"
+        ) from error
 
     for date in calendar:
         if date < CUTOVER:
@@ -450,9 +432,7 @@ def build_hybrid_outputs(
 ) -> dict[str, Path]:
     """Build and validate both hybrid outputs before replacing either file."""
     calendar = [
-        line.strip()
-        for line in calendar_path.read_text().splitlines()
-        if line.strip()
+        line.strip() for line in calendar_path.read_text().splitlines() if line.strip()
     ]
     pairs = {
         "csi500_hybrid": "csi500",
@@ -462,9 +442,7 @@ def build_hybrid_outputs(
     destinations: dict[str, Path] = {}
 
     for hybrid_name, official_name in pairs.items():
-        prefix_path = (
-            hybrid_root / "prefixes" / f"{hybrid_name}_prefix.csv"
-        )
+        prefix_path = hybrid_root / "prefixes" / f"{hybrid_name}_prefix.csv"
         official_path = changes_dir / f"{official_name}_instruments.txt"
         if not prefix_path.exists() or not official_path.exists():
             raise FileNotFoundError(
@@ -476,9 +454,7 @@ def build_hybrid_outputs(
         candidate = splice_official_suffix(prefix, official)
         validate_official_suffix(candidate, official, calendar)
         candidates[hybrid_name] = candidate
-        destinations[hybrid_name] = (
-            changes_dir / f"{hybrid_name}_instruments.txt"
-        )
+        destinations[hybrid_name] = changes_dir / f"{hybrid_name}_instruments.txt"
 
     for name, candidate in candidates.items():
         _write_text_atomic(

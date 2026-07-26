@@ -31,9 +31,7 @@ def test_proxy_selection_excludes_indices_and_breaks_ties_by_symbol():
         }
     )
 
-    selected = hybrid.select_csi1000_proxy(
-        frame, excluded={"SZ000001"}, limit=2
-    )
+    selected = hybrid.select_csi1000_proxy(frame, excluded={"SZ000001"}, limit=2)
 
     assert selected == {"SZ000002", "SZ000003"}
 
@@ -57,9 +55,7 @@ def test_rosters_become_non_overlapping_closed_intervals():
         source="fixture",
     )
 
-    assert set(
-        map(tuple, intervals[["symbol", "start", "end"]].to_numpy())
-    ) == {
+    assert set(map(tuple, intervals[["symbol", "start", "end"]].to_numpy())) == {
         ("SH600000", "2010-01-29", "2010-03-01"),
         ("SZ000001", "2010-01-29", "2010-02-01"),
         ("SZ000002", "2010-02-26", "2010-03-01"),
@@ -84,18 +80,14 @@ def test_required_month_ends_follow_local_calendar():
         "2010-03-01",
     ]
 
-    result = backfill.required_month_end_dates(
-        calendar, "2010-01", "2010-02"
-    )
+    result = backfill.required_month_end_dates(calendar, "2010-01", "2010-02")
 
     assert result == ["20100129", "20100226"]
 
 
 def test_merge_cache_is_idempotent_and_sorted():
     """Catches duplicate cache rows after a resumed backfill."""
-    existing = pd.DataFrame(
-        [{"trade_date": "20100129", "con_code": "000001.SZ"}]
-    )
+    existing = pd.DataFrame([{"trade_date": "20100129", "con_code": "000001.SZ"}])
     incoming = pd.DataFrame(
         [
             {"trade_date": "20100129", "con_code": "000001.SZ"},
@@ -103,9 +95,7 @@ def test_merge_cache_is_idempotent_and_sorted():
         ]
     )
 
-    merged = backfill.merge_cache(
-        existing, incoming, ["trade_date", "con_code"]
-    )
+    merged = backfill.merge_cache(existing, incoming, ["trade_date", "con_code"])
 
     assert merged.to_dict("records") == [
         {"trade_date": "20100129", "con_code": "000001.SZ"},
@@ -149,12 +139,32 @@ def test_total_mv_backfill_skips_cached_dates(tmp_path):
         sleep_seconds=0,
         start_month="2010-01",
         end_month="2010-02",
+        min_rows=1,
     )
 
     cached = pd.read_parquet(dest)
     assert pro.daily_calls == ["20100226"]
     assert set(cached["trade_date"]) == {"20100129", "20100226"}
     assert len(cached) == 3
+
+
+def test_total_mv_backfill_rejects_partial_cross_section(tmp_path):
+    """Catches freezing an incomplete all-A market-cap snapshot."""
+    dest = tmp_path / "total_mv.parquet"
+    pro = _FakeDailyBasicPro()
+
+    with pytest.raises(RuntimeError, match="截面仅 2 行"):
+        backfill.backfill_total_mv(
+            pro,
+            dest,
+            ["2010-01-29"],
+            sleep_seconds=0,
+            start_month="2010-01",
+            end_month="2010-01",
+            min_rows=3,
+        )
+
+    assert not dest.exists()
 
 
 class _FakeIndexWeightPro:
@@ -266,10 +276,51 @@ def test_backfill_all_returns_complete_cache_paths(tmp_path):
         index_specs={"csi500": ("000905.SH", "2010-01", "2010-01", 2)},
         total_mv_start="2010-01",
         total_mv_end="2010-01",
+        total_mv_min_rows=1,
     )
 
     assert set(result) == {"csi500", "total_mv_monthly"}
     assert all(path.exists() for path in result.values())
+
+
+def test_backfill_all_reuses_complete_caches_without_token(tmp_path, monkeypatch):
+    """Catches eager credential checks when no network request is needed."""
+    calendar_path = tmp_path / "day.txt"
+    calendar_path.write_text("2010-01-04\n2010-01-29\n")
+    hybrid_root = tmp_path / "hybrid"
+    snapshot_dir = hybrid_root / "snapshots"
+    snapshot_dir.mkdir(parents=True)
+    pd.DataFrame(
+        {
+            "trade_date": ["20100129", "20100129"],
+            "con_code": ["000001.SZ", "600000.SH"],
+        }
+    ).to_parquet(snapshot_dir / "csi500_index_weight.parquet")
+    pd.DataFrame(
+        {
+            "ts_code": ["000001.SZ"],
+            "trade_date": ["20100129"],
+            "total_mv": [10.0],
+        }
+    ).to_parquet(snapshot_dir / "total_mv_monthly.parquet")
+    monkeypatch.setattr(
+        backfill,
+        "get_tushare_pro",
+        lambda: (_ for _ in ()).throw(AssertionError("完整缓存不应读取 token")),
+    )
+
+    result = backfill.backfill_all(
+        hybrid_root=hybrid_root,
+        legacy_dir=tmp_path / "legacy",
+        calendar_path=calendar_path,
+        sleep_seconds=0,
+        index_specs={"csi500": ("000905.SH", "2010-01", "2010-01", 2)},
+        total_mv_start="2010-01",
+        total_mv_end="2010-01",
+        total_mv_min_rows=1,
+    )
+
+    assert set(result) == {"csi500", "total_mv_monthly"}
 
 
 def _prefix_fixture_frames():
@@ -281,9 +332,7 @@ def _prefix_fixture_frames():
         }
     )
     weights = {
-        "csi500": pd.DataFrame(
-            {"trade_date": ["20150430"], "con_code": ["000001.SZ"]}
-        ),
+        "csi500": pd.DataFrame({"trade_date": ["20150430"], "con_code": ["000001.SZ"]}),
         "csi1000": pd.DataFrame(
             {"trade_date": ["20150529"], "con_code": ["000003.SZ"]}
         ),
@@ -339,12 +388,8 @@ def test_freeze_prefixes_writes_manifest_with_hashes(tmp_path):
     hybrid_root = tmp_path / "hybrid"
     snapshot_dir = hybrid_root / "snapshots"
     snapshot_dir.mkdir(parents=True)
-    weights["csi500"].to_parquet(
-        snapshot_dir / "csi500_index_weight.parquet"
-    )
-    weights["csi1000"].to_parquet(
-        snapshot_dir / "csi1000_index_weight.parquet"
-    )
+    weights["csi500"].to_parquet(snapshot_dir / "csi500_index_weight.parquet")
+    weights["csi1000"].to_parquet(snapshot_dir / "csi1000_index_weight.parquet")
     total_mv.to_parquet(snapshot_dir / "total_mv_monthly.parquet")
     changes_dir = tmp_path / "changes"
     changes_dir.mkdir()
@@ -370,15 +415,9 @@ def test_freeze_prefixes_writes_manifest_with_hashes(tmp_path):
         "csi500_hybrid",
         "csi1000_hybrid",
     }
-    assert (
-        len(manifest["inputs"]["total_mv_monthly"]["sha256"]) == 64
-    )
-    assert (
-        hybrid_root / "prefixes" / "csi500_hybrid_prefix.csv"
-    ).exists()
-    assert (
-        hybrid_root / "prefixes" / "csi1000_hybrid_prefix.csv"
-    ).exists()
+    assert len(manifest["inputs"]["total_mv_monthly"]["sha256"]) == 64
+    assert (hybrid_root / "prefixes" / "csi500_hybrid_prefix.csv").exists()
+    assert (hybrid_root / "prefixes" / "csi1000_hybrid_prefix.csv").exists()
 
 
 def test_hybrid_suffix_is_exact_official_copy():
@@ -501,9 +540,7 @@ def test_build_hybrid_outputs_preserves_old_files_when_one_candidate_fails(
 def _patch_daily_side_effects(monkeypatch, events):
     monkeypatch.setattr(updater.cfg, "ensure_dirs", lambda: None)
     monkeypatch.setattr(updater, "crawl_incremental", lambda: 0)
-    monkeypatch.setattr(
-        updater, "rebuild", lambda: events.append("rebuild") or ""
-    )
+    monkeypatch.setattr(updater, "rebuild", lambda: events.append("rebuild") or "")
     monkeypatch.setattr(
         updater,
         "install_instruments",
@@ -574,9 +611,7 @@ def test_install_instruments_checks_all_sources_before_replacing(tmp_path, monke
     second.write_text("old-1000\n")
 
     with pytest.raises(FileNotFoundError):
-        updater.install_instruments(
-            ("csi500_hybrid", "csi1000_hybrid")
-        )
+        updater.install_instruments(("csi500_hybrid", "csi1000_hybrid"))
 
     assert first.read_text() == "old-500\n"
     assert second.read_text() == "old-1000\n"

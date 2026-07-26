@@ -32,6 +32,18 @@ def get_tushare_pro() -> Any:
     return ts.pro_api(token)
 
 
+class _LazyTusharePro:
+    """Delay credential access until a missing cache requires the network."""
+
+    def __init__(self):
+        self._client: Any | None = None
+
+    def __getattr__(self, name: str) -> Any:
+        if self._client is None:
+            self._client = get_tushare_pro()
+        return getattr(self._client, name)
+
+
 def required_month_end_dates(
     calendar: list[str],
     start_month: str,
@@ -177,6 +189,7 @@ def backfill_total_mv(
     sleep_seconds: float = 0.4,
     start_month: str = "2010-01",
     end_month: str = "2015-04",
+    min_rows: int = 800,
 ) -> Path:
     """Fetch missing month-end total-market-cap cross sections."""
     if dest.exists():
@@ -184,13 +197,12 @@ def backfill_total_mv(
     else:
         cached = pd.DataFrame(columns=["ts_code", "trade_date", "total_mv"])
     cached["trade_date"] = cached["trade_date"].astype(str)
-    cached_dates = set(cached["trade_date"])
+    cached_counts = cached.groupby("trade_date")["ts_code"].nunique().to_dict()
 
-    for trade_date in required_month_end_dates(
-        calendar, start_month, end_month
-    ):
-        if trade_date in cached_dates:
+    for trade_date in required_month_end_dates(calendar, start_month, end_month):
+        if cached_counts.get(trade_date, 0) >= min_rows:
             continue
+        cached = cached[cached["trade_date"] != trade_date]
         frame = pro.daily_basic(
             trade_date=trade_date,
             fields="ts_code,trade_date,total_mv",
@@ -204,6 +216,11 @@ def backfill_total_mv(
                 f"daily_basic {trade_date} 缺少字段 "
                 f"{sorted(required - set(frame.columns))}"
             )
+        if len(frame) < min_rows:
+            raise RuntimeError(
+                f"daily_basic {trade_date} 截面仅 {len(frame)} 行，"
+                f"至少需要 {min_rows} 行"
+            )
         frame = frame[columns].copy()
         frame["trade_date"] = frame["trade_date"].astype(str)
         cached = merge_cache(
@@ -212,7 +229,7 @@ def backfill_total_mv(
             ["trade_date", "ts_code"],
         )
         _write_parquet_atomic(cached, dest)
-        cached_dates.add(trade_date)
+        cached_counts[trade_date] = frame["ts_code"].nunique()
         if sleep_seconds:
             time.sleep(sleep_seconds)
     return dest
@@ -227,13 +244,12 @@ def backfill_all(
     index_specs: dict[str, tuple[str, str, str, int]] | None = None,
     total_mv_start: str = "2010-01",
     total_mv_end: str = "2015-04",
+    total_mv_min_rows: int = 800,
 ) -> dict[str, Path]:
     """Prepare every finite source cache required by the hybrid prefixes."""
-    client = pro or get_tushare_pro()
+    client = pro if pro is not None else _LazyTusharePro()
     calendar = [
-        line.strip()
-        for line in calendar_path.read_text().splitlines()
-        if line.strip()
+        line.strip() for line in calendar_path.read_text().splitlines() if line.strip()
     ]
     snapshot_dir = hybrid_root / "snapshots"
     paths = backfill_index_weights(
@@ -251,6 +267,7 @@ def backfill_all(
         sleep_seconds=sleep_seconds,
         start_month=total_mv_start,
         end_month=total_mv_end,
+        min_rows=total_mv_min_rows,
     )
     paths["total_mv_monthly"] = total_mv_path
     return paths

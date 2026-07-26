@@ -153,6 +153,29 @@ python -m scripts.data_collector.update_indices_daily
 
 `index_starts.py` 自动检测 csi500/1000「无大缺口后的最早定期调样」作为起点，写入 `index_starts.json`。
 
+### 3.6 训练专用 Hybrid 历史
+
+为了研究更长训练区间，另提供两个与官方池隔离的训练专用池：
+
+- `csi500_hybrid`
+- `csi1000_hybrid`
+
+两者从 2010 年开始提供近似成分，统一在 **2015-11-30** 切换到本模块的
+官方公告产物。切换日及以后，hybrid 的官方后缀直接复制
+`csi500_instruments.txt` / `csi1000_instruments.txt`，构建时还会逐行及逐日
+验证一致性；不一致时拒绝覆盖上一次成功文件。
+
+近似前缀的数据源：
+
+| 池 | 区间 | 来源 |
+|---|---|---|
+| `csi500_hybrid` | 2010-01-29～2015-11-27 | Tushare `index_weight` 月末快照 |
+| `csi1000_hybrid` | 2010-01-29～2015-04 月末 | Tushare `daily_basic.total_mv` 月末排序，剔除当月 CSI300/CSI500 后取最多 1000 只 |
+| `csi1000_hybrid` | 2015-05-29～2015-11-27 | Tushare `index_weight` 月末快照 |
+
+前缀是近似训练数据，不声称是官方历史，也不应直接替换正式评估池或实盘池。
+现有 `csi500`、`csi1000`、公告事件流和当前配置不受影响。
+
 ---
 
 ## 4. 重建命令
@@ -176,6 +199,56 @@ python -m scripts.data_collector.csindex_v2.aggregator
 python -m scripts.data_collector.csindex_v2.builder
 python -m scripts.data_collector.csindex_v2.validator
 ```
+
+### 4.1 Hybrid 一次性准备
+
+首次启用前设置 `TUSHARE_TOKEN`，执行有限历史回填、冻结和拼接：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  -m scripts.data_collector.csindex_v2.hybrid_history prepare
+```
+
+该命令会：
+
+1. 复用 `~/.cache/qlib/csindex_v2/tushare_snapshots/` 中已有的有效快照；
+2. 只请求缺失的月度 `index_weight` 和 `daily_basic.total_mv`；
+3. 将输入缓存到 `~/.cache/qlib/csindex_v2/hybrid/snapshots/`；
+4. 将 2015-11-30 以前的区间冻结到 `hybrid/prefixes/`；
+5. 写入包含来源参数和 SHA-256 的 `hybrid/manifest.json`；
+6. 生成 `changes/csi500_hybrid_instruments.txt` 和
+   `changes/csi1000_hybrid_instruments.txt`。
+
+回填按月落盘，可安全中断后重跑。token 只从环境变量读取，不写入源码、缓存或日志。
+
+若只需用已冻结前缀重新拼接最新官方后缀：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  -m scripts.data_collector.csindex_v2.hybrid_history build
+```
+
+日常不应再次执行 `freeze-prefix`；历史前缀保持冻结，只有官方后缀随日更变化。
+
+### 4.2 Hybrid 日更行为
+
+现有入口不变：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  -m scripts.data_collector.update_indices_daily
+```
+
+日更顺序为：
+
+1. 重建并安装四个官方指数；
+2. 从冻结前缀和最新官方文件构建两个 hybrid；
+3. 验证 2015-11-30 起与官方池逐日完全相同；
+4. 原子安装两个 hybrid；
+5. 对四个官方指数继续执行原有官网快照只读校验。
+
+hybrid 构建失败时，四个官方指数仍会完成安装和校验；旧 hybrid 不被覆盖，任务返回
+非零并触发现有告警。
 
 产物检查：
 
@@ -298,11 +371,20 @@ action,index_name,symbol,type,effective_date,announce_date,note
 │   ├── full_lists.csv
 │   ├── coverage.txt
 │   └── legacy_validation.txt   # 旧缓存交叉校验 + 构建产物结构校验
-└── changes/
+├── changes/
     ├── index_starts.json
     ├── build_report.txt
     ├── csi{300,500,1000,2000}_instruments.txt
     └── csi{300,500,1000,2000}_intervals.csv
+└── hybrid/
+    ├── snapshots/
+    │   ├── csi500_index_weight.parquet
+    │   ├── csi1000_index_weight.parquet
+    │   └── total_mv_monthly.parquet
+    ├── prefixes/
+    │   ├── csi500_hybrid_prefix.csv
+    │   └── csi1000_hybrid_prefix.csv
+    └── manifest.json
 ```
 
 模块内关键文件：

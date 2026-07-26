@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -72,3 +73,14 @@ def test_phase_m_report_orders_primary_csi1000_pool_first():
 
     assert rank_ic_pools == ["csi1000", "csi300", "csi500"]
     assert "优先关注研究主目标池 <b>CSI1000</b>" in report.PHASE_M_LEGEND_HTML
+
+
+def test_current_baseline_has_complete_phase_m_metrics():
+    registry = ROOT / "backtest" / "experiments" / "registry.jsonl"
+    rows = [json.loads(line) for line in registry.read_text().splitlines()]
+    baseline = next(row for row in rows if row["exp_id"] == "baseline/b2-m")
+
+    for pool in ("csi1000", "csi300", "csi500"):
+        metrics = baseline["metrics_summary"][pool]
+        for metric in report.PHASE_M_METRIC_KEYS:
+            assert metric in metrics, f"{pool} missing {metric}"

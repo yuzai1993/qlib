@@ -5,6 +5,8 @@ import pytest
 
 from scripts.data_collector.csindex_v2 import hybrid_backfill as backfill
 from scripts.data_collector.csindex_v2 import hybrid_history as hybrid
+from scripts.data_collector.csindex_v2 import updater
+from scripts.data_collector import update_indices_daily
 
 
 def test_ts_code_conversion_rejects_unknown_exchanges():
@@ -494,3 +496,116 @@ def test_build_hybrid_outputs_preserves_old_files_when_one_candidate_fails(
         old_bytes,
         old_bytes,
     ]
+
+
+def _patch_daily_side_effects(monkeypatch, events):
+    monkeypatch.setattr(updater.cfg, "ensure_dirs", lambda: None)
+    monkeypatch.setattr(updater, "crawl_incremental", lambda: 0)
+    monkeypatch.setattr(
+        updater, "rebuild", lambda: events.append("rebuild") or ""
+    )
+    monkeypatch.setattr(
+        updater,
+        "install_instruments",
+        lambda names: events.append(("install", names)) or {},
+    )
+    monkeypatch.setattr(updater, "archive_snapshots", lambda: None)
+    monkeypatch.setattr(
+        updater,
+        "check_against_official_snapshots",
+        lambda names: events.append(("check", names)) or {},
+    )
+    monkeypatch.setattr(updater, "current_members", lambda name: set())
+
+
+def test_update_daily_installs_official_before_building_hybrid(monkeypatch):
+    """Catches hybrid generation from stale official outputs."""
+    events = []
+    _patch_daily_side_effects(monkeypatch, events)
+    monkeypatch.setattr(
+        updater,
+        "build_hybrid_outputs",
+        lambda: events.append("build_hybrid") or {},
+    )
+
+    result = updater.update_daily(force_rebuild=True)
+
+    assert events[:4] == [
+        "rebuild",
+        ("install", updater.OFFICIAL_INDICES),
+        "build_hybrid",
+        ("install", updater.HYBRID_INDICES),
+    ]
+    assert events[4] == ("check", updater.OFFICIAL_INDICES)
+    assert result["hybrid_error"] is None
+
+
+def test_hybrid_failure_does_not_skip_official_snapshot_checks(monkeypatch):
+    """Catches a hybrid failure blocking official installation or diagnostics."""
+    events = []
+    _patch_daily_side_effects(monkeypatch, events)
+
+    def fail_hybrid():
+        events.append("build_hybrid")
+        raise ValueError("prefix missing")
+
+    monkeypatch.setattr(updater, "build_hybrid_outputs", fail_hybrid)
+
+    result = updater.update_daily(force_rebuild=True)
+
+    assert ("install", updater.OFFICIAL_INDICES) in events
+    assert ("install", updater.HYBRID_INDICES) not in events
+    assert ("check", updater.OFFICIAL_INDICES) in events
+    assert result["hybrid_error"] == "prefix missing"
+
+
+def test_install_instruments_checks_all_sources_before_replacing(tmp_path, monkeypatch):
+    """Catches a half-installed index set when a later source is missing."""
+    changes_dir = tmp_path / "changes"
+    instruments_dir = tmp_path / "instruments"
+    changes_dir.mkdir()
+    instruments_dir.mkdir()
+    monkeypatch.setattr(updater.cfg, "CHANGES_DIR", changes_dir)
+    monkeypatch.setattr(updater, "QLIB_INSTRUMENTS", instruments_dir)
+    (changes_dir / "csi500_hybrid_instruments.txt").write_text("new-500\n")
+    first = instruments_dir / "csi500_hybrid.txt"
+    second = instruments_dir / "csi1000_hybrid.txt"
+    first.write_text("old-500\n")
+    second.write_text("old-1000\n")
+
+    with pytest.raises(FileNotFoundError):
+        updater.install_instruments(
+            ("csi500_hybrid", "csi1000_hybrid")
+        )
+
+    assert first.read_text() == "old-500\n"
+    assert second.read_text() == "old-1000\n"
+
+
+def test_daily_entrypoint_fails_when_hybrid_refresh_fails(monkeypatch):
+    """Catches the scheduler reporting success while hybrid files are stale."""
+    checks = {
+        name: {
+            "ok": True,
+            "snap_date": "2026-07-24",
+            "snap_count": 1,
+            "error": None,
+            "pending_add": [],
+            "pending_drop": [],
+            "unexplained_local": [],
+            "unexplained_snap": [],
+        }
+        for name in updater.OFFICIAL_INDICES
+    }
+    monkeypatch.setattr(
+        updater,
+        "update_daily",
+        lambda: {
+            "new_details": 0,
+            "rebuilt": True,
+            "hybrid_error": "prefix missing",
+            "snapshot_check": checks,
+        },
+    )
+
+    assert update_indices_daily.run() == 1

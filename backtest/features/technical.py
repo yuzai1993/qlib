@@ -82,10 +82,78 @@ def _trend_features() -> tuple[list[str], list[str]]:
     return fields, names
 
 
+def _ratio_features() -> tuple[list[str], list[str]]:
+    """Tree-hard ratio constructs (axis-aligned splits cannot express division)."""
+    daily_ret = "$close/(Ref($close, 1)+1e-12)-1"
+    fields: list[str] = []
+    names: list[str] = []
+    for window in (20, 60):
+        fields.extend(
+            [
+                f"($close/(Ref($close, {window})+1e-12)-1)/(Std({daily_ret}, {window})+1e-12)",
+                f"Slope($close, {window})/(Std($close, {window})+1e-12)",
+                f"($close-Mean($close, {window}))/(2*Std($close, {window})+1e-12)",
+            ]
+        )
+        names.extend(
+            [
+                f"VAMOM{window}",
+                f"SLOPESTD{window}",
+                f"BBPOS{window}",
+            ]
+        )
+    return fields, names
+
+
+def _mastruct_features() -> tuple[list[str], list[str]]:
+    """Continuous MA-structure comparisons (feature-vs-feature ratios)."""
+    fields = [
+        "Mean($close, 5)/(Mean($close, 20)+1e-12)-1",
+        "Mean($close, 20)/(Mean($close, 60)+1e-12)-1",
+        "Mean($close, 5)/(Mean($close, 60)+1e-12)-1",
+        "Mean($close, 20)/(Mean($close, 120)+1e-12)-1",
+        "$close/(Mean($close, 120)+1e-12)-1",
+    ]
+    names = [
+        "MAGAP_5_20",
+        "MAGAP_20_60",
+        "MAGAP_5_60",
+        "MAGAP_20_120",
+        "CLOSE_MA120",
+    ]
+    return fields, names
+
+
+def _range_features() -> tuple[list[str], list[str]]:
+    """Dense range-position / event-frequency features (no sparse 0-1 events)."""
+    upper20 = "(Mean($close, 20)+2*Std($close, 20))"
+    lower20 = "(Mean($close, 20)-2*Std($close, 20))"
+    fields = [
+        "($close-Min($close, 120))/(Max($close, 120)-Min($close, 120)+1e-12)",
+        "$close/(Max($close, 120)+1e-12)",
+        "IdxMax($close, 120)/120",
+        f"Mean($close>{upper20}, 20)",
+        f"Mean($close<{lower20}, 20)",
+        "Mean($close>Mean($close, 60), 20)",
+    ]
+    names = [
+        "RNG120",
+        "HIGH120",
+        "IMAXC120",
+        "FREQ_UP20",
+        "FREQ_DOWN20",
+        "FREQ_MA60_20",
+    ]
+    return fields, names
+
+
 _FEATURE_BUILDERS = {
     "bollinger": _bollinger_features,
     "momentum": _momentum_features,
     "trend": _trend_features,
+    "ratio": _ratio_features,
+    "mastruct": _mastruct_features,
+    "range": _range_features,
 }
 
 

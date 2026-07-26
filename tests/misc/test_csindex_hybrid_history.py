@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
+import pytest
 
 from scripts.data_collector.csindex_v2 import hybrid_backfill as backfill
 from scripts.data_collector.csindex_v2 import hybrid_history as hybrid
@@ -376,3 +377,120 @@ def test_freeze_prefixes_writes_manifest_with_hashes(tmp_path):
     assert (
         hybrid_root / "prefixes" / "csi1000_hybrid_prefix.csv"
     ).exists()
+
+
+def test_hybrid_suffix_is_exact_official_copy():
+    """Catches any rewrite or reordering of official post-cutover intervals."""
+    prefix = pd.DataFrame(
+        [
+            (
+                "SH600000",
+                "2010-01-29",
+                "2015-11-27",
+                "tushare_index_weight",
+            )
+        ],
+        columns=["symbol", "start", "end", "source"],
+    )
+    official = pd.DataFrame(
+        [
+            ("SH600001", "2015-11-30", "2015-12-01"),
+            ("SH600002", "2015-11-30", "2099-12-31"),
+        ],
+        columns=["symbol", "start", "end"],
+    )
+
+    combined = hybrid.splice_official_suffix(prefix, official)
+    hybrid.validate_official_suffix(
+        combined,
+        official,
+        ["2015-11-27", "2015-11-30", "2015-12-01", "2015-12-02"],
+    )
+
+    pd.testing.assert_frame_equal(
+        combined.iloc[len(prefix) :].reset_index(drop=True),
+        official,
+    )
+
+
+def test_suffix_validation_rejects_one_changed_end_date():
+    """Catches a one-row mutation in the official suffix."""
+    official = pd.DataFrame(
+        [("SH600001", "2015-11-30", "2099-12-31")],
+        columns=["symbol", "start", "end"],
+    )
+    changed = official.copy()
+    changed.loc[0, "end"] = "2016-01-04"
+
+    with pytest.raises(ValueError, match="官方后缀"):
+        hybrid.validate_official_suffix(
+            changed,
+            official,
+            ["2015-11-30", "2016-01-04"],
+        )
+
+
+def test_build_hybrid_outputs_preserves_old_files_when_one_candidate_fails(
+    tmp_path,
+):
+    """Catches partial replacement before both hybrid candidates validate."""
+    hybrid_root = tmp_path / "hybrid"
+    prefix_dir = hybrid_root / "prefixes"
+    prefix_dir.mkdir(parents=True)
+    prefix = pd.DataFrame(
+        [
+            (
+                "SH600000",
+                "2010-01-29",
+                "2015-11-27",
+                "tushare_index_weight",
+            )
+        ],
+        columns=["symbol", "start", "end", "source"],
+    )
+    for name in ("csi500_hybrid", "csi1000_hybrid"):
+        prefix.to_csv(prefix_dir / f"{name}_prefix.csv", index=False)
+
+    changes_dir = tmp_path / "changes"
+    changes_dir.mkdir()
+    valid = pd.DataFrame(
+        [("SH600001", "2015-11-30", "2099-12-31")],
+        columns=["symbol", "start", "end"],
+    )
+    invalid = pd.DataFrame(
+        [("SH600002", "2015-11-27", "2099-12-31")],
+        columns=["symbol", "start", "end"],
+    )
+    valid.to_csv(
+        changes_dir / "csi500_instruments.txt",
+        sep="\t",
+        header=False,
+        index=False,
+    )
+    invalid.to_csv(
+        changes_dir / "csi1000_instruments.txt",
+        sep="\t",
+        header=False,
+        index=False,
+    )
+    old_bytes = b"previous-good-output\n"
+    destinations = [
+        changes_dir / "csi500_hybrid_instruments.txt",
+        changes_dir / "csi1000_hybrid_instruments.txt",
+    ]
+    for path in destinations:
+        path.write_bytes(old_bytes)
+    calendar_path = tmp_path / "day.txt"
+    calendar_path.write_text("2015-11-27\n2015-11-30\n")
+
+    with pytest.raises(ValueError):
+        hybrid.build_hybrid_outputs(
+            hybrid_root=hybrid_root,
+            changes_dir=changes_dir,
+            calendar_path=calendar_path,
+        )
+
+    assert [path.read_bytes() for path in destinations] == [
+        old_bytes,
+        old_bytes,
+    ]

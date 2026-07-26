@@ -6,6 +6,7 @@ The pre-2015 history is approximate.  The official suffix starting on
 
 from __future__ import annotations
 
+import argparse
 import bisect
 import hashlib
 import json
@@ -366,3 +367,148 @@ def freeze_prefixes(
         hybrid_root / "manifest.json",
     )
     return manifest
+
+
+def validate_interval_structure(intervals: pd.DataFrame) -> None:
+    """Reject malformed or overlapping inclusive membership intervals."""
+    required = {"symbol", "start", "end"}
+    if not required.issubset(intervals.columns):
+        raise ValueError(f"区间缺少字段 {sorted(required - set(intervals.columns))}")
+    frame = intervals[["symbol", "start", "end"]].astype(str)
+    if frame.empty:
+        raise ValueError("区间为空")
+    if (frame["start"] > frame["end"]).any():
+        raise ValueError("区间起止日期倒置")
+    if frame.duplicated().any():
+        raise ValueError("存在完全重复区间")
+    overlaps: list[str] = []
+    for symbol, group in frame.sort_values(["symbol", "start"]).groupby(
+        "symbol"
+    ):
+        starts = group["start"].tolist()
+        ends = group["end"].tolist()
+        if any(start <= previous_end for previous_end, start in zip(ends, starts[1:])):
+            overlaps.append(symbol)
+    if overlaps:
+        raise ValueError(f"成员区间重叠: {overlaps[:10]}")
+
+
+def splice_official_suffix(
+    prefix: pd.DataFrame,
+    official: pd.DataFrame,
+) -> pd.DataFrame:
+    """Append the official suffix without rewriting any official row."""
+    prefix_columns = prefix[["symbol", "start", "end"]].copy()
+    official_columns = official[["symbol", "start", "end"]].copy()
+    if not prefix_columns.empty and (prefix_columns["end"] >= CUTOVER).any():
+        raise ValueError(f"hybrid prefix 越过公告切换点 {CUTOVER}")
+    if official_columns.empty or (official_columns["start"] < CUTOVER).any():
+        raise ValueError(f"官方 instruments 含 {CUTOVER} 以前的区间")
+    combined = pd.concat(
+        [prefix_columns, official_columns],
+        ignore_index=True,
+    )
+    validate_interval_structure(combined)
+    return combined
+
+
+def validate_official_suffix(
+    hybrid: pd.DataFrame,
+    official: pd.DataFrame,
+    calendar: list[str],
+) -> None:
+    """Prove exact-row and daily-membership equality after the cutover."""
+    expected = official[["symbol", "start", "end"]].reset_index(drop=True)
+    actual = hybrid.loc[
+        hybrid["start"] >= CUTOVER,
+        ["symbol", "start", "end"],
+    ].reset_index(drop=True)
+    try:
+        pd.testing.assert_frame_equal(actual, expected)
+    except AssertionError as error:
+        raise ValueError(f"hybrid 官方后缀与官方 instruments 不一致: {error}") from error
+
+    for date in calendar:
+        if date < CUTOVER:
+            continue
+        if active_members(hybrid, date) != active_members(official, date):
+            raise ValueError(f"hybrid 官方后缀在 {date} 的逐日成分不一致")
+
+
+def _instruments_text(frame: pd.DataFrame) -> str:
+    return frame[["symbol", "start", "end"]].to_csv(
+        sep="\t",
+        header=False,
+        index=False,
+    )
+
+
+def build_hybrid_outputs(
+    hybrid_root: Path = HYBRID_ROOT,
+    changes_dir: Path = cfg.CHANGES_DIR,
+    calendar_path: Path = CALENDAR_PATH,
+) -> dict[str, Path]:
+    """Build and validate both hybrid outputs before replacing either file."""
+    calendar = [
+        line.strip()
+        for line in calendar_path.read_text().splitlines()
+        if line.strip()
+    ]
+    pairs = {
+        "csi500_hybrid": "csi500",
+        "csi1000_hybrid": "csi1000",
+    }
+    candidates: dict[str, pd.DataFrame] = {}
+    destinations: dict[str, Path] = {}
+
+    for hybrid_name, official_name in pairs.items():
+        prefix_path = (
+            hybrid_root / "prefixes" / f"{hybrid_name}_prefix.csv"
+        )
+        official_path = changes_dir / f"{official_name}_instruments.txt"
+        if not prefix_path.exists() or not official_path.exists():
+            raise FileNotFoundError(
+                f"{hybrid_name} 构建输入缺失: "
+                f"prefix={prefix_path.exists()} official={official_path.exists()}"
+            )
+        prefix = pd.read_csv(prefix_path, dtype=str)
+        official = read_instruments(official_path)
+        candidate = splice_official_suffix(prefix, official)
+        validate_official_suffix(candidate, official, calendar)
+        candidates[hybrid_name] = candidate
+        destinations[hybrid_name] = (
+            changes_dir / f"{hybrid_name}_instruments.txt"
+        )
+
+    for name, candidate in candidates.items():
+        _write_text_atomic(
+            _instruments_text(candidate),
+            destinations[name],
+        )
+    return destinations
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run one hybrid-history lifecycle stage."""
+    parser = argparse.ArgumentParser(
+        description="构建训练专用 CSI500/CSI1000 hybrid 历史"
+    )
+    parser.add_argument(
+        "command",
+        choices=("backfill", "freeze-prefix", "build", "prepare"),
+    )
+    args = parser.parse_args(argv)
+
+    if args.command in {"backfill", "prepare"}:
+        from .hybrid_backfill import backfill_all
+
+        backfill_all()
+    if args.command in {"freeze-prefix", "prepare"}:
+        freeze_prefixes()
+    if args.command in {"build", "prepare"}:
+        build_hybrid_outputs()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

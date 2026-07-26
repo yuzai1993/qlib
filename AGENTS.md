@@ -8,12 +8,12 @@
 
 不可协商的要点：
 
-1. 基线 B0 固定（实盘 `live_trading/configs/csi300_topk10_live.yaml`：CSI300 · Alpha158 · LGBM · TopkDropout(10,2)，实盘费率 0.00021/0.00071），不得自行变更。每个实验方向须写明 `baseline_ref`，HTML 该方向表第一行为对应 baseline 指标。
+1. 当前研究模型基线为 B4-M（见 `backtest/EXPERIMENT_STANDARD.md`：CSI1000 · Alpha158+range · DoubleEnsemble · H40）；实盘仍为 B1（`live_trading/configs/csi300_topk10_live.yaml`），研究基线提升不自动切换实盘。每个实验方向须写明 `baseline_ref`，HTML 该方向表第一行为对应 baseline 指标。
 2. 模型与策略分开迭代：Phase M 只改模型（看 IC/RankIC），Phase S 只改策略（看扣费超额 IR/年化/最大回撤）。
-3. 固定 5 种子 [42, 1000, 2000, 3000, 4000]；默认只在基线训练池（CSI300）训练，在 3 个测试集（csi300/csi500/csi1000）上评估（全A 默认不测）；仅训练样本类实验才更换训练池。
+3. 固定 5 种子 [42, 1000, 2000, 3000, 4000]；默认只在基线训练池（CSI1000）训练，在 3 个测试集（csi1000/csi300/csi500）上评估（全A 默认不测）；仅训练样本类实验才更换训练池。
 4. 时间划分固定：valid 2020-01-13~2021-07-15，test 2021-07-16~2026-07-16；禁止用 test 调参。
 5. 每个实验（含失败的）登记 `backtest/experiments/registry.jsonl` 并更新 HTML 报告（每个方向独立表格）。
-6. 实验结束后清理 `mlruns/`：只保留实盘推理模型与当前 baseline 5 种子训练产物，避免磁盘打爆（详见规范 6.3）。
+6. 实验结束后清理 `mlruns/` 与 `backtest/result/`：只保留当前 baseline 与最佳合格候选五种子产物，避免磁盘打爆（详见规范 6.3）。
 
 ## 环境注意事项
 

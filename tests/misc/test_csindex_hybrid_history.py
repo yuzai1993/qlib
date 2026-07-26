@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 import pytest
 
@@ -206,6 +208,83 @@ def test_index_weight_backfill_migrates_complete_legacy_month(tmp_path):
     assert migrated.to_dict("records") == legacy.to_dict("records")
 
 
+def test_index_weight_backfill_merges_partial_destination_with_legacy(tmp_path):
+    """Catches ignoring fuller legacy history after a partial new cache exists."""
+    legacy_dir = tmp_path / "legacy"
+    snapshot_dir = tmp_path / "hybrid"
+    legacy_dir.mkdir()
+    snapshot_dir.mkdir()
+    pd.DataFrame(
+        {
+            "trade_date": ["20100129", "20100129"],
+            "con_code": ["000001.SZ", "600000.SH"],
+        }
+    ).to_parquet(snapshot_dir / "csi500_index_weight.parquet")
+    pd.DataFrame(
+        {
+            "trade_date": [
+                "20100129",
+                "20100129",
+                "20100226",
+                "20100226",
+            ],
+            "con_code": [
+                "000001.SZ",
+                "600000.SH",
+                "000002.SZ",
+                "600001.SH",
+            ],
+        }
+    ).to_parquet(legacy_dir / "csi500.parquet")
+    pro = _FakeIndexWeightPro()
+
+    paths = backfill.backfill_index_weights(
+        pro,
+        snapshot_dir,
+        legacy_dir,
+        sleep_seconds=0,
+        specs={"csi500": ("000905.SH", "2010-01", "2010-02", 2)},
+    )
+
+    cached = pd.read_parquet(paths["csi500"])
+    assert pro.index_calls == []
+    assert set(cached["trade_date"]) == {"20100129", "20100226"}
+
+
+def test_index_weight_merge_keeps_only_latest_snapshot_in_same_month(tmp_path):
+    """Catches an unintended second rebalance within one cached month."""
+    legacy_dir = tmp_path / "legacy"
+    snapshot_dir = tmp_path / "hybrid"
+    legacy_dir.mkdir()
+    snapshot_dir.mkdir()
+    pd.DataFrame(
+        {
+            "trade_date": ["20100129", "20100129"],
+            "con_code": ["000002.SZ", "600001.SH"],
+        }
+    ).to_parquet(snapshot_dir / "csi500_index_weight.parquet")
+    pd.DataFrame(
+        {
+            "trade_date": ["20100128", "20100128"],
+            "con_code": ["000001.SZ", "600000.SH"],
+        }
+    ).to_parquet(legacy_dir / "csi500.parquet")
+    pro = _FakeIndexWeightPro()
+
+    paths = backfill.backfill_index_weights(
+        pro,
+        snapshot_dir,
+        legacy_dir,
+        sleep_seconds=0,
+        specs={"csi500": ("000905.SH", "2010-01", "2010-01", 2)},
+    )
+
+    cached = pd.read_parquet(paths["csi500"])
+    assert pro.index_calls == []
+    assert set(cached["trade_date"]) == {"20100129"}
+    assert set(cached["con_code"]) == {"000002.SZ", "600001.SH"}
+
+
 def test_index_weight_backfill_keeps_latest_snapshot_in_month(tmp_path):
     """Catches mixing multiple source dates into one monthly roster."""
     response = pd.DataFrame(
@@ -359,6 +438,112 @@ def _prefix_fixture_frames():
     return weights, total_mv, csi300, calendar
 
 
+def _complete_source_frames():
+    calendar = pd.bdate_range("2010-01-01", "2015-11-30").strftime("%Y-%m-%d").tolist()
+    month_ends = {}
+    for date in calendar:
+        month_ends[date[:7]] = date.replace("-", "")
+
+    csi500_codes = [f"{number:06d}.SZ" for number in range(1, 501)]
+    csi1000_codes = [f"{number:06d}.SZ" for number in range(2000, 3000)]
+    market_codes = [f"{number:06d}.SZ" for number in range(1000, 1800)]
+
+    csi500_dates = [
+        month_ends[str(month)]
+        for month in pd.period_range("2010-01", "2015-10", freq="M")
+    ]
+    csi1000_dates = [
+        month_ends[str(month)]
+        for month in pd.period_range("2015-05", "2015-10", freq="M")
+    ]
+    total_mv_dates = [
+        month_ends[str(month)]
+        for month in pd.period_range("2010-01", "2015-04", freq="M")
+    ]
+    weights = {
+        "csi500": pd.DataFrame(
+            [
+                {"trade_date": date, "con_code": code}
+                for date in csi500_dates
+                for code in csi500_codes
+            ]
+        ),
+        "csi1000": pd.DataFrame(
+            [
+                {"trade_date": date, "con_code": code}
+                for date in csi1000_dates
+                for code in csi1000_codes
+            ]
+        ),
+    }
+    total_mv = pd.DataFrame(
+        [
+            {
+                "trade_date": date,
+                "ts_code": code,
+                "total_mv": float(2000 - position),
+            }
+            for date in total_mv_dates
+            for position, code in enumerate(market_codes)
+        ]
+    )
+    csi300 = pd.DataFrame(
+        [
+            {
+                "symbol": "SH600000",
+                "start": "2010-01-01",
+                "end": "2099-12-31",
+            }
+        ]
+    )
+    return weights, total_mv, csi300, calendar
+
+
+def _write_complete_freeze_inputs(tmp_path):
+    weights, total_mv, csi300, calendar = _complete_source_frames()
+    hybrid_root = tmp_path / "hybrid"
+    snapshot_dir = hybrid_root / "snapshots"
+    snapshot_dir.mkdir(parents=True)
+    weights["csi500"].to_parquet(snapshot_dir / "csi500_index_weight.parquet")
+    weights["csi1000"].to_parquet(snapshot_dir / "csi1000_index_weight.parquet")
+    total_mv.to_parquet(snapshot_dir / "total_mv_monthly.parquet")
+    changes_dir = tmp_path / "changes"
+    changes_dir.mkdir()
+    csi300[["symbol", "start", "end"]].to_csv(
+        changes_dir / "csi300_instruments.txt",
+        sep="\t",
+        header=False,
+        index=False,
+    )
+    calendar_path = tmp_path / "day.txt"
+    calendar_path.write_text("\n".join(calendar) + "\n")
+    return hybrid_root, changes_dir, calendar_path
+
+
+def _write_prefix_manifest(hybrid_root):
+    outputs = {}
+    for name in ("csi500_hybrid", "csi1000_hybrid"):
+        path = hybrid_root / "prefixes" / f"{name}_prefix.csv"
+        frame = pd.read_csv(path, dtype=str)
+        outputs[name] = {
+            "path": str(path),
+            "rows": len(frame),
+            "first": frame["start"].min(),
+            "last": frame["end"].max(),
+            "sha256": hybrid.sha256_file(path),
+        }
+    (hybrid_root / "manifest.json").write_text(
+        json.dumps(
+            {
+                "algorithm_version": 1,
+                "cutover": hybrid.CUTOVER,
+                "prefix_end": hybrid.PREFIX_END,
+                "outputs": outputs,
+            }
+        )
+    )
+
+
 def test_csi1000_proxy_hands_off_to_direct_snapshot_at_2015_05():
     """Catches source-boundary loss or wrong large-cap exclusions."""
     weights, total_mv, csi300, calendar = _prefix_fixture_frames()
@@ -382,25 +567,33 @@ def test_csi1000_proxy_hands_off_to_direct_snapshot_at_2015_05():
     assert not csi1000.duplicated(["symbol", "start", "end"]).any()
 
 
+def test_csi1000_ignores_direct_snapshots_before_2015_05():
+    """Catches an extra historical cache row moving the approved handoff."""
+    weights, total_mv, csi300, calendar = _complete_source_frames()
+    early = pd.DataFrame(
+        {
+            "trade_date": ["20140430"] * 1000,
+            "con_code": [f"{number:06d}.SZ" for number in range(3000, 4000)],
+        }
+    )
+    weights["csi1000"] = pd.concat(
+        [early, weights["csi1000"]],
+        ignore_index=True,
+    )
+
+    hybrid.validate_source_coverage(weights, total_mv, calendar)
+    frames = hybrid.build_prefix_frames(weights, total_mv, csi300, calendar)
+    direct = frames["csi1000_hybrid"].loc[
+        frames["csi1000_hybrid"]["source"] == "tushare_index_weight"
+    ]
+
+    assert direct["start"].min() >= "2015-05-01"
+    assert len(hybrid.active_members(frames["csi1000_hybrid"], "2015-04-30")) == 800
+
+
 def test_freeze_prefixes_writes_manifest_with_hashes(tmp_path):
     """Catches unauditable prefixes whose exact source inputs are unknown."""
-    weights, total_mv, csi300, calendar = _prefix_fixture_frames()
-    hybrid_root = tmp_path / "hybrid"
-    snapshot_dir = hybrid_root / "snapshots"
-    snapshot_dir.mkdir(parents=True)
-    weights["csi500"].to_parquet(snapshot_dir / "csi500_index_weight.parquet")
-    weights["csi1000"].to_parquet(snapshot_dir / "csi1000_index_weight.parquet")
-    total_mv.to_parquet(snapshot_dir / "total_mv_monthly.parquet")
-    changes_dir = tmp_path / "changes"
-    changes_dir.mkdir()
-    csi300[["symbol", "start", "end"]].to_csv(
-        changes_dir / "csi300_instruments.txt",
-        sep="\t",
-        header=False,
-        index=False,
-    )
-    calendar_path = tmp_path / "day.txt"
-    calendar_path.write_text("\n".join(calendar) + "\n")
+    hybrid_root, changes_dir, calendar_path = _write_complete_freeze_inputs(tmp_path)
 
     manifest = hybrid.freeze_prefixes(
         hybrid_root=hybrid_root,
@@ -418,6 +611,52 @@ def test_freeze_prefixes_writes_manifest_with_hashes(tmp_path):
     assert len(manifest["inputs"]["total_mv_monthly"]["sha256"]) == 64
     assert (hybrid_root / "prefixes" / "csi500_hybrid_prefix.csv").exists()
     assert (hybrid_root / "prefixes" / "csi1000_hybrid_prefix.csv").exists()
+
+
+def test_source_coverage_rejects_missing_csi500_month():
+    """Catches silently freezing a gap in the CSI500 monthly history."""
+    weights, total_mv, _, calendar = _complete_source_frames()
+    first_date = weights["csi500"]["trade_date"].min()
+    weights["csi500"] = weights["csi500"][weights["csi500"]["trade_date"] != first_date]
+
+    with pytest.raises(ValueError, match=r"CSI500.*缺少月份.*2010-01"):
+        hybrid.validate_source_coverage(weights, total_mv, calendar)
+
+
+def test_source_coverage_rejects_truncated_csi500_snapshot():
+    """Catches a month that exists but contains fewer than 500 members."""
+    weights, total_mv, _, calendar = _complete_source_frames()
+    first_date = weights["csi500"]["trade_date"].min()
+    first_row = weights["csi500"].index[weights["csi500"]["trade_date"] == first_date][
+        0
+    ]
+    weights["csi500"] = weights["csi500"].drop(first_row)
+
+    with pytest.raises(ValueError, match=r"CSI500.*成分数 499"):
+        hybrid.validate_source_coverage(weights, total_mv, calendar)
+
+
+def test_source_coverage_rejects_invalid_total_mv_snapshot():
+    """Catches a market-cap month with fewer than 800 usable stocks."""
+    weights, total_mv, _, calendar = _complete_source_frames()
+    first_date = total_mv["trade_date"].min()
+    first_row = total_mv.index[total_mv["trade_date"] == first_date][0]
+    total_mv.loc[first_row, "total_mv"] = -1
+
+    with pytest.raises(ValueError, match=r"total_mv.*有效截面仅 799"):
+        hybrid.validate_source_coverage(weights, total_mv, calendar)
+
+
+def test_source_coverage_rejects_history_starting_after_2010_01_29():
+    """Catches a nominal January snapshot whose usable history starts late."""
+    weights, total_mv, _, calendar = _complete_source_frames()
+    first_date = weights["csi500"]["trade_date"].min()
+    weights["csi500"].loc[
+        weights["csi500"]["trade_date"] == first_date, "trade_date"
+    ] = "20100130"
+
+    with pytest.raises(ValueError, match=r"CSI500.*起始日.*2010-01-29"):
+        hybrid.validate_source_coverage(weights, total_mv, calendar)
 
 
 def test_hybrid_suffix_is_exact_official_copy():
@@ -491,6 +730,7 @@ def test_build_hybrid_outputs_preserves_old_files_when_one_candidate_fails(
     )
     for name in ("csi500_hybrid", "csi1000_hybrid"):
         prefix.to_csv(prefix_dir / f"{name}_prefix.csv", index=False)
+    _write_prefix_manifest(hybrid_root)
 
     changes_dir = tmp_path / "changes"
     changes_dir.mkdir()
@@ -535,6 +775,97 @@ def test_build_hybrid_outputs_preserves_old_files_when_one_candidate_fails(
         old_bytes,
         old_bytes,
     ]
+
+
+def test_build_rejects_mutated_frozen_prefix_without_replacing_outputs(tmp_path):
+    """Catches daily use of a prefix changed after it was frozen."""
+    hybrid_root, changes_dir, calendar_path = _write_complete_freeze_inputs(tmp_path)
+    hybrid.freeze_prefixes(
+        hybrid_root=hybrid_root,
+        changes_dir=changes_dir,
+        calendar_path=calendar_path,
+    )
+    official_frames = {
+        "csi500": pd.DataFrame(
+            [("SH900001", hybrid.CUTOVER, "2099-12-31")],
+            columns=["symbol", "start", "end"],
+        ),
+        "csi1000": pd.DataFrame(
+            [("SH900002", hybrid.CUTOVER, "2099-12-31")],
+            columns=["symbol", "start", "end"],
+        ),
+    }
+    for name, frame in official_frames.items():
+        frame.to_csv(
+            changes_dir / f"{name}_instruments.txt",
+            sep="\t",
+            header=False,
+            index=False,
+        )
+    destinations = hybrid.build_hybrid_outputs(
+        hybrid_root=hybrid_root,
+        changes_dir=changes_dir,
+        calendar_path=calendar_path,
+    )
+    old_bytes = {name: path.read_bytes() for name, path in destinations.items()}
+
+    prefix_path = hybrid_root / "prefixes" / "csi500_hybrid_prefix.csv"
+    changed = pd.read_csv(prefix_path, dtype=str)
+    changed.loc[0, "symbol"] = "SZ999999"
+    changed.to_csv(prefix_path, index=False)
+
+    with pytest.raises(ValueError, match="prefix SHA-256"):
+        hybrid.build_hybrid_outputs(
+            hybrid_root=hybrid_root,
+            changes_dir=changes_dir,
+            calendar_path=calendar_path,
+        )
+
+    assert {name: path.read_bytes() for name, path in destinations.items()} == old_bytes
+
+
+@pytest.mark.parametrize(
+    ("case", "match"),
+    [
+        ("version", "algorithm_version"),
+        ("cutover", "cutover"),
+        ("outputs", "outputs"),
+        ("rows", "行数"),
+    ],
+)
+def test_frozen_manifest_rejects_identity_and_metadata_changes(tmp_path, case, match):
+    """Catches accepting a manifest for a different frozen data set."""
+    prefix_dir = tmp_path / "hybrid" / "prefixes"
+    prefix_dir.mkdir(parents=True)
+    prefix = pd.DataFrame(
+        [
+            (
+                "SH600000",
+                hybrid.HISTORY_START,
+                hybrid.PREFIX_END,
+                "fixture",
+            )
+        ],
+        columns=["symbol", "start", "end", "source"],
+    )
+    for name in hybrid.HYBRID_NAMES:
+        prefix.to_csv(prefix_dir / f"{name}_prefix.csv", index=False)
+    hybrid_root = tmp_path / "hybrid"
+    _write_prefix_manifest(hybrid_root)
+    manifest_path = hybrid_root / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    if case == "version":
+        manifest["algorithm_version"] = 2
+    elif case == "cutover":
+        manifest["cutover"] = "2015-12-01"
+    elif case == "outputs":
+        manifest["outputs"].pop("csi1000_hybrid")
+    else:
+        manifest["outputs"]["csi500_hybrid"]["rows"] += 1
+    manifest_path.write_text(json.dumps(manifest))
+
+    with pytest.raises(ValueError, match=match):
+        hybrid.validate_frozen_manifest(hybrid_root)
 
 
 def _patch_daily_side_effects(monkeypatch, events):
@@ -615,6 +946,91 @@ def test_install_instruments_checks_all_sources_before_replacing(tmp_path, monke
 
     assert first.read_text() == "old-500\n"
     assert second.read_text() == "old-1000\n"
+
+
+def test_install_instruments_rolls_back_both_files_on_second_replace_failure(
+    tmp_path, monkeypatch
+):
+    """Catches a mixed old/new installed pair after an I/O failure."""
+    changes_dir = tmp_path / "changes"
+    instruments_dir = tmp_path / "instruments"
+    changes_dir.mkdir()
+    instruments_dir.mkdir()
+    monkeypatch.setattr(updater.cfg, "CHANGES_DIR", changes_dir)
+    monkeypatch.setattr(updater, "QLIB_INSTRUMENTS", instruments_dir)
+    names = ("csi500_hybrid", "csi1000_hybrid")
+    for name, content in zip(names, ("new-500\n", "new-1000\n")):
+        (changes_dir / f"{name}_instruments.txt").write_text(content)
+    first = instruments_dir / "csi500_hybrid.txt"
+    second = instruments_dir / "csi1000_hybrid.txt"
+    first.write_text("old-500\n")
+    second.write_text("old-1000\n")
+
+    real_replace = updater.os.replace
+    failed = False
+
+    def fail_second_install(source, destination):
+        nonlocal failed
+        source_path = pd.io.common.stringify_path(source)
+        if not failed and destination == second and source_path.endswith(".tmp"):
+            failed = True
+            raise OSError("injected second install failure")
+        return real_replace(source, destination)
+
+    monkeypatch.setattr(updater.os, "replace", fail_second_install)
+
+    with pytest.raises(OSError, match="injected second install failure"):
+        updater.install_instruments(names)
+
+    assert first.read_text() == "old-500\n"
+    assert second.read_text() == "old-1000\n"
+
+
+def test_install_preserves_backup_when_rollback_itself_fails(tmp_path, monkeypatch):
+    """Catches deleting the only recoverable old copy after rollback failure."""
+    changes_dir = tmp_path / "changes"
+    instruments_dir = tmp_path / "instruments"
+    changes_dir.mkdir()
+    instruments_dir.mkdir()
+    monkeypatch.setattr(updater.cfg, "CHANGES_DIR", changes_dir)
+    monkeypatch.setattr(updater, "QLIB_INSTRUMENTS", instruments_dir)
+    names = ("csi500_hybrid", "csi1000_hybrid")
+    for name, content in zip(names, ("new-500\n", "new-1000\n")):
+        (changes_dir / f"{name}_instruments.txt").write_text(content)
+    first = instruments_dir / "csi500_hybrid.txt"
+    second = instruments_dir / "csi1000_hybrid.txt"
+    first.write_text("old-500\n")
+    second.write_text("old-1000\n")
+
+    real_replace = updater.os.replace
+    primary_failed = False
+
+    def fail_install_and_first_restore(source, destination):
+        nonlocal primary_failed
+        source_path = pd.io.common.stringify_path(source)
+        if (
+            not primary_failed
+            and destination == second
+            and source_path.endswith(".tmp")
+        ):
+            primary_failed = True
+            raise OSError("injected install failure")
+        if destination == first and source_path.endswith(".backup"):
+            raise OSError("injected rollback failure")
+        return real_replace(source, destination)
+
+    monkeypatch.setattr(
+        updater.os,
+        "replace",
+        fail_install_and_first_restore,
+    )
+
+    with pytest.raises(RuntimeError, match="回滚不完整"):
+        updater.install_instruments(names)
+
+    backups = list(instruments_dir.glob(".csi500_hybrid.txt.*.backup"))
+    assert len(backups) == 1
+    assert backups[0].read_text() == "old-500\n"
 
 
 def test_daily_entrypoint_fails_when_hybrid_refresh_fails(monkeypatch):

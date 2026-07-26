@@ -214,9 +214,11 @@ python -m scripts.data_collector.csindex_v2.validator
 1. 复用 `~/.cache/qlib/csindex_v2/tushare_snapshots/` 中已有的有效快照；
 2. 只请求缺失的月度 `index_weight` 和 `daily_basic.total_mv`；
 3. 将输入缓存到 `~/.cache/qlib/csindex_v2/hybrid/snapshots/`；
-4. 将 2015-11-30 以前的区间冻结到 `hybrid/prefixes/`；
-5. 写入包含来源参数和 SHA-256 的 `hybrid/manifest.json`；
-6. 生成 `changes/csi500_hybrid_instruments.txt` 和
+4. 校验 2010-01 起的必需月份、CSI500/CSI1000 成分数和
+   `total_mv` 有效截面数，残缺输入拒绝冻结；
+5. 将 2015-11-30 以前的区间冻结到 `hybrid/prefixes/`；
+6. 写入包含来源参数和 SHA-256 的 `hybrid/manifest.json`；
+7. 生成 `changes/csi500_hybrid_instruments.txt` 和
    `changes/csi1000_hybrid_instruments.txt`。
 
 回填按月落盘，可安全中断后重跑。token 只从环境变量读取，不写入源码、缓存或日志。
@@ -243,9 +245,10 @@ python -m scripts.data_collector.csindex_v2.validator
 
 1. 重建并安装四个官方指数；
 2. 从冻结前缀和最新官方文件构建两个 hybrid；
-3. 验证 2015-11-30 起与官方池逐日完全相同；
-4. 原子安装两个 hybrid；
-5. 对四个官方指数继续执行原有官网快照只读校验。
+3. 校验 manifest 版本、切换点和两个冻结前缀的 SHA-256；
+4. 验证 2015-11-30 起与官方池逐日完全相同；
+5. 分组安装两个 hybrid；任一替换失败时整组回滚；
+6. 对四个官方指数继续执行原有官网快照只读校验。
 
 hybrid 构建失败时，四个官方指数仍会完成安装和校验；旧 hybrid 不被覆盖，任务返回
 非零并触发现有告警。

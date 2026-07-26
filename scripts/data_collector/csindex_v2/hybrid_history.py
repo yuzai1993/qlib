@@ -22,6 +22,9 @@ from . import config as cfg
 
 CUTOVER = "2015-11-30"
 PREFIX_END = "2015-11-27"
+HISTORY_START = "2010-01-29"
+CSI1000_DIRECT_START_MONTH = "2015-05"
+HYBRID_NAMES = ("csi500_hybrid", "csi1000_hybrid")
 HYBRID_ROOT = cfg.CACHE_ROOT / "hybrid"
 CALENDAR_PATH = Path("~/.qlib/qlib_data/cn_data/calendars/day.txt").expanduser()
 
@@ -147,6 +150,136 @@ def _roster_on_or_before(
     return set(eligible[-1]) if eligible else set()
 
 
+def _required_months(start: str, end: str) -> list[str]:
+    return [str(month) for month in pd.period_range(start, end, freq="M")]
+
+
+def _latest_weight_rosters_by_month(
+    frame: pd.DataFrame,
+) -> dict[str, tuple[str, set[str]]]:
+    latest: dict[str, tuple[str, set[str]]] = {}
+    for date, members in _weight_rosters(frame):
+        month = date[:7]
+        if month not in latest or date > latest[month][0]:
+            latest[month] = (date, members)
+    return latest
+
+
+def _monthly_weight_rosters(
+    frame: pd.DataFrame,
+    start_month: str | None = None,
+) -> list[tuple[str, set[str]]]:
+    """Return only the latest source roster in each eligible month."""
+    snapshots = _latest_weight_rosters_by_month(frame)
+    return sorted(
+        (date, members)
+        for month, (date, members) in snapshots.items()
+        if start_month is None or month >= start_month
+    )
+
+
+def validate_source_coverage(
+    index_weights: dict[str, pd.DataFrame],
+    total_mv: pd.DataFrame,
+    calendar: list[str],
+) -> None:
+    """Reject incomplete pre-cutover inputs before a prefix can be frozen."""
+    missing_indices = {"csi500", "csi1000"} - set(index_weights)
+    if missing_indices:
+        raise ValueError(f"指数权重缺少输入 {sorted(missing_indices)}")
+
+    weight_rules = {
+        "CSI500": (
+            _latest_weight_rosters_by_month(index_weights["csi500"]),
+            _required_months("2010-01", "2015-10"),
+            500,
+            500,
+        ),
+        "CSI1000": (
+            _latest_weight_rosters_by_month(index_weights["csi1000"]),
+            _required_months("2015-05", "2015-10"),
+            1000,
+            1002,
+        ),
+    }
+    for label, (snapshots, required, minimum, maximum) in weight_rules.items():
+        missing = [month for month in required if month not in snapshots]
+        if missing:
+            raise ValueError(f"{label} index_weight 缺少月份: {missing}")
+        for month in required:
+            date, members = snapshots[month]
+            count = len(members)
+            if not minimum <= count <= maximum:
+                raise ValueError(
+                    f"{label} index_weight {date} 成分数 {count}，"
+                    f"期望 {minimum}~{maximum}"
+                )
+
+    required_columns = {"trade_date", "ts_code", "total_mv"}
+    if not required_columns.issubset(total_mv.columns):
+        raise ValueError(
+            f"总市值缓存缺少字段 " f"{sorted(required_columns - set(total_mv.columns))}"
+        )
+    market_cap = total_mv[["trade_date", "ts_code", "total_mv"]].copy()
+    market_cap["trade_date"] = market_cap["trade_date"].map(_iso_date)
+    market_cap["symbol"] = market_cap["ts_code"].map(ts_code_to_symbol)
+    market_cap["total_mv"] = pd.to_numeric(
+        market_cap["total_mv"],
+        errors="coerce",
+    )
+    latest_total_mv: dict[str, tuple[str, int]] = {}
+    for date, group in market_cap.groupby("trade_date", sort=True):
+        valid = group[group["symbol"].notna() & group["total_mv"].gt(0)]
+        month = date[:7]
+        count = valid["symbol"].nunique()
+        if month not in latest_total_mv or date > latest_total_mv[month][0]:
+            latest_total_mv[month] = (date, count)
+
+    required_total_mv = _required_months("2010-01", "2015-04")
+    missing_total_mv = [
+        month for month in required_total_mv if month not in latest_total_mv
+    ]
+    if missing_total_mv:
+        raise ValueError(f"total_mv 缺少月份: {missing_total_mv}")
+    for month in required_total_mv:
+        date, count = latest_total_mv[month]
+        if count < 800:
+            raise ValueError(f"total_mv {date} 有效截面仅 {count}，至少需要 800")
+
+    january_dates = [date for date in calendar if date.startswith("2010-01")]
+    if not january_dates:
+        raise ValueError("Qlib 日历缺少 2010-01")
+    latest_allowed_start = max(january_dates)
+    csi500_start = weight_rules["CSI500"][0]["2010-01"][0]
+    total_mv_start = latest_total_mv["2010-01"][0]
+    for label, start in (
+        ("CSI500", csi500_start),
+        ("CSI1000 total_mv", total_mv_start),
+    ):
+        if start > latest_allowed_start:
+            raise ValueError(
+                f"{label} 起始日 {start} 晚于 2010-01 月末 " f"{latest_allowed_start}"
+            )
+
+    proxy_last = latest_total_mv["2015-04"][0]
+    direct_rosters = [
+        roster
+        for roster in _monthly_weight_rosters(
+            index_weights["csi1000"],
+            start_month=CSI1000_DIRECT_START_MONTH,
+        )
+        if roster[0] < CUTOVER
+    ]
+    if not direct_rosters:
+        raise ValueError("CSI1000 direct roster 为空")
+    direct_start = direct_rosters[0][0]
+    if proxy_last >= direct_start:
+        raise ValueError(
+            f"CSI1000 source handoff 倒置: proxy={proxy_last}, "
+            f"direct={direct_start}"
+        )
+
+
 def build_prefix_frames(
     index_weights: dict[str, pd.DataFrame],
     total_mv: pd.DataFrame,
@@ -156,7 +289,9 @@ def build_prefix_frames(
 ) -> dict[str, pd.DataFrame]:
     """Build frozen pre-cutover intervals from monthly source rosters."""
     csi500_rosters = [
-        item for item in _weight_rosters(index_weights["csi500"]) if item[0] < CUTOVER
+        item
+        for item in _monthly_weight_rosters(index_weights["csi500"])
+        if item[0] < CUTOVER
     ]
     if not csi500_rosters:
         raise ValueError("CSI500 Tushare 月末快照为空")
@@ -168,7 +303,12 @@ def build_prefix_frames(
     )
 
     direct_rosters = [
-        item for item in _weight_rosters(index_weights["csi1000"]) if item[0] < CUTOVER
+        item
+        for item in _monthly_weight_rosters(
+            index_weights["csi1000"],
+            start_month=CSI1000_DIRECT_START_MONTH,
+        )
+        if item[0] < CUTOVER
     ]
     direct_start = direct_rosters[0][0] if direct_rosters else CUTOVER
 
@@ -292,6 +432,7 @@ def freeze_prefixes(
         "csi1000": pd.read_parquet(input_paths["csi1000_index_weight"]),
     }
     total_mv = pd.read_parquet(input_paths["total_mv_monthly"])
+    validate_source_coverage(weights, total_mv, calendar)
     frames = build_prefix_frames(weights, total_mv, csi300, calendar)
 
     prefix_dir = hybrid_root / "prefixes"
@@ -299,6 +440,10 @@ def freeze_prefixes(
     for name, frame in frames.items():
         if frame.empty or frame["end"].max() > PREFIX_END:
             raise ValueError(f"{name} prefix 日期越过 {PREFIX_END}")
+        if frame["start"].min() > HISTORY_START:
+            raise ValueError(
+                f"{name} prefix 起始日 {frame['start'].min()} " f"晚于 {HISTORY_START}"
+            )
         dest = prefix_dir / f"{name}_prefix.csv"
         _write_csv_atomic(frame, dest)
         output_meta[name] = {
@@ -312,14 +457,20 @@ def freeze_prefixes(
     monthly_counts = {
         "csi500_hybrid": {
             date: len(members)
-            for date, members in _weight_rosters(weights["csi500"])
+            for date, members in _monthly_weight_rosters(weights["csi500"])
             if date < CUTOVER
         },
         "csi1000_hybrid": {
             date: len(active_members(frames["csi1000_hybrid"], date))
             for date in sorted(
                 {_iso_date(value) for value in total_mv["trade_date"]}
-                | {date for date, _ in _weight_rosters(weights["csi1000"])}
+                | {
+                    date
+                    for date, _ in _monthly_weight_rosters(
+                        weights["csi1000"],
+                        start_month=CSI1000_DIRECT_START_MONTH,
+                    )
+                }
             )
             if date < CUTOVER
         },
@@ -425,12 +576,67 @@ def _instruments_text(frame: pd.DataFrame) -> str:
     )
 
 
+def validate_frozen_manifest(hybrid_root: Path) -> dict:
+    """Verify that daily builds use the exact prefixes recorded at freeze time."""
+    manifest_path = hybrid_root / "manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"hybrid manifest 缺失: {manifest_path}")
+    try:
+        manifest = json.loads(manifest_path.read_text())
+    except (json.JSONDecodeError, OSError) as error:
+        raise ValueError(f"hybrid manifest 无法读取: {error}") from error
+
+    expected_header = {
+        "algorithm_version": 1,
+        "cutover": CUTOVER,
+        "prefix_end": PREFIX_END,
+    }
+    for key, expected in expected_header.items():
+        if manifest.get(key) != expected:
+            raise ValueError(
+                f"hybrid manifest {key}={manifest.get(key)!r}，" f"期望 {expected!r}"
+            )
+
+    outputs = manifest.get("outputs")
+    if not isinstance(outputs, dict) or set(outputs) != set(HYBRID_NAMES):
+        actual = sorted(outputs) if isinstance(outputs, dict) else outputs
+        raise ValueError(
+            f"hybrid manifest outputs={actual!r}，" f"期望 {sorted(HYBRID_NAMES)}"
+        )
+
+    for name in HYBRID_NAMES:
+        prefix_path = hybrid_root / "prefixes" / f"{name}_prefix.csv"
+        if not prefix_path.exists():
+            raise FileNotFoundError(f"hybrid prefix 缺失: {prefix_path}")
+        metadata = outputs[name]
+        if not isinstance(metadata, dict):
+            raise ValueError(f"{name} manifest output 元数据非法")
+        recorded_path = Path(str(metadata.get("path", ""))).expanduser()
+        if recorded_path.resolve() != prefix_path.resolve():
+            raise ValueError(
+                f"{name} manifest path={recorded_path}，" f"期望 {prefix_path}"
+            )
+        actual_hash = sha256_file(prefix_path)
+        if metadata.get("sha256") != actual_hash:
+            raise ValueError(f"{name} prefix SHA-256 与冻结 manifest 不一致")
+        frame = pd.read_csv(prefix_path, dtype=str)
+        if metadata.get("rows") != len(frame):
+            raise ValueError(f"{name} prefix 行数与冻结 manifest 不一致")
+        if (
+            metadata.get("first") != frame["start"].min()
+            or metadata.get("last") != frame["end"].max()
+        ):
+            raise ValueError(f"{name} prefix 日期范围与冻结 manifest 不一致")
+    return manifest
+
+
 def build_hybrid_outputs(
     hybrid_root: Path = HYBRID_ROOT,
     changes_dir: Path = cfg.CHANGES_DIR,
     calendar_path: Path = CALENDAR_PATH,
 ) -> dict[str, Path]:
     """Build and validate both hybrid outputs before replacing either file."""
+    validate_frozen_manifest(hybrid_root)
     calendar = [
         line.strip() for line in calendar_path.read_text().splitlines() if line.strip()
     ]

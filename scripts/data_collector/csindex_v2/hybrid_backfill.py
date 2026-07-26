@@ -82,6 +82,24 @@ def merge_cache(
     )
 
 
+def keep_latest_snapshot_per_month(
+    frame: pd.DataFrame,
+    date_column: str = "trade_date",
+) -> pd.DataFrame:
+    """Normalize a cache to one (latest) snapshot date per month."""
+    if frame.empty:
+        return frame.copy()
+    work = frame.copy()
+    work[date_column] = work[date_column].astype(str)
+    work["_month"] = work[date_column].str[:6]
+    latest = work.groupby("_month")[date_column].transform("max")
+    return (
+        work.loc[work[date_column] == latest]
+        .drop(columns="_month")
+        .reset_index(drop=True)
+    )
+
+
 def _write_parquet_atomic(frame: pd.DataFrame, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     handle, temporary = tempfile.mkstemp(
@@ -123,11 +141,20 @@ def backfill_index_weights(
     for name, (index_code, start_month, end_month, expected) in specs.items():
         dest = snapshot_dir / f"{name}_index_weight.parquet"
         legacy = legacy_dir / f"{name}.parquet"
-        source = dest if dest.exists() else legacy
-        cached = _read_parquet_or_empty(
-            source,
+        legacy_cached = _read_parquet_or_empty(
+            legacy,
             ["trade_date", "con_code"],
         )
+        destination_cached = _read_parquet_or_empty(
+            dest,
+            ["trade_date", "con_code"],
+        )
+        cached = merge_cache(
+            legacy_cached,
+            destination_cached,
+            ["trade_date", "con_code"],
+        )
+        cached = keep_latest_snapshot_per_month(cached)
         cached["trade_date"] = cached["trade_date"].astype(str)
         cached["con_code"] = cached["con_code"].astype(str)
 
@@ -173,6 +200,7 @@ def backfill_index_weights(
                 frame,
                 ["trade_date", "con_code"],
             )
+            cached = keep_latest_snapshot_per_month(cached)
             _write_parquet_atomic(cached, dest)
             if sleep_seconds:
                 time.sleep(sleep_seconds)

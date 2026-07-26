@@ -102,6 +102,58 @@ def test_rank_icir_breaks_equal_rank_ic_tie():
     assert retained[-1]["exp_id"] == "feature-test/b"
 
 
+def test_primary_csi1000_rank_ic_beats_larger_cross_pool_average():
+    baseline = _baseline()
+    stronger_primary = _row(
+        "feature-test/primary",
+        metrics=_metrics(
+            [0.0201, 0.0301, 0.0500],
+            [0.201, 0.301, 0.401],
+        ),
+        result_dirs=["backtest/result/primary"],
+    )
+    stronger_average = _row(
+        "feature-test/average",
+        metrics=_metrics(
+            [0.0300, 0.0400, 0.0410],
+            [0.202, 0.302, 0.402],
+        ),
+        result_dirs=["backtest/result/average"],
+    )
+
+    retained = cleanup.select_retained_rows(
+        [baseline, stronger_primary, stronger_average]
+    )
+
+    assert retained[-1]["exp_id"] == "feature-test/primary"
+
+
+def test_primary_csi1000_rank_icir_breaks_primary_rank_ic_tie():
+    baseline = _baseline()
+    stronger_primary_ir = _row(
+        "feature-test/primary-ir",
+        metrics=_metrics(
+            [0.0201, 0.0301, 0.0450],
+            [0.201, 0.301, 0.500],
+        ),
+        result_dirs=["backtest/result/primary-ir"],
+    )
+    stronger_average = _row(
+        "feature-test/average",
+        metrics=_metrics(
+            [0.0300, 0.0400, 0.0450],
+            [0.400, 0.500, 0.401],
+        ),
+        result_dirs=["backtest/result/average"],
+    )
+
+    retained = cleanup.select_retained_rows(
+        [baseline, stronger_primary_ir, stronger_average]
+    )
+
+    assert retained[-1]["exp_id"] == "feature-test/primary-ir"
+
+
 def test_keeps_only_baseline_when_no_candidate_beats_every_pool():
     baseline = _baseline()
     candidate = _row(

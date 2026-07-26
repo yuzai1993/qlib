@@ -12,6 +12,7 @@ from statistics import mean
 from typing import Any, Sequence
 
 DEFAULT_POOLS = ("csi300", "csi500", "csi1000")
+PRIMARY_TEST_POOL = "csi1000"
 FIXED_SEEDS = (42, 1000, 2000, 3000, 4000)
 
 
@@ -48,7 +49,7 @@ def _current_baseline(rows: Sequence[dict]) -> dict:
 def _phase_m_candidate_score(
     row: dict,
     baseline: dict,
-) -> tuple[float, float] | None:
+) -> tuple[float, float, float] | None:
     if row.get("phase") != "M":
         return None
     if row.get("direction") == "baseline":
@@ -76,8 +77,18 @@ def _phase_m_candidate_score(
         if candidate_ir is not None and baseline_ir is not None:
             rank_icir_deltas.append(candidate_ir - baseline_ir)
 
-    ir_score = mean(rank_icir_deltas) if len(rank_icir_deltas) == 3 else float("-inf")
-    return mean(rank_deltas), ir_score
+    primary_rank_delta = (
+        _metric(row, PRIMARY_TEST_POOL, "rank_ic_mean")
+        - _metric(baseline, PRIMARY_TEST_POOL, "rank_ic_mean")
+    )
+    primary_ir = _metric(row, PRIMARY_TEST_POOL, "rank_icir")
+    baseline_primary_ir = _metric(baseline, PRIMARY_TEST_POOL, "rank_icir")
+    primary_ir_delta = (
+        primary_ir - baseline_primary_ir
+        if primary_ir is not None and baseline_primary_ir is not None
+        else float("-inf")
+    )
+    return primary_rank_delta, primary_ir_delta, mean(rank_deltas)
 
 
 def select_retained_rows(rows: Sequence[dict]) -> list[dict]:
@@ -90,7 +101,7 @@ def select_retained_rows(rows: Sequence[dict]) -> list[dict]:
             candidates.append((score, str(row.get("exp_id") or ""), row))
     if not candidates:
         return [baseline]
-    best = max(candidates, key=lambda item: (item[0][0], item[0][1], item[1]))
+    best = max(candidates, key=lambda item: (item[0], item[1]))
     return [baseline, best[2]]
 
 

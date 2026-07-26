@@ -32,7 +32,8 @@ PHASE_M_METRIC_LABELS = {
     "ic_mean": "IC",
     "icir": "ICIR",
 }
-DEFAULT_TEST_POOLS = ("csi300", "csi500", "csi1000")
+PRIMARY_TEST_POOL = "csi1000"
+DEFAULT_TEST_POOLS = (PRIMARY_TEST_POOL, "csi300", "csi500")
 POOL_DISPLAY = {
     "csi300": "CSI300",
     "csi500": "CSI500",
@@ -112,7 +113,7 @@ PHASE_M_LEGEND_HTML = """
 </tr>
 </tbody>
 </table>
-<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注实盘目标池 <b>CSI300</b>，再看 CSI500 / CSI1000 是否同步改善（防过拟合单一市场）。
+<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注研究主目标池 <b>CSI1000</b>，再看 CSI300 / CSI500 是否同步改善（防过拟合单一市场）。
 默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。每个方向表格第一行为对应 <code>baseline_ref</code> 的 baseline 指标。</p>
 </section>
 """
@@ -243,8 +244,8 @@ def _get_flat_metric(row: dict, key: str) -> Any:
     if isinstance(ms, dict):
         if key in ms and not isinstance(ms[key], dict):
             return ms[key]
-        # 常见写法：{"csi300": {"ir": ...}}
-        for pool in row.get("test_pools") or ("csi300",):
+        # 常见写法：{"csi1000": {"ir": ...}}
+        for pool in row.get("test_pools") or (PRIMARY_TEST_POOL,):
             pool_m = ms.get(pool)
             if isinstance(pool_m, dict) and key in pool_m:
                 return pool_m[key]

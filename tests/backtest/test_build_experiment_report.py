@@ -58,3 +58,17 @@ def test_label_design_renders_formal_then_diagnostic_rows():
     assert 'class="diagnostic"' in section
     assert section.count('class="best"') == 0
     assert "diagnostic best" not in section
+
+
+def test_phase_m_report_orders_primary_csi1000_pool_first():
+    assert report._test_pools() == ["csi1000", "csi300", "csi500"]
+
+    columns = report._metric_columns_m(report._test_pools())
+    rank_ic_pools = [
+        pool
+        for key, _label, pool, _primary in columns
+        if key.startswith("rank_ic_mean@")
+    ]
+
+    assert rank_ic_pools == ["csi1000", "csi300", "csi500"]
+    assert "优先关注研究主目标池 <b>CSI1000</b>" in report.PHASE_M_LEGEND_HTML

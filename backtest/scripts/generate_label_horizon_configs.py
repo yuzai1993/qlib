@@ -28,7 +28,7 @@ def _render_config(cfg: dict, *, exp_id: str, seed: int) -> str:
         f"ld_{exp_id.rsplit('/', 1)[-1].replace('-', '_')}_lgbm_s{seed}.yaml"
     )
     header = (
-        f"# EXPERIMENT_STANDARD v1.3 | exp: {exp_id} | seed {seed}\n"
+        f"# EXPERIMENT_STANDARD v1.4 | exp: {exp_id} | seed {seed}\n"
         "# /opt/anaconda3/envs/qlib/bin/python "
         "backtest/scripts/run_backtest.py "
         f"--config {command_path}\n"

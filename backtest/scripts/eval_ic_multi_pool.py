@@ -75,7 +75,34 @@ def _segment_bounds(cfg: dict, segment: str) -> tuple[str, str]:
     return str(values[0]), str(values[1])
 
 
-def _build_dataset(cfg: dict, pool: str, segment: str = "test"):
+def _effective_segment(
+    cfg: dict,
+    segment: str,
+    *,
+    end_override: Optional[str] = None,
+) -> tuple[str, str]:
+    start, end = _segment_bounds(cfg, segment)
+    if end_override is None:
+        return start, end
+    override = str(end_override)
+    if pd.Timestamp(override) > pd.Timestamp(end):
+        raise ValueError(
+            f"eval end {override} exceeds official segment end {end}"
+        )
+    if pd.Timestamp(override) < pd.Timestamp(start):
+        raise ValueError(
+            f"eval end {override} precedes segment start {start}"
+        )
+    return start, override
+
+
+def _build_dataset(
+    cfg: dict,
+    pool: str,
+    segment: str = "test",
+    *,
+    end_override: Optional[str] = None,
+):
     """按 config 的 handler 设置构建指定池、指定分段的推理 DatasetH。"""
     from qlib.utils import init_instance_by_config
 
@@ -83,7 +110,9 @@ def _build_dataset(cfg: dict, pool: str, segment: str = "test"):
     pool_cfg["data"]["instruments"] = pool
     handler = pool_cfg["data"]["handler"]
     handler.pop("instruments", None)
-    start, end = _segment_bounds(cfg, segment)
+    start, end = _effective_segment(
+        cfg, segment, end_override=end_override
+    )
     handler["start_time"] = _handler_start_for_inference(start)
     handler["end_time"] = end
     # ProcessInf 等 infer processors 无需拟合统计量；fit 区间仅为满足接口
@@ -102,11 +131,22 @@ def _build_dataset(cfg: dict, pool: str, segment: str = "test"):
     return init_instance_by_config(dataset_cfg)
 
 
-def _fetch_label(pool: str, start: str, end: str) -> pd.Series:
+def _fetch_label(
+    pool: str,
+    start: str,
+    end: str,
+    *,
+    expression: str = EVAL_LABEL_EXPR,
+) -> pd.Series:
     """固定评测标签（不做任何截面归一化；IC 对逐日仿射变换不敏感）。"""
     from qlib.data import D
 
-    df = D.features(D.instruments(pool), [EVAL_LABEL_EXPR], start_time=start, end_time=end)
+    df = D.features(
+        D.instruments(pool),
+        [expression],
+        start_time=start,
+        end_time=end,
+    )
     s = df.iloc[:, 0]
     s.index = s.index.set_names(["instrument", "datetime"])
     return s.swaplevel().sort_index()
@@ -151,36 +191,62 @@ def evaluate(
     st_symbols: Optional[set[str]] = None,
     min_count: int = 20,
     segment: str = "test",
+    eval_label_expr: str = EVAL_LABEL_EXPR,
+    eval_label_role: str = "fixed_1d",
+    eval_end: Optional[str] = None,
 ) -> dict:
     from qlib.data import D
 
-    eval_start, eval_end = _segment_bounds(cfg, segment)
+    eval_start, effective_end = _effective_segment(
+        cfg, segment, end_override=eval_end
+    )
+    if eval_label_expr != EVAL_LABEL_EXPR and eval_label_role != "self":
+        raise ValueError(
+            "custom evaluation labels require eval_label_role='self'"
+        )
     models = [(seed, _load_model(session)) for session, seed in sessions]
 
     result: dict[str, Any] = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "config": cfg.get("_config_path"),
-        "eval_label": EVAL_LABEL_EXPR,
+        "eval_label": eval_label_expr,
+        "eval_label_role": eval_label_role,
         "eval_segment_name": segment,
-        "eval_segment": [eval_start, eval_end],
+        "eval_segment": list(_segment_bounds(cfg, segment)),
+        "effective_eval_segment": [eval_start, effective_end],
         "sessions": [{"session": s, "seed": seed} for s, seed in sessions],
         "data_version": str(pd.Timestamp(D.calendar(start_time="2020-01-01")[-1]).date()),
         "st_filter": "enabled" if st_symbols is not None else "unavailable（未剔除 ST）",
         "pools": {},
     }
     if segment == "test":
-        result["test_segment"] = [eval_start, eval_end]
+        result["test_segment"] = [eval_start, effective_end]
 
     for pool in pools:
-        label = _fetch_label(pool, eval_start, eval_end)
+        label = _fetch_label(
+            pool,
+            eval_start,
+            effective_end,
+            expression=eval_label_expr,
+        )
         if pool in POOLS_NEED_LISTING_FILTER:
-            mask = _listing_age_mask(label.index, pool, min_listing_days, eval_end)
+            mask = _listing_age_mask(
+                label.index,
+                pool,
+                min_listing_days,
+                effective_end,
+            )
             label = label[mask]
         if st_symbols:
             keep = ~label.index.get_level_values("instrument").str.upper().isin(st_symbols)
             label = label[keep]
 
-        dataset = _build_dataset(cfg, pool, segment=segment)
+        dataset = _build_dataset(
+            cfg,
+            pool,
+            segment=segment,
+            end_override=eval_end,
+        )
         pool_out: dict[str, Any] = {"seeds": {}}
         for seed, model in models:
             pred = model.predict(dataset, segment=segment)
@@ -234,7 +300,28 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--min-listing-days", type=int, default=60, help="全A 池最短上市交易日数")
     p.add_argument("--st-names", type=Path, default=None, help="可选 symbol,name CSV 用于剔除 ST")
     p.add_argument("--min-count", type=int, default=20, help="单日截面最少样本数")
-    return p.parse_args(argv)
+    p.add_argument(
+        "--eval-label",
+        default=EVAL_LABEL_EXPR,
+        help="评测标签；自标签诊断时必须同时指定 --eval-label-role self",
+    )
+    p.add_argument(
+        "--eval-label-role",
+        choices=("fixed_1d", "self"),
+        default="fixed_1d",
+    )
+    p.add_argument(
+        "--eval-end",
+        default=None,
+        help="可选有效评测截止日，不得晚于规范分段截止日",
+    )
+    args = p.parse_args(argv)
+    if (
+        args.eval_label != EVAL_LABEL_EXPR
+        and args.eval_label_role != "self"
+    ):
+        p.error("custom --eval-label requires --eval-label-role self")
+    return args
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
@@ -252,6 +339,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         st_symbols=st_symbols,
         min_count=args.min_count,
         segment=args.segment,
+        eval_label_expr=args.eval_label,
+        eval_label_role=args.eval_label_role,
+        eval_end=args.eval_end,
     )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -32,7 +32,8 @@ PHASE_M_METRIC_LABELS = {
     "ic_mean": "IC",
     "icir": "ICIR",
 }
-DEFAULT_TEST_POOLS = ("csi300", "csi500", "csi1000")
+PRIMARY_TEST_POOL = "csi1000"
+DEFAULT_TEST_POOLS = (PRIMARY_TEST_POOL, "csi300", "csi500")
 POOL_DISPLAY = {
     "csi300": "CSI300",
     "csi500": "CSI500",
@@ -76,6 +77,8 @@ table.exp td.content { max-width: 360px; font-size: 12px; color: #333; }
 table.exp tr:nth-child(even) { background: #f7f9fb; }
 table.exp th.primary { background: #dbeafe; }
 table.exp td.primary { background: #f0f7ff; }
+table.exp tr.diagnostic { background: #fff7ed; color: #7c2d12; }
+.eval-role { white-space: nowrap; font-family: ui-monospace, monospace; }
 .best { color: #1a7f37; font-weight: 600; }
 .empty { color: #999; }
 """
@@ -110,7 +113,7 @@ PHASE_M_LEGEND_HTML = """
 </tr>
 </tbody>
 </table>
-<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注实盘目标池 <b>CSI300</b>，再看 CSI500 / CSI1000 是否同步改善（防过拟合单一市场）。
+<p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注研究主目标池 <b>CSI1000</b>，再看 CSI300 / CSI500 是否同步改善（防过拟合单一市场）。
 默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。每个方向表格第一行为对应 <code>baseline_ref</code> 的 baseline 指标。</p>
 </section>
 """
@@ -241,8 +244,8 @@ def _get_flat_metric(row: dict, key: str) -> Any:
     if isinstance(ms, dict):
         if key in ms and not isinstance(ms[key], dict):
             return ms[key]
-        # 常见写法：{"csi300": {"ir": ...}}
-        for pool in row.get("test_pools") or ("csi300",):
+        # 常见写法：{"csi1000": {"ir": ...}}
+        for pool in row.get("test_pools") or (PRIMARY_TEST_POOL,):
             pool_m = ms.get(pool)
             if isinstance(pool_m, dict) and key in pool_m:
                 return pool_m[key]
@@ -251,17 +254,56 @@ def _get_flat_metric(row: dict, key: str) -> Any:
     return b0s.get(alias.get(key, key))
 
 
-def _best_indices(values: Sequence[Optional[float]], *, higher_better: bool) -> set[int]:
-    nums = [(i, v) for i, v in enumerate(values) if v is not None]
+def _best_indices(
+    values: Sequence[Optional[float]],
+    *,
+    higher_better: bool,
+    eligible: Optional[Sequence[bool]] = None,
+) -> set[int]:
+    nums = [
+        (i, v)
+        for i, v in enumerate(values)
+        if v is not None and (eligible is None or eligible[i])
+    ]
     if not nums:
         return set()
     best = max(v for _, v in nums) if higher_better else min(v for _, v in nums)
     return {i for i, v in nums if v == best}
 
 
+def _expand_phase_m_rows(rows: Sequence[dict]) -> list[dict]:
+    expanded: list[dict] = []
+    for row in rows:
+        by_label = row.get("metrics_by_eval_label")
+        if not isinstance(by_label, dict):
+            display = dict(row)
+            display["_eval_label_role"] = "eval_1d"
+            display["_rowspan"] = 1
+            display["_rowspan_first"] = True
+            expanded.append(display)
+            continue
+        roles = [
+            role for role in ("eval_1d", "eval_self")
+            if isinstance(by_label.get(role), dict)
+        ]
+        for index, role in enumerate(roles):
+            display = dict(row)
+            display["metrics_summary"] = by_label[role]
+            display["_eval_label_role"] = role
+            display["_rowspan"] = len(roles)
+            display["_rowspan_first"] = index == 0
+            expanded.append(display)
+    return expanded
+
+
 def _build_phase_m_table(rows: Sequence[dict]) -> str:
+    rows = _expand_phase_m_rows(rows)
     pools = _test_pools(rows)
     cols = _metric_columns_m(pools)
+    eligible = [
+        row.get("_eval_label_role") != "eval_self"
+        for row in rows
+    ]
 
     # 预取数值，标记每列最优
     col_vals: list[list[Optional[float]]] = []
@@ -276,13 +318,21 @@ def _build_phase_m_table(rows: Sequence[dict]) -> str:
                 vals.append(None)
         col_vals.append(vals)
 
-    best_sets = [_best_indices(vals, higher_better=True) for vals in col_vals]
+    best_sets = [
+        _best_indices(
+            vals,
+            higher_better=True,
+            eligible=eligible,
+        )
+        for vals in col_vals
+    ]
 
     n_pools = len(pools)
     # 两行表头：第一行指标（colspan），第二行指数
     row1 = [
         '<th rowspan="2">实验名</th>',
         '<th rowspan="2">实验内容</th>',
+        '<th rowspan="2">评测标签</th>',
     ]
     for metric in PHASE_M_METRIC_KEYS:
         primary = metric in ("rank_ic_mean", "rank_icir")
@@ -303,7 +353,18 @@ def _build_phase_m_table(rows: Sequence[dict]) -> str:
     for ri, r in enumerate(rows):
         name = _esc(r.get("exp_id") or "")
         content = _esc(r.get("hypothesis") or r.get("note") or "")
-        cells = [f'<td class="name">{name}</td>', f'<td class="content">{content}</td>']
+        cells = []
+        if r.get("_rowspan_first"):
+            rowspan = int(r.get("_rowspan") or 1)
+            rowspan_attr = f' rowspan="{rowspan}"' if rowspan > 1 else ""
+            cells.extend(
+                [
+                    f'<td class="name"{rowspan_attr}>{name}</td>',
+                    f'<td class="content"{rowspan_attr}>{content}</td>',
+                ]
+            )
+        role = str(r.get("_eval_label_role") or "eval_1d")
+        cells.append(f'<td class="eval-role">{_esc(role)}</td>')
         for (_, _, _, primary), vals, best in zip(cols, col_vals, best_sets):
             v = vals[ri]
             cls = ["num"]
@@ -312,7 +373,10 @@ def _build_phase_m_table(rows: Sequence[dict]) -> str:
             if ri in best and v is not None:
                 cls.append("best")
             cells.append(f'<td class="{" ".join(cls)}">{_fmt_metric(v)}</td>')
-        body_rows.append("<tr>" + "".join(cells) + "</tr>")
+        row_class = ' class="diagnostic"' if role == "eval_self" else ""
+        body_rows.append(
+            f"<tr{row_class}>" + "".join(cells) + "</tr>"
+        )
 
     return (
         '<table class="exp"><thead>'

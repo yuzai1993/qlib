@@ -9,6 +9,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from backtest.label_design import horizons  # noqa: E402
 from backtest.label_design.horizons import (  # noqa: E402
     common_self_eval_end,
     cumulative_label,
@@ -44,6 +45,40 @@ def test_survival_weighted_label_normalizes_and_orders_terms():
 def test_survival_weighted_label_requires_every_age():
     with pytest.raises(ValueError, match="age 2"):
         survival_weighted_label({1: 1.0, 3: 0.2}, max_horizon=3)
+
+
+def test_survival_power_weights_apply_power_before_normalizing():
+    expression, weights = horizons.survival_power_weighted_label(
+        {1: 1.0, 2: 0.25},
+        max_horizon=2,
+        power=0.5,
+    )
+
+    assert weights == {1: pytest.approx(2 / 3), 2: pytest.approx(1 / 3)}
+    assert expression == (
+        "0.666666666667*(Ref($close, -2)/Ref($close, -1)-1)"
+        "+0.333333333333*(Ref($close, -3)/Ref($close, -2)-1)"
+    )
+
+
+def test_survival_power_one_matches_standard_survival_label():
+    survival = {1: 1.0, 2: 0.5, 3: 0.25}
+
+    assert horizons.survival_power_weighted_label(
+        survival,
+        max_horizon=3,
+        power=1.0,
+    ) == survival_weighted_label(survival, max_horizon=3)
+
+
+@pytest.mark.parametrize("power", [0.0, -1.0, float("nan"), float("inf")])
+def test_survival_power_rejects_nonpositive_or_nonfinite_power(power):
+    with pytest.raises(ValueError, match="power"):
+        horizons.survival_power_weighted_label(
+            {1: 1.0},
+            max_horizon=1,
+            power=power,
+        )
 
 
 def test_anchor_selection_maps_p50_p75_p90_to_distinct_nearest_values():

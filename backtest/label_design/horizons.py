@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 
 import pandas as pd
@@ -21,9 +22,26 @@ def survival_weighted_label(
     max_horizon: int,
 ) -> tuple[str, dict[int, float]]:
     """Build a normalized sum of forward one-day returns."""
+    return survival_power_weighted_label(
+        survival,
+        max_horizon=max_horizon,
+        power=1.0,
+    )
+
+
+def survival_power_weighted_label(
+    survival: Mapping[int, float],
+    *,
+    max_horizon: int,
+    power: float,
+) -> tuple[str, dict[int, float]]:
+    """Build forward-return weights proportional to survival probability^power."""
     max_horizon = int(max_horizon)
     if max_horizon <= 0:
         raise ValueError("max_horizon must be positive")
+    power = float(power)
+    if not math.isfinite(power) or power <= 0:
+        raise ValueError("power must be positive and finite")
     raw: dict[int, float] = {}
     for age in range(1, max_horizon + 1):
         if age not in survival:
@@ -31,7 +49,7 @@ def survival_weighted_label(
         value = float(survival[age])
         if value < 0:
             raise ValueError(f"survival at age {age} must be nonnegative")
-        raw[age] = value
+        raw[age] = value**power
     total = sum(raw.values())
     if total <= 0:
         raise ValueError("survival weights must have a positive sum")

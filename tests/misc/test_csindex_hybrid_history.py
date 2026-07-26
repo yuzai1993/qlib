@@ -267,3 +267,112 @@ def test_backfill_all_returns_complete_cache_paths(tmp_path):
 
     assert set(result) == {"csi500", "total_mv_monthly"}
     assert all(path.exists() for path in result.values())
+
+
+def _prefix_fixture_frames():
+    total_mv = pd.DataFrame(
+        {
+            "trade_date": ["20150430"] * 3,
+            "ts_code": ["000001.SZ", "000002.SZ", "000003.SZ"],
+            "total_mv": [30.0, 20.0, 10.0],
+        }
+    )
+    weights = {
+        "csi500": pd.DataFrame(
+            {"trade_date": ["20150430"], "con_code": ["000001.SZ"]}
+        ),
+        "csi1000": pd.DataFrame(
+            {"trade_date": ["20150529"], "con_code": ["000003.SZ"]}
+        ),
+    }
+    csi300 = pd.DataFrame(
+        [
+            {
+                "symbol": "SZ000002",
+                "start": "2010-01-01",
+                "end": "2099-12-31",
+            }
+        ]
+    )
+    calendar = [
+        "2015-04-29",
+        "2015-04-30",
+        "2015-05-04",
+        "2015-05-28",
+        "2015-05-29",
+        "2015-06-01",
+        "2015-11-27",
+        "2015-11-30",
+    ]
+    return weights, total_mv, csi300, calendar
+
+
+def test_csi1000_proxy_hands_off_to_direct_snapshot_at_2015_05():
+    """Catches source-boundary loss or wrong large-cap exclusions."""
+    weights, total_mv, csi300, calendar = _prefix_fixture_frames()
+
+    frames = hybrid.build_prefix_frames(
+        weights,
+        total_mv,
+        csi300,
+        calendar,
+        proxy_limit=1000,
+    )
+
+    csi1000 = frames["csi1000_hybrid"]
+    assert hybrid.active_members(csi1000, "2015-04-30") == {"SZ000003"}
+    assert hybrid.active_members(csi1000, "2015-05-28") == {"SZ000003"}
+    assert hybrid.active_members(csi1000, "2015-05-29") == {"SZ000003"}
+    assert set(csi1000["source"]) == {
+        "total_mv_proxy",
+        "tushare_index_weight",
+    }
+    assert not csi1000.duplicated(["symbol", "start", "end"]).any()
+
+
+def test_freeze_prefixes_writes_manifest_with_hashes(tmp_path):
+    """Catches unauditable prefixes whose exact source inputs are unknown."""
+    weights, total_mv, csi300, calendar = _prefix_fixture_frames()
+    hybrid_root = tmp_path / "hybrid"
+    snapshot_dir = hybrid_root / "snapshots"
+    snapshot_dir.mkdir(parents=True)
+    weights["csi500"].to_parquet(
+        snapshot_dir / "csi500_index_weight.parquet"
+    )
+    weights["csi1000"].to_parquet(
+        snapshot_dir / "csi1000_index_weight.parquet"
+    )
+    total_mv.to_parquet(snapshot_dir / "total_mv_monthly.parquet")
+    changes_dir = tmp_path / "changes"
+    changes_dir.mkdir()
+    csi300[["symbol", "start", "end"]].to_csv(
+        changes_dir / "csi300_instruments.txt",
+        sep="\t",
+        header=False,
+        index=False,
+    )
+    calendar_path = tmp_path / "day.txt"
+    calendar_path.write_text("\n".join(calendar) + "\n")
+
+    manifest = hybrid.freeze_prefixes(
+        hybrid_root=hybrid_root,
+        changes_dir=changes_dir,
+        calendar_path=calendar_path,
+    )
+
+    assert manifest["algorithm_version"] == 1
+    assert manifest["cutover"] == "2015-11-30"
+    assert manifest["prefix_end"] == "2015-11-27"
+    assert set(manifest["outputs"]) == {
+        "csi500_hybrid",
+        "csi1000_hybrid",
+    }
+    assert (
+        len(manifest["inputs"]["total_mv_monthly"]["sha256"]) == 64
+    )
+    assert (
+        hybrid_root / "prefixes" / "csi500_hybrid_prefix.csv"
+    ).exists()
+    assert (
+        hybrid_root / "prefixes" / "csi1000_hybrid_prefix.csv"
+    ).exists()

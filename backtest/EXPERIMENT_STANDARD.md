@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v1.7（2026-07-26）
+版本：v1.8（2026-07-27）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -9,7 +9,7 @@
 
 ## 0. 硬性约束（先读这里）
 
-1. 当前模型基线（B4-M）固定，见第 1 节；任何新模型实验必须与 B4 对比。**每个实验方向必须写明对照的 baseline 版本**（registry 的 `baseline_ref`，当前为 `B4 v1.0`），HTML 该方向表格**第一行**为对应 baseline 指标行。
+1. 当前模型基线（B5-M）固定，见第 1 节；任何新模型实验必须与 B5 对比。**每个实验方向必须写明对照的 baseline 版本**（registry 的 `baseline_ref`，当前为 `B5 v1.0`），HTML 该方向表格**第一行**为对应 baseline 指标行。
 2. 模型与策略**分开迭代**：一期只改模型（Phase M），策略冻结为 B1-S；确定更优模型后才进入策略迭代（Phase S），此时模型冻结。
 3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
 4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi1000/csi300/csi500）上评估 IC/RankIC，**研究主目标池为 CSI1000**。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
@@ -19,26 +19,27 @@
 
 ---
 
-## 1. 基线定义（B4-M / B1-S）
+## 1. 基线定义（B5-M / B1-S）
 
 基线取自当前实盘配置 `live_trading/configs/csi300_topk10_live.yaml`，拆为模型基线与策略基线两部分。实盘对照回测的唯一合法配置是 `backtest/configs/csi300_live_parity.yaml`。
 
-### 1.1 模型基线 B4-M
+### 1.1 模型基线 B5-M
 
 | 项 | 值 |
 |---|---|
-| 基线版本 | `B4 v1.0`（B4-M，2026-07-26，由用户确认将 `model-arch/double-ensemble` 提升） |
-| 五种子基线组 | `model-arch/double-ensemble`，固定种子 `[42, 1000, 2000, 3000, 4000]` |
+| 基线版本 | `B5 v1.0`（B5-M，2026-07-27，由用户确认将 `loss-design/cs-rank-norm` 提升） |
+| 五种子基线组 | `loss-design/cs-rank-norm`，固定种子 `[42, 1000, 2000, 3000, 4000]` |
 | 训练池 | CSI1000 |
-| 来源 | B3（Alpha158+range、H40）之上将 LGBM 替换为 DoubleEnsemble；registry `baseline/b4-m` 记录五种子配置、IC JSON 与结果目录 |
+| 来源 | B4（Alpha158+range、DoubleEnsemble、H40）之上将标签截面处理由 CSZScoreNorm 改为 CSRankNorm；registry `baseline/b5-m` 记录五种子配置、IC JSON 与结果目录 |
 | 特征 | Alpha158 + `range`（`backtest.features.technical.Alpha158Technical`，6 个密集区间/事件频率特征），handler start_time=2003-01-02 |
 | 训练区间 | fit 2016-01-02 ~ 2020-01-10（csi1000 完整样本池） |
 | 标签 | 累计未来 H40：`Ref($close, -41)/Ref($close, -1) - 1` |
+| 标签处理 | `learn_processors`: DropnaLabel + CSRankNorm(fields_group=label)（覆盖 Alpha158 默认 CSZScoreNorm） |
 | 模型 | `qlib.contrib.model.double_ensemble.DEnsembleModel`（base_model=gbm，num_models=3，enable_sr/enable_fs=True，epochs=28，decay=0.5） |
-| 超参 | 子模型 LGB 与 B3 相同：loss=mse, learning_rate=0.2, colsample_bytree=0.8879, subsample=0.8789, lambda_l1=205.6999, lambda_l2=580.9768, max_depth=8, num_leaves=210（见 `backtest/configs/model-arch/double-ensemble/`） |
+| 超参 | 子模型 LGB 与 B4 相同：loss=mse, learning_rate=0.2, colsample_bytree=0.8879, subsample=0.8789, lambda_l1=205.6999, lambda_l2=580.9768, max_depth=8, num_leaves=210（见 `backtest/configs/loss-design/cs-rank-norm/`） |
 | 数据处理 | infer_processors 含 ProcessInf，与实盘配置一致 |
 
-五种子 test 固定一日评估指标以 registry `baseline/b4-m` 为准；后续模型实验优先查看 CSI1000。B3-M / B2-M / B1-M 为历史模型基线，旧实验的 `baseline_ref` 不改写。B4-M 是研究基线提升，不自动切换实盘 B1-M artifact。
+五种子 test 固定一日评估指标以 registry `baseline/b5-m` 为准；后续模型实验优先查看 CSI1000。B4-M / B3-M / B2-M / B1-M 为历史模型基线，旧实验的 `baseline_ref` 不改写。B5-M 是研究基线提升，不自动切换实盘 B1-M artifact。
 
 ### 1.2 策略基线 B1-S
 
@@ -59,7 +60,7 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与当前
 
 只有当某实验按本规范完成完整评估（第 4/5 节）、结果对比数据经用户确认后，才可将其提升为新基线；提升时在本文件更新当前基线定义并记录版本号与日期。agent 不得自行提升基线。
 
-本次 B4-M 提升已获用户确认；实盘配置与实盘模型仍保持 B1，除非另行完成部署审批。B3-M（`baseline/b3-m`，Alpha158+range + LGBM）与 B2-M 保留为历史对照。
+本次 B5-M 提升已获用户确认；实盘配置与实盘模型仍保持 B1，除非另行完成部署审批。B4-M（`baseline/b4-m`，DoubleEnsemble + CSZScoreNorm）与更早基线保留为历史对照。
 
 ---
 

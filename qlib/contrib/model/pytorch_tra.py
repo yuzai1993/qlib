@@ -251,6 +251,10 @@ class TRAModel(Model):
             total_loss += loss.item()
             total_count += 1
 
+            # MPS caching allocator grows unboundedly across variable-shape batches
+            if device == "mps" and cur_step % 32 == 0:
+                torch.mps.empty_cache()
+
         if self.use_daily_transport and len(P_all) > 0:
             P_all = pd.concat(P_all, axis=0)
             prob_all = pd.concat(prob_all, axis=0)
@@ -279,7 +283,10 @@ class TRAModel(Model):
         probs = []
         P_all = []
         metrics = []
-        for batch in tqdm(data_set):
+        for _step, batch in enumerate(tqdm(data_set)):
+            # MPS caching allocator grows unboundedly across variable-shape batches
+            if device == "mps" and _step % 32 == 0:
+                torch.mps.empty_cache()
             data, state, label, count = batch["data"], batch["state"], batch["label"], batch["daily_count"]
             index = batch["daily_index"] if self.use_daily_transport else batch["index"]
 

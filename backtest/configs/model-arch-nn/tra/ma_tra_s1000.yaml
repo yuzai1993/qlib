@@ -1,0 +1,115 @@
+# EXPERIMENT_STANDARD v1.8 | exp: model-arch-nn/tra | baseline B5 v1.0 | seed 1000
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config model-arch-nn/tra/ma_tra_s1000.yaml
+run:
+  mode: train_only
+  note: ma_tra_s1000
+  n_runs: 1
+  from_session: null
+  from_run: 1
+  generate_figures: false
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: csi1000
+  benchmark: SH000852
+  handler:
+    class: Alpha158Technical
+    module_path: backtest.features.technical
+    start_time: '2014-01-02'
+    end_time: '2026-07-16'
+    fit_start_time: '2016-01-02'
+    fit_end_time: '2020-01-10'
+    infer_processors:
+    - class: ProcessInf
+    - class: RobustZScoreNorm
+      kwargs:
+        fields_group: feature
+        clip_outlier: true
+    - class: Fillna
+      kwargs:
+        fields_group: feature
+    learn_processors:
+    - class: DropnaLabel
+    - class: CSRankNorm
+      kwargs:
+        fields_group: label
+    label:
+    - - Ref($close, -41)/Ref($close, -1)-1
+    - - LABEL0
+    feature_groups:
+    - range
+    drop_raw: true
+segments:
+  train:
+  - '2016-01-02'
+  - '2019-11-13'
+  valid:
+  - '2020-01-13'
+  - '2021-05-18'
+  test:
+  - '2021-07-16'
+  - '2026-07-16'
+model:
+  class: TRAModelAuto
+  module_path: backtest.models.tra_device
+  kwargs:
+    model_type: RNN
+    model_config:
+      input_size: 164
+      hidden_size: 256
+      num_layers: 2
+      rnn_arch: LSTM
+      use_attn: true
+      dropout: 0.2
+    tra_config:
+      num_states: 3
+      rnn_arch: LSTM
+      hidden_size: 32
+      num_layers: 1
+      dropout: 0.0
+      tau: 1.0
+      src_info: LR_TPE
+    lr: 0.001
+    n_epochs: 40
+    early_stop: 10
+    max_steps_per_epoch: 150
+    lamb: 1.0
+    rho: 0.99
+    alpha: 0.5
+    transport_method: router
+    memory_mode: sample
+    pretrain: true
+    eval_train: false
+    eval_test: false
+    logdir: null
+    seed: 1000
+dataset:
+  class: LeanMTSDatasetH
+  module_path: backtest.datasets.lean_mts
+  kwargs:
+    seq_len: 60
+    horizon: 41
+    num_states: 3
+    batch_size: 1024
+    memory_mode: sample
+    drop_last: true
+strategy:
+  class: TopkDropoutStrategy
+  module_path: qlib.contrib.strategy.signal_strategy
+  topk: 10
+  n_drop: 2
+  kwargs:
+    hold_thresh: 1
+    risk_degree: 0.95
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+backtest:
+  account: 1000000
+  exchange_kwargs:
+    freq: day
+    deal_price: close
+    limit_threshold: 0.095
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5
+    trade_unit: 100

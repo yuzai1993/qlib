@@ -26,7 +26,9 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import shutil
+import tempfile
 from pathlib import Path
 
 import pandas as pd
@@ -37,14 +39,22 @@ from . import crawler
 from . import parser_content, parser_excel, parser_pdf
 from .aggregator import aggregate
 from .builder import build_all, load_current_snapshot
+from .hybrid_history import build_hybrid_outputs
 
 QLIB_INSTRUMENTS = Path("~/.qlib/qlib_data/cn_data/instruments").expanduser().resolve()
-INSTALL_INDICES = ("csi300", "csi500", "csi1000", "csi2000")
+OFFICIAL_INDICES = ("csi300", "csi500", "csi1000", "csi2000")
+HYBRID_INDICES = ("csi500_hybrid", "csi1000_hybrid")
+# 向后兼容已有导入；官网快照与公告流水线只使用这四个官方指数。
+INSTALL_INDICES = OFFICIAL_INDICES
 
 
 def crawl_incremental() -> int:
     """增量爬取，返回本次新拉取的详情条数。"""
-    before = {p.stem for p in cfg.DETAILS_DIR.glob("*.json")} if cfg.DETAILS_DIR.exists() else set()
+    before = (
+        {p.stem for p in cfg.DETAILS_DIR.glob("*.json")}
+        if cfg.DETAILS_DIR.exists()
+        else set()
+    )
     logger.info("=== csindex_v2 增量爬取 ===")
     items = crawler.build_manifest(incremental=True)
     crawler.fetch_details(items)
@@ -70,15 +80,80 @@ def rebuild() -> str:
 
 
 def install_instruments(indices: tuple[str, ...] = INSTALL_INDICES) -> dict[str, Path]:
-    """把 changes/{index}_instruments.txt 安装到 qlib instruments/。"""
+    """预检并分组安装；任一替换失败时恢复整组旧文件。"""
     QLIB_INSTRUMENTS.mkdir(parents=True, exist_ok=True)
-    installed: dict[str, Path] = {}
+    sources = {name: cfg.CHANGES_DIR / f"{name}_instruments.txt" for name in indices}
+    missing = [str(path) for path in sources.values() if not path.exists()]
+    if missing:
+        raise FileNotFoundError(f"缺少构建产物: {missing}")
+
+    destinations = {name: QLIB_INSTRUMENTS / f"{name}.txt" for name in indices}
+    staged: dict[str, Path] = {}
+    backups: dict[str, Path | None] = {}
+    touched: list[str] = []
+    clean_backups = True
+    try:
+        for name in indices:
+            src = sources[name]
+            dest = destinations[name]
+            descriptor, temporary = tempfile.mkstemp(
+                dir=QLIB_INSTRUMENTS,
+                prefix=f".{dest.name}.",
+                suffix=".tmp",
+            )
+            temp_path = Path(temporary)
+            staged[name] = temp_path
+            with src.open("rb") as source, os.fdopen(descriptor, "wb") as target:
+                shutil.copyfileobj(source, target)
+                target.flush()
+                os.fsync(target.fileno())
+
+        for name in indices:
+            dest = destinations[name]
+            backup_path = None
+            if dest.exists():
+                descriptor, backup = tempfile.mkstemp(
+                    dir=QLIB_INSTRUMENTS,
+                    prefix=f".{dest.name}.",
+                    suffix=".backup",
+                )
+                os.close(descriptor)
+                backup_path = Path(backup)
+                backup_path.unlink()
+                backups[name] = backup_path
+                os.replace(dest, backup_path)
+            else:
+                backups[name] = None
+            touched.append(name)
+            os.replace(staged[name], dest)
+    except BaseException as error:
+        rollback_errors = []
+        for name in reversed(touched):
+            dest = destinations[name]
+            backup_path = backups[name]
+            try:
+                dest.unlink(missing_ok=True)
+                if backup_path is not None and backup_path.exists():
+                    os.replace(backup_path, dest)
+            except Exception as rollback_error:
+                rollback_errors.append(f"{name}: {rollback_error}")
+        if rollback_errors:
+            clean_backups = False
+            raise RuntimeError(
+                f"instruments 安装失败且回滚不完整: {rollback_errors}"
+            ) from error
+        raise
+    finally:
+        for path in staged.values():
+            path.unlink(missing_ok=True)
+        if clean_backups:
+            for path in backups.values():
+                if path is not None:
+                    path.unlink(missing_ok=True)
+
+    installed = {}
     for name in indices:
-        src = cfg.CHANGES_DIR / f"{name}_instruments.txt"
-        if not src.exists():
-            raise FileNotFoundError(f"缺少构建产物: {src}")
-        dest = QLIB_INSTRUMENTS / f"{name}.txt"
-        shutil.copy2(src, dest)
+        dest = destinations[name]
         installed[name] = dest
         logger.info(f"安装 {name} → {dest}")
     return installed
@@ -105,7 +180,11 @@ def _load_instruments_df(path: Path) -> pd.DataFrame:
     if not path.exists():
         return pd.DataFrame(columns=["symbol", "start_date", "end_date"])
     return pd.read_csv(
-        path, sep="\t", header=None, names=["symbol", "start_date", "end_date"], dtype=str
+        path,
+        sep="\t",
+        header=None,
+        names=["symbol", "start_date", "end_date"],
+        dtype=str,
     )
 
 
@@ -128,28 +207,24 @@ def diff_snapshot(
     - 真实漂移（unexplained_*）：差异股票近期无任何区间边界，
       说明漏公告或解析错，需要告警。
     """
-    lag_floor = (
-        pd.Timestamp(snap_date) - pd.Timedelta(days=lag_days)
-    ).strftime("%Y-%m-%d")
+    lag_floor = (pd.Timestamp(snap_date) - pd.Timedelta(days=lag_days)).strftime(
+        "%Y-%m-%d"
+    )
 
     active_mask = (df["start_date"] <= snap_date) & (df["end_date"] > snap_date)
     active = set(df.loc[active_mask, "symbol"])
 
-    only_local = sorted(active - snap_set)   # 在册有、快照无
-    only_snap = sorted(snap_set - active)    # 快照有、在册无
+    only_local = sorted(active - snap_set)  # 在册有、快照无
+    only_snap = sorted(snap_set - active)  # 快照有、在册无
 
     # 公告已调入未生效：活跃区间的 start 落在滞后窗口内
-    recent_start = set(
-        df.loc[active_mask & (df["start_date"] >= lag_floor), "symbol"]
-    )
+    recent_start = set(df.loc[active_mask & (df["start_date"] >= lag_floor), "symbol"])
     pending_add = [s for s in only_local if s in recent_start]
     unexplained_local = [s for s in only_local if s not in recent_start]
 
     # 公告已调出未生效：最近一段区间的 end 落在滞后窗口内
     closed = df.loc[df["end_date"] <= snap_date]
-    recent_end = set(
-        closed.loc[closed["end_date"] >= lag_floor, "symbol"]
-    )
+    recent_end = set(closed.loc[closed["end_date"] >= lag_floor, "symbol"])
     pending_drop = [s for s in only_snap if s in recent_end]
     unexplained_snap = [s for s in only_snap if s not in recent_end]
 
@@ -175,8 +250,10 @@ def compare_snapshot(index_name: str, snap_date: str, snap_set: set[str]) -> dic
             "snap_date": snap_date,
             "snap_count": len(snap_set),
             "error": f"instruments 缺失或为空: {path}",
-            "pending_add": [], "pending_drop": [],
-            "unexplained_local": [], "unexplained_snap": [],
+            "pending_add": [],
+            "pending_drop": [],
+            "unexplained_local": [],
+            "unexplained_snap": [],
         }
 
     result = diff_snapshot(df, snap_date, snap_set)
@@ -200,7 +277,7 @@ def compare_snapshot(index_name: str, snap_date: str, snap_set: set[str]) -> dic
 
 
 def check_against_official_snapshots(
-    indices: tuple[str, ...] = INSTALL_INDICES,
+    indices: tuple[str, ...] = OFFICIAL_INDICES,
 ) -> dict[str, dict]:
     """下载（或使用已缓存）官网快照并逐指数比对。只读校验，不改 instruments。"""
     # 确保快照是最新的
@@ -232,14 +309,20 @@ def archive_snapshots() -> None:
 def update_daily(force_rebuild: bool = True) -> dict:
     """
     每日入口：
-      公告增量 → 重建历史区间 → 安装四指数 → 官网快照只读校验
+      公告增量 → 重建并安装官方指数 → 拼接并安装 hybrid → 官网快照只读校验
 
     instruments 始终以公告构建结果为准；快照差异只用于告警，不回写。
+    hybrid 失败不会阻止官方安装和校验，但会记录错误供入口返回非零。
     """
     cfg.ensure_dirs()
     n_new = crawl_incremental()
-    need_rebuild = force_rebuild or n_new > 0 or not all(
-        (cfg.CHANGES_DIR / f"{n}_instruments.txt").exists() for n in INSTALL_INDICES
+    need_rebuild = (
+        force_rebuild
+        or n_new > 0
+        or not all(
+            (cfg.CHANGES_DIR / f"{n}_instruments.txt").exists()
+            for n in OFFICIAL_INDICES
+        )
     )
     if need_rebuild:
         rebuild()
@@ -248,18 +331,29 @@ def update_daily(force_rebuild: bool = True) -> dict:
         logger.info("跳过重建（无新公告且产物已存在）")
         rebuilt = False
 
-    installed = install_instruments(INSTALL_INDICES)
+    installed = install_instruments(OFFICIAL_INDICES)
+    hybrid_error = None
+    try:
+        build_hybrid_outputs()
+        installed.update(install_instruments(HYBRID_INDICES))
+    except Exception as error:
+        hybrid_error = str(error)
+        logger.exception(f"hybrid 指数刷新失败，保留上一次成功安装的文件: {error}")
+
     archive_snapshots()
     logger.info("=== 官网快照只读校验（不回写 instruments）===")
-    snap_check = check_against_official_snapshots(INSTALL_INDICES)
+    snap_check = check_against_official_snapshots(OFFICIAL_INDICES)
 
-    members = {name: current_members(name) for name in INSTALL_INDICES}
+    members = {
+        name: current_members(name) for name in OFFICIAL_INDICES + HYBRID_INDICES
+    }
     for name, m in members.items():
         logger.info(f"{name} 当前在册 {len(m)} 只")
 
     return {
         "new_details": n_new,
         "rebuilt": rebuilt,
+        "hybrid_error": hybrid_error,
         "installed": {k: str(v) for k, v in installed.items()},
         "snapshot_check": snap_check,
         "members": members,

@@ -35,7 +35,10 @@ def run() -> int:
     logger.add(sys.stderr, format="{time:YYYY-MM-DD HH:mm:ss} | {level:<7} | {message}")
 
     try:
-        from scripts.data_collector.csindex_v2.updater import update_daily, INSTALL_INDICES
+        from scripts.data_collector.csindex_v2.updater import (
+            OFFICIAL_INDICES,
+            update_daily,
+        )
 
         logger.info("======== csindex_v2 日更（公告写入 + 官网快照只读校验）========")
         result = update_daily()
@@ -47,7 +50,12 @@ def run() -> int:
         # 公告→生效窗口内的滞后（pending_add/pending_drop）属预期，不失败；
         # 无法解释的漂移（unexplained_*）或快照/清单缺失才失败。
         ok = True
-        for name in INSTALL_INDICES:
+        hybrid_error = result.get("hybrid_error")
+        if hybrid_error:
+            ok = False
+            logger.error(f"hybrid 指数刷新失败: {hybrid_error}")
+
+        for name in OFFICIAL_INDICES:
             check = (result.get("snapshot_check") or {}).get(name)
             if not check:
                 ok = False

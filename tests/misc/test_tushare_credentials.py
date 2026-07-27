@@ -8,6 +8,7 @@ PRODUCTION_FILES = (
     ROOT / "scripts/data_collector/tushare/collector.py",
     ROOT / "scripts/data_collector/tushare/fill_missing_from_index.py",
     ROOT / "scripts/data_collector/csindex_v2/puller_tushare.py",
+    ROOT / "scripts/data_collector/csindex_v2/hybrid_backfill.py",
 )
 
 

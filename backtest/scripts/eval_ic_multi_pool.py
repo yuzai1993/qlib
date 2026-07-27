@@ -96,6 +96,39 @@ def _effective_segment(
     return start, override
 
 
+MTS_DATASET_CLASSES = {"MTSDatasetH", "LeanMTSDatasetH"}
+
+
+def _build_mts_dataset(
+    cfg: dict,
+    pool: str,
+    segment: str = "test",
+    *,
+    end_override: Optional[str] = None,
+):
+    """时序数据集（TRA 等）：按 config 原样构建指定池的推理数据集。
+
+    与 DatasetH 分支不同，handler 的 start/fit 区间保持训练配置不变：
+    RobustZScoreNorm 等统计量必须拟合在训练期（fit 区间在 test 之前，无泄漏），
+    且序列窗口/特征暖场需要训练期同样的历史起点。
+    """
+    from qlib.utils import init_instance_by_config
+
+    pool_cfg = copy.deepcopy(cfg)
+    pool_cfg["data"]["instruments"] = pool
+    handler = pool_cfg["data"]["handler"]
+    handler.pop("instruments", None)
+    start, end = _effective_segment(cfg, segment, end_override=end_override)
+    handler["end_time"] = end
+
+    handler_cfg = build_handler_kwargs(pool_cfg)
+    dataset_cfg = copy.deepcopy(pool_cfg["dataset"])
+    dataset_cfg.setdefault("kwargs", {})
+    dataset_cfg["kwargs"]["handler"] = handler_cfg
+    dataset_cfg["kwargs"]["segments"] = {segment: (start, end)}
+    return init_instance_by_config(dataset_cfg)
+
+
 def _build_dataset(
     cfg: dict,
     pool: str,
@@ -105,6 +138,9 @@ def _build_dataset(
 ):
     """按 config 的 handler 设置构建指定池、指定分段的推理 DatasetH。"""
     from qlib.utils import init_instance_by_config
+
+    if str(cfg.get("dataset", {}).get("class", "")) in MTS_DATASET_CLASSES:
+        return _build_mts_dataset(cfg, pool, segment=segment, end_override=end_override)
 
     pool_cfg = copy.deepcopy(cfg)
     pool_cfg["data"]["instruments"] = pool
@@ -252,6 +288,9 @@ def evaluate(
             pred = model.predict(dataset, segment=segment)
             if isinstance(pred, pd.DataFrame):
                 pred = pred.iloc[:, 0]
+            # TRA/MTSDatasetH 返回 (instrument, datetime) 顺序，统一到 (datetime, instrument)
+            if not pd.api.types.is_datetime64_any_dtype(pred.index.get_level_values(0)):
+                pred = pred.swaplevel().sort_index()
             pred.index = pred.index.set_names(["datetime", "instrument"])
             daily = daily_ic(pred, label, min_count=min_count)
             pool_out["seeds"][str(seed)] = summarize_ic(daily)

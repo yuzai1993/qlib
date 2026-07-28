@@ -93,6 +93,7 @@ monitor:
     max_drawdown: -0.10
     consecutive_loss_days: 5
     reject_rate: 0.5
+    cash_tolerance: 100.0        # 账本与 QMT 可用资金差额告警阈值（元）
 
 web:
   host: "0.0.0.0"

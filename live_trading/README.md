@@ -283,6 +283,7 @@ r.set_cash(123456.78)
 | `imported 0 fill events` | `outbound/` 没有 `.done`——QMT 侧没跑完或没跑；确认策略当天在运行。若 14:55 后仍无 done，说明盘中策略挂了，需人工去 QMT 界面核对当日委托，手工补记账本 |
 | `missing > 0` | 个别订单无终态回执，对照 QMT 界面委托记录，手工确认后用 `upsert_position` / `set_cash` 校正 |
 | 导入报 `SELL fill ... exceeds ledger position` | 账本与实际严重漂移；该回执事务已回滚，立即停止次日发布，按 QMT 实际持仓/现金全量校正后重导 |
+| `BROKER_POSITION_MISMATCH` / `BROKER_CASH_MISMATCH` | 二道对账发现账本与券商不一致（见下节），停止次日发布后核对 |
 
 ### 5. 紧急停止
 
@@ -310,6 +311,7 @@ r.set_cash(123456.78)
 - 同一天出现两个 batch 都被执行（幂等失效，理论不应发生）
 - 回执文件 14:55 后仍未出现（盘中策略挂了）
 - 单日 `REJECTED`+`ERROR` 超过订单半数
+- 二道对账报 `BROKER_POSITION_MISMATCH` / `BROKER_CASH_MISMATCH` / `CASH_NEGATIVE`
 
 **容易忘的三件事：**
 
@@ -374,7 +376,29 @@ export SERVERCHAN_SENDKEY="SCT..."
 - 告警同日同规则只推一次微信，重跑 monitor 不会重复轰炸；全部告警记录在 `alerts` 表和 Web 告警页；
 - 微信推送失败不影响监控本身（db 里照记），连续收不到日报时检查 `SERVERCHAN_SENDKEY` 和网络。
 
-### 7.5 交易费用、分红与红利税
+### 7.5 二道对账（券商快照 vs 本地账本）
+
+回执只反映策略「以为」成交了什么，漏记就无人发现。所以桥接在批次终结时（14:45~14:57）额外向 `outbound/` 写一份券商自己的口径：
+
+| 文件 | 内容 | 来源 |
+|------|------|------|
+| `account_{batch}.jsonl` + `.done` | `account_snapshot` 一行（可用资金 / 总资产 / 市值） | `get_trade_detail_data(..., "ACCOUNT")` |
+| 同一文件 | 每只股票一行 `broker_position`（股数 / 可卖量 / 成本） | `get_trade_detail_data(..., "POSITION")` |
+
+`run_import_fills.py` 导入回执后顺带把快照入库（`broker_account_snapshot` / `broker_position_snapshot`，按 batch 覆盖式、幂等），随后 `run_monitor.py --stage postmarket` 逐股比对：
+
+| 规则 | 级别 | 触发条件 |
+|------|------|----------|
+| `BROKER_POSITION_MISMATCH` | CRIT | 任一股票券商股数 ≠ 账本股数 |
+| `BROKER_CASH_MISMATCH` | CRIT | 账本现金与券商可用资金差额 > `thresholds.cash_tolerance`（默认 100 元） |
+| `CASH_NEGATIVE` | CRIT | 账本现金为负 |
+| `BROKER_SNAPSHOT_MISSING` | WARN | 当日有 LIVE 批次但没拿到券商快照（桥接版本旧 / 查询失败） |
+
+快照查询失败不会阻断批次终结（只记日志），SIMULATE 批次不查券商。差额核对清楚后用 `record_cash_flow --type CORRECTION` 校正，不要直接 `set_cash`（否则日收益失真）。
+
+> 为什么需要它：科创板限价单单笔上限 10 万股，QMT 会把大单拆成多个合同编号但 `remark` 相同。桥接曾因此只记到最后一个子单的成交量，持仓少记 20 万股（2026-07-28 688223），仅靠回执自查发现不了。
+
+### 7.6 交易费用、分红与红利税
 
 **费用规则（2026 现行，自动扣减）**：每笔 LIVE 成交入账时同步扣费——
 

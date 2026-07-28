@@ -201,8 +201,35 @@ class LiveRecorder:
                     PRIMARY KEY (date, instrument)
                 );
 
+                CREATE TABLE IF NOT EXISTS broker_account_snapshot (
+                    batch_id TEXT PRIMARY KEY,
+                    trade_date TEXT NOT NULL,
+                    account_id TEXT,
+                    available_cash REAL,
+                    total_asset REAL,
+                    market_value REAL,
+                    frozen_cash REAL,
+                    ts TEXT,
+                    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+                );
+
+                CREATE TABLE IF NOT EXISTS broker_position_snapshot (
+                    batch_id TEXT NOT NULL,
+                    trade_date TEXT NOT NULL,
+                    stock_code TEXT NOT NULL,
+                    shares INTEGER NOT NULL,
+                    can_use_volume INTEGER,
+                    avg_cost REAL,
+                    market_value REAL,
+                    PRIMARY KEY (batch_id, stock_code)
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
                 CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id);
+                CREATE INDEX IF NOT EXISTS idx_broker_acct_date
+                    ON broker_account_snapshot(trade_date);
+                CREATE INDEX IF NOT EXISTS idx_broker_pos_date
+                    ON broker_position_snapshot(trade_date);
             """)
             # 旧库迁移：补批次发布语义与费用列，再迁移订单联合主键。
             batch_cols = {
@@ -1326,6 +1353,86 @@ class LiveRecorder:
                 for r in rows
             }
 
+    # ---------- 券商快照（二道对账）----------
+
+    def save_broker_snapshot(self, batch_id: str, account: dict,
+                            positions: list) -> None:
+        """存券商 ACCOUNT/POSITION 快照（覆盖式，重复导入幂等）。
+
+        Args:
+            account: 账户行 dict，或 None（ACCOUNT 查询为空时）
+            positions: 持仓行 dict 列表
+        """
+        with self._conn() as conn:
+            batch = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
+            ).fetchone()
+            if batch is None:
+                raise SchemaError(f"unknown snapshot batch_id: {batch_id!r}")
+            trade_date = batch["trade_date"]
+
+            if account is not None:
+                conn.execute(
+                    """INSERT INTO broker_account_snapshot
+                       (batch_id, trade_date, account_id, available_cash,
+                        total_asset, market_value, frozen_cash, ts)
+                       VALUES (?,?,?,?,?,?,?,?)
+                       ON CONFLICT(batch_id) DO UPDATE SET
+                           account_id=excluded.account_id,
+                           available_cash=excluded.available_cash,
+                           total_asset=excluded.total_asset,
+                           market_value=excluded.market_value,
+                           frozen_cash=excluded.frozen_cash,
+                           ts=excluded.ts""",
+                    (batch_id, trade_date, account.get("account_id"),
+                     account.get("available_cash"), account.get("total_asset"),
+                     account.get("market_value"), account.get("frozen_cash"),
+                     account.get("ts")),
+                )
+
+            conn.execute(
+                "DELETE FROM broker_position_snapshot WHERE batch_id=?", (batch_id,)
+            )
+            conn.executemany(
+                """INSERT INTO broker_position_snapshot
+                   (batch_id, trade_date, stock_code, shares, can_use_volume,
+                    avg_cost, market_value)
+                   VALUES (?,?,?,?,?,?,?)""",
+                [
+                    (batch_id, trade_date, p["stock_code"], int(p["shares"]),
+                     p.get("can_use_volume"), p.get("avg_cost"),
+                     p.get("market_value"))
+                    for p in positions
+                ],
+            )
+
+    def get_broker_account_snapshot(self, trade_date: str):
+        """当日最新批次的券商账户快照；无则 None。"""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM broker_account_snapshot WHERE trade_date=? "
+                "ORDER BY batch_id DESC LIMIT 1",
+                (trade_date,),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def get_broker_positions(self, trade_date: str) -> dict:
+        """当日最新批次的券商持仓 {stock_code: shares}；无快照则空 dict。"""
+        with self._conn() as conn:
+            batch = conn.execute(
+                "SELECT batch_id FROM broker_position_snapshot WHERE trade_date=? "
+                "ORDER BY batch_id DESC LIMIT 1",
+                (trade_date,),
+            ).fetchone()
+            if batch is None:
+                return {}
+            rows = conn.execute(
+                "SELECT stock_code, shares FROM broker_position_snapshot "
+                "WHERE batch_id=?",
+                (batch["batch_id"],),
+            ).fetchall()
+            return {r["stock_code"]: r["shares"] for r in rows}
+
 
 class FillImporter:
     """扫描共享目录 outbound/，导入回执并归档。"""
@@ -1351,6 +1458,49 @@ class FillImporter:
             self._archive(jsonl_path)
             self._archive(done_path)
         return count
+
+    def import_broker_snapshots(self) -> int:
+        """导入券商 ACCOUNT/POSITION 快照，返回处理的批次数。"""
+        if not self.outbound.exists():
+            return 0
+
+        count = 0
+        for done_path in sorted(self.outbound.glob("account_*.done")):
+            jsonl_path = done_path.with_suffix(".jsonl")
+            if not jsonl_path.exists():
+                logger.warning("done without jsonl: %s", done_path)
+                continue
+            if self._import_snapshot(jsonl_path):
+                count += 1
+            self._archive(jsonl_path)
+            self._archive(done_path)
+        return count
+
+    def _import_snapshot(self, jsonl_path: Path) -> bool:
+        account = None
+        positions = []
+        batch_id = None
+        for line in jsonl_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            d = json.loads(line)
+            batch_id = batch_id or d.get("batch_id")
+            if d.get("type") == "account_snapshot":
+                account = d
+            elif d.get("type") == "broker_position":
+                positions.append(d)
+        if batch_id is None:
+            logger.warning("empty broker snapshot: %s", jsonl_path.name)
+            return False
+        self.recorder.save_broker_snapshot(batch_id, account, positions)
+        logger.info(
+            "imported broker snapshot %s: cash=%s positions=%d",
+            batch_id,
+            None if account is None else account.get("available_cash"),
+            len(positions),
+        )
+        return True
 
     def _import_one(self, jsonl_path: Path) -> int:
         count = 0

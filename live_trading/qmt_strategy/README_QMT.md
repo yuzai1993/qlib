@@ -110,6 +110,7 @@ python live_trading/scripts/run_publish_signals.py \
    - 批次执行期间信号保留在 `processing`；完成后才移入 `archive`
    - QMT/策略重启后会从 `processing` 和 `state/active_*.json` 恢复，已标记提交的订单不会重提
 3. 检查 `outbound\fills_*.jsonl`：每单一条 `SKIPPED simulated`，且有 `.done`
+   （SIMULATE 不产出 `account_*.jsonl`，实盘批次才有券商快照）
 4. 研究机导入：`python live_trading/scripts/run_import_fills.py --config csi300_topk10_live`
 5. 验证幂等：把 archive 里的信号文件复制回 inbox → 应整批 `SKIPPED duplicate`
 6. 验证过期：发布 `--trade-date` 为昨天的批次 → 应整批 `SKIPPED expired`
@@ -130,6 +131,15 @@ python live_trading/scripts/run_publish_signals.py \
 
 进入买入阶段时，策略只读取一次可用资金，并逐单预占委托金额、最低佣金和过户费；这用于隔离
 QMT 本地资金缓存的刷新延迟。预算不足时按整手缩单，不足一手则跳过。
+
+**大单拆单**：科创板限价单单笔上限 10 万股，柜台会把一笔 `passorder` 拆成多个合同编号，
+它们的 `remark`（= `client_order_id`）相同。策略按 remark 汇总所有子单的成交量与成交额，
+只有累计成交量达到委托量才写 `FILLED`，收盘撤单也会逐个子单撤。回执里 `qmt_order_id`
+为逗号分隔的多个合同编号（如 `175,176,177`）。
+
+**券商快照（二道对账）**：批次终结时策略额外写 `outbound\account_{batch}.jsonl` + `.done`，
+内容为 `ACCOUNT` 查询的可用资金/总资产和 `POSITION` 查询的逐股持仓。Mac 侧导入后与本地账本
+逐股比对，差异告 CRIT。查询失败只记日志，不影响批次终结；SIMULATE 批次不查询。
 
 ## 6. 日常排障
 

@@ -31,6 +31,7 @@ from live_trading.modules.pipeline_monitor import (
     DEFAULT_THRESHOLDS,
     Finding,
     check_account,
+    check_broker_reconcile,
     check_evening,
     check_postmarket,
     check_report,
@@ -127,9 +128,22 @@ def run_postmarket(date, recorder, store, config) -> list:
         rows = store.get_position_snapshots(snaps[-1]["date"])
         prev_positions = {r["stock_code"]: r["shares"] for r in rows}
 
-    reject_rate = _thresholds(config)["reject_rate"]
-    return check_postmarket(date, batches, reconciles, fills,
-                            prev_positions, reject_rate=reject_rate)
+    thresholds = _thresholds(config)
+    findings = check_postmarket(date, batches, reconciles, fills,
+                               prev_positions,
+                               reject_rate=thresholds["reject_rate"])
+    # 只有 LIVE 批次才会产出券商快照，SIMULATE / 停发日不做二道对账。
+    if any(b.get("mode") == "LIVE" for b in batches):
+        findings += check_broker_reconcile(
+            date,
+            recorder.get_broker_account_snapshot(date),
+            recorder.get_broker_positions(date),
+            {code: pos["shares"]
+             for code, pos in recorder.get_positions().items()},
+            recorder.get_cash(),
+            cash_tolerance=thresholds["cash_tolerance"],
+        )
+    return findings
 
 
 def run_corporate_actions(date, recorder, store, config) -> tuple:

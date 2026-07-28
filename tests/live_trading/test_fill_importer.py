@@ -583,6 +583,96 @@ def test_reprice_fees_refunds_lower_rate_and_is_idempotent(env):
     assert repricer.get_cash() == pytest.approx(cash_after)
 
 
+def _write_broker_snapshot(bridge_root: Path, rows: list, batch_id=BATCH_ID,
+                           with_done=True):
+    outbound = bridge_root / "outbound"
+    outbound.mkdir(parents=True, exist_ok=True)
+    (outbound / f"account_{batch_id}.jsonl").write_text(
+        "\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8",
+    )
+    if with_done:
+        (outbound / f"account_{batch_id}.done").write_text("done\n", encoding="utf-8")
+
+
+def _snapshot_rows(cash=123456.78, positions=(("688223.SH", 244500),)):
+    rows = [{
+        "type": "account_snapshot", "batch_id": BATCH_ID,
+        "trade_date": "2026-07-14", "account_id": "8881352838",
+        "available_cash": cash, "total_asset": 9876543.21,
+        "market_value": 9000000.0, "frozen_cash": 0.0,
+        "ts": "2026-07-14T14:57:00",
+    }]
+    rows += [{
+        "type": "broker_position", "batch_id": BATCH_ID,
+        "trade_date": "2026-07-14", "stock_code": code, "shares": shares,
+        "can_use_volume": 0, "avg_cost": 4.14, "market_value": shares * 4.14,
+        "ts": "2026-07-14T14:57:00",
+    } for code, shares in positions]
+    return rows
+
+
+def test_import_broker_snapshot_stores_and_archives(env):
+    bridge_root, recorder, importer = env
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    _write_broker_snapshot(bridge_root, _snapshot_rows())
+
+    assert importer.import_broker_snapshots() == 1
+
+    account = recorder.get_broker_account_snapshot("2026-07-14")
+    assert account["available_cash"] == pytest.approx(123456.78)
+    assert recorder.get_broker_positions("2026-07-14") == {"688223.SH": 244500}
+    assert not list((bridge_root / "outbound").glob("account_*"))
+    assert len(list((bridge_root / "archive").glob("account_*"))) == 2
+
+
+def test_import_broker_snapshot_is_idempotent_and_overwrites(env):
+    bridge_root, recorder, importer = env
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    _write_broker_snapshot(bridge_root, _snapshot_rows())
+    importer.import_broker_snapshots()
+
+    # 同批次重新导入（例如手工补一份）应覆盖而不是累加持仓行
+    _write_broker_snapshot(
+        bridge_root,
+        _snapshot_rows(cash=999.0, positions=(("600000.SH", 100),)),
+    )
+    assert importer.import_broker_snapshots() == 1
+
+    assert recorder.get_broker_account_snapshot("2026-07-14")["available_cash"] \
+        == pytest.approx(999.0)
+    assert recorder.get_broker_positions("2026-07-14") == {"600000.SH": 100}
+
+
+def test_broker_snapshot_without_done_is_not_imported(env):
+    bridge_root, recorder, importer = env
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    _write_broker_snapshot(bridge_root, _snapshot_rows(), with_done=False)
+
+    assert importer.import_broker_snapshots() == 0
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+    assert (bridge_root / "outbound" / f"account_{BATCH_ID}.jsonl").exists()
+
+
+def test_broker_snapshot_for_unknown_batch_is_rejected(env):
+    bridge_root, _, importer = env
+    _write_broker_snapshot(bridge_root, _snapshot_rows())
+
+    with pytest.raises(SchemaError):
+        importer.import_broker_snapshots()
+
+
+def test_broker_snapshot_survives_missing_account_row(env):
+    """ACCOUNT 查询为空时只落持仓，账户快照缺失不阻断导入。"""
+    bridge_root, recorder, importer = env
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    rows = [r for r in _snapshot_rows() if r["type"] != "account_snapshot"]
+    _write_broker_snapshot(bridge_root, rows)
+
+    assert importer.import_broker_snapshots() == 1
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+    assert recorder.get_broker_positions("2026-07-14") == {"688223.SH": 244500}
+
+
 def test_reconcile_counts(env):
     bridge_root, recorder, importer = env
     recorder.upsert_position("000001.SZ", 800, 10.0)

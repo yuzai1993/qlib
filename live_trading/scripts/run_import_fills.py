@@ -37,6 +37,9 @@ def main():
     n = importer.import_fills()
     print(f"imported {n} fill events")
 
+    snapshots = importer.import_broker_snapshots()
+    print(f"imported {snapshots} broker account snapshots")
+
     for batch in recorder.list_batches(limit=5):
         r = importer.reconcile(batch["batch_id"])
         flag = "OK " if r["missing"] == 0 else "WARN"

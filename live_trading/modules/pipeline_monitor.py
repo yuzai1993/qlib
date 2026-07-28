@@ -19,6 +19,7 @@ DEFAULT_THRESHOLDS = {
     "max_drawdown": -0.10,
     "consecutive_loss_days": 5,
     "reject_rate": 0.5,
+    "cash_tolerance": 100.0,
 }
 
 
@@ -134,6 +135,63 @@ def _oversold_codes(fills, prev_positions) -> list:
         code for code, qty in sold.items()
         if qty > prev_positions.get(code, 0)
     )
+
+
+def check_broker_reconcile(trade_date, broker_account, broker_positions,
+                           ledger_positions, ledger_cash,
+                           cash_tolerance=None) -> list:
+    """二道对账：券商快照 vs 本地账本。
+
+    回执只反映策略「以为」成交了什么；券商快照是账户自己的口径，
+    两者对不上说明账本漂移（漏记拆单、费率差异、期初资金不符）。
+
+    Args:
+        broker_account: broker_account_snapshot 行（dict）或 None
+        broker_positions: {stock_code: shares} 券商持仓；无快照传空 dict
+        ledger_positions: {stock_code: shares} 账本持仓
+        ledger_cash: 账本现金
+        cash_tolerance: 现金差额容忍额（元）
+    """
+    tol = DEFAULT_THRESHOLDS["cash_tolerance"] if cash_tolerance is None \
+        else float(cash_tolerance)
+    findings = []
+
+    if ledger_cash < 0:
+        findings.append(Finding(
+            "CASH_NEGATIVE", CRIT,
+            f"{trade_date} 账本现金为负（{ledger_cash:.2f}）：期初资金或成交记录有缺口，"
+            "先与 QMT 可用资金对账再发布次日信号"))
+
+    if broker_account is None and not broker_positions:
+        findings.append(Finding(
+            "BROKER_SNAPSHOT_MISSING", WARN,
+            f"{trade_date} 缺少券商账户快照，二道对账未执行"
+            "（检查桥接策略版本与 outbound/account_*.jsonl）"))
+        return findings
+
+    diffs = []
+    for code in sorted(set(broker_positions) | set(ledger_positions)):
+        broker_shares = int(broker_positions.get(code, 0))
+        ledger_shares = int(ledger_positions.get(code, 0))
+        if broker_shares != ledger_shares:
+            diffs.append(f"{code} 券商{broker_shares}/账本{ledger_shares}")
+    if diffs:
+        findings.append(Finding(
+            "BROKER_POSITION_MISMATCH", CRIT,
+            f"{trade_date} 持仓与券商不一致：{', '.join(diffs)}，"
+            "停止次日发布并核对成交明细"))
+
+    broker_cash = None if broker_account is None \
+        else broker_account.get("available_cash")
+    if broker_cash is not None:
+        gap = ledger_cash - float(broker_cash)
+        if abs(gap) > tol:
+            findings.append(Finding(
+                "BROKER_CASH_MISMATCH", CRIT,
+                f"{trade_date} 现金与券商差 {gap:.2f} 元"
+                f"（账本 {ledger_cash:.2f} / 券商可用 {float(broker_cash):.2f}），"
+                f"超过容忍 {tol:.2f}，核对后用 record_cash_flow CORRECTION 校正"))
+    return findings
 
 
 def check_report(trade_date, latest_calendar_date, missing_price_codes) -> list:

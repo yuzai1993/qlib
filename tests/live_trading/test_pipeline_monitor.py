@@ -7,6 +7,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.pipeline_monitor import (
     check_account,
+    check_broker_reconcile,
     check_evening,
     check_postmarket,
     check_report,
@@ -178,6 +179,9 @@ def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):
         return {"planned": 10, "terminal": 10, "missing": 0}
 
     monkeypatch.setattr(run_monitor.FillImporter, "reconcile", fake_reconcile)
+    recorder.save_broker_snapshot(
+        active, {"account_id": "1", "available_cash": 0.0}, [],
+    )
     findings = run_monitor.run_postmarket(
         "2026-07-15", recorder, store,
         {"live": {"bridge_root": str(tmp_path)}},
@@ -185,6 +189,102 @@ def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):
 
     assert findings == []
     assert reconciled == [active]
+
+
+def test_run_postmarket_flags_missing_broker_snapshot(monkeypatch, tmp_path):
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db))
+    store = MonitorStore(str(db))
+    batch_id = "20260715_csi300_topk10_001"
+    recorder.record_batch(batch_id, "2026-07-15", "LIVE", 1)
+    monkeypatch.setattr(
+        run_monitor.FillImporter, "reconcile",
+        lambda _self, _bid: {"planned": 1, "terminal": 1, "missing": 0},
+    )
+
+    findings = run_monitor.run_postmarket(
+        "2026-07-15", recorder, store,
+        {"live": {"bridge_root": str(tmp_path)}},
+    )
+
+    assert _rules(findings) == ["BROKER_SNAPSHOT_MISSING"]
+
+
+def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_path):
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db))
+    store = MonitorStore(str(db))
+    batch_id = "20260715_csi300_topk10_001"
+    recorder.record_batch(batch_id, "2026-07-15", "SIMULATE", 1)
+    monkeypatch.setattr(
+        run_monitor.FillImporter, "reconcile",
+        lambda _self, _bid: {"planned": 1, "terminal": 1, "missing": 0},
+    )
+
+    findings = run_monitor.run_postmarket(
+        "2026-07-15", recorder, store,
+        {"live": {"bridge_root": str(tmp_path)}},
+    )
+
+    assert findings == []
+
+
+# ---------- 二道对账 ----------
+
+def _account(cash=1000.0):
+    return {"account_id": "1", "available_cash": cash}
+
+
+def test_broker_reconcile_ok():
+    assert check_broker_reconcile(
+        "2026-07-28", _account(1000.0), {"688223.SH": 244500},
+        {"688223.SH": 244500}, 1000.0,
+    ) == []
+
+
+def test_broker_reconcile_detects_position_undercount():
+    findings = check_broker_reconcile(
+        "2026-07-28", _account(1000.0), {"688223.SH": 244500},
+        {"688223.SH": 44500}, 1000.0,
+    )
+    finding = next(f for f in findings if f.rule == "BROKER_POSITION_MISMATCH")
+    assert finding.level == "CRIT"
+    assert "券商244500/账本44500" in finding.message
+
+
+def test_broker_reconcile_detects_cash_gap_beyond_tolerance():
+    findings = check_broker_reconcile(
+        "2026-07-28", _account(1000.0), {}, {}, 1150.0, cash_tolerance=100.0,
+    )
+    finding = next(f for f in findings if f.rule == "BROKER_CASH_MISMATCH")
+    assert finding.level == "CRIT"
+
+    assert check_broker_reconcile(
+        "2026-07-28", _account(1000.0), {}, {}, 1099.0, cash_tolerance=100.0,
+    ) == []
+
+
+def test_broker_reconcile_flags_negative_ledger_cash():
+    findings = check_broker_reconcile(
+        "2026-07-28", _account(-22560.37), {}, {}, -22560.37,
+    )
+    assert "CASH_NEGATIVE" in _rules(findings)
+    assert next(f for f in findings if f.rule == "CASH_NEGATIVE").level == "CRIT"
+
+
+def test_broker_reconcile_without_snapshot_warns_once():
+    findings = check_broker_reconcile("2026-07-28", None, {}, {}, 1000.0)
+    assert _rules(findings) == ["BROKER_SNAPSHOT_MISSING"]
+    assert findings[0].level == "WARN"
+
+
+def test_broker_reconcile_tolerates_account_query_without_cash():
+    """ACCOUNT 查询缺可用资金字段时只比持仓，不误报现金差额。"""
+    findings = check_broker_reconcile(
+        "2026-07-28", {"account_id": "1", "available_cash": None},
+        {"600000.SH": 100}, {"600000.SH": 100}, 1000.0,
+    )
+    assert findings == []
 
 
 # ---------- report ----------

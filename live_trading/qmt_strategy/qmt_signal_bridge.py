@@ -229,9 +229,112 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
     _save_active_state(batch)
 
 
+def _account_snapshot_path(batch_id):
+    return _path("outbound", "account_" + batch_id + ".jsonl")
+
+
+def _qmt_stock_code(symbol, exchange):
+    """Rebuild the 600000.SH form from a POSITION row."""
+    symbol = str(symbol).strip()
+    market = str(exchange or "").strip().upper()
+    if market.startswith("SH"):
+        return symbol + ".SH"
+    if market.startswith("SZ"):
+        return symbol + ".SZ"
+    if market.startswith("BJ"):
+        return symbol + ".BJ"
+    if symbol[:1] in ("6", "9"):
+        return symbol + ".SH"
+    if symbol[:1] in ("0", "2", "3"):
+        return symbol + ".SZ"
+    if symbol[:1] in ("4", "8"):
+        return symbol + ".BJ"
+    return symbol
+
+
+def _opt_float(obj, *names):
+    for name in names:
+        raw = getattr(obj, name, None)
+        if raw is None:
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(value):
+            return value
+    return None
+
+
+def _write_account_snapshot(batch):
+    """Dump broker ACCOUNT + POSITION for second-line reconciliation.
+
+    The fill receipts only describe what the strategy believes it traded.
+    This snapshot is the broker's own view, so the Mac side can detect
+    ledger drift (missed split children, fee/opening-cash gaps) the same day.
+
+    Never raises: a failed snapshot must not block batch finalization.
+    """
+    if batch.header.get("mode") != "LIVE":
+        return
+    account_id = _account_id(batch)
+    try:
+        rows = []
+        accounts = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ACCOUNT")
+        if accounts:
+            a = accounts[0]
+            rows.append({
+                "type": "account_snapshot",
+                "batch_id": batch.batch_id(),
+                "trade_date": batch.header.get("trade_date", ""),
+                "account_id": str(getattr(a, "m_strAccountID", "") or account_id),
+                "available_cash": _opt_float(a, "m_dAvailable"),
+                "total_asset": _opt_float(a, "m_dBalance", "m_dAssureAsset"),
+                "market_value": _opt_float(
+                    a, "m_dInstrumentValue", "m_dStockValue"),
+                "frozen_cash": _opt_float(a, "m_dFrozenCash"),
+                "ts": datetime.datetime.now().isoformat(),
+            })
+        else:
+            _log("ACCOUNT query returned no rows; snapshot has positions only")
+
+        positions = get_trade_detail_data(account_id, ACCOUNT_TYPE, "POSITION")
+        for p in positions or []:
+            shares = int(getattr(p, "m_nVolume", 0) or 0)
+            if shares <= 0:
+                continue
+            rows.append({
+                "type": "broker_position",
+                "batch_id": batch.batch_id(),
+                "trade_date": batch.header.get("trade_date", ""),
+                "stock_code": _qmt_stock_code(
+                    getattr(p, "m_strInstrumentID", ""),
+                    getattr(p, "m_strExchangeID", ""),
+                ),
+                "shares": shares,
+                "can_use_volume": int(getattr(p, "m_nCanUseVolume", 0) or 0),
+                "avg_cost": _opt_float(p, "m_dOpenPrice", "m_dPositionCost"),
+                "market_value": _opt_float(p, "m_dMarketValue"),
+                "ts": datetime.datetime.now().isoformat(),
+            })
+
+        path = _account_snapshot_path(batch.batch_id())
+        with open(path, "w") as f:
+            for row in rows:
+                f.write(json.dumps(row, sort_keys=True) + "\n")
+        with open(path.replace(".jsonl", ".done"), "w") as f:
+            f.write("done\n")
+        _log("account snapshot written: %d rows" % len(rows))
+    except Exception:
+        _log("account snapshot failed:\n" + traceback.format_exc())
+
+
 def _finalize_batch(batch):
     if batch.finalized:
         return
+    # Snapshot before the fills .done marker so the Mac importer never sees
+    # receipts for a batch whose broker snapshot is still missing.
+    _write_account_snapshot(batch)
     done = _fills_path(batch.batch_id()).replace(".jsonl", ".done")
     with open(done, "w") as f:
         f.write("done\n")
@@ -395,7 +498,12 @@ def _account_id(batch):
 
 
 def _get_orders_by_remark(account_id):
-    """remark -> order detail object."""
+    """remark -> list of order detail objects.
+
+    STAR board (688*) limit orders max 100k shares; QMT may split one
+    passorder into multiple contract IDs that share the same remark
+    (client_order_id). Callers must aggregate via _summarize_remark_orders.
+    """
     result = {}
     try:
         details = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ORDER")
@@ -405,8 +513,88 @@ def _get_orders_by_remark(account_id):
     for d in details:
         remark = getattr(d, "m_strRemark", "")
         if remark:
-            result[remark] = d
+            result.setdefault(remark, []).append(d)
     return result
+
+
+def _summarize_remark_orders(details, requested_qty):
+    """Aggregate child orders that share one remark.
+
+    Returns None if there is nothing actionable yet.
+    Otherwise a dict: traded, avg_price, qmt_order_id, fill_status, message.
+
+    FILLED only when traded >= requested_qty (never trust a single child
+    SUCCEEDED while the parent quantity is still short).
+    """
+    if not details:
+        return None
+    traded = 0
+    amount = 0.0
+    sysids = []
+    statuses = []
+    for d in details:
+        vol = int(getattr(d, "m_nVolumeTraded", 0) or 0)
+        price = float(getattr(d, "m_dTradedPrice", 0.0) or 0.0)
+        traded += vol
+        if vol > 0 and price > 0.0:
+            amount += float(vol) * price
+        sysid = getattr(d, "m_strOrderSysID", "") or ""
+        if sysid and str(sysid) not in sysids:
+            sysids.append(str(sysid))
+        statuses.append(int(getattr(d, "m_nOrderStatus", -1)))
+
+    avg_price = (amount / float(traded)) if traded > 0 else 0.0
+    qmt_order_id = ",".join(sysids)
+    req = int(requested_qty)
+    all_terminal = all(s in TERMINAL_ORDER_STATUS for s in statuses)
+    any_canceled = any(
+        s in (STATUS_PART_CANCEL, STATUS_CANCELED) for s in statuses
+    )
+    all_junk = all(s == STATUS_JUNK for s in statuses)
+
+    if traded >= req and traded > 0:
+        return {
+            "traded": traded,
+            "avg_price": avg_price,
+            "qmt_order_id": qmt_order_id,
+            "fill_status": "FILLED",
+            "message": "",
+        }
+    if all_terminal and any_canceled:
+        if traded > 0:
+            return {
+                "traded": traded,
+                "avg_price": avg_price,
+                "qmt_order_id": qmt_order_id,
+                "fill_status": "PARTIAL",
+                "message": "canceled",
+            }
+        return {
+            "traded": 0,
+            "avg_price": 0.0,
+            "qmt_order_id": qmt_order_id,
+            "fill_status": "EXPIRED",
+            "message": "canceled",
+        }
+    if all_terminal and all_junk:
+        return {
+            "traded": 0,
+            "avg_price": 0.0,
+            "qmt_order_id": qmt_order_id,
+            "fill_status": "REJECTED",
+            "message": "junk order",
+        }
+    # All visible children SUCCEEDED but still short of requested_qty: more
+    # split children may still appear; keep non-terminal.
+    if traded > 0:
+        return {
+            "traded": traded,
+            "avg_price": avg_price,
+            "qmt_order_id": qmt_order_id,
+            "fill_status": "ACCEPTED",
+            "message": "partial in progress",
+        }
+    return None
 
 
 def _get_can_use_volume(account_id, stock_code):
@@ -610,25 +798,19 @@ def _poll_status(batch):
         coid = order["client_order_id"]
         if coid not in batch.submitted or _order_is_terminal(batch, coid):
             continue
-        d = details.get(coid)
-        if d is None:
+        summary = _summarize_remark_orders(
+            details.get(coid) or [], order["quantity"],
+        )
+        if summary is None:
             continue
-        status = int(getattr(d, "m_nOrderStatus", -1))
-        traded = int(getattr(d, "m_nVolumeTraded", 0))
-        price = float(getattr(d, "m_dTradedPrice", 0.0))
-        sysid = getattr(d, "m_strOrderSysID", "")
-        if status == STATUS_SUCCEEDED:
-            _write_fill(batch, order, "FILLED", traded, price, sysid, "")
-        elif status in (STATUS_PART_CANCEL, STATUS_CANCELED):
-            if traded > 0:
-                _write_fill(batch, order, "PARTIAL", traded, price, sysid, "canceled")
-            else:
-                _write_fill(batch, order, "EXPIRED", 0, 0.0, sysid, "canceled")
-        elif status == STATUS_JUNK:
-            _write_fill(batch, order, "REJECTED", 0, 0.0, sysid, "junk order")
-        elif status == STATUS_PART_SUCC and traded > 0:
-            # intermediate partial; record progress, stays non-terminal via ACCEPTED
-            _write_fill(batch, order, "ACCEPTED", traded, price, sysid, "partial in progress")
+        _write_fill(
+            batch, order,
+            summary["fill_status"],
+            summary["traded"],
+            summary["avg_price"],
+            summary["qmt_order_id"],
+            summary["message"],
+        )
 
 
 def _process_batch(ContextInfo, batch):
@@ -735,9 +917,10 @@ def _force_finalize_if_near_close(ContextInfo, batch):
         for order in batch.orders:
             coid = order["client_order_id"]
             if coid in batch.submitted and not _order_is_terminal(batch, coid):
-                d = details.get(coid)
-                if d is not None:
-                    _cancel_by_detail(d, _account_id(batch), ContextInfo)
+                for d in details.get(coid) or []:
+                    status = int(getattr(d, "m_nOrderStatus", -1))
+                    if status not in TERMINAL_ORDER_STATUS:
+                        _cancel_by_detail(d, _account_id(batch), ContextInfo)
         _poll_status(batch)
 
     if now >= FINALIZE_AT:

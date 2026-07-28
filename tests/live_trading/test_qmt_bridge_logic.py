@@ -314,7 +314,7 @@ def test_removing_live_switch_still_cancels_already_submitted_orders(
     monkeypatch.setattr(bridge, "_now_hms", lambda: "14:56:30")
     monkeypatch.setattr(
         bridge, "_get_orders_by_remark",
-        lambda account_id: {order["client_order_id"]: Detail()},
+        lambda account_id: {order["client_order_id"]: [Detail()]},
     )
     monkeypatch.setattr(bridge, "can_cancel_order", lambda *args: True, raising=False)
     monkeypatch.setattr(
@@ -478,3 +478,215 @@ def test_simulate_batch_processes_without_qmt_api(bridge, monkeypatch):
     assert done.exists()
     assert not list((Path(bridge.BRIDGE_ROOT) / "processing").glob("signal_*"))
     assert len(list((Path(bridge.BRIDGE_ROOT) / "archive").glob("signal_*"))) == 2
+
+
+class _OrderDetail:
+    def __init__(self, sysid, status, traded, price):
+        self.m_strOrderSysID = sysid
+        self.m_nOrderStatus = status
+        self.m_nVolumeTraded = traded
+        self.m_dTradedPrice = price
+
+
+def test_summarize_remark_orders_aggregates_star_board_split(bridge):
+    """科创板拆单：同 remark 多合同编号应汇总成交量/均价。"""
+    details = [
+        _OrderDetail("175", bridge.STATUS_SUCCEEDED, 100000, 4.14),
+        _OrderDetail("176", bridge.STATUS_SUCCEEDED, 100000, 4.14),
+        _OrderDetail("177", bridge.STATUS_SUCCEEDED, 44500, 4.14),
+    ]
+    summary = bridge._summarize_remark_orders(details, 244500)
+    assert summary["fill_status"] == "FILLED"
+    assert summary["traded"] == 244500
+    assert summary["avg_price"] == pytest.approx(4.14)
+    assert summary["qmt_order_id"] == "175,176,177"
+
+
+def test_summarize_remark_orders_does_not_fill_on_single_child(bridge):
+    """仅一笔子单已成且数量不足时，不得误标 FILLED。"""
+    details = [_OrderDetail("177", bridge.STATUS_SUCCEEDED, 44500, 4.14)]
+    summary = bridge._summarize_remark_orders(details, 244500)
+    assert summary["fill_status"] == "ACCEPTED"
+    assert summary["traded"] == 44500
+    assert "partial" in summary["message"]
+
+
+def test_poll_status_sums_split_children(bridge, monkeypatch):
+    order = _order(coid="20260714001004B", side="BUY", priority=20)
+    order["quantity"] = 244500
+    order["stock_code"] = "688223.SH"
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.submitted[order["client_order_id"]] = True
+    monkeypatch.setattr(
+        bridge, "_get_orders_by_remark",
+        lambda account_id: {
+            order["client_order_id"]: [
+                _OrderDetail("175", bridge.STATUS_SUCCEEDED, 100000, 4.14),
+                _OrderDetail("176", bridge.STATUS_SUCCEEDED, 100000, 4.14),
+                _OrderDetail("177", bridge.STATUS_SUCCEEDED, 44500, 4.14),
+            ],
+        },
+    )
+
+    bridge._poll_status(batch)
+
+    fill = batch.fills[order["client_order_id"]]
+    assert fill["status"] == "FILLED"
+    assert fill["filled_qty"] == 244500
+    assert fill["qmt_order_id"] == "175,176,177"
+
+
+def test_force_finalize_cancels_all_split_children(bridge, monkeypatch):
+    order = _order(coid="20260714001004B", side="BUY", priority=20)
+    order["quantity"] = 244500
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.submitted[order["client_order_id"]] = True
+    batch.fills[order["client_order_id"]] = {
+        "status": "ACCEPTED", "filled_qty": 100000, "avg_price": 4.14,
+    }
+    canceled = []
+
+    class Working:
+        m_strOrderSysID = "175"
+        m_nOrderStatus = bridge.STATUS_PART_SUCC
+        m_nVolumeTraded = 100000
+        m_dTradedPrice = 4.14
+
+    class Working2:
+        m_strOrderSysID = "176"
+        m_nOrderStatus = -1
+        m_nVolumeTraded = 0
+        m_dTradedPrice = 0.0
+
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:56:30")
+    monkeypatch.setattr(
+        bridge, "_get_orders_by_remark",
+        lambda account_id: {
+            order["client_order_id"]: [Working(), Working2()],
+        },
+    )
+    monkeypatch.setattr(bridge, "can_cancel_order", lambda *args: True, raising=False)
+    monkeypatch.setattr(
+        bridge, "cancel",
+        lambda order_id, *args: canceled.append(order_id), raising=False,
+    )
+
+    bridge._force_finalize_if_near_close(object(), batch)
+
+    assert set(canceled) == {"175", "176"}
+
+
+class _AccountRow:
+    m_strAccountID = "8881352838"
+    m_dAvailable = 123456.78
+    m_dBalance = 9876543.21
+    m_dInstrumentValue = 9000000.0
+    m_dFrozenCash = 0.0
+
+
+class _PositionRow:
+    def __init__(self, symbol, exchange, volume, can_use=0, cost=1.0):
+        self.m_strInstrumentID = symbol
+        self.m_strExchangeID = exchange
+        self.m_nVolume = volume
+        self.m_nCanUseVolume = can_use
+        self.m_dOpenPrice = cost
+        self.m_dMarketValue = volume * cost
+
+
+def _read_account_snapshot(bridge, batch_id=BATCH_ID):
+    p = (Path(bridge.BRIDGE_ROOT) / "outbound" / ("account_%s.jsonl" % batch_id))
+    if not p.exists():
+        return []
+    return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+
+
+def _live_batch(bridge, batch_id=BATCH_ID):
+    header = {
+        "batch_id": batch_id, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8881352838",
+    }
+    return bridge.Batch(header, [_order()])
+
+
+def test_finalize_writes_broker_account_snapshot(bridge, monkeypatch):
+    batch = _live_batch(bridge)
+
+    def fake_query(account_id, account_type, kind):
+        if kind == "ACCOUNT":
+            return [_AccountRow()]
+        return [
+            _PositionRow("688223", "SH", 244500, cost=4.14),
+            _PositionRow("300308", "SZ", 1100, can_use=1100, cost=1072.36),
+            _PositionRow("600000", "", 0),  # 空持仓不入快照
+        ]
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", fake_query, raising=False)
+
+    bridge._finalize_batch(batch)
+
+    rows = _read_account_snapshot(bridge)
+    account = [r for r in rows if r["type"] == "account_snapshot"]
+    positions = {r["stock_code"]: r for r in rows if r["type"] == "broker_position"}
+    assert len(account) == 1
+    assert account[0]["available_cash"] == pytest.approx(123456.78)
+    assert set(positions) == {"688223.SH", "300308.SZ"}
+    assert positions["688223.SH"]["shares"] == 244500
+    assert positions["300308.SZ"]["can_use_volume"] == 1100
+    # .done 与回执一致，Mac 侧只读完整文件
+    assert (Path(bridge.BRIDGE_ROOT) / "outbound" /
+            ("account_%s.done" % BATCH_ID)).exists()
+
+
+def test_snapshot_failure_does_not_block_finalize(bridge, monkeypatch):
+    batch = _live_batch(bridge)
+
+    def boom(*args):
+        raise RuntimeError("ACCOUNT query unavailable")
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", boom, raising=False)
+
+    bridge._finalize_batch(batch)
+
+    assert batch.finalized
+    assert (Path(bridge.BRIDGE_ROOT) / "outbound" /
+            ("fills_%s.done" % BATCH_ID)).exists()
+
+
+def test_simulate_batch_writes_no_broker_snapshot(bridge, monkeypatch):
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "SIMULATE",
+        "account_id": "1",
+    }
+    batch = bridge.Batch(header, [_order()])
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("SIMULATE must not query the broker"),
+        raising=False,
+    )
+
+    bridge._finalize_batch(batch)
+
+    assert _read_account_snapshot(bridge) == []
+
+
+@pytest.mark.parametrize("symbol,exchange,expected", [
+    ("688223", "SH", "688223.SH"),
+    ("300308", "SZ", "300308.SZ"),
+    ("600000", "SHSE", "600000.SH"),
+    ("000001", "SZSE", "000001.SZ"),
+    ("688223", "", "688223.SH"),   # 交易所字段缺失时按代码前缀推断
+    ("300308", "", "300308.SZ"),
+    ("920001", "", "920001.SH"),
+])
+def test_qmt_stock_code_suffix(bridge, symbol, exchange, expected):
+    assert bridge._qmt_stock_code(symbol, exchange) == expected

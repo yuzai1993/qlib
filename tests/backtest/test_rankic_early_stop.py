@@ -118,6 +118,15 @@ def _features(*, instruments=21, days=("2020-01-13", "2021-07-13")):
 
 def _provider_for(features: pd.DataFrame, *, nan_at=None, label_index=None):
     index = features.index if label_index is None else label_index
+    if label_index is None:
+        post_anchor = pd.MultiIndex.from_product(
+            [
+                pd.to_datetime(["2021-07-14", "2021-07-15"]),
+                features.index.get_level_values("instrument").unique(),
+            ],
+            names=["datetime", "instrument"],
+        )
+        index = index.append(post_anchor)
     if index.names == ["datetime", "instrument"]:
         index = index.swaplevel().set_names(["instrument", "datetime"])
     values = np.arange(len(index), dtype=float)
@@ -146,6 +155,21 @@ def test_fixed_next_day_valid_frame_uses_safe_fixed_boundary_and_returns_aligned
     assert provider.feature_calls == [
         ([f"S{i:03d}" for i in range(21)], [EVAL_LABEL_EXPR], "2020-01-13", "2021-07-15"),
     ]
+
+
+def test_fixed_next_day_valid_frame_discards_post_anchor_label_rows(monkeypatch):
+    """Fails if the 7/14--7/15 label-query rows prevent safe-frame alignment."""
+    from backtest.models import rankic_early_stop
+
+    features = _features()
+    dataset = _FakeDataset(features)
+    provider = _provider_for(features)
+    monkeypatch.setattr(rankic_early_stop, "D", provider)
+
+    frame = fixed_next_day_valid_frame(dataset)
+
+    assert len(provider.label_frame) == len(features) + 2 * 21
+    assert frame.index.equals(features.index)
 
 
 @pytest.mark.parametrize(

@@ -77,6 +77,7 @@ def fixed_next_day_valid_frame(dataset: DatasetH) -> pd.DataFrame:
         raise ValueError("expected exactly one evaluation label column")
     label = label_frame.iloc[:, 0].copy()
     label.index = _as_datetime_instrument_index(label.index)
+    label = label.loc[label.index.isin(features.index)]
     if not label.index.is_unique:
         raise ValueError("label index must be unique")
     label = label.sort_index()

@@ -372,13 +372,24 @@ Assert the pending row has:
 assert row["baseline_ref"] == "B5 v1.0"
 assert row["seeds"] == [42, 1000, 2000, 3000, 4000]
 assert row["selection_segment"] == "valid"
+assert row["selection_official_segment"] == ["2020-01-13", "2021-07-15"]
+assert row["selection_effective_segment"] == ["2020-01-13", "2021-07-13"]
 assert row["selection_label_role"] == "fixed_1d"
+assert row["selection_min_count"] == 20
 assert row["test_pools"] == ["csi1000", "csi300", "csi500"]
 assert row["conclusion"] == "pending"
 ```
 
-Finalization must reject a test result whose sessions differ from the
-frozen selection and must include pairwise CSI1000 RankIC versus B5.
+Pending registration requires the current Qlib `data_version` as an explicit
+argument and refuses an existing row with the same experiment ID. It must
+append without rewriting any existing registry line.
+
+Finalization must require exactly one still-pending row, preserve every
+pre-registered protocol field, verify the complete manifest hash chain through
+the Task 4 guard, reject a test result whose data version, sessions, pools,
+label, minimum count, or manifest hash differs from the frozen selection, and
+include exact-five-seed pairwise CSI1000 RankIC versus B5. It replaces only the
+target pending line and preserves every other registry line byte-for-byte.
 
 - [ ] **Step 2: Run focused tests and confirm RED**
 
@@ -391,8 +402,16 @@ frozen selection and must include pairwise CSI1000 RankIC versus B5.
 
 The predeclared hypothesis must state that one of four fixed candidates is
 selected only by five-seed CSI1000 valid RankIC, then tested once. Replace
-the pending row in place during finalization instead of appending a second
-row.
+the unique pending row in place during finalization instead of appending a
+second row. Use an atomic same-directory write and keep all unrelated raw
+lines unchanged.
+
+The descriptive conclusion rule is fixed before test:
+
+- `improve` when all three test-pool RankIC means exceed B5;
+- `regress` when CSI1000 RankIC does not exceed B5;
+- `inconclusive` when CSI1000 improves but at least one transfer pool does
+  not.
 
 - [ ] **Step 4: Pre-register before training**
 
@@ -400,7 +419,8 @@ Run:
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/register_b5_rankic_hyperparams.py --stage pending
+  backtest/scripts/register_b5_rankic_hyperparams.py \
+  --stage pending --data-version <current-qlib-calendar-version>
 ```
 
 Rebuild the HTML and assert the `model-hyperparam` table begins with B5.

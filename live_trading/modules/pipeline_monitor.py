@@ -139,7 +139,7 @@ def _oversold_codes(fills, prev_positions) -> list:
 
 def check_broker_reconcile(trade_date, broker_account, broker_positions,
                            ledger_positions, ledger_cash,
-                           cash_tolerance=None) -> list:
+                           cash_tolerance=None, check_cash=True) -> list:
     """二道对账：券商快照 vs 本地账本。
 
     回执只反映策略「以为」成交了什么；券商快照是账户自己的口径，
@@ -151,12 +151,15 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
         ledger_positions: {stock_code: shares} 账本持仓
         ledger_cash: 账本现金
         cash_tolerance: 现金差额容忍额（元）
+        check_cash: False 时跳过现金类告警（CASH_NEGATIVE /
+            BROKER_CASH_MISMATCH），只对持仓。QMT 模拟盘的可用资金口径
+            不可信、以账本为准时用；切真实账户后应恢复 True。
     """
     tol = DEFAULT_THRESHOLDS["cash_tolerance"] if cash_tolerance is None \
         else float(cash_tolerance)
     findings = []
 
-    if ledger_cash < 0:
+    if check_cash and ledger_cash < 0:
         findings.append(Finding(
             "CASH_NEGATIVE", CRIT,
             f"{trade_date} 账本现金为负（{ledger_cash:.2f}）：期初资金或成交记录有缺口，"
@@ -181,7 +184,7 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
             f"{trade_date} 持仓与券商不一致：{', '.join(diffs)}，"
             "停止次日发布并核对成交明细"))
 
-    broker_cash = None if broker_account is None \
+    broker_cash = None if (broker_account is None or not check_cash) \
         else broker_account.get("available_cash")
     if broker_cash is not None:
         gap = ledger_cash - float(broker_cash)

@@ -278,6 +278,20 @@ def test_broker_reconcile_without_snapshot_warns_once():
     assert findings[0].level == "WARN"
 
 
+def test_broker_reconcile_cash_check_disabled_only_checks_positions():
+    """模拟盘现金口径不可信：check_cash=False 关闭现金类告警，持仓照查。"""
+    findings = check_broker_reconcile(
+        "2026-07-30", _account(302311.0), {"688223.SH": 244500},
+        {"688223.SH": 44500}, -619730.0, check_cash=False,
+    )
+    assert _rules(findings) == ["BROKER_POSITION_MISMATCH"]
+
+    assert check_broker_reconcile(
+        "2026-07-30", _account(302311.0), {"688223.SH": 244500},
+        {"688223.SH": 244500}, -619730.0, check_cash=False,
+    ) == []
+
+
 def test_broker_reconcile_tolerates_account_query_without_cash():
     """ACCOUNT 查询缺可用资金字段时只比持仓，不误报现金差额。"""
     findings = check_broker_reconcile(

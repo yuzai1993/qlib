@@ -255,21 +255,44 @@ Run the generator, then the Task 3 pytest command.
 ### Task 4: Freeze Valid-Only Selection and Guard Test Evaluation
 
 **Files:**
+- Create: `backtest/scripts/eval_b5_rankic_valid.py`
 - Create: `backtest/scripts/freeze_b5_rankic_selection.py`
 - Create: `backtest/scripts/eval_frozen_b5_rankic.py`
 - Create: `tests/backtest/test_freeze_b5_rankic_selection.py`
 
 **Interfaces:**
+- Produces: a controlled valid evaluator fixed to CSI1000, H1, `min_count=20`, and safe end `2021-07-13`
 - Produces: `select_candidate(valid_results: dict[str, dict], config_paths: dict[str, list[Path]]) -> dict`
-- Produces: frozen JSON manifest with `selection_metric`, `tie_breaker`, `selected_candidate`, candidate metrics, five sessions, and SHA-256 hashes
+- Produces: frozen JSON manifest with `selection_metric`, `tie_breaker`, `selected_candidate`, candidate metrics, five sessions, valid-result hashes, and all 20 config SHA-256 hashes
 - Consumes: four valid evaluation JSON files
 
-- [ ] **Step 1: Write failing selection tests**
+- [ ] **Step 1: Write failing controlled-valid and selection tests**
+
+The controlled valid CLI exposes only config, five sessions, and output. It
+must call the existing evaluator with fixed arguments:
+
+```python
+segment = "valid"
+pools = ["csi1000"]
+eval_label_expr = EVAL_LABEL_EXPR
+eval_label_role = "fixed_1d"
+eval_end = "2021-07-13"
+min_count = 20
+```
+
+It must record `min_count=20`, validate the returned protocol, and refuse to
+overwrite an existing output. No CLI option may override pool, segment,
+label, end date, or minimum count.
 
 Test that selection rejects:
 
 - any artifact whose `eval_segment_name != "valid"`;
+- any artifact whose official valid segment is not
+  `2020-01-13..2021-07-15` or effective segment is not
+  `2020-01-13..2021-07-13`;
 - any non-fixed-one-day label;
+- any `min_count != 20`;
+- any pool other than exactly CSI1000;
 - missing or duplicate fixed seeds;
 - missing CSI1000 metrics;
 - non-finite RankIC;
@@ -290,30 +313,44 @@ assert selected["tie_breaker"] == ["rank_icir", "candidate_id"]
   tests/backtest/test_freeze_b5_rankic_selection.py -q
 ```
 
-- [ ] **Step 3: Implement fail-closed selection and hashing**
+- [ ] **Step 3: Implement the controlled valid evaluator**
 
-Use `hashlib.sha256(path.read_bytes()).hexdigest()` for every selected
-config. Store the exact five selected sessions and seeds. Write with
-`Path.write_text(json.dumps(..., indent=2))`.
+Import and call `eval_ic_multi_pool.evaluate()` directly with the fixed
+arguments above. Validate the complete valid protocol before atomically
+writing a new output; reject an existing output path.
 
-- [ ] **Step 4: Implement the guarded test evaluator**
+- [ ] **Step 4: Implement fail-closed selection and hashing**
+
+Use `hashlib.sha256(path.read_bytes()).hexdigest()` for all 20 configs and
+all four valid artifacts. Recompute each candidate's five-seed RankIC and
+RankICIR rather than trusting `seed_mean`, store the exact five selected
+sessions and seeds, and refuse to overwrite an existing manifest.
+
+- [ ] **Step 5: Implement the guarded test evaluator**
 
 `eval_frozen_b5_rankic.py` must re-hash configs, verify exact sessions and
-seeds, initialize Qlib, and call existing evaluator semantics with:
+seeds, re-hash valid inputs, recompute the winner, initialize Qlib only after
+all guards pass, and call existing evaluator semantics with:
 
 ```python
 segment = "test"
 pools = ["csi1000", "csi300", "csi500"]
 eval_label_expr = EVAL_LABEL_EXPR
 eval_label_role = "fixed_1d"
+eval_end = None
+min_count = 20
 ```
 
-No CLI option may override segment, pools, or label.
+No CLI option may override segment, pools, label, end date, or minimum
+count. The output must refuse overwrite and record the selection manifest's
+SHA-256 hash.
 
-- [ ] **Step 5: Add guard tests and confirm GREEN**
+- [ ] **Step 6: Add guard tests and confirm GREEN**
 
 Patch the evaluator and assert a missing/changed manifest prevents any
-evaluation call. Run the Task 4 pytest command.
+Qlib initialization or evaluation call. Also assert CLI override attempts are
+rejected and existing manifest/output paths are never overwritten. Run the
+Task 4 pytest command.
 
 ### Task 5: Pre-Registration and Reporting Support
 
@@ -393,15 +430,14 @@ successful run and a unique MLflow experiment ID.
 
 - [ ] **Step 2: Evaluate each candidate on CSI1000 valid only**
 
-For each candidate:
+For each candidate, use the controlled wrapper so the last valid prediction
+anchor is 2021-07-13 and its next-day label never reads test prices:
 
 ```bash
 MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/eval_ic_multi_pool.py \
+  backtest/scripts/eval_b5_rankic_valid.py \
   --config model-hyperparam/<candidate>/mh_<candidate_slug>_s42.yaml \
   --sessions <five session:seed values> \
-  --pools csi1000 \
-  --segment valid \
   --output backtest/experiments/ic/mh_<candidate_slug>_valid_1d.json
 ```
 

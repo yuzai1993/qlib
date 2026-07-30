@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -13,6 +14,7 @@ SCRIPTS = ROOT / "backtest" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import build_experiment_report as report  # noqa: E402
+import cleanup_experiment_artifacts as cleanup  # noqa: E402
 import register_b5_rankic_hyperparams as register  # noqa: E402
 
 
@@ -59,6 +61,10 @@ def _baseline_row(values: dict[str, float] | None = None) -> dict:
         "seeds": SEEDS,
         "test_pools": POOLS,
         "data_version": "2026-07-30",
+        "result_dirs": [
+            *(f"backtest/result/baseline-s{seed}" for seed in SEEDS),
+            "backtest/experiments/ic/ls_rank_norm_test_1d.json",
+        ],
         "metrics_summary": {
             pool: _pool(value)["seed_mean"] for pool, value in values.items()
         },
@@ -84,13 +90,23 @@ def _baseline_result(values: dict[str, float] | None = None) -> dict:
     }
 
 
-def _manifest() -> dict:
+def _manifest(repo_root: Path) -> dict:
     candidates = {}
     config_hashes = []
     valid_hashes = {}
     for candidate_index, candidate in enumerate(register.CANDIDATES):
         sessions = [
-            {"session": f"/tmp/{candidate}-s{seed}", "seed": seed}
+            {
+                "session": str(
+                    (
+                        repo_root
+                        / "backtest"
+                        / "result"
+                        / f"{candidate}-s{seed}"
+                    ).resolve()
+                ),
+                "seed": seed,
+            }
             for seed in SEEDS
         ]
         candidates[candidate] = {
@@ -105,12 +121,20 @@ def _manifest() -> dict:
             "sha256": f"valid-{candidate}",
         }
         for seed in SEEDS:
+            path = (
+                repo_root
+                / "backtest"
+                / "configs"
+                / "model-hyperparam"
+                / candidate
+                / f"mh_{candidate.replace('-', '_')}_s{seed}.yaml"
+            )
             config_hashes.append(
                 {
                     "candidate": candidate,
                     "seed": seed,
-                    "path": f"/tmp/{candidate}-s{seed}.yaml",
-                    "sha256": f"config-{candidate}-{seed}",
+                    "path": str(path.resolve()),
+                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
                 }
             )
     winner = register.CANDIDATES[-1]
@@ -139,12 +163,12 @@ def _manifest() -> dict:
     }
 
 
-def _test_result(values: dict[str, float] | None = None) -> dict:
+def _test_result(repo_root: Path, values: dict[str, float] | None = None) -> dict:
     values = values or {"csi1000": 0.06, "csi300": 0.05, "csi500": 0.055}
-    manifest = _manifest()
+    manifest = _manifest(repo_root)
     return {
         "generated_at": "2026-07-31T02:00:00",
-        "config": "/tmp/rankic-es-leaves128-s42.yaml",
+        "config": manifest["config_hashes"][-5]["path"],
         "eval_label": register.EVAL_LABEL_EXPR,
         "eval_label_role": "fixed_1d",
         "eval_segment_name": "test",
@@ -160,7 +184,52 @@ def _test_result(values: dict[str, float] | None = None) -> dict:
 
 
 def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+
+def _write_session(path: Path, experiment_id: int) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "meta.json").write_text(
+        json.dumps(
+            {
+                "runs": [
+                    {
+                        "status": "success",
+                        "train_experiment_id": str(experiment_id),
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _prepare_preregistered_artifacts(repo_root: Path) -> Path:
+    config_root = repo_root / "backtest" / "configs" / "model-hyperparam"
+    for candidate in register.CANDIDATES:
+        source = ROOT / "backtest" / "configs" / "model-hyperparam" / candidate
+        shutil.copytree(source, config_root / candidate)
+    baseline_path = (
+        repo_root
+        / "backtest"
+        / "experiments"
+        / "ic"
+        / "ls_rank_norm_test_1d.json"
+    )
+    _write_json(baseline_path, _baseline_result())
+    for index, seed in enumerate(SEEDS, start=1):
+        _write_session(
+            repo_root / "backtest" / "result" / f"baseline-s{seed}",
+            100 + index,
+        )
+    winner = register.CANDIDATES[-1]
+    for index, seed in enumerate(SEEDS, start=1):
+        _write_session(
+            repo_root / "backtest" / "result" / f"{winner}-s{seed}",
+            200 + index,
+        )
+    return baseline_path
 
 
 def _setup_final_files(
@@ -169,11 +238,14 @@ def _setup_final_files(
     *,
     values: dict[str, float] | None = None,
 ) -> tuple[Path, Path, Path, Path]:
-    registry_path = tmp_path / "registry.jsonl"
-    baseline_path = tmp_path / "baseline.json"
-    manifest_path = tmp_path / "selection.json"
-    test_path = tmp_path / "test.json"
-    pending = register.build_pending_row("2026-07-30")
+    registry_path = tmp_path / "backtest" / "experiments" / "registry.jsonl"
+    baseline_path = _prepare_preregistered_artifacts(tmp_path)
+    manifest_path = (
+        tmp_path / "backtest" / "experiments" / "selection.json"
+    )
+    test_path = tmp_path / "backtest" / "experiments" / "ic" / "test.json"
+    pending = register.build_pending_row("2026-07-30", repo_root=tmp_path)
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
     registry_path.write_text(
         json.dumps(_baseline_row(), ensure_ascii=False)
         + "\n"
@@ -181,9 +253,8 @@ def _setup_final_files(
         + "\n",
         encoding="utf-8",
     )
-    manifest = _manifest()
-    test_result = _test_result(values)
-    _write_json(baseline_path, _baseline_result())
+    manifest = _manifest(tmp_path)
+    test_result = _test_result(tmp_path, values)
     _write_json(manifest_path, manifest)
     test_result["selection_manifest_sha256"] = hashlib.sha256(
         manifest_path.read_bytes()
@@ -205,6 +276,7 @@ def _finalize(
         manifest_path=manifest_path,
         test_result_path=test_path,
         baseline_result_path=baseline_path,
+        repo_root=registry_path.parents[2],
     )
 
 
@@ -219,6 +291,19 @@ def test_pending_row_freezes_the_complete_valid_only_search_protocol():
     assert row["learn_processors"] == ["DropnaLabel", "CSRankNorm(label)"]
     assert row["selection_candidates"] == list(register.CANDIDATES)
     assert row["config_count"] == 20
+    assert len(row["config_hashes"]) == 20
+    assert row["variant_overrides"] == {
+        "rankic-es-base": {},
+        "rankic-es-l1low": {"lambda_l1": 51.425},
+        "rankic-es-lr010": {"learning_rate": 0.1},
+        "rankic-es-leaves128": {"num_leaves": 128},
+    }
+    assert row["baseline_result"] == (
+        "backtest/experiments/ic/ls_rank_norm_test_1d.json"
+    )
+    assert row["baseline_result_sha256"] == hashlib.sha256(
+        (ROOT / row["baseline_result"]).read_bytes()
+    ).hexdigest()
     assert row["selection_segment"] == "valid"
     assert row["selection_official_segment"] == ["2020-01-13", "2021-07-15"]
     assert row["selection_effective_segment"] == ["2020-01-13", "2021-07-13"]
@@ -297,7 +382,8 @@ def test_final_replaces_only_pending_line_and_preserves_bystander_bytes(
     )
     baseline_raw = json.dumps(_baseline_row(), ensure_ascii=False).encode()
     pending_raw = json.dumps(
-        register.build_pending_row("2026-07-30"), ensure_ascii=False
+        register.build_pending_row("2026-07-30", repo_root=tmp_path),
+        ensure_ascii=False,
     ).encode()
     prefix = b" \t" + baseline_raw + b"  \r\n"
     suffix = b'  {"exp_id":"bystander","x":1} \n'
@@ -380,14 +466,14 @@ def test_final_rejects_baseline_anchor_or_pairwise_seed_drift(
     baseline = json.loads(baseline_path.read_text())
     baseline["pools"]["csi1000"]["seed_mean"]["rank_ic_mean"] += 0.01
     _write_json(baseline_path, baseline)
-    with pytest.raises(ValueError, match="B5 registry anchor"):
+    with pytest.raises(ValueError, match="baseline result SHA-256"):
         _finalize(registry_path, baseline_path, manifest_path, test_path)
 
     _write_json(baseline_path, _baseline_result())
     baseline = json.loads(baseline_path.read_text())
     baseline["pools"]["csi1000"]["seeds"].pop("42")
     _write_json(baseline_path, baseline)
-    with pytest.raises(ValueError, match="five seeds"):
+    with pytest.raises(ValueError, match="baseline result SHA-256"):
         _finalize(registry_path, baseline_path, manifest_path, test_path)
 
 
@@ -425,7 +511,7 @@ def test_final_records_complete_audit_and_renders_b5_first_with_12_metrics(
 
     row = _finalize(registry_path, baseline_path, manifest_path, test_path)
 
-    pending = register.build_pending_row("2026-07-30")
+    pending = register.build_pending_row("2026-07-30", repo_root=tmp_path)
     for key, value in pending.items():
         if key != "conclusion":
             assert row[key] == value, f"finalization changed pre-registered {key}"
@@ -449,6 +535,78 @@ def test_final_records_complete_audit_and_renders_b5_first_with_12_metrics(
     final_html_row = section.split(register.EXP_ID, 1)[1].split("</tr>", 1)[0]
     assert final_html_row.count('<td class="num') == 12
     assert '<span class="empty">—</span>' not in final_html_row
+
+
+def test_final_rejects_config_changed_after_pending_without_registry_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    registry_path, baseline_path, manifest_path, test_path = _setup_final_files(
+        tmp_path, monkeypatch
+    )
+    changed = next(
+        tmp_path.glob(
+            "backtest/configs/model-hyperparam/rankic-es-base/*s42.yaml"
+        )
+    )
+    changed.write_bytes(changed.read_bytes() + b"\n# changed after pending\n")
+    original = registry_path.read_bytes()
+
+    with pytest.raises(ValueError, match="config hash"):
+        _finalize(registry_path, baseline_path, manifest_path, test_path)
+    assert registry_path.read_bytes() == original
+
+
+def test_final_rejects_b5_seed_edits_even_when_seed_mean_is_unchanged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    registry_path, baseline_path, manifest_path, test_path = _setup_final_files(
+        tmp_path, monkeypatch
+    )
+    baseline = json.loads(baseline_path.read_text())
+    seeds = baseline["pools"]["csi1000"]["seeds"]
+    seeds["42"]["rank_ic_mean"] += 0.001
+    seeds["1000"]["rank_ic_mean"] -= 0.001
+    _write_json(baseline_path, baseline)
+    original = registry_path.read_bytes()
+
+    with pytest.raises(ValueError, match="baseline result SHA-256"):
+        _finalize(registry_path, baseline_path, manifest_path, test_path)
+    assert registry_path.read_bytes() == original
+
+
+def test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    registry_path, baseline_path, manifest_path, test_path = _setup_final_files(
+        tmp_path, monkeypatch
+    )
+
+    row = _finalize(registry_path, baseline_path, manifest_path, test_path)
+
+    expected = [
+        f"backtest/result/{register.CANDIDATES[-1]}-s{seed}" for seed in SEEDS
+    ]
+    assert row["winner_result_dirs"] == expected
+    assert row["result_dirs"][:5] == expected
+    plan = cleanup.build_cleanup_plan(tmp_path, [_baseline_row(), row])
+    assert plan["candidate_exp_id"] == register.EXP_ID
+    assert plan["keep_result_dirs"] == sorted(
+        [
+            *(
+                tmp_path / "backtest" / "result" / f"baseline-s{seed}"
+                for seed in SEEDS
+            ),
+            *(
+                tmp_path
+                / "backtest"
+                / "result"
+                / f"{register.CANDIDATES[-1]}-s{seed}"
+                for seed in SEEDS
+            ),
+        ],
+        key=lambda path: str(path.resolve()),
+    )
+    assert plan["errors"] == []
 
 
 def test_cli_requires_data_version_only_for_pending():

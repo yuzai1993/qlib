@@ -30,6 +30,10 @@ from backtest.scripts.freeze_b5_rankic_selection import (  # noqa: E402
     TEST_SEGMENT,
     VALID_SEGMENT,
     sha256_file,
+    validate_config_set,
+)
+from backtest.scripts.generate_b5_rankic_hyperparams import (  # noqa: E402
+    VARIANTS as VARIANT_OVERRIDES,
 )
 
 
@@ -41,6 +45,7 @@ IC_DIR = BACKTEST_ROOT / "experiments" / "ic"
 MANIFEST = BACKTEST_ROOT / "experiments" / "b5_rankic_hyperparam_selection.json"
 TEST_RESULT = IC_DIR / "mh_valid_rankic_selected_test_1d.json"
 BASELINE_RESULT = IC_DIR / "ls_rank_norm_test_1d.json"
+BASELINE_RESULT_REL = "backtest/experiments/ic/ls_rank_norm_test_1d.json"
 METRIC_KEYS = ("ic_mean", "icir", "rank_ic_mean", "rank_icir")
 
 HYPOTHESIS = (
@@ -73,21 +78,53 @@ def _canonical_date(value: Any, label: str = "data_version") -> str:
     return value
 
 
-def _config_paths() -> list[str]:
-    return [
-        (
-            "backtest/configs/model-hyperparam/"
-            f"{candidate}/mh_{candidate.replace('-', '_')}_s{seed}.yaml"
-        )
-        for candidate in CANDIDATES
-        for seed in SEEDS
-    ]
+def _config_path(repo_root: Path, candidate: str, seed: int) -> Path:
+    return (
+        Path(repo_root)
+        / "backtest"
+        / "configs"
+        / "model-hyperparam"
+        / candidate
+        / f"mh_{candidate.replace('-', '_')}_s{seed}.yaml"
+    )
 
 
-def build_pending_row(data_version: str) -> dict[str, Any]:
+def _preregister_config_hashes(repo_root: Path) -> list[dict[str, Any]]:
+    repo_root = Path(repo_root).expanduser().resolve()
+    rows = []
+    for candidate in CANDIDATES:
+        paths = [_config_path(repo_root, candidate, seed) for seed in SEEDS]
+        by_seed = validate_config_set(candidate, paths)
+        for seed in SEEDS:
+            path = by_seed[seed].resolve()
+            try:
+                relative = path.relative_to(repo_root).as_posix()
+            except ValueError:
+                _fail(f"config must be inside repository: {path}")
+            rows.append(
+                {
+                    "candidate": candidate,
+                    "seed": seed,
+                    "path": relative,
+                    "sha256": sha256_file(path),
+                }
+            )
+    return rows
+
+
+def build_pending_row(
+    data_version: str,
+    *,
+    repo_root: Path = QLIB_ROOT,
+) -> dict[str, Any]:
     """Build the immutable pre-test protocol row."""
 
     data_version = _canonical_date(data_version)
+    repo_root = Path(repo_root).expanduser().resolve()
+    config_hashes = _preregister_config_hashes(repo_root)
+    baseline_result = (repo_root / BASELINE_RESULT_REL).resolve()
+    if not baseline_result.is_file():
+        raise FileNotFoundError(f"canonical B5 result missing: {baseline_result}")
     return {
         "exp_id": EXP_ID,
         "direction": "model-hyperparam",
@@ -109,7 +146,14 @@ def build_pending_row(data_version: str) -> dict[str, Any]:
         "early_stopping_rounds": 20,
         "selection_candidates": list(CANDIDATES),
         "config_count": len(CANDIDATES) * len(SEEDS),
-        "configs": _config_paths(),
+        "configs": [row["path"] for row in config_hashes],
+        "config_hashes": config_hashes,
+        "variant_overrides": {
+            candidate: dict(VARIANT_OVERRIDES[candidate])
+            for candidate in CANDIDATES
+        },
+        "baseline_result": BASELINE_RESULT_REL,
+        "baseline_result_sha256": sha256_file(baseline_result),
         "selection_segment": "valid",
         "selection_official_segment": list(VALID_SEGMENT),
         "selection_effective_segment": list(SAFE_VALID_SEGMENT),
@@ -188,7 +232,12 @@ def _encode_row(row: Mapping[str, Any]) -> bytes:
         _fail(f"registry row is not finite JSON: {exc}")
 
 
-def register_pending(registry_path: Path, data_version: str) -> dict[str, Any]:
+def register_pending(
+    registry_path: Path,
+    data_version: str,
+    *,
+    repo_root: Path = QLIB_ROOT,
+) -> dict[str, Any]:
     """Atomically append one pending row without altering existing bytes."""
 
     registry_path = Path(registry_path)
@@ -196,7 +245,7 @@ def register_pending(registry_path: Path, data_version: str) -> dict[str, Any]:
     entries = _registry_entries(raw)
     if any(row.get("exp_id") == EXP_ID for _, row in entries):
         _fail(f"experiment {EXP_ID} already exists")
-    row = build_pending_row(data_version)
+    row = build_pending_row(data_version, repo_root=repo_root)
     separator = b"" if not raw or raw.endswith((b"\n", b"\r")) else b"\n"
     _atomic_replace(registry_path, raw + separator + _encode_row(row) + b"\n")
     return row
@@ -265,6 +314,11 @@ def _baseline_anchor(entries: Sequence[tuple[int, dict]]) -> dict:
         or anchor.get("seeds") != list(SEEDS)
     ):
         _fail("B5 registry anchor protocol drift")
+    if BASELINE_RESULT_REL not in (anchor.get("result_dirs") or []):
+        _fail(
+            "B5 registry anchor result_dirs must record the canonical "
+            f"{BASELINE_RESULT_REL}"
+        )
     return anchor
 
 
@@ -316,16 +370,20 @@ def _validate_baseline_result(
     return summaries
 
 
-def _validate_pending(row: Mapping[str, Any]) -> None:
+def _validate_pending(row: Mapping[str, Any], repo_root: Path) -> None:
     if row.get("conclusion") != "pending":
         _fail(f"{EXP_ID} is not pending")
     data_version = _canonical_date(row.get("data_version"))
-    expected = build_pending_row(data_version)
+    expected = build_pending_row(data_version, repo_root=repo_root)
     if set(row) != set(expected):
         _fail("pending registry row fields differ from pre-registration")
     for key, value in expected.items():
         if key == "date":
             _canonical_date(row.get("date"), "pending date")
+        elif key == "config_hashes" and row.get(key) != value:
+            _fail("pre-registered config hash matrix differs from current configs")
+        elif key == "baseline_result_sha256" and row.get(key) != value:
+            _fail("pre-registered baseline result SHA-256 differs from canonical B5")
         elif row.get(key) != value:
             _fail(f"pending registry protocol drift: {key}")
 
@@ -344,6 +402,7 @@ def _validate_frozen_contract(
     manifest: Mapping[str, Any],
     test_result: Mapping[str, Any],
     pending: Mapping[str, Any],
+    repo_root: Path,
 ) -> None:
     if manifest.get("data_version") != pending.get("data_version"):
         _fail("selection manifest data_version differs from pending registry")
@@ -387,6 +446,26 @@ def _validate_frozen_contract(
         (candidate, seed) for candidate in CANDIDATES for seed in SEEDS
     }:
         _fail("selection manifest 20 config candidate/seed matrix drift")
+    normalized_config_hashes = []
+    for row in config_hashes:
+        path = Path(str(row["path"])).expanduser().resolve()
+        try:
+            relative = path.relative_to(repo_root).as_posix()
+        except ValueError:
+            _fail(f"selection manifest config must be inside repository: {path}")
+        actual_sha = sha256_file(path)
+        if actual_sha != row.get("sha256"):
+            _fail(f"selection manifest config hash differs from disk: {relative}")
+        normalized_config_hashes.append(
+            {
+                "candidate": row["candidate"],
+                "seed": row["seed"],
+                "path": relative,
+                "sha256": actual_sha,
+            }
+        )
+    if normalized_config_hashes != pending.get("config_hashes"):
+        _fail("selection manifest config hashes differ from pre-registration")
     winner = manifest.get("selected_candidate")
     sessions = manifest.get("selected_sessions")
     if winner not in CANDIDATES:
@@ -470,12 +549,32 @@ def _conclusion(
     return "inconclusive"
 
 
-def _display_path(path: Path) -> str:
+def _display_path(path: Path, repo_root: Path = QLIB_ROOT) -> str:
     path = Path(path).expanduser().resolve()
     try:
-        return str(path.relative_to(QLIB_ROOT))
+        return path.relative_to(Path(repo_root).resolve()).as_posix()
     except ValueError:
         return str(path)
+
+
+def _winner_result_dirs(
+    manifest: Mapping[str, Any],
+    repo_root: Path,
+) -> list[str]:
+    repo_root = Path(repo_root).resolve()
+    result_root = (repo_root / "backtest" / "result").resolve()
+    result_dirs = []
+    for row in manifest["selected_sessions"]:
+        path = Path(str(row["session"])).expanduser().resolve()
+        if path.parent != result_root or not path.is_dir():
+            _fail(
+                "selected winner session must be an existing direct child of "
+                f"RESULT_ROOT: {path}"
+            )
+        result_dirs.append(path.relative_to(repo_root).as_posix())
+    if len(set(result_dirs)) != len(SEEDS):
+        _fail("selected winner result directories must be five unique sessions")
+    return result_dirs
 
 
 def _final_row(
@@ -488,6 +587,7 @@ def _final_row(
     manifest_path: Path,
     test_result_path: Path,
     baseline_result_path: Path,
+    repo_root: Path,
 ) -> dict[str, Any]:
     metrics = _test_metrics(test_result)
     pairwise = _pairwise_rankic(
@@ -507,7 +607,7 @@ def _final_row(
                 row.get("rank_icir"), f"{candidate} valid rank_icir"
             ),
         }
-    winner_dirs = [row["session"] for row in manifest["selected_sessions"]]
+    winner_dirs = _winner_result_dirs(manifest, repo_root)
     valid_artifacts = {
         candidate: dict(manifest["valid_result_hashes"][candidate])
         for candidate in CANDIDATES
@@ -527,20 +627,23 @@ def _final_row(
         "candidate_valid_summary": valid_summary,
         "winner_result_dirs": winner_dirs,
         "result_dirs": winner_dirs
-        + [_display_path(manifest_path), _display_path(test_result_path)],
+        + [
+            _display_path(manifest_path, repo_root),
+            _display_path(test_result_path, repo_root),
+        ],
         "metrics_summary": metrics,
         "metrics_by_eval_label": {"eval_1d": metrics},
         "pairwise_csi1000_rankic_vs_b5": pairwise,
-        "selection_manifest": _display_path(manifest_path),
+        "selection_manifest": _display_path(manifest_path, repo_root),
         "selection_manifest_sha256": manifest_sha,
-        "test_result": _display_path(test_result_path),
+        "test_result": _display_path(test_result_path, repo_root),
         "test_result_sha256": test_sha,
         "audit_artifacts": {
-            "selection_manifest": _display_path(manifest_path),
+            "selection_manifest": _display_path(manifest_path, repo_root),
             "selection_manifest_sha256": manifest_sha,
-            "test_result": _display_path(test_result_path),
+            "test_result": _display_path(test_result_path, repo_root),
             "test_result_sha256": test_sha,
-            "baseline_result": _display_path(baseline_result_path),
+            "baseline_result": _display_path(baseline_result_path, repo_root),
             "baseline_result_sha256": sha256_file(baseline_result_path),
             "valid_results": valid_artifacts,
             "config_hashes": [dict(row) for row in manifest["config_hashes"]],
@@ -556,10 +659,12 @@ def finalize_registry(
     manifest_path: Path,
     test_result_path: Path,
     baseline_result_path: Path,
+    repo_root: Path = QLIB_ROOT,
 ) -> dict[str, Any]:
     """Verify the frozen chain and replace the sole pending row in place."""
 
     registry_path = Path(registry_path)
+    repo_root = Path(repo_root).expanduser().resolve()
     raw = registry_path.read_bytes()
     raw_lines = raw.splitlines(keepends=True)
     entries = _registry_entries(raw)
@@ -571,12 +676,23 @@ def finalize_registry(
     if len(target_rows) != 1 or target_rows[0][1].get("conclusion") != "pending":
         _fail(f"registry must contain exactly one pending {EXP_ID} row")
     target_index, pending = target_rows[0]
-    _validate_pending(pending)
+    _validate_pending(pending, repo_root)
     anchor = _baseline_anchor(entries)
 
     manifest_path = Path(manifest_path)
     test_result_path = Path(test_result_path)
-    baseline_result_path = Path(baseline_result_path)
+    baseline_result_path = Path(baseline_result_path).expanduser().resolve()
+    canonical_baseline_path = (repo_root / BASELINE_RESULT_REL).resolve()
+    if baseline_result_path != canonical_baseline_path:
+        _fail(
+            "baseline result must use canonical path "
+            f"{canonical_baseline_path}"
+        )
+    if pending.get("baseline_result") != BASELINE_RESULT_REL:
+        _fail("pending baseline result path differs from canonical B5 artifact")
+    baseline_sha = sha256_file(baseline_result_path)
+    if baseline_sha != pending.get("baseline_result_sha256"):
+        _fail("baseline result SHA-256 differs from pre-registration")
     manifest = _load_json(manifest_path, "selection manifest")
     test_result = _load_json(test_result_path, "frozen test result")
     baseline_result = _load_json(baseline_result_path, "B5 baseline result")
@@ -587,7 +703,12 @@ def finalize_registry(
     verified_manifest = verify_manifest(manifest)
     if verified_manifest != manifest:
         _fail("verified manifest differs from supplied selection manifest")
-    _validate_frozen_contract(verified_manifest, test_result, pending)
+    _validate_frozen_contract(
+        verified_manifest,
+        test_result,
+        pending,
+        repo_root,
+    )
     validate_test_result(test_result, verified_manifest)
     baseline_summary = _validate_baseline_result(baseline_result, anchor)
 
@@ -600,6 +721,7 @@ def finalize_registry(
         manifest_path=manifest_path,
         test_result_path=test_result_path,
         baseline_result_path=baseline_result_path,
+        repo_root=repo_root,
     )
     old_line = raw_lines[target_index]
     if old_line.endswith(b"\r\n"):

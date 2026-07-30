@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
+from qlib.contrib.model.double_ensemble import DEnsembleModel
 from qlib.data import D
 from qlib.data.dataset import DatasetH
 from qlib.data.dataset.handler import DataHandlerLP
@@ -15,6 +17,91 @@ VALID_SEGMENT = ("2020-01-13", "2021-07-15")
 TEST_SEGMENT = ("2021-07-16", "2026-07-16")
 SAFE_VALID_END = "2021-07-13"
 EVAL_LABEL_EXPR = "Ref($close, -2)/Ref($close, -1)-1"
+
+
+class _PreparedTrainValidDataset:
+    def __init__(self, train: pd.DataFrame, valid: pd.DataFrame):
+        self.train = train
+        self.valid = valid
+
+    def prepare(self, segments, *, col_set, data_key):
+        if segments != ["train", "valid"]:
+            raise ValueError("adapter only provides train and valid frames")
+        if col_set != ["feature", "label"] or data_key != DataHandlerLP.DK_L:
+            raise ValueError("adapter only provides learn features and labels")
+        return self.train, self.valid
+
+
+class RankICEarlyStoppingDEnsembleModel(DEnsembleModel):
+    """DoubleEnsemble whose GBM submodels stop on fixed-valid daily RankIC."""
+
+    def __init__(
+        self,
+        *,
+        valid_segment: tuple[str, str] = VALID_SEGMENT,
+        test_segment: tuple[str, str] = TEST_SEGMENT,
+        **kwargs,
+    ):
+        base_model = kwargs.get("base_model", "gbm")
+        loss = kwargs.get("loss", "mse")
+        early_stopping_rounds = kwargs.get("early_stopping_rounds")
+        if base_model != "gbm":
+            raise ValueError("base_model must be gbm")
+        if loss != "mse":
+            raise ValueError("loss must be mse")
+        if early_stopping_rounds is None or early_stopping_rounds <= 0:
+            raise ValueError("early_stopping_rounds must be positive")
+        if not _segment_matches(valid_segment, VALID_SEGMENT):
+            raise ValueError("valid_segment must use the fixed boundary")
+        if not _segment_matches(test_segment, TEST_SEGMENT):
+            raise ValueError("test_segment must use the fixed boundary")
+
+        super().__init__(**kwargs)
+        self.rankic_evals_result: list[dict] = []
+
+    def fit(self, dataset: DatasetH):
+        df_train = dataset.prepare(
+            "train",
+            col_set=["feature", "label"],
+            data_key=DataHandlerLP.DK_L,
+        )
+        df_valid = fixed_next_day_valid_frame(dataset)
+        self.rankic_evals_result = []
+        return super().fit(_PreparedTrainValidDataset(df_train, df_valid))
+
+    def train_submodel(self, df_train, df_valid, weights, features):
+        dtrain, dvalid = self._prepare_data_gbm(df_train, df_valid, weights, features)
+        valid_index = df_valid.index
+        evals_result = {}
+
+        def rankic_feval(pred, eval_data):
+            score = mean_daily_rank_ic(pred, eval_data.get_label(), valid_index)
+            return "daily_rank_ic", score, True
+
+        model = lgb.train(
+            params={**self.params, "objective": "mse", "metric": "None"},
+            train_set=dtrain,
+            num_boost_round=self.epochs,
+            valid_sets=[dvalid],
+            valid_names=["valid"],
+            feval=rankic_feval,
+            callbacks=[
+                lgb.log_evaluation(20),
+                lgb.record_evaluation(evals_result),
+                lgb.early_stopping(
+                    self.early_stopping_rounds,
+                    first_metric_only=True,
+                ),
+            ],
+        )
+        self.rankic_evals_result.append(
+            {
+                "best_iteration": model.best_iteration,
+                "best_score": model.best_score["valid"]["daily_rank_ic"],
+                "valid_days": valid_index.get_level_values("datetime").nunique(),
+            }
+        )
+        return model
 
 
 def mean_daily_rank_ic(

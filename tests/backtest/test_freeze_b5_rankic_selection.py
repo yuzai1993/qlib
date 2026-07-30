@@ -61,6 +61,28 @@ def _write_sessions(
         for seed, config_path in zip(SEEDS, paths, strict=True):
             session = result_root / f"20260731_{candidate.replace('-', '_')}_s{seed}"
             session.mkdir()
+            experiment_id = f"exp-{candidate}-{seed}"
+            recorder_id = f"rec-{candidate}-{seed}"
+            experiment_name = f"train-{candidate}-{seed}"
+            artifact_root = (
+                result_root.parent / "mlruns" / experiment_id / recorder_id
+            )
+            model_path = artifact_root / "artifacts" / "trained_model"
+            model_path.parent.mkdir(parents=True)
+            model_path.write_bytes(f"model:{candidate}:{seed}".encode())
+            run_dir = session / "run_01"
+            run_dir.mkdir()
+            (run_dir / "mlruns_link.json").write_text(
+                json.dumps(
+                    {
+                        "train_experiment_name": experiment_name,
+                        "train_experiment_id": experiment_id,
+                        "train_recorder_id": recorder_id,
+                        "train_artifacts": str(artifact_root),
+                    }
+                ),
+                encoding="utf-8",
+            )
             meta = {
                 "session_name": session.name,
                 "note": f"mh_{candidate.replace('-', '_')}_s{seed}",
@@ -68,6 +90,7 @@ def _write_sessions(
                 "n_runs": 1,
                 "config_path": str(config_path.resolve()),
                 "market": "csi1000",
+                "handler": "Alpha158Technical",
                 "segments": {
                     "train": ["2016-01-02", "2020-01-10"],
                     "valid": ["2020-01-13", "2021-07-15"],
@@ -77,8 +100,9 @@ def _write_sessions(
                     {
                         "run": 1,
                         "status": "success",
-                        "train_experiment_id": f"exp-{candidate}-{seed}",
-                        "train_recorder_id": f"rec-{candidate}-{seed}",
+                        "train_experiment_name": experiment_name,
+                        "train_experiment_id": experiment_id,
+                        "train_recorder_id": recorder_id,
                         "backtest_experiment_id": None,
                         "backtest_recorder_id": None,
                     }
@@ -370,6 +394,137 @@ def test_selection_rejects_session_meta_drift(experiment):
         freeze.select_candidate(results, config_paths, artifact_paths)
 
 
+@pytest.mark.parametrize("target", ["meta", "link", "model"])
+def test_frozen_guard_rehashes_session_and_model_provenance_before_qlib(
+    experiment, tmp_path, monkeypatch, target
+):
+    config_paths, sessions, results, artifact_paths = experiment
+    manifest_path = tmp_path / "selection.json"
+    freeze.freeze_selection(
+        valid_results=results,
+        config_paths=config_paths,
+        valid_result_paths=artifact_paths,
+        output=manifest_path,
+    )
+    session = Path(sessions["rankic-es-l1low"][0][0])
+    if target == "meta":
+        (session / "meta.json").write_text("{}", encoding="utf-8")
+    elif target == "link":
+        (session / "run_01" / "mlruns_link.json").write_text("{}", encoding="utf-8")
+    else:
+        provenance = json.loads(manifest_path.read_text(encoding="utf-8"))[
+            "candidates"
+        ]["rankic-es-l1low"]["session_provenance"][0]
+        Path(provenance["trained_model_path"]).write_bytes(b"tampered")
+
+    calls = []
+    monkeypatch.setattr(
+        frozen_cli.evaluator, "_init_qlib", lambda cfg: calls.append("init")
+    )
+    monkeypatch.setattr(
+        frozen_cli.evaluator, "evaluate", lambda *a, **k: calls.append("eval")
+    )
+    with pytest.raises(ValueError, match="session|hash|model|mlruns|recomputed"):
+        frozen_cli.run_frozen_evaluation(
+            manifest=manifest_path,
+            output=tmp_path / "out.json",
+        )
+    assert calls == []
+
+
+def test_manifest_freezes_all_twenty_unique_model_provenance_rows(experiment):
+    config_paths, _, results, artifact_paths = experiment
+    manifest = freeze.select_candidate(results, config_paths, artifact_paths)
+    rows = [
+        row
+        for candidate in CANDIDATES
+        for row in manifest["candidates"][candidate]["session_provenance"]
+    ]
+    assert len(rows) == 20
+    assert len({row["train_experiment_name"] for row in rows}) == 20
+    assert len({row["train_experiment_id"] for row in rows}) == 20
+    assert len({row["train_recorder_id"] for row in rows}) == 20
+    assert all(len(row["meta_sha256"]) == 64 for row in rows)
+    assert all(len(row["mlruns_link_sha256"]) == 64 for row in rows)
+    assert all(len(row["trained_model_sha256"]) == 64 for row in rows)
+
+
+def test_selection_requires_valid_and_consistent_data_version(experiment):
+    config_paths, _, results, artifact_paths = experiment
+    bad = copy.deepcopy(results)
+    bad["rankic-es-base"]["data_version"] = "2026/07/16"
+    artifact_paths["rankic-es-base"].write_text(
+        json.dumps(bad["rankic-es-base"]), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="data_version"):
+        freeze.select_candidate(bad, config_paths, artifact_paths)
+
+    bad = copy.deepcopy(results)
+    bad["rankic-es-base"]["data_version"] = "2026-07-15"
+    artifact_paths["rankic-es-base"].write_text(
+        json.dumps(bad["rankic-es-base"]), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="data_version"):
+        freeze.select_candidate(bad, config_paths, artifact_paths)
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda cfg: cfg["dataset"]["kwargs"].update(label_horizon=20),
+        lambda cfg: cfg["data"]["handler"].update(infer_processors=[]),
+        lambda cfg: cfg["data"].update(region="us"),
+        lambda cfg: cfg["strategy"].update(topk=20),
+        lambda cfg: cfg["backtest"]["exchange_kwargs"].update(open_cost=0.1),
+    ],
+)
+def test_selection_rejects_full_b5_contract_drift(experiment, mutate):
+    config_paths, _, results, artifact_paths = experiment
+    path = config_paths["rankic-es-base"][0]
+    cfg = yaml.safe_load(path.read_text(encoding="utf-8"))
+    mutate(cfg)
+    path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    with pytest.raises(ValueError, match="config"):
+        freeze.select_candidate(results, config_paths, artifact_paths)
+
+
+def test_selection_recursively_rejects_nested_test_keys(experiment):
+    config_paths, _, results, artifact_paths = experiment
+    bad = copy.deepcopy(results)
+    bad["rankic-es-base"]["audit"] = {
+        "nested": {"test_metrics": {"rank_ic_mean": 0.1}}
+    }
+    artifact_paths["rankic-es-base"].write_text(
+        json.dumps(bad["rankic-es-base"]), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="test"):
+        freeze.select_candidate(bad, config_paths, artifact_paths)
+
+
+def test_selection_rejects_test_parent_token_without_rejecting_backtest(
+    experiment, tmp_path
+):
+    config_paths, _, results, artifact_paths = experiment
+    test_dir = tmp_path / "test"
+    test_dir.mkdir()
+    bad_path = test_dir / "mh_rankic_es_base_valid_1d.json"
+    bad_path.write_text(json.dumps(results["rankic-es-base"]), encoding="utf-8")
+    artifact_paths["rankic-es-base"] = bad_path
+    with pytest.raises(ValueError, match="test"):
+        freeze.select_candidate(results, config_paths, artifact_paths)
+
+
+def test_selection_requires_positive_valid_day_count(experiment):
+    config_paths, _, results, artifact_paths = experiment
+    bad = copy.deepcopy(results)
+    bad["rankic-es-base"]["pools"]["csi1000"]["seeds"]["42"]["n_days"] = 0
+    artifact_paths["rankic-es-base"].write_text(
+        json.dumps(bad["rankic-es-base"]), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="n_days"):
+        freeze.select_candidate(bad, config_paths, artifact_paths)
+
+
 def test_freeze_manifest_refuses_overwrite(experiment, tmp_path):
     config_paths, _, results, artifact_paths = experiment
     output = tmp_path / "selection.json"
@@ -412,6 +567,7 @@ def test_frozen_evaluator_rehashes_before_qlib_and_calls_exact_test_protocol(
         calls.append(("evaluate", cfg, passed_sessions, pools, kwargs))
         return {
             "config": cfg["_config_path"],
+            "data_version": "2026-07-16",
             "eval_label": "Ref($close, -2)/Ref($close, -1) - 1",
             "eval_label_role": "fixed_1d",
             "eval_segment_name": "test",
@@ -427,12 +583,19 @@ def test_frozen_evaluator_rehashes_before_qlib_and_calls_exact_test_protocol(
                     "seeds": {
                         str(seed): {
                             "n_days": 1000,
+                            "ic_mean": 0.03,
+                            "icir": 0.3,
                             "rank_ic_mean": 0.04,
                             "rank_icir": 0.4,
                         }
                         for seed in SEEDS
                     },
-                    "seed_mean": {"rank_ic_mean": 0.04, "rank_icir": 0.4},
+                    "seed_mean": {
+                        "ic_mean": 0.03,
+                        "icir": 0.3,
+                        "rank_ic_mean": 0.04,
+                        "rank_icir": 0.4,
+                    },
                 }
                 for pool in ["csi1000", "csi300", "csi500"]
             },
@@ -456,6 +619,76 @@ def test_frozen_evaluator_rehashes_before_qlib_and_calls_exact_test_protocol(
         manifest_path.read_bytes()
     ).hexdigest()
     assert result["min_count"] == 20
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda r: r.update(data_version="2026-07-15"),
+        lambda r: r["pools"]["csi1000"]["seeds"]["42"].pop("ic_mean"),
+        lambda r: r["pools"]["csi1000"]["seeds"]["42"].update(icir=float("nan")),
+        lambda r: r["pools"]["csi1000"]["seed_mean"].pop("rank_icir"),
+        lambda r: r["pools"]["csi1000"]["seed_mean"].update(ic_mean=999.0),
+    ],
+)
+def test_final_result_requires_matching_version_and_all_recomputed_metrics(
+    experiment, tmp_path, monkeypatch, mutation
+):
+    config_paths, sessions, results, artifact_paths = experiment
+    manifest_path = tmp_path / "selection.json"
+    manifest = freeze.freeze_selection(
+        valid_results=results,
+        config_paths=config_paths,
+        valid_result_paths=artifact_paths,
+        output=manifest_path,
+    )
+    selected_sessions = sessions[manifest["selected_candidate"]]
+
+    def bad_evaluate(cfg, passed_sessions, pools, **kwargs):
+        result = {
+            "config": cfg["_config_path"],
+            "data_version": "2026-07-16",
+            "eval_label": "Ref($close, -2)/Ref($close, -1) - 1",
+            "eval_label_role": "fixed_1d",
+            "eval_segment_name": "test",
+            "eval_segment": ["2021-07-16", "2026-07-16"],
+            "effective_eval_segment": ["2021-07-16", "2026-07-16"],
+            "test_segment": ["2021-07-16", "2026-07-16"],
+            "sessions": [
+                {"session": path, "seed": seed}
+                for path, seed in selected_sessions
+            ],
+            "pools": {
+                pool: {
+                    "seeds": {
+                        str(seed): {
+                            "n_days": 1000,
+                            "ic_mean": 0.03,
+                            "icir": 0.3,
+                            "rank_ic_mean": 0.04,
+                            "rank_icir": 0.4,
+                        }
+                        for seed in SEEDS
+                    },
+                    "seed_mean": {
+                        "ic_mean": 0.03,
+                        "icir": 0.3,
+                        "rank_ic_mean": 0.04,
+                        "rank_icir": 0.4,
+                    },
+                }
+                for pool in ["csi1000", "csi300", "csi500"]
+            },
+        }
+        mutation(result)
+        return result
+
+    monkeypatch.setattr(frozen_cli.evaluator, "_init_qlib", lambda cfg: None)
+    monkeypatch.setattr(frozen_cli.evaluator, "evaluate", bad_evaluate)
+    output = tmp_path / "test.json"
+    with pytest.raises(ValueError, match="data_version|finite|metric|mean"):
+        frozen_cli.run_frozen_evaluation(manifest=manifest_path, output=output)
+    assert not output.exists()
 
 
 @pytest.mark.parametrize("tamper", ["config", "valid", "winner"])

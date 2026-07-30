@@ -133,6 +133,8 @@ def validate_test_result(result: Mapping[str, Any], manifest: Mapping[str, Any])
         or result.get("min_count") != MIN_COUNT
     ):
         _fail("frozen test result label/min_count protocol drift")
+    if result.get("data_version") != manifest.get("data_version"):
+        _fail("frozen test result data_version differs from valid selection")
 
     expected_sessions = manifest["selected_sessions"]
     if result.get("sessions") != expected_sessions:
@@ -155,31 +157,27 @@ def validate_test_result(result: Mapping[str, Any], manifest: Mapping[str, Any])
         seed_rows = pool.get("seeds")
         if not isinstance(seed_rows, dict) or set(seed_rows) != {str(s) for s in SEEDS}:
             _fail(f"frozen test result seed set invalid: {pool_name}")
-        rank_values = []
-        ir_values = []
+        metric_values = {
+            key: []
+            for key in ("ic_mean", "icir", "rank_ic_mean", "rank_icir")
+        }
         for seed in SEEDS:
             row = seed_rows[str(seed)]
             if not isinstance(row, dict) or int(row.get("n_days", 0)) <= 0:
                 _fail(f"frozen test result seed metrics missing: {pool_name}/{seed}")
-            rank_values.append(
-                _finite(row.get("rank_ic_mean"), f"{pool_name}/{seed} rank_ic_mean")
-            )
-            ir_values.append(
-                _finite(row.get("rank_icir"), f"{pool_name}/{seed} rank_icir")
-            )
+            for key in metric_values:
+                metric_values[key].append(
+                    _finite(row.get(key), f"{pool_name}/{seed} {key} metric")
+                )
         seed_mean = pool.get("seed_mean")
         if not isinstance(seed_mean, dict):
             _fail(f"frozen test result seed_mean missing: {pool_name}")
-        _check_mean(
-            seed_mean.get("rank_ic_mean"),
-            rank_values,
-            f"{pool_name} rank_ic_mean",
-        )
-        _check_mean(
-            seed_mean.get("rank_icir"),
-            ir_values,
-            f"{pool_name} rank_icir",
-        )
+        for key, values in metric_values.items():
+            _check_mean(
+                seed_mean.get(key),
+                values,
+                f"{pool_name} {key} mean",
+            )
 
 
 def run_frozen_evaluation(*, manifest: Path, output: Path) -> dict:

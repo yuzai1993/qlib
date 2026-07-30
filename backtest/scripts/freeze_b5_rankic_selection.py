@@ -9,13 +9,17 @@ import math
 import os
 import re
 import tempfile
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
 import yaml
 
-from backtest.scripts.config_loader import RESULT_ROOT
+from backtest.scripts.config_loader import (
+    RESULT_ROOT,
+    ConfigError,
+    load_session_model_info,
+)
 
 
 CANDIDATES = (
@@ -69,6 +73,7 @@ _BASE_MODEL_KWARGS = {
     "test_segment": list(TEST_SEGMENT),
 }
 _TEST_BASENAME = re.compile(r"(^|[_-])test([_.-]|$)", re.IGNORECASE)
+_TEST_KEY = re.compile(r"(^|[_-])test($|[_-])", re.IGNORECASE)
 
 
 def sha256_file(path: Path) -> str:
@@ -128,6 +133,86 @@ def _load_yaml_mapping(path: Path) -> dict:
     return value
 
 
+def _expected_candidate_config(candidate: str, seed: int) -> dict:
+    note = f"mh_{candidate.replace('-', '_')}_s{seed}"
+    model_kwargs = dict(_BASE_MODEL_KWARGS)
+    model_kwargs["seed"] = seed
+    model_kwargs.update(_VARIANT_OVERRIDES[candidate])
+    return {
+        "run": {
+            "mode": "train_only",
+            "note": note,
+            "n_runs": 1,
+            "from_session": None,
+            "from_run": 1,
+            "generate_figures": False,
+        },
+        "data": {
+            "provider_uri": "~/.qlib/qlib_data/cn_data",
+            "region": "cn",
+            "instruments": VALID_POOL,
+            "benchmark": "SH000852",
+            "handler": {
+                "class": "Alpha158Technical",
+                "module_path": "backtest.features.technical",
+                "start_time": "2003-01-02",
+                "end_time": "2026-07-16",
+                "fit_start_time": TRAIN_SEGMENT[0],
+                "fit_end_time": TRAIN_SEGMENT[1],
+                "infer_processors": [{"class": "ProcessInf"}],
+                "label": [["Ref($close, -41)/Ref($close, -1)-1"], ["LABEL0"]],
+                "feature_groups": ["range"],
+                "learn_processors": [
+                    {"class": "DropnaLabel"},
+                    {
+                        "class": "CSRankNorm",
+                        "kwargs": {"fields_group": "label"},
+                    },
+                ],
+            },
+        },
+        "segments": {
+            "train": list(TRAIN_SEGMENT),
+            "valid": list(VALID_SEGMENT),
+            "test": list(TEST_SEGMENT),
+        },
+        "model": {
+            "class": MODEL_CLASS,
+            "module_path": MODEL_MODULE,
+            "kwargs": model_kwargs,
+        },
+        "strategy": {
+            "class": "TopkDropoutStrategy",
+            "module_path": "qlib.contrib.strategy.signal_strategy",
+            "topk": 10,
+            "n_drop": 2,
+            "kwargs": {
+                "hold_thresh": 1,
+                "risk_degree": 0.95,
+                "only_tradable": False,
+                "forbid_all_trade_at_limit": False,
+            },
+        },
+        "backtest": {
+            "account": 1_000_000,
+            "exchange_kwargs": {
+                "freq": "day",
+                "deal_price": "close",
+                "limit_threshold": 0.095,
+                "open_cost": 0.00021,
+                "close_cost": 0.00071,
+                "min_cost": 5,
+                "trade_unit": 100,
+            },
+        },
+        "dataset": {
+            "class": "PurgedHorizonDataset",
+            "module_path": "backtest.label_design.dataset",
+            "kwargs": {"label_horizon": 40},
+        },
+    }
+
+
 def validate_candidate_config(path: Path, candidate: str, seed: int) -> dict:
     """Validate one generated YAML against the frozen B5 candidate contract."""
 
@@ -141,57 +226,8 @@ def validate_candidate_config(path: Path, candidate: str, seed: int) -> dict:
             f"(expected .../{candidate}/{expected_name})"
         )
     cfg = _load_yaml_mapping(path)
-    run = cfg.get("run")
-    if not isinstance(run, dict):
-        _fail(f"config run section missing: {path}")
-    expected_note = f"mh_{candidate.replace('-', '_')}_s{seed}"
-    if (
-        run.get("mode") != "train_only"
-        or run.get("note") != expected_note
-        or int(run.get("n_runs", 0)) != 1
-    ):
-        _fail(f"config run binding drift: {path}")
-
-    data = cfg.get("data")
-    if not isinstance(data, dict) or data.get("instruments") != VALID_POOL:
-        _fail(f"config training pool drift: {path}")
-    handler = data.get("handler")
-    if (
-        not isinstance(handler, dict)
-        or handler.get("class") != "Alpha158Technical"
-        or handler.get("module_path") != "backtest.features.technical"
-        or handler.get("fit_start_time") != TRAIN_SEGMENT[0]
-        or handler.get("fit_end_time") != TRAIN_SEGMENT[1]
-        or handler.get("label")
-        != [["Ref($close, -41)/Ref($close, -1)-1"], ["LABEL0"]]
-        or handler.get("feature_groups") != ["range"]
-        or handler.get("learn_processors")
-        != [
-            {"class": "DropnaLabel"},
-            {"class": "CSRankNorm", "kwargs": {"fields_group": "label"}},
-        ]
-    ):
-        _fail(f"config B5 handler drift: {path}")
-
-    segments = cfg.get("segments")
-    if not isinstance(segments, dict):
-        _fail(f"config segments missing: {path}")
-    _exact_segment(segments.get("train"), TRAIN_SEGMENT, f"config {path} train")
-    _exact_segment(segments.get("valid"), VALID_SEGMENT, f"config {path} valid")
-    _exact_segment(segments.get("test"), TEST_SEGMENT, f"config {path} test")
-
-    model = cfg.get("model")
-    if (
-        not isinstance(model, dict)
-        or model.get("class") != MODEL_CLASS
-        or model.get("module_path") != MODEL_MODULE
-    ):
-        _fail(f"config model class drift: {path}")
-    expected_kwargs = dict(_BASE_MODEL_KWARGS)
-    expected_kwargs["seed"] = seed
-    expected_kwargs.update(_VARIANT_OVERRIDES[candidate])
-    if model.get("kwargs") != expected_kwargs:
-        _fail(f"config model kwargs drift or non-declared override: {path}")
+    if cfg != _expected_candidate_config(candidate, seed):
+        _fail(f"config differs from the complete declared B5 contract: {path}")
     return cfg
 
 
@@ -233,19 +269,23 @@ def _resolve_session(raw: str) -> Path:
     return path
 
 
-def validate_session(
+def session_provenance(
     raw_session: str,
     *,
     seed: int,
     candidate: str,
     config_path: Path,
-) -> str:
+) -> dict[str, Any]:
     session = _resolve_session(raw_session)
-    meta_path = session / "meta.json"
     try:
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        _fail(f"session meta invalid: {session}: {exc}")
+        info = load_session_model_info(session, from_run=1)
+    except (ConfigError, OSError, json.JSONDecodeError) as exc:
+        _fail(f"session model provenance invalid: {session}: {exc}")
+    meta = info["meta"]
+    link = info["mlruns_link"]
+    meta_path = session / "meta.json"
+    link_path = info["run_dir"] / "mlruns_link.json"
+    model_path = Path(info["model_path"]).resolve()
     expected_note = f"mh_{candidate.replace('-', '_')}_s{seed}"
     try:
         meta_config = Path(meta["config_path"]).expanduser().resolve()
@@ -279,18 +319,50 @@ def validate_session(
         or run.get("backtest_recorder_id") is not None
     ):
         _fail(f"session must contain exactly one successful train-only run: {session}")
-    return str(session)
+    id_keys = (
+        "train_experiment_name",
+        "train_experiment_id",
+        "train_recorder_id",
+    )
+    if any(not run.get(key) or run.get(key) != link.get(key) for key in id_keys):
+        _fail(f"session meta/mlruns provenance IDs differ: {session}")
+    return {
+        "session": str(session),
+        "seed": seed,
+        "meta_path": str(meta_path.resolve()),
+        "meta_sha256": sha256_file(meta_path),
+        "mlruns_link_path": str(link_path.resolve()),
+        "mlruns_link_sha256": sha256_file(link_path),
+        "trained_model_path": str(model_path),
+        "trained_model_sha256": sha256_file(model_path),
+        **{key: str(run[key]) for key in id_keys},
+    }
 
 
-def normalize_and_validate_sessions(
+def validate_session(
+    raw_session: str,
+    *,
+    seed: int,
+    candidate: str,
+    config_path: Path,
+) -> str:
+    return session_provenance(
+        raw_session,
+        seed=seed,
+        candidate=candidate,
+        config_path=config_path,
+    )["session"]
+
+
+def _normalize_session_provenance(
     sessions: Sequence[tuple[str, Any]],
     *,
     candidate: str,
     configs_by_seed: Mapping[int, Path],
-) -> list[tuple[str, int]]:
+) -> list[dict[str, Any]]:
     if len(sessions) != len(SEEDS):
         _fail(f"session seed set for {candidate} must contain exactly five rows")
-    by_seed: dict[int, str] = {}
+    by_seed: dict[int, dict[str, Any]] = {}
     seen_paths: set[str] = set()
     for raw_session, raw_seed in sessions:
         try:
@@ -301,19 +373,35 @@ def normalize_and_validate_sessions(
             _fail(f"session seed duplicate for {candidate}: {seed}")
         if seed not in configs_by_seed:
             _fail(f"session seed is not fixed for {candidate}: {seed}")
-        session = validate_session(
+        provenance = session_provenance(
             raw_session,
             seed=seed,
             candidate=candidate,
             config_path=configs_by_seed[seed],
         )
-        if session in seen_paths:
-            _fail(f"session path duplicate for {candidate}: {session}")
-        seen_paths.add(session)
-        by_seed[seed] = session
+        if provenance["session"] in seen_paths:
+            _fail(
+                f"session path duplicate for {candidate}: {provenance['session']}"
+            )
+        seen_paths.add(provenance["session"])
+        by_seed[seed] = provenance
     if set(by_seed) != set(SEEDS):
         _fail(f"session seeds differ from fixed seeds for {candidate}: {sorted(by_seed)}")
-    return [(by_seed[seed], seed) for seed in SEEDS]
+    return [by_seed[seed] for seed in SEEDS]
+
+
+def normalize_and_validate_sessions(
+    sessions: Sequence[tuple[str, Any]],
+    *,
+    candidate: str,
+    configs_by_seed: Mapping[int, Path],
+) -> list[tuple[str, int]]:
+    provenance = _normalize_session_provenance(
+        sessions,
+        candidate=candidate,
+        configs_by_seed=configs_by_seed,
+    )
+    return [(row["session"], row["seed"]) for row in provenance]
 
 
 def _finite_metric(value: Any, label: str) -> float:
@@ -332,6 +420,38 @@ def _check_seed_mean(actual: Any, expected: float, label: str) -> None:
         _fail(f"{label} does not match recomputed seed_mean")
 
 
+def _validate_data_version(value: Any) -> str:
+    if not isinstance(value, str):
+        _fail("data_version must be a YYYY-MM-DD string")
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError:
+        _fail(f"data_version must be valid YYYY-MM-DD: {value!r}")
+    if parsed.isoformat() != value:
+        _fail(f"data_version must be canonical YYYY-MM-DD: {value!r}")
+    return value
+
+
+def _reject_nested_test_keys(value: Any, path: str = "$") -> None:
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            key_text = str(key)
+            if _TEST_KEY.search(key_text):
+                _fail(f"valid artifact contains test key at {path}.{key_text}")
+            _reject_nested_test_keys(nested, f"{path}.{key_text}")
+    elif isinstance(value, list):
+        for index, nested in enumerate(value):
+            _reject_nested_test_keys(nested, f"{path}[{index}]")
+
+
+def _validate_valid_artifact_path(path: Path) -> None:
+    path = Path(path).resolve()
+    if _TEST_BASENAME.search(path.name) or any(
+        part.lower() == "test" for part in path.parts[:-1]
+    ):
+        _fail(f"valid artifact path must not identify test data: {path}")
+
+
 def validate_valid_result(
     candidate: str,
     result: Mapping[str, Any],
@@ -340,10 +460,8 @@ def validate_valid_result(
     configs_by_seed: Mapping[int, Path],
 ) -> dict[str, Any]:
     artifact_path = Path(artifact_path).resolve()
-    if _TEST_BASENAME.search(artifact_path.name):
-        _fail(f"valid artifact basename must not identify test data: {artifact_path.name}")
-    if any(str(key).lower().startswith("test") for key in result):
-        _fail("valid artifact contains a top-level test key")
+    _validate_valid_artifact_path(artifact_path)
+    _reject_nested_test_keys(result)
     if result.get("candidate") not in (None, candidate):
         _fail(f"valid artifact candidate binding drift: {candidate}")
     if result.get("eval_segment_name") != "valid":
@@ -361,6 +479,7 @@ def validate_valid_result(
         _fail(f"valid artifact label protocol drift: {candidate}")
     if result.get("min_count") != MIN_COUNT:
         _fail(f"valid artifact min_count drift: {candidate}")
+    data_version = _validate_data_version(result.get("data_version"))
     if result.get("config") is None:
         _fail(f"valid artifact config binding missing: {candidate}")
     if Path(str(result["config"])).expanduser().resolve() != configs_by_seed[SEEDS[0]]:
@@ -384,7 +503,7 @@ def validate_valid_result(
         if not isinstance(row, dict) or set(row) != {"session", "seed"}:
             _fail(f"valid artifact session row invalid: {candidate}")
         session_pairs.append((row["session"], row["seed"]))
-    sessions = normalize_and_validate_sessions(
+    provenance = _normalize_session_provenance(
         session_pairs,
         candidate=candidate,
         configs_by_seed=configs_by_seed,
@@ -396,6 +515,8 @@ def validate_valid_result(
         row = seed_rows[str(seed)]
         if not isinstance(row, dict):
             _fail(f"valid artifact metrics missing for seed {seed}")
+        if int(row.get("n_days", 0)) <= 0:
+            _fail(f"valid artifact n_days must be positive: {candidate}/{seed}")
         rank_values.append(
             _finite_metric(
                 row.get("rank_ic_mean"),
@@ -426,10 +547,13 @@ def validate_valid_result(
     return {
         "rank_ic_mean": rank_mean,
         "rank_icir": rank_icir,
+        "data_version": data_version,
         "seeds": list(SEEDS),
         "sessions": [
-            {"session": session, "seed": seed} for session, seed in sessions
+            {"session": row["session"], "seed": row["seed"]}
+            for row in provenance
         ],
+        "session_provenance": provenance,
     }
 
 
@@ -454,6 +578,12 @@ def select_candidate(
     candidate_rows: dict[str, dict] = {}
     config_hashes: list[dict] = []
     valid_hashes: dict[str, dict] = {}
+    data_versions: set[str] = set()
+    provenance_ids = {
+        "train_experiment_name": set(),
+        "train_experiment_id": set(),
+        "train_recorder_id": set(),
+    }
     for candidate in CANDIDATES:
         configs_by_seed = validate_config_set(candidate, config_paths[candidate])
         artifact_path = Path(valid_result_paths[candidate]).resolve()
@@ -467,6 +597,13 @@ def select_candidate(
             artifact_path=artifact_path,
             configs_by_seed=configs_by_seed,
         )
+        data_versions.add(metrics["data_version"])
+        for provenance in metrics["session_provenance"]:
+            for key, values in provenance_ids.items():
+                value = provenance[key]
+                if value in values:
+                    _fail(f"session provenance {key} is not globally unique: {value}")
+                values.add(value)
         if artifact_result != valid_results[candidate]:
             _fail(f"valid artifact content differs from supplied result: {candidate}")
         per_candidate_configs = []
@@ -490,6 +627,14 @@ def select_candidate(
             "configs": per_candidate_configs,
         }
 
+    if len(data_versions) != 1:
+        _fail(
+            "valid artifacts data_version values differ: "
+            f"{sorted(data_versions)}"
+        )
+    if any(len(values) != 20 for values in provenance_ids.values()):
+        _fail("session provenance must contain 20 globally unique model IDs")
+
     ordered = sorted(
         CANDIDATES,
         key=lambda candidate: (
@@ -510,6 +655,7 @@ def select_candidate(
         "eval_label": EVAL_LABEL_EXPR,
         "eval_label_role": "fixed_1d",
         "min_count": MIN_COUNT,
+        "data_version": next(iter(data_versions)),
         "official_valid_segment": list(VALID_SEGMENT),
         "effective_valid_segment": list(SAFE_VALID_SEGMENT),
         "seeds": list(SEEDS),

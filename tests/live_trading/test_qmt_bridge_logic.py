@@ -677,6 +677,77 @@ def test_simulate_batch_writes_no_broker_snapshot(bridge, monkeypatch):
     bridge._finalize_batch(batch)
 
     assert _read_account_snapshot(bridge) == []
+    assert not _marker_path(bridge).exists()
+
+
+def _marker_path(bridge, batch_id=BATCH_ID):
+    return (Path(bridge.BRIDGE_ROOT) / "state" /
+            ("snapshot_refresh_%s.json" % batch_id))
+
+
+def test_post_close_refresh_rewrites_snapshot_with_close_values(
+        bridge, monkeypatch):
+    """finalize 写盘中快照留标记，15:01 后用收盘后的账户状态覆盖重写。"""
+    batch = _live_batch(bridge)
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *a: [_AccountRow()] if a[2] == "ACCOUNT" else [],
+        raising=False)
+    bridge._finalize_batch(batch)
+
+    marker = _marker_path(bridge)
+    assert json.loads(marker.read_text())["trade_date"] == bridge._today()
+    assert _read_account_snapshot(bridge)[0]["available_cash"] == \
+        pytest.approx(123456.78)
+
+    class CloseAccount(_AccountRow):
+        m_dAvailable = 654321.0
+        m_dInstrumentValue = 9328041.0
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *a: [CloseAccount()] if a[2] == "ACCOUNT" else
+        [_PositionRow("688223", "SH", 244500, cost=4.14)],
+        raising=False)
+
+    # 15:01 前不动
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:59:00")
+    bridge._refresh_account_snapshots_after_close()
+    assert _read_account_snapshot(bridge)[0]["available_cash"] == \
+        pytest.approx(123456.78)
+    assert marker.exists()
+
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:01:30")
+    bridge._refresh_account_snapshots_after_close()
+    rows = _read_account_snapshot(bridge)
+    account = next(r for r in rows if r["type"] == "account_snapshot")
+    assert account["available_cash"] == pytest.approx(654321.0)
+    assert account["market_value"] == pytest.approx(9328041.0)
+    positions = [r for r in rows if r["type"] == "broker_position"]
+    assert positions and positions[0]["stock_code"] == "688223.SH"
+    assert not marker.exists()
+
+    # 标记已消费：再跑不应再查询券商
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *a: pytest.fail("consumed marker must not re-query"),
+        raising=False)
+    bridge._refresh_account_snapshots_after_close()
+
+
+def test_stale_snapshot_marker_dropped_without_query(bridge, monkeypatch):
+    """当日没刷新成（QMT 提前关了）：隔日标记直接丢弃，兜底快照仍有效。"""
+    _marker_path(bridge).write_text(json.dumps({
+        "batch_id": BATCH_ID, "trade_date": "2020-01-01", "account_id": "1"}))
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:00")
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *a: pytest.fail("stale marker must not trigger a snapshot"),
+        raising=False)
+
+    bridge._refresh_account_snapshots_after_close()
+
+    assert not _marker_path(bridge).exists()
 
 
 @pytest.mark.parametrize("symbol,exchange,expected", [

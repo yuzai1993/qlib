@@ -134,6 +134,7 @@ def run_postmarket(date, recorder, store, config) -> list:
                                reject_rate=thresholds["reject_rate"])
     # 只有 LIVE 批次才会产出券商快照，SIMULATE / 停发日不做二道对账。
     if any(b.get("mode") == "LIVE" for b in batches):
+        reconcile_cfg = config.get("monitor", {}).get("broker_reconcile") or {}
         findings += check_broker_reconcile(
             date,
             recorder.get_broker_account_snapshot(date),
@@ -142,6 +143,7 @@ def run_postmarket(date, recorder, store, config) -> list:
              for code, pos in recorder.get_positions().items()},
             recorder.get_cash(),
             cash_tolerance=thresholds["cash_tolerance"],
+            check_cash=bool(reconcile_cfg.get("cash_check", True)),
         )
     return findings
 

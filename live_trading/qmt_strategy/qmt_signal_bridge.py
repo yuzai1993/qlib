@@ -38,6 +38,7 @@ SELL_WAIT_TIMEOUT_SEC = 4 * 60    # max wait for sells before starting buys
 TRADE_START = "14:45:00"   # late-session window: execute near close price
 CANCEL_AT = "14:56:00"     # cancel all pending orders
 FINALIZE_AT = "14:57:00"   # force-write fills .done
+SNAPSHOT_REFRESH_AT = "15:01:00"  # rewrite broker snapshot with close values
 
 # First-order pricing: cross the current opposing quote with a small buffer.
 # QMT daily stop prices are the hard bounds; the signal price is a fallback.
@@ -266,7 +267,7 @@ def _opt_float(obj, *names):
     return None
 
 
-def _write_account_snapshot(batch):
+def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
     """Dump broker ACCOUNT + POSITION for second-line reconciliation.
 
     The fill receipts only describe what the strategy believes it traded.
@@ -275,9 +276,6 @@ def _write_account_snapshot(batch):
 
     Never raises: a failed snapshot must not block batch finalization.
     """
-    if batch.header.get("mode") != "LIVE":
-        return
-    account_id = _account_id(batch)
     try:
         rows = []
         accounts = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ACCOUNT")
@@ -285,8 +283,8 @@ def _write_account_snapshot(batch):
             a = accounts[0]
             rows.append({
                 "type": "account_snapshot",
-                "batch_id": batch.batch_id(),
-                "trade_date": batch.header.get("trade_date", ""),
+                "batch_id": batch_id,
+                "trade_date": trade_date,
                 "account_id": str(getattr(a, "m_strAccountID", "") or account_id),
                 "available_cash": _opt_float(a, "m_dAvailable"),
                 "total_asset": _opt_float(a, "m_dBalance", "m_dAssureAsset"),
@@ -305,8 +303,8 @@ def _write_account_snapshot(batch):
                 continue
             rows.append({
                 "type": "broker_position",
-                "batch_id": batch.batch_id(),
-                "trade_date": batch.header.get("trade_date", ""),
+                "batch_id": batch_id,
+                "trade_date": trade_date,
                 "stock_code": _qmt_stock_code(
                     getattr(p, "m_strInstrumentID", ""),
                     getattr(p, "m_strExchangeID", ""),
@@ -318,23 +316,91 @@ def _write_account_snapshot(batch):
                 "ts": datetime.datetime.now().isoformat(),
             })
 
-        path = _account_snapshot_path(batch.batch_id())
+        path = _account_snapshot_path(batch_id)
         with open(path, "w") as f:
             for row in rows:
                 f.write(json.dumps(row, sort_keys=True) + "\n")
         with open(path.replace(".jsonl", ".done"), "w") as f:
             f.write("done\n")
-        _log("account snapshot written: %d rows" % len(rows))
+        _log("account snapshot written (%s): %d rows" % (label, len(rows)))
     except Exception:
         _log("account snapshot failed:\n" + traceback.format_exc())
+
+
+def _write_account_snapshot(batch):
+    if batch.header.get("mode") != "LIVE":
+        return
+    _dump_broker_snapshot(
+        batch.batch_id(), batch.header.get("trade_date", ""),
+        _account_id(batch), "finalize",
+    )
+
+
+def _snapshot_marker_path(batch_id):
+    return _path("state", "snapshot_refresh_" + batch_id + ".json")
+
+
+def _write_snapshot_marker(batch):
+    """Ask the post-close pass to rewrite this batch's broker snapshot.
+
+    The finalize-time snapshot (14:45~14:57) carries final cash and shares
+    but intraday prices; on the sim account even the account values can be
+    stale. After SNAPSHOT_REFRESH_AT the marker triggers a rewrite with
+    close values, well before the 16:00 Mac-side import.
+    """
+    if batch.header.get("mode") != "LIVE":
+        return
+    payload = {
+        "batch_id": batch.batch_id(),
+        "trade_date": batch.header.get("trade_date", ""),
+        "account_id": _account_id(batch),
+    }
+    try:
+        with open(_snapshot_marker_path(batch.batch_id()), "w") as f:
+            f.write(json.dumps(payload, sort_keys=True))
+    except Exception:
+        _log("snapshot marker write failed:\n" + traceback.format_exc())
+
+
+def _refresh_account_snapshots_after_close():
+    """Rewrite pending broker snapshots once the close is in (>= 15:01)."""
+    if _now_hms() < SNAPSHOT_REFRESH_AT:
+        return
+    state_dir = _path("state")
+    if not os.path.isdir(state_dir):
+        return
+    for name in sorted(os.listdir(state_dir)):
+        if not name.startswith("snapshot_refresh_"):
+            continue
+        path = os.path.join(state_dir, name)
+        try:
+            with open(path, "r") as f:
+                info = json.load(f)
+        except Exception:
+            _log("unreadable snapshot marker %s; dropping" % name)
+            os.remove(path)
+            continue
+        if info.get("trade_date") != _today():
+            # QMT was closed before the refresh window that day; the
+            # finalize-time fallback snapshot already covers the batch.
+            _log("stale snapshot marker %s; dropping" % name)
+            os.remove(path)
+            continue
+        _dump_broker_snapshot(
+            info["batch_id"], info["trade_date"], info["account_id"],
+            "post-close",
+        )
+        os.remove(path)
 
 
 def _finalize_batch(batch):
     if batch.finalized:
         return
     # Snapshot before the fills .done marker so the Mac importer never sees
-    # receipts for a batch whose broker snapshot is still missing.
+    # receipts for a batch whose broker snapshot is still missing. The
+    # post-close pass rewrites it with close values via the marker.
     _write_account_snapshot(batch)
+    _write_snapshot_marker(batch)
     done = _fills_path(batch.batch_id()).replace(".jsonl", ".done")
     with open(done, "w") as f:
         f.write("done\n")
@@ -974,5 +1040,6 @@ def handlebar(ContextInfo):
             _force_finalize_if_near_close(ContextInfo, g.batch)
         if g.batch is not None:
             _process_batch(ContextInfo, g.batch)
+        _refresh_account_snapshots_after_close()
     except Exception:
         _log("handlebar error:\n" + traceback.format_exc())

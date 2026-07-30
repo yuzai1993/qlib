@@ -94,6 +94,10 @@ monitor:
     consecutive_loss_days: 5
     reject_rate: 0.5
     cash_tolerance: 100.0        # 账本与 QMT 可用资金差额告警阈值（元）
+  broker_reconcile:
+    # QMT 模拟盘的可用资金/市值口径不可信（与界面显示都对不上），现金以账本
+    # 为准，二道对账只对持仓。切换到真实账户后务必改回 true。
+    cash_check: false
 
 web:
   host: "0.0.0.0"

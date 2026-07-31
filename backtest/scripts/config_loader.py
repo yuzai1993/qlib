@@ -13,7 +13,7 @@ BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 CONFIGS_DIR = BACKTEST_ROOT / "configs"
 RESULT_ROOT = BACKTEST_ROOT / "result"
 
-VALID_MODES = ("train_only", "train_backtest", "backtest_only")
+VALID_MODES = ("train_only", "train_backtest", "backtest_only", "pred_backtest")
 DEFAULT_CONFIG_NAME = "csi300_live_parity.yaml"
 
 

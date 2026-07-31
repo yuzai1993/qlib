@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-31T22:50:00+08:00",
+  "protocol_id": "post2020-forward-v1",
+  "valid_segment": ["2023-01-03", "2024-06-28"],
+  "effective_valid_segment": ["2023-01-03", "2024-06-26"],
+  "valid_days_per_submodel": 357,
+  "groups": {
+    "rankic-winner-stale": {
+      "summary": {
+        "booster_count": 15,
+        "mean_best_iteration": 52.06666666666667,
+        "min_best_iteration": 17,
+        "max_best_iteration": 128,
+        "max_rounds": 200,
+        "early_stopping_rounds": 20,
+        "triggered_count": 15
+      },
+      "seeds": {
+        "42": {
+          "session": "backtest/result/20260731_210340_tr_rankic_winner_stale_s42",
+          "trained_model_sha256": "a26f46306ee93ee56a4dfede9c3e9986b0f6a95767c16473ecf21fc3567ce6eb",
+          "submodels": [
+            {"best_iteration": 36, "best_score": 0.05329018992147597},
+            {"best_iteration": 51, "best_score": 0.054503770309599},
+            {"best_iteration": 53, "best_score": 0.05608755779335932}
+          ]
+        },
+        "1000": {
+          "session": "backtest/result/20260731_211525_tr_rankic_winner_stale_s1000",
+          "trained_model_sha256": "f8dc82674127af4aa1ba9c6dede887594cae25e4c8ca712237301069696b89e9",
+          "submodels": [
+            {"best_iteration": 36, "best_score": 0.05383558471427028},
+            {"best_iteration": 17, "best_score": 0.05327092086227534},
+            {"best_iteration": 119, "best_score": 0.054669420895585984}
+          ]
+        },
+        "2000": {
+          "session": "backtest/result/20260731_213034_tr_rankic_winner_stale_s2000",
+          "trained_model_sha256": "6695774928390c518d8099da6383aa4f431ddf774f91b2f9de1534c57dc80878",
+          "submodels": [
+            {"best_iteration": 29, "best_score": 0.05524918867940931},
+            {"best_iteration": 47, "best_score": 0.05712073862981756},
+            {"best_iteration": 24, "best_score": 0.054907127993420075}
+          ]
+        },
+        "3000": {
+          "session": "backtest/result/20260731_211438_tr_rankic_winner_stale_s3000",
+          "trained_model_sha256": "8a0308e8cc38add19dc4c579457d10546723d60dd8f06cb9c2d37be279c8fbea",
+          "submodels": [
+            {"best_iteration": 58, "best_score": 0.0543778038404652},
+            {"best_iteration": 128, "best_score": 0.053961825208083104},
+            {"best_iteration": 27, "best_score": 0.05542091927760573}
+          ]
+        },
+        "4000": {
+          "session": "backtest/result/20260731_213719_tr_rankic_winner_stale_s4000",
+          "trained_model_sha256": "6b07562c166dc79befdfcc2e24bcfc82d60309aa7f086340aebc8ed75ae0814a",
+          "submodels": [
+            {"best_iteration": 32, "best_score": 0.05449826374688107},
+            {"best_iteration": 68, "best_score": 0.05473930838962898},
+            {"best_iteration": 56, "best_score": 0.05333487350320546}
+          ]
+        }
+      }
+    },
+    "rankic-winner-post2020": {
+      "summary": {
+        "booster_count": 15,
+        "mean_best_iteration": 46.666666666666664,
+        "min_best_iteration": 27,
+        "max_best_iteration": 79,
+        "max_rounds": 200,
+        "early_stopping_rounds": 20,
+        "triggered_count": 15
+      },
+      "seeds": {
+        "42": {
+          "session": "backtest/result/20260731_214410_tr_rankic_winner_post2020_s42",
+          "trained_model_sha256": "793710808e9b1538125a81ed193c09321e73e0818d3da04d586f76b05f6f4ff6",
+          "submodels": [
+            {"best_iteration": 32, "best_score": 0.05999335100196195},
+            {"best_iteration": 43, "best_score": 0.05916590977110367},
+            {"best_iteration": 27, "best_score": 0.059797307219543266}
+          ]
+        },
+        "1000": {
+          "session": "backtest/result/20260731_220444_tr_rankic_winner_post2020_s1000",
+          "trained_model_sha256": "bf5440eb265d297d44d8e1f7cf7454ba4633b7b782be5b88c8c10714c8ed4dfc",
+          "submodels": [
+            {"best_iteration": 44, "best_score": 0.059420574829356886},
+            {"best_iteration": 39, "best_score": 0.06011950785750371},
+            {"best_iteration": 73, "best_score": 0.06136622978936073}
+          ]
+        },
+        "2000": {
+          "session": "backtest/result/20260731_215101_tr_rankic_winner_post2020_s2000",
+          "trained_model_sha256": "037749c455f59d70cfaa169118e64780b0e34b72b20770b41c0d897b45f573a1",
+          "submodels": [
+            {"best_iteration": 28, "best_score": 0.06048037371825864},
+            {"best_iteration": 39, "best_score": 0.05971130652302935},
+            {"best_iteration": 38, "best_score": 0.058829691708486724}
+          ]
+        },
+        "3000": {
+          "session": "backtest/result/20260731_221008_tr_rankic_winner_post2020_s3000",
+          "trained_model_sha256": "cfd3d942af6482e56a681ab78b3374d1fb5e341f4eed1756687e4f5a9eb73e93",
+          "submodels": [
+            {"best_iteration": 42, "best_score": 0.05974182300333692},
+            {"best_iteration": 76, "best_score": 0.06051037567322239},
+            {"best_iteration": 79, "best_score": 0.05843083575088713}
+          ]
+        },
+        "4000": {
+          "session": "backtest/result/20260731_222739_tr_rankic_winner_post2020_s4000",
+          "trained_model_sha256": "306da2f218d278c7765629a9fd526bbb83181177ef4f94dbd13a456117059dfe",
+          "submodels": [
+            {"best_iteration": 52, "best_score": 0.058872856422249306},
+            {"best_iteration": 30, "best_score": 0.05949333832099138},
+            {"best_iteration": 58, "best_score": 0.06041295238571086}
+          ]
+        }
+      }
+    }
+  }
+}

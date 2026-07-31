@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import gc
 import json
 import pickle
 import sys
@@ -58,6 +59,153 @@ def _load_model(session: str, from_run: int = 1) -> Any:
     info = load_session_model_info(resolve_session_dir(session), from_run=from_run)
     with open(info["model_path"], "rb") as fh:
         return pickle.load(fh)
+
+
+def _effective_boosting_iterations(model: Any) -> list[int]:
+    """Return the effective tree count for every DoubleEnsemble sub-model."""
+    boosters = getattr(model, "ensemble", None)
+    if not boosters:
+        raise ValueError("rolling model does not contain ensemble boosters")
+    iterations = []
+    for booster in boosters:
+        best = int(getattr(booster, "best_iteration", 0) or 0)
+        current = getattr(booster, "current_iteration", None)
+        effective = best if best > 0 else int(current() if callable(current) else 0)
+        if effective <= 0:
+            raise ValueError("rolling booster has no positive iteration count")
+        iterations.append(effective)
+    return iterations
+
+
+def _record_rolling_iterations(
+    diagnostics: dict,
+    *,
+    seed: Any,
+    fold: int,
+    model: Any,
+) -> None:
+    """Record one seed/fold once and reject inconsistent repeated loads."""
+    seed_key = str(seed)
+    fold_key = str(fold)
+    iterations = _effective_boosting_iterations(model)
+    existing = diagnostics.setdefault(seed_key, {}).setdefault(
+        fold_key, iterations
+    )
+    if existing != iterations:
+        raise ValueError(
+            f"rolling model iterations differ across pools: seed={seed}, fold={fold}"
+        )
+
+
+def _summarize_rolling_iterations(
+    diagnostics: dict,
+    *,
+    max_rounds: int,
+    early_stopping_rounds: Optional[int],
+) -> dict:
+    """Summarize whether the configured early stopping shortened training."""
+    values = [
+        int(value)
+        for folds in diagnostics.values()
+        for iterations in folds.values()
+        for value in iterations
+    ]
+    if not values:
+        raise ValueError("no rolling model iteration diagnostics")
+    triggered = sum(value < max_rounds for value in values)
+    return {
+        "max_rounds": int(max_rounds),
+        "early_stopping_rounds": early_stopping_rounds,
+        "best_iterations": diagnostics,
+        "booster_count": len(values),
+        "triggered_count": triggered,
+        "trigger_rate": float(triggered / len(values)),
+        "mean_best_iteration": float(np.mean(values)),
+        "min_best_iteration": min(values),
+        "max_best_iteration": max(values),
+    }
+
+
+def _load_rolling_sessions(
+    sessions: Sequence[tuple[str, Any]],
+    calendar: pd.DatetimeIndex,
+) -> dict[str, Any]:
+    """Load and validate identical, complete rolling manifests."""
+    calendar = pd.DatetimeIndex(calendar)
+    canonical_folds = None
+    canonical_step = None
+    loaded = []
+    seen_seeds = set()
+    for session, requested_seed in sessions:
+        session_dir = resolve_session_dir(session)
+        meta_path = session_dir / "meta.json"
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        if meta.get("mode") != "rolling_train_only":
+            raise ValueError(f"not a rolling train-only session: {session_dir}")
+        seed = meta.get("seed") if requested_seed is None else requested_seed
+        if requested_seed is not None and int(meta.get("seed")) != int(requested_seed):
+            raise ValueError(f"seed mismatch for rolling session: {session_dir}")
+        if seed in seen_seeds:
+            raise ValueError(f"duplicate rolling seed: {seed}")
+        seen_seeds.add(seed)
+
+        folds = meta.get("rolling_folds") or []
+        expected = int(meta.get("expected_fold_count") or 0)
+        successful = [
+            row
+            for row in (meta.get("runs") or [])
+            if row.get("status") == "success"
+        ]
+        if expected <= 0 or len(folds) != expected or len(successful) != expected:
+            raise ValueError(
+                f"rolling session does not contain all successful folds: {session_dir}"
+            )
+        successful_by_fold = {int(row.get("fold") or row.get("run")): row for row in successful}
+        if set(successful_by_fold) != set(range(1, expected + 1)):
+            raise ValueError(
+                f"rolling session does not contain all successful folds: {session_dir}"
+            )
+        for fold in folds:
+            fold_no = int(fold["fold"])
+            if successful_by_fold[fold_no].get("segments") != fold.get("segments"):
+                raise ValueError(f"run/fold segment mismatch: {session_dir}")
+
+        if canonical_folds is None:
+            canonical_folds = folds
+            canonical_step = int(meta.get("step") or 0)
+        elif folds != canonical_folds or int(meta.get("step") or 0) != canonical_step:
+            raise ValueError("rolling fold manifest differs between seeds")
+        loaded.append(
+            {
+                "session": str(session_dir.resolve()),
+                "seed": seed,
+            }
+        )
+
+    if not canonical_folds:
+        raise ValueError("no rolling folds")
+    previous_end = None
+    for fold in canonical_folds:
+        test_start, test_end = (str(v) for v in fold["segments"]["test"])
+        start_pos = int(calendar.searchsorted(pd.Timestamp(test_start)))
+        end_pos = int(calendar.searchsorted(pd.Timestamp(test_end)))
+        if (
+            start_pos >= len(calendar)
+            or end_pos >= len(calendar)
+            or calendar[start_pos] != pd.Timestamp(test_start)
+            or calendar[end_pos] != pd.Timestamp(test_end)
+            or start_pos > end_pos
+        ):
+            raise ValueError(f"invalid rolling test segment: {test_start}..{test_end}")
+        if previous_end is not None and start_pos != previous_end + 1:
+            raise ValueError("rolling prediction folds must be contiguous")
+        previous_end = end_pos
+    return {
+        "folds": canonical_folds,
+        "sessions": loaded,
+        "step": canonical_step,
+        "rolling_type": "expanding",
+    }
 
 
 def _handler_start_for_inference(test_start: str) -> str:
@@ -218,6 +366,13 @@ def _load_st_symbols(st_names: Optional[Path]) -> Optional[set[str]]:
     return set(df.loc[mask, sym_col].astype(str).str.upper())
 
 
+def _yearly_summaries(daily: pd.DataFrame) -> dict[str, dict]:
+    return {
+        str(year): summarize_ic(group)
+        for year, group in daily.groupby(daily.index.year)
+    }
+
+
 def evaluate(
     cfg: dict,
     sessions: Sequence[tuple[str, Any]],
@@ -293,7 +448,9 @@ def evaluate(
                 pred = pred.swaplevel().sort_index()
             pred.index = pred.index.set_names(["datetime", "instrument"])
             daily = daily_ic(pred, label, min_count=min_count)
-            pool_out["seeds"][str(seed)] = summarize_ic(daily)
+            summary = summarize_ic(daily)
+            summary["yearly"] = _yearly_summaries(daily)
+            pool_out["seeds"][str(seed)] = summary
 
         seed_stats = [v for v in pool_out["seeds"].values() if v.get("n_days")]
         if seed_stats:
@@ -308,6 +465,190 @@ def evaluate(
         result["pools"][pool] = pool_out
         print(f"[{pool}] {pool_out.get('seed_mean', {})}")
 
+    return result
+
+
+def _rolling_fold_config(cfg: dict, fold: dict) -> dict:
+    out = copy.deepcopy(cfg)
+    out["segments"] = copy.deepcopy(fold["segments"])
+    handler = out["data"]["handler"]
+    handler["fit_start_time"] = out["segments"]["train"][0]
+    handler["fit_end_time"] = out["segments"]["train"][1]
+    handler["end_time"] = out["segments"]["test"][1]
+    return out
+
+
+def _normalize_prediction(pred: pd.Series | pd.DataFrame) -> pd.Series:
+    if isinstance(pred, pd.DataFrame):
+        pred = pred.iloc[:, 0]
+    if not pd.api.types.is_datetime64_any_dtype(pred.index.get_level_values(0)):
+        pred = pred.swaplevel().sort_index()
+    pred.index = pred.index.set_names(["datetime", "instrument"])
+    return pred.sort_index()
+
+
+def _period_summaries(
+    daily: pd.DataFrame,
+    folds: Sequence[dict],
+) -> tuple[dict[str, dict], dict[str, dict]]:
+    fold_stats = {}
+    for fold in folds:
+        start, end = fold["segments"]["test"]
+        fold_stats[str(fold["fold"])] = {
+            "test": [start, end],
+            **summarize_ic(daily.loc[str(start):str(end)]),
+        }
+    yearly = _yearly_summaries(daily)
+    return fold_stats, yearly
+
+
+def evaluate_rolling(
+    cfg: dict,
+    sessions: Sequence[tuple[str, Any]],
+    pools: Sequence[str],
+    *,
+    min_listing_days: int = 60,
+    st_symbols: Optional[set[str]] = None,
+    min_count: int = 20,
+) -> dict:
+    """Evaluate stitched walk-forward predictions through the canonical IC path."""
+    from qlib.data import D
+
+    official_start, official_end = _segment_bounds(cfg, "test")
+    calendar = pd.DatetimeIndex(
+        D.calendar(start_time=official_start, end_time=official_end)
+    )
+    manifest = _load_rolling_sessions(sessions, calendar)
+    folds = manifest["folds"]
+    first_start = str(folds[0]["segments"]["test"][0])
+    last_end = str(folds[-1]["segments"]["test"][1])
+    if (first_start, last_end) != (official_start, official_end):
+        raise ValueError(
+            "rolling folds must cover the complete official test segment"
+        )
+
+    result: dict[str, Any] = {
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "config": cfg.get("_config_path"),
+        "eval_label": EVAL_LABEL_EXPR,
+        "eval_label_role": "fixed_1d",
+        "eval_segment_name": "test",
+        "eval_segment": [official_start, official_end],
+        "effective_eval_segment": [official_start, official_end],
+        "test_segment": [official_start, official_end],
+        "sessions": manifest["sessions"],
+        "rolling": {
+            "type": manifest["rolling_type"],
+            "step": manifest["step"],
+            "fold_count": len(folds),
+            "folds": folds,
+        },
+        "data_version": str(
+            pd.Timestamp(D.calendar(start_time="2020-01-01")[-1]).date()
+        ),
+        "st_filter": (
+            "enabled" if st_symbols is not None else "unavailable（未剔除 ST）"
+        ),
+        "pools": {},
+    }
+
+    expected_dates = set(calendar)
+    iteration_diagnostics: dict[str, dict[str, list[int]]] = {}
+    for pool in pools:
+        label = _fetch_label(pool, official_start, official_end)
+        if pool in POOLS_NEED_LISTING_FILTER:
+            mask = _listing_age_mask(
+                label.index,
+                pool,
+                min_listing_days,
+                official_end,
+            )
+            label = label[mask]
+        if st_symbols:
+            keep = ~label.index.get_level_values("instrument").str.upper().isin(
+                st_symbols
+            )
+            label = label[keep]
+
+        predictions: dict[Any, list[pd.Series]] = {
+            row["seed"]: [] for row in manifest["sessions"]
+        }
+        for fold in folds:
+            fold_cfg = _rolling_fold_config(cfg, fold)
+            dataset = _build_dataset(fold_cfg, pool, segment="test")
+            for session_row in manifest["sessions"]:
+                model = _load_model(
+                    session_row["session"],
+                    from_run=int(fold["fold"]),
+                )
+                _record_rolling_iterations(
+                    iteration_diagnostics,
+                    seed=session_row["seed"],
+                    fold=int(fold["fold"]),
+                    model=model,
+                )
+                pred = _normalize_prediction(
+                    model.predict(dataset, segment="test")
+                )
+                predictions[session_row["seed"]].append(pred)
+                del model
+            del dataset
+            gc.collect()
+
+        pool_out: dict[str, Any] = {"seeds": {}}
+        for seed, pieces in predictions.items():
+            pred = pd.concat(pieces).sort_index()
+            if pred.index.has_duplicates:
+                raise ValueError(
+                    f"duplicate rolling predictions for pool={pool}, seed={seed}"
+                )
+            predicted_dates = set(
+                pd.DatetimeIndex(
+                    pred.index.get_level_values("datetime").unique()
+                )
+            )
+            if predicted_dates != expected_dates:
+                missing = sorted(expected_dates - predicted_dates)
+                extra = sorted(predicted_dates - expected_dates)
+                raise ValueError(
+                    f"rolling prediction date coverage mismatch for {pool}/{seed}: "
+                    f"missing={missing[:3]}, extra={extra[:3]}"
+                )
+            daily = daily_ic(pred, label, min_count=min_count)
+            summary = summarize_ic(daily)
+            fold_stats, yearly = _period_summaries(daily, folds)
+            summary["folds"] = fold_stats
+            summary["yearly"] = yearly
+            pool_out["seeds"][str(seed)] = summary
+
+        seed_stats = [v for v in pool_out["seeds"].values() if v.get("n_days")]
+        if seed_stats:
+            pool_out["seed_mean"] = {
+                key: float(
+                    np.mean(
+                        [row[key] for row in seed_stats if row.get(key) is not None]
+                    )
+                )
+                for key in ("ic_mean", "icir", "rank_ic_mean", "rank_icir")
+                if any(row.get(key) is not None for row in seed_stats)
+            }
+            rank_means = [
+                row["rank_ic_mean"]
+                for row in seed_stats
+                if row.get("rank_ic_mean") is not None
+            ]
+            if len(rank_means) > 1:
+                pool_out["seed_mean"]["rank_ic_mean_std"] = float(
+                    np.std(rank_means, ddof=1)
+                )
+        result["pools"][pool] = pool_out
+        print(f"[rolling/{pool}] {pool_out.get('seed_mean', {})}")
+    model_kwargs = cfg["model"]["kwargs"]
+    result["rolling"]["model_diagnostics"] = _summarize_rolling_iterations(
+        iteration_diagnostics,
+        max_rounds=int(model_kwargs["epochs"]),
+        early_stopping_rounds=model_kwargs.get("early_stopping_rounds"),
+    )
     return result
 
 
@@ -354,12 +695,23 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default=None,
         help="可选有效评测截止日，不得晚于规范分段截止日",
     )
+    p.add_argument(
+        "--rolling",
+        action="store_true",
+        help="sessions are rolling parent sessions; stitch fold predictions",
+    )
     args = p.parse_args(argv)
     if (
         args.eval_label != EVAL_LABEL_EXPR
         and args.eval_label_role != "self"
     ):
         p.error("custom --eval-label requires --eval-label-role self")
+    if args.rolling and (
+        args.segment != "test"
+        or args.eval_label != EVAL_LABEL_EXPR
+        or args.eval_end is not None
+    ):
+        p.error("--rolling requires full test segment and fixed 1-day label")
     return args
 
 
@@ -370,18 +722,28 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
     sessions = [_parse_session(s) for s in args.sessions]
     st_symbols = _load_st_symbols(args.st_names)
-    result = evaluate(
-        cfg,
-        sessions,
-        args.pools,
-        min_listing_days=args.min_listing_days,
-        st_symbols=st_symbols,
-        min_count=args.min_count,
-        segment=args.segment,
-        eval_label_expr=args.eval_label,
-        eval_label_role=args.eval_label_role,
-        eval_end=args.eval_end,
-    )
+    if args.rolling:
+        result = evaluate_rolling(
+            cfg,
+            sessions,
+            args.pools,
+            min_listing_days=args.min_listing_days,
+            st_symbols=st_symbols,
+            min_count=args.min_count,
+        )
+    else:
+        result = evaluate(
+            cfg,
+            sessions,
+            args.pools,
+            min_listing_days=args.min_listing_days,
+            st_symbols=st_symbols,
+            min_count=args.min_count,
+            segment=args.segment,
+            eval_label_expr=args.eval_label,
+            eval_label_role=args.eval_label_role,
+            eval_end=args.eval_end,
+        )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

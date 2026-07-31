@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
@@ -17,6 +19,15 @@ VALID_SEGMENT = ("2020-01-13", "2021-07-15")
 TEST_SEGMENT = ("2021-07-16", "2026-07-16")
 SAFE_VALID_END = "2021-07-13"
 EVAL_LABEL_EXPR = "Ref($close, -2)/Ref($close, -1)-1"
+DEFAULT_PROTOCOL_ID = "official-v1"
+_PROTOCOLS = {
+    DEFAULT_PROTOCOL_ID: (VALID_SEGMENT, SAFE_VALID_END, TEST_SEGMENT),
+    "post2020-forward-v1": (
+        ("2023-01-03", "2024-06-28"),
+        "2024-06-26",
+        ("2024-07-01", "2026-07-16"),
+    ),
+}
 
 
 class _PreparedTrainValidDataset:
@@ -38,10 +49,16 @@ class RankICEarlyStoppingDEnsembleModel(DEnsembleModel):
     def __init__(
         self,
         *,
-        valid_segment: tuple[str, str] = VALID_SEGMENT,
-        test_segment: tuple[str, str] = TEST_SEGMENT,
+        protocol_id: str = DEFAULT_PROTOCOL_ID,
+        valid_segment: Optional[tuple[str, str]] = None,
+        test_segment: Optional[tuple[str, str]] = None,
         **kwargs,
     ):
+        expected_valid, _, expected_test = _protocol(protocol_id)
+        if valid_segment is None:
+            valid_segment = expected_valid
+        if test_segment is None:
+            test_segment = expected_test
         base_model = kwargs.get("base_model", "gbm")
         loss = kwargs.get("loss", "mse")
         early_stopping_rounds = kwargs.get("early_stopping_rounds")
@@ -51,12 +68,13 @@ class RankICEarlyStoppingDEnsembleModel(DEnsembleModel):
             raise ValueError("loss must be mse")
         if early_stopping_rounds is None or early_stopping_rounds <= 0:
             raise ValueError("early_stopping_rounds must be positive")
-        if not _segment_matches(valid_segment, VALID_SEGMENT):
+        if not _segment_matches(valid_segment, expected_valid):
             raise ValueError("valid_segment must use the fixed boundary")
-        if not _segment_matches(test_segment, TEST_SEGMENT):
+        if not _segment_matches(test_segment, expected_test):
             raise ValueError("test_segment must use the fixed boundary")
 
         super().__init__(**kwargs)
+        self.protocol_id = protocol_id
         self.rankic_evals_result: list[dict] = []
 
     def fit(self, dataset: DatasetH):
@@ -65,7 +83,10 @@ class RankICEarlyStoppingDEnsembleModel(DEnsembleModel):
             col_set=["feature", "label"],
             data_key=DataHandlerLP.DK_L,
         )
-        df_valid = fixed_next_day_valid_frame(dataset)
+        df_valid = fixed_next_day_valid_frame(
+            dataset,
+            protocol_id=self.protocol_id,
+        )
         self.rankic_evals_result = []
         return super().fit(_PreparedTrainValidDataset(df_train, df_valid))
 
@@ -126,25 +147,37 @@ def _segment_matches(segment: tuple[str, str], expected: tuple[str, str]) -> boo
     return tuple(pd.Timestamp(value) for value in segment) == tuple(pd.Timestamp(value) for value in expected)
 
 
+def _protocol(protocol_id: str):
+    try:
+        return _PROTOCOLS[protocol_id]
+    except KeyError as exc:
+        raise ValueError(f"unknown protocol_id: {protocol_id!r}") from exc
+
+
 def _as_datetime_instrument_index(index: pd.MultiIndex) -> pd.MultiIndex:
     if not isinstance(index, pd.MultiIndex) or set(index.names) != {"datetime", "instrument"}:
         raise ValueError("label index must have datetime and instrument levels")
     return index.reorder_levels(["datetime", "instrument"])
 
 
-def fixed_next_day_valid_frame(dataset: DatasetH) -> pd.DataFrame:
+def fixed_next_day_valid_frame(
+    dataset: DatasetH,
+    *,
+    protocol_id: str = DEFAULT_PROTOCOL_ID,
+) -> pd.DataFrame:
     """Return fixed-safe valid features with their unprocessed next-day labels.
 
     Labels are fetched directly from Qlib rather than from the training handler,
     so RankIC early stopping always uses the common one-day evaluation target.
     """
-    if not _segment_matches(dataset.segments.get("valid", ()), VALID_SEGMENT) or not _segment_matches(
-        dataset.segments.get("test", ()), TEST_SEGMENT
+    valid_segment, safe_valid_end, test_segment = _protocol(protocol_id)
+    if not _segment_matches(dataset.segments.get("valid", ()), valid_segment) or not _segment_matches(
+        dataset.segments.get("test", ()), test_segment
     ):
         raise ValueError("dataset must use the fixed valid/test segments")
 
     features = dataset.prepare(
-        slice(VALID_SEGMENT[0], SAFE_VALID_END),
+        slice(valid_segment[0], safe_valid_end),
         col_set="feature",
         data_key=DataHandlerLP.DK_I,
     )
@@ -157,8 +190,8 @@ def fixed_next_day_valid_frame(dataset: DatasetH) -> pd.DataFrame:
     label_frame = D.features(
         instruments,
         [EVAL_LABEL_EXPR],
-        start_time=VALID_SEGMENT[0],
-        end_time=VALID_SEGMENT[1],
+        start_time=valid_segment[0],
+        end_time=valid_segment[1],
     )
     if label_frame.shape[1] != 1:
         raise ValueError("expected exactly one evaluation label column")

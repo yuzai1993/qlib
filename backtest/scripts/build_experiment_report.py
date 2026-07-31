@@ -186,6 +186,14 @@ def _resolve_baseline_row(all_rows: Sequence[dict], group: Sequence[dict]) -> Op
 
 def _with_baseline_first(all_rows: Sequence[dict], group: Sequence[dict]) -> tuple[list[dict], str]:
     """确保表格第一行为 baseline；返回 (rows, baseline_ref 标注)。"""
+    if group and all(_is_baseline_anchor(row) for row in group):
+        current = group[-1]
+        current_id = current.get("exp_id")
+        ordered = [current] + [
+            row for row in group if row.get("exp_id") != current_id
+        ]
+        return ordered, str(current.get("baseline_ref") or "").strip()
+
     ref = _baseline_ref_of(group)
     baseline = _resolve_baseline_row(all_rows, group)
     ordered = list(group)
@@ -302,6 +310,7 @@ def _build_phase_m_table(rows: Sequence[dict]) -> str:
     cols = _metric_columns_m(pools)
     eligible = [
         row.get("_eval_label_role") != "eval_self"
+        and row.get("evaluation_comparable_to_baseline", True) is True
         for row in rows
     ]
 
@@ -373,7 +382,11 @@ def _build_phase_m_table(rows: Sequence[dict]) -> str:
             if ri in best and v is not None:
                 cls.append("best")
             cells.append(f'<td class="{" ".join(cls)}">{_fmt_metric(v)}</td>')
-        row_class = ' class="diagnostic"' if role == "eval_self" else ""
+        diagnostic = (
+            role == "eval_self"
+            or r.get("evaluation_comparable_to_baseline", True) is not True
+        )
+        row_class = ' class="diagnostic"' if diagnostic else ""
         body_rows.append(
             f"<tr{row_class}>" + "".join(cells) + "</tr>"
         )

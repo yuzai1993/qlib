@@ -1,0 +1,105 @@
+# EXPERIMENT_STANDARD v1.8 | exp: train-schedule/expanding-annual | seed 3000
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_rolling_retrain.py --config train-schedule/expanding-annual/ts_expanding_annual_s3000.yaml
+backtest:
+  account: 1000000
+  exchange_kwargs:
+    close_cost: 0.00071
+    deal_price: close
+    freq: day
+    limit_threshold: 0.095
+    min_cost: 5
+    open_cost: 0.00021
+    trade_unit: 100
+data:
+  benchmark: SH000852
+  handler:
+    class: Alpha158Technical
+    end_time: '2026-07-16'
+    feature_groups:
+    - range
+    fit_end_time: '2020-01-10'
+    fit_start_time: '2016-01-02'
+    infer_processors:
+    - class: ProcessInf
+    label:
+    - - Ref($close, -41)/Ref($close, -1)-1
+    - - LABEL0
+    learn_processors:
+    - class: DropnaLabel
+    - class: CSRankNorm
+      kwargs:
+        fields_group: label
+    module_path: backtest.features.technical
+    start_time: '2003-01-02'
+  instruments: csi1000
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+dataset:
+  class: PurgedHorizonDataset
+  kwargs:
+    label_horizon: 40
+  module_path: backtest.label_design.dataset
+model:
+  class: DEnsembleModel
+  kwargs:
+    alpha1: 1
+    alpha2: 1
+    base_model: gbm
+    bins_fs: 5
+    bins_sr: 10
+    colsample_bytree: 0.8879
+    decay: 0.5
+    enable_fs: true
+    enable_sr: true
+    epochs: 28
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    learning_rate: 0.2
+    loss: mse
+    max_depth: 8
+    num_leaves: 210
+    num_models: 3
+    num_threads: 8
+    sample_ratios:
+    - 0.8
+    - 0.7
+    - 0.6
+    - 0.5
+    - 0.4
+    seed: 3000
+    sub_weights:
+    - 1
+    - 1
+    - 1
+    subsample: 0.8789
+  module_path: qlib.contrib.model.double_ensemble
+run:
+  from_run: 1
+  from_session: null
+  generate_figures: false
+  mode: train_only
+  n_runs: 1
+  note: ts_expanding_annual_s3000
+segments:
+  test:
+  - '2021-07-16'
+  - '2026-07-16'
+  train:
+  - '2016-01-02'
+  - '2020-01-10'
+  valid:
+  - '2020-01-13'
+  - '2021-07-15'
+strategy:
+  class: TopkDropoutStrategy
+  kwargs:
+    forbid_all_trade_at_limit: false
+    hold_thresh: 1
+    only_tradable: false
+    risk_degree: 0.95
+  module_path: qlib.contrib.strategy.signal_strategy
+  n_drop: 2
+  topk: 10
+rolling:
+  type: expanding
+  step: 252

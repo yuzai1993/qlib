@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import statistics
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -40,12 +41,16 @@ def _pool(rank_ic: float) -> dict:
         str(seed): _seed_metrics(rank_ic, index)
         for index, seed in enumerate(SEEDS)
     }
+    seed_mean = {
+        metric: sum(row[metric] for row in seeds.values()) / len(SEEDS)
+        for metric in METRICS
+    }
+    seed_mean["rank_ic_mean_std"] = statistics.stdev(
+        row["rank_ic_mean"] for row in seeds.values()
+    )
     return {
         "seeds": seeds,
-        "seed_mean": {
-            metric: sum(row[metric] for row in seeds.values()) / len(SEEDS)
-            for metric in METRICS
-        },
+        "seed_mean": seed_mean,
     }
 
 
@@ -528,6 +533,13 @@ def test_final_records_complete_audit_and_renders_b5_first_with_12_metrics(
     assert row["audit_artifacts"]["selection_manifest"].endswith("selection.json")
     for pool in POOLS:
         assert set(METRICS) <= set(row["metrics_summary"][pool])
+        expected_std = statistics.stdev(
+            test_result_seed["rank_ic_mean"]
+            for test_result_seed in json.loads(test_path.read_text())["pools"][pool][
+                "seeds"
+            ].values()
+        )
+        assert row["metrics_summary"][pool]["rank_ic_mean_std"] == expected_std
 
     html = report.build_html([_baseline_row(), row])
     section = html.split("id='direction-model-hyperparam'", 1)[1]
@@ -535,6 +547,20 @@ def test_final_records_complete_audit_and_renders_b5_first_with_12_metrics(
     final_html_row = section.split(register.EXP_ID, 1)[1].split("</tr>", 1)[0]
     assert final_html_row.count('<td class="num') == 12
     assert '<span class="empty">—</span>' not in final_html_row
+
+
+def test_final_rejects_rankic_sample_std_drift(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    registry_path, baseline_path, manifest_path, test_path = _setup_final_files(
+        tmp_path, monkeypatch
+    )
+    result = json.loads(test_path.read_text())
+    result["pools"]["csi1000"]["seed_mean"]["rank_ic_mean_std"] = 999.0
+    _write_json(test_path, result)
+
+    with pytest.raises(ValueError, match="rank_ic_mean_std"):
+        _finalize(registry_path, baseline_path, manifest_path, test_path)
 
 
 def test_final_rejects_config_changed_after_pending_without_registry_write(

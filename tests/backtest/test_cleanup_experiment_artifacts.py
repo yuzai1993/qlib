@@ -185,6 +185,21 @@ def test_later_phase_s_baseline_does_not_replace_phase_m_baseline():
     assert cleanup.select_retained_rows([baseline, phase_s]) == [baseline]
 
 
+def test_latest_phase_m_b6_anchor_replaces_b5_and_has_no_b5_relative_candidate():
+    b5 = _baseline()
+    b5.update({"exp_id": "baseline/b5-m", "baseline_ref": "B5 v1.0"})
+    b6 = _baseline()
+    b6.update({"exp_id": "baseline/b6-m", "baseline_ref": "B6 v1.0"})
+    old_winner = _row(
+        "model-hyperparam/valid-rankic-search-v1",
+        metrics=_metrics([0.03, 0.04, 0.05], [0.5, 0.5, 0.5]),
+        result_dirs=["backtest/result/old-winner"],
+    )
+    old_winner["baseline_ref"] = "B5 v1.0"
+
+    assert cleanup.select_retained_rows([b5, old_winner, b6]) == [b6]
+
+
 def test_non_finite_candidate_metrics_are_ineligible():
     baseline = _baseline()
     for value in (math.nan, math.inf, -math.inf):
@@ -198,6 +213,18 @@ def test_non_finite_candidate_metrics_are_ineligible():
         assert cleanup.select_retained_rows([baseline, candidate]) == [baseline]
 
 
+def test_forward_holdout_row_can_explicitly_opt_out_of_baseline_retention():
+    baseline = _baseline()
+    forward = _row(
+        "train-recency/rankic-winner-post2020",
+        metrics=_metrics([0.03, 0.04, 0.05], [0.5, 0.5, 0.5]),
+        result_dirs=["backtest/result/forward"],
+    )
+    forward["cleanup_retention_eligible"] = False
+
+    assert cleanup.select_retained_rows([baseline, forward]) == [baseline]
+
+
 def _write_session(path: Path, experiment_id: str):
     path.mkdir(parents=True)
     (path / "meta.json").write_text(
@@ -209,6 +236,41 @@ def _write_session(path: Path, experiment_id: str):
                         "train_experiment_id": experiment_id,
                     }
                 ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_rolling_session(path: Path, experiment_ids: list[str]):
+    path.mkdir(parents=True)
+    folds = [
+        {
+            "fold": index,
+            "segments": {
+                "train": ["2016-01-02", f"202{index}-01-01"],
+                "valid": [f"202{index}-01-02", f"202{index}-06-30"],
+                "test": [f"202{index}-07-01", f"202{index + 1}-06-30"],
+            },
+        }
+        for index in range(1, len(experiment_ids) + 1)
+    ]
+    (path / "meta.json").write_text(
+        json.dumps(
+            {
+                "mode": "rolling_train_only",
+                "expected_fold_count": len(folds),
+                "rolling_folds": folds,
+                "runs": [
+                    {
+                        "run": fold["fold"],
+                        "fold": fold["fold"],
+                        "segments": fold["segments"],
+                        "status": "success",
+                        "train_experiment_id": experiment_id,
+                    }
+                    for fold, experiment_id in zip(folds, experiment_ids)
+                ],
             }
         ),
         encoding="utf-8",
@@ -272,6 +334,52 @@ def test_cleanup_plan_is_direct_child_safe_and_dry_run_is_non_destructive(tmp_pa
     assert (mlruns_root / "202").exists()
     assert not (mlruns_root / "303").exists()
     assert not (mlruns_root / ".trash").exists()
+
+
+def test_cleanup_retains_every_fold_experiment_for_five_rolling_sessions(
+    tmp_path,
+):
+    result_root = tmp_path / "backtest" / "result"
+    mlruns_root = tmp_path / "mlruns"
+    base_dirs = [result_root / f"base-{index}" for index in range(5)]
+    rolling_dirs = [result_root / f"rolling-{index}" for index in range(5)]
+
+    for index, session in enumerate(base_dirs, start=101):
+        _write_session(session, str(index))
+        (mlruns_root / str(index)).mkdir(parents=True)
+    rolling_ids = []
+    for index, session in enumerate(rolling_dirs, start=201):
+        fold_ids = [str(index * 10 + 1), str(index * 10 + 2)]
+        rolling_ids.extend(fold_ids)
+        _write_rolling_session(session, fold_ids)
+        for experiment_id in fold_ids:
+            (mlruns_root / experiment_id).mkdir(parents=True)
+
+    baseline = _baseline()
+    baseline["result_dirs"] = [
+        f"backtest/result/base-{index}" for index in range(5)
+    ]
+    rolling = _row(
+        "train-schedule/expanding-annual",
+        metrics=_metrics([0.021, 0.031, 0.041], [0.21, 0.31, 0.41]),
+        result_dirs=[
+            f"backtest/result/rolling-{index}" for index in range(5)
+        ],
+    )
+
+    plan = cleanup.build_cleanup_plan(tmp_path, [baseline, rolling])
+
+    assert plan["errors"] == []
+    assert plan["candidate_exp_id"] == "train-schedule/expanding-annual"
+    assert plan["keep_result_dirs"] == sorted(
+        [path.resolve() for path in base_dirs + rolling_dirs]
+    )
+    assert plan["keep_mlruns_dirs"] == sorted(
+        [
+            *(mlruns_root / str(index) for index in range(101, 106)),
+            *(mlruns_root / experiment_id for experiment_id in rolling_ids),
+        ]
+    )
 
 
 def test_cli_writes_machine_readable_plan_to_stdout(tmp_path, capsys):

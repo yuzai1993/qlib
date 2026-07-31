@@ -75,12 +75,99 @@ def test_phase_m_report_orders_primary_csi1000_pool_first():
     assert "优先关注研究主目标池 <b>CSI1000</b>" in report.PHASE_M_LEGEND_HTML
 
 
-def test_current_baseline_has_complete_phase_m_metrics():
+def test_forward_holdout_rows_are_diagnostic_and_not_best_highlighted():
+    rows = [
+        {
+            "exp_id": "baseline/b5-m",
+            "direction": "baseline",
+            "phase": "M",
+            "baseline_ref": "B5 v1.0",
+            "conclusion": "baseline",
+            "metrics_summary": _pool_metrics(0.02),
+        },
+        {
+            "exp_id": "train-recency/rankic-winner-stale",
+            "direction": "train-recency",
+            "phase": "M",
+            "baseline_ref": "B5 v1.0",
+            "evaluation_comparable_to_baseline": False,
+            "metrics_summary": _pool_metrics(0.03),
+        },
+        {
+            "exp_id": "train-recency/rankic-winner-post2020",
+            "direction": "train-recency",
+            "phase": "M",
+            "baseline_ref": "B5 v1.0",
+            "evaluation_comparable_to_baseline": False,
+            "metrics_summary": _pool_metrics(0.04),
+        },
+    ]
+
+    section = report.build_html(rows).split("id='direction-train-recency'", 1)[1]
+    stale_row = section.split("train-recency/rankic-winner-stale", 1)[1].split("</tr>", 1)[0]
+    expanded_row = section.split("train-recency/rankic-winner-post2020", 1)[1].split("</tr>", 1)[0]
+
+    assert 'class="diagnostic"' in section
+    assert " best" not in stale_row
+    assert " best" not in expanded_row
+
+
+def test_current_b6_baseline_has_complete_phase_m_metrics():
     registry = ROOT / "backtest" / "experiments" / "registry.jsonl"
     rows = [json.loads(line) for line in registry.read_text().splitlines()]
-    baseline = next(row for row in rows if row["exp_id"] == "baseline/b2-m")
+    baseline = [
+        row
+        for row in rows
+        if row.get("direction") == "baseline"
+        and row.get("phase") == "M"
+        and row.get("conclusion") == "baseline"
+    ][-1]
+
+    assert baseline["exp_id"] == "baseline/b6-m"
+    assert baseline["baseline_ref"] == "B6 v1.0"
 
     for pool in ("csi1000", "csi300", "csi500"):
         metrics = baseline["metrics_summary"][pool]
         for metric in report.PHASE_M_METRIC_KEYS:
             assert metric in metrics, f"{pool} missing {metric}"
+
+
+def test_baseline_table_puts_b6_first_but_historical_b5_group_keeps_b5():
+    rows = [
+        {
+            "exp_id": "baseline/b5-m",
+            "direction": "baseline",
+            "phase": "M",
+            "date": "2026-07-27",
+            "baseline_ref": "B5 v1.0",
+            "conclusion": "baseline",
+            "metrics_summary": _pool_metrics(0.02),
+        },
+        {
+            "exp_id": "model-hyperparam/old",
+            "direction": "model-hyperparam",
+            "phase": "M",
+            "date": "2026-07-30",
+            "baseline_ref": "B5 v1.0",
+            "metrics_summary": _pool_metrics(0.03),
+        },
+        {
+            "exp_id": "baseline/b6-m",
+            "direction": "baseline",
+            "phase": "M",
+            "date": "2026-07-31",
+            "baseline_ref": "B6 v1.0",
+            "conclusion": "baseline",
+            "metrics_summary": _pool_metrics(0.04),
+        },
+    ]
+
+    html = report.build_html(rows)
+    baseline_section = html.split("id='direction-baseline'", 1)[1].split("<h2", 1)[0]
+    historical_section = html.split("id='direction-model-hyperparam'", 1)[1]
+
+    assert baseline_section.index("baseline/b6-m") < baseline_section.index("baseline/b5-m")
+    assert historical_section.index("baseline/b5-m") < historical_section.index(
+        "model-hyperparam/old"
+    )
+    assert "baseline/b6-m" not in historical_section

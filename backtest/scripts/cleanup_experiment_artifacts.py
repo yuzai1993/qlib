@@ -52,6 +52,8 @@ def _phase_m_candidate_score(
 ) -> tuple[float, float, float] | None:
     if row.get("phase") != "M":
         return None
+    if row.get("cleanup_retention_eligible", True) is not True:
+        return None
     if row.get("direction") == "baseline":
         return None
     if row.get("baseline_ref") != baseline.get("baseline_ref"):
@@ -229,14 +231,45 @@ def _train_experiment_ids(
         except (OSError, json.JSONDecodeError) as exc:
             errors.append(f"session meta unreadable: {meta_path}: {exc}")
             continue
+        runs = meta.get("runs") or []
+        successful_runs = []
         session_ids = set()
-        for run in meta.get("runs") or []:
+        for run in runs:
             if run.get("status") != "success":
                 continue
+            successful_runs.append(run)
             experiment_id = str(run.get("train_experiment_id") or "")
             if experiment_id.isdigit():
                 session_ids.add(experiment_id)
-        if len(session_ids) != 1:
+        if meta.get("mode") == "rolling_train_only":
+            expected = int(meta.get("expected_fold_count") or 0)
+            folds = meta.get("rolling_folds") or []
+            successful_by_fold = {
+                int(run.get("fold") or run.get("run") or 0): run
+                for run in successful_runs
+            }
+            valid = (
+                expected > 0
+                and len(folds) == expected
+                and len(successful_runs) == expected
+                and len(successful_by_fold) == expected
+                and set(successful_by_fold) == set(range(1, expected + 1))
+                and len(session_ids) == expected
+            )
+            if valid:
+                valid = all(
+                    successful_by_fold[int(fold.get("fold") or 0)].get(
+                        "segments"
+                    )
+                    == fold.get("segments")
+                    for fold in folds
+                )
+            if not valid:
+                errors.append(
+                    "rolling session must reference one successful unique train "
+                    f"experiment per declared fold: {meta_path}"
+                )
+        elif len(session_ids) != 1:
             errors.append(
                 f"session must reference exactly one successful train experiment: "
                 f"{meta_path}"

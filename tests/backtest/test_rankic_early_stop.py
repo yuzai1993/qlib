@@ -94,16 +94,22 @@ class _FakeDataset:
 
 
 class _FakeDataProvider:
-    def __init__(self, label_frame: pd.DataFrame):
+    def __init__(
+        self,
+        label_frame: pd.DataFrame,
+        *,
+        valid_segment=("2020-01-13", "2021-07-15"),
+    ):
         self.label_frame = label_frame
+        self.valid_segment = valid_segment
         self.feature_calls = []
 
     def calendar(self, *, start_time, end_time):
-        assert start_time == "2020-01-13"
-        assert end_time == "2021-07-15"
+        assert (start_time, end_time) == self.valid_segment
         return pd.date_range(start_time, end_time, freq="B")
 
     def features(self, instruments, fields, *, start_time, end_time):
+        assert (start_time, end_time) == self.valid_segment
         self.feature_calls.append((instruments, fields, start_time, end_time))
         return self.label_frame
 
@@ -171,6 +177,50 @@ def test_fixed_next_day_valid_frame_discards_post_anchor_label_rows(monkeypatch)
 
     assert len(provider.label_frame) == len(features) + 2 * 21
     assert frame.index.equals(features.index)
+
+
+def test_post2020_protocol_uses_its_fixed_safe_valid_boundary_without_test(monkeypatch):
+    """Fails if the selected protocol cannot control fixed valid/test boundaries."""
+    from backtest.models import rankic_early_stop
+
+    valid_segment = ("2023-01-03", "2024-06-28")
+    test_segment = ("2024-07-01", "2026-07-16")
+    features = _features(days=("2023-01-03", "2024-06-26"))
+    dataset = _FakeDataset(features, valid=valid_segment, test=test_segment)
+    post_anchor = pd.MultiIndex.from_product(
+        [
+            pd.to_datetime(["2024-06-27", "2024-06-28"]),
+            features.index.get_level_values("instrument").unique(),
+        ],
+        names=["datetime", "instrument"],
+    )
+    label_index = features.index.append(post_anchor).swaplevel()
+    label_index = label_index.set_names(["instrument", "datetime"])
+    provider = _FakeDataProvider(
+        pd.DataFrame(
+            {EVAL_LABEL_EXPR: np.arange(len(label_index), dtype=float)},
+            index=label_index,
+        ),
+        valid_segment=valid_segment,
+    )
+    monkeypatch.setattr(rankic_early_stop, "D", provider)
+
+    frame = fixed_next_day_valid_frame(
+        dataset,
+        protocol_id="post2020-forward-v1",
+    )
+
+    assert dataset.prepared_segments == [slice("2023-01-03", "2024-06-26")]
+    assert "test" not in dataset.prepared_segments
+    assert frame.index.equals(features.index)
+    assert provider.feature_calls == [
+        (
+            [f"S{i:03d}" for i in range(21)],
+            [EVAL_LABEL_EXPR],
+            "2023-01-03",
+            "2024-06-28",
+        ),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -248,6 +298,36 @@ def test_rankic_ensemble_rejects_settings_that_change_the_fixed_protocol(kwargs,
 
     with pytest.raises(ValueError, match=error):
         RankICEarlyStoppingDEnsembleModel(**defaults)
+
+
+def test_rankic_ensemble_accepts_allowlisted_post2020_protocol():
+    """Fails if a valid forward protocol is not retained by the model instance."""
+    model = RankICEarlyStoppingDEnsembleModel(
+        protocol_id="post2020-forward-v1",
+        early_stopping_rounds=20,
+    )
+
+    assert model.protocol_id == "post2020-forward-v1"
+
+
+def test_rankic_ensemble_rejects_unknown_protocol_id():
+    """Fails if an arbitrary protocol can select unaudited validation data."""
+    with pytest.raises(ValueError, match="unknown protocol_id"):
+        RankICEarlyStoppingDEnsembleModel(
+            protocol_id="ad-hoc-window",
+            early_stopping_rounds=20,
+        )
+
+
+def test_rankic_ensemble_rejects_boundaries_from_another_protocol():
+    """Fails if protocol selection and explicit boundaries can disagree."""
+    with pytest.raises(ValueError, match="valid_segment"):
+        RankICEarlyStoppingDEnsembleModel(
+            protocol_id="post2020-forward-v1",
+            valid_segment=("2020-01-13", "2021-07-15"),
+            test_segment=("2021-07-16", "2026-07-16"),
+            early_stopping_rounds=20,
+        )
 
 
 class _FakeLGBDataset:
@@ -388,6 +468,60 @@ class _PredictingBooster:
         return np.full(len(values), self.value, dtype=float)
 
 
+def test_rankic_fit_uses_instance_protocol_without_preparing_test(monkeypatch):
+    """Fails if fit silently falls back to the default validation protocol."""
+    from backtest.models import rankic_early_stop
+
+    train = _model_frame(
+        np.arange(40, dtype=float),
+        days=("2022-11-01", "2022-11-02"),
+    )
+    valid = _model_frame(
+        np.arange(40, dtype=float),
+        days=("2023-01-03", "2023-01-04"),
+    )
+    dataset = _FitDataset(train, pd.DataFrame())
+    dataset.segments.update(
+        {
+            "valid": ("2023-01-03", "2024-06-28"),
+            "test": ("2024-07-01", "2026-07-16"),
+        }
+    )
+    captured = {}
+
+    def fake_fixed_valid(actual_dataset, *, protocol_id):
+        assert actual_dataset is dataset
+        captured["protocol_id"] = protocol_id
+        return valid
+
+    def fake_parent_fit(self, prepared_dataset):
+        captured["frames"] = prepared_dataset.prepare(
+            ["train", "valid"],
+            col_set=["feature", "label"],
+            data_key="learn",
+        )
+        return "fit-result"
+
+    monkeypatch.setattr(
+        rankic_early_stop,
+        "fixed_next_day_valid_frame",
+        fake_fixed_valid,
+    )
+    monkeypatch.setattr(rankic_early_stop.DEnsembleModel, "fit", fake_parent_fit)
+    model = RankICEarlyStoppingDEnsembleModel(
+        protocol_id="post2020-forward-v1",
+        early_stopping_rounds=20,
+    )
+
+    result = model.fit(dataset)
+
+    assert result == "fit-result"
+    assert captured["protocol_id"] == "post2020-forward-v1"
+    assert captured["frames"] == (train, valid)
+    assert dataset.prepare_calls == [("train", ["feature", "label"], "learn")]
+    assert all(call[0] != "test" for call in dataset.prepare_calls)
+
+
 def test_rankic_fit_keeps_h40_train_for_three_submodels_and_parent_prediction(monkeypatch):
     """Fails if the H1 valid frame leaks into SR/FS or changes parent prediction."""
     from backtest.models import rankic_early_stop
@@ -422,8 +556,9 @@ def test_rankic_fit_keeps_h40_train_for_three_submodels_and_parent_prediction(mo
         ]
     )
 
-    def fake_fixed_valid(actual_dataset):
+    def fake_fixed_valid(actual_dataset, *, protocol_id):
         assert actual_dataset is dataset
+        assert protocol_id == "official-v1"
         return valid
 
     def fake_train(**kwargs):

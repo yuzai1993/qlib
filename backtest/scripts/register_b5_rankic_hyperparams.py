@@ -271,6 +271,13 @@ def _finite(value: Any, label: str) -> float:
     return number
 
 
+def _sample_std(values: Sequence[float]) -> float:
+    if len(values) != len(SEEDS):
+        _fail("RankIC sample standard deviation requires five seeds")
+    mean = math.fsum(values) / len(values)
+    return math.sqrt(math.fsum((value - mean) ** 2 for value in values) / (len(values) - 1))
+
+
 def _exact_segment(value: Any, expected: Sequence[str], label: str) -> None:
     if not isinstance(value, (list, tuple)) or list(map(str, value)) != list(expected):
         _fail(f"{label} segment drift")
@@ -300,6 +307,18 @@ def _validate_seed_pool(pool: Any, label: str) -> dict[str, Any]:
         if not math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-15):
             _fail(f"{label} seed_mean differs from exact five seeds")
         normalized[key] = actual
+    expected_rank_ic_mean_std = _sample_std(values["rank_ic_mean"])
+    actual_rank_ic_mean_std = _finite(
+        seed_mean.get("rank_ic_mean_std"), f"{label} seed_mean rank_ic_mean_std"
+    )
+    if not math.isclose(
+        actual_rank_ic_mean_std,
+        expected_rank_ic_mean_std,
+        rel_tol=1e-12,
+        abs_tol=1e-15,
+    ):
+        _fail(f"{label} rank_ic_mean_std differs from exact five seeds")
+    normalized["rank_ic_mean_std"] = actual_rank_ic_mean_std
     return normalized
 
 

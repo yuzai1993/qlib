@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v1.8（2026-07-27）
+版本：v2.0（2026-07-31）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -9,37 +9,37 @@
 
 ## 0. 硬性约束（先读这里）
 
-1. 当前模型基线（B5-M）固定，见第 1 节；任何新模型实验必须与 B5 对比。**每个实验方向必须写明对照的 baseline 版本**（registry 的 `baseline_ref`，当前为 `B5 v1.0`），HTML 该方向表格**第一行**为对应 baseline 指标行。
-2. 模型与策略**分开迭代**：一期只改模型（Phase M），策略冻结为 B1-S；确定更优模型后才进入策略迭代（Phase S），此时模型冻结。
+1. 当前研究模型基线为 **B6-M**，见第 1 节；模型迭代已收尾。历史实验的 `baseline_ref` 不改写，HTML 每个方向表格**第一行**仍为该方向对应的 baseline 指标行。
+2. 模型与策略**分开迭代**：当前进入 Phase S，冻结 B6-M 五种子模型，只改策略；初始策略对照为 B1-S。
 3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
 4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi1000/csi300/csi500）上评估 IC/RankIC，**研究主目标池为 CSI1000**。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
-5. 时间划分固定（第 3 节）：测试集 2021-07-16 ~ 2026-07-16；评估集 2020-01-13 ~ 2021-07-15。**禁止用测试集调参**。
+5. 默认时间划分固定（第 3 节）：测试集 2021-07-16 ~ 2026-07-16；评估集 2020-01-13 ~ 2021-07-15。**禁止用测试集调参**。仅第 3.4 节由用户明确批准的 post-2020 forward 成对实验使用其专用时间切分。
 6. 每个实验必须登记到 `backtest/experiments/registry.jsonl`（配置路径 + 结果路径），并更新 HTML 报告（每个实验方向一张独立表格）。
 7. **实验结束后必须同时清理 `mlruns/` 和 `backtest/result/`**（见第 6.3 节）。当前 Phase M 自动清理只保留模型 baseline 与超过它的最佳候选实验组，避免磁盘被打爆。
 
 ---
 
-## 1. 基线定义（B5-M / B1-S）
+## 1. 基线定义（B6-M / B1-S）
 
 基线取自当前实盘配置 `live_trading/configs/csi300_topk10_live.yaml`，拆为模型基线与策略基线两部分。实盘对照回测的唯一合法配置是 `backtest/configs/csi300_live_parity.yaml`。
 
-### 1.1 模型基线 B5-M
+### 1.1 模型基线 B6-M
 
 | 项 | 值 |
 |---|---|
-| 基线版本 | `B5 v1.0`（B5-M，2026-07-27，由用户确认将 `loss-design/cs-rank-norm` 提升） |
-| 五种子基线组 | `loss-design/cs-rank-norm`，固定种子 `[42, 1000, 2000, 3000, 4000]` |
+| 基线版本 | `B6 v1.0`（B6-M，2026-07-31，由用户明确要求将超参冠军提升） |
+| 五种子基线组 | `model-hyperparam/valid-rankic-search-v1` 的冻结胜者 `rankic-es-lr010`，固定种子 `[42, 1000, 2000, 3000, 4000]` |
 | 训练池 | CSI1000 |
-| 来源 | B4（Alpha158+range、DoubleEnsemble、H40）之上将标签截面处理由 CSZScoreNorm 改为 CSRankNorm；registry `baseline/b5-m` 记录五种子配置、IC JSON 与结果目录 |
+| 来源 | B5（Alpha158+range、DoubleEnsemble、H40+CSRankNorm）之上，仅把学习率改为 0.1，并用固定次日 CSI1000 valid RankIC 早停与选型；registry `baseline/b6-m` 与 `b6_model_freeze.json` 记录完整证据 |
 | 特征 | Alpha158 + `range`（`backtest.features.technical.Alpha158Technical`，6 个密集区间/事件频率特征），handler start_time=2003-01-02 |
 | 训练区间 | fit 2016-01-02 ~ 2020-01-10（csi1000 完整样本池） |
 | 标签 | 累计未来 H40：`Ref($close, -41)/Ref($close, -1) - 1` |
 | 标签处理 | `learn_processors`: DropnaLabel + CSRankNorm(fields_group=label)（覆盖 Alpha158 默认 CSZScoreNorm） |
-| 模型 | `qlib.contrib.model.double_ensemble.DEnsembleModel`（base_model=gbm，num_models=3，enable_sr/enable_fs=True，epochs=28，decay=0.5） |
-| 超参 | 子模型 LGB 与 B4 相同：loss=mse, learning_rate=0.2, colsample_bytree=0.8879, subsample=0.8789, lambda_l1=205.6999, lambda_l2=580.9768, max_depth=8, num_leaves=210（见 `backtest/configs/loss-design/cs-rank-norm/`） |
+| 模型 | `backtest.models.rankic_early_stop.RankICEarlyStoppingDEnsembleModel`（base_model=gbm，num_models=3，enable_sr/enable_fs=True，epochs=200，early_stopping_rounds=20） |
+| 超参 | loss=mse, learning_rate=0.1，其余子模型 LGB 参数沿用 B5；早停指标为固定次日 valid 日 RankIC，有效 valid 截止 2021-07-13（见 `backtest/configs/model-hyperparam/rankic-es-lr010/`） |
 | 数据处理 | infer_processors 含 ProcessInf，与实盘配置一致 |
 
-五种子 test 固定一日评估指标以 registry `baseline/b5-m` 为准；后续模型实验优先查看 CSI1000。B4-M / B3-M / B2-M / B1-M 为历史模型基线，旧实验的 `baseline_ref` 不改写。B5-M 是研究基线提升，不自动切换实盘 B1-M artifact。
+五种子 test 固定一日正式指标以 registry `baseline/b6-m` 为准；H40 self-eval 仅为诊断。B5-M 及更早基线是历史对照，旧实验的 `baseline_ref` 不改写。B6-M 已冻结供 Phase S 使用，但不自动切换实盘 B1 artifact。
 
 ### 1.2 策略基线 B1-S
 
@@ -60,7 +60,7 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与当前
 
 只有当某实验按本规范完成完整评估（第 4/5 节）、结果对比数据经用户确认后，才可将其提升为新基线；提升时在本文件更新当前基线定义并记录版本号与日期。agent 不得自行提升基线。
 
-本次 B5-M 提升已获用户确认；实盘配置与实盘模型仍保持 B1，除非另行完成部署审批。B4-M（`baseline/b4-m`，DoubleEnsemble + CSZScoreNorm）与更早基线保留为历史对照。
+本次 B6-M 提升及 Phase M 收尾已获用户明确确认；实盘配置与实盘模型仍保持 B1，除非另行完成部署流程。B5-M 与更早基线保留为历史对照。
 
 ---
 
@@ -71,11 +71,11 @@ Phase M（模型迭代）            Phase S（策略迭代）
 改：特征/标签/模型/超参    →    改：策略类型/参数/调仓规则
 冻结：B1-S 策略                冻结：Phase M 选出的最优模型
 指标：IC / RankIC              指标：扣费超额 IR / 年化 / 最大回撤
-                    ↑ 用户确认后切换 ↑
+                    ↑ 当前已切换，冻结 B6-M ↑
 ```
 
 - Phase M 配置必须使用 `run.mode=train_only`，只训练并保存模型；**不得随模型训练自动运行策略回测**。如确需参考策略回测，必须在模型评估完成后使用冻结模型另行运行，且 B1-S 参数原样不变，结果不参与 Phase M 选型。
-- Phase S 期间**不重训模型**：使用冻结模型的 5 种子预测分数（建议经 `backtest/scripts/ensemble_preds.py` 做截面 z-score 等权集成），在同一份分数上比较策略，用 `backtest/scripts/run_pred_backtest.py` / `run_strategy_sweep.py` 执行。
+- Phase S 期间**不重训模型**：使用 B6-M 冻结清单中的 5 种子预测分数，经严格 five-of-five 覆盖校验后做截面 z-score 等权集成，在同一份分数上比较策略。
 - 同时改模型和策略的实验结果**不予采信、不进 registry**。
 
 ---
@@ -109,6 +109,26 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 ### 3.3 种子
 
 固定 5 个种子：`[42, 1000, 2000, 3000, 4000]`。不得增删或挑选种子；报告必须给出 5 种子的均值与标准差，不得只报最优种子。
+
+### 3.4 Post-2020 固定截点成对实验（一次性批准协议）
+
+用户于 2026-07-31 明确要求：后续实盘目标改为当前研究最优模型，并允许在已选定的 `rankic-es-lr010` 超参版本上继续研究 2020 年后的训练样本。为避免把 2021-2026 同时作为训练和测试，批准以下一次性 forward 协议：
+
+| 分组 | train | valid | test |
+|---|---|---|---|
+| stale control | 2016-01-02 ~ 2020-01-10 | 2023-01-03 ~ 2024-06-28 | 2024-07-01 ~ 2026-07-16 |
+| post-2020 expanded | 2016-01-02 ~ 2022-12-30 | 2023-01-03 ~ 2024-06-28 | 2024-07-01 ~ 2026-07-16 |
+
+协议约束：
+
+1. 两组均使用 `model-hyperparam/valid-rankic-search-v1` 已冻结胜者的完整结构与超参；除 train 终点及对应 handler `fit_end_time` 外不得改变模型变量。
+2. 两组均在 CSI1000 训练，使用固定五种子，并在共同 test 上评估 csi1000/csi300/csi500。结论只按两组在同一 forward test 上的成对差异给出，不得把 forward 数值直接与原 B5 的 2021-07-16 ~ 2026-07-16 数值比较。
+3. early stopping 仍使用固定次日 valid 日 RankIC；为防标签跨入 test，有效 valid 锚点固定为 2023-01-03 ~ 2024-06-26（valid 最后两个交易日不作为早停样本）。训练 H40 标签继续由 `PurgedHorizonDataset(label_horizon=40)` 清除边界样本。
+4. test 不参与早停、调参或二次筛选。两个分组、配置哈希及结论规则必须在训练前写入冻结协议清单；实验完成后，无论结果好坏都须登记 registry 并更新 HTML。
+5. 该协议不改变 B5 v1.0 基线定义，不自动提升研究基线，也不直接切换实盘。registry 行必须同时标记 `evaluation_comparable_to_baseline: false` 与 `cleanup_retention_eligible: false`，清理器不得把该 forward 指标用于当前 baseline 候选排序。
+6. 若 expanded 组胜出，生产重训、DoubleEnsemble 实盘推理适配、shadow/SIMULATE 与切换仍是后续独立步骤；不得用本协议的 test 继续调 production 模型超参。
+
+该成对实验最终为 `inconclusive`，只回答“加入 post-2020 样本是否改善共同 forward 窗口”。B6-M 的提升来自此前冻结的 valid 超参选择及原始 test 评估，**不是**由该 forward 结果驱动；B6-M 训练窗口仍固定为 2016-01-02 ~ 2020-01-10。
 
 ---
 
@@ -157,7 +177,12 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 | 主指标 | 扣费超额 IR（information_ratio） |
 | 副指标 | 扣费超额年化（annualized_return）、扣费最大回撤（max_drawdown） |
 
-**报告要求**：在冻结模型的同一份预测分数上对比；三项指标齐报，并附分年度 IR（`eval_protocol.py: yearly_ir`）以确认不是单一年份驱动。
+**选型与报告要求**：
+
+1. 首先为 B6-M 冻结五种子 raw prediction 路径、SHA-256、exact five-of-five 索引覆盖、截面 z-score 等权集成规则与 ensemble SHA-256。
+2. 策略网格、主指标与并列规则须预先登记；**只允许在 valid 段选型**，test 不得参与参数筛选。
+3. valid 冻结胜者后，B1-S 对照与胜者各只打开一次 test；在同一份冻结分数上齐报扣费超额 IR/年化/最大回撤及扣费分年度 IR。
+4. 新的 Phase S 对照锚点使用 `baseline/b1-s-on-b6-m`（或等价明确命名），`baseline_ref: B1-S v1.0`、`frozen_model_ref: B6 v1.0`。不得沿用旧模型产生的策略数值。
 
 ### 5.3 历史教训
 
@@ -206,6 +231,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 - **`hypothesis` 必填，且必须在实验开跑前写好**（改了什么、预期哪个指标为什么会变好）；事后只按该口径解读结果，防止"事后找亮点"。
 - **`baseline_ref` 必填**：写明对照的 baseline 版本（当前如 `B1 v1.0`）；同一 `direction` 内不得混用多个版本。HTML 该方向表第一行即此版本对应的 baseline 指标。
 - **`data_version` 必填**：填当时数据日历的最后交易日（`eval_ic_multi_pool.py` 输出中自动带出）。数据前复权重标定不改变 Alpha158 特征值（全部为比值形态），但历史修正/补数会轻微改变截面构成，此字段用于事后解释不同时间实验结果的差异，无需做数据快照。
+- Phase S 行另须填写 **`frozen_model_ref`**、预测/集成 artifact 与 SHA、selection segment、冻结策略参数、费率、benchmark 及三项扣费指标；模型引用当前固定为 `B6 v1.0`。
 
 ### 6.3 mlruns 与 result 清理（强制，防磁盘打爆）
 
@@ -235,6 +261,8 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 - CSI1000 RankIC 增量相同时，以 CSI1000 RankICIR 增量作为并列规则；
 - 上述两项仍相同时，以三池 RankIC 平均增量作为第二并列规则；
 - Phase M 与 Phase S 指标不可混排。当前清理器只自动评选 Phase M；进入 Phase S 前须先为第 5.2 节三项策略指标补齐独立 baseline/候选 schema 与清理测试，不得套用 RankIC 规则。
+
+Phase S 的预测与回测 bundle 尚未接入本清理器。**首个策略实验开跑前**必须先补齐 Phase S 独立 retention schema、exact five-of-five 预测校验及清理测试；完成前不得让现有 Phase M 清理器处理策略 artifact。
 
 **`mlruns/` 保留内容**：
 
@@ -266,15 +294,15 @@ registry 中的历史 `result_dirs` 字符串允许指向已清理目录，它�
 
 ## 8. 标准执行流程（checklist）
 
+Phase M 已以 B6-M 收尾。Phase S checklist：
+
 ```
-[ ] 1. 读本文件，确认当前 Phase（M 或 S）与当前 baseline 版本；本方向 baseline_ref 写死为该版本
-[ ] 2. 写实验假设与变体设计（即 registry 的 hypothesis 字段，开跑前定稿，不得事后修改）
-[ ] 3. 生成 `run.mode=train_only` 配置（复用现有 config 模板，只改实验变量；时间/种子不得动）
-[ ] 4. 基线训练池（CSI1000）× 5 种子仅训练，在默认 3 个测试集（csi1000/csi300/csi500）上打分评估
-[ ] 5. 按第 5 节口径汇总指标，与当前 baseline 对比
-[ ] 6. 登记 registry.jsonl（含 baseline_ref），并重跑 build_experiment_report.py 生成 HTML（确认表首行为 baseline）
-[ ] 7. 先 dry-run、再按 6.3 `--apply` 清理 mlruns 与 backtest/result，确认只保留当前 baseline + 最佳合格候选
-[ ] 8. 将对比数据报告用户，由用户决定是否采纳/提升基线；不自行改 baseline
+[ ] 1. 校验 B6 freeze；生成并冻结五种子 raw predictions 与 five-of-five ensemble（路径 + SHA）
+[ ] 2. 先建立 B1-S-on-B6-M 的 Phase S baseline，并冻结费用/benchmark/回测配置
+[ ] 3. 在 registry 预登记策略网格、valid 选型指标和并列规则
+[ ] 4. 只在 valid 扫参；冻结胜者后，胜者与 B1-S 对照各做一次 test 回测
+[ ] 5. 齐报扣费超额 IR/年化/最大回撤与扣费分年度 IR
+[ ] 6. 登记 registry、重建 HTML；使用独立 Phase S 清理规则保留 baseline + 最佳候选
 ```
 
 ---

@@ -7,9 +7,31 @@ This order generator is for strategies based on WeightStrategyBase
 
 from ...backtest.position import Position
 from ...backtest.exchange import Exchange
+from ...backtest.decision import OrderDir
 
 import pandas as pd
 import copy
+
+
+def _calculate_current_stock_value(
+    current: Position,
+    trade_exchange: Exchange,
+    start_time: pd.Timestamp,
+    end_time: pd.Timestamp,
+) -> float:
+    """Value holdings at the trade price, falling back for suspended/delisted names."""
+    value = 0.0
+    for stock_id, amount in current.get_stock_amount_dict().items():
+        price = trade_exchange.get_deal_price(
+            stock_id=stock_id,
+            start_time=start_time,
+            end_time=end_time,
+            direction=OrderDir.SELL,
+        )
+        if price is None:
+            price = current.get_stock_price(stock_id)
+        value += price * amount
+    return value
 
 
 class OrderGenerator:
@@ -94,11 +116,11 @@ class OrderGenWInteract(OrderGenerator):
         # calculate current_tradable_value
         current_amount_dict = current.get_stock_amount_dict()
 
-        current_total_value = trade_exchange.calculate_amount_position_value(
-            amount_dict=current_amount_dict,
+        current_total_value = _calculate_current_stock_value(
+            current=current,
+            trade_exchange=trade_exchange,
             start_time=trade_start_time,
             end_time=trade_end_time,
-            only_tradable=False,
         )
         current_tradable_value = trade_exchange.calculate_amount_position_value(
             amount_dict=current_amount_dict,

@@ -111,3 +111,19 @@ def test_backtest_command_references_frozen_prediction_without_copy(tmp_path):
         "valid-b1",
         "--skip-pred-copy",
     ]
+
+
+def test_merge_retry_rows_preserves_failed_attempt_and_original_order():
+    existing = [
+        {"candidate_id": "baseline", "status": "success", "score": 1},
+        {"candidate_id": "soft", "status": "failed", "error": "bad price"},
+    ]
+    retry = [{"candidate_id": "soft", "status": "success", "score": 2}]
+
+    merged = sweep.merge_retry_rows(existing, retry)
+
+    assert [row["candidate_id"] for row in merged] == ["baseline", "soft"]
+    assert merged[1]["status"] == "success"
+    assert merged[1]["previous_attempts"] == [
+        {"status": "failed", "error": "bad price"}
+    ]

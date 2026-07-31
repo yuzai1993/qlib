@@ -146,6 +146,32 @@ def _params_text(row: dict[str, Any]) -> str:
     )
 
 
+def merge_retry_rows(
+    existing_rows: list[dict[str, Any]], retry_rows: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Replace retried candidates while retaining prior failed-attempt evidence."""
+    retries = {row["candidate_id"]: copy.deepcopy(row) for row in retry_rows}
+    merged: list[dict[str, Any]] = []
+    for existing in existing_rows:
+        candidate_id = existing["candidate_id"]
+        if candidate_id not in retries:
+            merged.append(copy.deepcopy(existing))
+            continue
+        replacement = retries.pop(candidate_id)
+        attempts = copy.deepcopy(existing.get("previous_attempts", []))
+        attempts.append(
+            {
+                key: copy.deepcopy(value)
+                for key, value in existing.items()
+                if key in {"status", "error", "result_dir", "returncode", "config"}
+            }
+        )
+        replacement["previous_attempts"] = attempts
+        merged.append(replacement)
+    merged.extend(retries.values())
+    return merged
+
+
 def write_comparison(
     out_dir: Path,
     rows: list[dict[str, Any]],
@@ -225,6 +251,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--configs-dir", type=Path)
     parser.add_argument("--summary-output", type=Path)
+    parser.add_argument(
+        "--resume-summary",
+        type=Path,
+        help="retry failed rows from an existing comparison and preserve attempt history",
+    )
     args = parser.parse_args(argv)
     if args.segment == "test" and not args.candidate_id:
         parser.error("test requires frozen --candidate-id values")
@@ -239,7 +270,19 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     base = load_config(args.config)
     all_candidates = strategy_grid(args.model_ref)
     by_id = {row["candidate_id"]: row for row in all_candidates}
-    candidate_ids = args.candidate_id or [row["candidate_id"] for row in all_candidates]
+    existing_payload = None
+    if args.resume_summary:
+        existing_payload = json.loads(args.resume_summary.read_text(encoding="utf-8"))
+        if existing_payload.get("model_ref") != args.model_ref:
+            raise ValueError("resume summary model_ref does not match")
+    candidate_ids = args.candidate_id
+    if not candidate_ids and existing_payload is not None:
+        candidate_ids = [
+            row["candidate_id"]
+            for row in existing_payload["all_rows"]
+            if row.get("status") != "success"
+        ]
+    candidate_ids = candidate_ids or [row["candidate_id"] for row in all_candidates]
     unknown = sorted(set(candidate_ids) - set(by_id))
     if unknown:
         raise ValueError(f"unknown candidate IDs for {args.model_ref}: {unknown}")
@@ -313,6 +356,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             )
         rows.append(row)
 
+    if existing_payload is not None:
+        rows = merge_retry_rows(existing_payload["all_rows"], rows)
     payload = write_comparison(
         out_dir,
         rows,

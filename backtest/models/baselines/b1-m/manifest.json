@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "baseline_exp_id": "baseline/b1-m",
+  "baseline_ref": "B1 v1.0",
+  "retention_scope": "best_available_seed_model",
+  "selection": {
+    "candidate_seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "metric": "valid.csi1000.rank_ic_mean",
+    "direction": "max",
+    "tie_breaker": "valid.csi1000.rank_icir",
+    "selected_seed": 2000,
+    "selected_value": 0.049554970987230315,
+    "selected_rank_icir": 0.54488734852271,
+    "selection_segment": [
+      "2020-01-13",
+      "2021-07-15"
+    ]
+  },
+  "source": {
+    "model": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model",
+    "metadata": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/metadata.json",
+    "session": "backtest/result/20260725_004255_td_csi1000_full_v2_lgbm_s2000",
+    "config": "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml"
+  },
+  "retained_model": {
+    "path": "backtest/models/baselines/b1-m/seed2000/trained_model",
+    "sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+    "size_bytes": 121245
+  }
+}

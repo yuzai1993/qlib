@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v2.0（2026-07-31）
+版本：v2.1（2026-08-01）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -10,7 +10,7 @@
 ## 0. 硬性约束（先读这里）
 
 1. 当前研究模型基线为 **B6-M**，见第 1 节；模型迭代已收尾。历史实验的 `baseline_ref` 不改写，HTML 每个方向表格**第一行**仍为该方向对应的 baseline 指标行。
-2. 模型与策略**分开迭代**：当前进入 Phase S，冻结 B6-M 五种子模型，只改策略；初始策略对照为 B1-S。
+2. 模型与策略**分开迭代**：当前进入 Phase S，冻结 B6-M seed 4000 单模型，只改策略；初始策略对照为 B1-S。
 3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
 4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi1000/csi300/csi500）上评估 IC/RankIC，**研究主目标池为 CSI1000**。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
 5. 默认时间划分固定（第 3 节）：测试集 2021-07-16 ~ 2026-07-16；评估集 2020-01-13 ~ 2021-07-15。**禁止用测试集调参**。仅第 3.4 节由用户明确批准的 post-2020 forward 成对实验使用其专用时间切分。
@@ -28,9 +28,10 @@
 | 项 | 值 |
 |---|---|
 | 基线版本 | `B6 v1.0`（B6-M，2026-07-31，由用户明确要求将超参冠军提升） |
-| 五种子基线组 | `model-hyperparam/valid-rankic-search-v1` 的冻结胜者 `rankic-es-lr010`，固定种子 `[42, 1000, 2000, 3000, 4000]` |
+| Phase M 五种子评估组 | `model-hyperparam/valid-rankic-search-v1` 的冻结胜者 `rankic-es-lr010`，固定种子 `[42, 1000, 2000, 3000, 4000]` |
+| Phase S 冻结模型 | seed 4000 单模型；按 CSI1000 valid RankIC 选择，artifact 与 SHA-256 见 `backtest/models/baselines/b6-m/manifest.json` |
 | 训练池 | CSI1000 |
-| 来源 | B5（Alpha158+range、DoubleEnsemble、H40+CSRankNorm）之上，仅把学习率改为 0.1，并用固定次日 CSI1000 valid RankIC 早停与选型；registry `baseline/b6-m` 与 `b6_model_freeze.json` 记录完整证据 |
+| 来源 | B5（Alpha158+range、DoubleEnsemble、H40+CSRankNorm）之上，仅把学习率改为 0.1，并用固定次日 CSI1000 valid RankIC 早停与选型；registry `baseline/b6-m` 记录研究指标，baseline manifest 记录 Phase S 单模型 artifact |
 | 特征 | Alpha158 + `range`（`backtest.features.technical.Alpha158Technical`，6 个密集区间/事件频率特征），handler start_time=2003-01-02 |
 | 训练区间 | fit 2016-01-02 ~ 2020-01-10（csi1000 完整样本池） |
 | 标签 | 累计未来 H40：`Ref($close, -41)/Ref($close, -1) - 1` |
@@ -39,7 +40,7 @@
 | 超参 | loss=mse, learning_rate=0.1，其余子模型 LGB 参数沿用 B5；早停指标为固定次日 valid 日 RankIC，有效 valid 截止 2021-07-13（见 `backtest/configs/model-hyperparam/rankic-es-lr010/`） |
 | 数据处理 | infer_processors 含 ProcessInf，与实盘配置一致 |
 
-五种子 test 固定一日正式指标以 registry `baseline/b6-m` 为准；H40 self-eval 仅为诊断。B5-M 及更早基线是历史对照，旧实验的 `baseline_ref` 不改写。B6-M 已冻结供 Phase S 使用，但不自动切换实盘 B1 artifact。
+五种子 test 固定一日正式指标以 registry `baseline/b6-m` 为准；H40 self-eval 仅为诊断。B5-M 及更早基线是历史对照，旧实验的 `baseline_ref` 不改写。Phase S 使用 `backtest/models/baselines/b6-m/manifest.json` 冻结的 seed 4000 单模型，但不自动切换实盘 B1 artifact。
 
 ### 1.2 策略基线 B1-S
 
@@ -75,7 +76,7 @@ Phase M（模型迭代）            Phase S（策略迭代）
 ```
 
 - Phase M 配置必须使用 `run.mode=train_only`，只训练并保存模型；**不得随模型训练自动运行策略回测**。如确需参考策略回测，必须在模型评估完成后使用冻结模型另行运行，且 B1-S 参数原样不变，结果不参与 Phase M 选型。
-- Phase S 期间**不重训模型**：使用 B6-M 冻结清单中的 5 种子预测分数，经严格 five-of-five 覆盖校验后做截面 z-score 等权集成，在同一份分数上比较策略。
+- Phase S 期间**不重训模型**：Phase S 期间只使用 B6-M 冻结的 seed 4000 单模型，在同一份冻结预测分数上比较策略。
 - 同时改模型和策略的实验结果**不予采信、不进 registry**。
 
 ---
@@ -179,7 +180,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 
 **选型与报告要求**：
 
-1. 首先为 B6-M 冻结五种子 raw prediction 路径、SHA-256、exact five-of-five 索引覆盖、截面 z-score 等权集成规则与 ensemble SHA-256。
+1. 首先校验 B6-M baseline manifest 中 seed 4000 模型及配置的 SHA-256，并冻结该单模型的 raw prediction 路径、索引覆盖与 SHA-256。
 2. 策略网格、主指标与并列规则须预先登记；**只允许在 valid 段选型**，test 不得参与参数筛选。
 3. valid 冻结胜者后，B1-S 对照与胜者各只打开一次 test；在同一份冻结分数上齐报扣费超额 IR/年化/最大回撤及扣费分年度 IR。
 4. 新的 Phase S 对照锚点使用 `baseline/b1-s-on-b6-m`（或等价明确命名），`baseline_ref: B1-S v1.0`、`frozen_model_ref: B6 v1.0`。不得沿用旧模型产生的策略数值。
@@ -262,7 +263,7 @@ handler 时间：`start_time=2003-01-02`，`end_time >= 2026-07-16`，`fit_start
 - 上述两项仍相同时，以三池 RankIC 平均增量作为第二并列规则；
 - Phase M 与 Phase S 指标不可混排。当前清理器只自动评选 Phase M；进入 Phase S 前须先为第 5.2 节三项策略指标补齐独立 baseline/候选 schema 与清理测试，不得套用 RankIC 规则。
 
-Phase S 的预测与回测 bundle 尚未接入本清理器。**首个策略实验开跑前**必须先补齐 Phase S 独立 retention schema、exact five-of-five 预测校验及清理测试；完成前不得让现有 Phase M 清理器处理策略 artifact。
+Phase S 的预测与回测 bundle 尚未接入本清理器。**首个策略实验开跑前**必须先补齐 Phase S 单模型 prediction retention schema、索引覆盖校验及清理测试；完成前不得让现有 Phase M 清理器处理策略 artifact。
 
 **`mlruns/` 保留内容**：
 
@@ -297,7 +298,7 @@ registry 中的历史 `result_dirs` 字符串允许指向已清理目录，它�
 Phase M 已以 B6-M 收尾。Phase S checklist：
 
 ```
-[ ] 1. 校验 B6 freeze；生成并冻结五种子 raw predictions 与 five-of-five ensemble（路径 + SHA）
+[ ] 1. 校验 B6 baseline manifest；生成并冻结 seed 4000 单模型 raw prediction（路径 + SHA）
 [ ] 2. 先建立 B1-S-on-B6-M 的 Phase S baseline，并冻结费用/benchmark/回测配置
 [ ] 3. 在 registry 预登记策略网格、valid 选型指标和并列规则
 [ ] 4. 只在 valid 扫参；冻结胜者后，胜者与 B1-S 对照各做一次 test 回测

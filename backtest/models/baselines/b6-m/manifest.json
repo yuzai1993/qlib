@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "baseline_exp_id": "baseline/b6-m",
+  "baseline_ref": "B6 v1.0",
+  "retention_scope": "phase_s_single_model",
+  "selection": {
+    "metric": "valid.csi1000.rank_ic_mean",
+    "direction": "max",
+    "selected_seed": 4000,
+    "selected_value": 0.049698109941383316,
+    "selection_segment": [
+      "2020-01-13",
+      "2021-07-15"
+    ],
+    "result": "backtest/experiments/ic/mh_rankic_es_lr010_valid_1d.json"
+  },
+  "config": {
+    "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+    "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+  },
+  "model": {
+    "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+    "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+    "size_bytes": 3391157
+  },
+  "source": {
+    "model": "mlruns/657807164385264418/6c0d30716b31441887bb4d16593414b9/artifacts/trained_model",
+    "session": "backtest/result/20260731_040103_mh_rankic_es_lr010_s4000"
+  }
+}

@@ -7,6 +7,7 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
+from typing import Optional, Sequence
 
 import pandas as pd
 
@@ -29,6 +30,7 @@ from config_loader import (
 )
 from report_utils import make_session_dir, write_json
 from run_backtest import _finalize_session, _save_run_report, extract_metrics
+from phase_s_protocol import sha256_file
 
 
 class ExternalPredPortAnaRecord(PortAnaRecord):
@@ -59,7 +61,30 @@ def _load_pred(path: Path) -> pd.DataFrame:
     return pred.rename(columns={pred.columns[0]: "score"}).sort_index()
 
 
-def parse_args() -> argparse.Namespace:
+def prepare_pred_artifact(
+    source_path: Path,
+    pred: pd.DataFrame,
+    session_dir: Path,
+    *,
+    copy_name: str,
+    skip_copy: bool,
+) -> dict:
+    """Freeze the source reference and optionally persist a session-local copy."""
+    source = Path(source_path).expanduser().resolve()
+    if not source.is_file():
+        raise FileNotFoundError(f"预测文件不存在: {source}")
+    saved: Optional[Path] = None
+    if not skip_copy:
+        saved = Path(session_dir) / copy_name
+        pred.to_pickle(saved)
+    return {
+        "source_pred": str(source),
+        "source_pred_sha256": sha256_file(source),
+        "saved_pred": str(saved) if saved is not None else None,
+    }
+
+
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="直接对外部预测执行 TopkDropout 回测，不训练模型")
     parser.add_argument("--pred", required=True, type=Path, help="外部 pred.pkl（MultiIndex datetime/instrument）")
     parser.add_argument(
@@ -73,7 +98,12 @@ def parse_args() -> argparse.Namespace:
         default="external_pred.pkl",
         help="保存至结果目录的预测文件名",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--skip-pred-copy",
+        action="store_true",
+        help="引用冻结预测而不在 result/MLflow 中重复复制",
+    )
+    return parser.parse_args(argv)
 
 
 def main() -> None:
@@ -96,8 +126,13 @@ def main() -> None:
     note = args.note if args.note is not None else cfg["run"].get("note", "")
     session_dir = make_session_dir(RESULT_ROOT, note=note)
     session_name = session_dir.name
-    pred_copy = session_dir / args.pred_copy_name
-    pred.to_pickle(pred_copy)
+    pred_artifact = prepare_pred_artifact(
+        pred_path,
+        pred,
+        session_dir,
+        copy_name=args.pred_copy_name,
+        skip_copy=bool(args.skip_pred_copy),
+    )
 
     port_cfg = json.loads(json.dumps(build_port_analysis_config(cfg)))
     port_cfg["backtest"]["exchange_kwargs"] = normalize_exchange_kwargs(
@@ -116,8 +151,7 @@ def main() -> None:
         "mode": "pred_backtest",
         "created_at": start_time.isoformat(timespec="seconds"),
         "config_path": cfg["_config_path"],
-        "source_pred": str(args.pred.resolve()),
-        "saved_pred": str(pred_copy),
+        **pred_artifact,
         "backtest": port_cfg["backtest"],
         "strategy": {
             "class": port_cfg["strategy"]["class"],
@@ -134,7 +168,8 @@ def main() -> None:
         with R.start(experiment_name=experiment_name):
             recorder = R.get_recorder()
             recorder_id, experiment_id = recorder.id, recorder.experiment_id
-            recorder.save_objects(local_path=str(pred_copy))
+            if pred_artifact["saved_pred"] is not None:
+                recorder.save_objects(local_path=pred_artifact["saved_pred"])
             ExternalPredPortAnaRecord(recorder, port_cfg, pred, "day").generate()
 
         recorder = R.get_recorder(recorder_id=recorder_id, experiment_name=experiment_name)

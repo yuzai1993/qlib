@@ -127,6 +127,22 @@ def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -
     except Exception:
         pass
 
+    try:
+        turnover = report_normal_df["turnover"].dropna()
+        if len(turnover):
+            metrics["annualized_one_way_turnover"] = float(
+                turnover.mean() * 250.0 / 2.0
+            )
+    except Exception:
+        pass
+
+    try:
+        total_cost = report_normal_df["total_cost"].dropna()
+        if len(total_cost):
+            metrics["cumulative_trade_cost"] = float(total_cost.iloc[-1])
+    except Exception:
+        pass
+
     return metrics
 
 

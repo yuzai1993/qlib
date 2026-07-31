@@ -261,13 +261,16 @@ def _retained_phase_s_dirs(
     retained = set()
     for raw in raw_paths:
         raw_path = Path(raw)
-        if len(raw_path.parts) < 3 or raw_path.parts[:2] != (
-            "backtest",
-            "result",
-        ):
-            errors.append(f"unsafe Phase S result path: {raw}")
-            continue
-        unresolved = repo_root / raw_path
+        if raw_path.is_absolute():
+            unresolved = raw_path
+        else:
+            if len(raw_path.parts) < 3 or raw_path.parts[:2] != (
+                "backtest",
+                "result",
+            ):
+                errors.append(f"unsafe Phase S result path: {raw}")
+                continue
+            unresolved = repo_root / raw_path
         if unresolved.is_symlink():
             errors.append(f"retained Phase S result path is a symlink: {raw}")
             continue

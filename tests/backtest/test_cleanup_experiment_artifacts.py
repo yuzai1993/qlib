@@ -483,6 +483,19 @@ def test_phase_s_retains_baseline_and_frozen_winner_for_every_test_pool(tmp_path
     assert plan["delete_mlruns_dirs"] == [(mlruns_root / "999").resolve()]
 
 
+def test_phase_s_retention_accepts_absolute_direct_child_inside_result_root(tmp_path):
+    session = tmp_path / "backtest/result/final-test"
+    session.mkdir(parents=True)
+    errors = []
+
+    retained = cleanup._retained_phase_s_dirs(
+        tmp_path, [str(session.resolve())], errors
+    )
+
+    assert retained == [session.resolve()]
+    assert errors == []
+
+
 def test_incomplete_phase_s_bundle_blocks_all_deletion(tmp_path):
     result_root = tmp_path / "backtest/result"
     mlruns_root = tmp_path / "mlruns"

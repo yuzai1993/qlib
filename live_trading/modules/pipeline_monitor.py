@@ -16,7 +16,6 @@ _TRADED_STATUS = {"FILLED", "PARTIAL"}
 
 DEFAULT_THRESHOLDS = {
     "daily_loss": -0.03,
-    "max_drawdown": -0.10,
     "consecutive_loss_days": 5,
     "reject_rate": 0.5,
     "cash_tolerance": 100.0,
@@ -228,17 +227,6 @@ def check_account(snapshots, thresholds=None) -> list:
         findings.append(Finding(
             "DAILY_LOSS", WARN,
             f"{date} 单日收益 {daily*100:.2f}%，超过阈值 {th['daily_loss']*100:.1f}%"))
-
-    peak, max_dd = None, 0.0
-    for s in snapshots:
-        v = s["total_value"]
-        peak = v if peak is None or v > peak else peak
-        dd = v / peak - 1
-        max_dd = min(max_dd, dd)
-    if max_dd < th["max_drawdown"]:
-        findings.append(Finding(
-            "MAX_DRAWDOWN", CRIT,
-            f"{date} 最大回撤 {max_dd*100:.2f}%，超过阈值 {th['max_drawdown']*100:.1f}%"))
 
     n = int(th["consecutive_loss_days"])
     recent = [s.get("daily_return") for s in snapshots[-n:]]

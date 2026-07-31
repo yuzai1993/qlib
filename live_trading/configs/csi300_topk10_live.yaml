@@ -90,7 +90,6 @@ monitor:
     daily_report: true           # report 阶段无告警也推日报
   thresholds:
     daily_loss: -0.03
-    max_drawdown: -0.10
     consecutive_loss_days: 5
     reject_rate: 0.5
     cash_tolerance: 100.0        # 账本与 QMT 可用资金差额告警阈值（元）

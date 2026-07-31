@@ -73,7 +73,9 @@ def test_prediction_validation_returns_literal_coverage_summary():
         "end": "2020-01-14",
         "n_dates": 2,
         "n_rows": 2,
+        "index_sha256": coverage["index_sha256"],
     }
+    assert len(coverage["index_sha256"]) == 64
 
 
 def test_manifest_entry_records_model_config_prediction_sha_and_data_version(tmp_path):

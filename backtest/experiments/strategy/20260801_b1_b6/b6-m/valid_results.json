@@ -43,10 +43,9 @@
     "backtest_recorder_id": "2f89f1320ef94588b3704c388e9e7161",
     "backtest_experiment_id": "658500488700151446",
     "backtest_experiment_name": "backtest_20260801_013305_phase_s_b6-m_topk-t10-d2-h1_csi1000_valid_run01",
-    "yearly_ir": {
-      "2020": 1.9462724827989326,
-      "2021": 0.6950016639992852
-    }
+    "provenance_verification": "manifest_backfill_after_valid_cleanup",
+    "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+    "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
   },
   "ranked": [
     {
@@ -88,10 +87,9 @@
       "backtest_recorder_id": "f59e9f1f01a54e6da60a587c3c46fc8e",
       "backtest_experiment_id": "332516810063728522",
       "backtest_experiment_name": "backtest_20260801_013556_phase_s_b6-m_topk-t30-d2-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 2.019323385772034,
-        "2021": 0.4663304491458909
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t10-d2-h1",
@@ -132,10 +130,9 @@
       "backtest_recorder_id": "2f89f1320ef94588b3704c388e9e7161",
       "backtest_experiment_id": "658500488700151446",
       "backtest_experiment_name": "backtest_20260801_013305_phase_s_b6-m_topk-t10-d2-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.9462724827989326,
-        "2021": 0.6950016639992852
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d2-h10",
@@ -176,10 +173,9 @@
       "backtest_recorder_id": "ac0f3d98350a4d99947665adda1819ef",
       "backtest_experiment_id": "303506522554001960",
       "backtest_experiment_name": "backtest_20260801_013542_phase_s_b6-m_topk-t30-d2-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.8604254280009291,
-        "2021": -0.2578850518641971
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d2-h20",
@@ -220,10 +216,9 @@
       "backtest_recorder_id": "6ab0e234b8d541a98af7861732b8298d",
       "backtest_experiment_id": "967432564738129006",
       "backtest_experiment_name": "backtest_20260801_013512_phase_s_b6-m_topk-t20-d2-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.0610968871136623,
-        "2021": 0.9530911388955607
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d2-h5",
@@ -264,10 +259,9 @@
       "backtest_recorder_id": "addf814fb3cd494699a6bd8b66f2af0f",
       "backtest_experiment_id": "768048643512921136",
       "backtest_experiment_name": "backtest_20260801_013443_phase_s_b6-m_topk-t20-d2-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.6573769838951795,
-        "2021": 1.6670713962403811
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d1-h5",
@@ -308,10 +302,9 @@
       "backtest_recorder_id": "cf2841b67ab6415c8728db745a4a71ce",
       "backtest_experiment_id": "647332040479371888",
       "backtest_experiment_name": "backtest_20260801_013400_phase_s_b6-m_topk-t20-d1-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.2856951185794352,
-        "2021": 0.5060409953153846
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t10-d1-h10",
@@ -352,10 +345,9 @@
       "backtest_recorder_id": "5276c23be23540fc99f6f8c3c2f5d811",
       "backtest_experiment_id": "556910363318941634",
       "backtest_experiment_name": "backtest_20260801_013333_phase_s_b6-m_topk-t10-d1-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.8567417767045497,
-        "2021": 1.07142942469556
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d3-h5",
@@ -396,10 +388,9 @@
       "backtest_recorder_id": "429e3347f6ba4a2cb43fa387194e653c",
       "backtest_experiment_id": "973382644050680475",
       "backtest_experiment_name": "backtest_20260801_013611_phase_s_b6-m_topk-t30-d3-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.7141992161879547,
-        "2021": -0.09524290651560624
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d2-h5",
@@ -440,10 +431,9 @@
       "backtest_recorder_id": "4671729973684a74afb969f39105e7a0",
       "backtest_experiment_id": "621524657774007142",
       "backtest_experiment_name": "backtest_20260801_013527_phase_s_b6-m_topk-t30-d2-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.368077485085305,
-        "2021": 0.2714284616636559
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d3-h10",
@@ -484,10 +474,9 @@
       "backtest_recorder_id": "e6e5a4430f80488482bbb4809844aba7",
       "backtest_experiment_id": "522542364978450636",
       "backtest_experiment_name": "backtest_20260801_013625_phase_s_b6-m_topk-t30-d3-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.8448049665848,
-        "2021": 1.0071170052784821
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t10-d1-h5",
@@ -528,10 +517,9 @@
       "backtest_recorder_id": "0e3aeb9702594d76b55fbfa5fed83a00",
       "backtest_experiment_id": "677272883738390824",
       "backtest_experiment_name": "backtest_20260801_013319_phase_s_b6-m_topk-t10-d1-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.415826561663853,
-        "2021": -0.035721235238545264
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t10-d1-h20",
@@ -572,10 +560,9 @@
       "backtest_recorder_id": "3321ee9fe76a43ffb1525a9c3bfb326f",
       "backtest_experiment_id": "645784453829700310",
       "backtest_experiment_name": "backtest_20260801_013346_phase_s_b6-m_topk-t10-d1-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.0002723674599507,
-        "2021": 0.42012291040476696
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d3-h20",
@@ -616,10 +603,9 @@
       "backtest_recorder_id": "124d6e4ffe5d4c178ce91f2561cdef6b",
       "backtest_experiment_id": "335236232036164936",
       "backtest_experiment_name": "backtest_20260801_013640_phase_s_b6-m_topk-t30-d3-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.2112531243308622,
-        "2021": -0.3829682482150219
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d2-h10",
@@ -660,10 +646,9 @@
       "backtest_recorder_id": "b8bd86d4a89a479f931a6d7ebfad961f",
       "backtest_experiment_id": "652193266119983858",
       "backtest_experiment_name": "backtest_20260801_013458_phase_s_b6-m_topk-t20-d2-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.5202637929719315,
-        "2021": 0.5553832403708596
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d1-h10",
@@ -704,10 +689,9 @@
       "backtest_recorder_id": "13ab97bfb2c5454e8a71065799f6c445",
       "backtest_experiment_id": "611432244525717033",
       "backtest_experiment_name": "backtest_20260801_013414_phase_s_b6-m_topk-t20-d1-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.6252165021130655,
-        "2021": -0.06545826810218255
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d1-h20",
@@ -748,306 +732,9 @@
       "backtest_recorder_id": "a5a2a754c3c4439781d15b0b9cd67191",
       "backtest_experiment_id": "653516136186708307",
       "backtest_experiment_name": "backtest_20260801_013428_phase_s_b6-m_topk-t20-d1-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.479514744252661,
-        "2021": -2.2167791930317744
-      }
-    },
-    {
-      "candidate_id": "soft-t10-i025",
-      "strategy_class": "SoftTopkStrategy",
-      "topk": 10,
-      "impact_ratio": 0.25,
-      "trade_impact_limit": 0.02375,
-      "risk_degree": 0.95,
-      "returncode": 0,
-      "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t10-i025_csi1000_valid.yaml",
-      "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013654_phase_s_b6-m_soft-t10-i025_csi1000_valid",
-      "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
-      "excess_with_cost_std": 0.01057989665779464,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
-      "excess_with_cost_max_drawdown": -0.11959037714153675,
-      "excess_no_cost_mean": NaN,
-      "excess_no_cost_std": 0.010587757252390556,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
-      "excess_no_cost_max_drawdown": -0.11726576703056546,
-      "portfolio_cum_return": -0.018839031201025258,
-      "benchmark_cum_return": 0.23748445510864258,
-      "excess_cum_return": -0.25632348630966784,
-      "portfolio_mean": -6.353218534083105e-05,
-      "portfolio_std": 0.01869284881975374,
-      "portfolio_annualized_return": -0.01500739007830254,
-      "portfolio_information_ratio": -0.052433250175520106,
-      "portfolio_max_drawdown": -0.13548207673423784,
-      "benchmark_mean": 0.0005840063095092773,
-      "benchmark_std": 0.0156745295971632,
-      "benchmark_annualized_return": 0.14905548095703125,
-      "benchmark_information_ratio": 0.5747930141591193,
-      "benchmark_max_drawdown": -0.18666887283325195,
-      "annualized_one_way_turnover": 40.61462798158334,
-      "cumulative_trade_cost": 7064.513697171607,
-      "backtest_recorder_id": "89893e62fce5411ba777124beffdac35",
-      "backtest_experiment_id": "353929581360745767",
-      "backtest_experiment_name": "backtest_20260801_013654_phase_s_b6-m_soft-t10-i025_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.7611196136621704
-      }
-    },
-    {
-      "candidate_id": "soft-t10-i050",
-      "strategy_class": "SoftTopkStrategy",
-      "topk": 10,
-      "impact_ratio": 0.5,
-      "trade_impact_limit": 0.0475,
-      "risk_degree": 0.95,
-      "returncode": 0,
-      "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t10-i050_csi1000_valid.yaml",
-      "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013708_phase_s_b6-m_soft-t10-i050_csi1000_valid",
-      "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
-      "excess_with_cost_std": 0.011296574222268133,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
-      "excess_with_cost_max_drawdown": -0.10330861061921925,
-      "excess_no_cost_mean": NaN,
-      "excess_no_cost_std": 0.011297392384428942,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
-      "excess_no_cost_max_drawdown": -0.10045758440550079,
-      "portfolio_cum_return": 0.0392526576991401,
-      "benchmark_cum_return": 0.23748445510864258,
-      "excess_cum_return": -0.19823179740950247,
-      "portfolio_mean": 0.0008096920569544697,
-      "portfolio_std": 0.018562534925956966,
-      "portfolio_annualized_return": 0.21243257628595336,
-      "portfolio_information_ratio": 0.6729318338545989,
-      "portfolio_max_drawdown": -0.12580075648532163,
-      "benchmark_mean": 0.0005840063095092773,
-      "benchmark_std": 0.0156745295971632,
-      "benchmark_annualized_return": 0.14905548095703125,
-      "benchmark_information_ratio": 0.5747930141591193,
-      "benchmark_max_drawdown": -0.18666887283325195,
-      "annualized_one_way_turnover": 63.84829958805575,
-      "cumulative_trade_cost": 9178.673967217394,
-      "backtest_recorder_id": "5ed03b797fae4103bcb1d1a8faf32f3f",
-      "backtest_experiment_id": "677282910295161208",
-      "backtest_experiment_name": "backtest_20260801_013708_phase_s_b6-m_soft-t10-i050_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.8924831201700565
-      }
-    },
-    {
-      "candidate_id": "soft-t20-i025",
-      "strategy_class": "SoftTopkStrategy",
-      "topk": 20,
-      "impact_ratio": 0.25,
-      "trade_impact_limit": 0.011875,
-      "risk_degree": 0.95,
-      "returncode": 0,
-      "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t20-i025_csi1000_valid.yaml",
-      "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_014155_phase_s_b6-m_soft-t20-i025_csi1000_valid",
-      "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
-      "excess_with_cost_std": 0.009372886205176343,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
-      "excess_with_cost_max_drawdown": -0.09744073335198156,
-      "excess_no_cost_mean": NaN,
-      "excess_no_cost_std": 0.009384325428299652,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
-      "excess_no_cost_max_drawdown": -0.09278911309097249,
-      "portfolio_cum_return": -0.056850003022229756,
-      "benchmark_cum_return": 0.23748445510864258,
-      "excess_cum_return": -0.29433445813087233,
-      "portfolio_mean": -0.0007281140389571172,
-      "portfolio_std": 0.02170212848002704,
-      "portfolio_annualized_return": -0.15916031359681637,
-      "portfolio_information_ratio": -0.5175896140065659,
-      "portfolio_max_drawdown": -0.13422972548640455,
-      "benchmark_mean": 0.0005840063095092773,
-      "benchmark_std": 0.0156745295971632,
-      "benchmark_annualized_return": 0.14905548095703125,
-      "benchmark_information_ratio": 0.5747930141591193,
-      "benchmark_max_drawdown": -0.18666887283325195,
-      "annualized_one_way_turnover": 40.253656469186524,
-      "cumulative_trade_cost": 9330.0,
-      "backtest_recorder_id": "1b47e2c55f78419982aeec7c27d74a1d",
-      "backtest_experiment_id": "968255507366295293",
-      "backtest_experiment_name": "backtest_20260801_014155_phase_s_b6-m_soft-t20-i025_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.4645275141437881
-      },
-      "previous_attempts": [
-        {
-          "returncode": 1,
-          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t20-i025_csi1000_valid.yaml",
-          "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013721_phase_s_b6-m_soft-t20-i025_csi1000_valid",
-          "status": "failed",
-          "error": "temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 371, in generate_trade_decision\n    order_list = self.order_generator.generate_order_list_from_target_weight_position(\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 97, in generate_order_list_from_target_weight_position\n    current_total_value = trade_exchange.calculate_amount_position_value(\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/exchange.py\", line 702, in calculate_amount_position_value\n    self.get_deal_price(\nTypeError: unsupported operand type(s) for *: 'NoneType' and 'float'\n"
-        },
-        {
-          "returncode": 1,
-          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t20-i025_csi1000_valid.yaml",
-          "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_014025_phase_s_b6-m_soft-t20-i025_csi1000_valid",
-          "status": "failed",
-          "error": "ate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 371, in generate_trade_decision\n    order_list = self.order_generator.generate_order_list_from_target_weight_position(\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 117, in generate_order_list_from_target_weight_position\n    current_total_value = _calculate_current_stock_value(\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 24, in _calculate_current_stock_value\n    price = trade_exchange.get_deal_price(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Exchange.get_deal_price() missing 1 required positional argument: 'direction'\n"
-        }
-      ]
-    },
-    {
-      "candidate_id": "soft-t20-i050",
-      "strategy_class": "SoftTopkStrategy",
-      "topk": 20,
-      "impact_ratio": 0.5,
-      "trade_impact_limit": 0.02375,
-      "risk_degree": 0.95,
-      "returncode": 0,
-      "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t20-i050_csi1000_valid.yaml",
-      "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013732_phase_s_b6-m_soft-t20-i050_csi1000_valid",
-      "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
-      "excess_with_cost_std": 0.009914343525104806,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
-      "excess_with_cost_max_drawdown": -0.09007224523739155,
-      "excess_no_cost_mean": NaN,
-      "excess_no_cost_std": 0.009922652951736612,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
-      "excess_no_cost_max_drawdown": -0.08548517802191191,
-      "portfolio_cum_return": 0.030875273829915395,
-      "benchmark_cum_return": 0.23748445510864258,
-      "excess_cum_return": -0.20660918127872718,
-      "portfolio_mean": 0.0007814250274036372,
-      "portfolio_std": 0.01902024067278969,
-      "portfolio_annualized_return": 0.20430968825476037,
-      "portfolio_information_ratio": 0.6338110218192754,
-      "portfolio_max_drawdown": -0.12605273993511856,
-      "benchmark_mean": 0.0005840063095092773,
-      "benchmark_std": 0.0156745295971632,
-      "benchmark_annualized_return": 0.14905548095703125,
-      "benchmark_information_ratio": 0.5747930141591193,
-      "benchmark_max_drawdown": -0.18666887283325195,
-      "annualized_one_way_turnover": 64.50889439753135,
-      "cumulative_trade_cost": 12248.370099971304,
-      "backtest_recorder_id": "7b7a9487940945b2b1eda07e6f881b0e",
-      "backtest_experiment_id": "275075513552956518",
-      "backtest_experiment_name": "backtest_20260801_013732_phase_s_b6-m_soft-t20-i050_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 2.1459523557171076
-      }
-    },
-    {
-      "candidate_id": "soft-t30-i025",
-      "strategy_class": "SoftTopkStrategy",
-      "topk": 30,
-      "impact_ratio": 0.25,
-      "trade_impact_limit": 0.007916666666666666,
-      "risk_degree": 0.95,
-      "returncode": 0,
-      "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t30-i025_csi1000_valid.yaml",
-      "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_014210_phase_s_b6-m_soft-t30-i025_csi1000_valid",
-      "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
-      "excess_with_cost_std": 0.009419085865294222,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
-      "excess_with_cost_max_drawdown": -0.10139620492834855,
-      "excess_no_cost_mean": NaN,
-      "excess_no_cost_std": 0.009428236097153873,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
-      "excess_no_cost_max_drawdown": -0.09475246253841985,
-      "portfolio_cum_return": -0.018719989776230905,
-      "benchmark_cum_return": 0.23748445510864258,
-      "excess_cum_return": -0.2562044448848735,
-      "portfolio_mean": 0.0001316865704874548,
-      "portfolio_std": 0.02030814397481968,
-      "portfolio_annualized_return": 0.031835587919607056,
-      "portfolio_information_ratio": 0.10003678649390058,
-      "portfolio_max_drawdown": -0.1120955831486804,
-      "benchmark_mean": 0.0005840063095092773,
-      "benchmark_std": 0.0156745295971632,
-      "benchmark_annualized_return": 0.14905548095703125,
-      "benchmark_information_ratio": 0.5747930141591193,
-      "benchmark_max_drawdown": -0.18666887283325195,
-      "annualized_one_way_turnover": 36.3223648129779,
-      "cumulative_trade_cost": 12750.0,
-      "backtest_recorder_id": "62fd45f393054b94a3e4b7fcc2f583c0",
-      "backtest_experiment_id": "987703708471359340",
-      "backtest_experiment_name": "backtest_20260801_014210_phase_s_b6-m_soft-t30-i025_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.8223611431542173
-      },
-      "previous_attempts": [
-        {
-          "returncode": 1,
-          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t30-i025_csi1000_valid.yaml",
-          "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013744_phase_s_b6-m_soft-t30-i025_csi1000_valid",
-          "status": "failed",
-          "error": "temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 371, in generate_trade_decision\n    order_list = self.order_generator.generate_order_list_from_target_weight_position(\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 97, in generate_order_list_from_target_weight_position\n    current_total_value = trade_exchange.calculate_amount_position_value(\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/exchange.py\", line 702, in calculate_amount_position_value\n    self.get_deal_price(\nTypeError: unsupported operand type(s) for *: 'NoneType' and 'float'\n"
-        },
-        {
-          "returncode": 1,
-          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t30-i025_csi1000_valid.yaml",
-          "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_014039_phase_s_b6-m_soft-t30-i025_csi1000_valid",
-          "status": "failed",
-          "error": "ate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 371, in generate_trade_decision\n    order_list = self.order_generator.generate_order_list_from_target_weight_position(\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 117, in generate_order_list_from_target_weight_position\n    current_total_value = _calculate_current_stock_value(\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 24, in _calculate_current_stock_value\n    price = trade_exchange.get_deal_price(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Exchange.get_deal_price() missing 1 required positional argument: 'direction'\n"
-        }
-      ]
-    },
-    {
-      "candidate_id": "soft-t30-i050",
-      "strategy_class": "SoftTopkStrategy",
-      "topk": 30,
-      "impact_ratio": 0.5,
-      "trade_impact_limit": 0.01583333333333333,
-      "risk_degree": 0.95,
-      "returncode": 0,
-      "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t30-i050_csi1000_valid.yaml",
-      "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013755_phase_s_b6-m_soft-t30-i050_csi1000_valid",
-      "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
-      "excess_with_cost_std": 0.009506002675831288,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
-      "excess_with_cost_max_drawdown": -0.0763887080296154,
-      "excess_no_cost_mean": NaN,
-      "excess_no_cost_std": 0.009519684502947528,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
-      "excess_no_cost_max_drawdown": -0.07009664730188725,
-      "portfolio_cum_return": 0.04563220525298273,
-      "benchmark_cum_return": 0.23748445510864258,
-      "excess_cum_return": -0.19185224985565985,
-      "portfolio_mean": 0.0011947006054797704,
-      "portfolio_std": 0.020691231657546445,
-      "portfolio_annualized_return": 0.32865749398958277,
-      "portfolio_information_ratio": 0.8907610514875183,
-      "portfolio_max_drawdown": -0.12084870831726269,
-      "benchmark_mean": 0.0005840063095092773,
-      "benchmark_std": 0.0156745295971632,
-      "benchmark_annualized_return": 0.14905548095703125,
-      "benchmark_information_ratio": 0.5747930141591193,
-      "benchmark_max_drawdown": -0.18666887283325195,
-      "annualized_one_way_turnover": 63.93399995128249,
-      "cumulative_trade_cost": 13613.895085278811,
-      "backtest_recorder_id": "f46e09cae36c454dae0317586267a28a",
-      "backtest_experiment_id": "565604549594851929",
-      "backtest_experiment_name": "backtest_20260801_013755_phase_s_b6-m_soft-t30-i050_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 2.4794361336527566
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     }
   ],
   "all_rows": [
@@ -1090,10 +777,9 @@
       "backtest_recorder_id": "2f89f1320ef94588b3704c388e9e7161",
       "backtest_experiment_id": "658500488700151446",
       "backtest_experiment_name": "backtest_20260801_013305_phase_s_b6-m_topk-t10-d2-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.9462724827989326,
-        "2021": 0.6950016639992852
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t10-d1-h5",
@@ -1134,10 +820,9 @@
       "backtest_recorder_id": "0e3aeb9702594d76b55fbfa5fed83a00",
       "backtest_experiment_id": "677272883738390824",
       "backtest_experiment_name": "backtest_20260801_013319_phase_s_b6-m_topk-t10-d1-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.415826561663853,
-        "2021": -0.035721235238545264
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t10-d1-h10",
@@ -1178,10 +863,9 @@
       "backtest_recorder_id": "5276c23be23540fc99f6f8c3c2f5d811",
       "backtest_experiment_id": "556910363318941634",
       "backtest_experiment_name": "backtest_20260801_013333_phase_s_b6-m_topk-t10-d1-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.8567417767045497,
-        "2021": 1.07142942469556
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t10-d1-h20",
@@ -1222,10 +906,9 @@
       "backtest_recorder_id": "3321ee9fe76a43ffb1525a9c3bfb326f",
       "backtest_experiment_id": "645784453829700310",
       "backtest_experiment_name": "backtest_20260801_013346_phase_s_b6-m_topk-t10-d1-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.0002723674599507,
-        "2021": 0.42012291040476696
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d1-h5",
@@ -1266,10 +949,9 @@
       "backtest_recorder_id": "cf2841b67ab6415c8728db745a4a71ce",
       "backtest_experiment_id": "647332040479371888",
       "backtest_experiment_name": "backtest_20260801_013400_phase_s_b6-m_topk-t20-d1-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.2856951185794352,
-        "2021": 0.5060409953153846
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d1-h10",
@@ -1310,10 +992,9 @@
       "backtest_recorder_id": "13ab97bfb2c5454e8a71065799f6c445",
       "backtest_experiment_id": "611432244525717033",
       "backtest_experiment_name": "backtest_20260801_013414_phase_s_b6-m_topk-t20-d1-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.6252165021130655,
-        "2021": -0.06545826810218255
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d1-h20",
@@ -1354,10 +1035,9 @@
       "backtest_recorder_id": "a5a2a754c3c4439781d15b0b9cd67191",
       "backtest_experiment_id": "653516136186708307",
       "backtest_experiment_name": "backtest_20260801_013428_phase_s_b6-m_topk-t20-d1-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.479514744252661,
-        "2021": -2.2167791930317744
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d2-h5",
@@ -1398,10 +1078,9 @@
       "backtest_recorder_id": "addf814fb3cd494699a6bd8b66f2af0f",
       "backtest_experiment_id": "768048643512921136",
       "backtest_experiment_name": "backtest_20260801_013443_phase_s_b6-m_topk-t20-d2-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.6573769838951795,
-        "2021": 1.6670713962403811
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d2-h10",
@@ -1442,10 +1121,9 @@
       "backtest_recorder_id": "b8bd86d4a89a479f931a6d7ebfad961f",
       "backtest_experiment_id": "652193266119983858",
       "backtest_experiment_name": "backtest_20260801_013458_phase_s_b6-m_topk-t20-d2-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.5202637929719315,
-        "2021": 0.5553832403708596
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t20-d2-h20",
@@ -1486,10 +1164,9 @@
       "backtest_recorder_id": "6ab0e234b8d541a98af7861732b8298d",
       "backtest_experiment_id": "967432564738129006",
       "backtest_experiment_name": "backtest_20260801_013512_phase_s_b6-m_topk-t20-d2-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.0610968871136623,
-        "2021": 0.9530911388955607
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d2-h5",
@@ -1530,10 +1207,9 @@
       "backtest_recorder_id": "4671729973684a74afb969f39105e7a0",
       "backtest_experiment_id": "621524657774007142",
       "backtest_experiment_name": "backtest_20260801_013527_phase_s_b6-m_topk-t30-d2-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.368077485085305,
-        "2021": 0.2714284616636559
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d2-h10",
@@ -1574,10 +1250,9 @@
       "backtest_recorder_id": "ac0f3d98350a4d99947665adda1819ef",
       "backtest_experiment_id": "303506522554001960",
       "backtest_experiment_name": "backtest_20260801_013542_phase_s_b6-m_topk-t30-d2-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.8604254280009291,
-        "2021": -0.2578850518641971
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d2-h20",
@@ -1618,10 +1293,9 @@
       "backtest_recorder_id": "f59e9f1f01a54e6da60a587c3c46fc8e",
       "backtest_experiment_id": "332516810063728522",
       "backtest_experiment_name": "backtest_20260801_013556_phase_s_b6-m_topk-t30-d2-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 2.019323385772034,
-        "2021": 0.4663304491458909
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d3-h5",
@@ -1662,10 +1336,9 @@
       "backtest_recorder_id": "429e3347f6ba4a2cb43fa387194e653c",
       "backtest_experiment_id": "973382644050680475",
       "backtest_experiment_name": "backtest_20260801_013611_phase_s_b6-m_topk-t30-d3-h5_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.7141992161879547,
-        "2021": -0.09524290651560624
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d3-h10",
@@ -1706,10 +1379,9 @@
       "backtest_recorder_id": "e6e5a4430f80488482bbb4809844aba7",
       "backtest_experiment_id": "522542364978450636",
       "backtest_experiment_name": "backtest_20260801_013625_phase_s_b6-m_topk-t30-d3-h10_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.8448049665848,
-        "2021": 1.0071170052784821
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "topk-t30-d3-h20",
@@ -1750,10 +1422,9 @@
       "backtest_recorder_id": "124d6e4ffe5d4c178ce91f2561cdef6b",
       "backtest_experiment_id": "335236232036164936",
       "backtest_experiment_name": "backtest_20260801_013640_phase_s_b6-m_topk-t30-d3-h20_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.2112531243308622,
-        "2021": -0.3829682482150219
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
     },
     {
       "candidate_id": "soft-t10-i025",
@@ -1766,16 +1437,16 @@
       "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t10-i025_csi1000_valid.yaml",
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013654_phase_s_b6-m_soft-t10-i025_csi1000_valid",
       "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
+      "status": "invalid",
+      "excess_with_cost_mean": null,
       "excess_with_cost_std": 0.01057989665779464,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
+      "excess_with_cost_annualized_return": null,
+      "excess_with_cost_information_ratio": null,
       "excess_with_cost_max_drawdown": -0.11959037714153675,
-      "excess_no_cost_mean": NaN,
+      "excess_no_cost_mean": null,
       "excess_no_cost_std": 0.010587757252390556,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
+      "excess_no_cost_annualized_return": null,
+      "excess_no_cost_information_ratio": null,
       "excess_no_cost_max_drawdown": -0.11726576703056546,
       "portfolio_cum_return": -0.018839031201025258,
       "benchmark_cum_return": 0.23748445510864258,
@@ -1795,9 +1466,10 @@
       "backtest_recorder_id": "89893e62fce5411ba777124beffdac35",
       "backtest_experiment_id": "353929581360745767",
       "backtest_experiment_name": "backtest_20260801_013654_phase_s_b6-m_soft-t10-i025_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.7611196136621704
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+      "error": "non-finite strategy metrics: excess_with_cost_information_ratio, excess_with_cost_annualized_return"
     },
     {
       "candidate_id": "soft-t10-i050",
@@ -1810,16 +1482,16 @@
       "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t10-i050_csi1000_valid.yaml",
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013708_phase_s_b6-m_soft-t10-i050_csi1000_valid",
       "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
+      "status": "invalid",
+      "excess_with_cost_mean": null,
       "excess_with_cost_std": 0.011296574222268133,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
+      "excess_with_cost_annualized_return": null,
+      "excess_with_cost_information_ratio": null,
       "excess_with_cost_max_drawdown": -0.10330861061921925,
-      "excess_no_cost_mean": NaN,
+      "excess_no_cost_mean": null,
       "excess_no_cost_std": 0.011297392384428942,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
+      "excess_no_cost_annualized_return": null,
+      "excess_no_cost_information_ratio": null,
       "excess_no_cost_max_drawdown": -0.10045758440550079,
       "portfolio_cum_return": 0.0392526576991401,
       "benchmark_cum_return": 0.23748445510864258,
@@ -1839,9 +1511,10 @@
       "backtest_recorder_id": "5ed03b797fae4103bcb1d1a8faf32f3f",
       "backtest_experiment_id": "677282910295161208",
       "backtest_experiment_name": "backtest_20260801_013708_phase_s_b6-m_soft-t10-i050_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.8924831201700565
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+      "error": "non-finite strategy metrics: excess_with_cost_information_ratio, excess_with_cost_annualized_return"
     },
     {
       "candidate_id": "soft-t20-i025",
@@ -1854,16 +1527,16 @@
       "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t20-i025_csi1000_valid.yaml",
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_014155_phase_s_b6-m_soft-t20-i025_csi1000_valid",
       "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
+      "status": "invalid",
+      "excess_with_cost_mean": null,
       "excess_with_cost_std": 0.009372886205176343,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
+      "excess_with_cost_annualized_return": null,
+      "excess_with_cost_information_ratio": null,
       "excess_with_cost_max_drawdown": -0.09744073335198156,
-      "excess_no_cost_mean": NaN,
+      "excess_no_cost_mean": null,
       "excess_no_cost_std": 0.009384325428299652,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
+      "excess_no_cost_annualized_return": null,
+      "excess_no_cost_information_ratio": null,
       "excess_no_cost_max_drawdown": -0.09278911309097249,
       "portfolio_cum_return": -0.056850003022229756,
       "benchmark_cum_return": 0.23748445510864258,
@@ -1883,9 +1556,6 @@
       "backtest_recorder_id": "1b47e2c55f78419982aeec7c27d74a1d",
       "backtest_experiment_id": "968255507366295293",
       "backtest_experiment_name": "backtest_20260801_014155_phase_s_b6-m_soft-t20-i025_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.4645275141437881
-      },
       "previous_attempts": [
         {
           "returncode": 1,
@@ -1901,7 +1571,11 @@
           "status": "failed",
           "error": "ate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 371, in generate_trade_decision\n    order_list = self.order_generator.generate_order_list_from_target_weight_position(\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 117, in generate_order_list_from_target_weight_position\n    current_total_value = _calculate_current_stock_value(\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 24, in _calculate_current_stock_value\n    price = trade_exchange.get_deal_price(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Exchange.get_deal_price() missing 1 required positional argument: 'direction'\n"
         }
-      ]
+      ],
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+      "error": "non-finite strategy metrics: excess_with_cost_information_ratio, excess_with_cost_annualized_return"
     },
     {
       "candidate_id": "soft-t20-i050",
@@ -1914,16 +1588,16 @@
       "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t20-i050_csi1000_valid.yaml",
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013732_phase_s_b6-m_soft-t20-i050_csi1000_valid",
       "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
+      "status": "invalid",
+      "excess_with_cost_mean": null,
       "excess_with_cost_std": 0.009914343525104806,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
+      "excess_with_cost_annualized_return": null,
+      "excess_with_cost_information_ratio": null,
       "excess_with_cost_max_drawdown": -0.09007224523739155,
-      "excess_no_cost_mean": NaN,
+      "excess_no_cost_mean": null,
       "excess_no_cost_std": 0.009922652951736612,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
+      "excess_no_cost_annualized_return": null,
+      "excess_no_cost_information_ratio": null,
       "excess_no_cost_max_drawdown": -0.08548517802191191,
       "portfolio_cum_return": 0.030875273829915395,
       "benchmark_cum_return": 0.23748445510864258,
@@ -1943,9 +1617,10 @@
       "backtest_recorder_id": "7b7a9487940945b2b1eda07e6f881b0e",
       "backtest_experiment_id": "275075513552956518",
       "backtest_experiment_name": "backtest_20260801_013732_phase_s_b6-m_soft-t20-i050_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 2.1459523557171076
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+      "error": "non-finite strategy metrics: excess_with_cost_information_ratio, excess_with_cost_annualized_return"
     },
     {
       "candidate_id": "soft-t30-i025",
@@ -1958,16 +1633,16 @@
       "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t30-i025_csi1000_valid.yaml",
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_014210_phase_s_b6-m_soft-t30-i025_csi1000_valid",
       "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
+      "status": "invalid",
+      "excess_with_cost_mean": null,
       "excess_with_cost_std": 0.009419085865294222,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
+      "excess_with_cost_annualized_return": null,
+      "excess_with_cost_information_ratio": null,
       "excess_with_cost_max_drawdown": -0.10139620492834855,
-      "excess_no_cost_mean": NaN,
+      "excess_no_cost_mean": null,
       "excess_no_cost_std": 0.009428236097153873,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
+      "excess_no_cost_annualized_return": null,
+      "excess_no_cost_information_ratio": null,
       "excess_no_cost_max_drawdown": -0.09475246253841985,
       "portfolio_cum_return": -0.018719989776230905,
       "benchmark_cum_return": 0.23748445510864258,
@@ -1987,9 +1662,6 @@
       "backtest_recorder_id": "62fd45f393054b94a3e4b7fcc2f583c0",
       "backtest_experiment_id": "987703708471359340",
       "backtest_experiment_name": "backtest_20260801_014210_phase_s_b6-m_soft-t30-i025_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 1.8223611431542173
-      },
       "previous_attempts": [
         {
           "returncode": 1,
@@ -2005,7 +1677,11 @@
           "status": "failed",
           "error": "ate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 371, in generate_trade_decision\n    order_list = self.order_generator.generate_order_list_from_target_weight_position(\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 117, in generate_order_list_from_target_weight_position\n    current_total_value = _calculate_current_stock_value(\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/order_generator.py\", line 24, in _calculate_current_stock_value\n    price = trade_exchange.get_deal_price(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Exchange.get_deal_price() missing 1 required positional argument: 'direction'\n"
         }
-      ]
+      ],
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+      "error": "non-finite strategy metrics: excess_with_cost_information_ratio, excess_with_cost_annualized_return"
     },
     {
       "candidate_id": "soft-t30-i050",
@@ -2018,16 +1694,16 @@
       "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/strategy-sweep/b6-m/soft-t30-i050_csi1000_valid.yaml",
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_013755_phase_s_b6-m_soft-t30-i050_csi1000_valid",
       "run": 1,
-      "status": "success",
-      "excess_with_cost_mean": NaN,
+      "status": "invalid",
+      "excess_with_cost_mean": null,
       "excess_with_cost_std": 0.009506002675831288,
-      "excess_with_cost_annualized_return": NaN,
-      "excess_with_cost_information_ratio": NaN,
+      "excess_with_cost_annualized_return": null,
+      "excess_with_cost_information_ratio": null,
       "excess_with_cost_max_drawdown": -0.0763887080296154,
-      "excess_no_cost_mean": NaN,
+      "excess_no_cost_mean": null,
       "excess_no_cost_std": 0.009519684502947528,
-      "excess_no_cost_annualized_return": NaN,
-      "excess_no_cost_information_ratio": NaN,
+      "excess_no_cost_annualized_return": null,
+      "excess_no_cost_information_ratio": null,
       "excess_no_cost_max_drawdown": -0.07009664730188725,
       "portfolio_cum_return": 0.04563220525298273,
       "benchmark_cum_return": 0.23748445510864258,
@@ -2047,9 +1723,10 @@
       "backtest_recorder_id": "f46e09cae36c454dae0317586267a28a",
       "backtest_experiment_id": "565604549594851929",
       "backtest_experiment_name": "backtest_20260801_013755_phase_s_b6-m_soft-t30-i050_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 2.4794361336527566
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+      "error": "non-finite strategy metrics: excess_with_cost_information_ratio, excess_with_cost_annualized_return"
     }
   ],
   "winner": {
@@ -2091,9 +1768,8 @@
     "backtest_recorder_id": "f59e9f1f01a54e6da60a587c3c46fc8e",
     "backtest_experiment_id": "332516810063728522",
     "backtest_experiment_name": "backtest_20260801_013556_phase_s_b6-m_topk-t30-d2-h20_csi1000_valid_run01",
-    "yearly_ir": {
-      "2020": 2.019323385772034,
-      "2021": 0.4663304491458909
-    }
+    "provenance_verification": "manifest_backfill_after_valid_cleanup",
+    "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+    "source_pred_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc"
   }
 }

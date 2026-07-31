@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
 import subprocess
 import sys
 from datetime import datetime
@@ -29,6 +30,7 @@ from phase_s_protocol import (  # noqa: E402
     TEST_SEGMENT,
     VALID_SEGMENT,
     select_valid_winner,
+    sha256_file,
     strategy_grid,
 )
 from report_utils import make_session_dir  # noqa: E402
@@ -36,6 +38,56 @@ from report_utils import make_session_dir  # noqa: E402
 IR_KEY = "excess_with_cost_information_ratio"
 ANN_KEY = "excess_with_cost_annualized_return"
 MDD_KEY = "excess_with_cost_max_drawdown"
+
+
+def classify_strategy_outcome(row: dict[str, Any]) -> None:
+    """Treat non-finite strategy metrics as invalid outcomes, not successes."""
+    if row.get("status") != "success":
+        return
+    required = (IR_KEY, ANN_KEY, MDD_KEY, "annualized_one_way_turnover")
+    invalid = []
+    for key in required:
+        try:
+            value = float(row.get(key))
+        except (TypeError, ValueError):
+            invalid.append(key)
+            continue
+        if not math.isfinite(value):
+            invalid.append(key)
+    if invalid:
+        row.update(
+            status="invalid",
+            error=f"non-finite strategy metrics: {', '.join(invalid)}",
+        )
+
+
+def verify_prediction_contract(
+    pred_path: Path,
+    manifest_path: Path,
+    *,
+    model_ref: str,
+    pool: str,
+    segment: str,
+) -> dict[str, Any]:
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    matches = [
+        entry
+        for entry in manifest.get("predictions") or []
+        if (entry.get("model_ref"), entry.get("pool"), entry.get("segment"))
+        == (model_ref, pool, segment)
+    ]
+    if len(matches) != 1:
+        raise ValueError("prediction manifest must contain exactly one matching artifact")
+    entry = matches[0]
+    declared = Path(entry["path"]).expanduser()
+    if not declared.is_absolute():
+        declared = REPO_ROOT / declared
+    if declared.resolve() != pred_path.resolve():
+        raise ValueError("prediction path differs from frozen manifest")
+    actual_sha = sha256_file(pred_path)
+    if actual_sha != entry.get("prediction_sha256"):
+        raise ValueError("prediction SHA-256 differs from frozen manifest")
+    return dict(entry)
 
 
 def _segment_bounds(segment: str) -> tuple[str, str]:
@@ -243,6 +295,7 @@ def write_comparison(
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase S frozen-prediction strategy sweep")
     parser.add_argument("--pred", required=True, type=Path)
+    parser.add_argument("--prediction-manifest", required=True, type=Path)
     parser.add_argument("--config", required=True)
     parser.add_argument("--model-ref", required=True, choices=MODEL_REFS)
     parser.add_argument("--pool", choices=tuple(POOL_BENCHMARKS), default="csi1000")
@@ -267,6 +320,13 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     pred_path = args.pred.expanduser().resolve()
     if not pred_path.is_file():
         raise FileNotFoundError(f"prediction file missing: {pred_path}")
+    prediction_entry = verify_prediction_contract(
+        pred_path,
+        args.prediction_manifest,
+        model_ref=args.model_ref,
+        pool=args.pool,
+        segment=args.segment,
+    )
     base = load_config(args.config)
     all_candidates = strategy_grid(args.model_ref)
     by_id = {row["candidate_id"]: row for row in all_candidates}
@@ -337,6 +397,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             capture_output=True,
         )
         row = dict(candidate)
+        row["source_pred"] = str(pred_path)
+        row["source_pred_sha256"] = prediction_entry["prediction_sha256"]
         row["returncode"] = completed.returncode
         row["config"] = str(config_path)
         try:
@@ -344,6 +406,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             row["result_dir"] = str(result_dir)
             metrics_path = result_dir / "run_01" / "metrics.json"
             row.update(json.loads(metrics_path.read_text(encoding="utf-8")))
+            classify_strategy_outcome(row)
             if row.get("status") == "success":
                 yearly = yearly_ir(result_dir / "run_01" / "report_normal.csv")
                 row["yearly_ir"] = {str(year): float(value) for year, value in yearly.items()}

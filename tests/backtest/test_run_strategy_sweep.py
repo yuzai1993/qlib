@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
+import math
 import sys
 from pathlib import Path
 
@@ -127,3 +130,51 @@ def test_merge_retry_rows_preserves_failed_attempt_and_original_order():
     assert merged[1]["previous_attempts"] == [
         {"status": "failed", "error": "bad price"}
     ]
+
+
+def test_non_finite_success_is_reclassified_as_invalid():
+    row = {
+        "status": "success",
+        sweep.IR_KEY: math.nan,
+        sweep.ANN_KEY: 0.0,
+        sweep.MDD_KEY: -0.1,
+        "annualized_one_way_turnover": 2.0,
+    }
+
+    sweep.classify_strategy_outcome(row)
+
+    assert row["status"] == "invalid"
+    assert "non-finite" in row["error"]
+
+
+def test_verify_prediction_contract_enforces_path_and_sha(tmp_path):
+    pred = tmp_path / "csi1000_valid.pkl"
+    pred.write_bytes(b"frozen")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "predictions": [
+                    {
+                        "model_ref": "b1-m",
+                        "pool": "csi1000",
+                        "segment": "valid",
+                        "path": str(pred),
+                        "prediction_sha256": hashlib.sha256(b"frozen").hexdigest(),
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    entry = sweep.verify_prediction_contract(
+        pred, manifest, model_ref="b1-m", pool="csi1000", segment="valid"
+    )
+    assert entry["prediction_sha256"] == hashlib.sha256(b"frozen").hexdigest()
+
+    pred.write_bytes(b"changed")
+    with pytest.raises(ValueError, match="SHA"):
+        sweep.verify_prediction_contract(
+            pred, manifest, model_ref="b1-m", pool="csi1000", segment="valid"
+        )

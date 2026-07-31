@@ -224,6 +224,8 @@ def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
         if row.get("phase") != "S":
             continue
         exp_id = str(row.get("exp_id") or "")
+        if exp_id.startswith("baseline/"):
+            continue
         if row.get("state") != "test_complete":
             raise ValueError(f"Phase S row is incomplete: {exp_id} ({row.get('state')})")
         if row.get("cleanup_retention_eligible") is not True:

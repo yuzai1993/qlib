@@ -13,6 +13,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import run_backtest  # noqa: E402
 import run_pred_backtest  # noqa: E402
+from eval_protocol import yearly_ir  # noqa: E402
 
 
 def test_extract_metrics_adds_turnover_and_cumulative_cost_diagnostics():
@@ -73,3 +74,25 @@ def test_load_pred_source_returns_resolved_path_used_by_artifact_metadata(tmp_pa
     assert resolved == source.resolve()
     assert list(frame.columns) == ["score"]
     assert frame.index.names == ["datetime", "instrument"]
+
+
+def test_yearly_ir_subtracts_daily_cost(tmp_path):
+    report = pd.DataFrame(
+        {
+            "datetime": pd.to_datetime(["2025-01-02", "2025-01-03", "2025-01-06"]),
+            "return": [0.02, 0.01, -0.01],
+            "bench": [0.0, 0.0, 0.0],
+            "cost": [0.01, 0.01, 0.01],
+        }
+    )
+    path = tmp_path / "report.csv"
+    report.to_csv(path, index=False)
+
+    actual = yearly_ir(path).loc[2025]
+
+    from qlib.contrib.evaluate import risk_analysis
+
+    expected = risk_analysis(pd.Series([0.01, 0.0, -0.02]), freq="day").loc[
+        "information_ratio", "risk"
+    ]
+    assert actual == pytest.approx(expected)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+import math
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
@@ -82,3 +83,22 @@ def test_strategy_report_renders_two_models_baseline_first_and_frozen_winner():
         assert "2025" in section
     assert "test 不参与选型" in html
     assert "500,000" in html
+
+
+def test_strategy_report_labels_non_finite_and_shows_retry_audit():
+    row = _row("b1-m")
+    row["valid_results"][0]["previous_attempts"] = [{"status": "failed"}]
+    row["valid_results"].append(
+        {
+            "candidate_id": "soft-invalid",
+            "status": "invalid",
+            "error": "non-finite strategy metrics",
+            "excess_with_cost_information_ratio": math.nan,
+        }
+    )
+
+    html = report.build_html([row])
+
+    assert "无效" in html
+    assert "工程失败后重跑" in html
+    assert ">nan<" not in html

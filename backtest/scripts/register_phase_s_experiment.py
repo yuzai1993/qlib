@@ -54,8 +54,16 @@ def _prediction_artifacts(manifest: dict, model_ref: str) -> list[dict]:
             f"missing={sorted(expected - actual)}, extra={sorted(actual - expected)}"
         )
     for entry in entries:
-        if not entry.get("prediction_sha256") or not entry.get("coverage"):
+        coverage = entry.get("coverage") or {}
+        if not entry.get("prediction_sha256") or not coverage.get("index_sha256"):
             raise ValueError(f"prediction artifact incomplete: {entry}")
+        path = Path(str(entry.get("path") or "")).expanduser()
+        if not path.is_absolute():
+            path = REPO_ROOT / path
+        if not path.is_file():
+            raise ValueError(f"prediction artifact missing: {path}")
+        if sha256_file(path) != entry["prediction_sha256"]:
+            raise ValueError(f"prediction artifact SHA mismatch: {path}")
     return sorted(entries, key=lambda entry: (entry["pool"], entry["segment"]))
 
 
@@ -189,6 +197,13 @@ def bind_valid_results(row: dict, result_path: Path) -> dict:
             f"missing={sorted(expected_ids - actual_ids)}, "
             f"extra={sorted(actual_ids - expected_ids)}"
         )
+    expected_pred_sha = next(
+        item["prediction_sha256"]
+        for item in row["prediction_artifacts"]
+        if item["pool"] == "csi1000" and item["segment"] == "valid"
+    )
+    if any(item.get("source_pred_sha256") != expected_pred_sha for item in result_rows):
+        raise ValueError("valid result prediction SHA differs from preregistration")
     winner = select_valid_winner(result_rows)
     if payload.get("winner", {}).get("candidate_id") not in (None, winner["candidate_id"]):
         raise ValueError("valid result winner differs from canonical selection")
@@ -240,6 +255,13 @@ def bind_test_results(row: dict, result_path: Path) -> dict:
         candidates = pool_payload.get("all_rows") or []
         if {candidate.get("candidate_id") for candidate in candidates} != expected_ids:
             raise ValueError(f"test candidate set mismatch for {pool}")
+        expected_pred_sha = next(
+            item["prediction_sha256"]
+            for item in row["prediction_artifacts"]
+            if item["pool"] == pool and item["segment"] == "test"
+        )
+        if any(item.get("source_pred_sha256") != expected_pred_sha for item in candidates):
+            raise ValueError(f"test result prediction SHA differs for {pool}")
         test_results[pool] = candidates
         winner = next(
             candidate
@@ -269,6 +291,57 @@ def bind_test_results(row: dict, result_path: Path) -> dict:
         note="仅按 CSI1000 valid 选型；test 只评估冻结胜者与 B1-S 基线",
     )
     return out
+
+
+def build_phase_s_baseline_anchor(sweep_row: dict) -> dict[str, Any]:
+    """Build the model-specific B1-S anchor required for a completed sweep."""
+    model_ref = str(sweep_row.get("model_ref") or "")
+    if sweep_row.get("phase") != "S" or model_ref not in MODEL_REFS:
+        raise ValueError("baseline anchor requires a completed Phase S sweep row")
+    metrics_summary: dict[str, dict[str, float]] = {}
+    result_dirs = []
+    baseline_results = {}
+    for pool in POOL_BENCHMARKS:
+        candidates = (sweep_row.get("test_results") or {}).get(pool) or []
+        baseline = next(
+            (item for item in candidates if item.get("candidate_id") == BASELINE_CANDIDATE_ID),
+            None,
+        )
+        if baseline is None:
+            raise ValueError(f"B1-S baseline result missing for {model_ref}/{pool}")
+        baseline_results[pool] = baseline
+        metrics_summary[pool] = {
+            "ir": baseline["excess_with_cost_information_ratio"],
+            "ann": baseline["excess_with_cost_annualized_return"],
+            "mdd": baseline["excess_with_cost_max_drawdown"],
+        }
+        if baseline.get("result_dir"):
+            result_dirs.append(baseline["result_dir"])
+    return {
+        "exp_id": f"baseline/b1-s-on-{model_ref}",
+        "direction": sweep_row["direction"],
+        "phase": "S",
+        "date": sweep_row.get("date"),
+        "conclusion": "baseline",
+        "hypothesis": f"B1-S 在冻结 {model_ref.upper()} 分数上的模型专属策略对照。",
+        "baseline_ref": "B1-S v1.0",
+        "frozen_model_ref": sweep_row.get("frozen_model_ref"),
+        "model_ref": model_ref,
+        "model_manifest": sweep_row.get("model_manifest"),
+        "model_path": sweep_row.get("model_path"),
+        "model_sha256": sweep_row.get("model_sha256"),
+        "account": sweep_row.get("account"),
+        "fees": sweep_row.get("fees"),
+        "strategy": next(
+            item for item in sweep_row["strategy_grid"]
+            if item["candidate_id"] == BASELINE_CANDIDATE_ID
+        ) if sweep_row.get("strategy_grid") else {"candidate_id": BASELINE_CANDIDATE_ID},
+        "metrics_summary": metrics_summary,
+        "test_results": baseline_results,
+        "result_dirs": result_dirs,
+        "cleanup_retention_eligible": False,
+        "note": "模型专属 B1-S baseline；不得跨 frozen_model_ref 复用数值",
+    }
 
 
 def write_protocol(path: Path) -> None:

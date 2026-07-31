@@ -43,10 +43,9 @@
     "backtest_recorder_id": "7c691f5a5d604c8bbe36145ebd84d674",
     "backtest_experiment_id": "913359360874824011",
     "backtest_experiment_name": "backtest_20260801_012532_phase_s_b1-m_topk-t10-d2-h1_csi1000_valid_run01",
-    "yearly_ir": {
-      "2020": -1.2440510992829839,
-      "2021": 1.814653127193802
-    }
+    "provenance_verification": "manifest_backfill_after_valid_cleanup",
+    "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+    "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
   },
   "ranked": [
     {
@@ -88,10 +87,9 @@
       "backtest_recorder_id": "af065ed6ec4f436c818c7b11adb79e64",
       "backtest_experiment_id": "764300589523356995",
       "backtest_experiment_name": "backtest_20260801_012659_phase_s_b1-m_topk-t30-d3-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.15292903402881738,
-        "2021": 1.6176144389396414
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t10-d1-h1",
@@ -132,10 +130,9 @@
       "backtest_recorder_id": "5e8ecac7e7994d29b098d011d3e80b14",
       "backtest_experiment_id": "817403827192827768",
       "backtest_experiment_name": "backtest_20260801_012501_phase_s_b1-m_topk-t10-d1-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.23907682228025864,
-        "2021": 1.6173653771167331
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t30-d6-h1",
@@ -176,10 +173,9 @@
       "backtest_recorder_id": "5539ebfb383446b8a31791908be764f8",
       "backtest_experiment_id": "917120869330871727",
       "backtest_experiment_name": "backtest_20260801_012730_phase_s_b1-m_topk-t30-d6-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.17640925452356712,
-        "2021": 2.100903809754405
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t10-d2-h3",
@@ -220,10 +216,9 @@
       "backtest_recorder_id": "ff229fe41abc4fab8beaf302a31b9721",
       "backtest_experiment_id": "503156031109312199",
       "backtest_experiment_name": "backtest_20260801_012546_phase_s_b1-m_topk-t10-d2-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.48897099039538733,
-        "2021": 1.5559724657482212
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d4-h1",
@@ -264,10 +259,9 @@
       "backtest_recorder_id": "5978df4093c74d759047e6de247f32a5",
       "backtest_experiment_id": "506701050648276602",
       "backtest_experiment_name": "backtest_20260801_012630_phase_s_b1-m_topk-t20-d4-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.5791921850090738,
-        "2021": 1.6660412308409918
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d2-h1",
@@ -308,10 +302,9 @@
       "backtest_recorder_id": "8652c2468c9d4532a0cb28fcb785e8a0",
       "backtest_experiment_id": "212596339690763091",
       "backtest_experiment_name": "backtest_20260801_012601_phase_s_b1-m_topk-t20-d2-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.9512129022856466,
-        "2021": 1.5110325659117214
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t30-d3-h3",
@@ -352,10 +345,9 @@
       "backtest_recorder_id": "e3a305b5a28b40f7914f71803629ead2",
       "backtest_experiment_id": "253299602623858733",
       "backtest_experiment_name": "backtest_20260801_012715_phase_s_b1-m_topk-t30-d3-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -1.3063267696052476,
-        "2021": 1.5081234158615697
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d2-h3",
@@ -396,10 +388,9 @@
       "backtest_recorder_id": "4a41f68684db4af5a8405cf1eeb912fc",
       "backtest_experiment_id": "681586288160704819",
       "backtest_experiment_name": "backtest_20260801_012615_phase_s_b1-m_topk-t20-d2-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.23532662125621565,
-        "2021": 0.20516599318240908
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t10-d1-h3",
@@ -440,10 +431,9 @@
       "backtest_recorder_id": "d003e3a9731e4099a7c4fab1547139df",
       "backtest_experiment_id": "762302616495430787",
       "backtest_experiment_name": "backtest_20260801_012517_phase_s_b1-m_topk-t10-d1-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.9638862060533046,
-        "2021": 0.9158382659523896
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t30-d6-h3",
@@ -484,10 +474,9 @@
       "backtest_recorder_id": "d78b163857aa40ed99a9e05ee1367826",
       "backtest_experiment_id": "115420563865234590",
       "backtest_experiment_name": "backtest_20260801_012746_phase_s_b1-m_topk-t30-d6-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.1265347157261996,
-        "2021": 0.052030041096665605
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t10-d2-h1",
@@ -528,10 +517,9 @@
       "backtest_recorder_id": "7c691f5a5d604c8bbe36145ebd84d674",
       "backtest_experiment_id": "913359360874824011",
       "backtest_experiment_name": "backtest_20260801_012532_phase_s_b1-m_topk-t10-d2-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -1.2440510992829839,
-        "2021": 1.814653127193802
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d4-h3",
@@ -572,10 +560,9 @@
       "backtest_recorder_id": "7ca4ab5eea134b1a8a0687eca081eabb",
       "backtest_experiment_id": "814382798291160024",
       "backtest_experiment_name": "backtest_20260801_012645_phase_s_b1-m_topk-t20-d4-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.98880329392649,
-        "2021": 0.7769635191084886
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     }
   ],
   "all_rows": [
@@ -618,10 +605,9 @@
       "backtest_recorder_id": "5e8ecac7e7994d29b098d011d3e80b14",
       "backtest_experiment_id": "817403827192827768",
       "backtest_experiment_name": "backtest_20260801_012501_phase_s_b1-m_topk-t10-d1-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.23907682228025864,
-        "2021": 1.6173653771167331
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t10-d1-h3",
@@ -662,10 +648,9 @@
       "backtest_recorder_id": "d003e3a9731e4099a7c4fab1547139df",
       "backtest_experiment_id": "762302616495430787",
       "backtest_experiment_name": "backtest_20260801_012517_phase_s_b1-m_topk-t10-d1-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.9638862060533046,
-        "2021": 0.9158382659523896
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t10-d2-h1",
@@ -706,10 +691,9 @@
       "backtest_recorder_id": "7c691f5a5d604c8bbe36145ebd84d674",
       "backtest_experiment_id": "913359360874824011",
       "backtest_experiment_name": "backtest_20260801_012532_phase_s_b1-m_topk-t10-d2-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -1.2440510992829839,
-        "2021": 1.814653127193802
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t10-d2-h3",
@@ -750,10 +734,9 @@
       "backtest_recorder_id": "ff229fe41abc4fab8beaf302a31b9721",
       "backtest_experiment_id": "503156031109312199",
       "backtest_experiment_name": "backtest_20260801_012546_phase_s_b1-m_topk-t10-d2-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.48897099039538733,
-        "2021": 1.5559724657482212
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d2-h1",
@@ -794,10 +777,9 @@
       "backtest_recorder_id": "8652c2468c9d4532a0cb28fcb785e8a0",
       "backtest_experiment_id": "212596339690763091",
       "backtest_experiment_name": "backtest_20260801_012601_phase_s_b1-m_topk-t20-d2-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.9512129022856466,
-        "2021": 1.5110325659117214
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d2-h3",
@@ -838,10 +820,9 @@
       "backtest_recorder_id": "4a41f68684db4af5a8405cf1eeb912fc",
       "backtest_experiment_id": "681586288160704819",
       "backtest_experiment_name": "backtest_20260801_012615_phase_s_b1-m_topk-t20-d2-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.23532662125621565,
-        "2021": 0.20516599318240908
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d4-h1",
@@ -882,10 +863,9 @@
       "backtest_recorder_id": "5978df4093c74d759047e6de247f32a5",
       "backtest_experiment_id": "506701050648276602",
       "backtest_experiment_name": "backtest_20260801_012630_phase_s_b1-m_topk-t20-d4-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.5791921850090738,
-        "2021": 1.6660412308409918
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t20-d4-h3",
@@ -926,10 +906,9 @@
       "backtest_recorder_id": "7ca4ab5eea134b1a8a0687eca081eabb",
       "backtest_experiment_id": "814382798291160024",
       "backtest_experiment_name": "backtest_20260801_012645_phase_s_b1-m_topk-t20-d4-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.98880329392649,
-        "2021": 0.7769635191084886
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t30-d3-h1",
@@ -970,10 +949,9 @@
       "backtest_recorder_id": "af065ed6ec4f436c818c7b11adb79e64",
       "backtest_experiment_id": "764300589523356995",
       "backtest_experiment_name": "backtest_20260801_012659_phase_s_b1-m_topk-t30-d3-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": 0.15292903402881738,
-        "2021": 1.6176144389396414
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t30-d3-h3",
@@ -1014,10 +992,9 @@
       "backtest_recorder_id": "e3a305b5a28b40f7914f71803629ead2",
       "backtest_experiment_id": "253299602623858733",
       "backtest_experiment_name": "backtest_20260801_012715_phase_s_b1-m_topk-t30-d3-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -1.3063267696052476,
-        "2021": 1.5081234158615697
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t30-d6-h1",
@@ -1058,10 +1035,9 @@
       "backtest_recorder_id": "5539ebfb383446b8a31791908be764f8",
       "backtest_experiment_id": "917120869330871727",
       "backtest_experiment_name": "backtest_20260801_012730_phase_s_b1-m_topk-t30-d6-h1_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.17640925452356712,
-        "2021": 2.100903809754405
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "topk-t30-d6-h3",
@@ -1102,10 +1078,9 @@
       "backtest_recorder_id": "d78b163857aa40ed99a9e05ee1367826",
       "backtest_experiment_id": "115420563865234590",
       "backtest_experiment_name": "backtest_20260801_012746_phase_s_b1-m_topk-t30-d6-h3_csi1000_valid_run01",
-      "yearly_ir": {
-        "2020": -0.1265347157261996,
-        "2021": 0.052030041096665605
-      }
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "soft-t10-i050",
@@ -1119,7 +1094,10 @@
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_012801_phase_s_b1-m_soft-t10-i050_csi1000_valid",
       "run": 1,
       "status": "failed",
-      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n"
+      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n",
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "soft-t10-i100",
@@ -1133,7 +1111,10 @@
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_012814_phase_s_b1-m_soft-t10-i100_csi1000_valid",
       "run": 1,
       "status": "failed",
-      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n"
+      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n",
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "soft-t20-i050",
@@ -1147,7 +1128,10 @@
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_012828_phase_s_b1-m_soft-t20-i050_csi1000_valid",
       "run": 1,
       "status": "failed",
-      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n"
+      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n",
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "soft-t20-i100",
@@ -1161,7 +1145,10 @@
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_012841_phase_s_b1-m_soft-t20-i100_csi1000_valid",
       "run": 1,
       "status": "failed",
-      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n"
+      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n",
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "soft-t30-i050",
@@ -1175,7 +1162,10 @@
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_012853_phase_s_b1-m_soft-t30-i050_csi1000_valid",
       "run": 1,
       "status": "failed",
-      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n"
+      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n",
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     },
     {
       "candidate_id": "soft-t30-i100",
@@ -1189,7 +1179,10 @@
       "result_dir": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260801_012904_phase_s_b1-m_soft-t30-i100_csi1000_valid",
       "run": 1,
       "status": "failed",
-      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n"
+      "error": "exp/backtest/scripts/run_pred_backtest.py\", line 178, in main\n    ExternalPredPortAnaRecord(recorder, port_cfg, pred, \"day\").generate()\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 235, in generate\n    artifact_dict = self._generate(*args, **kwargs)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/workflow/record_temp.py\", line 488, in _generate\n    portfolio_metric_dict, indicator_dict = normal_backtest(\n                                            ^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/__init__.py\", line 276, in backtest\n    return backtest_loop(start_time, end_time, trade_strategy, trade_executor)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 43, in backtest_loop\n    for _decision in collect_data_loop(start_time, end_time, trade_strategy, trade_executor, return_value):\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/backtest/backtest.py\", line 88, in collect_data_loop\n    _trade_decision: BaseTradeDecision = trade_strategy.generate_trade_decision(_execute_result)\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/signal_strategy.py\", line 368, in generate_trade_decision\n    target_weight_position = self.generate_target_weight_position(\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/Project/qlib_exp/qlib/contrib/strategy/cost_control.py\", line 60, in generate_target_weight_position\n    ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: DataFrame.sort_values() missing 1 required positional argument: 'by'\n",
+      "provenance_verification": "manifest_backfill_after_valid_cleanup",
+      "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
     }
   ],
   "winner": {
@@ -1231,9 +1224,8 @@
     "backtest_recorder_id": "af065ed6ec4f436c818c7b11adb79e64",
     "backtest_experiment_id": "764300589523356995",
     "backtest_experiment_name": "backtest_20260801_012659_phase_s_b1-m_topk-t30-d3-h1_csi1000_valid_run01",
-    "yearly_ir": {
-      "2020": 0.15292903402881738,
-      "2021": 1.6176144389396414
-    }
+    "provenance_verification": "manifest_backfill_after_valid_cleanup",
+    "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+    "source_pred_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c"
   }
 }

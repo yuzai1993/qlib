@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import hashlib
 import json
 import pickle
 import sys
@@ -51,6 +52,14 @@ def normalize_prediction(pred: pd.Series | pd.DataFrame) -> pd.Series:
     return pred
 
 
+def prediction_index_sha256(index: pd.MultiIndex) -> str:
+    return hashlib.sha256(
+        pd.util.hash_pandas_object(index.to_frame(index=False), index=False)
+        .to_numpy()
+        .tobytes()
+    ).hexdigest()
+
+
 def validate_prediction_index(
     pred: pd.Series, expected_dates: pd.DatetimeIndex
 ) -> dict[str, Any]:
@@ -80,6 +89,7 @@ def validate_prediction_index(
         "end": str(actual[-1].date()),
         "n_dates": int(len(actual)),
         "n_rows": int(len(pred)),
+        "index_sha256": prediction_index_sha256(pred.index),
     }
 
 

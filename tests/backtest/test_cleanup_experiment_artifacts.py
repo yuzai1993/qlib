@@ -277,6 +277,53 @@ def _write_rolling_session(path: Path, experiment_ids: list[str]):
     )
 
 
+def _write_phase_s_session(path: Path, experiment_id: str):
+    path.mkdir(parents=True)
+    (path / "meta.json").write_text(
+        json.dumps(
+            {
+                "mode": "pred_backtest",
+                "runs": [{"status": "success", "backtest_recorder_id": f"rec-{experiment_id}"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    run = path / "run_01"
+    run.mkdir()
+    (run / "mlruns_link.json").write_text(
+        json.dumps(
+            {
+                "backtest_experiment_id": experiment_id,
+                "backtest_recorder_id": f"rec-{experiment_id}",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _phase_s_row(model_ref: str, result_names: list[str], state="test_complete"):
+    baseline = "topk-t10-d2-h1"
+    winner = "topk-t20-d2-h10"
+    iterator = iter(result_names)
+    return {
+        "exp_id": f"strategy-sweep/{model_ref}",
+        "phase": "S",
+        "state": state,
+        "model_ref": model_ref,
+        "selected_candidate_id": winner,
+        "cleanup_retention_eligible": state == "test_complete",
+        "test_results": {
+            pool: [
+                {"candidate_id": baseline, "result_dir": f"backtest/result/{next(iterator)}"},
+                {"candidate_id": winner, "result_dir": f"backtest/result/{next(iterator)}"},
+            ]
+            for pool in ("csi1000", "csi300", "csi500")
+        }
+        if state == "test_complete"
+        else {},
+    }
+
+
 def test_cleanup_plan_is_direct_child_safe_and_dry_run_is_non_destructive(tmp_path):
     result_root = tmp_path / "backtest" / "result"
     mlruns_root = tmp_path / "mlruns"
@@ -399,6 +446,65 @@ def test_cli_writes_machine_readable_plan_to_stdout(tmp_path, capsys):
     plan = json.loads(captured.out)
     assert plan["baseline_exp_id"] == "baseline/b1-m"
     assert "dry-run only" in captured.err
+
+
+def test_phase_s_retains_baseline_and_frozen_winner_for_every_test_pool(tmp_path):
+    result_root = tmp_path / "backtest/result"
+    mlruns_root = tmp_path / "mlruns"
+    baseline = _baseline()
+    baseline["result_dirs"] = []
+    for index in range(5):
+        name = f"phase-m-{index}"
+        experiment_id = str(100 + index)
+        _write_session(result_root / name, experiment_id)
+        (mlruns_root / experiment_id).mkdir(parents=True)
+        baseline["result_dirs"].append(f"backtest/result/{name}")
+
+    phase_s_names = [f"phase-s-{index}" for index in range(6)]
+    for index, name in enumerate(phase_s_names, start=200):
+        _write_phase_s_session(result_root / name, str(index))
+        (mlruns_root / str(index)).mkdir(parents=True)
+    _write_phase_s_session(result_root / "loser", "999")
+    (mlruns_root / "999").mkdir(parents=True)
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path,
+        [baseline, _phase_s_row("b1-m", phase_s_names)],
+    )
+
+    assert plan["errors"] == []
+    assert set(plan["keep_result_dirs"]) == {
+        (result_root / f"phase-m-{index}").resolve() for index in range(5)
+    } | {(result_root / name).resolve() for name in phase_s_names}
+    assert plan["delete_result_dirs"] == [(result_root / "loser").resolve()]
+    assert set(plan["keep_mlruns_dirs"]) == {
+        (mlruns_root / str(index)).resolve() for index in range(100, 105)
+    } | {(mlruns_root / str(index)).resolve() for index in range(200, 206)}
+    assert plan["delete_mlruns_dirs"] == [(mlruns_root / "999").resolve()]
+
+
+def test_incomplete_phase_s_bundle_blocks_all_deletion(tmp_path):
+    result_root = tmp_path / "backtest/result"
+    mlruns_root = tmp_path / "mlruns"
+    baseline = _baseline()
+    baseline["result_dirs"] = []
+    for index in range(5):
+        name = f"phase-m-{index}"
+        experiment_id = str(100 + index)
+        _write_session(result_root / name, experiment_id)
+        (mlruns_root / experiment_id).mkdir(parents=True)
+        baseline["result_dirs"].append(f"backtest/result/{name}")
+    _write_phase_s_session(result_root / "loser", "999")
+    (mlruns_root / "999").mkdir(parents=True)
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path,
+        [baseline, _phase_s_row("b1-m", [], state="valid_complete")],
+    )
+
+    assert any("Phase S" in error for error in plan["errors"])
+    assert plan["delete_result_dirs"] == []
+    assert plan["delete_mlruns_dirs"] == []
 
 
 def test_missing_retained_metadata_blocks_all_deletion(tmp_path):

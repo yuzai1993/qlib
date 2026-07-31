@@ -14,6 +14,8 @@ from typing import Any, Sequence
 DEFAULT_POOLS = ("csi300", "csi500", "csi1000")
 PRIMARY_TEST_POOL = "csi1000"
 FIXED_SEEDS = (42, 1000, 2000, 3000, 4000)
+PHASE_S_POOLS = ("csi1000", "csi300", "csi500")
+PHASE_S_BASELINE_ID = "topk-t10-d2-h1"
 
 
 def load_registry(path: Path) -> list[dict]:
@@ -215,6 +217,71 @@ def _retained_result_dirs(
     return sorted(retained)
 
 
+def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
+    """Return final baseline/winner test sessions for every completed Phase S row."""
+    retained: set[str] = set()
+    for row in rows:
+        if row.get("phase") != "S":
+            continue
+        exp_id = str(row.get("exp_id") or "")
+        if row.get("state") != "test_complete":
+            raise ValueError(f"Phase S row is incomplete: {exp_id} ({row.get('state')})")
+        if row.get("cleanup_retention_eligible") is not True:
+            raise ValueError(f"Phase S row is not retention eligible: {exp_id}")
+        winner = str(row.get("selected_candidate_id") or "")
+        if not winner:
+            raise ValueError(f"Phase S row has no frozen winner: {exp_id}")
+        test_results = row.get("test_results") or {}
+        if set(test_results) != set(PHASE_S_POOLS):
+            raise ValueError(f"Phase S test pool matrix is incomplete: {exp_id}")
+        expected_ids = {PHASE_S_BASELINE_ID, winner}
+        for pool in PHASE_S_POOLS:
+            candidates = test_results[pool]
+            if {candidate.get("candidate_id") for candidate in candidates} != expected_ids:
+                raise ValueError(
+                    f"Phase S candidate matrix is incomplete: {exp_id}/{pool}"
+                )
+            for candidate in candidates:
+                raw = candidate.get("result_dir")
+                if not isinstance(raw, str) or not raw:
+                    raise ValueError(
+                        f"Phase S result_dir missing: {exp_id}/{pool}/"
+                        f"{candidate.get('candidate_id')}"
+                    )
+                retained.add(raw)
+    return retained
+
+
+def _retained_phase_s_dirs(
+    repo_root: Path,
+    raw_paths: Sequence[str],
+    errors: list[str],
+) -> list[Path]:
+    result_root = (repo_root / "backtest" / "result").resolve()
+    retained = set()
+    for raw in raw_paths:
+        raw_path = Path(raw)
+        if len(raw_path.parts) < 3 or raw_path.parts[:2] != (
+            "backtest",
+            "result",
+        ):
+            errors.append(f"unsafe Phase S result path: {raw}")
+            continue
+        unresolved = repo_root / raw_path
+        if unresolved.is_symlink():
+            errors.append(f"retained Phase S result path is a symlink: {raw}")
+            continue
+        candidate = _direct_child(result_root, unresolved)
+        if candidate is None:
+            errors.append(f"unsafe Phase S result path: {raw}")
+            continue
+        if not candidate.is_dir():
+            errors.append(f"retained Phase S result session missing: {raw}")
+            continue
+        retained.add(candidate)
+    return sorted(retained)
+
+
 def _train_experiment_ids(
     session_dirs: Sequence[Path],
     warnings: list[str],
@@ -278,6 +345,36 @@ def _train_experiment_ids(
     return experiment_ids
 
 
+def _backtest_experiment_ids(
+    session_dirs: Sequence[Path], errors: list[str]
+) -> set[str]:
+    experiment_ids = set()
+    for session in session_dirs:
+        meta_path = session / "meta.json"
+        link_path = session / "run_01" / "mlruns_link.json"
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            link = json.loads(link_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"Phase S session metadata unreadable: {session}: {exc}")
+            continue
+        successful = [
+            run for run in (meta.get("runs") or []) if run.get("status") == "success"
+        ]
+        experiment_id = str(link.get("backtest_experiment_id") or "")
+        if (
+            meta.get("mode") != "pred_backtest"
+            or len(successful) != 1
+            or not experiment_id.isdigit()
+        ):
+            errors.append(
+                f"Phase S session must contain one successful pred_backtest: {session}"
+            )
+            continue
+        experiment_ids.add(experiment_id)
+    return experiment_ids
+
+
 def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
     warnings: list[str] = []
     errors: list[str] = []
@@ -287,17 +384,33 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
 
     retained_rows = select_retained_rows(rows)
     _validate_baseline(retained_rows[0], errors)
-    keep_result_dirs = (
+    phase_m_result_dirs = (
         _retained_result_dirs(repo_root, retained_rows, warnings, errors)
         if roots_safe
         else []
     )
+    phase_s_raw_paths: set[str] = set()
+    try:
+        phase_s_raw_paths = select_phase_s_retained_result_paths(rows)
+    except ValueError as exc:
+        errors.append(str(exc))
+    phase_s_result_dirs = (
+        _retained_phase_s_dirs(repo_root, sorted(phase_s_raw_paths), errors)
+        if roots_safe
+        else []
+    )
+    keep_result_dirs = sorted(set(phase_m_result_dirs) | set(phase_s_result_dirs))
     all_result_dirs = _safe_child_dirs(result_root, errors) if roots_safe else []
     delete_result_dirs = [
         path for path in all_result_dirs if path not in set(keep_result_dirs)
     ]
 
-    keep_experiment_ids = _train_experiment_ids(keep_result_dirs, warnings, errors)
+    keep_experiment_ids = _train_experiment_ids(
+        phase_m_result_dirs, warnings, errors
+    )
+    keep_experiment_ids.update(
+        _backtest_experiment_ids(phase_s_result_dirs, errors)
+    )
     keep_mlruns_dirs = []
     delete_mlruns_dirs = []
     if roots_safe and mlruns_root.is_dir():

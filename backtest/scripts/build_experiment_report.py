@@ -174,6 +174,10 @@ def _resolve_baseline_row(all_rows: Sequence[dict], group: Sequence[dict]) -> Op
     """按方向内 baseline_ref 查找对应 baseline 锚点行。"""
     ref = _baseline_ref_of(group)
     anchors = [r for r in all_rows if _is_baseline_anchor(r)]
+    group_phases = {_phase_of(row) for row in group}
+    if len(group_phases) == 1:
+        phase = next(iter(group_phases))
+        anchors = [row for row in anchors if _phase_of(row) == phase]
     if not anchors:
         return None
     if ref:

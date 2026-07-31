@@ -132,6 +132,32 @@ def test_current_b6_baseline_has_complete_phase_m_metrics():
             assert metric in metrics, f"{pool} missing {metric}"
 
 
+def test_phase_s_direction_never_injects_phase_m_model_baseline():
+    rows = [
+        {
+            "exp_id": "baseline/b6-m",
+            "direction": "baseline",
+            "phase": "M",
+            "baseline_ref": "B6 v1.0",
+            "conclusion": "baseline",
+            "metrics_summary": _pool_metrics(0.04),
+        },
+        {
+            "exp_id": "strategy-sweep/b6-m",
+            "direction": "strategy-sweep-b6-m",
+            "phase": "S",
+            "baseline_ref": "B1-S v1.0",
+            "metrics_summary": {"csi1000": {"ir": 1.2, "ann": 0.1, "mdd": -0.2}},
+        },
+    ]
+
+    section = report.build_html(rows).split("id='direction-strategy-sweep-b6-m'", 1)[1]
+
+    assert "strategy-sweep/b6-m" in section
+    assert "baseline/b6-m" not in section
+    assert "1.2000" in section
+
+
 def test_baseline_table_is_chronological_but_historical_b5_group_keeps_b5():
     rows = [
         {

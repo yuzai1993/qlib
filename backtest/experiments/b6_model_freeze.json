@@ -2,18 +2,7 @@
   "schema_version": 1,
   "baseline_exp_id": "baseline/b6-m",
   "baseline_ref": "B6 v1.0",
-  "promoted_from": "model-hyperparam/valid-rankic-search-v1",
   "selected_candidate": "rankic-es-lr010",
-  "selection_source": {
-    "path": "backtest/experiments/b5_rankic_hyperparam_selection.json",
-    "sha256": "358d12fd3114b7154b5df00a561e09f6bdc46c80c6f30b21216bf66ff78001a4"
-  },
-  "selection_metric": "csi1000.valid.rank_ic_mean",
-  "selection_tie_breaker": [
-    "rank_icir",
-    "candidate_id"
-  ],
-  "selection_min_count": 20,
   "seeds": [
     42,
     1000,
@@ -64,7 +53,7 @@
   "evaluations": {
     "formal_fixed_1d": {
       "path": "backtest/experiments/ic/mh_valid_rankic_selected_test_1d.json",
-      "sha256": "e6b12843c9ef43f7cd2476117299716ea1e5893858c07c8094b4c63274dd1f08",
+      "sha256": "735c9e53068c8e581bfd524591c95a62e736f84554d3e404f6d39a1d8ebd67bb",
       "eval_label": "Ref($close, -2)/Ref($close, -1) - 1",
       "eval_label_role": "fixed_1d",
       "data_version": "2026-07-30",

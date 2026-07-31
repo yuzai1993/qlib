@@ -132,7 +132,7 @@ def test_current_b6_baseline_has_complete_phase_m_metrics():
             assert metric in metrics, f"{pool} missing {metric}"
 
 
-def test_baseline_table_puts_b6_first_but_historical_b5_group_keeps_b5():
+def test_baseline_table_is_chronological_but_historical_b5_group_keeps_b5():
     rows = [
         {
             "exp_id": "baseline/b5-m",
@@ -166,7 +166,10 @@ def test_baseline_table_puts_b6_first_but_historical_b5_group_keeps_b5():
     baseline_section = html.split("id='direction-baseline'", 1)[1].split("<h2", 1)[0]
     historical_section = html.split("id='direction-model-hyperparam'", 1)[1]
 
-    assert baseline_section.index("baseline/b6-m") < baseline_section.index("baseline/b5-m")
+    assert baseline_section.index("baseline/b5-m") < baseline_section.index("baseline/b6-m")
+    assert baseline_section.rfind('<td class="exp-id">') < baseline_section.index(
+        "baseline/b6-m"
+    )
     assert historical_section.index("baseline/b5-m") < historical_section.index(
         "model-hyperparam/old"
     )

@@ -30,9 +30,7 @@ WINNER_TEMPLATE = (
     / "rankic-es-lr010"
     / "mh_rankic_es_lr010_s42.yaml"
 )
-PROTOCOL_MANIFEST = (
-    ROOT / "backtest" / "experiments" / "b5_post2020_forward_protocol.json"
-)
+REGISTRY = ROOT / "backtest" / "experiments" / "registry.jsonl"
 
 
 def _load(path: Path) -> dict:
@@ -159,30 +157,20 @@ def test_generation_is_deterministic_and_refuses_changed_existing_file(tmp_path)
         generate_configs(winner_cfg=winner, output_root=tmp_path)
 
 
-def test_frozen_protocol_manifest_binds_implementation_and_all_configs():
-    manifest = json.loads(PROTOCOL_MANIFEST.read_text(encoding="utf-8"))
+def test_registry_retains_post2020_configs_and_metrics_without_protocol_manifest():
+    rows = [json.loads(line) for line in REGISTRY.read_text(encoding="utf-8").splitlines()]
+    by_id = {row["exp_id"]: row for row in rows}
 
-    assert manifest["frozen_before_training"] is True
-    assert manifest["protocol_id"] == FORWARD_PROTOCOL_ID
-    assert manifest["common_valid_segment"] == list(VALID_SEGMENT)
-    assert manifest["effective_h1_valid_segment"] == [
-        VALID_SEGMENT[0],
-        "2024-06-26",
-    ]
-    assert manifest["common_test_segment"] == list(TEST_SEGMENT)
-    assert manifest["evaluation_comparable_to_baseline"] is False
-    assert manifest["cleanup_retention_eligible"] is False
+    for group in GROUPS:
+        row = by_id[f"train-recency/{group}"]
+        assert "protocol_manifest" not in row
+        assert "protocol_manifest_sha256" not in row
+        assert row["evaluation_comparable_to_baseline"] is False
+        assert row["cleanup_retention_eligible"] is False
+        assert len(row["configs"]) == 5
+        assert row["metrics_summary"]
+        assert _sha256(ROOT / row["eval_result"]) == row["eval_result_sha256"]
+        for artifact in row["config_hashes"]:
+            assert _sha256(ROOT / artifact["path"]) == artifact["sha256"]
 
-    for relative, expected in manifest["implementation_hashes"].items():
-        assert _sha256(ROOT / relative) == expected
-    for group, by_seed in manifest["config_hashes"].items():
-        for seed, expected in by_seed.items():
-            path = (
-                ROOT
-                / "backtest"
-                / "configs"
-                / "train-recency"
-                / group
-                / f"tr_{group.replace('-', '_')}_s{seed}.yaml"
-            )
-            assert _sha256(path) == expected
+    assert not (ROOT / "backtest/experiments/b5_post2020_forward_protocol.json").exists()

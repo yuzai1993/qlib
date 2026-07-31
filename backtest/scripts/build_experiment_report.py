@@ -188,11 +188,7 @@ def _with_baseline_first(all_rows: Sequence[dict], group: Sequence[dict]) -> tup
     """确保表格第一行为 baseline；返回 (rows, baseline_ref 标注)。"""
     if group and all(_is_baseline_anchor(row) for row in group):
         current = group[-1]
-        current_id = current.get("exp_id")
-        ordered = [current] + [
-            row for row in group if row.get("exp_id") != current_id
-        ]
-        return ordered, str(current.get("baseline_ref") or "").strip()
+        return list(group), str(current.get("baseline_ref") or "").strip()
 
     ref = _baseline_ref_of(group)
     baseline = _resolve_baseline_row(all_rows, group)
@@ -466,9 +462,11 @@ def build_html(rows: Sequence[dict]) -> str:
         toc_items.append(
             f"<li><a href='#{anchor}'>{_esc(direction)}</a>（{n_native} 个实验）</li>"
         )
+        is_baseline_history = bool(group) and all(_is_baseline_anchor(row) for row in group)
         ref_note = (
-            f"<p class='meta'>对照 baseline：<b>{_esc(baseline_ref)}</b>"
-            "（表格第一行）</p>"
+            f"<p class='meta'>{'当前 baseline' if is_baseline_history else '对照 baseline'}："
+            f"<b>{_esc(baseline_ref)}</b>"
+            f"（{'按时间顺序列示' if is_baseline_history else '表格第一行'}）</p>"
             if baseline_ref
             else "<p class='meta'>警告：本方向缺少 <code>baseline_ref</code>，"
             "未注入 baseline 首行。</p>"

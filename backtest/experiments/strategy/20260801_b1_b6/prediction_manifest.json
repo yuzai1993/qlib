@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-01T01:22:51",
+  "data_version": "2026-07-31",
+  "models": {
+    "b1-m": {
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/seed2000/trained_model",
+      "model_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "config_sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a"
+    },
+    "b6-m": {
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    }
+  },
+  "predictions": [
+    {
+      "model_ref": "b1-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/seed2000/trained_model",
+      "model_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "config_sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a",
+      "pool": "csi1000",
+      "segment": "valid",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_valid.pkl",
+      "prediction_sha256": "1fdc86ed1897d638b9ead202aa541c8612d206d1f50146a12dc1e3ef6d85323c",
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2021-07-15",
+        "n_dates": 365,
+        "n_rows": 364595
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b1-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/seed2000/trained_model",
+      "model_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "config_sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a",
+      "pool": "csi1000",
+      "segment": "test",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi1000_test.pkl",
+      "prediction_sha256": "d25179c04b563de3fcba1a11203263ad78a65e8dc315cdebcacda620cbe351ae",
+      "coverage": {
+        "start": "2021-07-16",
+        "end": "2026-07-31",
+        "n_dates": 1222,
+        "n_rows": 1219689
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b1-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/seed2000/trained_model",
+      "model_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "config_sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a",
+      "pool": "csi300",
+      "segment": "valid",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi300_valid.pkl",
+      "prediction_sha256": "595faee8aa180367502a9b8d3c1fe724e9568fb5f93e8e6088b3c75179d07708",
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2021-07-15",
+        "n_dates": 365,
+        "n_rows": 109327
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b1-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/seed2000/trained_model",
+      "model_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "config_sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a",
+      "pool": "csi300",
+      "segment": "test",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi300_test.pkl",
+      "prediction_sha256": "3b503d428f5b8b5eb110ee54c6b9ea8c70c53497399081f36126cafd916c8b3c",
+      "coverage": {
+        "start": "2021-07-16",
+        "end": "2026-07-31",
+        "n_dates": 1222,
+        "n_rows": 366131
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b1-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/seed2000/trained_model",
+      "model_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "config_sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a",
+      "pool": "csi500",
+      "segment": "valid",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi500_valid.pkl",
+      "prediction_sha256": "a3259f6663524d279edc6e5176bd274e106c1848aa225d77c1375e9e27e2c671",
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2021-07-15",
+        "n_dates": 365,
+        "n_rows": 182380
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b1-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b1-m/seed2000/trained_model",
+      "model_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "config_sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a",
+      "pool": "csi500",
+      "segment": "test",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b1-m/csi500_test.pkl",
+      "prediction_sha256": "1b8b3ac35a5a690a1f4881cf82d2feae03324094af3043d04c5e6f1d08a06283",
+      "coverage": {
+        "start": "2021-07-16",
+        "end": "2026-07-31",
+        "n_dates": 1222,
+        "n_rows": 609874
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b6-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+      "pool": "csi1000",
+      "segment": "valid",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+      "prediction_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2021-07-15",
+        "n_dates": 365,
+        "n_rows": 364595
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b6-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+      "pool": "csi1000",
+      "segment": "test",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_test.pkl",
+      "prediction_sha256": "864a5fe42a79e093cde71aff3530c5141afc338a6c9289121f013050c308991a",
+      "coverage": {
+        "start": "2021-07-16",
+        "end": "2026-07-31",
+        "n_dates": 1222,
+        "n_rows": 1219689
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b6-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+      "pool": "csi300",
+      "segment": "valid",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi300_valid.pkl",
+      "prediction_sha256": "bff425207b03f6c3330dd6ccb9afacc87e4e965b0a34b849e9c9d0176eedf4f3",
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2021-07-15",
+        "n_dates": 365,
+        "n_rows": 109327
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b6-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+      "pool": "csi300",
+      "segment": "test",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi300_test.pkl",
+      "prediction_sha256": "fd0df064cd1d8965e3e1d2d0efc5f7d0458762c9963ec6278eb543c2044d8138",
+      "coverage": {
+        "start": "2021-07-16",
+        "end": "2026-07-31",
+        "n_dates": 1222,
+        "n_rows": 366131
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b6-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+      "pool": "csi500",
+      "segment": "valid",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi500_valid.pkl",
+      "prediction_sha256": "2f0ad23a420bf9d73522c842e6c275f874a82951664bf6284ec5cb9901569e0e",
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2021-07-15",
+        "n_dates": 365,
+        "n_rows": 182380
+      },
+      "data_version": "2026-07-31"
+    },
+    {
+      "model_ref": "b6-m",
+      "manifest_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/manifest.json",
+      "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+      "pool": "csi500",
+      "segment": "test",
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi500_test.pkl",
+      "prediction_sha256": "3ca6cb4c24026d7c67fa4679829ea7ef2c57eecad816437c3a75469cf192601f",
+      "coverage": {
+        "start": "2021-07-16",
+        "end": "2026-07-31",
+        "n_dates": 1222,
+        "n_rows": 609874
+      },
+      "data_version": "2026-07-31"
+    }
+  ]
+}

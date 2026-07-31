@@ -328,24 +328,23 @@ def test_account_daily_loss_boundary():
     assert _rules(check_account(snaps)) == ["DAILY_LOSS"]
 
 
-def test_account_max_drawdown():
+def test_account_does_not_alert_on_max_drawdown():
+    """最大回撤只展示、不告警（短持有期策略回撤波动大，阈值告警噪音高）。"""
     snaps = [
         _snap("2026-07-10", 100.0, None),
         _snap("2026-07-11", 110.0, 0.10),
         _snap("2026-07-14", 98.0, -0.109),  # 峰值 110 回撤 -10.9%
     ]
-    f = check_account(snaps, {"daily_loss": -0.5})
-    assert _rules(f) == ["MAX_DRAWDOWN"] and f[0].level == "CRIT"
+    assert check_account(snaps, {"daily_loss": -0.5}) == []
 
 
 def test_account_consecutive_loss():
     snaps = [_snap("2026-07-13", 100.0, None)]
     snaps += [_snap(f"2026-07-{14+i}", 99.0 - i, -0.001) for i in range(5)]
-    f = check_account(snaps, {"daily_loss": -0.5, "max_drawdown": -0.5})
+    f = check_account(snaps, {"daily_loss": -0.5})
     assert _rules(f) == ["CONSECUTIVE_LOSS"]
     # 窗口不足 N 天不触发
-    f = check_account(snaps[:4], {"daily_loss": -0.5, "max_drawdown": -0.5,
-                                  "consecutive_loss_days": 5})
+    f = check_account(snaps[:4], {"daily_loss": -0.5, "consecutive_loss_days": 5})
     assert f == []
 
 

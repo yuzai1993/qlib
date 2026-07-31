@@ -58,3 +58,18 @@ def test_parse_args_accepts_skip_pred_copy():
     )
 
     assert args.skip_pred_copy is True
+
+
+def test_load_pred_source_returns_resolved_path_used_by_artifact_metadata(tmp_path):
+    source = tmp_path / "pred.pkl"
+    index = pd.MultiIndex.from_tuples(
+        [(pd.Timestamp("2020-01-13"), "SH600000")],
+        names=["datetime", "instrument"],
+    )
+    pd.DataFrame({"score": [1.0]}, index=index).to_pickle(source)
+
+    resolved, frame = run_pred_backtest.load_pred_source(source)
+
+    assert resolved == source.resolve()
+    assert list(frame.columns) == ["score"]
+    assert frame.index.names == ["datetime", "instrument"]

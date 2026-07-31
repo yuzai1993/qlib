@@ -61,6 +61,11 @@ def _load_pred(path: Path) -> pd.DataFrame:
     return pred.rename(columns={pred.columns[0]: "score"}).sort_index()
 
 
+def load_pred_source(path: Path) -> tuple[Path, pd.DataFrame]:
+    resolved = Path(path).expanduser().resolve()
+    return resolved, _load_pred(resolved)
+
+
 def prepare_pred_artifact(
     source_path: Path,
     pred: pd.DataFrame,
@@ -122,7 +127,7 @@ def main() -> None:
         raise RuntimeError(f"Qlib 数据未找到: {provider_uri}")
     qlib.init(provider_uri=provider_uri, region=REG_CN if cfg["data"].get("region", "cn") == "cn" else cfg["data"]["region"])
 
-    pred = _load_pred(args.pred)
+    pred_path, pred = load_pred_source(args.pred)
     note = args.note if args.note is not None else cfg["run"].get("note", "")
     session_dir = make_session_dir(RESULT_ROOT, note=note)
     session_name = session_dir.name

@@ -8,6 +8,7 @@ import json
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Sequence
@@ -223,8 +224,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--configs-dir", type=Path, default=DEFAULT_CONFIGS_DIR)
     parser.add_argument("--max-runtime-hours", type=float, default=4.5)
+    parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--prepare-only", action="store_true")
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.workers < 1 or args.workers > 4:
+        parser.error("--workers must be between 1 and 4")
+    return args
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
@@ -266,15 +271,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     rows = list(checkpoint.get("all_rows") or [])
     pending = pending_candidates(grid, checkpoint)
     started = time.monotonic()
-    for index, candidate in enumerate(pending, 1):
-        if (time.monotonic() - started) / 3600 >= args.max_runtime_hours:
-            raise RuntimeError("runtime budget reached before valid grid completed")
-        print(
-            f"[{index}/{len(pending)}] {candidate['candidate_id']} "
-            f"elapsed={(time.monotonic() - started) / 3600:.2f}h",
-            flush=True,
-        )
-        row = _run_candidate(
+    def run_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
+        return _run_candidate(
             base,
             candidate,
             pool="csi1000",
@@ -283,20 +281,35 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             prediction_manifest_path=manifest_path,
             configs_dir=configs_dir,
         )
-        rows = upsert_result(rows, row, grid)
-        write_json_atomic(
-            valid_path,
-            {
-                "schema_version": 1,
-                "state": "running",
-                "updated_at": datetime.now().isoformat(timespec="seconds"),
-                "protocol_sha256": protocol_sha,
-                "model_ref": "b6-m",
-                "pool": "csi1000",
-                "segment": "valid",
-                "all_rows": rows,
-            },
-        )
+
+    for offset in range(0, len(pending), args.workers):
+        if (time.monotonic() - started) / 3600 >= args.max_runtime_hours:
+            raise RuntimeError("runtime budget reached before valid grid completed")
+        batch = pending[offset : offset + args.workers]
+        for index, candidate in enumerate(batch, offset + 1):
+            print(
+                f"[{index}/{len(pending)}] {candidate['candidate_id']} "
+                f"elapsed={(time.monotonic() - started) / 3600:.2f}h",
+                flush=True,
+            )
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
+            futures = [executor.submit(run_candidate, candidate) for candidate in batch]
+            for future in futures:
+                row = future.result()
+                rows = upsert_result(rows, row, grid)
+                write_json_atomic(
+                    valid_path,
+                    {
+                        "schema_version": 1,
+                        "state": "running",
+                        "updated_at": datetime.now().isoformat(timespec="seconds"),
+                        "protocol_sha256": protocol_sha,
+                        "model_ref": "b6-m",
+                        "pool": "csi1000",
+                        "segment": "valid",
+                        "all_rows": rows,
+                    },
+                )
     scored, winner = score_valid_candidates(rows, grid)
     write_json_atomic(
         valid_path,

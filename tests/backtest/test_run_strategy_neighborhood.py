@@ -103,3 +103,16 @@ def test_prepare_only_is_an_explicit_cli_mode(tmp_path: Path):
     )
 
     assert args.prepare_only is True
+
+
+def test_workers_is_an_explicit_bounded_cli_setting(tmp_path: Path):
+    args = runner.parse_args(
+        [
+            "--prediction-manifest",
+            str(tmp_path / "manifest.json"),
+            "--workers",
+            "3",
+        ]
+    )
+
+    assert args.workers == 3

@@ -13,11 +13,23 @@ from live_trading.modules.live_config import load_live_config
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LIVE_PATH = REPO_ROOT / "live_trading/configs/csi300_topk10_live.yaml"
 BACKTEST_PATH = REPO_ROOT / "backtest/configs/csi300_live_parity.yaml"
+NEW_LIVE_PATH = (
+    REPO_ROOT / "live_trading/configs/csi1000_b6m_b2s_postclose.yaml"
+)
+NEW_BACKTEST_PATH = (
+    REPO_ROOT / "backtest/configs/csi1000_b6m_b2s_postclose_parity.yaml"
+)
 
 
 def _configs():
     live = load_live_config(LIVE_PATH, REPO_ROOT)
     backtest = yaml.safe_load(BACKTEST_PATH.read_text(encoding="utf-8"))
+    return live, backtest
+
+
+def _new_configs():
+    live = load_live_config(NEW_LIVE_PATH, REPO_ROOT)
+    backtest = yaml.safe_load(NEW_BACKTEST_PATH.read_text(encoding="utf-8"))
     return live, backtest
 
 
@@ -31,6 +43,12 @@ def _set_path(mapping, path, value):
 
 def test_real_live_and_designated_backtest_configs_match():
     live, backtest = _configs()
+
+    validate_backtest_parity(live, backtest)
+
+
+def test_new_csi1000_live_and_parity_configs_match():
+    live, backtest = _new_configs()
 
     validate_backtest_parity(live, backtest)
 
@@ -77,6 +95,25 @@ def test_live_config_points_to_designated_backtest():
     assert live["parity"]["backtest_config"] == (
         "backtest/configs/csi300_live_parity.yaml"
     )
+
+
+@pytest.mark.parametrize(
+    "path,value,reported_path",
+    [
+        ("strategy.initial_buy_count", 3, "strategy.initial_buy_count"),
+        ("handler.feature_groups", ["momentum"], "handler.feature_groups"),
+        ("account.opening_cash", 600_000.0, "backtest.account"),
+    ],
+)
+def test_new_parity_gate_reports_initialization_and_handler_drift(
+    path, value, reported_path,
+):
+    live, backtest = _new_configs()
+    live = copy.deepcopy(live)
+    _set_path(live, path, value)
+
+    with pytest.raises(ParityError, match=reported_path.replace(".", r"\.")):
+        validate_backtest_parity(live, backtest)
 
 
 def test_publish_checks_parity_before_account_or_durable_side_effects(monkeypatch):

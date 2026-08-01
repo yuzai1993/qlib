@@ -1,0 +1,68 @@
+# Deployment-parity config for csi1000_b6m_b2s_postclose.
+# The staged initialization overlay is production behavior, not a new research baseline.
+
+run:
+  mode: backtest_only
+  note: "csi1000_b6m_b2s_postclose_parity"
+  n_runs: 1
+  generate_figures: false
+
+parity:
+  live_config: "live_trading/configs/csi1000_b6m_b2s_postclose.yaml"
+  model_experiment_name: "baseline/b6-m"
+  model_experiment_id: "frozen-baseline"
+  model_recorder_id: "seed4000"
+  model_path: "live_trading/models/b6_m/seed4000/trained_model"
+  model_sha256: "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325"
+  execution_price_proxy: "close"
+  broker_environment: "SIMULATION"
+  after_hours_price_type: 49
+
+data:
+  provider_uri: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi1000"
+  benchmark: "SH000852"
+  handler:
+    class: "Alpha158Technical"
+    module_path: "backtest.features.technical"
+    start_time: "2003-01-02"
+    end_time: "2026-07-31"
+    fit_start_time: "2016-01-02"
+    fit_end_time: "2020-01-10"
+    infer_processors:
+      - class: "ProcessInf"
+    feature_groups:
+      - "range"
+
+segments:
+  train: ["2016-01-02", "2020-01-10"]
+  valid: ["2020-01-13", "2021-07-15"]
+  test: ["2021-07-16", "2026-07-31"]
+
+model:
+  class: "RankICEarlyStoppingDEnsembleModel"
+  module_path: "backtest.models.rankic_early_stop"
+
+strategy:
+  class: "TopkDropoutStrategy"
+  module_path: "qlib.contrib.strategy.signal_strategy"
+  topk: 30
+  n_drop: 2
+  kwargs:
+    initial_buy_count: 2
+    risk_degree: 0.95
+    hold_thresh: 20
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+
+backtest:
+  account: 500000.0
+  exchange_kwargs:
+    freq: "day"
+    deal_price: "close"
+    limit_threshold: 0.095
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5.0
+    trade_unit: 100

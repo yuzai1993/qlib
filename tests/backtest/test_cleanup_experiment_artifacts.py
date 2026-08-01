@@ -483,6 +483,32 @@ def test_phase_s_retains_baseline_and_frozen_winner_for_every_test_pool(tmp_path
     assert plan["delete_mlruns_dirs"] == [(mlruns_root / "999").resolve()]
 
 
+def test_phase_s_completed_non_selecting_diagnostic_is_not_retained():
+    diagnostic = {
+        "exp_id": "strategy-stability-full-period/b1-m",
+        "phase": "S",
+        "state": "complete",
+        "conclusion": "diagnostic_no_selection",
+        "cleanup_retention_eligible": False,
+        "result_dirs": ["backtest/result/diagnostic-a"],
+    }
+
+    assert cleanup.select_phase_s_retained_result_paths([diagnostic]) == set()
+
+
+def test_phase_s_incomplete_non_selecting_diagnostic_still_blocks_cleanup():
+    diagnostic = {
+        "exp_id": "strategy-stability-full-period/b1-m",
+        "phase": "S",
+        "state": "preregistered",
+        "conclusion": "preregistered",
+        "cleanup_retention_eligible": False,
+    }
+
+    with pytest.raises(ValueError, match="incomplete"):
+        cleanup.select_phase_s_retained_result_paths([diagnostic])
+
+
 def test_phase_s_retention_accepts_absolute_direct_child_inside_result_root(tmp_path):
     session = tmp_path / "backtest/result/final-test"
     session.mkdir(parents=True)

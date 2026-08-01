@@ -112,6 +112,17 @@ def build_diagnostic_payload(
     }
 
 
+def select_resume_candidates(
+    candidates: list[dict[str, Any]], existing_rows: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    failed_ids = {
+        row.get("candidate_id")
+        for row in existing_rows
+        if row.get("status") == "failed"
+    }
+    return [row for row in candidates if row["candidate_id"] in failed_ids]
+
+
 def _load_report(result_dir: Path) -> pd.DataFrame:
     report = pd.read_csv(
         result_dir / "run_01" / "report_normal.csv", parse_dates=["datetime"]
@@ -172,12 +183,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         existing_payload = json.loads(args.resume_summary.read_text(encoding="utf-8"))
         if existing_payload.get("model_ref") != args.model_ref:
             raise ValueError("resume summary model_ref does not match")
-        failed_ids = {
-            row["candidate_id"]
-            for row in existing_payload.get("all_rows") or []
-            if row.get("status") != "success"
-        }
-        candidates = [row for row in candidates if row["candidate_id"] in failed_ids]
+        candidates = select_resume_candidates(
+            candidates, existing_payload.get("all_rows") or []
+        )
     out_dir = (
         args.output_dir.resolve()
         if args.output_dir

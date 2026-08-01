@@ -22,6 +22,11 @@ METRICS = (
     ("max_drawdown", "最大回撤", True),
     ("annualized_one_way_turnover", "年化单边换手", False),
 )
+STABILITY_SUMMARIES = (
+    ("positive_complete_years", "完整年正收益数", False),
+    ("complete_year_sharpe_median", "完整年夏普中位", False),
+    ("worst_complete_year_max_drawdown", "最差完整年回撤", True),
+)
 
 
 def _esc(value: Any) -> str:
@@ -46,6 +51,8 @@ def _ordered(row: dict) -> list[dict]:
 def _table(rows: list[dict], *, yearly: bool = False, table_class: str = "") -> str:
     prefix = "<th>年度</th>" if yearly else ""
     headers = "".join(f"<th>{label}</th>" for _, label, _ in METRICS)
+    if not yearly:
+        headers += "".join(f"<th>{label}</th>" for _, label, _ in STABILITY_SUMMARIES)
     body = []
     for candidate in rows:
         year_items = sorted((candidate.get("years") or {}).items()) if yearly else [(None, candidate.get("full_period") or {})]
@@ -57,10 +64,31 @@ def _table(rows: list[dict], *, yearly: bool = False, table_class: str = "") -> 
                 partial = "（部分年度）" if metrics.get("partial_year") else ""
                 cells.append(f"<td>{_esc(year)}{partial}</td>")
             cells.extend(f"<td class=\"num\">{_fmt(metrics.get(key), percent)}</td>" for key, _, percent in METRICS)
+            if not yearly:
+                cells.extend(
+                    f'<td class="num">{_fmt(candidate.get(key), percent)}</td>'
+                    for key, _, percent in STABILITY_SUMMARIES
+                )
             status = candidate.get("status") or "—"
-            body.append(f"<tr><td>{_esc(candidate.get('candidate_id'))}</td>{''.join(cells)}<td>{_esc(status)}</td></tr>")
+            error_lines = str(candidate.get("error") or "").splitlines()
+            reason = error_lines[0] if error_lines else ""
+            attempts = 1 + len(candidate.get("previous_attempts") or [])
+            note = f"{reason}；{attempts} 次" if reason else f"{attempts} 次"
+            body.append(f"<tr><td>{_esc(candidate.get('candidate_id'))}</td>{''.join(cells)}<td>{_esc(status)}</td><td>{_esc(note)}</td></tr>")
     class_attr = f' class="{table_class}"' if table_class else ""
-    return f"<table{class_attr}><thead><tr><th>策略</th>{prefix}{headers}<th>状态</th></tr></thead><tbody>{''.join(body)}</tbody></table>"
+    return f"<table{class_attr}><thead><tr><th>策略</th>{prefix}{headers}<th>状态</th><th>说明</th></tr></thead><tbody>{''.join(body)}</tbody></table>"
+
+
+def _benchmark_context(rows: list[dict]) -> str:
+    value = next(
+        (
+            item.get("full_period", {}).get("benchmark_cumulative_return")
+            for item in rows
+            if item.get("full_period", {}).get("benchmark_cumulative_return") is not None
+        ),
+        None,
+    )
+    return f'<p class="note">CSI1000 区间累计收益：{_fmt(value, True)}</p>'
 
 
 def build_html(rows: Sequence[dict]) -> str:
@@ -78,6 +106,7 @@ def build_html(rows: Sequence[dict]) -> str:
         sections.append(
             f'<section class="model" id="{model_ref}"><h2>{model_ref.upper()}</h2>'
             '<h3>全周期连续组合（2020-01-13 至 2026-07-31）</h3>'
+            + _benchmark_context(results)
             + _table(results, table_class="full-period")
             + '<h3>自然年拆分</h3><p class="note">2020 与 2026 为部分年度；其余年份为完整自然年。</p>'
             + _table(results, yearly=True, table_class="yearly")

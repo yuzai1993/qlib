@@ -486,6 +486,7 @@ def test_phase_s_retains_baseline_and_frozen_winner_for_every_test_pool(tmp_path
 def test_phase_s_completed_non_selecting_diagnostic_is_not_retained():
     diagnostic = {
         "exp_id": "strategy-stability-full-period/b1-m",
+        "direction": "strategy-stability-full-period",
         "phase": "S",
         "state": "complete",
         "conclusion": "diagnostic_no_selection",
@@ -505,7 +506,30 @@ def test_phase_s_incomplete_non_selecting_diagnostic_still_blocks_cleanup():
         "cleanup_retention_eligible": False,
     }
 
-    with pytest.raises(ValueError, match="incomplete"):
+    with pytest.raises(ValueError, match="diagnostic row is malformed"):
+        cleanup.select_phase_s_retained_result_paths([diagnostic])
+
+
+@pytest.mark.parametrize(
+    ("mutation", "value"),
+    [
+        ("state", "preregistered"),
+        ("direction", "strategy-sweep-b1-m"),
+        ("exp_id", "strategy-sweep/b1-m"),
+    ],
+)
+def test_phase_s_partially_matching_diagnostic_blocks_cleanup(mutation, value):
+    diagnostic = {
+        "exp_id": "strategy-stability-full-period/b1-m",
+        "direction": "strategy-stability-full-period",
+        "phase": "S",
+        "state": "complete",
+        "conclusion": "diagnostic_no_selection",
+        "cleanup_retention_eligible": False,
+    }
+    diagnostic[mutation] = value
+
+    with pytest.raises(ValueError, match="diagnostic row is malformed"):
         cleanup.select_phase_s_retained_result_paths([diagnostic])
 
 

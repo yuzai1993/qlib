@@ -226,10 +226,18 @@ def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
         exp_id = str(row.get("exp_id") or "")
         if exp_id.startswith("baseline/"):
             continue
-        if (
-            row.get("conclusion") == "diagnostic_no_selection"
-            and row.get("cleanup_retention_eligible") is False
-        ):
+        diagnostic_markers = (
+            exp_id.startswith("strategy-stability-full-period/"),
+            row.get("direction") == "strategy-stability-full-period",
+            row.get("conclusion") == "diagnostic_no_selection",
+        )
+        if any(diagnostic_markers):
+            if not (
+                all(diagnostic_markers)
+                and row.get("state") == "complete"
+                and row.get("cleanup_retention_eligible") is False
+            ):
+                raise ValueError(f"Phase S diagnostic row is malformed: {exp_id}")
             continue
         if row.get("state") != "test_complete":
             raise ValueError(f"Phase S row is incomplete: {exp_id} ({row.get('state')})")

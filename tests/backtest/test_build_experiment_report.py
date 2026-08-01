@@ -9,6 +9,7 @@ SCRIPTS = ROOT / "backtest" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import build_experiment_report as report  # noqa: E402
+from bs4 import BeautifulSoup
 
 
 def _pool_metrics(value: float) -> dict:
@@ -156,6 +157,31 @@ def test_phase_s_direction_never_injects_phase_m_model_baseline():
     assert "strategy-sweep/b6-m" in section
     assert "baseline/b6-m" not in section
     assert "1.2000" in section
+
+
+def test_non_selecting_stability_direction_uses_honest_audit_table_without_ir():
+    rows = [
+        {
+            "exp_id": f"strategy-stability-full-period/{model_ref}",
+            "direction": "strategy-stability-full-period",
+            "phase": "S",
+            "model_ref": model_ref,
+            "baseline_ref": "B1-S v1.0",
+            "state": "complete",
+            "conclusion": "diagnostic_no_selection",
+            "diagnostic_results": [{"status": "success"}] * count,
+        }
+        for model_ref, count in (("b1-m", 18), ("b6-m", 22))
+    ]
+
+    soup = BeautifulSoup(report.build_html(rows), "html.parser")
+    section = soup.select_one("#direction-strategy-stability-full-period")
+    headers = [item.get_text(strip=True) for item in section.select("th")]
+
+    assert "扣费超额IR" not in headers
+    assert headers == ["实验名", "模型", "状态", "成功/无效/失败", "详细报告"]
+    assert "表格第一行" not in section.get_text()
+    assert "独立报告每个模型表首行" in section.get_text()
 
 
 def test_baseline_table_is_chronological_but_historical_b5_group_keeps_b5():

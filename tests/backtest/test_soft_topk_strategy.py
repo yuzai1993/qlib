@@ -52,5 +52,18 @@ def test_soft_topk_logic():
     assert abs(res_c["D"] - 0.475) < 1e-8
 
 
+def test_soft_topk_accepts_single_column_dataframe_signal():
+    scores = pd.DataFrame({"score": [0.9, 0.8, 0.1]}, index=["C", "D", "A"])
+    current_pos = MockPosition({})
+    strat = SoftTopkStrategy.__new__(SoftTopkStrategy)
+    strat.topk = 2
+    strat.risk_degree = 0.95
+    strat.trade_impact_limit = 1.0
+
+    result = strat.generate_target_weight_position(scores, current_pos, None, None)
+
+    assert result == {"C": 0.475, "D": 0.475}
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

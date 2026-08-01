@@ -277,6 +277,114 @@ def _write_rolling_session(path: Path, experiment_ids: list[str]):
     )
 
 
+def _write_phase_s_session(path: Path, experiment_id: str):
+    path.mkdir(parents=True)
+    (path / "meta.json").write_text(
+        json.dumps(
+            {
+                "mode": "pred_backtest",
+                "runs": [{"status": "success", "backtest_recorder_id": f"rec-{experiment_id}"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    run = path / "run_01"
+    run.mkdir()
+    (run / "mlruns_link.json").write_text(
+        json.dumps(
+            {
+                "backtest_experiment_id": experiment_id,
+                "backtest_recorder_id": f"rec-{experiment_id}",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _bind_phase_s_baseline_metadata(path: Path, pool: str, row: dict, root: Path):
+    meta_path = path / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta.update(
+        config_path=str((root / f"backtest/configs/{pool}.yaml").resolve()),
+        source_pred=str((root / f"backtest/predictions/{pool}.pkl").resolve()),
+        source_pred_sha256=f"{pool}-sha",
+        backtest={
+            "account": 500000,
+            "start_time": "2021-07-16",
+            "end_time": "2026-07-31",
+            "benchmark": row["benchmarks"][pool],
+            "exchange_kwargs": row["fees"],
+        },
+        strategy={
+            "class": "TopkDropoutStrategy",
+            "risk_degree": 0.95,
+            "topk": 30,
+            "n_drop": 2,
+            "hold_thresh": 20,
+        },
+    )
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+
+
+def _phase_s_row(model_ref: str, result_names: list[str], state="test_complete"):
+    baseline = "topk-t10-d2-h1"
+    winner = "topk-t20-d2-h10"
+    iterator = iter(result_names)
+    return {
+        "exp_id": f"strategy-sweep/{model_ref}",
+        "phase": "S",
+        "state": state,
+        "model_ref": model_ref,
+        "selected_candidate_id": winner,
+        "cleanup_retention_eligible": state == "test_complete",
+        "test_results": {
+            pool: [
+                {"candidate_id": baseline, "result_dir": f"backtest/result/{next(iterator)}"},
+                {"candidate_id": winner, "result_dir": f"backtest/result/{next(iterator)}"},
+            ]
+            for pool in ("csi1000", "csi300", "csi500")
+        }
+        if state == "test_complete"
+        else {},
+    }
+
+
+def _phase_s_baseline_row(result_names: list[str]):
+    benchmarks = {"csi1000": "SH000852", "csi300": "SH000300", "csi500": "SH000905"}
+    return {
+        "exp_id": "baseline/b2-s-on-b6-m",
+        "direction": "baseline-strategy",
+        "phase": "S",
+        "state": "baseline",
+        "conclusion": "baseline",
+        "baseline_ref": "B2-S v1.0",
+        "frozen_model_ref": "B6 v1.0",
+        "strategy": {
+            "candidate_id": "topk-t30-d2-h20",
+            "strategy_class": "TopkDropoutStrategy",
+            "topk": 30,
+            "n_drop": 2,
+            "hold_thresh": 20,
+        },
+        "test_segment": ["2021-07-16", "2026-07-31"],
+        "account": 500000,
+        "risk_degree": 0.95,
+        "fees": {"open_cost": 0.00021, "close_cost": 0.00071},
+        "benchmarks": benchmarks,
+        "cleanup_retention_eligible": True,
+        "test_results": {
+            pool: {
+                "candidate_id": "topk-t30-d2-h20",
+                "result_dir": f"backtest/result/{name}",
+                "config": f"backtest/configs/{pool}.yaml",
+                "source_pred": f"backtest/predictions/{pool}.pkl",
+                "source_pred_sha256": f"{pool}-sha",
+            }
+            for pool, name in zip(("csi1000", "csi300", "csi500"), result_names)
+        },
+    }
+
+
 def test_cleanup_plan_is_direct_child_safe_and_dry_run_is_non_destructive(tmp_path):
     result_root = tmp_path / "backtest" / "result"
     mlruns_root = tmp_path / "mlruns"
@@ -399,6 +507,188 @@ def test_cli_writes_machine_readable_plan_to_stdout(tmp_path, capsys):
     plan = json.loads(captured.out)
     assert plan["baseline_exp_id"] == "baseline/b1-m"
     assert "dry-run only" in captured.err
+
+
+def test_phase_s_retains_only_latest_registered_strategy_baseline(tmp_path):
+    result_root = tmp_path / "backtest/result"
+    mlruns_root = tmp_path / "mlruns"
+    baseline = _baseline()
+    baseline["result_dirs"] = []
+    for index in range(5):
+        name = f"phase-m-{index}"
+        experiment_id = str(100 + index)
+        _write_session(result_root / name, experiment_id)
+        (mlruns_root / experiment_id).mkdir(parents=True)
+        baseline["result_dirs"].append(f"backtest/result/{name}")
+
+    legacy_names = [f"legacy-phase-s-{index}" for index in range(6)]
+    baseline_names = [f"phase-s-baseline-{index}" for index in range(3)]
+    for index, name in enumerate(legacy_names, start=200):
+        _write_phase_s_session(result_root / name, str(index))
+        (mlruns_root / str(index)).mkdir(parents=True)
+    phase_s_baseline = _phase_s_baseline_row(baseline_names)
+    for index, (pool, name) in enumerate(
+        zip(("csi1000", "csi300", "csi500"), baseline_names), start=206
+    ):
+        session = result_root / name
+        _write_phase_s_session(session, str(index))
+        _bind_phase_s_baseline_metadata(session, pool, phase_s_baseline, tmp_path)
+        (mlruns_root / str(index)).mkdir(parents=True)
+    _write_phase_s_session(result_root / "loser", "999")
+    (mlruns_root / "999").mkdir(parents=True)
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path,
+        [
+            baseline,
+            _phase_s_row("b1-m", legacy_names),
+            phase_s_baseline,
+        ],
+    )
+
+    assert plan["errors"] == []
+    assert set(plan["keep_result_dirs"]) == {
+        (result_root / f"phase-m-{index}").resolve() for index in range(5)
+    } | {(result_root / name).resolve() for name in baseline_names}
+    assert set(plan["delete_result_dirs"]) == {
+        (result_root / name).resolve() for name in legacy_names
+    } | {(result_root / "loser").resolve()}
+    assert set(plan["keep_mlruns_dirs"]) == {
+        (mlruns_root / str(index)).resolve() for index in range(100, 105)
+    } | {(mlruns_root / str(index)).resolve() for index in range(206, 209)}
+    assert set(plan["delete_mlruns_dirs"]) == {
+        (mlruns_root / str(index)).resolve() for index in range(200, 206)
+    } | {(mlruns_root / "999").resolve()}
+
+
+def test_phase_s_baseline_requires_three_distinct_test_sessions():
+    row = _phase_s_baseline_row(["same", "same", "same"])
+
+    with pytest.raises(ValueError, match="distinct test sessions"):
+        cleanup.select_phase_s_retained_result_paths([row])
+
+
+def test_phase_s_baseline_retains_optional_interactive_full_period_result():
+    row = _phase_s_baseline_row(["csi1000", "csi300", "csi500"])
+    row["interactive_full_period_result"] = {
+        "result_dir": "backtest/result/baseline-full-interactive",
+        "config": "backtest/configs/baseline-full.yaml",
+        "source_pred": "backtest/predictions/csi1000-full.pkl",
+        "source_pred_sha256": "full-sha",
+        "period": ["2020-01-13", "2026-07-31"],
+    }
+
+    assert cleanup.select_phase_s_retained_result_paths([row]) == {
+        "backtest/result/csi1000",
+        "backtest/result/csi300",
+        "backtest/result/csi500",
+        "backtest/result/baseline-full-interactive",
+    }
+
+
+def test_phase_s_baseline_session_metadata_is_bound_to_expected_pool(tmp_path):
+    names = ["csi1000-session", "csi300-session", "csi500-session"]
+    row = _phase_s_baseline_row(names)
+    for pool, name in zip(("csi1000", "csi300", "csi500"), names):
+        session = tmp_path / "backtest/result" / name
+        _write_phase_s_session(session, str(300 + len(pool)))
+        _bind_phase_s_baseline_metadata(session, pool, row, tmp_path)
+
+    errors = []
+    cleanup._validate_phase_s_baseline_sessions(tmp_path, row, errors)
+    assert errors == []
+
+    row["test_results"]["csi300"]["result_dir"] = row["test_results"]["csi1000"]["result_dir"]
+    errors = []
+    cleanup._validate_phase_s_baseline_sessions(tmp_path, row, errors)
+    assert any("csi300" in error and "metadata mismatch" in error for error in errors)
+
+
+def test_phase_s_completed_non_selecting_diagnostic_is_not_retained():
+    diagnostic = {
+        "exp_id": "strategy-stability-full-period/b1-m",
+        "direction": "strategy-stability-full-period",
+        "phase": "S",
+        "state": "complete",
+        "conclusion": "diagnostic_no_selection",
+        "cleanup_retention_eligible": False,
+        "result_dirs": ["backtest/result/diagnostic-a"],
+    }
+
+    assert cleanup.select_phase_s_retained_result_paths([diagnostic]) == set()
+
+
+def test_phase_s_incomplete_non_selecting_diagnostic_still_blocks_cleanup():
+    diagnostic = {
+        "exp_id": "strategy-stability-full-period/b1-m",
+        "phase": "S",
+        "state": "preregistered",
+        "conclusion": "preregistered",
+        "cleanup_retention_eligible": False,
+    }
+
+    with pytest.raises(ValueError, match="diagnostic row is malformed"):
+        cleanup.select_phase_s_retained_result_paths([diagnostic])
+
+
+@pytest.mark.parametrize(
+    ("mutation", "value"),
+    [
+        ("state", "preregistered"),
+        ("direction", "strategy-sweep-b1-m"),
+        ("exp_id", "strategy-sweep/b1-m"),
+    ],
+)
+def test_phase_s_partially_matching_diagnostic_blocks_cleanup(mutation, value):
+    diagnostic = {
+        "exp_id": "strategy-stability-full-period/b1-m",
+        "direction": "strategy-stability-full-period",
+        "phase": "S",
+        "state": "complete",
+        "conclusion": "diagnostic_no_selection",
+        "cleanup_retention_eligible": False,
+    }
+    diagnostic[mutation] = value
+
+    with pytest.raises(ValueError, match="diagnostic row is malformed"):
+        cleanup.select_phase_s_retained_result_paths([diagnostic])
+
+
+def test_phase_s_retention_accepts_absolute_direct_child_inside_result_root(tmp_path):
+    session = tmp_path / "backtest/result/final-test"
+    session.mkdir(parents=True)
+    errors = []
+
+    retained = cleanup._retained_phase_s_dirs(
+        tmp_path, [str(session.resolve())], errors
+    )
+
+    assert retained == [session.resolve()]
+    assert errors == []
+
+
+def test_incomplete_phase_s_bundle_blocks_all_deletion(tmp_path):
+    result_root = tmp_path / "backtest/result"
+    mlruns_root = tmp_path / "mlruns"
+    baseline = _baseline()
+    baseline["result_dirs"] = []
+    for index in range(5):
+        name = f"phase-m-{index}"
+        experiment_id = str(100 + index)
+        _write_session(result_root / name, experiment_id)
+        (mlruns_root / experiment_id).mkdir(parents=True)
+        baseline["result_dirs"].append(f"backtest/result/{name}")
+    _write_phase_s_session(result_root / "loser", "999")
+    (mlruns_root / "999").mkdir(parents=True)
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path,
+        [baseline, _phase_s_row("b1-m", [], state="valid_complete")],
+    )
+
+    assert any("Phase S" in error for error in plan["errors"])
+    assert plan["delete_result_dirs"] == []
+    assert plan["delete_mlruns_dirs"] == []
 
 
 def test_missing_retained_metadata_blocks_all_deletion(tmp_path):

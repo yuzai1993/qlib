@@ -182,13 +182,13 @@ def summarize_ic(daily: pd.DataFrame) -> dict:
 
 
 def yearly_ir(report_normal_csv: PathLike) -> pd.Series:
-    """按年计算日超额（return - bench）的 information_ratio。"""
+    """按年计算扣费日超额（return - bench - cost）的 information_ratio。"""
     from qlib.contrib.evaluate import risk_analysis
 
     path = Path(report_normal_csv)
     df = pd.read_csv(path, parse_dates=["datetime"])
-    df = df.dropna(subset=["return", "bench"])
-    excess = df["return"] - df["bench"]
+    df = df.dropna(subset=["return", "bench", "cost"])
+    excess = df["return"] - df["bench"] - df["cost"]
     excess.index = df["datetime"]
 
     out: dict[int, float] = {}

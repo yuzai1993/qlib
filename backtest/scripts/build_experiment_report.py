@@ -174,6 +174,10 @@ def _resolve_baseline_row(all_rows: Sequence[dict], group: Sequence[dict]) -> Op
     """按方向内 baseline_ref 查找对应 baseline 锚点行。"""
     ref = _baseline_ref_of(group)
     anchors = [r for r in all_rows if _is_baseline_anchor(r)]
+    group_phases = {_phase_of(row) for row in group}
+    if len(group_phases) == 1:
+        phase = next(iter(group_phases))
+        anchors = [row for row in anchors if _phase_of(row) == phase]
     if not anchors:
         return None
     if ref:
@@ -444,6 +448,31 @@ def _build_phase_s_table(rows: Sequence[dict]) -> str:
     )
 
 
+def _build_stability_audit_table(rows: Sequence[dict]) -> str:
+    body = []
+    for row in sorted(rows, key=lambda item: str(item.get("model_ref") or "")):
+        results = row.get("diagnostic_results") or []
+        counts = {
+            status: sum(item.get("status") == status for item in results)
+            for status in ("success", "invalid", "failed")
+        }
+        body.append(
+            "<tr>"
+            f'<td class="name">{_esc(row.get("exp_id"))}</td>'
+            f'<td>{_esc(str(row.get("model_ref") or "").upper())}</td>'
+            f'<td>{_esc(row.get("state"))}</td>'
+            f'<td class="num">{counts["success"]}/{counts["invalid"]}/{counts["failed"]}</td>'
+            '<td><a href="strategy_stability_report.html">strategy_stability_report.html</a></td>'
+            "</tr>"
+        )
+    return (
+        '<table class="exp"><thead><tr><th>实验名</th><th>模型</th><th>状态</th>'
+        '<th>成功/无效/失败</th><th>详细报告</th></tr></thead><tbody>'
+        + "".join(body)
+        + "</tbody></table>"
+    )
+
+
 def build_html(rows: Sequence[dict]) -> str:
     by_direction: dict[str, list[dict]] = {}
     for r in rows:
@@ -455,6 +484,26 @@ def build_html(rows: Sequence[dict]) -> str:
     sections = []
     for direction in sorted(by_direction):
         group = sorted(by_direction[direction], key=lambda r: str(r.get("date") or ""))
+        is_stability_diagnostic = (
+            direction == "strategy-stability-full-period"
+            and bool(group)
+            and all(row.get("conclusion") == "diagnostic_no_selection" for row in group)
+        )
+        if is_stability_diagnostic:
+            current_group = [
+                row for row in group if row.get("model_ref") == "b6-m"
+            ]
+            anchor = _slug(direction)
+            toc_items.append(
+                f"<li><a href='#{anchor}'>{_esc(direction)}</a>（{len(current_group)} 个实验）</li>"
+            )
+            sections.append(
+                f"<section id='{anchor}'><h2>{_esc(direction)}</h2>"
+                "<p class='meta'>诊断协议：B2-S 基线位于独立报告首行；"
+                "本登记摘要不注入跨模型基线，也不产生选型结论。</p>"
+                f"{_build_stability_audit_table(current_group)}</section>"
+            )
+            continue
         table_rows, baseline_ref = _with_baseline_first(rows, group)
         # toc 计数不含注入的外来 baseline 行
         n_native = len(group)

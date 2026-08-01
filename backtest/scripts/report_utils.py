@@ -1,4 +1,4 @@
-"""回测结果归档：目录命名、Plotly→PNG、HTML 报告。"""
+"""回测结果归档：目录命名、Plotly 交互图、HTML 报告。"""
 
 from __future__ import annotations
 
@@ -94,6 +94,31 @@ def save_plotly_pngs(figures: Iterable[FigureLike], out_dir: Path, basename: str
     return paths
 
 
+def save_plotly_htmls(
+    figures: Iterable[FigureLike], out_dir: Path, basename: str
+) -> list[Path]:
+    """将 Plotly figure(s) 写成可离线打开、支持悬浮明细的 HTML。"""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fig_list = _as_figure_list(figures)
+    paths: list[Path] = []
+    for i, fig in enumerate(fig_list, start=1):
+        name = (
+            f"{basename}.html"
+            if len(fig_list) == 1
+            else f"{basename}_{i:02d}.html"
+        )
+        path = out_dir / name
+        safe_fig = _sanitize_figure(fig)
+        safe_fig.write_html(
+            str(path),
+            include_plotlyjs=True,
+            full_html=True,
+            config={"displaylogo": False, "responsive": True},
+        )
+        paths.append(path)
+    return paths
+
+
 def build_pred_label(pred: pd.DataFrame, label: pd.DataFrame) -> pd.DataFrame:
     """对齐 pred / label 为 score_ic / model_performance 所需的 pred_label。"""
     pred = pred.copy()
@@ -119,7 +144,7 @@ def generate_run_figures(
     pred_label: Optional[pd.DataFrame],
     figures_dir: Path,
 ) -> dict[str, list[str]]:
-    """生成 notebook 四类图的静态 PNG，返回 {类别: [相对 figures/ 的文件名]}。"""
+    """生成 notebook 四类交互图，返回 {类别: [相对 figures/ 的文件名]}。"""
     from qlib.contrib.report import analysis_model, analysis_position
 
     figures_dir.mkdir(parents=True, exist_ok=True)
@@ -128,7 +153,7 @@ def generate_run_figures(
     def _try_save(key: str, factory) -> None:
         try:
             figs = factory()
-            paths = save_plotly_pngs(figs, figures_dir, key)
+            paths = save_plotly_htmls(figs, figures_dir, key)
             saved[key] = [p.name for p in paths]
         except Exception as e:
             print(f"[report_utils] 出图失败 {key}: {e}")
@@ -185,9 +210,18 @@ def _figures_html(figure_files: Mapping[str, Sequence[str]], figures_rel: str = 
             parts.append("<p><em>未生成</em></p>")
             continue
         for name in files:
-            parts.append(
-                f'<p><img src="{html.escape(figures_rel + "/" + name)}" alt="{html.escape(name)}" style="max-width:100%;border:1px solid #ddd;"/></p>'
-            )
+            source = html.escape(figures_rel + "/" + name)
+            escaped_name = html.escape(name)
+            if Path(name).suffix.lower() == ".html":
+                parts.append(
+                    f'<iframe src="{source}" title="{escaped_name}" '
+                    'loading="lazy"></iframe>'
+                )
+            else:
+                parts.append(
+                    f'<p><img src="{source}" alt="{escaped_name}" '
+                    'style="max-width:100%;border:1px solid #ddd;"/></p>'
+                )
     return "\n".join(parts)
 
 
@@ -207,6 +241,7 @@ th { background: #f5f5f5; }
 h1,h2,h3 { color: #111; }
 code { background: #f0f0f0; padding: 1px 4px; }
 a { color: #0645ad; }
+iframe { width: 100%; height: 720px; border: 1px solid #ddd; border-radius: 4px; }
 """
 
 

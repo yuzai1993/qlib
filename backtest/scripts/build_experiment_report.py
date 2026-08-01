@@ -156,8 +156,11 @@ def _phase_of(row: dict) -> str:
 
 
 def _is_baseline_anchor(row: dict) -> bool:
-    """registry 中 direction=baseline 的锚点行（供各方向表首行注入）。"""
-    if str(row.get("direction") or "").lower() != "baseline":
+    """registry 中模型或策略 baseline 锚点（供各方向表首行注入）。"""
+    if str(row.get("direction") or "").lower() not in {
+        "baseline",
+        "baseline-strategy",
+    }:
         return False
     conclusion = str(row.get("conclusion") or "").lower()
     exp_id = str(row.get("exp_id") or "").lower()

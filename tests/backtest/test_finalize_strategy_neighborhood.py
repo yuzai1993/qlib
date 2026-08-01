@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backtest/scripts"))
 
 import finalize_strategy_neighborhood as finalizer  # noqa: E402
+import run_strategy_neighborhood as runner  # noqa: E402
 import strategy_neighborhood_protocol as protocol  # noqa: E402
 
 
@@ -115,6 +116,35 @@ def test_preregistered_row_freezes_b2s_protocol_and_540_candidates(tmp_path: Pat
     assert len(row["prediction_artifacts"]) == 4
 
 
+def test_registry_rows_store_repo_paths_portably(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(finalizer, "REPO_ROOT", tmp_path)
+    manifest = _manifest(tmp_path)
+    manifest["models"]["b6-m"]["manifest_path"] = str(
+        tmp_path / "backtest/models/baselines/b6-m/manifest.json"
+    )
+    manifest["models"]["b6-m"]["model_path"] = str(
+        tmp_path / "backtest/models/baselines/b6-m/seed4000/trained_model"
+    )
+    for item in manifest["predictions"]:
+        item["path"] = str(
+            tmp_path / "backtest/experiments/run" / Path(item["path"]).name
+        )
+    row = finalizer.build_preregistered_row(
+        _protocol(),
+        manifest,
+        protocol_path=tmp_path / "backtest/experiments/run/protocol.json",
+        prediction_manifest_path=tmp_path / "backtest/experiments/run/manifest.json",
+        configs_dir=tmp_path / "backtest/configs/run",
+    )
+
+    assert row["model_manifest"] == "backtest/models/baselines/b6-m/manifest.json"
+    assert row["model_path"] == "backtest/models/baselines/b6-m/seed4000/trained_model"
+    assert all(
+        item["path"].startswith("backtest/")
+        for item in row["prediction_artifacts"]
+    )
+
+
 def test_final_report_starts_with_baseline_and_compares_frozen_winner():
     winner_id = protocol.BASELINE_CANDIDATE_ID
     valid = {
@@ -166,4 +196,178 @@ def test_registry_transition_preserves_unrelated_lines_and_rejects_rewrite(tmp_p
             registry,
             {**complete, "winner": "changed"},
             expected_previous_state="preregistered",
+        )
+
+
+def test_complete_row_recomputes_winner_and_rejects_tampering(tmp_path: Path):
+    grid = protocol.strategy_neighborhood_grid()
+    rows = [_metrics(item["candidate_id"], 1.0) for item in grid]
+    scored, winner = protocol.score_valid_candidates(rows, grid)
+    valid_path = tmp_path / "valid.json"
+    test_path = tmp_path / "test.json"
+    report_path = tmp_path / "report.html"
+    valid = {
+        "state": "valid_complete",
+        "protocol_sha256": "protocol-sha",
+        "run_contract": {
+            "protocol_sha256": "protocol-sha",
+            "prediction_manifest_sha256": "manifest-sha",
+            "base_config_sha256": "base-sha",
+        },
+        "all_rows": scored,
+        "winner": {**winner, "candidate_id": grid[-1]["candidate_id"]},
+    }
+    test = {
+        "state": "test_complete",
+        "run_contract": valid["run_contract"],
+        "winner": valid["winner"],
+        "pools": {
+            pool: _metrics(valid["winner"]["candidate_id"], 1.0)
+            for pool in ("csi1000", "csi300", "csi500")
+        },
+    }
+    valid_path.write_text(json.dumps(valid), encoding="utf-8")
+    test_path.write_text(json.dumps(test), encoding="utf-8")
+    report_path.write_text("report", encoding="utf-8")
+    preregistered = {
+        "state": "preregistered",
+        "protocol_sha256": "protocol-sha",
+        "prediction_manifest_sha256": "manifest-sha",
+        "prediction_artifacts": [],
+    }
+
+    with pytest.raises(ValueError, match="recomputed valid winner"):
+        finalizer.build_complete_row(
+            preregistered,
+            _protocol(),
+            valid,
+            test,
+            valid_path=valid_path,
+            test_path=test_path,
+            report_path=report_path,
+        )
+
+
+def test_complete_row_rejects_non_exact_valid_candidate_set(tmp_path: Path):
+    grid = protocol.strategy_neighborhood_grid()
+    rows = [_metrics(item["candidate_id"], 1.0) for item in grid]
+    valid = {
+        "state": "valid_complete",
+        "all_rows": rows[:-1] + [rows[0]],
+        "winner": rows[0],
+    }
+    test = {"state": "test_complete", "winner": rows[0], "pools": {}}
+    path = tmp_path / "x.json"
+    path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="exactly match protocol grid"):
+        finalizer.build_complete_row(
+            {"state": "preregistered"},
+            _protocol(),
+            valid,
+            test,
+            valid_path=path,
+            test_path=path,
+            report_path=path,
+        )
+
+
+def test_complete_row_verifies_prediction_and_config_contracts(tmp_path: Path):
+    proto = _protocol()
+    base_path = runner.DEFAULT_BASE_CONFIG
+    proto.update(
+        base_config=str(base_path.relative_to(ROOT)),
+        base_config_sha256=finalizer.sha256_file(base_path),
+    )
+    base = runner.load_config(str(base_path))
+    grid = proto["strategy_grid"]
+    valid_rows = []
+    for candidate in grid:
+        row = {**candidate, **_metrics(candidate["candidate_id"], 1.0)}
+        row.update(
+            source_pred_sha256="valid-pred",
+            effective_config_sha256=runner.effective_config_sha256(
+                base, candidate, pool="csi1000", segment="valid"
+            ),
+        )
+        valid_rows.append(row)
+    scored, winner = protocol.score_valid_candidates(valid_rows, grid)
+    contract = {
+        "protocol_sha256": "protocol-sha",
+        "prediction_manifest_sha256": "manifest-sha",
+        "base_config_sha256": proto["base_config_sha256"],
+    }
+    valid = {
+        "state": "valid_complete",
+        "protocol_sha256": "protocol-sha",
+        "run_contract": contract,
+        "all_rows": scored,
+        "winner": winner,
+    }
+    pools = {}
+    for pool in ("csi1000", "csi300", "csi500"):
+        row = _metrics(winner["candidate_id"], 1.0)
+        row.update(
+            source_pred_sha256=f"{pool}-pred",
+            effective_config_sha256=runner.effective_config_sha256(
+                base, winner, pool=pool, segment="test"
+            ),
+        )
+        pools[pool] = row
+    test = {
+        "state": "test_complete",
+        "run_contract": contract,
+        "winner": winner,
+        "pools": pools,
+    }
+    preregistered = {
+        "state": "preregistered",
+        "protocol_sha256": "protocol-sha",
+        "prediction_manifest_sha256": "manifest-sha",
+        "prediction_artifacts": [
+            {
+                "model_ref": "b6-m",
+                "pool": "csi1000",
+                "segment": "valid",
+                "prediction_sha256": "valid-pred",
+            },
+            *[
+                {
+                    "model_ref": "b6-m",
+                    "pool": pool,
+                    "segment": "test",
+                    "prediction_sha256": f"{pool}-pred",
+                }
+                for pool in ("csi1000", "csi300", "csi500")
+            ],
+        ],
+    }
+    valid_path = tmp_path / "valid.json"
+    test_path = tmp_path / "test.json"
+    report_path = tmp_path / "report.html"
+    valid_path.write_text(json.dumps(valid), encoding="utf-8")
+    test_path.write_text(json.dumps(test), encoding="utf-8")
+    report_path.write_text("report", encoding="utf-8")
+
+    complete = finalizer.build_complete_row(
+        preregistered,
+        proto,
+        valid,
+        test,
+        valid_path=valid_path,
+        test_path=test_path,
+        report_path=report_path,
+    )
+    assert complete["selected_candidate_id"] == winner["candidate_id"]
+
+    test["pools"]["csi300"]["source_pred_sha256"] = "tampered"
+    with pytest.raises(ValueError, match="csi300 test prediction identity differs"):
+        finalizer.build_complete_row(
+            preregistered,
+            proto,
+            valid,
+            test,
+            valid_path=valid_path,
+            test_path=test_path,
+            report_path=report_path,
         )

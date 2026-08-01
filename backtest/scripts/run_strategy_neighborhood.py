@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import subprocess
 import sys
@@ -56,14 +57,64 @@ def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     temporary.replace(path)
 
 
-def pending_candidates(
-    grid: Sequence[dict[str, Any]], checkpoint: Optional[dict[str, Any]]
-) -> list[dict[str, Any]]:
-    completed = {
-        str(row.get("candidate_id"))
-        for row in (checkpoint or {}).get("all_rows") or []
-        if row.get("status") == "success"
+def effective_config_sha256(
+    base: dict[str, Any],
+    candidate: dict[str, Any],
+    *,
+    pool: str,
+    segment: str,
+) -> str:
+    rendered = yaml.safe_dump(
+        build_sweep_config(base, candidate, pool=pool, segment=segment),
+        allow_unicode=True,
+        sort_keys=False,
+    ).encode("utf-8")
+    return hashlib.sha256(rendered).hexdigest()
+
+
+def build_checkpoint_contract(
+    protocol_sha256: str, prediction_manifest_path: Path, base_config_path: Path
+) -> dict[str, str]:
+    return {
+        "protocol_sha256": protocol_sha256,
+        "prediction_manifest_sha256": sha256_file(prediction_manifest_path),
+        "base_config_sha256": sha256_file(base_config_path),
     }
+
+
+def validate_checkpoint_contract(
+    checkpoint: dict[str, Any], expected: dict[str, str], label: str
+) -> None:
+    if checkpoint and checkpoint.get("run_contract") != expected:
+        raise ValueError(f"{label} checkpoint run contract differs from current inputs")
+
+
+def pending_candidates(
+    grid: Sequence[dict[str, Any]],
+    checkpoint: Optional[dict[str, Any]],
+    *,
+    base: Optional[dict[str, Any]] = None,
+    pool: str = "csi1000",
+    segment: str = "valid",
+    prediction_sha256: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    completed = set()
+    for row in (checkpoint or {}).get("all_rows") or []:
+        if row.get("status") != "success":
+            continue
+        candidate_id = str(row.get("candidate_id"))
+        candidate = next(
+            (item for item in grid if item["candidate_id"] == candidate_id), None
+        )
+        if candidate is None:
+            continue
+        if prediction_sha256 is not None and row.get("source_pred_sha256") != prediction_sha256:
+            continue
+        if base is not None and row.get("effective_config_sha256") != effective_config_sha256(
+            base, candidate, pool=pool, segment=segment
+        ):
+            continue
+        completed.add(candidate_id)
     return [copy.deepcopy(row) for row in grid if row["candidate_id"] not in completed]
 
 
@@ -117,7 +168,17 @@ def build_test_plan(
     return tasks
 
 
-def _protocol_payload(grid: Sequence[dict[str, Any]]) -> dict[str, Any]:
+def _repo_path(path: Path) -> str:
+    resolved = Path(path).resolve()
+    try:
+        return str(resolved.relative_to(REPO_ROOT.resolve()))
+    except ValueError:
+        return str(resolved)
+
+
+def _protocol_payload(
+    grid: Sequence[dict[str, Any]], base_config_path: Path
+) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "exp_id": "strategy-neighborhood/b2-s-local-v1",
@@ -127,6 +188,8 @@ def _protocol_payload(grid: Sequence[dict[str, Any]]) -> dict[str, Any]:
         "frozen_model_ref": "B6 v1.0",
         "model_ref": "b6-m",
         "account": 500000,
+        "base_config": _repo_path(base_config_path),
+        "base_config_sha256": sha256_file(base_config_path),
         "selection_pool": "csi1000",
         "selection_segment": list(VALID_SEGMENT),
         "test_pools": list(POOL_BENCHMARKS),
@@ -168,14 +231,12 @@ def _run_candidate(
     )
     config_path = configs_dir / f"{candidate['candidate_id']}_{pool}_{segment}.yaml"
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(
-        yaml.safe_dump(
-            build_sweep_config(base, candidate, pool=pool, segment=segment),
-            allow_unicode=True,
-            sort_keys=False,
-        ),
-        encoding="utf-8",
+    rendered_config = yaml.safe_dump(
+        build_sweep_config(base, candidate, pool=pool, segment=segment),
+        allow_unicode=True,
+        sort_keys=False,
     )
+    config_path.write_text(rendered_config, encoding="utf-8")
     note = f"strategy_neighborhood_{candidate['candidate_id']}_{pool}_{segment}"
     command = build_backtest_command(
         Path(sys.executable),
@@ -187,14 +248,17 @@ def _run_candidate(
     completed = subprocess.run(command, cwd=REPO_ROOT, text=True, capture_output=True)
     row = {
         **candidate,
-        "source_pred": str(pred_path),
+        "source_pred": _repo_path(pred_path),
         "source_pred_sha256": prediction["prediction_sha256"],
+        "effective_config_sha256": hashlib.sha256(
+            rendered_config.encode("utf-8")
+        ).hexdigest(),
         "returncode": completed.returncode,
-        "config": str(config_path),
+        "config": _repo_path(config_path),
     }
     try:
         result_dir = _parse_result_dir(completed.stdout)
-        row["result_dir"] = str(result_dir)
+        row["result_dir"] = _repo_path(result_dir)
         row.update(
             json.loads(
                 (result_dir / "run_01/metrics.json").read_text(encoding="utf-8")
@@ -237,10 +301,11 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     output_root = args.output_root.resolve()
     configs_dir = args.configs_dir.resolve()
     manifest_path = args.prediction_manifest.resolve()
+    base_config_path = args.base_config.resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     grid = strategy_neighborhood_grid()
     protocol_path = output_root / "protocol.json"
-    protocol = _protocol_payload(grid)
+    protocol = _protocol_payload(grid, base_config_path)
     if protocol_path.exists():
         if json.loads(protocol_path.read_text(encoding="utf-8")) != protocol:
             raise ValueError("existing protocol differs from preregistered protocol")
@@ -261,15 +326,27 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     )
     if valid_entry is None:
         raise ValueError("prediction manifest lacks b6-m/csi1000/valid")
-    base = load_config(str(args.base_config))
+    base = load_config(str(base_config_path))
+    run_contract = build_checkpoint_contract(
+        protocol_sha, manifest_path, base_config_path
+    )
+    valid_prediction_sha = str(valid_entry.get("prediction_sha256") or "")
+    if not valid_prediction_sha or sha256_file(_prediction_path(valid_entry)) != valid_prediction_sha:
+        raise ValueError("valid prediction file SHA differs from manifest")
     valid_path = output_root / "valid_results.json"
     checkpoint = (
         json.loads(valid_path.read_text(encoding="utf-8")) if valid_path.exists() else {}
     )
-    if checkpoint and checkpoint.get("protocol_sha256") != protocol_sha:
-        raise ValueError("valid checkpoint protocol SHA differs from preregistration")
+    validate_checkpoint_contract(checkpoint, run_contract, "valid")
     rows = list(checkpoint.get("all_rows") or [])
-    pending = pending_candidates(grid, checkpoint)
+    pending = pending_candidates(
+        grid,
+        checkpoint,
+        base=base,
+        pool="csi1000",
+        segment="valid",
+        prediction_sha256=valid_prediction_sha,
+    )
     started = time.monotonic()
     def run_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
         return _run_candidate(
@@ -304,6 +381,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                         "state": "running",
                         "updated_at": datetime.now().isoformat(timespec="seconds"),
                         "protocol_sha256": protocol_sha,
+                        "run_contract": run_contract,
                         "model_ref": "b6-m",
                         "pool": "csi1000",
                         "segment": "valid",
@@ -318,6 +396,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             "state": "valid_complete",
             "updated_at": datetime.now().isoformat(timespec="seconds"),
             "protocol_sha256": protocol_sha,
+            "run_contract": run_contract,
             "model_ref": "b6-m",
             "pool": "csi1000",
             "segment": "valid",
@@ -330,14 +409,34 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     test_payload = (
         json.loads(test_path.read_text(encoding="utf-8"))
         if test_path.exists()
-        else {"schema_version": 1, "state": "running", "winner": winner, "pools": {}}
+        else {
+            "schema_version": 1,
+            "state": "running",
+            "winner": winner,
+            "run_contract": run_contract,
+            "pools": {},
+        }
     )
+    validate_checkpoint_contract(test_payload, run_contract, "test")
     if test_payload.get("winner", {}).get("candidate_id") != winner["candidate_id"]:
         raise ValueError("test checkpoint winner differs from frozen valid winner")
     for task in build_test_plan(winner, manifest):
         pool = task["pool"]
-        if test_payload.get("pools", {}).get(pool, {}).get("status") == "success":
-            continue
+        previous = test_payload.get("pools", {}).get(pool, {})
+        prediction_sha = str(task["prediction"].get("prediction_sha256") or "")
+        if not prediction_sha or sha256_file(_prediction_path(task["prediction"])) != prediction_sha:
+            raise ValueError(f"{pool} test prediction file SHA differs from manifest")
+        expected_config_sha = effective_config_sha256(
+            base, winner, pool=pool, segment="test"
+        )
+        if previous.get("status") == "success":
+            if (
+                previous.get("candidate_id") == winner["candidate_id"]
+                and previous.get("source_pred_sha256") == prediction_sha
+                and previous.get("effective_config_sha256") == expected_config_sha
+            ):
+                continue
+            raise ValueError(f"{pool} test checkpoint artifact identity differs")
         row = _run_candidate(
             base,
             winner,

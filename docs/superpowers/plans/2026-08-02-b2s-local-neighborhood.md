@@ -25,10 +25,10 @@
 - Create: `backtest/scripts/strategy_neighborhood_protocol.py`
 - Create: `tests/backtest/test_strategy_neighborhood_protocol.py`
 
-- [ ] Write failing tests for the exact 540 unique candidates, baseline inclusion, axial-neighbor membership, incomplete-neighbor rejection, and preregistered ranking order.
-- [ ] Run the focused tests and confirm RED.
-- [ ] Implement candidate generation, neighbor lookup, finite-metric validation, P25 scoring, and deterministic winner selection.
-- [ ] Run the focused tests and confirm GREEN.
+- [x] Write failing tests for the exact 540 unique candidates, baseline inclusion, axial-neighbor membership, incomplete-neighbor rejection, and preregistered ranking order.
+- [x] Run the focused tests and confirm RED.
+- [x] Implement candidate generation, neighbor lookup, finite-metric validation, P25 scoring, and deterministic winner selection.
+- [x] Run the focused tests and confirm GREEN.
 
 ### Task 2: Build restartable valid/test runner
 
@@ -37,10 +37,10 @@
 - Create: `backtest/scripts/run_strategy_neighborhood.py`
 - Create: `tests/backtest/test_run_strategy_neighborhood.py`
 
-- [ ] Write failing tests for per-candidate risk propagation, checkpoint resume, valid completeness gating, and winner-only test planning.
-- [ ] Run the focused tests and confirm RED.
-- [ ] Add candidate risk support without changing legacy defaults, then implement atomic checkpoints and phase gating.
-- [ ] Run the focused tests and confirm GREEN.
+- [x] Write failing tests for per-candidate risk propagation, checkpoint resume, valid completeness gating, and winner-only test planning.
+- [x] Run the focused tests and confirm RED.
+- [x] Add candidate risk support without changing legacy defaults, then implement atomic checkpoints and phase gating.
+- [x] Run the focused tests and confirm GREEN.
 
 ### Task 3: Publish baseline-first report and registry row
 
@@ -51,10 +51,10 @@
 - Modify during execution: `backtest/experiments/registry.jsonl`
 - Modify during execution: `backtest/experiments/report.html`
 
-- [ ] Write failing tests for the baseline-first HTML, B2-S baseline reference, frozen-winner identity, and immutable JSONL upsert.
-- [ ] Run the focused tests and confirm RED.
-- [ ] Implement finalization and report rendering.
-- [ ] Run the focused tests and confirm GREEN.
+- [x] Write failing tests for the baseline-first HTML, B2-S baseline reference, frozen-winner identity, and immutable JSONL upsert.
+- [x] Run the focused tests and confirm RED.
+- [x] Implement finalization and report rendering.
+- [x] Run the focused tests and confirm GREEN.
 
 ### Task 4: Execute and verify the experiment
 
@@ -62,11 +62,11 @@
 - Create during execution: `backtest/configs/strategy-neighborhood/b2-s-local/*.yaml`
 - Create during execution: `backtest/experiments/strategy-neighborhood/20260802_b2s_local/*`
 
-- [ ] Generate the six frozen prediction artifacts and verify their hashes.
-- [ ] Write the preregistered protocol before the first valid backtest.
-- [ ] Run/resume all 540 CSI1000 valid candidates and freeze the robust winner.
-- [ ] Run the frozen winner once on each of the three test pools.
-- [ ] Finalize registry and both HTML reports.
-- [ ] Run focused tests, `tests/backtest`, JSON/hash checks, and `git diff --check`.
-- [ ] Run standard cleanup in dry-run and apply modes, then verify retained summaries.
-- [ ] Commit the experiment implementation and results.
+- [x] Generate the six frozen prediction artifacts and verify their hashes.
+- [x] Write the preregistered protocol before the first valid backtest.
+- [x] Run/resume all 540 CSI1000 valid candidates and freeze the robust winner.
+- [x] Run the frozen winner once on each of the three test pools.
+- [x] Finalize registry and both HTML reports.
+- [x] Run focused tests, `tests/backtest`, JSON/hash checks, and `git diff --check`.
+- [x] Run standard cleanup dry-run; after its worktree-safety refusal, remove only the exact experiment result/mlruns roots and verify retained summaries.
+- [x] Commit the experiment implementation and results.

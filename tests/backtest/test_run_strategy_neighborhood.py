@@ -30,6 +30,56 @@ def test_pending_candidates_skip_only_successful_checkpoints():
     ]
 
 
+def test_checkpoint_contract_rejects_manifest_or_base_config_drift(tmp_path: Path):
+    manifest = tmp_path / "manifest.json"
+    base = tmp_path / "base.yaml"
+    manifest.write_text('{"predictions": []}', encoding="utf-8")
+    base.write_text("account: 500000\n", encoding="utf-8")
+    expected = runner.build_checkpoint_contract("protocol-sha", manifest, base)
+
+    runner.validate_checkpoint_contract({"run_contract": expected}, expected, "valid")
+    manifest.write_text('{"predictions": [1]}', encoding="utf-8")
+    changed = runner.build_checkpoint_contract("protocol-sha", manifest, base)
+
+    with pytest.raises(ValueError, match="run contract"):
+        runner.validate_checkpoint_contract({"run_contract": expected}, changed, "valid")
+
+
+def test_pending_candidates_rechecks_prediction_and_effective_config_identity():
+    grid = protocol.strategy_neighborhood_grid()[:2]
+    base = runner.load_config(str(runner.DEFAULT_BASE_CONFIG))
+    expected_sha = runner.effective_config_sha256(
+        base, grid[0], pool="csi1000", segment="valid"
+    )
+    checkpoint = {
+        "all_rows": [
+            {
+                "candidate_id": grid[0]["candidate_id"],
+                "status": "success",
+                "source_pred_sha256": "pred-sha",
+                "effective_config_sha256": expected_sha,
+            },
+            {
+                "candidate_id": grid[1]["candidate_id"],
+                "status": "success",
+                "source_pred_sha256": "stale-pred",
+                "effective_config_sha256": "stale-config",
+            },
+        ]
+    }
+
+    pending = runner.pending_candidates(
+        grid,
+        checkpoint,
+        base=base,
+        pool="csi1000",
+        segment="valid",
+        prediction_sha256="pred-sha",
+    )
+
+    assert [row["candidate_id"] for row in pending] == [grid[1]["candidate_id"]]
+
+
 def test_upsert_result_replaces_retry_without_changing_grid_order():
     grid = protocol.strategy_neighborhood_grid()[:3]
     rows = [

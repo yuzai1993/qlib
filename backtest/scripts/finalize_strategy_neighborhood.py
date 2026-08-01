@@ -17,6 +17,9 @@ REPO_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from phase_s_protocol import sha256_file  # noqa: E402
+from config_loader import load_config  # noqa: E402
+from run_strategy_neighborhood import effective_config_sha256  # noqa: E402
+from strategy_neighborhood_protocol import score_valid_candidates  # noqa: E402
 
 EXP_ID = "strategy-neighborhood/b2-s-local-v1"
 DEFAULT_ROOT = REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260802_b2s_local"
@@ -32,7 +35,10 @@ METRICS = (
 
 
 def _path_text(path: Path) -> str:
-    resolved = Path(path).resolve()
+    candidate = Path(path).expanduser()
+    if not candidate.is_absolute():
+        candidate = REPO_ROOT / candidate
+    resolved = candidate.resolve()
     try:
         return str(resolved.relative_to(REPO_ROOT.resolve()))
     except ValueError:
@@ -41,6 +47,31 @@ def _path_text(path: Path) -> str:
 
 def _hash_if_file(path: Path) -> str | None:
     return sha256_file(path) if Path(path).is_file() else None
+
+
+_PORTABLE_PATH_KEYS = {
+    "config",
+    "config_path",
+    "manifest_path",
+    "model_path",
+    "path",
+    "result_dir",
+    "source_pred",
+}
+
+
+def _portable_artifact_paths(value: Any, key: str | None = None) -> Any:
+    """Rewrite repository-owned artifact paths without embedding a worktree root."""
+    if isinstance(value, dict):
+        return {
+            item_key: _portable_artifact_paths(item_value, item_key)
+            for item_key, item_value in value.items()
+        }
+    if isinstance(value, list):
+        return [_portable_artifact_paths(item, key) for item in value]
+    if isinstance(value, str) and key in _PORTABLE_PATH_KEYS:
+        return _path_text(Path(value))
+    return value
 
 
 def build_preregistered_row(
@@ -69,7 +100,10 @@ def build_preregistered_row(
     identities = {(entry.get("pool"), entry.get("segment")) for entry in used}
     if len(used) != 4 or identities != expected:
         raise ValueError("prediction artifact matrix must contain exactly four used artifacts")
-    model = (prediction_manifest.get("models") or {}).get("b6-m") or {}
+    used = _portable_artifact_paths(used)
+    model = _portable_artifact_paths(
+        (prediction_manifest.get("models") or {}).get("b6-m") or {}
+    )
     return {
         "exp_id": EXP_ID,
         "direction": "strategy-neighborhood-b2-s",
@@ -123,8 +157,75 @@ def build_complete_row(
     if preregistered.get("state") != "preregistered":
         raise ValueError("finalization requires a preregistered row")
     winner = valid.get("winner") or {}
-    if valid.get("state") != "valid_complete" or len(valid.get("all_rows") or []) != 540:
+    valid_rows = valid.get("all_rows") or []
+    grid = protocol.get("strategy_grid") or []
+    if valid.get("state") != "valid_complete" or len(valid_rows) != 540:
         raise ValueError("valid grid is incomplete")
+    expected_ids = [str(item["candidate_id"]) for item in grid]
+    actual_ids = [str(item.get("candidate_id")) for item in valid_rows]
+    if len(set(actual_ids)) != len(actual_ids) or set(actual_ids) != set(expected_ids):
+        raise ValueError("valid candidate IDs must exactly match protocol grid")
+    _, recomputed_winner = score_valid_candidates(valid_rows, grid)
+    if winner.get("candidate_id") != recomputed_winner.get("candidate_id"):
+        raise ValueError("stored winner differs from recomputed valid winner")
+    if not math.isclose(
+        float(winner.get("neighbor_ir_p25")),
+        float(recomputed_winner.get("neighbor_ir_p25")),
+        rel_tol=0.0,
+        abs_tol=1e-12,
+    ):
+        raise ValueError("stored winner score differs from recomputed valid winner")
+    protocol_sha = preregistered.get("protocol_sha256")
+    manifest_sha = preregistered.get("prediction_manifest_sha256")
+    base_config_sha = protocol.get("base_config_sha256")
+    expected_run_contract = {
+        "protocol_sha256": protocol_sha,
+        "prediction_manifest_sha256": manifest_sha,
+        "base_config_sha256": base_config_sha,
+    }
+    if valid.get("protocol_sha256") != protocol_sha:
+        raise ValueError("valid protocol SHA differs from preregistration")
+    if valid.get("run_contract") != expected_run_contract:
+        raise ValueError("valid run contract differs from preregistration")
+    if test.get("run_contract") != expected_run_contract:
+        raise ValueError("test run contract differs from preregistration")
+    base_config_text = protocol.get("base_config")
+    if not base_config_text or not base_config_sha:
+        raise ValueError("protocol lacks frozen base config identity")
+    base_config_path = Path(str(base_config_text)).expanduser()
+    if not base_config_path.is_absolute():
+        base_config_path = REPO_ROOT / base_config_path
+    if not base_config_path.is_file() or sha256_file(base_config_path) != base_config_sha:
+        raise ValueError("frozen base config SHA differs from protocol")
+    base_config = load_config(str(base_config_path))
+    artifacts = preregistered.get("prediction_artifacts") or []
+    artifact_map = {
+        (item.get("model_ref"), item.get("pool"), item.get("segment")): item
+        for item in artifacts
+    }
+    expected_artifacts = {
+        ("b6-m", "csi1000", "valid"),
+        ("b6-m", "csi1000", "test"),
+        ("b6-m", "csi300", "test"),
+        ("b6-m", "csi500", "test"),
+    }
+    if len(artifacts) != 4 or set(artifact_map) != expected_artifacts:
+        raise ValueError("prediction artifact contract is incomplete or duplicated")
+    valid_prediction_sha = artifact_map[("b6-m", "csi1000", "valid")].get(
+        "prediction_sha256"
+    )
+    grid_by_id = {str(item["candidate_id"]): item for item in grid}
+    for row in valid_rows:
+        candidate = grid_by_id[str(row["candidate_id"])]
+        if row.get("status") != "success":
+            raise ValueError("valid grid contains unsuccessful row")
+        if row.get("source_pred_sha256") != valid_prediction_sha:
+            raise ValueError("valid row prediction identity differs")
+        expected_config_sha = effective_config_sha256(
+            base_config, candidate, pool="csi1000", segment="valid"
+        )
+        if row.get("effective_config_sha256") != expected_config_sha:
+            raise ValueError("valid row effective config identity differs")
     if test.get("state") != "test_complete":
         raise ValueError("test results are incomplete")
     if test.get("winner", {}).get("candidate_id") != winner.get("candidate_id"):
@@ -134,6 +235,19 @@ def build_complete_row(
         raise ValueError("winner test pools are incomplete")
     if any(row.get("status") != "success" for row in pools.values()):
         raise ValueError("winner test contains unsuccessful pool")
+    for pool, row in pools.items():
+        if row.get("candidate_id") != winner.get("candidate_id"):
+            raise ValueError(f"{pool} test candidate differs from valid winner")
+        expected_prediction_sha = artifact_map[("b6-m", pool, "test")].get(
+            "prediction_sha256"
+        )
+        if row.get("source_pred_sha256") != expected_prediction_sha:
+            raise ValueError(f"{pool} test prediction identity differs")
+        expected_config_sha = effective_config_sha256(
+            base_config, grid_by_id[str(winner["candidate_id"])], pool=pool, segment="test"
+        )
+        if row.get("effective_config_sha256") != expected_config_sha:
+            raise ValueError(f"{pool} test effective config identity differs")
     selected = next(
         item
         for item in protocol["strategy_grid"]
@@ -148,8 +262,9 @@ def build_complete_row(
         }
         for pool, row in pools.items()
     }
+    portable_pools = _portable_artifact_paths(pools)
     result_dirs = [
-        row["result_dir"] for row in pools.values() if row.get("result_dir")
+        row["result_dir"] for row in portable_pools.values() if row.get("result_dir")
     ]
     out = copy.deepcopy(preregistered)
     out.update(
@@ -170,7 +285,7 @@ def build_complete_row(
         test_result_sha256=sha256_file(test_path),
         detailed_report=_path_text(report_path),
         metrics_summary=metrics_summary,
-        test_results=pools,
+        test_results=portable_pools,
         result_dirs=result_dirs,
         note=(
             "仅用 CSI1000 valid 的轴向邻域 IR 25% 分位冻结胜者；test 三池仅运行该胜者，"

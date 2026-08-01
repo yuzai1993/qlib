@@ -159,6 +159,34 @@ def test_phase_s_direction_never_injects_phase_m_model_baseline():
     assert "1.2000" in section
 
 
+def test_phase_s_direction_injects_matching_baseline_strategy_anchor_first():
+    rows = [
+        {
+            "exp_id": "baseline/b2-s-on-b6-m",
+            "direction": "baseline-strategy",
+            "phase": "S",
+            "baseline_ref": "B2-S v1.0",
+            "conclusion": "baseline",
+            "metrics_summary": {"csi1000": {"ir": 0.9}},
+        },
+        {
+            "exp_id": "strategy-neighborhood/b2-s-local-v1",
+            "direction": "strategy-neighborhood-b2-s",
+            "phase": "S",
+            "baseline_ref": "B2-S v1.0",
+            "metrics_summary": {"csi1000": {"ir": 0.7}},
+        },
+    ]
+
+    section = report.build_html(rows).split(
+        "id='direction-strategy-neighborhood-b2-s'", 1
+    )[1]
+
+    assert section.index("baseline/b2-s-on-b6-m") < section.index(
+        "strategy-neighborhood/b2-s-local-v1"
+    )
+
+
 def test_non_selecting_stability_direction_uses_honest_audit_table_without_ir():
     rows = [
         {

@@ -13,6 +13,10 @@ REQUIRED_COLUMNS = {"return", "cost", "bench", "turnover"}
 COMPLETE_YEARS = {2021, 2022, 2023, 2024, 2025}
 
 
+class IncompletePortfolioError(ValueError):
+    """The continuous portfolio contains a day without usable account data."""
+
+
 def _finite(value: Any) -> float | None:
     try:
         number = float(value)
@@ -34,9 +38,13 @@ def _validate_report(report: pd.DataFrame) -> pd.DataFrame:
 
 def summarize_period(report: pd.DataFrame) -> dict[str, float | int | None]:
     report = _validate_report(report)
-    clean = report.dropna(subset=["return", "cost", "bench", "turnover"])
-    if clean.empty:
-        raise ValueError("report contains no complete daily rows")
+    incomplete = report[list(REQUIRED_COLUMNS)].isna().any(axis=1)
+    if incomplete.any():
+        first = report.index[incomplete][0]
+        raise IncompletePortfolioError(
+            f"continuous portfolio is incomplete from {first.date()}"
+        )
+    clean = report
     net = clean["return"].astype(float) - clean["cost"].astype(float)
     annualized_return = float(net.mean() * TRADING_DAYS)
     daily_std = float(net.std(ddof=1)) if len(net) > 1 else float("nan")

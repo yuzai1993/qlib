@@ -12,6 +12,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import phase_s_protocol as protocol  # noqa: E402
 import run_strategy_stability as stability  # noqa: E402
+from strategy_stability_metrics import IncompletePortfolioError  # noqa: E402
 
 BASE_CONFIG = ROOT / "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml"
 
@@ -72,6 +73,17 @@ def test_non_finite_requested_metric_is_invalid_not_success():
 
     assert row["status"] == "invalid"
     assert "non-finite" in row["error"]
+
+
+def test_interrupted_continuous_portfolio_is_invalid_not_retryable_failure():
+    row = {"status": "failed"}
+
+    stability.classify_diagnostic_exception(
+        row, IncompletePortfolioError("portfolio is incomplete from 2020-06-01")
+    )
+
+    assert row["status"] == "invalid"
+    assert row["error"] == "portfolio is incomplete from 2020-06-01"
 
 
 def test_payload_rejects_missing_candidate():

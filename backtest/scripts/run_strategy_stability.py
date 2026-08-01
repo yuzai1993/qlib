@@ -29,7 +29,10 @@ from run_strategy_sweep import (  # noqa: E402
     merge_retry_rows,
     verify_prediction_contract,
 )
-from strategy_stability_metrics import summarize_stability  # noqa: E402
+from strategy_stability_metrics import (  # noqa: E402
+    IncompletePortfolioError,
+    summarize_stability,
+)
 
 REQUESTED_METRICS = (
     "annualized_return",
@@ -68,6 +71,13 @@ def classify_diagnostic_outcome(row: dict[str, Any]) -> None:
             status="invalid",
             error=f"non-finite diagnostic metrics: {', '.join(invalid)}",
         )
+
+
+def classify_diagnostic_exception(row: dict[str, Any], exc: Exception) -> None:
+    row.update(
+        status="invalid" if isinstance(exc, IncompletePortfolioError) else "failed",
+        error=str(exc),
+    )
 
 
 def _finite_json(value: Any) -> Any:
@@ -221,7 +231,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             row.update(status="success", **summarize_stability(_load_report(result_dir)))
             classify_diagnostic_outcome(row)
         except Exception as exc:
-            row.update(status="failed", error=f"{exc}\n{completed.stderr[-2000:]}")
+            classify_diagnostic_exception(row, exc)
+            if completed.stderr:
+                row["error"] += f"\n{completed.stderr[-2000:]}"
         if completed.returncode != 0:
             row.update(status="failed", error=completed.stderr[-2000:] or "backtest subprocess failed")
         rows.append(row)

@@ -10,7 +10,11 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backtest/scripts"))
 
-from strategy_stability_metrics import summarize_period, summarize_stability  # noqa: E402
+from strategy_stability_metrics import (  # noqa: E402
+    IncompletePortfolioError,
+    summarize_period,
+    summarize_stability,
+)
 
 
 def _report(dates, returns, costs, *, turnover=None, bench=None):
@@ -94,4 +98,15 @@ def test_missing_required_report_column_is_rejected():
     report = pd.DataFrame({"return": [0.01]}, index=pd.to_datetime(["2021-01-04"]))
 
     with pytest.raises(ValueError, match="missing columns"):
+        summarize_period(report)
+
+
+def test_nan_portfolio_day_invalidates_continuous_period():
+    report = _report(
+        ["2020-05-29", "2020-06-01"],
+        [0.01, math.nan],
+        [0.001, math.nan],
+    )
+
+    with pytest.raises(IncompletePortfolioError, match="2020-06-01"):
         summarize_period(report)

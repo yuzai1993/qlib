@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import qlib
 from qlib.constant import REG_CN
+from qlib.data import D
 from qlib.utils import exists_qlib_data
 from qlib.workflow import R
 from qlib.workflow.record_temp import PortAnaRecord
@@ -28,7 +29,7 @@ from config_loader import (
     load_config,
     normalize_exchange_kwargs,
 )
-from report_utils import make_session_dir, write_json
+from report_utils import build_pred_label, make_session_dir, write_json
 from run_backtest import _finalize_session, _save_run_report, extract_metrics
 from phase_s_protocol import sha256_file
 
@@ -64,6 +65,45 @@ def _load_pred(path: Path) -> pd.DataFrame:
 def load_pred_source(path: Path) -> tuple[Path, pd.DataFrame]:
     resolved = Path(path).expanduser().resolve()
     return resolved, _load_pred(resolved)
+
+
+def load_configured_pred_label(
+    cfg: dict,
+    pred: pd.DataFrame,
+    *,
+    instrument_resolver=None,
+    feature_loader=None,
+) -> pd.DataFrame:
+    """Fetch the configured raw label only, without loading features or a model."""
+    label_config = (cfg.get("data", {}).get("handler", {}).get("label"))
+    if (
+        not isinstance(label_config, (list, tuple))
+        or len(label_config) != 2
+        or not label_config[0]
+        or len(label_config[0]) != len(label_config[1])
+    ):
+        raise ValueError("configured handler label must contain fields and names")
+    fields = list(label_config[0])
+    names = list(label_config[1])
+    dates = pred.index.get_level_values("datetime")
+    instrument_resolver = instrument_resolver or D.instruments
+    feature_loader = feature_loader or D.features
+    label = feature_loader(
+        instrument_resolver(cfg["data"]["instruments"]),
+        fields,
+        start_time=dates.min(),
+        end_time=dates.max(),
+        freq="day",
+    )
+    if label is None or label.empty:
+        raise ValueError("configured dataset did not produce a test label")
+    label = label.copy()
+    label.columns = names
+    if isinstance(label.index, pd.MultiIndex) and set(label.index.names) == set(
+        pred.index.names
+    ):
+        label = label.reorder_levels(pred.index.names).sort_index()
+    return build_pred_label(pred, label)
 
 
 def prepare_pred_artifact(
@@ -180,6 +220,11 @@ def main() -> None:
         recorder = R.get_recorder(recorder_id=recorder_id, experiment_name=experiment_name)
         report_normal = recorder.load_object("portfolio_analysis/report_normal_1day.pkl")
         analysis = recorder.load_object("portfolio_analysis/port_analysis_1day.pkl")
+        pred_label = (
+            load_configured_pred_label(cfg, pred)
+            if bool(cfg["run"].get("generate_figures", False))
+            else None
+        )
         result.update(extract_metrics(analysis, report_normal))
         result.update(
             status="success",
@@ -203,7 +248,7 @@ def main() -> None:
             mlruns_link=link,
             report_normal_df=report_normal,
             analysis_df=analysis,
-            pred_label=None,
+            pred_label=pred_label,
             generate_figures=bool(cfg["run"].get("generate_figures", False)),
         )
     except Exception as exc:

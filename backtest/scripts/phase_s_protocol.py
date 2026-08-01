@@ -158,6 +158,9 @@ def strategy_grid(model_ref: str) -> list[dict[str, Any]]:
             for topk in (10, 20, 30)
             for impact in (0.50, 1.00)
         )
+        rows.sort(
+            key=lambda row: row["candidate_id"] != BASELINE_CANDIDATE_ID
+        )
     elif model_ref == "b6-m":
         rows = [_topk_candidate(10, 2, 1)]
         rows.extend(

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-01T16:12:12",
+  "source_manifest": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/prediction_manifest.json",
+  "source_manifest_sha256": "2e4b47339bb8f66b12008c3fa81b927b3ca567f0b8f636ba522dfd27fb504711",
+  "data_version": "2026-07-31",
+  "predictions": [
+    {
+      "model_ref": "b6-m",
+      "pool": "csi1000",
+      "segment": "full",
+      "sources": [
+        {
+          "segment": "valid",
+          "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+          "prediction_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+          "index_sha256": "8dbd2f3b8d14fbf2065da1b6e49677c74774ed146c7a944b66a95afcc84bdf74"
+        },
+        {
+          "segment": "test",
+          "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_test.pkl",
+          "prediction_sha256": "864a5fe42a79e093cde71aff3530c5141afc338a6c9289121f013050c308991a",
+          "index_sha256": "ccea5530aeb10eb7ad7f792b063a98fc6701b1f6c0f37f1d297b916394c1c4d3"
+        }
+      ],
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2026-07-31",
+        "n_dates": 1587,
+        "n_rows": 1584284,
+        "index_sha256": "e6336cd92cc988f71f61afe2907980451ad20201388b6b39a542e469c1313abd"
+      },
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy-stability/20260801_full_period/predictions/b6-m/csi1000_full.pkl",
+      "prediction_sha256": "951f5fa34fd5641217041edf30fc549931bc1fb07e5d5fdacefa7573bee4ae1f",
+      "data_version": "2026-07-31"
+    }
+  ]
+}

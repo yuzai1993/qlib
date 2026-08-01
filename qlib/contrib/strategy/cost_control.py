@@ -56,6 +56,11 @@ class SoftTopkStrategy(WeightStrategyBase):
         def apply_impact_limit(weight):
             return weight if self.trade_impact_limit is None else min(weight, self.trade_impact_limit)
 
+        if getattr(score, "ndim", 1) == 2:
+            if score.shape[1] != 1:
+                raise ValueError("SoftTopkStrategy requires a Series or a single-column DataFrame signal")
+            score = score.iloc[:, 0]
+
         ideal_per_stock = self.risk_degree / self.topk
         ideal_list = score.sort_values(ascending=False).iloc[: self.topk].index.tolist()
 

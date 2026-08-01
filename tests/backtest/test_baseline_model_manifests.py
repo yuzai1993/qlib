@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 
@@ -43,13 +44,16 @@ def test_b6_manifest_is_single_model_phase_s_contract_selected_on_valid():
 
 
 def test_phase_s_references_canonical_single_model_manifest_only():
+    sys.path.insert(0, str(ROOT / "backtest/scripts"))
+    from phase_s_protocol import load_frozen_model
+
     rows = [json.loads(line) for line in REGISTRY.read_text(encoding="utf-8").splitlines()]
     b6 = next(row for row in rows if row["exp_id"] == "baseline/b6-m")
-    standard = STANDARD.read_text(encoding="utf-8")
 
     assert b6["model_manifest"] == "backtest/models/baselines/b6-m/manifest.json"
     assert "freeze_manifest" not in b6
     assert "backtest/experiments/b6_model_freeze.json" not in json.dumps(b6)
-    assert "backtest/models/baselines/b6-m/manifest.json" in standard
-    assert "Phase S 期间只使用 B6-M 冻结的 seed 4000 单模型" in standard
-    assert "exact five-of-five" not in standard
+    for model_ref in ("b1-m", "b6-m"):
+        frozen = load_frozen_model(ROOT, model_ref)
+        expected_dir = (ROOT / "backtest/models/baselines" / model_ref).resolve()
+        assert frozen.model_path.is_relative_to(expected_dir)

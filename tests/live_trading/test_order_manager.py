@@ -4,9 +4,11 @@ import pytest
 from live_trading.modules.order_manager import OrderManager
 
 
-def _manager():
+def _manager(**strategy_overrides):
+    strategy = {"topk": 10, "n_drop": 2}
+    strategy.update(strategy_overrides)
     return OrderManager({
-        "strategy": {"topk": 10, "n_drop": 2},
+        "strategy": strategy,
         "exchange": {"trade_unit": 100},
     })
 
@@ -47,9 +49,9 @@ def test_full_portfolio_rotates_two_positions():
 
     assert set(_instruments(orders, "SELL")) == set(scores.index[10:12])
     assert _instruments(orders, "BUY") == list(scores.index[8:10])
-    assert [order["target_shares"] for order in orders if order["direction"] == "BUY"] == [
-        500,
-        500,
+    assert [order["target_value"] for order in orders if order["direction"] == "BUY"] == [
+        pytest.approx(1_900.0),
+        pytest.approx(1_900.0),
     ]
 
 
@@ -88,7 +90,7 @@ def test_empty_portfolio_buys_topk():
     assert _instruments(orders, "BUY") == list(scores.index[:10])
 
 
-def test_buy_orders_keep_price_filter_and_board_lot_rounding():
+def test_buy_target_values_do_not_depend_on_previous_close():
     scores = _scores()
     prices = _prices(scores)
     prices[scores.index[1]] = 0.0
@@ -98,9 +100,10 @@ def test_buy_orders_keep_price_filter_and_board_lot_rounding():
     )
 
     buys = [order for order in orders if order["direction"] == "BUY"]
-    assert scores.index[1] not in _instruments(orders, "BUY")
-    assert len(buys) == 9
-    assert [order["target_shares"] for order in buys] == [900] * 9
+    assert len(buys) == 10
+    assert [order["target_value"] for order in buys] == [
+        pytest.approx(9_500.0)
+    ] * 10
 
 
 @pytest.mark.parametrize(
@@ -215,11 +218,11 @@ def test_buy_budget_uses_configured_risk_degree():
     assert orders == [{
         "instrument": "SH600000",
         "direction": "BUY",
-        "target_shares": 500,
+        "target_value": 5_000.0,
     }]
 
 
-def test_sell_fees_are_deducted_before_sizing_replacement():
+def test_replacement_buy_keeps_one_slot_target_value():
     scores = pd.Series({"SH600000": 2.0, "SZ000001": 1.0})
     manager = OrderManager({
         "strategy": {"topk": 1, "n_drop": 1, "risk_degree": 1.0},
@@ -242,5 +245,110 @@ def test_sell_fees_are_deducted_before_sizing_replacement():
     )
 
     buy = next(order for order in orders if order["direction"] == "BUY")
-    # Gross proceeds are 1,000; fees are 5 commission + 0.5 stamp + 0.01 transfer.
-    assert buy["target_shares"] == 99
+    assert buy["target_value"] == pytest.approx(1_000.0)
+
+
+def test_staged_initialization_buys_two_slots_without_sells():
+    scores = _scores(40)
+    manager = _manager(
+        topk=30,
+        n_drop=2,
+        initial_buy_count=2,
+        risk_degree=0.95,
+        hold_thresh=20,
+    )
+
+    orders = manager.generate_orders(
+        scores, {}, 500_000.0, {}, 500_000.0,
+    )
+
+    assert _instruments(orders, "SELL") == []
+    assert _instruments(orders, "BUY") == list(scores.index[:2])
+    assert [order["target_value"] for order in orders] == [
+        pytest.approx(15_833.333333333334),
+        pytest.approx(15_833.333333333334),
+    ]
+    assert all("target_shares" not in order for order in orders)
+
+
+def test_staged_initialization_preserves_low_ranked_holding_until_full():
+    scores = _scores(40)
+    held = list(scores.index[:8]) + [scores.index[39]]
+    manager = _manager(
+        topk=30,
+        n_drop=2,
+        initial_buy_count=2,
+        hold_thresh=20,
+    )
+
+    orders = manager.generate_orders(
+        scores, _positions(held), 400_000.0, {}, 500_000.0,
+    )
+
+    assert _instruments(orders, "SELL") == []
+    assert _instruments(orders, "BUY") == list(scores.index[8:10])
+
+
+def _aged_positions(instruments, opened_trade_date):
+    positions = _positions(instruments)
+    for position in positions.values():
+        position["opened_trade_date"] = opened_trade_date
+    return positions
+
+
+def test_hold20_blocks_sell_after_only_nineteen_signal_days():
+    scores = _scores()
+    held = list(scores.index[:8]) + list(scores.index[10:12])
+    manager = _manager(hold_thresh=20)
+    trade_dates = pd.bdate_range("2026-07-01", periods=19).strftime("%Y-%m-%d").tolist()
+
+    orders = manager.generate_orders(
+        scores,
+        _aged_positions(held, trade_dates[0]),
+        10_000.0,
+        _prices(scores),
+        20_000.0,
+        signal_date=trade_dates[-1],
+        trade_dates=trade_dates,
+    )
+
+    assert _instruments(orders, "SELL") == []
+    assert _instruments(orders, "BUY") == []
+
+
+def test_hold20_allows_sell_after_twentieth_signal_day():
+    scores = _scores()
+    held = list(scores.index[:8]) + list(scores.index[10:12])
+    manager = _manager(hold_thresh=20)
+    trade_dates = pd.bdate_range("2026-07-01", periods=20).strftime("%Y-%m-%d").tolist()
+
+    orders = manager.generate_orders(
+        scores,
+        _aged_positions(held, trade_dates[0]),
+        10_000.0,
+        _prices(scores),
+        20_000.0,
+        signal_date=trade_dates[-1],
+        trade_dates=trade_dates,
+    )
+
+    assert set(_instruments(orders, "SELL")) == set(scores.index[10:12])
+
+
+def test_hold_filter_fails_closed_without_open_date():
+    scores = _scores()
+    held = list(scores.index[:8]) + list(scores.index[10:12])
+    manager = _manager(hold_thresh=20)
+
+    orders = manager.generate_orders(
+        scores,
+        _positions(held),
+        10_000.0,
+        _prices(scores),
+        20_000.0,
+        signal_date="2026-07-31",
+        trade_dates=["2026-07-31"],
+    )
+
+    assert _instruments(orders, "SELL") == []
+    assert _instruments(orders, "BUY") == []

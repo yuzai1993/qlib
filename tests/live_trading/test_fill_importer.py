@@ -48,11 +48,18 @@ def _write_fills(bridge_root: Path, fills: list, batch_id=BATCH_ID, with_done=Tr
         (outbound / f"fills_{batch_id}.done").write_text("ok\n", encoding="utf-8")
 
 
-def _record_plan(recorder, fills, batch_id=BATCH_ID, mode=None, planned_orders=None):
+def _record_plan(
+    recorder,
+    fills,
+    batch_id=BATCH_ID,
+    mode=None,
+    planned_orders=None,
+    trade_date="2026-07-14",
+):
     """为回执测试写入对应的原始计划，模拟正常发布链路。"""
     mode = mode or fills[0]["mode"]
     recorder.record_batch(
-        batch_id, "2026-07-14", mode,
+        batch_id, trade_date, mode,
         planned_orders if planned_orders is not None else len(fills),
     )
     recorder.record_orders(batch_id, [
@@ -77,6 +84,62 @@ def env(tmp_path):
     recorder = LiveRecorder(str(db_path))
     importer = FillImporter(tmp_path, recorder)
     return tmp_path, recorder, importer
+
+
+def test_opening_cash_seeds_only_a_fresh_ledger(tmp_path):
+    db_path = tmp_path / "fresh.db"
+
+    recorder = LiveRecorder(str(db_path), opening_cash=500_000.0)
+    assert recorder.get_cash() == pytest.approx(500_000.0)
+
+    recorder.set_cash(490_000.0)
+    reopened = LiveRecorder(str(db_path), opening_cash=500_000.0)
+    assert reopened.get_cash() == pytest.approx(490_000.0)
+
+
+def test_opening_cash_refuses_to_seed_an_already_used_ledger(tmp_path):
+    db_path = tmp_path / "used.db"
+    recorder = LiveRecorder(str(db_path))
+    recorder.record_batch("used", "2026-07-14", "SIMULATE", 0)
+
+    with pytest.raises(SchemaError, match="opening_cash"):
+        LiveRecorder(str(db_path), opening_cash=500_000.0)
+
+
+def test_position_open_date_survives_add_on_and_resets_after_full_exit(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "dates.db"), opening_cash=100_000.0)
+
+    first = _fill(
+        batch_id="b1", client_order_id="buy1", side="BUY",
+        stock_code="600000.SH", requested=100, filled=100, price=10.0,
+    )
+    _record_plan(recorder, [first], batch_id="b1", trade_date="2026-07-14")
+    recorder.apply_fill(FillEvent.from_dict(first))
+    assert recorder.get_positions()["600000.SH"]["opened_trade_date"] == "2026-07-14"
+
+    add_on = _fill(
+        batch_id="b2", client_order_id="buy2", side="BUY",
+        stock_code="600000.SH", requested=100, filled=100, price=11.0,
+    )
+    _record_plan(recorder, [add_on], batch_id="b2", trade_date="2026-07-15")
+    recorder.apply_fill(FillEvent.from_dict(add_on))
+    assert recorder.get_positions()["600000.SH"]["opened_trade_date"] == "2026-07-14"
+
+    sell = _fill(
+        batch_id="b3", client_order_id="sell1", side="SELL",
+        stock_code="600000.SH", requested=200, filled=200, price=12.0,
+    )
+    _record_plan(recorder, [sell], batch_id="b3", trade_date="2026-07-16")
+    recorder.apply_fill(FillEvent.from_dict(sell))
+    assert "600000.SH" not in recorder.get_positions()
+
+    reentry = _fill(
+        batch_id="b4", client_order_id="buy3", side="BUY",
+        stock_code="600000.SH", requested=100, filled=100, price=12.0,
+    )
+    _record_plan(recorder, [reentry], batch_id="b4", trade_date="2026-07-17")
+    recorder.apply_fill(FillEvent.from_dict(reentry))
+    assert recorder.get_positions()["600000.SH"]["opened_trade_date"] == "2026-07-17"
 
 
 def test_same_client_order_id_can_exist_in_two_batches(env):
@@ -286,6 +349,7 @@ def test_partial_fill_average_change_uses_cumulative_amount_delta(env):
     assert recorder.get_positions()["600000.SH"] == {
         "shares": 200,
         "avg_cost": pytest.approx(11.0),
+        "opened_trade_date": "2026-07-14",
     }
 
 

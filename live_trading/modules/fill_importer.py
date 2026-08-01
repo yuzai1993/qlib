@@ -37,7 +37,12 @@ EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW"}
 class LiveRecorder:
     """实盘账簿 SQLite 存储（batches / fills / positions / cash_flows）。"""
 
-    def __init__(self, db_path: str, fees: dict = None):
+    def __init__(
+        self,
+        db_path: str,
+        fees: dict = None,
+        opening_cash: float | None = None,
+    ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.fees = dict(DEFAULT_FEES)
@@ -46,6 +51,36 @@ class LiveRecorder:
         self.fees = validate_fees(self.fees)
         self._backup_legacy_db()
         self._init_db()
+        self._seed_opening_cash(opening_cash)
+
+    def _seed_opening_cash(self, opening_cash: float | None) -> None:
+        if opening_cash is None:
+            return
+        if (
+            isinstance(opening_cash, bool)
+            or not isinstance(opening_cash, (int, float))
+            or not math.isfinite(opening_cash)
+            or opening_cash <= 0
+        ):
+            raise ValueError("opening_cash must be a positive finite number")
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT value FROM account_state WHERE key='cash'"
+            ).fetchone()
+            if existing is not None:
+                return
+            used = sum(
+                conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in ("batches", "fills", "positions")
+            )
+            if used:
+                raise SchemaError(
+                    "opening_cash cannot seed an already-used live ledger"
+                )
+            conn.execute(
+                "INSERT INTO account_state (key, value) VALUES ('cash', ?)",
+                (float(opening_cash),),
+            )
 
     def _backup_legacy_db(self) -> None:
         """首次联合主键迁移前保留一个一致的 SQLite 备份。"""
@@ -126,6 +161,7 @@ class LiveRecorder:
                     stock_code TEXT PRIMARY KEY,
                     shares INTEGER NOT NULL,
                     avg_cost REAL NOT NULL,
+                    opened_trade_date TEXT,
                     updated_at TEXT DEFAULT (datetime('now', 'localtime'))
                 );
 
@@ -245,6 +281,13 @@ class LiveRecorder:
             if "applied_fee" not in cols:
                 conn.execute(
                     "ALTER TABLE fills ADD COLUMN applied_fee REAL NOT NULL DEFAULT 0"
+                )
+            position_cols = {
+                r["name"] for r in conn.execute("PRAGMA table_info(positions)")
+            }
+            if "opened_trade_date" not in position_cols:
+                conn.execute(
+                    "ALTER TABLE positions ADD COLUMN opened_trade_date TEXT"
                 )
             self._migrate_composite_keys(conn)
 
@@ -804,7 +847,11 @@ class LiveRecorder:
                     raise SchemaError("fill applied quantity/amount cannot decrease")
                 if delta_qty > 0 or delta_amount > 1e-9:
                     self._apply_position_delta(
-                        conn, fill, delta_qty, delta_amount,
+                        conn,
+                        fill,
+                        delta_qty,
+                        delta_amount,
+                        trade_date=batch["trade_date"],
                     )
                     self._apply_cash_delta(conn, fill, delta_amount)
                     fee_delta = self._apply_fee_delta(conn, fill, applied_fee)
@@ -834,20 +881,29 @@ class LiveRecorder:
 
     @staticmethod
     def _apply_position_delta(
-        conn, fill: FillEvent, delta_qty: int, delta_amount: float,
+        conn,
+        fill: FillEvent,
+        delta_qty: int,
+        delta_amount: float,
+        *,
+        trade_date: str,
     ) -> None:
         row = conn.execute(
-            "SELECT shares, avg_cost FROM positions WHERE stock_code=?",
+            "SELECT shares, avg_cost, opened_trade_date FROM positions "
+            "WHERE stock_code=?",
             (fill.stock_code,),
         ).fetchone()
         old_shares = row["shares"] if row else 0
         old_cost = row["avg_cost"] if row else 0.0
+        opened_trade_date = row["opened_trade_date"] if row else None
 
         if fill.side == "BUY":
             new_shares = old_shares + delta_qty
             if new_shares <= 0:
                 raise SchemaError("BUY fill did not produce a positive position")
             new_cost = (old_shares * old_cost + delta_amount) / new_shares
+            if old_shares == 0:
+                opened_trade_date = trade_date
         else:  # SELL
             if delta_qty > old_shares:
                 raise SchemaError(
@@ -859,9 +915,15 @@ class LiveRecorder:
 
         if new_shares > 0:
             conn.execute(
-                "INSERT OR REPLACE INTO positions (stock_code, shares, avg_cost) "
-                "VALUES (?,?,?)",
-                (fill.stock_code, new_shares, new_cost),
+                "INSERT OR REPLACE INTO positions "
+                "(stock_code, shares, avg_cost, opened_trade_date) "
+                "VALUES (?,?,?,?)",
+                (
+                    fill.stock_code,
+                    new_shares,
+                    new_cost,
+                    opened_trade_date,
+                ),
             )
         else:
             conn.execute(
@@ -1289,14 +1351,29 @@ class LiveRecorder:
 
     # ---------- positions ----------
 
-    def upsert_position(self, stock_code: str, shares: int, avg_cost: float) -> None:
+    def upsert_position(
+        self,
+        stock_code: str,
+        shares: int,
+        avg_cost: float,
+        opened_trade_date: str | None = None,
+    ) -> None:
         """人工 seed / 校正持仓入口。"""
         with self._conn() as conn:
             if shares > 0:
                 conn.execute(
-                    "INSERT OR REPLACE INTO positions (stock_code, shares, avg_cost) "
-                    "VALUES (?,?,?)",
-                    (stock_code, shares, avg_cost),
+                    """INSERT INTO positions
+                       (stock_code, shares, avg_cost, opened_trade_date)
+                       VALUES (?,?,?,?)
+                       ON CONFLICT(stock_code) DO UPDATE SET
+                           shares=excluded.shares,
+                           avg_cost=excluded.avg_cost,
+                           opened_trade_date=COALESCE(
+                               excluded.opened_trade_date,
+                               positions.opened_trade_date
+                           ),
+                           updated_at=datetime('now', 'localtime')""",
+                    (stock_code, shares, avg_cost, opened_trade_date),
                 )
             else:
                 conn.execute(
@@ -1348,10 +1425,16 @@ class LiveRecorder:
     def get_positions(self) -> dict:
         with self._conn() as conn:
             rows = conn.execute("SELECT * FROM positions").fetchall()
-            return {
-                r["stock_code"]: {"shares": r["shares"], "avg_cost": r["avg_cost"]}
-                for r in rows
-            }
+            positions = {}
+            for row in rows:
+                value = {
+                    "shares": row["shares"],
+                    "avg_cost": row["avg_cost"],
+                }
+                if row["opened_trade_date"]:
+                    value["opened_trade_date"] = row["opened_trade_date"]
+                positions[row["stock_code"]] = value
+            return positions
 
     # ---------- 券商快照（二道对账）----------
 

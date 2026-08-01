@@ -1,4 +1,4 @@
-"""Refresh Phase S audit artifacts after metric/provenance schema hardening."""
+"""Verify current B6-M predictions and rebuild the B2-S baseline anchor."""
 
 from __future__ import annotations
 
@@ -18,14 +18,11 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from eval_protocol import yearly_ir  # noqa: E402
 from generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
-from phase_s_protocol import MODEL_REFS, select_valid_winner, sha256_file  # noqa: E402
+from phase_s_protocol import select_valid_winner, sha256_file  # noqa: E402
 from register_phase_s_experiment import (  # noqa: E402
-    bind_test_results,
-    bind_valid_results,
-    build_phase_s_baseline_anchor,
-    build_preregistered_row,
-    load_frozen_model,
+    build_strategy_baseline_promotion,
     load_registry,
+    upsert_baseline_anchor_row,
 )
 from run_strategy_sweep import (  # noqa: E402
     ANN_KEY,
@@ -121,81 +118,28 @@ def refresh_prediction_manifest(path: Path) -> dict[str, Any]:
 def refresh_all(root: Path, registry: Path) -> None:
     experiment_root = root / "backtest/experiments/strategy/20260801_b1_b6"
     manifest_path = experiment_root / "prediction_manifest.json"
-    manifest = refresh_prediction_manifest(manifest_path)
-    rebuilt = [
-        row
-        for row in load_registry(registry)
-        if row.get("exp_id")
-        not in {
-            "strategy-sweep/b1-m",
-            "strategy-sweep/b6-m",
-            "baseline/b1-s-on-b1-m",
-            "baseline/b1-s-on-b6-m",
-        }
-    ]
-    for model_ref in MODEL_REFS:
-        model_root = experiment_root / model_ref
-        valid_path = model_root / "valid_results.json"
-        valid_payload = refresh_comparison(
-            json.loads(valid_path.read_text(encoding="utf-8")),
-            recompute_yearly=False,
-            prediction_entry=next(
-                item for item in manifest["predictions"]
-                if item["model_ref"] == model_ref and item["pool"] == "csi1000" and item["segment"] == "valid"
-            ),
-        )
-        _write_json(valid_path, valid_payload)
-        attempt_path = model_root / "valid_results_attempt1.json"
-        if attempt_path.is_file():
-            _write_json(
-                attempt_path,
-                refresh_comparison(
-                    json.loads(attempt_path.read_text(encoding="utf-8")),
-                    recompute_yearly=False,
-                    prediction_entry=next(
-                        item for item in manifest["predictions"]
-                        if item["model_ref"] == model_ref and item["pool"] == "csi1000" and item["segment"] == "valid"
-                    ),
-                ),
-            )
-        pool_payloads = {}
-        for pool in ("csi1000", "csi300", "csi500"):
-            pool_path = model_root / f"test_{pool}.json"
-            refreshed = refresh_comparison(
-                json.loads(pool_path.read_text(encoding="utf-8")),
-                recompute_yearly=True,
-                prediction_entry=next(
-                    item for item in manifest["predictions"]
-                    if item["model_ref"] == model_ref and item["pool"] == pool and item["segment"] == "test"
-                ),
-            )
-            _write_json(pool_path, refreshed)
-            pool_payloads[pool] = refreshed
-        test_path = model_root / "test_results.json"
-        _write_json(
-            test_path,
-            {"schema_version": 1, "model_ref": model_ref, "pools": pool_payloads},
-        )
-
-        frozen = load_frozen_model(root, model_ref)
-        sweep = build_preregistered_row(
-            frozen,
-            manifest,
-            protocol_path="backtest/experiments/strategy/20260801_b1_b6/protocol.json",
-        )
-        sweep = bind_valid_results(sweep, valid_path)
-        sweep = bind_test_results(sweep, test_path)
-        rebuilt.extend([build_phase_s_baseline_anchor(sweep), sweep])
-
-    temporary = registry.with_name(registry.name + ".tmp")
-    temporary.write_text(
-        "".join(
-            json.dumps(row, ensure_ascii=False, allow_nan=False) + "\n"
-            for row in rebuilt
+    refresh_prediction_manifest(manifest_path)
+    rows = load_registry(registry)
+    sweep = next(
+        (
+            row
+            for row in rows
+            if row.get("exp_id") == "strategy-sweep/b6-m"
         ),
-        encoding="utf-8",
+        None,
     )
-    temporary.replace(registry)
+    if sweep is None:
+        raise ValueError("registry row missing: strategy-sweep/b6-m")
+    existing = next(
+        (row for row in rows if row.get("exp_id") == "baseline/b2-s-on-b6-m"),
+        None,
+    )
+    baseline = build_strategy_baseline_promotion(
+        sweep,
+        baseline_ref="B2-S v1.0",
+        promotion_date=existing.get("date") if existing else None,
+    )
+    upsert_baseline_anchor_row(registry, baseline)
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -210,7 +154,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     root = args.repo_root.resolve()
     registry = args.registry or root / "backtest/experiments/registry.jsonl"
     refresh_all(root, registry)
-    print("Phase S artifacts refreshed with cost-aware yearly IR and enforced provenance")
+    print("B6-M predictions verified and B2-S baseline anchor refreshed")
 
 
 if __name__ == "__main__":

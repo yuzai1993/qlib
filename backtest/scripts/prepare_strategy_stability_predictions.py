@@ -16,7 +16,7 @@ REPO_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
-from phase_s_protocol import MODEL_REFS, sha256_file  # noqa: E402
+from phase_s_protocol import CURRENT_MODEL_REFS, MODEL_REFS, sha256_file  # noqa: E402
 
 FULL_START = "2020-01-13"
 FULL_END = "2026-07-31"
@@ -190,7 +190,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT / "backtest/experiments/strategy-stability/20260801_full_period",
     )
-    parser.add_argument("--model-ref", nargs="+", choices=MODEL_REFS, default=list(MODEL_REFS))
+    parser.add_argument(
+        "--model-ref",
+        nargs="+",
+        choices=MODEL_REFS,
+        default=list(CURRENT_MODEL_REFS),
+    )
     return parser.parse_args(argv)
 
 

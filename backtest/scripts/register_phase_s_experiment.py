@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from datetime import date
 from pathlib import Path
 from typing import Any, Optional, Sequence
@@ -11,6 +12,7 @@ from typing import Any, Optional, Sequence
 from phase_s_protocol import (
     ACCOUNT,
     BASELINE_CANDIDATE_ID,
+    CURRENT_MODEL_REFS,
     EXCHANGE_KWARGS,
     MODEL_REFS,
     POOL_BENCHMARKS,
@@ -344,6 +346,210 @@ def build_phase_s_baseline_anchor(sweep_row: dict) -> dict[str, Any]:
     }
 
 
+def _baseline_slug(baseline_ref: str) -> str:
+    token = baseline_ref.strip().split()[0] if baseline_ref.strip() else ""
+    if not token:
+        raise ValueError("baseline_ref must start with a version token, e.g. 'B2-S v1.0'")
+    return token.lower()
+
+
+def _promoted_config_path(raw: Any) -> Any:
+    if not isinstance(raw, str):
+        return raw
+    marker = "/backtest/configs/strategy-sweep/b6-m/"
+    if marker in raw:
+        return raw.replace(marker, "/backtest/configs/baseline-strategy/b2-s/", 1)
+    prefix = "backtest/configs/strategy-sweep/b6-m/"
+    if raw.startswith(prefix):
+        return raw.replace(prefix, "backtest/configs/baseline-strategy/b2-s/", 1)
+    return raw
+
+
+def build_strategy_baseline_promotion(
+    sweep_row: dict,
+    *,
+    baseline_ref: str,
+    promotion_date: Optional[str] = None,
+) -> dict[str, Any]:
+    """Promote a completed sweep's frozen valid winner to the Phase S baseline anchor.
+
+    The emitted row follows the retention schema enforced by
+    ``cleanup_experiment_artifacts.select_phase_s_retained_result_paths``: one
+    candidate per pool rather than the sweep's full candidate list.
+    """
+    model_ref = str(sweep_row.get("model_ref") or "")
+    if sweep_row.get("phase") != "S" or model_ref not in MODEL_REFS:
+        raise ValueError("strategy baseline promotion requires a Phase S sweep row")
+    if sweep_row.get("state") != "test_complete":
+        raise ValueError(
+            f"strategy baseline promotion requires state test_complete, "
+            f"found {sweep_row.get('state')!r}"
+        )
+    candidate_id = str(sweep_row.get("selected_candidate_id") or "")
+    if not candidate_id:
+        raise ValueError("sweep row has no frozen valid winner")
+    if candidate_id == BASELINE_CANDIDATE_ID:
+        raise ValueError(
+            "selected_strategy is the incumbent B1-S candidate; nothing to promote"
+        )
+    strategy = sweep_row.get("selected_strategy") or {}
+    if strategy.get("candidate_id") != candidate_id:
+        raise ValueError("selected_strategy does not match selected_candidate_id")
+
+    metrics_summary: dict[str, dict[str, float]] = {}
+    test_results: dict[str, dict] = {}
+    result_dirs: list[str] = []
+    configs: list[str] = []
+    for pool in POOL_BENCHMARKS:
+        candidates = (sweep_row.get("test_results") or {}).get(pool) or []
+        winner = next(
+            (item for item in candidates if item.get("candidate_id") == candidate_id),
+            None,
+        )
+        if winner is None:
+            raise ValueError(f"promoted candidate missing from test results: {pool}")
+        if winner.get("status") != "success":
+            raise ValueError(f"promoted candidate is not successful: {pool}")
+        if not winner.get("result_dir"):
+            raise ValueError(f"promoted candidate has no result_dir: {pool}")
+        for key in (
+            "excess_with_cost_information_ratio",
+            "excess_with_cost_annualized_return",
+            "excess_with_cost_max_drawdown",
+        ):
+            try:
+                value = float(winner[key])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError(f"promoted candidate metric missing: {pool}/{key}") from exc
+            if not math.isfinite(value):
+                raise ValueError(f"promoted candidate metric is not finite: {pool}/{key}")
+        winner = dict(winner)
+        winner["config"] = _promoted_config_path(winner.get("config"))
+        test_results[pool] = winner
+        metrics_summary[pool] = {
+            "ir": winner["excess_with_cost_information_ratio"],
+            "ann": winner["excess_with_cost_annualized_return"],
+            "mdd": winner["excess_with_cost_max_drawdown"],
+        }
+        result_dirs.append(winner["result_dir"])
+        if winner.get("config"):
+            configs.append(winner["config"])
+
+    valid_winner = next(
+        (
+            item
+            for item in sweep_row.get("valid_results") or []
+            if item.get("candidate_id") == candidate_id
+        ),
+        None,
+    )
+    if valid_winner and valid_winner.get("config"):
+        configs.insert(0, _promoted_config_path(valid_winner["config"]))
+    prediction_artifacts = [
+        item
+        for item in sweep_row.get("prediction_artifacts") or []
+        if item.get("segment") == "test"
+        or (item.get("pool") == "csi1000" and item.get("segment") == "valid")
+    ]
+    expected_predictions = {
+        (model_ref, "csi1000", "valid"),
+        (model_ref, "csi1000", "test"),
+        (model_ref, "csi300", "test"),
+        (model_ref, "csi500", "test"),
+    }
+    prediction_identities = {
+        (item.get("model_ref"), item.get("pool"), item.get("segment"))
+        for item in prediction_artifacts
+    }
+    if (
+        len(prediction_artifacts) != len(expected_predictions)
+        or prediction_identities != expected_predictions
+    ):
+        raise ValueError("strategy baseline prediction artifact matrix is incomplete")
+    if len(configs) != 4 or len(set(configs)) != 4:
+        raise ValueError("strategy baseline requires four distinct test configs")
+    configs.insert(
+        0,
+        str(
+            (
+                REPO_ROOT
+                / "backtest/configs/strategy-stability/b6-m/"
+                "topk-t30-d2-h20_csi1000_full.yaml"
+            ).resolve()
+        ),
+    )
+
+    return {
+        "exp_id": f"baseline/{_baseline_slug(baseline_ref)}-on-{model_ref}",
+        "direction": "baseline-strategy",
+        "phase": "S",
+        "state": "baseline",
+        "date": promotion_date or str(date.today()),
+        "conclusion": "baseline",
+        "hypothesis": (
+            f"{baseline_ref} 为当前研究策略基线：在冻结 {model_ref.upper()} 分数上，"
+            f"由 CSI1000 valid 选型冻结的 {candidate_id} 胜者提升而来。"
+        ),
+        "baseline_ref": baseline_ref,
+        "frozen_model_ref": sweep_row.get("frozen_model_ref"),
+        "model_ref": model_ref,
+        "model_manifest": sweep_row.get("model_manifest"),
+        "model_path": sweep_row.get("model_path"),
+        "model_sha256": sweep_row.get("model_sha256"),
+        "promoted_from": sweep_row.get("exp_id"),
+        "selection_pool": sweep_row.get("selection_pool"),
+        "selection_segment": sweep_row.get("selection_segment"),
+        "selection_metric": sweep_row.get("selection_metric"),
+        "selection_rule": sweep_row.get("selection_rule"),
+        "test_pools": list(POOL_BENCHMARKS),
+        "test_segment": sweep_row.get("test_segment"),
+        "data_version": sweep_row.get("data_version"),
+        "account": sweep_row.get("account"),
+        "risk_degree": sweep_row.get("risk_degree"),
+        "fees": sweep_row.get("fees"),
+        "benchmarks": sweep_row.get("benchmarks"),
+        "strategy": strategy,
+        "configs": configs,
+        "prediction_artifacts": prediction_artifacts,
+        "valid_result_path": sweep_row.get("valid_result_path"),
+        "valid_result_sha256": sweep_row.get("valid_result_sha256"),
+        "metrics_summary": metrics_summary,
+        "test_results": test_results,
+        "result_dirs": result_dirs,
+        "cleanup_retention_eligible": True,
+        "note": (
+            "当前 Phase S 策略基线；test 数值来自冻结 valid 胜者的一次性 test 回测，"
+            "未参与任何选型"
+        ),
+    }
+
+
+def upsert_baseline_anchor_row(registry: Path, row: dict) -> None:
+    """Insert or replace a Phase S baseline anchor without the sweep state machine."""
+    if row.get("direction") != "baseline-strategy" or row.get("state") != "baseline":
+        raise ValueError("baseline anchor upsert requires a baseline-strategy row")
+    rows = load_registry(registry)
+    matches = [i for i, current in enumerate(rows) if current.get("exp_id") == row["exp_id"]]
+    if len(matches) > 1:
+        raise ValueError(f"duplicate registry exp_id: {row['exp_id']}")
+    if matches:
+        if rows[matches[0]] != row:
+            raise ValueError(
+                f"refusing to rewrite baseline history for {row['exp_id']}; "
+                "use a new baseline version"
+            )
+        return
+    else:
+        rows.append(row)
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    temporary = registry.with_name(registry.name + ".tmp")
+    temporary.write_text(
+        "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in rows),
+        encoding="utf-8",
+    )
+    temporary.replace(registry)
+
+
 def write_protocol(path: Path) -> None:
     payload = {
         "schema_version": 1,
@@ -352,7 +558,7 @@ def write_protocol(path: Path) -> None:
         "model_source": "backtest/models/baselines/<model-ref>/manifest.json",
         "models": {
             model_ref: {"strategy_grid": strategy_grid(model_ref)}
-            for model_ref in MODEL_REFS
+            for model_ref in CURRENT_MODEL_REFS
         },
         "selection_pool": "csi1000",
         "selection_segment": list(VALID_SEGMENT),
@@ -388,6 +594,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     test = sub.add_parser("test")
     test.add_argument("--model-ref", required=True, choices=MODEL_REFS)
     test.add_argument("--result", required=True, type=Path)
+    promote = sub.add_parser("promote-baseline")
+    promote.add_argument("--model-ref", required=True, choices=MODEL_REFS)
+    promote.add_argument("--baseline-ref", required=True)
     return parser.parse_args(argv)
 
 
@@ -409,6 +618,15 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             protocol_path=args.protocol_path,
         )
         upsert_registry_row(args.registry, row, expected_previous_state=None)
+    elif args.command == "promote-baseline":
+        sweep = next(
+            (row for row in load_registry(args.registry) if row.get("exp_id") == exp_id),
+            None,
+        )
+        if sweep is None:
+            raise ValueError(f"registry row missing: {exp_id}")
+        row = build_strategy_baseline_promotion(sweep, baseline_ref=args.baseline_ref)
+        upsert_baseline_anchor_row(args.registry, row)
     else:
         current = next(
             (row for row in load_registry(args.registry) if row.get("exp_id") == exp_id),

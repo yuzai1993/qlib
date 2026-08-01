@@ -22,6 +22,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from config_loader import load_config  # noqa: E402
 from eval_ic_multi_pool import _build_dataset, _init_qlib  # noqa: E402
 from phase_s_protocol import (  # noqa: E402
+    CURRENT_MODEL_REFS,
     MODEL_REFS,
     POOL_BENCHMARKS,
     TEST_SEGMENT,
@@ -195,7 +196,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT / "backtest/experiments/strategy/20260801_b1_b6",
     )
-    parser.add_argument("--model-ref", nargs="+", choices=MODEL_REFS, default=list(MODEL_REFS))
+    parser.add_argument(
+        "--model-ref",
+        nargs="+",
+        choices=MODEL_REFS,
+        default=list(CURRENT_MODEL_REFS),
+    )
     parser.add_argument("--pools", nargs="+", default=list(POOL_BENCHMARKS))
     parser.add_argument("--segments", nargs="+", choices=("valid", "test"), default=["valid", "test"])
     return parser.parse_args(argv)

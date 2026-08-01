@@ -181,7 +181,9 @@ def test_non_selecting_stability_direction_uses_honest_audit_table_without_ir():
     assert "扣费超额IR" not in headers
     assert headers == ["实验名", "模型", "状态", "成功/无效/失败", "详细报告"]
     assert "表格第一行" not in section.get_text()
-    assert "独立报告每个模型表首行" in section.get_text()
+    assert "B2-S 基线位于独立报告首行" in section.get_text()
+    assert "strategy-stability-full-period/b6-m" in section.get_text()
+    assert "strategy-stability-full-period/b1-m" not in section.get_text()
 
 
 def test_baseline_table_is_chronological_but_historical_b5_group_keeps_b5():

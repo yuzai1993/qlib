@@ -2,7 +2,7 @@ run:
   mode: pred_backtest
   note: strategy_stability_topk-t30-d2-h20
   n_runs: 1
-  generate_figures: false
+  generate_figures: true
 data:
   provider_uri: ~/.qlib/qlib_data/cn_data
   region: cn

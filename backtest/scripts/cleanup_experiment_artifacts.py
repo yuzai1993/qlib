@@ -18,6 +18,18 @@ PHASE_S_POOLS = ("csi1000", "csi300", "csi500")
 PHASE_S_BASELINE_ID = "topk-t10-d2-h1"
 
 
+def _current_phase_s_baseline(rows: Sequence[dict]) -> dict | None:
+    anchors = [
+        row
+        for row in rows
+        if row.get("phase") == "S"
+        and row.get("conclusion") == "baseline"
+        and row.get("direction") == "baseline-strategy"
+        and row.get("cleanup_retention_eligible") is True
+    ]
+    return anchors[-1] if anchors else None
+
+
 def load_registry(path: Path) -> list[dict]:
     return [
         json.loads(line)
@@ -218,7 +230,52 @@ def _retained_result_dirs(
 
 
 def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
-    """Return final baseline/winner test sessions for every completed Phase S row."""
+    """Return the three test sessions of the latest registered Phase S baseline."""
+    anchor = _current_phase_s_baseline(rows)
+    if anchor is not None:
+        exp_id = str(anchor.get("exp_id") or "")
+        if anchor.get("state") != "baseline":
+            raise ValueError(f"Phase S baseline row is malformed: {exp_id}")
+        candidate_id = str((anchor.get("strategy") or {}).get("candidate_id") or "")
+        if not candidate_id:
+            raise ValueError(f"Phase S baseline strategy is missing: {exp_id}")
+        test_results = anchor.get("test_results") or {}
+        if set(test_results) != set(PHASE_S_POOLS):
+            raise ValueError(f"Phase S baseline test matrix is incomplete: {exp_id}")
+        retained = set()
+        for pool in PHASE_S_POOLS:
+            candidate = test_results[pool]
+            if candidate.get("candidate_id") != candidate_id:
+                raise ValueError(
+                    f"Phase S baseline candidate mismatch: {exp_id}/{pool}"
+                )
+            raw = candidate.get("result_dir")
+            if not isinstance(raw, str) or not raw:
+                raise ValueError(f"Phase S baseline result_dir missing: {exp_id}/{pool}")
+            retained.add(raw)
+        if len(retained) != len(PHASE_S_POOLS):
+            raise ValueError(
+                f"Phase S baseline must reference three distinct test sessions: {exp_id}"
+            )
+        interactive = anchor.get("interactive_full_period_result")
+        if interactive is not None:
+            if not isinstance(interactive, dict):
+                raise ValueError(
+                    f"Phase S baseline interactive result is malformed: {exp_id}"
+                )
+            raw = interactive.get("result_dir")
+            if not isinstance(raw, str) or not raw:
+                raise ValueError(
+                    f"Phase S baseline interactive result_dir missing: {exp_id}"
+                )
+            if raw in retained:
+                raise ValueError(
+                    f"Phase S baseline interactive result must be a distinct session: {exp_id}"
+                )
+            retained.add(raw)
+        return retained
+
+    # Compatibility path for registries created before strategy baseline promotion.
     retained: set[str] = set()
     for row in rows:
         if row.get("phase") != "S":
@@ -298,6 +355,79 @@ def _retained_phase_s_dirs(
             continue
         retained.add(candidate)
     return sorted(retained)
+
+
+def _repo_resolved(repo_root: Path, raw: Any) -> Path | None:
+    if not isinstance(raw, str) or not raw:
+        return None
+    path = Path(raw)
+    return path.resolve() if path.is_absolute() else (repo_root / path).resolve()
+
+
+def _validate_phase_s_baseline_sessions(
+    repo_root: Path,
+    anchor: dict,
+    errors: list[str],
+) -> None:
+    """Bind each retained Phase S session to its pool-specific registry metadata."""
+    strategy = anchor.get("strategy") or {}
+    test_segment = anchor.get("test_segment") or []
+    fees = anchor.get("fees") or {}
+    benchmarks = anchor.get("benchmarks") or {}
+    for pool in PHASE_S_POOLS:
+        expected = (anchor.get("test_results") or {}).get(pool) or {}
+        session = _repo_resolved(repo_root, expected.get("result_dir"))
+        if session is None:
+            errors.append(f"Phase S baseline result_dir missing: {pool}")
+            continue
+        meta_path = session / "meta.json"
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"Phase S baseline metadata unreadable: {pool}: {exc}")
+            continue
+
+        backtest = meta.get("backtest") or {}
+        actual_strategy = meta.get("strategy") or {}
+        expected_strategy = {
+            "class": strategy.get("strategy_class"),
+            "risk_degree": anchor.get("risk_degree"),
+            "topk": strategy.get("topk"),
+            "n_drop": strategy.get("n_drop"),
+            "hold_thresh": strategy.get("hold_thresh"),
+        }
+        mismatches = []
+        if _repo_resolved(repo_root, meta.get("config_path")) != _repo_resolved(
+            repo_root, expected.get("config")
+        ):
+            mismatches.append("config_path")
+        if _repo_resolved(repo_root, meta.get("source_pred")) != _repo_resolved(
+            repo_root, expected.get("source_pred")
+        ):
+            mismatches.append("source_pred")
+        if meta.get("source_pred_sha256") != expected.get("source_pred_sha256"):
+            mismatches.append("source_pred_sha256")
+        if len(test_segment) != 2 or [backtest.get("start_time"), backtest.get("end_time")] != list(
+            test_segment
+        ):
+            mismatches.append("test_segment")
+        if backtest.get("benchmark") != benchmarks.get(pool):
+            mismatches.append("benchmark")
+        if backtest.get("account") != anchor.get("account"):
+            mismatches.append("account")
+        exchange = backtest.get("exchange_kwargs") or {}
+        if any(exchange.get(key) != value for key, value in fees.items()):
+            mismatches.append("fees")
+        if any(
+            actual_strategy.get(key) != value
+            for key, value in expected_strategy.items()
+        ):
+            mismatches.append("strategy")
+        if mismatches:
+            errors.append(
+                f"Phase S baseline metadata mismatch for {pool}: "
+                + ", ".join(mismatches)
+            )
 
 
 def _train_experiment_ids(
@@ -417,6 +547,9 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
         if roots_safe
         else []
     )
+    phase_s_anchor = _current_phase_s_baseline(rows)
+    if roots_safe and phase_s_anchor is not None:
+        _validate_phase_s_baseline_sessions(repo_root, phase_s_anchor, errors)
     keep_result_dirs = sorted(set(phase_m_result_dirs) | set(phase_s_result_dirs))
     all_result_dirs = _safe_child_dirs(result_root, errors) if roots_safe else []
     delete_result_dirs = [

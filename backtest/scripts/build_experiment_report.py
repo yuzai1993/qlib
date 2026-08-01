@@ -490,15 +490,18 @@ def build_html(rows: Sequence[dict]) -> str:
             and all(row.get("conclusion") == "diagnostic_no_selection" for row in group)
         )
         if is_stability_diagnostic:
+            current_group = [
+                row for row in group if row.get("model_ref") == "b6-m"
+            ]
             anchor = _slug(direction)
             toc_items.append(
-                f"<li><a href='#{anchor}'>{_esc(direction)}</a>（{len(group)} 个实验）</li>"
+                f"<li><a href='#{anchor}'>{_esc(direction)}</a>（{len(current_group)} 个实验）</li>"
             )
             sections.append(
                 f"<section id='{anchor}'><h2>{_esc(direction)}</h2>"
-                "<p class='meta'>诊断协议：B1-S 基线位于独立报告每个模型表首行；"
+                "<p class='meta'>诊断协议：B2-S 基线位于独立报告首行；"
                 "本登记摘要不注入跨模型基线，也不产生选型结论。</p>"
-                f"{_build_stability_audit_table(group)}</section>"
+                f"{_build_stability_audit_table(current_group)}</section>"
             )
             continue
         table_rows, baseline_ref = _with_baseline_first(rows, group)

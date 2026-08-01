@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
-from phase_s_protocol import BASELINE_CANDIDATE_ID, MODEL_REFS
+from phase_s_protocol import CURRENT_STRATEGY_BASELINE_ID, strategy_grid
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
@@ -45,7 +45,12 @@ def _fmt(value: Any, percent: bool = False) -> str:
 
 def _ordered(row: dict) -> list[dict]:
     results = list(row.get("diagnostic_results") or [])
-    return sorted(results, key=lambda item: (item.get("candidate_id") != BASELINE_CANDIDATE_ID,))
+    return sorted(
+        results,
+        key=lambda item: (
+            item.get("candidate_id") != CURRENT_STRATEGY_BASELINE_ID,
+        ),
+    )
 
 
 def _table(rows: list[dict], *, yearly: bool = False, table_class: str = "") -> str:
@@ -92,27 +97,29 @@ def _benchmark_context(rows: list[dict]) -> str:
 
 
 def build_html(rows: Sequence[dict]) -> str:
-    by_model = {
-        model_ref: row
-        for model_ref in MODEL_REFS
+    b6_matches = [
+        row
         for row in rows
-        if row.get("exp_id") == f"strategy-stability-full-period/{model_ref}"
+        if row.get("exp_id") == "strategy-stability-full-period/b6-m"
         and row.get("conclusion") == "diagnostic_no_selection"
-    }
-    sections = []
-    for model_ref in MODEL_REFS:
-        row = by_model.get(model_ref, {})
-        results = _ordered(row)
-        sections.append(
-            f'<section class="model" id="{model_ref}"><h2>{model_ref.upper()}</h2>'
-            '<h3>全周期连续组合（2020-01-13 至 2026-07-31）</h3>'
-            + _benchmark_context(results)
-            + _table(results, table_class="full-period")
-            + '<h3>自然年拆分</h3><p class="note">2020 与 2026 为部分年度；其余年份为完整自然年。</p>'
-            + _table(results, yearly=True, table_class="yearly")
-            + "</section>"
-        )
-    b6 = _ordered(by_model.get("b6-m", {}))
+    ]
+    if len(b6_matches) != 1:
+        raise ValueError("report requires exactly one B6-M stability diagnostic row")
+    b6_row = b6_matches[0]
+    b6 = _ordered(b6_row)
+    expected_ids = {item["candidate_id"] for item in strategy_grid("b6-m")}
+    actual_ids = {item.get("candidate_id") for item in b6}
+    if actual_ids != expected_ids or len(b6) != len(expected_ids):
+        raise ValueError("B6-M stability diagnostic candidate set is incomplete")
+    sections = [
+        '<section class="model" id="b6-m"><h2>B6-M</h2>'
+        '<h3>全周期连续组合（2020-01-13 至 2026-07-31）</h3>'
+        + _benchmark_context(b6)
+        + _table(b6, table_class="full-period")
+        + '<h3>自然年拆分</h3><p class="note">2020 与 2026 为部分年度；其余年份为完整自然年。</p>'
+        + _table(b6, yearly=True, table_class="yearly")
+        + "</section>"
+    ]
     neighborhood = [
         item for item in b6
         if item.get("topk") == 30 and item.get("n_drop") in (2, 3) and item.get("hold_thresh") in (5, 10, 20)
@@ -121,8 +128,6 @@ def build_html(rows: Sequence[dict]) -> str:
         '<section id="b6-neighborhood"><h2>B6-M Top30 邻域对照</h2>'
         '<p class="note">固定 Top30，对比 d2/d3 与 h5/h10/h20；仅作敏感性诊断。</p>'
         + _table(neighborhood, table_class="full-period")
-        + '<h3>邻域自然年拆分</h3>'
-        + _table(neighborhood, yearly=True, table_class="yearly")
         + "</section>"
     )
     css = """

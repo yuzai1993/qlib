@@ -15,6 +15,11 @@ sys.path.insert(0, str(SCRIPTS))
 import phase_s_protocol as protocol  # noqa: E402
 
 
+def test_current_phase_s_model_set_excludes_cleaned_historical_b1():
+    assert protocol.CURRENT_MODEL_REFS == ("b6-m",)
+    assert "b1-m" in protocol.MODEL_REFS
+
+
 def _write_frozen_repo(tmp_path: Path, model_ref: str = "b1-m") -> tuple[Path, Path, str]:
     baseline = tmp_path / "backtest" / "models" / "baselines" / model_ref
     model = baseline / "seed2000" / "trained_model"

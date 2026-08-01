@@ -15,6 +15,7 @@ from phase_s_protocol import (
     BASELINE_CANDIDATE_ID,
     EXCHANGE_KWARGS,
     FULL_SEGMENT,
+    CURRENT_MODEL_REFS,
     MODEL_REFS,
     POOL_BENCHMARKS,
     RISK_DEGREE,
@@ -231,7 +232,10 @@ def write_protocol(path: Path) -> None:
         "date": str(date.today()),
         "phase": "S",
         "purpose": "retrospective_stability_diagnostic_no_selection",
-        "models": {model_ref: {"strategy_grid": strategy_grid(model_ref)} for model_ref in MODEL_REFS},
+        "models": {
+            model_ref: {"strategy_grid": strategy_grid(model_ref)}
+            for model_ref in CURRENT_MODEL_REFS
+        },
         "pool": "csi1000",
         "benchmark": POOL_BENCHMARKS["csi1000"],
         "period": list(FULL_SEGMENT),

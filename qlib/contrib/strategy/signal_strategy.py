@@ -20,7 +20,10 @@ from qlib.log import get_module_logger
 from qlib.utils import get_pre_trading_date, load_dataset
 from qlib.contrib.strategy.order_generator import OrderGenerator, OrderGenWOInteract
 from qlib.contrib.strategy.optimizer import EnhancedIndexingOptimizer
-from qlib.contrib.strategy.topk_dropout import select_topk_dropout
+from qlib.contrib.strategy.topk_dropout import (
+    calculate_topk_buy_value,
+    select_topk_dropout,
+)
 
 
 class BaseSignalStrategy(BaseStrategy, ABC):
@@ -87,6 +90,7 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         method_sell="bottom",
         method_buy="top",
         hold_thresh=1,
+        initial_buy_count=None,
         only_tradable=False,
         forbid_all_trade_at_limit=True,
         **kwargs,
@@ -105,6 +109,9 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         hold_thresh : int
             minimum holding days
             before sell stock , will check current.get_stock_count(order.stock_id) >= self.hold_thresh.
+        initial_buy_count : int or None
+            When set, an underfilled portfolio buys at most this many new
+            stocks per trading date and does not drop holdings until full.
         only_tradable : bool
             will the strategy only consider the tradable stock when buying and selling.
 
@@ -133,6 +140,7 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         self.method_sell = method_sell
         self.method_buy = method_buy
         self.hold_thresh = hold_thresh
+        self.initial_buy_count = initial_buy_count
         self.only_tradable = only_tradable
         self.forbid_all_trade_at_limit = forbid_all_trade_at_limit
 
@@ -194,6 +202,11 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         # load score
         cash = current_temp.get_cash()
         current_stock_list = current_temp.get_stock_list()
+        decision_total_value = current_temp.calculate_value()
+        staged_initialization = (
+            self.initial_buy_count is not None
+            and len(current_stock_list) < self.topk
+        )
         if (
             not self.only_tradable
             and self.method_buy == "top"
@@ -204,13 +217,20 @@ class TopkDropoutStrategy(BaseSignalStrategy):
                 current_stock_list,
                 topk=self.topk,
                 n_drop=self.n_drop,
+                initial_buy_count=self.initial_buy_count,
             )
             sell = selection.sell
             buy = selection.buy
         else:
             # Preserve the configurable random/tradability-filtered behavior.
             last = pred_score.reindex(current_stock_list).sort_values(ascending=False).index
-            if self.method_buy == "top":
+            if staged_initialization:
+                buy = get_first_n(
+                    pred_score[~pred_score.index.isin(last)].sort_values(ascending=False).index,
+                    min(self.initial_buy_count, self.topk - len(last)),
+                )
+                sell = []
+            elif self.method_buy == "top":
                 today = get_first_n(
                     pred_score[~pred_score.index.isin(last)].sort_values(ascending=False).index,
                     self.n_drop + self.topk - len(last),
@@ -225,19 +245,20 @@ class TopkDropoutStrategy(BaseSignalStrategy):
                     today = candi
             else:
                 raise NotImplementedError(f"This type of input is not supported")
-            comb = pred_score.reindex(last.union(pd.Index(today))).sort_values(ascending=False).index
+            if not staged_initialization:
+                comb = pred_score.reindex(last.union(pd.Index(today))).sort_values(ascending=False).index
 
-            if self.method_sell == "bottom":
-                sell = last[last.isin(get_last_n(comb, self.n_drop))]
-            elif self.method_sell == "random":
-                candi = filter_stock(last)
-                try:
-                    sell = pd.Index(np.random.choice(candi, self.n_drop, replace=False) if len(last) else [])
-                except ValueError:  # No enough candidates
-                    sell = candi
-            else:
-                raise NotImplementedError(f"This type of input is not supported")
-            buy = today[: len(sell) + self.topk - len(last)]
+                if self.method_sell == "bottom":
+                    sell = last[last.isin(get_last_n(comb, self.n_drop))]
+                elif self.method_sell == "random":
+                    candi = filter_stock(last)
+                    try:
+                        sell = pd.Index(np.random.choice(candi, self.n_drop, replace=False) if len(last) else [])
+                    except ValueError:  # No enough candidates
+                        sell = candi
+                else:
+                    raise NotImplementedError(f"This type of input is not supported")
+                buy = today[: len(sell) + self.topk - len(last)]
         for code in current_stock_list:
             if not self.trade_exchange.is_stock_tradable(
                 stock_id=code,
@@ -272,7 +293,14 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         # buy new stock
         # note the current has been changed
         # current_stock_list = current_temp.get_stock_list()
-        value = cash * self.risk_degree / len(buy) if len(buy) > 0 else 0
+        value = calculate_topk_buy_value(
+            cash=cash,
+            total_value=decision_total_value,
+            buy_count=len(buy),
+            risk_degree=self.risk_degree,
+            topk=self.topk,
+            staged=staged_initialization,
+        )
 
         # open_cost should be considered in the real trading environment, while the backtest in evaluate.py does not
         # consider it as the aim of demo is to accomplish same strategy as evaluate.py, so comment out this line

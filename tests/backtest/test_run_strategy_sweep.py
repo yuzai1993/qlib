@@ -57,6 +57,23 @@ def test_valid_config_uses_csi1000_dates_500k_and_live_costs():
     }
 
 
+def test_topk_config_uses_candidate_risk_degree_when_preregistered():
+    candidate = {
+        "candidate_id": "topk-t30-d2-h20-r090",
+        "strategy_class": "TopkDropoutStrategy",
+        "topk": 30,
+        "n_drop": 2,
+        "hold_thresh": 20,
+        "risk_degree": 0.90,
+    }
+
+    cfg = sweep.build_sweep_config(
+        _base(), candidate, pool="csi1000", segment="valid"
+    )
+
+    assert cfg["strategy"]["kwargs"]["risk_degree"] == 0.90
+
+
 def test_soft_topk_config_uses_precomputed_absolute_impact_limit():
     candidate = next(
         row

@@ -73,6 +73,12 @@ def test_load_new_csi1000_paper_config():
     assert cfg["storage"]["db_path"].endswith(
         "csi1000_b6m_b2s_postclose.db"
     )
+    assert cfg["provenance"]["strategy_baseline_config"].endswith(
+        "strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml"
+    )
+    assert cfg["provenance"]["strategy_baseline_sha256"] == (
+        "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+    )
 
 
 @pytest.mark.parametrize(

@@ -15,7 +15,9 @@
     "manifest": "backtest/models/baselines/b6-m/manifest.json",
     "artifact": "backtest/models/baselines/b6-m/seed4000/trained_model",
     "config": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
-    "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+    "strategy_baseline_config": "backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml",
+    "strategy_baseline_sha256": "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
   },
   "handler": {
     "class": "backtest.features.technical.Alpha158Technical",

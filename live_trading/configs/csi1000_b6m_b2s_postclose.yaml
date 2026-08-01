@@ -10,6 +10,11 @@ data:
 account:
   opening_cash: 500000.0
 
+provenance:
+  repository: "/Users/yuxianqi/Project/qlib_exp"
+  strategy_baseline_config: "backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml"
+  strategy_baseline_sha256: "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+
 model:
   experiment_name: "baseline/b6-m"
   experiment_id: "frozen-baseline"

@@ -13,6 +13,7 @@
 | 股票池 / benchmark | CSI1000 / `SH000852` |
 | 初始资金 | 500,000 元，空仓 |
 | 策略 | Top30 / Drop2 / initial Top2 / Hold20 / risk 0.95 |
+| 研究策略基线 | `qlib_exp/backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml` |
 | 模型 | B6-M seed 4000，SHA-256 `368a503c...e6325` |
 | 账本 | `live_trading/data/csi1000_b6m_b2s_postclose.db` |
 | 账户环境 | `SIMULATION`，`allow_real_money: false` |

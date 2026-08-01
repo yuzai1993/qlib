@@ -142,7 +142,7 @@ def build_sweep_config(
             "n_drop": candidate["n_drop"],
             "hold_thresh": candidate["hold_thresh"],
             "kwargs": {
-                "risk_degree": RISK_DEGREE,
+                "risk_degree": candidate.get("risk_degree", RISK_DEGREE),
                 "only_tradable": False,
                 "forbid_all_trade_at_limit": False,
             },

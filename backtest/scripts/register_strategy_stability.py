@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 from datetime import date
@@ -119,9 +120,17 @@ def _contains_forbidden_metric(value: Any) -> bool:
     return False
 
 
-def bind_results(row: dict, result_path: Path) -> dict:
-    if row.get("state") != "preregistered":
-        raise ValueError("diagnostic results require preregistered state")
+def bind_results(
+    row: dict, result_path: Path, *, repair_reason: Optional[str] = None
+) -> dict:
+    state = row.get("state")
+    is_repair = state == "complete" and bool(repair_reason)
+    if state != "preregistered" and not is_repair:
+        raise ValueError(
+            "diagnostic results require preregistered state or an explicit repair reason"
+        )
+    if state == "preregistered" and repair_reason:
+        raise ValueError("repair reason is only valid for a completed diagnostic")
     payload = json.loads(result_path.read_text(encoding="utf-8"))
     identity = (payload.get("model_ref"), payload.get("pool"), payload.get("segment"))
     if identity != (row.get("model_ref"), "csi1000", "full") or payload.get("period") != list(FULL_SEGMENT):
@@ -149,6 +158,17 @@ def bind_results(row: dict, result_path: Path) -> dict:
                 if not math.isfinite(value):
                     raise ValueError(f"non-finite diagnostic metric {key}")
     out = dict(row)
+    if is_repair:
+        history = copy.deepcopy(row.get("repair_history") or [])
+        history.append(
+            {
+                "date": str(date.today()),
+                "reason": repair_reason,
+                "diagnostic_result_path": row.get("diagnostic_result_path"),
+                "diagnostic_result_sha256": row.get("diagnostic_result_sha256"),
+            }
+        )
+        out["repair_history"] = history
     out.update(
         state="complete",
         conclusion="diagnostic_no_selection",
@@ -157,7 +177,11 @@ def bind_results(row: dict, result_path: Path) -> dict:
         diagnostic_results=results,
         result_dirs=list(dict.fromkeys(item["result_dir"] for item in results if item.get("result_dir"))),
         cleanup_retention_eligible=False,
-        note="全周期稳定性诊断完成；未选型，未改变实盘配置。",
+        note=(
+            "全周期稳定性诊断已修复补跑；未选型，未改变实盘配置。"
+            if is_repair
+            else "全周期稳定性诊断完成；未选型，未改变实盘配置。"
+        ),
     )
     return out
 
@@ -173,7 +197,22 @@ def upsert_diagnostic_row(
         previous = rows[matches[0]]
         if previous.get("state") != expected_previous_state:
             raise ValueError("diagnostic registry state mismatch")
-        if not (expected_previous_state == "preregistered" and row.get("state") == "complete"):
+        preregistered_finalization = (
+            expected_previous_state == "preregistered" and row.get("state") == "complete"
+        )
+        previous_history = previous.get("repair_history") or []
+        repaired_history = row.get("repair_history") or []
+        completed_repair = (
+            expected_previous_state == "complete"
+            and row.get("state") == "complete"
+            and repaired_history[:-1] == previous_history
+            and len(repaired_history) == len(previous_history) + 1
+            and repaired_history[-1].get("diagnostic_result_path")
+            == previous.get("diagnostic_result_path")
+            and repaired_history[-1].get("diagnostic_result_sha256")
+            == previous.get("diagnostic_result_sha256")
+        )
+        if not (preregistered_finalization or completed_repair):
             raise ValueError("invalid diagnostic state transition")
         rows[matches[0]] = row
     else:
@@ -223,6 +262,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     final = sub.add_parser("finalize")
     final.add_argument("--model-ref", choices=MODEL_REFS, required=True)
     final.add_argument("--result", type=Path, required=True)
+    final.add_argument("--repair-reason")
     return parser.parse_args(argv)
 
 
@@ -242,8 +282,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         row = next((item for item in load_registry(args.registry) if item.get("exp_id") == exp_id), None)
         if row is None:
             raise ValueError(f"registry row missing: {exp_id}")
-        row = bind_results(row, args.result)
-        previous = "preregistered"
+        previous = row.get("state")
+        row = bind_results(row, args.result, repair_reason=args.repair_reason)
     upsert_diagnostic_row(args.registry, row, expected_previous_state=previous)
     print(f"{row['exp_id']} -> {row['state']}")
 

@@ -100,7 +100,7 @@ def test_payload_rejects_missing_candidate():
         raise AssertionError("missing candidate must be rejected")
 
 
-def test_resume_retries_only_failed_and_preserves_terminal_invalid():
+def test_resume_retries_invalid_only_with_explicit_opt_in():
     grid = protocol.strategy_grid("b1-m")[:3]
     existing = [
         {**grid[0], "status": "success"},
@@ -109,5 +109,12 @@ def test_resume_retries_only_failed_and_preserves_terminal_invalid():
     ]
 
     selected = stability.select_resume_candidates(grid, existing)
+    repair_selected = stability.select_resume_candidates(
+        grid, existing, retry_invalid=True
+    )
 
     assert [item["candidate_id"] for item in selected] == [grid[2]["candidate_id"]]
+    assert [item["candidate_id"] for item in repair_selected] == [
+        grid[1]["candidate_id"],
+        grid[2]["candidate_id"],
+    ]

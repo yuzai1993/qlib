@@ -113,14 +113,18 @@ def build_diagnostic_payload(
 
 
 def select_resume_candidates(
-    candidates: list[dict[str, Any]], existing_rows: list[dict[str, Any]]
+    candidates: list[dict[str, Any]],
+    existing_rows: list[dict[str, Any]],
+    *,
+    retry_invalid: bool = False,
 ) -> list[dict[str, Any]]:
-    failed_ids = {
+    retryable_statuses = {"failed", "invalid"} if retry_invalid else {"failed"}
+    retryable_ids = {
         row.get("candidate_id")
         for row in existing_rows
-        if row.get("status") == "failed"
+        if row.get("status") in retryable_statuses
     }
-    return [row for row in candidates if row["candidate_id"] in failed_ids]
+    return [row for row in candidates if row["candidate_id"] in retryable_ids]
 
 
 def _load_report(result_dir: Path) -> pd.DataFrame:
@@ -161,6 +165,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--configs-dir", type=Path)
     parser.add_argument("--summary-output", required=True, type=Path)
     parser.add_argument("--resume-summary", type=Path)
+    parser.add_argument("--retry-invalid", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -184,7 +189,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         if existing_payload.get("model_ref") != args.model_ref:
             raise ValueError("resume summary model_ref does not match")
         candidates = select_resume_candidates(
-            candidates, existing_payload.get("all_rows") or []
+            candidates,
+            existing_payload.get("all_rows") or [],
+            retry_invalid=args.retry_invalid,
         )
     out_dir = (
         args.output_dir.resolve()

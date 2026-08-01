@@ -5,6 +5,8 @@
 This order generator is for strategies based on WeightStrategyBase
 """
 
+import math
+
 from ...backtest.position import Position
 from ...backtest.exchange import Exchange
 from ...backtest.decision import OrderDir
@@ -28,7 +30,7 @@ def _calculate_current_stock_value(
             end_time=end_time,
             direction=OrderDir.SELL,
         )
-        if price is None:
+        if price is None or not math.isfinite(price):
             price = current.get_stock_price(stock_id)
         value += price * amount
     return value

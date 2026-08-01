@@ -28,8 +28,15 @@ if ! mkdir "$LOCK_DIR" 2>/dev/null; then
     echo "another ${STAGE} monitor job holds $LOCK_DIR" >&2
     exit 75
 fi
-release_lock() { rmdir "$LOCK_DIR" 2>/dev/null || :; }
-trap release_lock EXIT
+finish_job() {
+    job_status=$?
+    trap - EXIT
+    rmdir "$LOCK_DIR" 2>/dev/null || :
+    echo "===== $(date '+%Y-%m-%d %H:%M:%S') exit status=${job_status} =====" \
+        >>"$LOG_FILE" 2>&1 || :
+    exit "$job_status"
+}
+trap finish_job EXIT
 
 {
     echo "===== $(date '+%Y-%m-%d %H:%M:%S') monitor stage=${STAGE} ====="
@@ -37,6 +44,5 @@ trap release_lock EXIT
     status=0
     "$PYTHON" live_trading/scripts/run_monitor.py \
         --config "$CONFIG_ID" --stage "$STAGE" || status=$?
-    echo "===== done status=${status} ====="
     exit "$status"
 } >>"$LOG_FILE" 2>&1

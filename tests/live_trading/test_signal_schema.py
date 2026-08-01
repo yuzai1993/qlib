@@ -218,10 +218,14 @@ def test_validate_fill_requires_mode():
 
 @pytest.mark.parametrize("changes", [
     {"requested_qty": -1},
+    {"requested_qty": True},
     {"filled_qty": -1},
+    {"filled_qty": True},
     {"requested_qty": 100, "filled_qty": 200},
     {"filled_qty": 1, "avg_price": 0.0},
     {"filled_qty": 0, "avg_price": -1.0},
+    {"avg_price": float("nan")},
+    {"avg_price": float("inf")},
 ])
 def test_validate_fill_rejects_bad_quantities_and_prices(changes):
     f = FillEvent(

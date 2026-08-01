@@ -172,10 +172,14 @@ def test_publish_retry_cannot_change_account_or_signal_date(tmp_path):
     for changed in (
         dataclasses.replace(_header(), account_id="DIFFERENT"),
         dataclasses.replace(_header(), signal_date="2026-07-10"),
-        dataclasses.replace(_header(), account_environment="REAL"),
     ):
         with pytest.raises(SchemaError, match="conflicts with durable plan"):
             recorder.record_publish_plan(changed, _orders())
+    with pytest.raises(SchemaError, match="SIMULATION"):
+        recorder.record_publish_plan(
+            dataclasses.replace(_header(), account_environment="REAL"),
+            _orders(),
+        )
 
     batch = recorder.get_batch(BATCH_ID)
     assert batch["account_id"] == "123456"

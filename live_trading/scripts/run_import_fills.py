@@ -2,7 +2,8 @@
 """导入 QMT 回执并对账。
 
 用法：
-    python live_trading/scripts/run_import_fills.py --config csi300_topk10_live
+    python live_trading/scripts/run_import_fills.py \
+        --config csi1000_b6m_b2s_postclose
 """
 
 import argparse

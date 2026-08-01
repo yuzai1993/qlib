@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
+import numpy as np
 import pandas as pd
 
 
@@ -37,7 +38,7 @@ def stable_rank_scores(scores: pd.Series) -> pd.Series:
         raise TypeError("scores must be a pandas Series")
     if scores.index.has_duplicates:
         raise ValueError("scores contain duplicate instruments")
-    clean = scores.dropna()
+    clean = scores[np.isfinite(scores)]
     if clean.empty:
         return clean
     frame = clean.rename("score").to_frame()

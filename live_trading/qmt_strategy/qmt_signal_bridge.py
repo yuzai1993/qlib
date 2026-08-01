@@ -9,7 +9,7 @@
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
 #     -> 15:05 after-hours fixed-price window:
-#        phase SELL: passorder all sells, wait terminal (or timeout)
+#        phase SELL: passorder all sells, then hold a fixed four-minute gate
 #        phase BUY : read actual cash and size target-value buys at official close
 #     -> QMT prType=49, price=0 (after-hours fixed price)
 #     -> poll order status by remark (client_order_id)
@@ -37,9 +37,11 @@ AFTER_HOURS_PRICE_TYPE = 49
 # Safety rollout gate. 100 means one-lot paper execution; set to 0 only after
 # shadow and one-lot acceptance are complete. This never enables real money.
 MAX_ORDER_QUANTITY = 100
+MAX_ORDERS_PER_BATCH = 40
+MAX_BATCH_BYTES = 256 * 1024
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
-SELL_WAIT_TIMEOUT_SEC = 4 * 60    # max wait for sells before starting buys
+SELL_WAIT_TIMEOUT_SEC = 4 * 60    # fixed sell settlement wait before buys
 TRADE_START = "15:05:00"
 CANCEL_AT = "15:28:00"
 FINALIZE_AT = "15:30:00"
@@ -69,6 +71,7 @@ class Batch(object):
         self.phase = "SELL"           # SELL -> BUY -> DONE
         self.phase_started = time.time()
         self.trading_started = False  # phase timer resets on first trade pass
+        self.execution_authorized = False  # frozen first-pass LIVE eligibility
         self.execution_live = False   # true only after both LIVE safety gates
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
@@ -136,6 +139,8 @@ def _load_processed():
 
 
 def _mark_processed(batch_id):
+    if batch_id in g.processed:
+        return
     g.processed.add(batch_id)
     with open(_state_file(), "a") as f:
         f.write(batch_id + "\n")
@@ -161,7 +166,9 @@ def _save_active_state(batch):
     payload = {
         "batch_id": batch.batch_id(),
         "phase": batch.phase,
+        "phase_started": batch.phase_started,
         "trading_started": batch.trading_started,
+        "execution_authorized": batch.execution_authorized,
         "execution_live": batch.execution_live,
         "submitted": sorted(batch.submitted.keys()),
         "fills": batch.fills,
@@ -190,19 +197,54 @@ def _load_active_state(batch):
         raise ValueError("active state batch_id mismatch")
     batch.phase = payload.get("phase", "SELL")
     batch.trading_started = bool(payload.get("trading_started", False))
+    batch.execution_authorized = bool(payload.get(
+        "execution_authorized", payload.get("execution_live", False),
+    ))
     batch.execution_live = bool(payload.get("execution_live", False))
     batch.submitted = dict((coid, True) for coid in payload.get("submitted", []))
     batch.fills = payload.get("fills", {})
     batch.remaining_cash = payload.get("remaining_cash")
     if payload.get("orders"):
         batch.orders = payload["orders"]
-    batch.phase_started = time.time()
+    try:
+        phase_started = float(payload.get("phase_started"))
+    except (TypeError, ValueError):
+        phase_started = time.time()
+    if not math.isfinite(phase_started) or phase_started <= 0.0:
+        phase_started = time.time()
+    batch.phase_started = phase_started
 
 
 def _remove_active_state(batch_id):
     path = _active_state_path(batch_id)
     if os.path.isfile(path):
         os.remove(path)
+
+
+def _fail_safe_corrupt_active_state(batch):
+    """Preserve corrupt state and assume every order may be in flight."""
+    path = _active_state_path(batch.batch_id())
+    if os.path.isfile(path):
+        suffix = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        corrupt = path + ".corrupt_" + suffix
+        sequence = 1
+        while os.path.isfile(corrupt):
+            corrupt = path + ".corrupt_" + suffix + "_" + str(sequence)
+            sequence += 1
+        os.rename(path, corrupt)
+    batch.phase = "SELL"
+    batch.phase_started = time.time()
+    batch.trading_started = True
+    batch.execution_authorized = False
+    batch.execution_live = (
+        batch.broker_authorized and batch.header.get("mode") == "LIVE"
+    )
+    batch.submitted = dict(
+        (order["client_order_id"], True) for order in batch.orders
+    )
+    batch.fills = {}
+    batch.remaining_cash = None
+    _save_active_state(batch)
 
 # ======================= fills output =======================
 
@@ -339,7 +381,8 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
 
 
 def _write_account_snapshot(batch):
-    if batch.header.get("mode") != "LIVE" or not batch.broker_authorized:
+    if (not batch.execution_live or batch.header.get("mode") != "LIVE"
+            or not batch.broker_authorized):
         return
     _dump_broker_snapshot(
         batch.batch_id(), batch.header.get("trade_date", ""),
@@ -354,12 +397,13 @@ def _snapshot_marker_path(batch_id):
 def _write_snapshot_marker(batch):
     """Ask the post-close pass to rewrite this batch's broker snapshot.
 
-    The finalize-time snapshot (14:45~14:57) carries final cash and shares
+    The finalize-time snapshot (15:28~15:30) carries final cash and shares
     but intraday prices; on the sim account even the account values can be
     stale. After SNAPSHOT_REFRESH_AT the marker triggers a rewrite with
-    close values, well before the 16:00 Mac-side import.
+    close values, before the 15:32 Mac-side import.
     """
-    if batch.header.get("mode") != "LIVE" or not batch.broker_authorized:
+    if (not batch.execution_live or batch.header.get("mode") != "LIVE"
+            or not batch.broker_authorized):
         return
     payload = {
         "batch_id": batch.batch_id(),
@@ -374,7 +418,7 @@ def _write_snapshot_marker(batch):
 
 
 def _refresh_account_snapshots_after_close():
-    """Rewrite pending broker snapshots once the close is in (>= 15:01)."""
+    """Rewrite pending broker snapshots once the close is in (>= 15:31)."""
     if _now_hms() < SNAPSHOT_REFRESH_AT:
         return
     state_dir = _path("state")
@@ -434,9 +478,12 @@ def _finalize_batch(batch):
 def _peek_trade_date(jsonl_path):
     """Read only the header line to get trade_date. None if unreadable."""
     try:
+        if os.path.getsize(jsonl_path) > MAX_BATCH_BYTES:
+            return None
         with open(jsonl_path, "r") as f:
             first = f.readline().strip()
-        return json.loads(first).get("trade_date")
+        trade_date = json.loads(first).get("trade_date")
+        return trade_date if isinstance(trade_date, str) else None
     except Exception:
         return None
 
@@ -473,23 +520,49 @@ def _claim_new_batch():
 
 
 def _archive_processing(jsonl_path, done_path):
-    for p in (jsonl_path, done_path):
+    paths = (jsonl_path, done_path)
+    collision = any(os.path.isfile(
+        _path("archive", os.path.basename(path))) for path in paths)
+    suffix = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    for p in paths:
         dst = _path("archive", os.path.basename(p))
-        if os.path.isfile(dst):
-            os.remove(dst)
+        if collision:
+            stem, ext = os.path.splitext(os.path.basename(p))
+            dst = _path("archive", stem + ".repeat_" + suffix + ext)
+            sequence = 1
+            while os.path.isfile(dst):
+                dst = _path(
+                    "archive", stem + ".repeat_" + suffix
+                    + "_" + str(sequence) + ext,
+                )
+                sequence += 1
         os.rename(p, dst)
 
 
 def _parse_and_check(jsonl_path, done_path):
     """Return Batch or None (rejected batches get a fills file + done)."""
-    with open(jsonl_path, "r") as f:
-        lines = [l.strip() for l in f.read().splitlines() if l.strip()]
-    if not lines:
-        _log("empty batch file: " + jsonl_path)
+    try:
+        if os.path.getsize(jsonl_path) > MAX_BATCH_BYTES:
+            raise ValueError("batch file exceeds byte limit")
+        with open(jsonl_path, "r") as f:
+            lines = [l.strip() for l in f.read().splitlines() if l.strip()]
+        if not lines:
+            raise ValueError("batch file is empty")
+        header = json.loads(lines[0])
+        if not isinstance(header, dict):
+            raise ValueError("batch header must be an object")
+        if not isinstance(header.get("batch_id"), str) \
+                or not header.get("batch_id"):
+            raise ValueError("batch_id must be a nonempty string")
+        order_lines = lines[1:]
+        orders = [json.loads(line) for line in order_lines]
+        if any(not isinstance(order, dict) for order in orders):
+            raise ValueError("each order must be an object")
+    except Exception as exc:
+        _log("quarantine unreadable batch %s: %s"
+             % (os.path.basename(jsonl_path), str(exc)))
+        _archive_processing(jsonl_path, done_path)
         return None
-    header = json.loads(lines[0])
-    order_lines = lines[1:]
-    orders = [json.loads(l) for l in order_lines]
     batch = Batch(header, orders)
     batch.processing_jsonl = jsonl_path
     batch.processing_done = done_path
@@ -499,6 +572,10 @@ def _parse_and_check(jsonl_path, done_path):
         batch.broker_authorized = False
         _log("reject batch %s: %s" % (batch_id, reason))
         for o in orders:
+            if not all(o.get(key) for key in (
+                    "client_order_id", "stock_code", "side")):
+                _log("skip malformed order receipt in batch %s" % batch_id)
+                continue
             _write_fill(batch, o, "SKIPPED", 0, 0.0, "", reason)
         _finalize_batch(batch)
         return None
@@ -509,6 +586,8 @@ def _parse_and_check(jsonl_path, done_path):
         return reject("schema_version must be %s" % SCHEMA_VERSION)
     if header.get("account_environment") != ACCOUNT_ENVIRONMENT:
         return reject("account_environment must be SIMULATION")
+    if header.get("mode") not in ("SIMULATE", "LIVE"):
+        return reject("mode must be SIMULATE or LIVE")
     if header.get("account_type") != ACCOUNT_TYPE:
         return reject("account_type mismatch")
     if not header.get("account_id"):
@@ -527,6 +606,9 @@ def _parse_and_check(jsonl_path, done_path):
         return reject("header checksum mismatch")
     if header.get("order_count") != len(orders):
         return reject("order_count mismatch")
+    if len(orders) > MAX_ORDERS_PER_BATCH:
+        return reject("order_count exceeds maximum %d"
+                      % MAX_ORDERS_PER_BATCH)
 
     seen = set()
     for order in orders:
@@ -611,7 +693,12 @@ def _recover_processing_batch():
         batch = _parse_and_check(jsonl_path, done_path)
         if batch is None:
             continue
-        _load_active_state(batch)
+        try:
+            _load_active_state(batch)
+        except Exception:
+            _log("corrupt active state for %s; disabling all resubmission:\n%s"
+                 % (batch.batch_id(), traceback.format_exc()))
+            _fail_safe_corrupt_active_state(batch)
         g.batch = batch
         _log("recovered batch %s: phase=%s submitted=%d"
              % (batch.batch_id(), batch.phase, len(batch.submitted)))
@@ -919,15 +1006,22 @@ def _process_batch(ContextInfo, batch):
         return
     if not batch.trading_started:
         # batch may have been claimed hours before the trade window opens;
-        # restart the sell-wait timer at the first real trading pass
+        # freeze both the sell-wait timer and LIVE safety decision at the
+        # first trading pass. A late LIVE_OK file cannot enable half a batch.
         batch.trading_started = True
         batch.phase_started = time.time()
+        batch.execution_authorized = (
+            batch.broker_authorized
+            and batch.header.get("mode") == "LIVE"
+            and _live_ok(batch.header.get("trade_date", ""))
+        )
+        batch.execution_live = batch.execution_authorized
+        _save_active_state(batch)
 
-    mode_live = (batch.broker_authorized
-                 and batch.header.get("mode") == "LIVE"
-                 and _live_ok(batch.header.get("trade_date", "")))
-    if mode_live:
-        batch.execution_live = True
+    mode_live = (
+        batch.execution_authorized
+        and _live_ok(batch.header.get("trade_date", ""))
+    )
     if batch.header.get("mode") == "LIVE" and not mode_live:
         _log("LIVE batch but LIVE_OK switch missing -> simulate/skip")
 
@@ -964,12 +1058,14 @@ def _process_batch(ContextInfo, batch):
         _poll_status(batch)
         sells_done = all(_order_is_terminal(batch, o["client_order_id"])
                          for o in sells) if sells else True
-        timed_out = (time.time() - batch.phase_started) > SELL_WAIT_TIMEOUT_SEC
-        if sells_done or timed_out or not sells:
+        wait_elapsed = (
+            time.time() - batch.phase_started
+        ) >= SELL_WAIT_TIMEOUT_SEC
+        if not sells or wait_elapsed:
             batch.phase = "BUY"
             batch.phase_started = time.time()
             _save_active_state(batch)
-            if timed_out and not sells_done:
+            if not sells_done:
                 _log("sell phase timeout, starting buys with actual cash")
 
     if batch.phase == "BUY":
@@ -1106,28 +1202,38 @@ def _register_postclose_timer(ContextInfo):
         return
     day = datetime.date.today()
     first_compact = day.strftime("%Y%m%d") + "150455"
-    if hasattr(ContextInfo, "schedule_run"):
-        ContextInfo.schedule_run(
-            timer_callback,
-            first_compact,
-            -1,
-            datetime.timedelta(seconds=POLL_SECONDS),
-            "qlib_postclose_poll",
-        )
-    else:
-        first_legacy = day.strftime("%Y-%m-%d") + " 15:04:55"
-        ContextInfo.run_time(
-            "timer_callback", "%dnSecond" % int(POLL_SECONDS), first_legacy,
-        )
+    # Some QMT builds invoke an overdue callback synchronously while the
+    # timer is registered. Mark it first so callback -> init cannot recurse.
     g.timer_registered = True
+    try:
+        if hasattr(ContextInfo, "schedule_run"):
+            ContextInfo.schedule_run(
+                timer_callback,
+                first_compact,
+                -1,
+                datetime.timedelta(seconds=POLL_SECONDS),
+                "qlib_postclose_poll",
+            )
+        else:
+            first_legacy = day.strftime("%Y-%m-%d") + " 15:04:55"
+            ContextInfo.run_time(
+                "timer_callback", "%dnSecond" % int(POLL_SECONDS), first_legacy,
+            )
+    except Exception:
+        g.timer_registered = False
+        raise
 
 
 def init(ContextInfo):
     _ensure_dirs()
     _load_processed()
     _recover_processing_batch()
-    _register_postclose_timer(ContextInfo)
     g.loaded = True
+    try:
+        _register_postclose_timer(ContextInfo)
+    except Exception:
+        g.loaded = False
+        raise
     _log("initialized, bridge_root=%s, %d processed batches"
          % (BRIDGE_ROOT, len(g.processed)))
 

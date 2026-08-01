@@ -216,12 +216,17 @@ def validate_fill(fill: FillEvent) -> None:
         raise SchemaError(f"invalid fill status: {fill.status!r}")
     if fill.side not in VALID_SIDES:
         raise SchemaError(f"invalid fill side: {fill.side!r}")
-    if not isinstance(fill.requested_qty, int) or fill.requested_qty < 0:
+    if (
+        isinstance(fill.requested_qty, bool)
+        or not isinstance(fill.requested_qty, int)
+        or fill.requested_qty < 0
+    ):
         raise SchemaError(
             f"requested_qty must be a non-negative int: {fill.requested_qty!r}"
         )
     if (
-        not isinstance(fill.filled_qty, int)
+        isinstance(fill.filled_qty, bool)
+        or not isinstance(fill.filled_qty, int)
         or fill.filled_qty < 0
         or fill.filled_qty > fill.requested_qty
     ):
@@ -229,7 +234,13 @@ def validate_fill(fill: FillEvent) -> None:
             "filled_qty must be a non-negative int no greater than "
             f"requested_qty: {fill.filled_qty!r}/{fill.requested_qty!r}"
         )
-    if fill.avg_price < 0 or (fill.filled_qty > 0 and fill.avg_price <= 0):
+    if (
+        isinstance(fill.avg_price, bool)
+        or not isinstance(fill.avg_price, (int, float))
+        or not math.isfinite(float(fill.avg_price))
+        or fill.avg_price < 0
+        or (fill.filled_qty > 0 and fill.avg_price <= 0)
+    ):
         raise SchemaError(
             f"avg_price must be positive when filled_qty > 0: {fill.avg_price!r}"
         )

@@ -23,12 +23,18 @@ if ! mkdir "$LOCK_DIR" 2>/dev/null; then
     echo "another import job holds $LOCK_DIR" >&2
     exit 75
 fi
-release_lock() { rmdir "$LOCK_DIR" 2>/dev/null || :; }
-trap release_lock EXIT
+finish_job() {
+    job_status=$?
+    trap - EXIT
+    rmdir "$LOCK_DIR" 2>/dev/null || :
+    echo "===== $(date '+%Y-%m-%d %H:%M:%S') exit status=${job_status} =====" \
+        >>"$LOG_FILE" 2>&1 || :
+    exit "$job_status"
+}
+trap finish_job EXIT
 
 {
     echo "===== $(date '+%Y-%m-%d %H:%M:%S') import fills ====="
     cd "$PROJECT_ROOT"
     "$PYTHON" live_trading/scripts/run_import_fills.py --config "$CONFIG_ID"
-    echo "===== done ====="
 } >>"$LOG_FILE" 2>&1

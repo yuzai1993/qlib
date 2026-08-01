@@ -71,6 +71,26 @@ def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
     assert name == "qlib_postclose_poll"
 
 
+def test_timer_registration_is_safe_when_qmt_invokes_overdue_timer_immediately(
+    bridge, monkeypatch,
+):
+    advances = []
+    monkeypatch.setattr(
+        bridge, "_advance", lambda context: advances.append(context),
+    )
+
+    class Context:
+        def schedule_run(self, callback, *args):
+            callback(self)
+            return 1
+
+    context = Context()
+    bridge.init(context)
+
+    assert bridge.g.timer_registered is True
+    assert advances == [context]
+
+
 def _order(coid="20260714001S", side="SELL", priority=10):
     is_buy = side == "BUY"
     return {
@@ -203,6 +223,7 @@ def test_empty_batch_finalizes_with_empty_receipt_file(bridge, monkeypatch):
     [
         ({"schema_version": "1.0"}, "schema_version"),
         ({"account_environment": "REAL"}, "account_environment"),
+        ({"mode": "REAL"}, "mode"),
     ],
 )
 def test_protocol_v2_and_simulation_account_are_fail_closed(
@@ -223,11 +244,86 @@ def test_protocol_v2_and_simulation_account_are_fail_closed(
     assert reason in _read_fills(bridge)[0]["message"]
 
 
+def test_batch_order_count_is_bounded_before_execution(bridge):
+    orders = [
+        _order(coid="202607140%03dS" % index)
+        for index in range(bridge.MAX_ORDERS_PER_BATCH + 1)
+    ]
+    _write_batch(bridge, bridge._today(), orders)
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch is None
+    assert "maximum" in _read_fills(bridge)[0]["message"]
+
+
+def test_malformed_batch_is_quarantined_without_blocking_next_batch(bridge):
+    inbox = Path(bridge.BRIDGE_ROOT) / "inbox"
+    (inbox / "signal_000_bad.jsonl").write_text("{not-json}\n")
+    (inbox / "signal_000_bad.done").write_text("sha256:bad\n")
+
+    valid_id = "20260714_csi300_topk10_002"
+    valid_order = _order()
+    valid_order["batch_id"] = valid_id
+    _write_batch(
+        bridge, bridge._today(), [valid_order], batch_id=valid_id,
+    )
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch.batch_id() == valid_id
+    archive = Path(bridge.BRIDGE_ROOT) / "archive"
+    assert (archive / "signal_000_bad.jsonl").exists()
+    assert (archive / "signal_000_bad.done").exists()
+
+
+def test_structurally_invalid_order_fails_closed_without_crashing(bridge):
+    invalid = _order()
+    invalid.pop("client_order_id")
+    _write_batch(bridge, bridge._today(), [invalid])
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch is None
+    assert BATCH_ID in bridge.g.processed
+    assert _read_fills(bridge) == []
+
+
+def test_archive_collision_preserves_both_batch_copies(bridge):
+    processing = Path(bridge.BRIDGE_ROOT) / "processing"
+    archive = Path(bridge.BRIDGE_ROOT) / "archive"
+    jsonl = processing / "signal_repeat.jsonl"
+    done = processing / "signal_repeat.done"
+    jsonl.write_text("new-jsonl")
+    done.write_text("new-done")
+    (archive / jsonl.name).write_text("original-jsonl")
+    (archive / done.name).write_text("original-done")
+
+    bridge._archive_processing(str(jsonl), str(done))
+
+    assert (archive / jsonl.name).read_text() == "original-jsonl"
+    assert (archive / done.name).read_text() == "original-done"
+    repeats = sorted(archive.glob("signal_repeat.repeat_*"))
+    assert len(repeats) == 2
+    assert {path.read_text() for path in repeats} == {"new-jsonl", "new-done"}
+
+
+def test_processed_batch_state_is_idempotent(bridge):
+    bridge._mark_processed(BATCH_ID)
+    bridge._mark_processed(BATCH_ID)
+
+    lines = (
+        Path(bridge.BRIDGE_ROOT) / "state" / "processed_batches.txt"
+    ).read_text().splitlines()
+    assert lines == [BATCH_ID]
+
+
 def test_restart_recovers_active_processing_batch(bridge):
     _write_batch(bridge, bridge._today(), [_order()])
     bridge._claim_new_batch()
     batch = bridge.g.batch
     batch.phase = "BUY"
+    batch.phase_started = 1234.5
     batch.submitted[_order()["client_order_id"]] = True
     batch.remaining_cash = 1234.5
     bridge._save_active_state(batch)
@@ -238,8 +334,33 @@ def test_restart_recovers_active_processing_batch(bridge):
     recovered = bridge.g.batch
     assert recovered is not None
     assert recovered.phase == "BUY"
+    assert recovered.phase_started == pytest.approx(1234.5)
     assert recovered.remaining_cash == pytest.approx(1234.5)
     assert _order()["client_order_id"] in recovered.submitted
+
+
+def test_corrupt_active_state_recovers_without_duplicate_submission(bridge):
+    orders = [
+        _order(coid="20260714001001S", side="SELL", priority=10),
+        _order(coid="20260714001002B", side="BUY", priority=20),
+    ]
+    _write_batch(bridge, bridge._today(), orders, mode="LIVE")
+    bridge._claim_new_batch()
+    active = (
+        Path(bridge.BRIDGE_ROOT) / "state" / ("active_" + BATCH_ID + ".json")
+    )
+    active.write_text("{broken")
+    bridge.g.batch = None
+
+    bridge._recover_processing_batch()
+
+    recovered = bridge.g.batch
+    assert recovered.execution_live is True
+    assert set(recovered.submitted) == {
+        "20260714001001S", "20260714001002B",
+    }
+    assert active.exists()
+    assert list(active.parent.glob(active.name + ".corrupt_*"))
 
 
 def test_restart_repairs_claim_interrupted_between_two_file_moves(bridge):
@@ -267,6 +388,103 @@ def test_max_affordable_quantity_includes_buy_fees(bridge):
 def test_target_buy_quantity_respects_target_value_cash_and_fees(bridge):
     assert bridge._target_buy_quantity(10_000.0, 10.0, 8_000.0) == 800
     assert bridge._target_buy_quantity(1_000.0, 10.0, 8_000.0) == 0
+
+
+def test_sell_phase_waits_full_four_minutes_before_any_buy(
+    bridge, monkeypatch,
+):
+    sell = _order(coid="20260714001001S", side="SELL", priority=10)
+    buy = _order(coid="20260714001002B", side="BUY", priority=20)
+    _write_batch(bridge, bridge._today(), [sell, buy])
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.trading_started = True
+    batch.phase_started = 100.0
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge.time, "time", lambda: 101.0)
+
+    bridge._process_batch(_TickCtx(10.0), batch)
+
+    assert batch.phase == "SELL"
+    assert buy["client_order_id"] not in batch.submitted
+
+    monkeypatch.setattr(bridge.time, "time", lambda: 341.0)
+    bridge._process_batch(_TickCtx(10.0), batch)
+
+    fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
+    assert fills[buy["client_order_id"]]["status"] == "SKIPPED"
+
+
+def test_live_execution_gate_is_frozen_at_first_trading_pass(
+    bridge, monkeypatch,
+):
+    sell = _order(coid="20260714001001S", side="SELL", priority=10)
+    buy = _order(coid="20260714001002B", side="BUY", priority=20)
+    _write_batch(bridge, bridge._today(), [sell, buy], mode="LIVE")
+    bridge._claim_new_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge.time, "time", lambda: 101.0)
+    submitted = []
+    account_queries = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+    monkeypatch.setattr(
+        bridge, "_get_available_cash", lambda account_id: 100_000.0,
+    )
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: account_queries.append(args) or [],
+        raising=False,
+    )
+
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge.g.batch.header["trade_date"])).write_text("")
+    assert bridge._live_ok(bridge.g.batch.header["trade_date"])
+    monkeypatch.setattr(bridge.time, "time", lambda: 341.0)
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert submitted == []
+    assert account_queries == []
+    fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
+    assert fills[buy["client_order_id"]]["message"] == "simulated"
+
+
+def test_removing_live_gate_blocks_later_buys_but_keeps_sell_management(
+    bridge, monkeypatch,
+):
+    sell = _order(coid="20260714001001S", side="SELL", priority=10)
+    buy = _order(coid="20260714001002B", side="BUY", priority=20)
+    _write_batch(bridge, bridge._today(), [sell, buy], mode="LIVE")
+    gate = (
+        Path(bridge.BRIDGE_ROOT) / "state" /
+        ("LIVE_OK_" + bridge._today())
+    )
+    gate.write_text("")
+    bridge._claim_new_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge.time, "time", lambda: 101.0)
+    monkeypatch.setattr(bridge, "_get_can_use_volume", lambda *args: 800)
+    monkeypatch.setattr(
+        bridge, "_get_available_cash", lambda account_id: 100_000.0,
+    )
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    gate.unlink()
+    monkeypatch.setattr(bridge.time, "time", lambda: 341.0)
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert [args[0] for args in submitted] == [24]
+    assert bridge.g.batch.execution_live is True
+    fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
+    assert fills[buy["client_order_id"]]["message"] == "simulated"
 
 
 def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
@@ -498,6 +716,9 @@ def test_simulate_batch_processes_without_qmt_api(bridge, monkeypatch):
     bridge._claim_new_batch()
     batch = bridge.g.batch
     assert batch is not None
+    batch.trading_started = True
+    batch.phase_started = 100.0
+    monkeypatch.setattr(bridge.time, "time", lambda: 341.0)
     bridge._process_batch(_TickCtx(10.0), batch)
     # SIMULATE：两单都 SKIPPED simulated，批次终结
     fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
@@ -651,7 +872,9 @@ def _live_batch(bridge, batch_id=BATCH_ID):
         "account_id": "8881352838", "account_environment": "SIMULATION",
         "schema_version": "2.0",
     }
-    return bridge.Batch(header, [_order()])
+    batch = bridge.Batch(header, [_order()])
+    batch.execution_live = True
+    return batch
 
 
 def test_finalize_writes_broker_account_snapshot(bridge, monkeypatch):

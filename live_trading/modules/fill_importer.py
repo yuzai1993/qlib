@@ -400,6 +400,8 @@ class LiveRecorder:
         planned_orders: int,
         account_environment: str = "SIMULATION",
     ) -> None:
+        if account_environment != "SIMULATION":
+            raise SchemaError("account_environment must be SIMULATION")
         with self._conn() as conn:
             existing = conn.execute(
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
@@ -550,6 +552,8 @@ class LiveRecorder:
         the database commit and shared-file publication), but it may never
         replace a plan for an existing batch id.
         """
+        if header.account_environment != "SIMULATION":
+            raise SchemaError("account_environment must be SIMULATION")
         batch_id = header.batch_id
         order_checksum = compute_checksum([
             order.to_json_line() for order in orders

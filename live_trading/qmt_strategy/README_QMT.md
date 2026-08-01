@@ -40,7 +40,7 @@ D:\qmt_bridge\
 
 1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、日期、账户和 SIMULATION 环境；
 2. 15:05 提交 SELL；
-3. 等卖单终态，最多等 240 秒；
+3. 无论卖单是否提前终态，都从首次提交阶段起固定等待 240 秒；
 4. 查询实际可用现金，用 QMT `lastPrice` 作为官方收盘价，将 BUY `target_value` 换算为整手并预留佣金/过户费；
 5. `passorder(..., orderType=1101, prType=49, price=0, quantity, ..., quickTrade=2, client_order_id, ContextInfo)`；
 6. 15:28 撤销未完成订单；
@@ -86,6 +86,7 @@ Shadow 通过后，必须同时满足：
 此外保持 `MAX_ORDER_QUANTITY = 100`。这会把每个可执行买卖订单限制为一手。每天开盘前确认 QMT UI 绑定的是模拟账户，收盘后逐单核对价格类型、官方收盘价、数量、委托状态和回执。
 
 删除 `LIVE_OK` 只禁止后续新提交。已经提交的 LIVE 订单仍会继续查询、撤单和终结。
+执行决定在 15:05 首次交易唤醒时冻结；首次缺少 `LIVE_OK` 的批次即使稍后补建开关，也会整批保持 simulated，避免只执行后半段买单。
 
 ## 6. 全额模拟盘
 

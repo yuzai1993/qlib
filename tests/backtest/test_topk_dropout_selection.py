@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -88,6 +89,15 @@ def test_empty_effective_scores_fail_closed():
 
     assert selection.sell == ()
     assert selection.buy == ()
+
+
+def test_stable_rank_excludes_all_non_finite_scores():
+    scores = pd.Series(
+        [np.inf, 2.0, -np.inf, np.nan],
+        index=["SH600000", "SH600001", "SH600002", "SH600003"],
+    )
+
+    assert stable_rank_scores(scores).index.tolist() == ["SH600001"]
 
 
 def test_duplicate_instruments_are_rejected():

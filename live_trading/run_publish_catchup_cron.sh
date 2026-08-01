@@ -32,8 +32,15 @@ if ! mkdir "$LOCK_DIR" 2>/dev/null; then
     echo "another publish/catch-up job holds $LOCK_DIR" >&2
     exit 75
 fi
-release_lock() { rmdir "$LOCK_DIR" 2>/dev/null || :; }
-trap release_lock EXIT
+finish_job() {
+    job_status=$?
+    trap - EXIT
+    rmdir "$LOCK_DIR" 2>/dev/null || :
+    echo "===== $(date '+%Y-%m-%d %H:%M:%S') exit status=${job_status} =====" \
+        >>"$LOG_FILE" 2>&1 || :
+    exit "$job_status"
+}
+trap finish_job EXIT
 export JOBLIB_MULTIPROCESSING="${JOBLIB_MULTIPROCESSING:-0}"
 export MPLCONFIGDIR="${MPLCONFIGDIR:-/tmp/mplconfig-live}"
 mkdir -p "$MPLCONFIGDIR"
@@ -53,7 +60,6 @@ fi
     echo "===== $(date '+%Y-%m-%d %H:%M:%S') publish catchup config=${CONFIG_ID} mode=${RUN_MODE} trade_date=${TRADE_DATE} ====="
     if [[ -n "$EXISTING" ]]; then
         echo "skip: batch already present (${EXISTING})"
-        echo "===== done ====="
         exit 0
     fi
     echo "missing batch for ${TRADE_DATE}; running publish"
@@ -63,5 +69,4 @@ fi
         --config "$CONFIG_ID" \
         --trade-date "$TRADE_DATE" \
         --mode "$RUN_MODE"
-    echo "===== done ====="
 } >>"$LOG_FILE" 2>&1

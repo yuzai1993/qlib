@@ -64,3 +64,17 @@ def test_strategy_positions_preserve_opening_trade_date():
             "opened_trade_date": "2026-07-01",
         }
     }
+
+
+def test_signal_date_requires_the_requested_trade_date_to_be_open():
+    calendar = ["2026-07-31", "2026-08-03"]
+
+    signal_date, dates = publish.resolve_signal_calendar(
+        calendar, "2026-08-03",
+    )
+
+    assert signal_date == "2026-07-31"
+    assert dates == ["2026-07-31"]
+
+    with pytest.raises(SystemExit, match="not a trading day"):
+        publish.resolve_signal_calendar(calendar, "2026-08-02")

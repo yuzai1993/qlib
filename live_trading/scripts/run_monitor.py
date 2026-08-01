@@ -3,7 +3,8 @@
 
 用法（三个 stage 对应三个 cron 时点，见 live_trading/README.md）：
     python live_trading/scripts/run_monitor.py \
-        --config csi300_topk10_live --stage {postmarket,report,evening} [--date YYYY-MM-DD]
+        --config csi1000_b6m_b2s_postclose \
+        --stage {postmarket,report,evening} [--date YYYY-MM-DD]
 
 退出码：0 全部 OK；1 有 WARN；2 有 CRIT/FAIL。
 设计文档：docs/superpowers/specs/2026-07-13-live-monitor-platform-design.md

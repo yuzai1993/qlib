@@ -35,6 +35,15 @@ def test_wrappers_do_not_swallow_monitor_failures_or_embed_python_stdin():
     assert "batch_status.py" in combined
 
 
+def test_wrappers_log_the_real_exit_status_while_releasing_locks():
+    for name in WRAPPERS:
+        text = (REPO_ROOT / "live_trading" / name).read_text(encoding="utf-8")
+        assert "finish_job()" in text
+        assert "job_status=$?" in text
+        assert "trap finish_job EXIT" in text
+        assert 'exit "$job_status"' in text
+
+
 def test_batch_status_finds_latest_active_batch(tmp_path):
     db = tmp_path / "live.db"
     with sqlite3.connect(db) as conn:

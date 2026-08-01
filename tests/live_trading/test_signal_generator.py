@@ -79,6 +79,26 @@ def test_model_output_must_match_feature_index_exactly():
         gen._score_features(features, "2026-07-10")
 
 
+def test_non_finite_model_scores_are_excluded():
+    class NonFiniteModel:
+        def predict(self, dataset, segment="test"):
+            features = dataset.prepare(
+                segment, col_set="feature", data_key="infer",
+            )
+            return pd.Series([1.0, np.inf], index=features.index)
+
+    gen = SignalGenerator(config={}, project_root=Path("."))
+    gen._model = NonFiniteModel()
+    features = pd.DataFrame(
+        {"F1": [1.0, 2.0]},
+        index=pd.Index(["SH600000", "SZ000001"], name="instrument"),
+    )
+
+    scores = gen._score_features(features, "2026-07-10")
+
+    assert scores.to_dict() == {"SH600000": 1.0}
+
+
 def _generator_with_features(last_date="2026-07-14"):
     gen = _make_generator()
     gen._handler = object()

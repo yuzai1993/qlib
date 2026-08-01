@@ -114,6 +114,16 @@ def test_opening_cash_refuses_to_seed_an_already_used_ledger(tmp_path):
         LiveRecorder(str(db_path), opening_cash=500_000.0)
 
 
+def test_batch_ledger_refuses_real_account_environment(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "simulation-only.db"))
+
+    with pytest.raises(SchemaError, match="SIMULATION"):
+        recorder.record_batch(
+            "real", "2026-07-14", "LIVE", 1,
+            account_environment="REAL",
+        )
+
+
 def test_position_open_date_survives_add_on_and_resets_after_full_exit(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "dates.db"), opening_cash=100_000.0)
 

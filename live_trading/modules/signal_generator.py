@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from qlib.data.dataset.handler import DataHandlerLP
 from qlib.utils import init_instance_by_config
@@ -111,7 +112,7 @@ class SignalGenerator:
         if not raw_scores.index.equals(day_features.index):
             raise ValueError("model prediction index must exactly match feature index")
         scores = raw_scores.astype(float).rename("score")
-        scores = scores.dropna()
+        scores = scores[np.isfinite(scores)]
 
         if scores.empty:
             logger.warning("Generated no finite predictions for %s", target_date)

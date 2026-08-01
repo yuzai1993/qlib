@@ -3,7 +3,8 @@
 
 用法：
     python live_trading/scripts/run_publish_signals.py \
-        --config csi300_topk10_live --trade-date 2026-07-14 [--mode SIMULATE] [--dry-run]
+        --config csi1000_b6m_b2s_postclose --trade-date 2026-08-03 \
+        [--mode SIMULATE] [--dry-run]
 
 流程（设计文档 §7.1）：
     qlib init → 预测 signal_date 分数 → 读取 live 持仓 → TopkDropout 意图
@@ -123,30 +124,39 @@ def to_strategy_positions(qmt_positions: dict) -> dict:
     }
 
 
+def resolve_signal_calendar(calendar, trade_date: str) -> tuple[str, list[str]]:
+    """Validate an open trade date and return its prior signal session."""
+    import pandas as pd
+
+    sessions = sorted({pd.Timestamp(value) for value in calendar})
+    target = pd.Timestamp(trade_date)
+    if target not in sessions:
+        raise SystemExit(f"trade_date {trade_date} is not a trading day")
+    prior = [value for value in sessions if value < target]
+    if not prior:
+        raise SystemExit(f"no trading day before {trade_date} in calendar")
+    return (
+        prior[-1].strftime("%Y-%m-%d"),
+        [value.strftime("%Y-%m-%d") for value in sessions if value < target],
+    )
+
+
 def get_signal_date_and_scores(config, trade_date: str):
     """初始化 qlib，取 trade_date 前最后一个交易日的预测分数。"""
     import qlib
     from qlib.data import D
-    import pandas as pd
 
     qlib.init(
         provider_uri=str(Path(config["data"]["qlib_dir"]).expanduser()),
         region=config["data"]["region"],
     )
-    cal = D.calendar(end_time=trade_date)
-    cal = [pd.Timestamp(c) for c in cal]
-    target = pd.Timestamp(trade_date)
-    prior = [c for c in cal if c < target]
-    if not prior:
-        raise SystemExit(f"no trading day before {trade_date} in calendar")
-    signal_date = prior[-1].strftime("%Y-%m-%d")
+    signal_date, trade_dates = resolve_signal_calendar(
+        D.calendar(end_time=trade_date), trade_date,
+    )
 
     from live_trading.modules.signal_generator import SignalGenerator
     gen = SignalGenerator(config, PROJECT_ROOT)
     scores = gen.predict(signal_date, allow_stale=False)
-    trade_dates = [
-        value.strftime("%Y-%m-%d") for value in cal if value <= prior[-1]
-    ]
     return signal_date, scores, trade_dates
 
 

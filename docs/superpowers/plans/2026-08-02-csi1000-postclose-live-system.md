@@ -275,9 +275,9 @@ Assert the 15:05/15:28/15:30 constants, positive post-close `lastPrice` requirem
 def test_submit_uses_after_hours_price_type(bridge, monkeypatch):
     submitted = []
     monkeypatch.setattr(bridge, "passorder", lambda *args: submitted.append(args), raising=False)
-    bridge._submit(ctx, batch, resolved_order, True, price=10.25)
+    bridge._submit(ctx, batch, resolved_order, True, official_close=10.25)
     assert submitted[0][4] == 49
-    assert submitted[0][5] == pytest.approx(10.25)
+    assert submitted[0][5] == 0
 ```
 
 - [ ] **Step 2: Run and verify RED**
@@ -291,7 +291,7 @@ def test_submit_uses_after_hours_price_type(bridge, monkeypatch):
 Delete ask/bid/slippage/fallback pricing. Require protocol-v2 simulation account scope. Resolve each BUY quantity once from target value, official close, fees, and actual cash; persist before submission. Submit all executable orders using:
 
 ```python
-passorder(op_type, 1101, account_id, stock_code, 49, close_price,
+passorder(op_type, 1101, account_id, stock_code, 49, 0,
           quantity, STRATEGY_NAME, 2, client_order_id, ContextInfo)
 ```
 
@@ -299,7 +299,7 @@ Retain the uncertainty marker so a crash favors a missed order over a duplicate.
 
 - [ ] **Step 4: Add timer scheduling with a shared advance loop**
 
-`init` calls `ContextInfo.schedule_run(advance, first_time, -1, datetime.timedelta(seconds=3), name)`. `handlebar` calls the same throttled `advance` only as a fallback. Cancellation/finalization continue after the execute marker is removed if any order was submitted.
+`init` calls `ContextInfo.schedule_run(timer_callback, first_time, -1, datetime.timedelta(seconds=3), name)`. `timer_callback` and `handlebar` call the same throttled `advance` path. Cancellation/finalization continue after the execute marker is removed if any order was submitted.
 
 - [ ] **Step 5: Verify and commit**
 

@@ -132,6 +132,7 @@ class LiveRecorder:
                     signal_date TEXT,
                     account_id TEXT,
                     account_type TEXT,
+                    account_environment TEXT NOT NULL DEFAULT 'SIMULATION',
                     order_checksum TEXT,
                     superseded_by TEXT,
                     superseded_at TEXT,
@@ -177,6 +178,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
                     priority INTEGER,
@@ -277,6 +279,11 @@ class LiveRecorder:
             ):
                 if col not in batch_cols:
                     conn.execute(f"ALTER TABLE batches ADD COLUMN {col} TEXT")
+            if "account_environment" not in batch_cols:
+                conn.execute(
+                    "ALTER TABLE batches ADD COLUMN account_environment "
+                    "TEXT NOT NULL DEFAULT 'SIMULATION'"
+                )
             cols = {r["name"] for r in conn.execute("PRAGMA table_info(fills)")}
             if "applied_fee" not in cols:
                 conn.execute(
@@ -288,6 +295,14 @@ class LiveRecorder:
             if "opened_trade_date" not in position_cols:
                 conn.execute(
                     "ALTER TABLE positions ADD COLUMN opened_trade_date TEXT"
+                )
+            order_cols = {
+                r["name"] for r in conn.execute("PRAGMA table_info(signal_orders)")
+            }
+            if "target_value" not in order_cols:
+                conn.execute(
+                    "ALTER TABLE signal_orders ADD COLUMN target_value "
+                    "REAL NOT NULL DEFAULT 0"
                 )
             self._migrate_composite_keys(conn)
 
@@ -352,6 +367,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
                     priority INTEGER,
@@ -360,10 +376,11 @@ class LiveRecorder:
                 );
                 INSERT INTO signal_orders (
                     batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, price_type, limit_price, priority, reason
+                    side, quantity, target_value, price_type, limit_price,
+                    priority, reason
                 )
                 SELECT batch_id, client_order_id, stock_code, instrument_qlib,
-                       side, quantity, price_type, limit_price, priority, reason
+                       side, quantity, 0, price_type, limit_price, priority, reason
                 FROM signal_orders_legacy;
                 DROP TABLE signal_orders_legacy;
             """)
@@ -375,8 +392,14 @@ class LiveRecorder:
 
     # ---------- batches ----------
 
-    def record_batch(self, batch_id: str, trade_date: str, mode: str,
-                     planned_orders: int) -> None:
+    def record_batch(
+        self,
+        batch_id: str,
+        trade_date: str,
+        mode: str,
+        planned_orders: int,
+        account_environment: str = "SIMULATION",
+    ) -> None:
         with self._conn() as conn:
             existing = conn.execute(
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
@@ -386,6 +409,7 @@ class LiveRecorder:
                     existing["trade_date"] == trade_date
                     and existing["mode"] == mode
                     and existing["planned_orders"] == planned_orders
+                    and existing["account_environment"] == account_environment
                 ):
                     return
                 raise SchemaError(
@@ -393,12 +417,17 @@ class LiveRecorder:
                 )
             conn.execute(
                 """INSERT INTO batches
-                   (batch_id, trade_date, mode, planned_orders) VALUES (?,?,?,?)
+                   (batch_id, trade_date, mode, planned_orders,
+                    account_environment) VALUES (?,?,?,?,?)
                    ON CONFLICT(batch_id) DO UPDATE SET
                        trade_date=excluded.trade_date,
                        mode=excluded.mode,
-                       planned_orders=excluded.planned_orders""",
-                (batch_id, trade_date, mode, planned_orders),
+                       planned_orders=excluded.planned_orders,
+                       account_environment=excluded.account_environment""",
+                (
+                    batch_id, trade_date, mode, planned_orders,
+                    account_environment,
+                ),
             )
 
     def get_batch(self, batch_id: str):
@@ -487,6 +516,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
                 get("priority"),
@@ -505,8 +535,9 @@ class LiveRecorder:
             conn.executemany(
                 """INSERT INTO signal_orders
                    (client_order_id, batch_id, stock_code, instrument_qlib,
-                    side, quantity, price_type, limit_price, priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    side, quantity, target_value, price_type, limit_price,
+                    priority, reason)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
@@ -536,6 +567,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
                 get("priority"),
@@ -556,12 +588,14 @@ class LiveRecorder:
                     and existing_batch["signal_date"] == header.signal_date
                     and existing_batch["account_id"] == header.account_id
                     and existing_batch["account_type"] == header.account_type
+                    and existing_batch["account_environment"]
+                    == header.account_environment
                     and existing_batch["order_checksum"] == order_checksum
                 )
                 existing_rows = [tuple(row) for row in conn.execute(
                     """SELECT batch_id, client_order_id, stock_code,
-                              instrument_qlib, side, quantity, price_type,
-                              limit_price, priority, reason
+                              instrument_qlib, side, quantity, target_value,
+                              price_type, limit_price, priority, reason
                        FROM signal_orders WHERE batch_id=?
                        ORDER BY client_order_id""",
                     (batch_id,),
@@ -575,19 +609,22 @@ class LiveRecorder:
             conn.execute(
                 """INSERT INTO batches
                    (batch_id, trade_date, mode, planned_orders, strategy_id,
-                    signal_date, account_id, account_type, order_checksum)
-                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                    signal_date, account_id, account_type, account_environment,
+                    order_checksum)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (
                     batch_id, header.trade_date, header.mode, len(rows),
                     header.strategy_id, header.signal_date, header.account_id,
-                    header.account_type, order_checksum,
+                    header.account_type, header.account_environment,
+                    order_checksum,
                 ),
             )
             conn.executemany(
                 """INSERT INTO signal_orders
                    (batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, price_type, limit_price, priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    side, quantity, target_value, price_type, limit_price,
+                    priority, reason)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
@@ -807,15 +844,25 @@ class LiveRecorder:
                 raise SchemaError(
                     f"fill side mismatch: {fill.side!r} != {order['side']!r}"
                 )
-            if (
-                fill.requested_qty <= 0
-                or fill.requested_qty > order["quantity"]
-                or fill.requested_qty % 100 != 0
-            ):
+            if fill.requested_qty <= 0 or fill.requested_qty % 100 != 0:
                 raise SchemaError(
                     f"fill requested_qty invalid for plan: {fill.requested_qty!r} "
-                    f"> planned {order['quantity']!r} or not a whole lot"
+                    "must be a positive whole lot"
                 )
+            if fill.side == "SELL" and fill.requested_qty > order["quantity"]:
+                raise SchemaError(
+                    f"SELL requested_qty {fill.requested_qty!r} exceeds "
+                    f"planned {order['quantity']!r}"
+                )
+            if fill.side == "BUY":
+                if order["quantity"] != 0 or order["target_value"] <= 0:
+                    raise SchemaError("BUY plan must use a positive target_value")
+                fill_gross = float(fill.filled_qty) * float(fill.avg_price)
+                if fill_gross > float(order["target_value"]) + 1e-6:
+                    raise SchemaError(
+                        f"BUY fill gross {fill_gross:.6f} exceeds target_value "
+                        f"{order['target_value']:.6f}"
+                    )
 
             row = conn.execute(
                 "SELECT * FROM fills WHERE batch_id=? AND client_order_id=?",

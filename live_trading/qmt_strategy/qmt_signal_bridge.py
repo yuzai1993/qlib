@@ -8,13 +8,12 @@
 # Flow per batch:
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
-#     -> 14:45 late-session window (execute near close, align w/ backtest):
+#     -> 15:05 after-hours fixed-price window:
 #        phase SELL: passorder all sells, wait terminal (or timeout)
-#        phase BUY : check available cash, passorder buys
-#     -> price: ask-one / bid-one +/- buffer, clamped to daily price limits
-#        (signal limit_price is used only when realtime data is unavailable)
+#        phase BUY : read actual cash and size target-value buys at official close
+#     -> QMT prType=49, price=0 (after-hours fixed price)
 #     -> poll order status by remark (client_order_id)
-#     -> 14:56 cancel pending, mark EXPIRED; write outbound/fills_{batch}.done
+#     -> 15:28 cancel pending; 15:30 finalize; 15:31 account snapshot
 #
 # LIVE double switch: header.mode == "LIVE" AND state/LIVE_OK_{trade_date} exists.
 # Otherwise orders are simulated: fill status SKIPPED, message "simulated".
@@ -29,21 +28,19 @@ import traceback
 # ======================= user settings =======================
 
 BRIDGE_ROOT = r"D:\qmt_bridge"
-ACCOUNT_ID = ""            # override header.account_id if non-empty
+ACCOUNT_ID = ""            # simulation account only; must match header if set
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
+SCHEMA_VERSION = "2.0"
+ACCOUNT_ENVIRONMENT = "SIMULATION"
+AFTER_HOURS_PRICE_TYPE = 49
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
 SELL_WAIT_TIMEOUT_SEC = 4 * 60    # max wait for sells before starting buys
-TRADE_START = "14:45:00"   # late-session window: execute near close price
-CANCEL_AT = "14:56:00"     # cancel all pending orders
-FINALIZE_AT = "14:57:00"   # force-write fills .done
-SNAPSHOT_REFRESH_AT = "15:01:00"  # rewrite broker snapshot with close values
-
-# First-order pricing: cross the current opposing quote with a small buffer.
-# QMT daily stop prices are the hard bounds; the signal price is a fallback.
-INTRADAY_BUY_SLIPPAGE = 0.003
-INTRADAY_SELL_SLIPPAGE = 0.003
+TRADE_START = "15:05:00"
+CANCEL_AT = "15:28:00"
+FINALIZE_AT = "15:30:00"
+SNAPSHOT_REFRESH_AT = "15:31:00"
 
 # BUY-side fee estimate used only for local cash reservation.
 COMMISSION_RATE = 0.00020
@@ -69,12 +66,17 @@ class Batch(object):
         self.phase = "SELL"           # SELL -> BUY -> DONE
         self.phase_started = time.time()
         self.trading_started = False  # phase timer resets on first trade pass
+        self.execution_live = False   # true only after both LIVE safety gates
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
         self.remaining_cash = None    # one broker cash snapshot for BUY phase
         self.processing_jsonl = None
         self.processing_done = None
         self.finalized = False
+        self.broker_authorized = (
+            header.get("schema_version") == SCHEMA_VERSION
+            and header.get("account_environment") == ACCOUNT_ENVIRONMENT
+        )
 
     def batch_id(self):
         return self.header["batch_id"]
@@ -86,6 +88,7 @@ class State(object):
         self.batch = None             # current Batch or None
         self.processed = set()        # batch ids finished (persisted)
         self.loaded = False
+        self.timer_registered = False
 
 
 g = State()
@@ -156,6 +159,7 @@ def _save_active_state(batch):
         "batch_id": batch.batch_id(),
         "phase": batch.phase,
         "trading_started": batch.trading_started,
+        "execution_live": batch.execution_live,
         "submitted": sorted(batch.submitted.keys()),
         "fills": batch.fills,
         "remaining_cash": batch.remaining_cash,
@@ -183,6 +187,7 @@ def _load_active_state(batch):
         raise ValueError("active state batch_id mismatch")
     batch.phase = payload.get("phase", "SELL")
     batch.trading_started = bool(payload.get("trading_started", False))
+    batch.execution_live = bool(payload.get("execution_live", False))
     batch.submitted = dict((coid, True) for coid in payload.get("submitted", []))
     batch.fills = payload.get("fills", {})
     batch.remaining_cash = payload.get("remaining_cash")
@@ -205,6 +210,9 @@ def _fills_path(batch_id):
 
 def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, message):
     mode = batch.header.get("mode", "SIMULATE")
+    requested_qty = int(order.get("quantity", 0) or 0)
+    if requested_qty <= 0 and order.get("side") == "BUY":
+        requested_qty = 100
     event = {
         "type": "fill_event",
         "batch_id": batch.batch_id(),
@@ -213,7 +221,7 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
         "stock_code": order["stock_code"],
         "side": order["side"],
         "status": status,
-        "requested_qty": order["quantity"],
+        "requested_qty": requested_qty,
         "filled_qty": int(filled_qty),
         "avg_price": float(avg_price),
         "qmt_order_id": str(qmt_order_id),
@@ -328,7 +336,7 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
 
 
 def _write_account_snapshot(batch):
-    if batch.header.get("mode") != "LIVE":
+    if batch.header.get("mode") != "LIVE" or not batch.broker_authorized:
         return
     _dump_broker_snapshot(
         batch.batch_id(), batch.header.get("trade_date", ""),
@@ -348,7 +356,7 @@ def _write_snapshot_marker(batch):
     stale. After SNAPSHOT_REFRESH_AT the marker triggers a rewrite with
     close values, well before the 16:00 Mac-side import.
     """
-    if batch.header.get("mode") != "LIVE":
+    if batch.header.get("mode") != "LIVE" or not batch.broker_authorized:
         return
     payload = {
         "batch_id": batch.batch_id(),
@@ -401,7 +409,12 @@ def _finalize_batch(batch):
     # post-close pass rewrites it with close values via the marker.
     _write_account_snapshot(batch)
     _write_snapshot_marker(batch)
-    done = _fills_path(batch.batch_id()).replace(".jsonl", ".done")
+    fills_path = _fills_path(batch.batch_id())
+    # Empty batches still need a jsonl companion so the Mac importer can
+    # archive the terminal receipt pair without warning.
+    with open(fills_path, "a"):
+        pass
+    done = fills_path.replace(".jsonl", ".done")
     with open(done, "w") as f:
         f.write("done\n")
     _mark_processed(batch.batch_id())
@@ -480,6 +493,7 @@ def _parse_and_check(jsonl_path, done_path):
     batch_id = header.get("batch_id", "unknown")
 
     def reject(reason):
+        batch.broker_authorized = False
         _log("reject batch %s: %s" % (batch_id, reason))
         for o in orders:
             _write_fill(batch, o, "SKIPPED", 0, 0.0, "", reason)
@@ -488,6 +502,16 @@ def _parse_and_check(jsonl_path, done_path):
 
     if batch_id in g.processed:
         return reject("duplicate batch")
+    if header.get("schema_version") != SCHEMA_VERSION:
+        return reject("schema_version must be %s" % SCHEMA_VERSION)
+    if header.get("account_environment") != ACCOUNT_ENVIRONMENT:
+        return reject("account_environment must be SIMULATION")
+    if header.get("account_type") != ACCOUNT_TYPE:
+        return reject("account_type mismatch")
+    if not header.get("account_id"):
+        return reject("account_id missing")
+    if ACCOUNT_ID and str(header.get("account_id")) != str(ACCOUNT_ID):
+        return reject("account_id does not match configured simulation account")
     if header.get("trade_date") != _today():
         return reject("expired: trade_date=%s today=%s"
                       % (header.get("trade_date"), _today()))
@@ -496,12 +520,48 @@ def _parse_and_check(jsonl_path, done_path):
     actual = _sha256_of_lines(order_lines)
     if expected and expected != actual:
         return reject("checksum mismatch")
+    if header.get("checksum") != actual:
+        return reject("header checksum mismatch")
     if header.get("order_count") != len(orders):
         return reject("order_count mismatch")
+
+    seen = set()
+    for order in orders:
+        coid = order.get("client_order_id", "")
+        side = order.get("side")
+        quantity = order.get("quantity")
+        target_value = order.get("target_value")
+        if order.get("batch_id") != batch_id:
+            return reject("order batch_id mismatch")
+        if not coid or coid in seen:
+            return reject("duplicate or empty client_order_id")
+        seen.add(coid)
+        if side not in ("BUY", "SELL"):
+            return reject("invalid order side")
+        if order.get("price_type") != "AFTER_HOURS_CLOSE":
+            return reject("price_type must be AFTER_HOURS_CLOSE")
+        if order.get("limit_price") != 0 and order.get("limit_price") != 0.0:
+            return reject("limit_price must be zero")
+        if side == "BUY":
+            if quantity != 0:
+                return reject("BUY quantity must be zero")
+            try:
+                target_value = float(target_value)
+            except (TypeError, ValueError):
+                return reject("BUY target_value invalid")
+            if not math.isfinite(target_value) or target_value <= 0.0:
+                return reject("BUY target_value invalid")
+        else:
+            if (not isinstance(quantity, int) or isinstance(quantity, bool)
+                    or quantity <= 0 or quantity % 100 != 0):
+                return reject("SELL quantity must be a positive whole lot")
+            if target_value != 0 and target_value != 0.0:
+                return reject("SELL target_value must be zero")
 
     # sells first by priority, stable by client_order_id
     orders.sort(key=lambda o: (o.get("priority", 99), o.get("client_order_id", "")))
     batch.orders = orders
+    batch.broker_authorized = True
     return batch
 
 
@@ -732,56 +792,12 @@ def _get_tick(ContextInfo, stock_code):
         return None
 
 
-def _first_book_price(tick, field):
-    levels = _tick_field(tick, field, [])
-    if not isinstance(levels, (list, tuple)) or not levels:
-        return 0.0
-    return _positive_price(levels[0])
-
-
-def _get_price_limits(ContextInfo, stock_code):
-    try:
-        detail = ContextInfo.get_instrumentdetail(stock_code)
-    except Exception:
-        _log("get_instrumentdetail failed for %s:\n%s"
-             % (stock_code, traceback.format_exc()))
-        return 0.0, 0.0
-    if detail is None:
-        return 0.0, 0.0
-    if isinstance(detail, dict):
-        upper = detail.get("UpStopPrice")
-        lower = detail.get("DownStopPrice")
-    else:
-        upper = getattr(detail, "UpStopPrice", None)
-        lower = getattr(detail, "DownStopPrice", None)
-    return _positive_price(upper), _positive_price(lower)
-
-
-def _effective_price(ContextInfo, order):
-    """Marketable first-order price with the signal price as data fallback."""
-    fallback_price = float(order["limit_price"])
-    tick = _get_tick(ContextInfo, order["stock_code"])
+def _official_close(ContextInfo, stock_code):
+    """Return QMT lastPrice after close; never infer or add slippage."""
+    tick = _get_tick(ContextInfo, stock_code)
     if tick is None:
-        return fallback_price
-
-    last = _positive_price(_tick_field(tick, "lastPrice"))
-    if order["side"] == "BUY":
-        reference = _first_book_price(tick, "askPrice") or last
-    else:
-        reference = _first_book_price(tick, "bidPrice") or last
-    if reference <= 0.0:
-        return fallback_price
-
-    upper, lower = _get_price_limits(ContextInfo, order["stock_code"])
-    if order["side"] == "BUY":
-        price = round(reference * (1.0 + INTRADAY_BUY_SLIPPAGE), 2)
-        if upper > 0.0:
-            price = min(price, upper)
-    else:
-        price = round(reference * (1.0 - INTRADAY_SELL_SLIPPAGE), 2)
-        if lower > 0.0:
-            price = max(price, lower)
-    return round(price, 2)
+        return 0.0
+    return _positive_price(_tick_field(tick, "lastPrice"))
 
 
 def _estimated_buy_cost(quantity, price):
@@ -802,7 +818,20 @@ def _max_affordable_quantity(cash, price, requested_qty):
     return 0
 
 
-def _submit(ContextInfo, batch, order, live, price=None):
+def _target_requested_quantity(price, target_value):
+    if price <= 0 or target_value <= 0:
+        return 0
+    return int(float(target_value) / float(price) / 100.0) * 100
+
+
+def _target_buy_quantity(cash, price, target_value):
+    requested = _target_requested_quantity(price, target_value)
+    if cash is None:
+        return requested
+    return _max_affordable_quantity(cash, price, requested)
+
+
+def _submit(ContextInfo, batch, order, live, official_close=None):
     """Submit one order. Returns True if submitted (or simulated)."""
     coid = order["client_order_id"]
     if coid in batch.submitted:
@@ -814,22 +843,20 @@ def _submit(ContextInfo, batch, order, live, price=None):
         return True
 
     op_type = 23 if order["side"] == "BUY" else 24
-    if price is None:
-        price = _effective_price(ContextInfo, order)
     # Persist before passorder. On a crash, an uncertain order is never
     # submitted twice; the safer failure direction is a missed order.
     batch.submitted[coid] = True
     _save_active_state(batch)
     try:
-        # orderType=1101 single stock by shares; prType=11 fixed price;
+        # orderType=1101 single stock by shares; prType=49 after-hours close;
         # quickTrade=2 submit immediately; userOrderId -> m_strRemark
         passorder(op_type, 1101, _account_id(batch), order["stock_code"],
-                  11, price, int(order["quantity"]),
+                  AFTER_HOURS_PRICE_TYPE, 0, int(order["quantity"]),
                   STRATEGY_NAME, 2, coid, ContextInfo)
         _write_fill(batch, order, "ACCEPTED", 0, 0.0, "", "submitted")
-        _log("passorder %s %s x%d @ %s (fallback_price %s) (%s)"
+        _log("passorder %s %s x%d prType=49 close=%s (%s)"
              % (order["side"], order["stock_code"], order["quantity"],
-                price, order["limit_price"], coid))
+                official_close, coid))
         return True
     except Exception:
         _write_fill(batch, order, "ERROR", 0, 0.0, "",
@@ -856,7 +883,7 @@ def _order_is_terminal(batch, coid):
 
 def _poll_status(batch):
     """Update fills from broker order details (LIVE only)."""
-    live = batch.header.get("mode") == "LIVE"
+    live = batch.execution_live and batch.broker_authorized
     if not live:
         return
     details = _get_orders_by_remark(_account_id(batch))
@@ -893,8 +920,11 @@ def _process_batch(ContextInfo, batch):
         batch.trading_started = True
         batch.phase_started = time.time()
 
-    mode_live = (batch.header.get("mode") == "LIVE"
+    mode_live = (batch.broker_authorized
+                 and batch.header.get("mode") == "LIVE"
                  and _live_ok(batch.header.get("trade_date", "")))
+    if mode_live:
+        batch.execution_live = True
     if batch.header.get("mode") == "LIVE" and not mode_live:
         _log("LIVE batch but LIVE_OK switch missing -> simulate/skip")
 
@@ -942,26 +972,44 @@ def _process_batch(ContextInfo, batch):
         for order in buys:
             if order["client_order_id"] in batch.submitted:
                 continue
+            close_price = _official_close(ContextInfo, order["stock_code"])
+            target_requested = _target_requested_quantity(
+                close_price, float(order["target_value"]))
+            if close_price <= 0.0:
+                order["quantity"] = 100
+                batch.submitted[order["client_order_id"]] = True
+                _write_fill(batch, order, "ERROR", 0, 0.0, "",
+                            "official close unavailable")
+                continue
+            if target_requested <= 0:
+                order["quantity"] = 100
+                batch.submitted[order["client_order_id"]] = True
+                _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                            "target_value below one board lot")
+                continue
+
+            quantity = _target_buy_quantity(
+                batch.remaining_cash if mode_live else None,
+                close_price,
+                float(order["target_value"]),
+            )
+            if quantity <= 0:
+                order["quantity"] = target_requested
+                batch.submitted[order["client_order_id"]] = True
+                _save_active_state(batch)
+                _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                            "insufficient actual cash: %.2f"
+                            % batch.remaining_cash)
+                continue
+            order["quantity"] = quantity
             if mode_live:
-                price = _effective_price(ContextInfo, order)
-                quantity = _max_affordable_quantity(
-                    batch.remaining_cash, price, order["quantity"])
-                if quantity <= 0:
-                    batch.submitted[order["client_order_id"]] = True
-                    _save_active_state(batch)
-                    _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
-                                "insufficient reserved cash: %.2f"
-                                % batch.remaining_cash)
-                    continue
-                if quantity < order["quantity"]:
-                    order["quantity"] = quantity
-                    _log("shrink buy %s to %d shares (reserved cash %.2f)"
-                         % (order["stock_code"], quantity,
-                            batch.remaining_cash))
-                reserved = _estimated_buy_cost(order["quantity"], price)
+                reserved = _estimated_buy_cost(quantity, close_price)
                 batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
                 _save_active_state(batch)
-                _submit(ContextInfo, batch, order, True, price=price)
+                _submit(
+                    ContextInfo, batch, order, True,
+                    official_close=close_price,
+                )
             else:
                 _submit(ContextInfo, batch, order, False)
 
@@ -978,7 +1026,7 @@ def _force_finalize_if_near_close(ContextInfo, batch):
         return
     # LIVE_OK gates *new* submissions only. Once a LIVE order was submitted,
     # removing the switch must not disable status polling or close-time cancel.
-    if batch.header.get("mode") == "LIVE":
+    if batch.execution_live and batch.broker_authorized:
         details = _get_orders_by_remark(_account_id(batch))
         for order in batch.orders:
             coid = order["client_order_id"]
@@ -1014,10 +1062,57 @@ def _force_finalize_if_near_close(ContextInfo, batch):
 # ======================= QMT entry points =======================
 
 
+def _advance(ContextInfo):
+    now = time.time()
+    if now - g.last_poll < POLL_SECONDS:
+        return
+    g.last_poll = now
+
+    _recover_processing_batch()
+    _claim_new_batch()
+    if g.batch is not None:
+        _force_finalize_if_near_close(ContextInfo, g.batch)
+    if g.batch is not None:
+        _process_batch(ContextInfo, g.batch)
+    _refresh_account_snapshots_after_close()
+
+
+def timer_callback(ContextInfo):
+    """Timer-driven path; continues after the last market tick."""
+    try:
+        if not g.loaded:
+            init(ContextInfo)
+        _advance(ContextInfo)
+    except Exception:
+        _log("timer_callback error:\n" + traceback.format_exc())
+
+
+def _register_postclose_timer(ContextInfo):
+    if g.timer_registered:
+        return
+    day = datetime.date.today()
+    first_compact = day.strftime("%Y%m%d") + "150455"
+    if hasattr(ContextInfo, "schedule_run"):
+        ContextInfo.schedule_run(
+            timer_callback,
+            first_compact,
+            -1,
+            datetime.timedelta(seconds=POLL_SECONDS),
+            "qlib_postclose_poll",
+        )
+    else:
+        first_legacy = day.strftime("%Y-%m-%d") + " 15:04:55"
+        ContextInfo.run_time(
+            "timer_callback", "%dnSecond" % int(POLL_SECONDS), first_legacy,
+        )
+    g.timer_registered = True
+
+
 def init(ContextInfo):
     _ensure_dirs()
     _load_processed()
     _recover_processing_batch()
+    _register_postclose_timer(ContextInfo)
     g.loaded = True
     _log("initialized, bridge_root=%s, %d processed batches"
          % (BRIDGE_ROOT, len(g.processed)))
@@ -1029,17 +1124,6 @@ def handlebar(ContextInfo):
             return
         if not g.loaded:
             init(ContextInfo)
-        now = time.time()
-        if now - g.last_poll < POLL_SECONDS:
-            return
-        g.last_poll = now
-
-        _recover_processing_batch()
-        _claim_new_batch()
-        if g.batch is not None:
-            _force_finalize_if_near_close(ContextInfo, g.batch)
-        if g.batch is not None:
-            _process_batch(ContextInfo, g.batch)
-        _refresh_account_snapshots_after_close()
+        _advance(ContextInfo)
     except Exception:
         _log("handlebar error:\n" + traceback.format_exc())

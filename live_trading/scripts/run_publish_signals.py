@@ -56,7 +56,7 @@ def publish_recorded_plan(recorder, publisher, header, orders):
         checksum=compute_checksum(order_lines),
     )
     validate_batch(validated_header, orders)
-    publisher.ensure_available(header.batch_id)
+    publisher.ensure_publishable(validated_header, orders)
     recorder.record_publish_plan(validated_header, orders)
     return publisher.publish(validated_header, orders)
 
@@ -97,12 +97,30 @@ def resolve_mode(args, config) -> str:
 
 
 def resolve_account_id(config) -> str:
-    account_id = config["live"].get("account_id") or os.environ.get("QMT_ACCOUNT_ID", "")
+    live_cfg = config["live"]
+    if live_cfg.get("broker_environment") != "SIMULATION":
+        raise SystemExit("refusing non-SIMULATION broker environment")
+    account_id = live_cfg.get("account_id") or os.environ.get(
+        "QMT_SIM_ACCOUNT_ID", ""
+    )
     if not account_id:
         raise SystemExit(
-            "account_id missing: set live.account_id in config or env QMT_ACCOUNT_ID"
+            "simulation account_id missing: set live.account_id or "
+            "QMT_SIM_ACCOUNT_ID"
         )
     return account_id
+
+
+def to_strategy_positions(qmt_positions: dict) -> dict:
+    """Map durable QMT positions to strategy metadata without dropping age."""
+    return {
+        qmt_to_qlib(code): {
+            "shares": position["shares"],
+            "cost_price": position["avg_cost"],
+            "opened_trade_date": position.get("opened_trade_date"),
+        }
+        for code, position in qmt_positions.items()
+    }
 
 
 def get_signal_date_and_scores(config, trade_date: str):
@@ -126,7 +144,10 @@ def get_signal_date_and_scores(config, trade_date: str):
     from live_trading.modules.signal_generator import SignalGenerator
     gen = SignalGenerator(config, PROJECT_ROOT)
     scores = gen.predict(signal_date, allow_stale=False)
-    return signal_date, scores
+    trade_dates = [
+        value.strftime("%Y-%m-%d") for value in cal if value <= prior[-1]
+    ]
+    return signal_date, scores, trade_dates
 
 
 def get_prev_close(config, instruments: list, signal_date: str) -> dict:
@@ -160,13 +181,19 @@ def main():
     trade_date = args.trade_date
     batch_id = f"{trade_date.replace('-', '')}_{live_cfg['strategy_id']}_{args.seq:03d}"
 
-    recorder = LiveRecorder(str(PROJECT_ROOT / config["storage"]["db_path"]))
+    recorder = LiveRecorder(
+        str(PROJECT_ROOT / config["storage"]["db_path"]),
+        fees=config.get("fees"),
+        opening_cash=config.get("account", {}).get("opening_cash"),
+    )
 
     if mode == "LIVE":
         ensure_prior_live_batches_terminal(recorder, trade_date)
 
     # 1. 预测分数
-    signal_date, scores = get_signal_date_and_scores(config, trade_date)
+    signal_date, scores, trade_dates = get_signal_date_and_scores(
+        config, trade_date
+    )
     logger.info("signal_date=%s, scored %d instruments", signal_date, len(scores))
 
     # 持久化全市场分数供监控查询（dry-run 不落库）
@@ -176,10 +203,7 @@ def main():
 
     # 2. 当前 live 持仓（QMT code → qlib instrument）
     qmt_positions = recorder.get_positions()
-    current_positions = {
-        qmt_to_qlib(code): {"shares": p["shares"], "cost_price": p["avg_cost"]}
-        for code, p in qmt_positions.items()
-    }
+    current_positions = to_strategy_positions(qmt_positions)
     cash = recorder.get_cash()
     logger.info("live positions: %d, cash: %.2f", len(current_positions), cash)
 
@@ -197,16 +221,19 @@ def main():
         for inst, p in current_positions.items()
     )
     intents = OrderManager(config).generate_orders(
-        scores, current_positions, cash, prev_close, total_value,
+        scores,
+        current_positions,
+        cash,
+        prev_close,
+        total_value,
+        signal_date=signal_date,
+        trade_dates=trade_dates,
     )
     if not intents:
-        logger.info("no orders to publish for %s", trade_date)
-        return
+        logger.info("no orders planned for %s; publishing terminal empty batch", trade_date)
 
     # 5. 订单行
     planner = OrderPlanner({
-        "buy_slippage": live_cfg["buy_slippage"],
-        "sell_slippage": live_cfg["sell_slippage"],
         "max_orders_per_day": live_cfg["max_orders_per_day"],
         "trade_unit": config["exchange"]["trade_unit"],
     })
@@ -217,8 +244,15 @@ def main():
     if args.dry_run:
         print(f"[dry-run] batch {batch_id} mode={mode} ({len(orders)} orders):")
         for o in orders:
-            print(f"  {o.side:4s} {o.stock_code} x{o.quantity} @ {o.limit_price}"
-                  f"  ({o.client_order_id})")
+            target = (
+                f"target_value={o.target_value:.2f}"
+                if o.side == "BUY"
+                else f"quantity={o.quantity}"
+            )
+            print(
+                f"  {o.side:4s} {o.stock_code} {target} "
+                f"({o.client_order_id})"
+            )
         return
 
     # 6. 发布
@@ -229,6 +263,7 @@ def main():
         signal_date=signal_date,
         account_id=account_id,
         account_type=live_cfg.get("account_type", "STOCK"),
+        account_environment=live_cfg["broker_environment"],
         mode=mode,
         created_at=datetime.now().astimezone().isoformat(timespec="seconds"),
         order_count=0,   # publisher 填充

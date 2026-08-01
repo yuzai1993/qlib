@@ -22,7 +22,7 @@ logger = logging.getLogger("live_trading.signal_publisher")
 
 
 class PublishError(RuntimeError):
-    """发布失败（重复批次、空批次等）。"""
+    """发布失败（同批次内容冲突或原子写失败）。"""
 
 
 class SignalPublisher:
@@ -31,35 +31,61 @@ class SignalPublisher:
         self.inbox = self.bridge_root / "inbox"
 
     def ensure_available(self, batch_id: str) -> None:
-        """Fail before any durable ledger write when a batch is already visible."""
+        """Legacy strict availability check."""
         jsonl_path = self.inbox / f"signal_{batch_id}.jsonl"
         done_path = self.inbox / f"signal_{batch_id}.done"
         if jsonl_path.exists() or done_path.exists():
             raise PublishError(f"batch {batch_id} already published")
 
-    def publish(self, header: BatchHeader, orders: list) -> Path:
-        """校验并原子写出批次文件，返回 jsonl 路径。
-
-        header 的 order_count / checksum 由本方法填充，调用方无需预填。
-        """
-        if not orders:
-            raise PublishError(f"batch {header.batch_id}: empty order list")
-
-        order_lines = [o.to_json_line() for o in orders]
+    @staticmethod
+    def _render(header: BatchHeader, orders: list):
+        order_lines = [order.to_json_line() for order in orders]
         header = dataclasses.replace(
             header,
             order_count=len(orders),
             checksum=compute_checksum(order_lines),
         )
         validate_batch(header, orders)
+        jsonl_content = "\n".join(
+            [header.to_json_line()] + order_lines
+        ) + "\n"
+        done_content = header.checksum + "\n"
+        return header, jsonl_content, done_content
+
+    def ensure_publishable(self, header: BatchHeader, orders: list) -> bool:
+        """Return True for an exact visible retry, fail on any conflict."""
+        _, jsonl_content, done_content = self._render(header, orders)
+        jsonl_path = self.inbox / f"signal_{header.batch_id}.jsonl"
+        done_path = self.inbox / f"signal_{header.batch_id}.done"
+        if not jsonl_path.exists() and not done_path.exists():
+            return False
+        if (
+            jsonl_path.is_file()
+            and done_path.is_file()
+            and jsonl_path.read_text(encoding="utf-8") == jsonl_content
+            and done_path.read_text(encoding="utf-8") == done_content
+        ):
+            return True
+        raise PublishError(
+            f"batch {header.batch_id} conflicts with already published bytes"
+        )
+
+    def publish(self, header: BatchHeader, orders: list) -> Path:
+        """校验并原子写出批次文件，返回 jsonl 路径。
+
+        header 的 order_count / checksum 由本方法填充，调用方无需预填。
+        """
+        header, jsonl_content, done_content = self._render(header, orders)
 
         self.inbox.mkdir(parents=True, exist_ok=True)
         jsonl_path = self.inbox / f"signal_{header.batch_id}.jsonl"
         done_path = self.inbox / f"signal_{header.batch_id}.done"
-        self.ensure_available(header.batch_id)
+        if self.ensure_publishable(header, orders):
+            logger.info("batch %s already published with exact bytes", header.batch_id)
+            return jsonl_path
 
-        self._atomic_write(jsonl_path, "\n".join([header.to_json_line()] + order_lines) + "\n")
-        self._atomic_write(done_path, header.checksum + "\n")
+        self._atomic_write(jsonl_path, jsonl_content)
+        self._atomic_write(done_path, done_content)
 
         logger.info(
             "published batch %s: %d orders, mode=%s -> %s",

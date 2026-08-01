@@ -28,13 +28,15 @@ def _orders():
         SignalOrder(
             batch_id=BATCH_ID, client_order_id="20260714001S",
             stock_code="000001.SZ", side="SELL", quantity=800,
-            price_type="FIX", limit_price=19.80, priority=10,
+            target_value=0.0, price_type="AFTER_HOURS_CLOSE", limit_price=0.0,
+            priority=10,
             instrument_qlib="SZ000001", reason="topk_drop",
         ),
         SignalOrder(
             batch_id=BATCH_ID, client_order_id="20260714002B",
-            stock_code="600000.SH", side="BUY", quantity=500,
-            price_type="FIX", limit_price=10.10, priority=20,
+            stock_code="600000.SH", side="BUY", quantity=0,
+            target_value=15_833.33, price_type="AFTER_HOURS_CLOSE",
+            limit_price=0.0, priority=20,
             instrument_qlib="SH600000", reason="topk_add",
         ),
     ]
@@ -45,6 +47,7 @@ def _header(order_count=0, checksum=""):
         batch_id=BATCH_ID, strategy_id="csi300_topk10",
         trade_date="2026-07-14", signal_date="2026-07-11",
         account_id="123456", account_type="STOCK", mode="SIMULATE",
+        account_environment="SIMULATION",
         created_at="2026-07-11T21:05:00+08:00",
         order_count=order_count, checksum=checksum,
     )
@@ -72,11 +75,21 @@ def test_publish_writes_jsonl_and_done(tmp_path):
     assert done.read_text(encoding="utf-8").strip() == expected
 
 
-def test_publish_refuses_duplicate_batch(tmp_path):
+def test_publish_exact_retry_is_idempotent(tmp_path):
+    pub = SignalPublisher(tmp_path)
+    first = pub.publish(_header(), _orders())
+    first_bytes = first.read_bytes()
+    second = pub.publish(_header(), _orders())
+    assert second == first
+    assert second.read_bytes() == first_bytes
+
+
+def test_publish_conflicting_retry_is_rejected(tmp_path):
     pub = SignalPublisher(tmp_path)
     pub.publish(_header(), _orders())
-    with pytest.raises(PublishError):
-        pub.publish(_header(), _orders())
+    changed = dataclasses.replace(_orders()[1], target_value=16_000.0)
+    with pytest.raises(PublishError, match="conflicts"):
+        pub.publish(_header(), [_orders()[0], changed])
 
 
 def test_publish_validates_orders(tmp_path):
@@ -95,17 +108,21 @@ def test_no_tmp_files_left(tmp_path):
     assert list((tmp_path / "inbox").glob("*.tmp")) == []
 
 
-def test_empty_orders_rejected(tmp_path):
-    with pytest.raises(PublishError):
-        SignalPublisher(tmp_path).publish(_header(), [])
+def test_empty_orders_publish_header_only_terminal_batch(tmp_path):
+    path = SignalPublisher(tmp_path).publish(_header(), [])
+    lines = path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    header = json.loads(lines[0])
+    assert header["order_count"] == 0
+    assert header["checksum"] == compute_checksum([])
 
 
 def test_plan_is_durable_before_signal_becomes_visible(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
 
     class InspectingPublisher:
-        def ensure_available(self, batch_id):
-            assert batch_id == BATCH_ID
+        def ensure_publishable(self, header, orders):
+            assert header.batch_id == BATCH_ID
 
         def publish(self, header, orders):
             assert recorder.get_batch(BATCH_ID)["planned_orders"] == 2
@@ -118,31 +135,33 @@ def test_plan_is_durable_before_signal_becomes_visible(tmp_path):
     assert path.name == f"signal_{BATCH_ID}.jsonl"
 
 
-def test_existing_shared_batch_does_not_create_unverified_db_plan(tmp_path):
+def test_existing_exact_shared_batch_is_adopted_into_durable_db_plan(tmp_path):
     publisher = SignalPublisher(tmp_path)
     publisher.publish(_header(), _orders())
     recorder = LiveRecorder(str(tmp_path / "live.db"))
 
-    with pytest.raises(PublishError, match="already published"):
-        publish_recorded_plan(recorder, publisher, _header(), _orders())
+    publish_recorded_plan(recorder, publisher, _header(), _orders())
 
-    assert recorder.get_batch(BATCH_ID) is None
-    assert recorder.get_orders(BATCH_ID) == []
+    assert recorder.get_batch(BATCH_ID)["planned_orders"] == 2
+    assert len(recorder.get_orders(BATCH_ID)) == 2
 
 
 def test_conflicting_publish_retry_preserves_original_plan(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     recorder.record_publish_plan(_header(), _orders())
     changed = [
-        SignalOrder(**{**order.__dict__, "limit_price": order.limit_price + 1.0})
+        SignalOrder(**{
+            **order.__dict__,
+            "target_value": order.target_value + (1.0 if order.side == "BUY" else 0.0),
+        })
         for order in _orders()
     ]
 
     with pytest.raises(SchemaError, match="conflicts with durable plan"):
         recorder.record_publish_plan(_header(), changed)
 
-    assert [row["limit_price"] for row in recorder.get_orders(BATCH_ID)] == [
-        19.80, 10.10,
+    assert [row["target_value"] for row in recorder.get_orders(BATCH_ID)] == [
+        0.0, 15_833.33,
     ]
 
 
@@ -153,6 +172,7 @@ def test_publish_retry_cannot_change_account_or_signal_date(tmp_path):
     for changed in (
         dataclasses.replace(_header(), account_id="DIFFERENT"),
         dataclasses.replace(_header(), signal_date="2026-07-10"),
+        dataclasses.replace(_header(), account_environment="REAL"),
     ):
         with pytest.raises(SchemaError, match="conflicts with durable plan"):
             recorder.record_publish_plan(changed, _orders())

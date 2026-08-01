@@ -68,9 +68,17 @@ def _record_plan(
             "stock_code": f["stock_code"],
             "instrument_qlib": "",
             "side": f["side"],
-            "quantity": f["requested_qty"],
-            "price_type": "FIX",
-            "limit_price": max(float(f["avg_price"]), 1.0),
+            "quantity": f["requested_qty"] if f["side"] == "SELL" else 0,
+            "target_value": (
+                0.0 if f["side"] == "SELL"
+                else f.get(
+                    "target_value",
+                    float(f["requested_qty"])
+                    * max(float(f["avg_price"]), 1.0),
+                )
+            ),
+            "price_type": "AFTER_HOURS_CLOSE",
+            "limit_price": 0.0,
             "priority": 10 if f["side"] == "SELL" else 20,
             "reason": "test",
         }
@@ -140,6 +148,31 @@ def test_position_open_date_survives_add_on_and_resets_after_full_exit(tmp_path)
     _record_plan(recorder, [reentry], batch_id="b4", trade_date="2026-07-17")
     recorder.apply_fill(FillEvent.from_dict(reentry))
     assert recorder.get_positions()["600000.SH"]["opened_trade_date"] == "2026-07-17"
+
+
+def test_buy_fill_is_broker_sized_and_cannot_exceed_target_value(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "target.db"), opening_cash=100_000.0)
+    fill = _fill(
+        batch_id="buy-target", client_order_id="buy-target-1", side="BUY",
+        stock_code="600000.SH", requested=1_000, filled=1_000, price=10.0,
+    )
+    _record_plan(recorder, [fill], batch_id="buy-target")
+
+    recorder.apply_fill(FillEvent.from_dict(fill))
+    assert recorder.get_positions()["600000.SH"]["shares"] == 1_000
+
+    over = dict(fill, avg_price=10.01)
+    with pytest.raises(SchemaError, match="target_value"):
+        recorder.apply_fill(FillEvent.from_dict(over))
+
+
+def test_sell_fill_remains_bounded_by_planned_quantity(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "sell-plan.db"))
+    fill = _fill(requested=800, filled=800)
+    _record_plan(recorder, [fill])
+
+    with pytest.raises(SchemaError, match="planned"):
+        recorder.apply_fill(FillEvent.from_dict(dict(fill, requested_qty=900)))
 
 
 def test_same_client_order_id_can_exist_in_two_batches(env):
@@ -285,7 +318,6 @@ def test_fill_must_match_recorded_order_before_mutating_ledger(env):
 @pytest.mark.parametrize(("changes", "message"), [
     ({"mode": "SIMULATE"}, "mode"),
     ({"side": "SELL"}, "side"),
-    ({"requested_qty": 300, "filled_qty": 200}, "requested_qty"),
 ])
 def test_fill_rejects_batch_and_order_mismatches(env, changes, message):
     _, recorder, _ = env
@@ -317,6 +349,21 @@ def test_fill_rejects_decreasing_cumulative_quantity(env):
     assert recorder.get_positions()["600000.SH"]["shares"] == 200
 
 
+def test_fill_requested_quantity_cannot_change_after_first_event(env):
+    _, recorder, _ = env
+    recorder.set_cash(100000.0)
+    partial = _fill(
+        side="BUY", stock_code="600000.SH", requested=500,
+        filled=200, price=10.0, status="PARTIAL",
+    )
+    _record_plan(recorder, [partial])
+    recorder.apply_fill(FillEvent.from_dict(partial))
+
+    changed = dict(partial, requested_qty=600, filled_qty=300)
+    with pytest.raises(SchemaError, match="requested_qty changed"):
+        recorder.apply_fill(FillEvent.from_dict(changed))
+
+
 def test_sell_fill_cannot_credit_cash_beyond_ledger_position(env):
     _, recorder, _ = env
     recorder.set_cash(100000.0)
@@ -339,6 +386,7 @@ def test_partial_fill_average_change_uses_cumulative_amount_delta(env):
         side="BUY", stock_code="600000.SH", requested=200,
         filled=100, price=10.0, status="PARTIAL",
     )
+    planned["target_value"] = 2_500.0
     _record_plan(recorder, [planned])
     recorder.apply_fill(FillEvent.from_dict(planned))
     final = dict(planned, status="FILLED", filled_qty=200, avg_price=11.0)

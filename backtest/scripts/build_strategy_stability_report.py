@@ -14,6 +14,7 @@ from phase_s_protocol import CURRENT_STRATEGY_BASELINE_ID, strategy_grid
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 DEFAULT_OUTPUT = REPO_ROOT / "backtest/experiments/strategy_stability_report.html"
+CURRENT_STRATEGY_BASELINE_EXP_ID = "baseline/b2-s-on-b6-m"
 METRICS = (
     ("annualized_return", "扣费年化", True),
     ("sharpe_ratio", "夏普", False),
@@ -96,6 +97,40 @@ def _benchmark_context(rows: list[dict]) -> str:
     return f'<p class="note">CSI1000 区间累计收益：{_fmt(value, True)}</p>'
 
 
+def _baseline_section(baseline_row: dict, candidates: Sequence[dict]) -> str:
+    strategy = baseline_row.get("strategy") or {}
+    candidate_id = strategy.get("candidate_id")
+    matches = [item for item in candidates if item.get("candidate_id") == candidate_id]
+    if len(matches) != 1:
+        raise ValueError("B2-S baseline candidate must match exactly one B6-M diagnostic result")
+    metrics = matches[0].get("full_period") or {}
+    selection_segment = baseline_row.get("selection_segment") or []
+    test_segment = baseline_row.get("test_segment") or []
+    start = selection_segment[0] if selection_segment else "—"
+    end = test_segment[-1] if test_segment else "—"
+    pool = str(baseline_row.get("selection_pool") or "—").upper()
+    params = (
+        f"Top{_esc(strategy.get('topk'))} / "
+        f"d{_esc(strategy.get('n_drop'))} / "
+        f"h{_esc(strategy.get('hold_thresh'))}"
+    )
+    metric_headers = "".join(f"<th>{label}</th>" for _, label, _ in METRICS)
+    metric_cells = "".join(
+        f'<td class="num">{_fmt(metrics.get(key), percent)}</td>'
+        for key, _, percent in METRICS
+    )
+    return (
+        '<section id="current-baseline"><h2>当前策略 Baseline</h2>'
+        '<table class="baseline"><thead><tr>'
+        '<th>Baseline</th><th>冻结模型</th><th>市场</th><th>全周期</th><th>策略参数</th>'
+        f"{metric_headers}</tr></thead><tbody><tr>"
+        f"<td>{_esc(baseline_row.get('baseline_ref'))}</td>"
+        f"<td>{_esc(baseline_row.get('frozen_model_ref'))}</td>"
+        f"<td>{_esc(pool)}</td><td>{_esc(start)} 至 {_esc(end)}</td>"
+        f"<td>{params}</td>{metric_cells}</tr></tbody></table></section>"
+    )
+
+
 def build_html(rows: Sequence[dict]) -> str:
     b6_matches = [
         row
@@ -111,7 +146,13 @@ def build_html(rows: Sequence[dict]) -> str:
     actual_ids = {item.get("candidate_id") for item in b6}
     if actual_ids != expected_ids or len(b6) != len(expected_ids):
         raise ValueError("B6-M stability diagnostic candidate set is incomplete")
+    baseline_matches = [
+        row for row in rows if row.get("exp_id") == CURRENT_STRATEGY_BASELINE_EXP_ID
+    ]
+    if len(baseline_matches) != 1:
+        raise ValueError("report requires exactly one B2-S baseline row")
     sections = [
+        _baseline_section(baseline_matches[0], b6),
         '<section class="model" id="b6-m"><h2>B6-M</h2>'
         '<h3>全周期连续组合（2020-01-13 至 2026-07-31）</h3>'
         + _benchmark_context(b6)

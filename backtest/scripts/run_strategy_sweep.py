@@ -24,6 +24,7 @@ from phase_s_protocol import (  # noqa: E402
     ACCOUNT,
     BASELINE_CANDIDATE_ID,
     EXCHANGE_KWARGS,
+    FULL_SEGMENT,
     MODEL_REFS,
     POOL_BENCHMARKS,
     RISK_DEGREE,
@@ -95,6 +96,8 @@ def _segment_bounds(segment: str) -> tuple[str, str]:
         return VALID_SEGMENT
     if segment == "test":
         return TEST_SEGMENT
+    if segment == "full":
+        return FULL_SEGMENT
     raise ValueError(f"unsupported Phase S segment: {segment}")
 
 

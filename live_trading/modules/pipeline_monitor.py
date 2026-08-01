@@ -65,7 +65,9 @@ def check_postmarket(trade_date, batches, reconciles, fills,
     for b in batches:
         r = reconciles.get(b["batch_id"], {})
         missing = r.get("missing", 0)
-        if missing > 0 or r.get("terminal", 0) == 0:
+        planned = int(r.get("planned", b.get("planned_orders", 0)) or 0)
+        terminal = int(r.get("terminal", 0) or 0)
+        if missing > 0 or (planned > 0 and terminal == 0):
             findings.append(Finding(
                 "FILLS_MISSING", CRIT,
                 f"批次 {b['batch_id']} 回执不全：planned={r.get('planned')} "

@@ -52,6 +52,7 @@ def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
     assert bridge.CANCEL_AT == "15:28:00"
     assert bridge.FINALIZE_AT == "15:30:00"
     assert bridge.SNAPSHOT_REFRESH_AT == "15:31:00"
+    assert bridge.MAX_ORDER_QUANTITY == 100
     calls = []
 
     class Context:
@@ -271,6 +272,7 @@ def test_target_buy_quantity_respects_target_value_cash_and_fees(bridge):
 def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
     bridge, monkeypatch,
 ):
+    bridge.MAX_ORDER_QUANTITY = 0
     first = _order(coid="20260714001001B", side="BUY", priority=20)
     second = _order(coid="20260714001002B", side="BUY", priority=20)
     first.update(target_value=8_000.0)

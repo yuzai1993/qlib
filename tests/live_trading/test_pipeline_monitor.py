@@ -87,6 +87,19 @@ def test_postmarket_batch_without_any_fill():
     assert "FILLS_MISSING" in _rules(f)
 
 
+def test_postmarket_zero_order_batch_is_terminal_without_fill_alert():
+    findings = check_postmarket(
+        "2026-07-14",
+        [{**BATCH, "mode": "LIVE", "planned_orders": 0}],
+        {BATCH["batch_id"]: {"planned": 0, "terminal": 0, "missing": 0}},
+        [],
+        prev_positions={},
+    )
+
+    assert "FILLS_MISSING" not in _rules(findings)
+    assert "ALL_ORDERS_SKIPPED" not in _rules(findings)
+
+
 def test_postmarket_reject_rate():
     fills = [_fill(status="REJECTED"), _fill(status="ERROR"),
              _fill(), _fill()]

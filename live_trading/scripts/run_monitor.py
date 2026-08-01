@@ -367,7 +367,11 @@ def main():
     date = args.date or _date.today().strftime("%Y-%m-%d")
 
     db_path = str(PROJECT_ROOT / config["storage"]["db_path"])
-    recorder = LiveRecorder(db_path, fees=fees_from_config(config))
+    recorder = LiveRecorder(
+        db_path,
+        fees=fees_from_config(config),
+        opening_cash=config.get("account", {}).get("opening_cash"),
+    )
     store = MonitorStore(db_path)
     notifier = create_notifier(config.get("monitor", {}))
 

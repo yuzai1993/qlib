@@ -30,8 +30,11 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
     config = load_live_config(CONFIGS_DIR / f"{args.config}.yaml", PROJECT_ROOT)
-    recorder = LiveRecorder(str(PROJECT_ROOT / config["storage"]["db_path"]),
-                            fees=fees_from_config(config))
+    recorder = LiveRecorder(
+        str(PROJECT_ROOT / config["storage"]["db_path"]),
+        fees=fees_from_config(config),
+        opening_cash=config.get("account", {}).get("opening_cash"),
+    )
     importer = FillImporter(config["live"]["bridge_root"], recorder)
 
     n = importer.import_fills()

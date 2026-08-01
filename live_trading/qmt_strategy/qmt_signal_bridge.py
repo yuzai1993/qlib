@@ -34,6 +34,9 @@ STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
 ACCOUNT_ENVIRONMENT = "SIMULATION"
 AFTER_HOURS_PRICE_TYPE = 49
+# Safety rollout gate. 100 means one-lot paper execution; set to 0 only after
+# shadow and one-lot acceptance are complete. This never enables real money.
+MAX_ORDER_QUANTITY = 100
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
 SELL_WAIT_TIMEOUT_SEC = 4 * 60    # max wait for sells before starting buys
@@ -949,6 +952,13 @@ def _process_batch(ContextInfo, batch):
                         batch.submitted[order["client_order_id"]] = True
                         _save_active_state(batch)
                         continue
+                if (MAX_ORDER_QUANTITY > 0
+                        and order["quantity"] > MAX_ORDER_QUANTITY):
+                    order["quantity"] = (
+                        int(MAX_ORDER_QUANTITY) // 100
+                    ) * 100
+                    _log("rollout gate shrinks sell %s to %d shares"
+                         % (order["stock_code"], order["quantity"]))
             _submit(ContextInfo, batch, order, mode_live)
 
         _poll_status(batch)
@@ -993,6 +1003,10 @@ def _process_batch(ContextInfo, batch):
                 close_price,
                 float(order["target_value"]),
             )
+            if mode_live and MAX_ORDER_QUANTITY > 0:
+                quantity = min(
+                    quantity, (int(MAX_ORDER_QUANTITY) // 100) * 100,
+                )
             if quantity <= 0:
                 order["quantity"] = target_requested
                 batch.submitted[order["client_order_id"]] = True

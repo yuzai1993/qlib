@@ -3,6 +3,8 @@
 > 面向本仓库后续「qlib 研究/回测 → QMT 实盘」的能力地图。
 > 资料来源：[QMT 新人教程](https://dict.thinktrader.net/freshman/rookie.html)、[迅投知识库](https://dict.thinktrader.net/)、[XtQuant 快速开始](https://dict.thinktrader.net/nativeApi/start_now.html)。
 
+> **当前实现说明（2026-08-02）：** CSI1000 B6-M 盘后模拟系统已经选择路线 A——QMT 内置 Python + 文件桥接，而不是本指南早期建议的 XtQuant 路线 B。原因是盘后定价需要 QMT 本地 `schedule_run` 定时器和 `passorder(..., prType=49)`，同时 Mac 侧只负责 T-1 信号与审计账本。当前部署与晋级步骤以 [`live_trading/README.md`](../live_trading/README.md) 和 [`README_QMT.md`](../live_trading/qmt_strategy/README_QMT.md) 为准；下文保留为通用能力地图，不应覆盖当前系统设计。
+
 ---
 
 ## 1. 一句话搞懂 QMT
@@ -45,8 +47,7 @@
 └─────────────────────────────────────────────────────────┘
 ```
 
-**结论：配合 qlib 实盘，用路线 B（XtQuant）。**
-路线 A 的 `passorder` 了解即可，不必作为主架构。
+**历史建议：一般外部 Python 桥接可用路线 B（XtQuant）。** 当前 CSI1000 盘后模拟系统例外，明确采用路线 A；不要把两套架构混装在同一账户。
 
 ---
 

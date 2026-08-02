@@ -139,28 +139,50 @@ def test_checkpoint_reuses_only_matching_full_config_and_prediction():
     assert pending[0] is not grid[1]
 
 
-def test_prediction_artifact_requires_exact_full_coverage_and_sha(tmp_path: Path):
-    index = pd.MultiIndex.from_arrays(
-        [
-            pd.to_datetime(["2020-01-13", "2026-07-31"]),
-            ["SH600000", "SH600000"],
-        ],
-        names=["datetime", "instrument"],
-    )
-    prediction = pd.DataFrame({"score": [0.1, 0.2]}, index=index)
-    path = tmp_path / "csi1000_full.pkl"
-    prediction.to_pickle(path)
-    entry = {
+def _prediction_entry(path: Path, prediction: pd.DataFrame) -> dict:
+    dates = pd.DatetimeIndex(prediction.index.get_level_values("datetime"))
+    return {
+        "model_ref": "b6-m",
+        "pool": "csi1000",
+        "segment": "full",
         "path": str(path),
         "prediction_sha256": runner.sha256_file(path),
         "coverage": {
-            "start": "2020-01-13",
-            "end": "2026-07-31",
-            "n_dates": 2,
-            "n_rows": 2,
-            "index_sha256": runner.prediction_index_sha256(index),
+            "start": str(dates.min().date()),
+            "end": str(dates.max().date()),
+            "n_dates": int(dates.nunique()),
+            "n_rows": int(len(prediction)),
+            "index_sha256": runner.prediction_index_sha256(prediction.index),
         },
     }
+
+
+def _write_authoritative_manifest(path: Path, entry: dict) -> None:
+    path.write_text(json.dumps({"predictions": [entry]}), encoding="utf-8")
+
+
+def test_prediction_artifact_requires_exact_full_coverage_and_sha(
+    tmp_path: Path, monkeypatch
+):
+    index = pd.MultiIndex.from_arrays(
+        [
+            pd.to_datetime(["2020-01-13", "2020-01-14", "2026-07-31"]),
+            ["SH600000", "SH600000", "SH600000"],
+        ],
+        names=["datetime", "instrument"],
+    )
+    prediction = pd.DataFrame({"score": [0.1, 0.15, 0.2]}, index=index)
+    path = tmp_path / "csi1000_full.pkl"
+    prediction.to_pickle(path)
+    entry = _prediction_entry(path, prediction)
+    authoritative_manifest = tmp_path / "tracked_prediction_manifest.json"
+    _write_authoritative_manifest(authoritative_manifest, entry)
+    monkeypatch.setattr(
+        runner,
+        "DEFAULT_PREDICTION_MANIFEST",
+        authoritative_manifest,
+        raising=False,
+    )
 
     coverage = runner.validate_prediction_artifact(entry, path)
 
@@ -169,9 +191,50 @@ def test_prediction_artifact_requires_exact_full_coverage_and_sha(tmp_path: Path
     changed["prediction_sha256"] = "0" * 64
     with pytest.raises(ValueError, match="SHA"):
         runner.validate_prediction_artifact(changed, path)
-    wrong_coverage = {**entry, "coverage": {**entry["coverage"], "n_rows": 3}}
+    wrong_coverage = {**entry, "coverage": {**entry["coverage"], "n_rows": 4}}
     with pytest.raises(ValueError, match="coverage"):
         runner.validate_prediction_artifact(wrong_coverage, path)
+
+
+def test_self_consistent_endpoint_only_prediction_is_rejected_by_tracked_manifest(
+    tmp_path: Path, monkeypatch
+):
+    authoritative_index = pd.MultiIndex.from_arrays(
+        [
+            pd.to_datetime(["2020-01-13", "2020-01-14", "2026-07-31"]),
+            ["SH600000", "SH600000", "SH600000"],
+        ],
+        names=["datetime", "instrument"],
+    )
+    authoritative = pd.DataFrame({"score": [0.1, 0.15, 0.2]}, index=authoritative_index)
+    authoritative_path = tmp_path / "authoritative_full.pkl"
+    authoritative.to_pickle(authoritative_path)
+    authoritative_manifest = tmp_path / "tracked_prediction_manifest.json"
+    _write_authoritative_manifest(
+        authoritative_manifest,
+        _prediction_entry(authoritative_path, authoritative),
+    )
+    monkeypatch.setattr(
+        runner,
+        "DEFAULT_PREDICTION_MANIFEST",
+        authoritative_manifest,
+        raising=False,
+    )
+
+    endpoint_index = pd.MultiIndex.from_arrays(
+        [
+            pd.to_datetime(["2020-01-13", "2026-07-31"]),
+            ["SH600000", "SH600000"],
+        ],
+        names=["datetime", "instrument"],
+    )
+    endpoint_only = pd.DataFrame({"score": [0.1, 0.2]}, index=endpoint_index)
+    endpoint_path = tmp_path / "endpoint_only.pkl"
+    endpoint_only.to_pickle(endpoint_path)
+    self_consistent_entry = _prediction_entry(endpoint_path, endpoint_only)
+
+    with pytest.raises(ValueError, match="authoritative tracked manifest"):
+        runner.validate_prediction_artifact(self_consistent_entry, endpoint_path)
 
 
 def test_full_config_uses_full_segment_and_canonical_filename(tmp_path: Path):
@@ -243,6 +306,29 @@ def test_batch_completion_checkpoints_on_caller_thread_with_at_most_three_worker
     assert 1 < max_active <= 3
     assert worker_threads != {caller_thread}
     assert checkpoint_threads == [caller_thread] * len(candidates)
+
+
+def test_worker_exception_becomes_failed_row_and_other_futures_are_checkpointed():
+    candidates = [{"candidate_id": f"c{i}"} for i in range(3)]
+    checkpointed = []
+
+    def run_candidate(candidate):
+        if candidate["candidate_id"] == "c1":
+            raise OSError("subprocess launch failed")
+        return {**candidate, "status": "success"}
+
+    runner.run_bounded_batches(
+        candidates,
+        run_candidate=run_candidate,
+        checkpoint=checkpointed.append,
+        workers=3,
+    )
+
+    assert {row["candidate_id"] for row in checkpointed} == {"c0", "c1", "c2"}
+    failed = next(row for row in checkpointed if row["candidate_id"] == "c1")
+    assert failed["status"] == "failed"
+    assert "subprocess launch failed" in failed["error"]
+    assert sum(row["status"] == "success" for row in checkpointed) == 2
 
 
 def _successful_grid_rows():

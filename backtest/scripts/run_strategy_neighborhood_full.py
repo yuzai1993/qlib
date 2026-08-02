@@ -69,6 +69,11 @@ DEFAULT_BASE_CONFIG = (
     REPO_ROOT
     / "backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml"
 )
+DEFAULT_PREDICTION_MANIFEST = (
+    REPO_ROOT
+    / "backtest/experiments/strategy-stability/20260801_full_period"
+    / "prediction_manifest.json"
+)
 SELECTION_RULE = [
     "axial_neighbor_ir_p25 desc",
     "own_ir desc",
@@ -156,11 +161,20 @@ def _prediction_frame(path: Path) -> pd.DataFrame:
     return frame.sort_index()
 
 
+def _authoritative_full_prediction_entry() -> dict[str, Any]:
+    """Load coverage identity from the tracked full-period stability manifest."""
+    manifest_path = DEFAULT_PREDICTION_MANIFEST.expanduser().resolve()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    return full_prediction_entry(manifest)
+
+
 def validate_prediction_artifact(entry: dict[str, Any], path: Path) -> dict[str, Any]:
-    """Verify the frozen score file and its exact declared full-period coverage."""
+    """Verify the score against its entry and the tracked coverage authority."""
     prediction_path = Path(path).expanduser().resolve()
     if not prediction_path.is_file():
         raise FileNotFoundError(f"full prediction file missing: {prediction_path}")
+    if _prediction_path(entry) != prediction_path:
+        raise ValueError("full prediction path differs from manifest")
     if sha256_file(prediction_path) != entry.get("prediction_sha256"):
         raise ValueError("full prediction file SHA differs from manifest")
     frame = _prediction_frame(prediction_path)
@@ -177,6 +191,23 @@ def validate_prediction_artifact(entry: dict[str, Any], path: Path) -> dict[str,
     declared = entry.get("coverage") or {}
     if any(declared.get(key) != value for key, value in actual.items()):
         raise ValueError("full prediction coverage differs from manifest")
+    authoritative = _authoritative_full_prediction_entry()
+    same_identity = (
+        (
+            entry.get("model_ref"),
+            entry.get("pool"),
+            entry.get("segment"),
+        )
+        == (MODEL_REF, POOL, SEGMENT)
+        and _prediction_path(entry) == _prediction_path(authoritative)
+        and entry.get("prediction_sha256") == authoritative.get("prediction_sha256")
+        and declared == (authoritative.get("coverage") or {})
+    )
+    if not same_identity:
+        raise ValueError(
+            "full prediction differs from authoritative tracked manifest: "
+            f"{_repo_path(DEFAULT_PREDICTION_MANIFEST)}"
+        )
     return actual
 
 
@@ -334,9 +365,22 @@ def run_bounded_batches(
             raise RuntimeError("runtime budget reached before full grid completed")
         batch = candidates[offset : offset + workers]
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = [executor.submit(run_candidate, candidate) for candidate in batch]
+            futures = {
+                executor.submit(run_candidate, candidate): copy.deepcopy(candidate)
+                for candidate in batch
+            }
             for future in as_completed(futures):
-                checkpoint(future.result())
+                candidate = futures[future]
+                try:
+                    row = future.result()
+                except Exception as exc:
+                    row = {
+                        **candidate,
+                        "status": "failed",
+                        "returncode": None,
+                        "error": f"worker exception: {type(exc).__name__}: {exc}",
+                    }
+                checkpoint(_json_safe(row))
 
 
 def completed_results_payload(

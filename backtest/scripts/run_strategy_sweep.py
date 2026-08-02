@@ -23,6 +23,7 @@ from eval_protocol import yearly_ir  # noqa: E402
 from phase_s_protocol import (  # noqa: E402
     ACCOUNT,
     BASELINE_CANDIDATE_ID,
+    CURRENT_STRATEGY_BASELINE_ID,
     EXCHANGE_KWARGS,
     FULL_SEGMENT,
     MODEL_REFS,
@@ -30,6 +31,8 @@ from phase_s_protocol import (  # noqa: E402
     RISK_DEGREE,
     TEST_SEGMENT,
     VALID_SEGMENT,
+    load_frozen_model,
+    select_strategy_winner,
     select_valid_winner,
     sha256_file,
     strategy_grid,
@@ -39,6 +42,30 @@ from report_utils import make_session_dir  # noqa: E402
 IR_KEY = "excess_with_cost_information_ratio"
 ANN_KEY = "excess_with_cost_annualized_return"
 MDD_KEY = "excess_with_cost_max_drawdown"
+FULL_EVALUATION_MODE = "full_history_in_sample"
+FULL_SELECTION_MODEL_REF = "b6-m"
+FULL_SELECTION_POOL = "csi1000"
+
+
+def _validate_full_selection_scope(model_ref: str, pool: str) -> None:
+    if (model_ref, pool) != (FULL_SELECTION_MODEL_REF, FULL_SELECTION_POOL):
+        raise ValueError("full Phase S selection requires B6-M / CSI1000")
+
+
+def _comparison_baseline_id(model_ref: str, segment: str) -> str:
+    """Keep B1 valid/test outputs reproducible while B6 research uses B2-S."""
+    if model_ref == "b1-m" and segment in {"valid", "test"}:
+        return BASELINE_CANDIDATE_ID
+    return CURRENT_STRATEGY_BASELINE_ID
+
+
+def _resolve_manifest_path(raw: Any, label: str) -> Path:
+    if not isinstance(raw, str) or not raw.strip():
+        raise ValueError(f"prediction manifest {label} is required")
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        path = REPO_ROOT / path
+    return path.resolve()
 
 
 def classify_strategy_outcome(row: dict[str, Any]) -> None:
@@ -70,6 +97,8 @@ def verify_prediction_contract(
     pool: str,
     segment: str,
 ) -> dict[str, Any]:
+    if segment == "full":
+        _validate_full_selection_scope(model_ref, pool)
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
     matches = [
         entry
@@ -88,6 +117,16 @@ def verify_prediction_contract(
     actual_sha = sha256_file(pred_path)
     if actual_sha != entry.get("prediction_sha256"):
         raise ValueError("prediction SHA-256 differs from frozen manifest")
+    if segment == "full":
+        frozen = load_frozen_model(REPO_ROOT, FULL_SELECTION_MODEL_REF)
+        if (
+            _resolve_manifest_path(entry.get("model_path"), "model_path")
+            != frozen.model_path.resolve()
+            or entry.get("model_sha256") != frozen.model_sha256
+        ):
+            raise ValueError(
+                "full Phase S selection requires the tracked B6-M seed-4000 model binding"
+            )
     return dict(entry)
 
 
@@ -235,9 +274,16 @@ def write_comparison(
     pool: str,
     segment: str,
 ) -> dict[str, Any]:
+    if segment == "full":
+        _validate_full_selection_scope(model_ref, pool)
+    baseline_id = _comparison_baseline_id(model_ref, segment)
     successful = [row for row in rows if row.get("status") == "success"]
     baseline = next(
-        (row for row in successful if row["candidate_id"] == BASELINE_CANDIDATE_ID),
+        (
+            row
+            for row in successful
+            if row["candidate_id"] == baseline_id
+        ),
         None,
     )
     if baseline is None:
@@ -257,7 +303,10 @@ def write_comparison(
         "ranked": ranked,
         "all_rows": rows,
     }
-    if segment in {"full", "valid"}:
+    if segment == "full":
+        payload["evaluation_mode"] = FULL_EVALUATION_MODE
+        payload["winner"] = select_strategy_winner(rows)
+    elif segment == "valid":
         payload["winner"] = select_valid_winner(rows)
     (out_dir / "comparison.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -265,8 +314,15 @@ def write_comparison(
     lines = [
         f"# {model_ref} {pool} {segment} Phase S",
         "",
-        f"- 基线: `{BASELINE_CANDIDATE_ID}`",
+        f"- 基线: `{baseline_id}`",
     ]
+    if segment == "full":
+        lines.extend(
+            [
+                f"- evaluation_mode: `{FULL_EVALUATION_MODE}`",
+                "- 声明：本结果为全历史样本内比较，非样本外检验。",
+            ]
+        )
     if payload.get("winner"):
         lines.append(f"- {segment} 胜者: `{payload['winner']['candidate_id']}`")
     lines.extend(
@@ -318,6 +374,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="retry failed rows from an existing comparison and preserve attempt history",
     )
     args = parser.parse_args(argv)
+    if args.segment == "full":
+        try:
+            _validate_full_selection_scope(args.model_ref, args.pool)
+        except ValueError as exc:
+            parser.error(str(exc))
     if args.segment == "test" and not args.candidate_id:
         parser.error("test requires frozen --candidate-id values")
     return args

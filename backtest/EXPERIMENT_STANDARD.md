@@ -190,7 +190,7 @@ Phase M 固定 5 个种子：`[42, 1000, 2000, 3000, 4000]`。不得增删或挑
 
 1. 首先校验所评估 model-ref 的 baseline manifest、模型路径与 SHA-256；记录 raw prediction 路径、SHA-256、精确索引覆盖、handler/config SHA 与数据版本。Phase S 不做多种子集成。
 2. 策略网格、主指标与并列规则须在运行前预登记；在 CSI1000 `full` 段（2020-01-13 ~ 2026-07-31）对 B2-S 与全部预登记候选作统一比较和选型。该比较必须显式标注 `full_history_in_sample`，不得表述为样本外检验。
-3. 将 full-period 比较、胜者、B2-S 对照、扣费超额 IR/年化/最大回撤及扣费分年度 IR 一并登记到 registry，并从 registry 重建统一 HTML 报告；不得再把 `valid` 冻结胜者和一次性 `test` 打开作为新 Phase S 的选型流程。
+3. 将 full-period 比较、胜者、B2-S 对照、扣费超额 IR/年化/最大回撤及扣费分年度 IR 一并登记到 registry，并从 registry 重建唯一活动的 Phase S 报告 `strategy_stability_report.html`；不得再把 `valid` 冻结胜者和一次性 `test` 打开作为新 Phase S 的选型流程。
 4. 新 Phase S 方向使用 `baseline_ref: B2-S v1.0`，并准确填写 `frozen_model_ref: B6 v1.0`。若未来更换冻结模型，须在该模型上重新建立策略对照锚点，不得跨模型复用数值。
 
 ### 5.3 历史教训
@@ -240,7 +240,7 @@ Phase M 固定 5 个种子：`[42, 1000, 2000, 3000, 4000]`。不得增删或挑
 - **`hypothesis` 必填，且必须在实验开跑前写好**（改了什么、预期哪个指标为什么会变好）；事后只按该口径解读结果，防止"事后找亮点"。
 - **`baseline_ref` 必填**：写明对照的 baseline 版本（当前如 `B1 v1.0`）；同一 `direction` 内不得混用多个版本。HTML 该方向表第一行即此版本对应的 baseline 指标。
 - **`data_version` 必填**：填当时数据日历的最后交易日（`eval_ic_multi_pool.py` 输出中自动带出）。数据前复权重标定不改变 Alpha158 特征值（全部为比值形态），但历史修正/补数会轻微改变截面构成，此字段用于事后解释不同时间实验结果的差异，无需做数据快照。
-- Phase S 行另须填写 **`frozen_model_ref`**、manifest/模型/预测 artifact 与 SHA、selection segment、冻结策略参数、费率、benchmark 及三项扣费指标；模型必须来自 `backtest/models/baselines/<model-ref>/manifest.json`。
+- Phase S 行另须填写 **`frozen_model_ref`**、manifest/模型/预测 artifact 与 SHA、selection segment、**`evaluation_mode: full_history_in_sample`**、冻结策略参数、费率、benchmark 及三项扣费指标；模型必须来自 `backtest/models/baselines/<model-ref>/manifest.json`。新 Phase S full-period 行缺少该 `evaluation_mode` 不得登记为完成的选型结果。
 
 ### 6.3 mlruns 与 result 清理（强制，防磁盘打爆）
 
@@ -291,12 +291,10 @@ registry 中的历史 `result_dirs` 字符串允许指向已清理目录，它�
 
 ## 7. HTML 报告规范
 
-- 报告由 `backtest/scripts/build_experiment_report.py` 从 `registry.jsonl` **自动生成**（`backtest/experiments/report.html`，自包含单文件）。**registry 是唯一数据源**，禁止手工编辑 HTML；登记新行后重跑脚本即可。
-- 报告顶部自动生成**目录**，并含 Phase M 指标说明（含义 + 关注优先级）。
-- **每个实验方向一张独立表格**（一个 direction 一张表），由脚本按 registry 的 `direction` 字段自动分组。
-- **每个方向必须明确 baseline 版本**：该方向内各实验的 `baseline_ref` 应一致；表格标题旁标注该版本，**第一行固定为对应 baseline 指标行**（从 registry 的 `direction=baseline` 锚点行注入；`baseline` 方向本身则以其锚点行置顶）。不得省略 baseline 行后直接罗列变体。
-- 表格列精简为：**实验名**、**实验内容**（hypothesis）、**指标列**。Phase M 为 4 指标（RankIC / RankICIR / IC / ICIR）× 3 指数，**两行表头**（第一行指标、第二行指数）；Phase S 为扣费超额 IR/年化/最大回撤。同列最优值高亮。
-- 无效实验也要登记并保留在表格中，避免重复试错。
+- `backtest/experiments/report.html` 由 `backtest/scripts/build_experiment_report.py` 从 `registry.jsonl` 自动生成，是 Phase M 与模型实验的规范入口；**不是 Phase S 的活动报告**。registry 仍是唯一数据源，禁止手工编辑 HTML。
+- Phase M 报告顶部自动生成目录与指标说明；每个方向一张表，表格第一行固定为对应 baseline，指标为 4 项（RankIC / RankICIR / IC / ICIR）× 3 指数。
+- `backtest/experiments/strategy_stability_report.html` 是**唯一活动的 Phase S 报告**，由 `backtest/scripts/build_strategy_stability_report.py` 从 registry 生成。每次 Phase S full-period 登记后必须重建它，并显著展示 `evaluation_mode: full_history_in_sample` 与非样本外声明。
+- 无效实验也要登记并保留在相应报告中，避免重复试错。
 - 历史报告 `build_benchmark_html.py` 仅作为规范生效前旧实验的存档，不再新增内容。
 
 ---
@@ -311,7 +309,7 @@ Phase M 已以 B6-M 收尾。Phase S checklist：
 [ ] 3. 在 registry 预登记策略网格、CSI1000 full-period 选型指标和并列规则，并标记 `full_history_in_sample`
 [ ] 4. 在 CSI1000 2020-01-13 ~ 2026-07-31 全历史连续区间统一比较 B2-S 与全部预登记候选并选型；不得称为样本外检验
 [ ] 5. 齐报 full-period 扣费超额 IR/年化/最大回撤与扣费分年度 IR，并将 B2-S 对照和胜者一并登记
-[ ] 6. 从 registry 重建统一 HTML 报告；提升获批后只保留当前 Phase S baseline 的 CSI1000 full-period 正式比较 session
+[ ] 6. 从 registry 重建唯一活动的 Phase S 报告 `strategy_stability_report.html`；提升获批后只保留当前 Phase S baseline 的 CSI1000 full-period 正式比较 session
 ```
 
 ---

@@ -193,7 +193,7 @@ def _finite_metric(row: dict[str, Any], key: str) -> float | None:
     return value if math.isfinite(value) else None
 
 
-def select_valid_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+def select_strategy_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
     """Select by preregistered IR, annualized return, MDD, turnover, then ID."""
     eligible: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
     for row in rows:
@@ -210,3 +210,8 @@ def select_valid_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
     if not eligible:
         raise ValueError("no successful candidate has all finite selection metrics")
     return dict(min(eligible, key=lambda item: item[0])[1])
+
+
+def select_valid_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Historical valid-segment compatibility wrapper for strategy selection."""
+    return select_strategy_winner(rows)

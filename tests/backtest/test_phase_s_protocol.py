@@ -204,6 +204,12 @@ def test_select_valid_winner_uses_preregistered_tie_break_order(rows, expected):
     assert protocol.select_valid_winner(rows)["candidate_id"] == expected
 
 
+def test_select_strategy_winner_uses_same_preregistered_tie_break_order():
+    rows = [_metric_row("b", ir=0.1), _metric_row("a", ir=0.2)]
+
+    assert protocol.select_strategy_winner(rows)["candidate_id"] == "a"
+
+
 @pytest.mark.parametrize("bad_value", [None, math.nan, math.inf, -math.inf])
 def test_select_valid_winner_rejects_missing_or_non_finite_metrics(bad_value):
     row = _metric_row("broken")

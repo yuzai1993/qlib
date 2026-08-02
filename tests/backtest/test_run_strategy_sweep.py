@@ -6,6 +6,7 @@ import json
 import math
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -107,11 +108,11 @@ def test_cli_defaults_to_full_period_selection_segment():
 def test_full_period_comparison_selects_and_reports_winner(tmp_path):
     rows = [
         {
-            "candidate_id": protocol.BASELINE_CANDIDATE_ID,
+            "candidate_id": protocol.CURRENT_STRATEGY_BASELINE_ID,
             "strategy_class": "TopkDropoutStrategy",
-            "topk": 10,
+            "topk": 30,
             "n_drop": 2,
-            "hold_thresh": 1,
+            "hold_thresh": 20,
             "status": "success",
             sweep.IR_KEY: 0.10,
             sweep.ANN_KEY: 0.08,
@@ -138,10 +139,128 @@ def test_full_period_comparison_selects_and_reports_winner(tmp_path):
         tmp_path, rows, model_ref="b6-m", pool="csi1000", segment="full"
     )
 
+    assert comparison["baseline"]["candidate_id"] == protocol.CURRENT_STRATEGY_BASELINE_ID
     assert comparison["winner"]["candidate_id"] == "topk-t20-d2-h10"
-    assert "full 胜者: `topk-t20-d2-h10`" in (tmp_path / "COMPARISON.md").read_text(
-        encoding="utf-8"
+    assert comparison["evaluation_mode"] == "full_history_in_sample"
+    report = (tmp_path / "COMPARISON.md").read_text(encoding="utf-8")
+    assert "full 胜者: `topk-t20-d2-h10`" in report
+    assert "evaluation_mode: `full_history_in_sample`" in report
+    assert "非样本外检验" in report
+
+
+@pytest.mark.parametrize(
+    ("model_ref", "pool"),
+    [("b1-m", "csi1000"), ("b6-m", "csi300")],
+)
+def test_cli_rejects_full_selection_outside_b6_csi1000(model_ref, pool):
+    with pytest.raises(SystemExit):
+        sweep.parse_args(
+            [
+                "--pred",
+                "prediction.pkl",
+                "--prediction-manifest",
+                "manifest.json",
+                "--config",
+                "base.yaml",
+                "--model-ref",
+                model_ref,
+                "--pool",
+                pool,
+                "--segment",
+                "full",
+            ]
+        )
+
+
+def test_full_comparison_rejects_non_b6_csi1000_scope(tmp_path):
+    rows = [
+        {
+            "candidate_id": protocol.CURRENT_STRATEGY_BASELINE_ID,
+            "strategy_class": "TopkDropoutStrategy",
+            "topk": 30,
+            "n_drop": 2,
+            "hold_thresh": 20,
+            "status": "success",
+            sweep.IR_KEY: 0.10,
+            sweep.ANN_KEY: 0.08,
+            sweep.MDD_KEY: -0.15,
+            "annualized_one_way_turnover": 8.0,
+            "result_dir": "baseline-result",
+        }
+    ]
+
+    with pytest.raises(ValueError, match="B6-M / CSI1000"):
+        sweep.write_comparison(
+            tmp_path, rows, model_ref="b1-m", pool="csi1000", segment="full"
+        )
+
+
+def test_historical_b1_valid_comparison_keeps_its_b1_audit_baseline(tmp_path):
+    rows = [
+        {
+            "candidate_id": protocol.BASELINE_CANDIDATE_ID,
+            "strategy_class": "TopkDropoutStrategy",
+            "topk": 10,
+            "n_drop": 2,
+            "hold_thresh": 1,
+            "status": "success",
+            sweep.IR_KEY: 0.10,
+            sweep.ANN_KEY: 0.08,
+            sweep.MDD_KEY: -0.15,
+            "annualized_one_way_turnover": 8.0,
+            "result_dir": "baseline-result",
+        }
+    ]
+
+    comparison = sweep.write_comparison(
+        tmp_path, rows, model_ref="b1-m", pool="csi1000", segment="valid"
     )
+
+    assert comparison["baseline"]["candidate_id"] == protocol.BASELINE_CANDIDATE_ID
+
+
+def test_full_prediction_contract_requires_b6_seed4000_model_binding(tmp_path, monkeypatch):
+    pred = tmp_path / "csi1000_full.pkl"
+    pred.write_bytes(b"frozen-prediction")
+    seed4000 = tmp_path / "seed4000" / "trained_model"
+    seed4000.parent.mkdir()
+    seed4000.write_bytes(b"seed4000")
+    seed2000 = tmp_path / "seed2000" / "trained_model"
+    seed2000.parent.mkdir()
+    seed2000.write_bytes(b"seed2000")
+    manifest = tmp_path / "prediction_manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "predictions": [
+                    {
+                        "model_ref": "b6-m",
+                        "pool": "csi1000",
+                        "segment": "full",
+                        "path": str(pred),
+                        "prediction_sha256": hashlib.sha256(pred.read_bytes()).hexdigest(),
+                        "model_path": str(seed2000),
+                        "model_sha256": hashlib.sha256(seed2000.read_bytes()).hexdigest(),
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sweep,
+        "load_frozen_model",
+        lambda _root, _model_ref: SimpleNamespace(
+            model_path=seed4000,
+            model_sha256=hashlib.sha256(seed4000.read_bytes()).hexdigest(),
+        ),
+        raising=False,
+    )
+
+    with pytest.raises(ValueError, match="seed-4000"):
+        sweep.verify_prediction_contract(
+            pred, manifest, model_ref="b6-m", pool="csi1000", segment="full"
+        )
 
 
 def test_topk_config_uses_candidate_risk_degree_when_preregistered():

@@ -1,0 +1,109 @@
+run:
+  mode: pred_backtest
+  note: phase_s_topk-t30-d3-h18-r100_csi1000_full
+  n_runs: 1
+  generate_figures: false
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: csi1000
+  benchmark: SH000852
+  handler:
+    class: Alpha158Technical
+    module_path: backtest.features.technical
+    start_time: '2003-01-02'
+    end_time: '2026-07-31'
+    fit_start_time: '2016-01-02'
+    fit_end_time: '2020-01-10'
+    infer_processors:
+    - class: ProcessInf
+    label:
+    - - Ref($close, -41)/Ref($close, -1)-1
+    - - LABEL0
+    feature_groups:
+    - range
+    learn_processors:
+    - class: DropnaLabel
+    - class: CSRankNorm
+      kwargs:
+        fields_group: label
+segments:
+  train:
+  - '2016-01-02'
+  - '2020-01-10'
+  valid:
+  - '2020-01-13'
+  - '2021-07-15'
+  test:
+  - '2020-01-13'
+  - '2026-07-31'
+model:
+  class: RankICEarlyStoppingDEnsembleModel
+  module_path: backtest.models.rankic_early_stop
+  kwargs:
+    base_model: gbm
+    loss: mse
+    num_models: 3
+    enable_sr: true
+    enable_fs: true
+    alpha1: 1
+    alpha2: 1
+    bins_sr: 10
+    bins_fs: 5
+    decay: 0.5
+    sample_ratios:
+    - 0.8
+    - 0.7
+    - 0.6
+    - 0.5
+    - 0.4
+    sub_weights:
+    - 1
+    - 1
+    - 1
+    epochs: 200
+    colsample_bytree: 0.8879
+    learning_rate: 0.1
+    subsample: 0.8789
+    lambda_l1: 205.6999
+    lambda_l2: 580.9768
+    max_depth: 8
+    num_leaves: 210
+    num_threads: 8
+    seed: 4000
+    early_stopping_rounds: 20
+    valid_segment:
+    - '2020-01-13'
+    - '2021-07-15'
+    test_segment:
+    - '2021-07-16'
+    - '2026-07-16'
+strategy:
+  class: TopkDropoutStrategy
+  module_path: qlib.contrib.strategy.signal_strategy
+  topk: 30
+  n_drop: 3
+  hold_thresh: 18
+  kwargs:
+    risk_degree: 1.0
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+backtest:
+  account: 500000
+  exchange_kwargs:
+    freq: day
+    deal_price: close
+    limit_threshold: 0.095
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5.0
+    trade_unit: 100
+dataset:
+  class: PurgedHorizonDataset
+  module_path: backtest.label_design.dataset
+  kwargs:
+    label_horizon: 40
+phase_s:
+  candidate_id: topk-t30-d3-h18-r100
+  selection_segment: full
+  pool: csi1000

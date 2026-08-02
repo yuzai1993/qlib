@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -14,11 +15,19 @@ sys.path.insert(0, str(SCRIPTS))
 import finalize_strategy_neighborhood_full as finalizer  # noqa: E402
 import run_strategy_neighborhood_full as runner  # noqa: E402
 import strategy_neighborhood_protocol as neighborhood  # noqa: E402
+from phase_s_protocol import load_frozen_model  # noqa: E402
 
 
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+@pytest.fixture(autouse=True)
+def _use_test_authoritative_manifest(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(
+        runner, "DEFAULT_PREDICTION_MANIFEST", tmp_path / "prediction_manifest.json"
+    )
 
 
 def _inputs(tmp_path: Path) -> tuple[dict, dict, Path, Path, Path]:
@@ -29,14 +38,25 @@ def _inputs(tmp_path: Path) -> tuple[dict, dict, Path, Path, Path]:
     protocol_path = tmp_path / "protocol.json"
     _write_json(protocol_path, protocol)
 
+    index = pd.MultiIndex.from_arrays(
+        [
+            pd.to_datetime(["2020-01-13", "2020-01-14", "2026-07-31"]),
+            ["SH600000", "SH600000", "SH600000"],
+        ],
+        names=["datetime", "instrument"],
+    )
+    prediction = pd.DataFrame({"score": [0.1, 0.15, 0.2]}, index=index)
     prediction_path = tmp_path / "csi1000_full.pkl"
-    prediction_path.write_bytes(b"frozen full-period prediction")
+    prediction.to_pickle(prediction_path)
+    frozen = load_frozen_model(ROOT, "b6-m")
     manifest = {
         "schema_version": 1,
         "data_version": "2026-07-31",
         "predictions": [
             {
                 "model_ref": "b6-m",
+                "model_path": str(frozen.model_path),
+                "model_sha256": frozen.model_sha256,
                 "pool": "csi1000",
                 "segment": "full",
                 "path": str(prediction_path),
@@ -44,9 +64,9 @@ def _inputs(tmp_path: Path) -> tuple[dict, dict, Path, Path, Path]:
                 "coverage": {
                     "start": "2020-01-13",
                     "end": "2026-07-31",
-                    "n_dates": 1587,
-                    "n_rows": 1584284,
-                    "index_sha256": "a" * 64,
+                    "n_dates": 3,
+                    "n_rows": 3,
+                    "index_sha256": runner.prediction_index_sha256(prediction.index),
                 },
                 "data_version": "2026-07-31",
             }
@@ -55,6 +75,45 @@ def _inputs(tmp_path: Path) -> tuple[dict, dict, Path, Path, Path]:
     manifest_path = tmp_path / "prediction_manifest.json"
     _write_json(manifest_path, manifest)
     return protocol, manifest, protocol_path, manifest_path, prediction_path
+
+
+@pytest.mark.parametrize(
+    ("tamper", "message"),
+    [
+        ("schema", "schema_version"),
+        ("data_version", "data_version"),
+        ("model", "seed-4000 model binding"),
+        ("coverage", "coverage"),
+    ],
+)
+def test_preregistration_uses_authoritative_prediction_validation(
+    tmp_path: Path, tamper: str, message: str
+):
+    protocol, manifest, protocol_path, manifest_path, prediction_path = _inputs(
+        tmp_path
+    )
+    if tamper == "schema":
+        manifest["schema_version"] = 2
+    elif tamper == "data_version":
+        manifest["data_version"] = None
+        manifest["predictions"][0]["data_version"] = None
+    elif tamper == "model":
+        manifest["predictions"][0]["model_path"] = str(tmp_path / "other-model")
+    else:
+        changed = pd.read_pickle(prediction_path).iloc[[0, -1]]
+        changed.to_pickle(prediction_path)
+        manifest["predictions"][0]["prediction_sha256"] = finalizer.sha256_file(
+            prediction_path
+        )
+    _write_json(manifest_path, manifest)
+
+    with pytest.raises(ValueError, match=message):
+        finalizer.build_preregistered_row(
+            protocol,
+            manifest,
+            protocol_path=protocol_path,
+            prediction_manifest_path=manifest_path,
+        )
 
 
 @pytest.fixture(scope="module")
@@ -252,6 +311,7 @@ def test_complete_row_rejects_stored_winner_tampering(
         ("protocol", "protocol SHA"),
         ("manifest", "prediction manifest SHA"),
         ("prediction", "prediction file SHA"),
+        ("preregistered_prediction_model", "prediction artifact"),
         ("effective_config", "effective config SHA"),
     ],
 )
@@ -270,6 +330,8 @@ def test_complete_row_rejects_artifact_identity_tampering(
         preregistered["prediction_manifest_sha256"] = "0" * 64
     elif tamper == "prediction":
         prediction_path.write_bytes(b"tampered prediction")
+    elif tamper == "preregistered_prediction_model":
+        preregistered["prediction_artifact"]["model_sha256"] = "0" * 64
     else:
         results["all_rows"][0]["effective_config_sha256"] = "0" * 64
 
@@ -327,7 +389,9 @@ def test_complete_row_rejects_base_config_identity_tampering(
         )
 
 
-def test_registry_transition_rejects_completed_row_rewrite(tmp_path: Path):
+def test_registry_transition_intrinsically_enforces_only_two_legal_edges(
+    tmp_path: Path,
+):
     registry = tmp_path / "registry.jsonl"
     original = '{"exp_id":"baseline/x","state":"baseline"}\n'
     registry.write_text(original, encoding="utf-8")
@@ -335,20 +399,41 @@ def test_registry_transition_rejects_completed_row_rewrite(tmp_path: Path):
         "exp_id": finalizer.EXP_ID,
         "state": "preregistered",
     }
-    finalizer.upsert_registry_transition(
-        registry, preregistered, expected_previous_state=None
-    )
+    finalizer.upsert_registry_transition(registry, preregistered)
     complete = {**preregistered, "state": "complete", "winner": "x"}
-    finalizer.upsert_registry_transition(
-        registry, complete, expected_previous_state="preregistered"
-    )
+    finalizer.upsert_registry_transition(registry, complete)
 
     assert registry.read_text(encoding="utf-8").startswith(original)
-    with pytest.raises(ValueError, match="expected previous state"):
+    with pytest.raises(ValueError, match="immutable"):
         finalizer.upsert_registry_transition(
-            registry,
-            {**complete, "winner": "changed"},
-            expected_previous_state="preregistered",
+            registry, {**complete, "winner": "changed"}
+        )
+
+
+@pytest.mark.parametrize("state", ["complete", "running", "test_complete", None])
+def test_registry_transition_rejects_direct_non_preregistered_insert(
+    tmp_path: Path, state: object
+):
+    registry = tmp_path / "registry.jsonl"
+
+    with pytest.raises(ValueError, match="absent -> preregistered"):
+        finalizer.upsert_registry_transition(
+            registry, {"exp_id": finalizer.EXP_ID, "state": state}
+        )
+
+
+@pytest.mark.parametrize("state", ["preregistered", "running", "test_complete"])
+def test_registry_transition_rejects_invalid_update_from_preregistered(
+    tmp_path: Path, state: str
+):
+    registry = tmp_path / "registry.jsonl"
+    finalizer.upsert_registry_transition(
+        registry, {"exp_id": finalizer.EXP_ID, "state": "preregistered"}
+    )
+
+    with pytest.raises(ValueError, match="preregistered -> complete"):
+        finalizer.upsert_registry_transition(
+            registry, {"exp_id": finalizer.EXP_ID, "state": state}
         )
 
 

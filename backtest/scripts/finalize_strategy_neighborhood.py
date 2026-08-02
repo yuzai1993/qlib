@@ -24,7 +24,7 @@ from strategy_neighborhood_protocol import score_valid_candidates  # noqa: E402
 EXP_ID = "strategy-neighborhood/b2-s-local-v1"
 DEFAULT_ROOT = REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260802_b2s_local"
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
-DEFAULT_OUTPUT = REPO_ROOT / "backtest/experiments/strategy_neighborhood_report.html"
+UNIFIED_REPORT = REPO_ROOT / "backtest/experiments/strategy_stability_report.html"
 DEFAULT_CONFIGS = REPO_ROOT / "backtest/configs/strategy-neighborhood/b2-s-local"
 METRICS = (
     ("excess_with_cost_information_ratio", "扣费超额IR", False),
@@ -306,8 +306,6 @@ def load_registry(path: Path) -> list[dict[str, Any]]:
 def upsert_registry_transition(
     registry: Path,
     row: dict[str, Any],
-    *,
-    expected_previous_state: Optional[str],
 ) -> None:
     lines = registry.read_text(encoding="utf-8").splitlines(keepends=True) if registry.is_file() else []
     parsed = [(index, json.loads(line)) for index, line in enumerate(lines) if line.strip()]
@@ -321,14 +319,23 @@ def upsert_registry_transition(
     serialized = json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
     if matches:
         index, previous = matches[0]
-        if previous.get("state") != expected_previous_state:
+        if previous.get("state") == "test_complete":
+            raise ValueError(f"completed registry row is immutable: {EXP_ID}")
+        if (
+            previous.get("state") != "preregistered"
+            or row.get("state") != "test_complete"
+        ):
             raise ValueError(
-                f"expected previous state {expected_previous_state!r}, found {previous.get('state')!r}"
+                "registry transition must be preregistered -> test_complete; "
+                f"found {previous.get('state')!r} -> {row.get('state')!r}"
             )
         lines[index] = serialized
     else:
-        if expected_previous_state is not None:
-            raise ValueError("expected previous state but experiment row is absent")
+        if row.get("state") != "preregistered":
+            raise ValueError(
+                "registry transition must be absent -> preregistered; "
+                f"found absent -> {row.get('state')!r}"
+            )
         if lines and not lines[-1].endswith(("\n", "\r")):
             lines[-1] += "\n"
         lines.append(serialized)
@@ -444,7 +451,6 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--test-results", type=Path, default=DEFAULT_ROOT / "test_results.json")
     parser.add_argument("--configs-dir", type=Path, default=DEFAULT_CONFIGS)
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     return parser.parse_args(argv)
 
 
@@ -460,17 +466,13 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             prediction_manifest_path=args.prediction_manifest,
             configs_dir=args.configs_dir,
         )
-        upsert_registry_transition(args.registry, row, expected_previous_state=None)
+        upsert_registry_transition(args.registry, row)
         print(f"preregistered: {EXP_ID}")
         return
     rows = load_registry(args.registry)
     preregistered = _unique_row(rows, EXP_ID)
-    baseline = _unique_row(rows, "baseline/b2-s-on-b6-m")
     valid = json.loads(args.valid_results.read_text(encoding="utf-8"))
     test = json.loads(args.test_results.read_text(encoding="utf-8"))
-    report = build_html(baseline, protocol, valid, test)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(report, encoding="utf-8")
     complete = build_complete_row(
         preregistered,
         protocol,
@@ -478,12 +480,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         test,
         valid_path=args.valid_results,
         test_path=args.test_results,
-        report_path=args.output,
+        report_path=UNIFIED_REPORT,
     )
-    upsert_registry_transition(
-        args.registry, complete, expected_previous_state="preregistered"
-    )
-    print(f"finalized: {EXP_ID} -> {args.output}")
+    upsert_registry_transition(args.registry, complete)
+    print(f"finalized: {EXP_ID}; rebuild Phase S report at {UNIFIED_REPORT}")
 
 
 if __name__ == "__main__":

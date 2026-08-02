@@ -260,3 +260,33 @@ def test_unified_report_adds_full_winner_top50_and_audits_every_phase_s_row():
     assert "strategy-sweep/b1-m" in audit_text
     assert "model/phase-m-only" not in audit_text
     assert "strategy_neighborhood_report.html" not in html
+
+
+def test_unified_report_renders_preregistered_full_experiment_as_in_progress():
+    preregistered = _full_neighborhood_row()
+    preregistered.update(
+        state="preregistered",
+        conclusion="preregistered",
+    )
+    for key in (
+        "selected_candidate_id",
+        "selected_strategy",
+        "full_winner_metrics",
+        "robust_top50",
+        "full_result_path",
+    ):
+        preregistered.pop(key, None)
+
+    html = report.build_html([_baseline_row(), _row("b6-m"), preregistered])
+    soup = BeautifulSoup(html, "html.parser")
+
+    status = soup.select_one("#full-neighborhood-status")
+    assert status is not None
+    assert "strategy-neighborhood/b2-s-local-full-v2" in status.get_text()
+    assert "preregistered" in status.get_text()
+    assert "进行中" in status.get_text()
+    assert soup.select_one("#full-neighborhood") is None
+    assert soup.select_one("table.robust-top50") is None
+    assert "strategy-neighborhood/b2-s-local-full-v2" in soup.select_one(
+        "#phase-s-audit-index"
+    ).get_text()

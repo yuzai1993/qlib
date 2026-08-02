@@ -221,6 +221,24 @@ def _full_neighborhood_section(row: dict[str, Any]) -> str:
     )
 
 
+def _full_neighborhood_status(row: dict[str, Any]) -> str:
+    if row.get("state") != "preregistered":
+        raise ValueError(
+            f"unsupported full-period neighborhood state: {row.get('state')!r}"
+        )
+    if row.get("evaluation_mode") != "full_history_in_sample" or row.get(
+        "selection_segment"
+    ) != ["2020-01-13", "2026-07-31"]:
+        raise ValueError("preregistered full-period neighborhood contract differs")
+    return (
+        '<section id="full-neighborhood-status"><h2>B2-S 全历史邻域比较（进行中）</h2>'
+        '<div class="card"><p><b>实验：</b>'
+        f"{_esc(row.get('exp_id'))}</p><p><b>状态：</b>{_esc(row.get('state'))}</p>"
+        '<p class="note"><code>full_history_in_sample</code> 协议及 540 候选已预登记；'
+        "结果尚未完成，因此不展示胜者或稳健 Top 50。</p></div></section>"
+    )
+
+
 def _artifact_link(path: Any) -> str:
     value = str(path or "").strip()
     if not value:
@@ -322,7 +340,12 @@ def build_html(rows: Sequence[dict]) -> str:
     if len(full_matches) > 1:
         raise ValueError("report requires at most one full-period neighborhood row")
     if full_matches:
-        sections.append(_full_neighborhood_section(full_matches[0]))
+        full_row = full_matches[0]
+        sections.append(
+            _full_neighborhood_section(full_row)
+            if full_row.get("state") == "complete"
+            else _full_neighborhood_status(full_row)
+        )
     sections.append(_phase_s_audit_index(phase_s_rows))
     css = """
 body{font-family:-apple-system,'PingFang SC',sans-serif;max-width:1500px;margin:24px auto;color:#172033;background:#f7f8fa}

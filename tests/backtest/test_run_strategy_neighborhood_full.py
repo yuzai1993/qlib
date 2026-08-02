@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "backtest/scripts"))
 
 import run_strategy_neighborhood_full as runner  # noqa: E402
 import strategy_neighborhood_protocol as protocol  # noqa: E402
+from phase_s_protocol import load_frozen_model  # noqa: E402
 
 
 def test_protocol_is_versioned_full_history_in_sample():
@@ -141,8 +142,11 @@ def test_checkpoint_reuses_only_matching_full_config_and_prediction():
 
 def _prediction_entry(path: Path, prediction: pd.DataFrame) -> dict:
     dates = pd.DatetimeIndex(prediction.index.get_level_values("datetime"))
+    frozen = load_frozen_model(ROOT, "b6-m")
     return {
         "model_ref": "b6-m",
+        "model_path": str(frozen.model_path),
+        "model_sha256": frozen.model_sha256,
         "pool": "csi1000",
         "segment": "full",
         "path": str(path),
@@ -154,11 +158,99 @@ def _prediction_entry(path: Path, prediction: pd.DataFrame) -> dict:
             "n_rows": int(len(prediction)),
             "index_sha256": runner.prediction_index_sha256(prediction.index),
         },
+        "data_version": "2026-07-31",
     }
 
 
 def _write_authoritative_manifest(path: Path, entry: dict) -> None:
-    path.write_text(json.dumps({"predictions": [entry]}), encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "data_version": "2026-07-31",
+                "predictions": [entry],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_canonical_manifest_binds_model_and_actual_prediction_frame(
+    tmp_path: Path, monkeypatch
+):
+    index = pd.MultiIndex.from_arrays(
+        [
+            pd.to_datetime(["2020-01-13", "2020-01-14", "2026-07-31"]),
+            ["SH600000", "SH600000", "SH600000"],
+        ],
+        names=["datetime", "instrument"],
+    )
+    prediction = pd.DataFrame({"score": [0.1, 0.15, 0.2]}, index=index)
+    prediction_path = tmp_path / "csi1000_full.pkl"
+    prediction.to_pickle(prediction_path)
+    entry = _prediction_entry(prediction_path, prediction)
+    manifest_path = tmp_path / "prediction_manifest.json"
+    _write_authoritative_manifest(manifest_path, entry)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    monkeypatch.setattr(runner, "DEFAULT_PREDICTION_MANIFEST", manifest_path)
+
+    verified, coverage = runner.validate_full_prediction_manifest(
+        manifest, manifest_path
+    )
+
+    assert verified["model_path"] == entry["model_path"]
+    assert verified["model_sha256"] == entry["model_sha256"]
+    assert coverage == entry["coverage"]
+
+
+@pytest.mark.parametrize(
+    ("tamper", "message"),
+    [
+        ("schema", "schema_version"),
+        ("data_version", "data_version"),
+        ("model", "seed-4000 model binding"),
+        ("coverage", "coverage"),
+        ("manifest_path", "authoritative manifest"),
+    ],
+)
+def test_canonical_manifest_rejects_self_declared_identity_tampering(
+    tmp_path: Path, monkeypatch, tamper: str, message: str
+):
+    index = pd.MultiIndex.from_arrays(
+        [
+            pd.to_datetime(["2020-01-13", "2020-01-14", "2026-07-31"]),
+            ["SH600000", "SH600000", "SH600000"],
+        ],
+        names=["datetime", "instrument"],
+    )
+    prediction = pd.DataFrame({"score": [0.1, 0.15, 0.2]}, index=index)
+    prediction_path = tmp_path / "csi1000_full.pkl"
+    prediction.to_pickle(prediction_path)
+    entry = _prediction_entry(prediction_path, prediction)
+    manifest_path = tmp_path / "prediction_manifest.json"
+    _write_authoritative_manifest(manifest_path, entry)
+    monkeypatch.setattr(runner, "DEFAULT_PREDICTION_MANIFEST", manifest_path)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    if tamper == "schema":
+        manifest["schema_version"] = 2
+    elif tamper == "data_version":
+        manifest["data_version"] = None
+        manifest["predictions"][0]["data_version"] = None
+    elif tamper == "model":
+        manifest["predictions"][0]["model_sha256"] = "0" * 64
+    elif tamper == "coverage":
+        manifest["predictions"][0]["coverage"]["n_rows"] += 1
+    else:
+        copied = tmp_path / "copied_manifest.json"
+        copied.write_text(manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
+        with pytest.raises(ValueError, match=message):
+            runner.validate_full_prediction_manifest(manifest, copied)
+        return
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        runner.validate_full_prediction_manifest(manifest, manifest_path)
 
 
 def test_prediction_artifact_requires_exact_full_coverage_and_sha(

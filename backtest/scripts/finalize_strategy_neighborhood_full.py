@@ -33,7 +33,7 @@ from run_strategy_neighborhood_full import (  # noqa: E402
     POOL,
     SELECTION_RULE,
     effective_config_sha256,
-    full_prediction_entry,
+    validate_full_prediction_manifest,
 )
 from strategy_neighborhood_protocol import (  # noqa: E402
     ANN_KEY,
@@ -103,22 +103,10 @@ def _validate_protocol(protocol: dict[str, Any]) -> list[dict[str, Any]]:
     return copy.deepcopy(grid)
 
 
-def _validate_prediction_artifact(
-    manifest: dict[str, Any],
-) -> dict[str, Any]:
-    entry = full_prediction_entry(manifest)
-    coverage = entry.get("coverage") or {}
-    if (coverage.get("start"), coverage.get("end")) != FULL_SEGMENT:
-        raise ValueError("full prediction coverage differs from selection segment")
-    raw_path = entry.get("path")
-    expected_sha = entry.get("prediction_sha256")
-    if not raw_path or not expected_sha:
-        raise ValueError("full prediction lacks path or SHA identity")
-    prediction_path = _resolve_path(str(raw_path))
-    if not prediction_path.is_file() or sha256_file(prediction_path) != expected_sha:
-        raise ValueError("prediction file SHA differs from manifest")
+def _portable_prediction_artifact(entry: dict[str, Any]) -> dict[str, Any]:
     portable = copy.deepcopy(entry)
-    portable["path"] = _path_text(prediction_path)
+    portable["path"] = _path_text(str(portable["path"]))
+    portable["model_path"] = _path_text(str(portable["model_path"]))
     for source in portable.get("sources") or []:
         if source.get("path"):
             source["path"] = _path_text(source["path"])
@@ -149,7 +137,10 @@ def build_preregistered_row(
         prediction_manifest_path,
         label="prediction manifest",
     )
-    prediction = _validate_prediction_artifact(prediction_manifest)
+    prediction, _ = validate_full_prediction_manifest(
+        prediction_manifest, prediction_manifest_path
+    )
+    prediction = _portable_prediction_artifact(prediction)
     frozen = load_frozen_model(REPO_ROOT, MODEL_REF)
     return {
         "exp_id": EXP_ID,
@@ -228,15 +219,10 @@ def _verify_preregistered_artifacts(
     ):
         raise ValueError("prediction manifest SHA differs from preregistration")
     manifest = _read_json(declared_manifest_path)
-    prediction = _validate_prediction_artifact(manifest)
+    prediction, _ = validate_full_prediction_manifest(manifest, declared_manifest_path)
+    prediction = _portable_prediction_artifact(prediction)
     frozen_prediction = preregistered.get("prediction_artifact") or {}
-    if (
-        prediction.get("prediction_sha256")
-        != frozen_prediction.get("prediction_sha256")
-        or prediction.get("coverage") != frozen_prediction.get("coverage")
-        or _resolve_path(str(prediction.get("path") or ""))
-        != _resolve_path(str(frozen_prediction.get("path") or ""))
-    ):
+    if prediction != frozen_prediction:
         raise ValueError("prediction artifact differs from preregistration")
 
     base_path = _resolve_path(str(protocol.get("base_config") or ""))
@@ -423,8 +409,6 @@ def load_registry(path: Path) -> list[dict[str, Any]]:
 def upsert_registry_transition(
     registry: Path,
     row: dict[str, Any],
-    *,
-    expected_previous_state: Optional[str],
 ) -> None:
     if row.get("exp_id") != EXP_ID:
         raise ValueError(f"registry transition only supports {EXP_ID}")
@@ -444,15 +428,20 @@ def upsert_registry_transition(
     serialized = json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
     if matches:
         index, previous = matches[0]
-        if previous.get("state") != expected_previous_state:
+        if previous.get("state") == "complete":
+            raise ValueError(f"completed registry row is immutable: {EXP_ID}")
+        if previous.get("state") != "preregistered" or row.get("state") != "complete":
             raise ValueError(
-                f"expected previous state {expected_previous_state!r}, "
-                f"found {previous.get('state')!r}"
+                "registry transition must be preregistered -> complete; "
+                f"found {previous.get('state')!r} -> {row.get('state')!r}"
             )
         lines[index] = serialized
     else:
-        if expected_previous_state is not None:
-            raise ValueError("expected previous state but experiment row is absent")
+        if row.get("state") != "preregistered":
+            raise ValueError(
+                "registry transition must be absent -> preregistered; "
+                f"found absent -> {row.get('state')!r}"
+            )
         if lines and not lines[-1].endswith(("\n", "\r")):
             lines[-1] += "\n"
         lines.append(serialized)
@@ -492,7 +481,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             protocol_path=args.protocol,
             prediction_manifest_path=args.prediction_manifest,
         )
-        upsert_registry_transition(args.registry, row, expected_previous_state=None)
+        upsert_registry_transition(args.registry, row)
     else:
         preregistered = _unique_row(load_registry(args.registry))
         results = _read_json(args.results)
@@ -503,9 +492,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             results_path=args.results,
             prediction_manifest_path=args.prediction_manifest,
         )
-        upsert_registry_transition(
-            args.registry, row, expected_previous_state="preregistered"
-        )
+        upsert_registry_transition(args.registry, row)
     print(f"{args.mode}: {EXP_ID} -> {args.registry}")
 
 

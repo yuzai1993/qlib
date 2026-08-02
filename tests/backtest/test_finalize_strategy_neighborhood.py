@@ -180,23 +180,35 @@ def test_registry_transition_preserves_unrelated_lines_and_rejects_rewrite(tmp_p
         "state": "preregistered",
     }
 
-    finalizer.upsert_registry_transition(
-        registry, preregistered, expected_previous_state=None
-    )
+    finalizer.upsert_registry_transition(registry, preregistered)
     complete = {**preregistered, "state": "test_complete", "winner": "x"}
-    finalizer.upsert_registry_transition(
-        registry, complete, expected_previous_state="preregistered"
-    )
+    finalizer.upsert_registry_transition(registry, complete)
 
     lines = registry.read_text(encoding="utf-8").splitlines(keepends=True)
     assert lines[0] == original
     assert json.loads(lines[1]) == complete
-    with pytest.raises(ValueError, match="expected previous state"):
+    with pytest.raises(ValueError, match="immutable"):
         finalizer.upsert_registry_transition(
-            registry,
-            {**complete, "winner": "changed"},
-            expected_previous_state="preregistered",
+            registry, {**complete, "winner": "changed"}
         )
+
+
+@pytest.mark.parametrize("state", ["test_complete", "complete", "running", None])
+def test_legacy_registry_transition_rejects_direct_completed_or_unknown_insert(
+    tmp_path: Path, state: object
+):
+    with pytest.raises(ValueError, match="absent -> preregistered"):
+        finalizer.upsert_registry_transition(
+            tmp_path / "registry.jsonl",
+            {"exp_id": finalizer.EXP_ID, "state": state},
+        )
+
+
+def test_legacy_cli_has_no_standalone_report_output_target():
+    args = finalizer.parse_args(["finalize"])
+
+    assert not hasattr(args, "output")
+    assert finalizer.UNIFIED_REPORT.name == "strategy_stability_report.html"
 
 
 def test_complete_row_recomputes_winner_and_rejects_tampering(tmp_path: Path):

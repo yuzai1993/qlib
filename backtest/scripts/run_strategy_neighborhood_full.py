@@ -30,6 +30,7 @@ from phase_s_protocol import (  # noqa: E402
     EXCHANGE_KWARGS,
     FULL_SEGMENT,
     POOL_BENCHMARKS,
+    load_frozen_model,
     sha256_file,
 )
 from run_strategy_neighborhood import (  # noqa: E402
@@ -43,7 +44,6 @@ from run_strategy_sweep import (  # noqa: E402
     build_backtest_command,
     build_sweep_config,
     classify_strategy_outcome,
-    verify_prediction_contract,
 )
 from strategy_neighborhood_protocol import (  # noqa: E402
     score_valid_candidates,
@@ -59,6 +59,7 @@ EVALUATION_MODE = "full_history_in_sample"
 MODEL_REF = "b6-m"
 POOL = "csi1000"
 SEGMENT = "full"
+DATA_VERSION = "2026-07-31"
 DEFAULT_OUTPUT_ROOT = (
     REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260802_b2s_local_full"
 )
@@ -209,6 +210,51 @@ def validate_prediction_artifact(entry: dict[str, Any], path: Path) -> dict[str,
             f"{_repo_path(DEFAULT_PREDICTION_MANIFEST)}"
         )
     return actual
+
+
+def validate_full_prediction_manifest(
+    manifest: dict[str, Any], manifest_path: Path
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Validate the one authoritative B6-M full prediction and its dataframe."""
+    declared_path = Path(manifest_path).expanduser().resolve()
+    authoritative_path = DEFAULT_PREDICTION_MANIFEST.expanduser().resolve()
+    if declared_path != authoritative_path:
+        raise ValueError(
+            "full prediction manifest differs from authoritative manifest path"
+        )
+    if not authoritative_path.is_file():
+        raise FileNotFoundError(
+            f"authoritative full prediction manifest missing: {authoritative_path}"
+        )
+    authoritative = json.loads(authoritative_path.read_text(encoding="utf-8"))
+    if manifest != authoritative:
+        raise ValueError("full prediction manifest differs from authoritative manifest")
+    if manifest.get("schema_version") != 1:
+        raise ValueError("full prediction manifest schema_version must be 1")
+    if manifest.get("data_version") != DATA_VERSION:
+        raise ValueError(
+            f"full prediction manifest data_version must be {DATA_VERSION}"
+        )
+    if len(manifest.get("predictions") or []) != 1:
+        raise ValueError("authoritative manifest requires exactly one prediction")
+
+    entry = full_prediction_entry(manifest)
+    if entry.get("data_version") != DATA_VERSION:
+        raise ValueError(f"full prediction data_version must be {DATA_VERSION}")
+    frozen = load_frozen_model(REPO_ROOT, MODEL_REF)
+    model_path = Path(str(entry.get("model_path") or "")).expanduser()
+    if not model_path.is_absolute():
+        model_path = REPO_ROOT / model_path
+    if (
+        model_path.resolve() != frozen.model_path.resolve()
+        or entry.get("model_sha256") != frozen.model_sha256
+    ):
+        raise ValueError(
+            "full prediction requires the tracked B6-M seed-4000 model binding"
+        )
+    prediction_path = _prediction_path(entry)
+    coverage = validate_prediction_artifact(entry, prediction_path)
+    return copy.deepcopy(entry), coverage
 
 
 def effective_config_sha256(base: dict[str, Any], candidate: dict[str, Any]) -> str:
@@ -473,16 +519,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     manifest_path = args.prediction_manifest.expanduser().resolve()
     base_config_path = args.base_config.expanduser().resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    entry = full_prediction_entry(manifest)
-    pred_path = _prediction_path(entry)
-    verified_entry = verify_prediction_contract(
-        pred_path,
-        manifest_path,
-        model_ref=MODEL_REF,
-        pool=POOL,
-        segment=SEGMENT,
+    verified_entry, coverage = validate_full_prediction_manifest(
+        manifest, manifest_path
     )
-    coverage = validate_prediction_artifact(verified_entry, pred_path)
+    pred_path = _prediction_path(verified_entry)
     grid = strategy_neighborhood_grid()
     protocol = protocol_payload(grid, base_config_path)
     protocol_path = output_root / "protocol.json"

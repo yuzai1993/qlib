@@ -133,7 +133,34 @@ def _full_neighborhood_row():
         "robust_top50": top50,
         "protocol_path": "backtest/experiments/full/protocol.json",
         "full_result_path": "backtest/experiments/full/full_results.json",
+        "full_result_sha256": "full-result-sha",
         "cleanup_retention_eligible": False,
+    }
+
+
+def _full_neighborhood_correction():
+    return {
+        "exp_id": "strategy-neighborhood/b2-s-local-full-v2-correction-v1",
+        "phase": "S",
+        "state": "correction",
+        "correction_of": "strategy-neighborhood/b2-s-local-full-v2",
+        "baseline_ref": "B2-S v1.0",
+        "evaluation_mode": "full_history_in_sample",
+        "full_result_sha256": "full-result-sha",
+        "same_run_baseline": {
+            "candidate_id": "topk-t30-d2-h20-r095",
+            "excess_with_cost_information_ratio": 1.005,
+            "excess_with_cost_annualized_return": 0.176,
+            "excess_with_cost_max_drawdown": -0.368,
+            "annualized_one_way_turnover": 5.605,
+        },
+        "robust_winner": {
+            "candidate_id": "candidate-001",
+            "excess_with_cost_information_ratio": 0.753,
+            "excess_with_cost_annualized_return": 0.129,
+            "excess_with_cost_max_drawdown": -0.395,
+            "annualized_one_way_turnover": 6.388,
+        },
     }
 
 
@@ -230,6 +257,7 @@ def test_unified_report_adds_full_winner_top50_and_audits_every_phase_s_row():
         _row("b1-m"),
         _row("b6-m"),
         _full_neighborhood_row(),
+        _full_neighborhood_correction(),
         *other_rows,
     ]
 
@@ -249,6 +277,10 @@ def test_unified_report_adds_full_winner_top50_and_audits_every_phase_s_row():
     assert "样本外" not in claim.get_text()
     assert len(full.select("table.robust-top50 tbody tr")) == 50
     assert "candidate-001" in full.select_one("#full-neighborhood-winner").get_text()
+    comparison = full.select_one("table.same-run-excess-comparison")
+    assert comparison is not None
+    assert "topk-t30-d2-h20-r095" in comparison.get_text()
+    assert "自身指标更弱" in full.get_text()
 
     phase_s_ids = {
         row["exp_id"] for row in rows if row.get("phase") == "S"

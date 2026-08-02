@@ -16,6 +16,7 @@ DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 DEFAULT_OUTPUT = REPO_ROOT / "backtest/experiments/strategy_stability_report.html"
 CURRENT_STRATEGY_BASELINE_EXP_ID = "baseline/b2-s-on-b6-m"
 FULL_NEIGHBORHOOD_EXP_ID = "strategy-neighborhood/b2-s-local-full-v2"
+FULL_NEIGHBORHOOD_CORRECTION_EXP_ID = f"{FULL_NEIGHBORHOOD_EXP_ID}-correction-v1"
 METRICS = (
     ("annualized_return", "扣费年化", True),
     ("sharpe_ratio", "夏普", False),
@@ -132,7 +133,9 @@ def _baseline_section(baseline_row: dict, candidates: Sequence[dict]) -> str:
     )
 
 
-def _full_neighborhood_section(row: dict[str, Any]) -> str:
+def _full_neighborhood_section(
+    row: dict[str, Any], correction: dict[str, Any]
+) -> str:
     if row.get("state") != "complete":
         raise ValueError("full-period neighborhood row must be complete")
     if row.get("evaluation_mode") != "full_history_in_sample":
@@ -149,6 +152,18 @@ def _full_neighborhood_section(row: dict[str, Any]) -> str:
     selected_id = row.get("selected_candidate_id")
     if not selected_id or top50[0].get("candidate_id") != selected_id:
         raise ValueError("full-period neighborhood winner differs from robust ranking")
+    if (
+        correction.get("exp_id") != FULL_NEIGHBORHOOD_CORRECTION_EXP_ID
+        or correction.get("state") != "correction"
+        or correction.get("correction_of") != FULL_NEIGHBORHOOD_EXP_ID
+    ):
+        raise ValueError("full-period neighborhood requires its audit correction")
+    if correction.get("full_result_sha256") != row.get("full_result_sha256"):
+        raise ValueError("full-period correction does not match the completed result")
+    baseline = correction.get("same_run_baseline") or {}
+    corrected_winner = correction.get("robust_winner") or {}
+    if not baseline.get("candidate_id") or corrected_winner.get("candidate_id") != selected_id:
+        raise ValueError("full-period correction lacks the same-run comparison")
 
     metric_specs = (
         ("neighbor_ir_p25", "邻域 IR P25", False),
@@ -182,6 +197,32 @@ def _full_neighborhood_section(row: dict[str, Any]) -> str:
         f"<td>{_esc(row.get('exp_id'))}</td><td>{_esc(selected_id)}</td>"
         f"<td>{params}</td>{winner_cells}</tr></tbody></table>"
     )
+    comparison_specs = (
+        ("excess_with_cost_information_ratio", "扣费超额 IR", False),
+        ("excess_with_cost_annualized_return", "扣费超额年化", True),
+        ("excess_with_cost_max_drawdown", "扣费最大回撤", True),
+        ("annualized_one_way_turnover", "年化单边换手", False),
+    )
+    comparison_headers = "".join(
+        f"<th>{label}</th>" for _, label, _ in comparison_specs
+    )
+    comparison_rows = "".join(
+        "<tr>"
+        f"<td>{_esc(label)}</td><td>{_esc(candidate.get('candidate_id'))}</td>"
+        + "".join(
+            f'<td class="num">{_fmt(candidate.get(key), percent)}</td>'
+            for key, _, percent in comparison_specs
+        )
+        + "</tr>"
+        for label, candidate in (
+            ("B2-S v1.0 同运行基线", baseline),
+            ("预登记稳健胜者", corrected_winner),
+        )
+    )
+    comparison_table = (
+        '<table class="same-run-excess-comparison"><thead><tr><th>角色</th><th>候选</th>'
+        f"{comparison_headers}</tr></thead><tbody>{comparison_rows}</tbody></table>"
+    )
 
     yearly_rows = "".join(
         f'<tr><td>{_esc(year)}</td><td class="num">{_fmt(value)}</td></tr>'
@@ -213,6 +254,11 @@ def _full_neighborhood_section(row: dict[str, Any]) -> str:
         '<p class="winner-claim"><code>full_history_in_sample</code>：使用 CSI1000 '
         "2020-01-13 至 2026-07-31 全历史连续区间比较和选型；"
         "该胜者仅为研究候选，不是独立 holdout 结论，也不自动提升 B2-S。</p>"
+        '<h3>同运行 B2-S 基线与稳健胜者（扣费超额）</h3>'
+        '<p class="note">同一冻结 B6-M 预测、同一全历史区间、同一扣费超额指标。'
+        'B2-S 基线在自身扣费超额 IR、年化与最大回撤上优于该稳健胜者；'
+        '胜者自身指标更弱，但仅按预登记的轴向邻域 IR P25 规则入选，故不构成自动提升。</p>'
+        f"{comparison_table}"
         '<div id="full-neighborhood-winner"><h3>全历史稳健胜者</h3>'
         f"{winner_table}<h3>胜者扣费分年度 IR</h3>{yearly_table}</div>"
         '<h3>稳健排名 Top 50</h3><p class="note">按轴向邻域扣费超额 IR '
@@ -341,11 +387,19 @@ def build_html(rows: Sequence[dict]) -> str:
         raise ValueError("report requires at most one full-period neighborhood row")
     if full_matches:
         full_row = full_matches[0]
-        sections.append(
-            _full_neighborhood_section(full_row)
-            if full_row.get("state") == "complete"
-            else _full_neighborhood_status(full_row)
-        )
+        if full_row.get("state") == "complete":
+            correction_matches = [
+                row
+                for row in phase_s_rows
+                if row.get("exp_id") == FULL_NEIGHBORHOOD_CORRECTION_EXP_ID
+            ]
+            if len(correction_matches) != 1:
+                raise ValueError(
+                    "completed full-period neighborhood requires exactly one correction"
+                )
+            sections.append(_full_neighborhood_section(full_row, correction_matches[0]))
+        else:
+            sections.append(_full_neighborhood_status(full_row))
     sections.append(_phase_s_audit_index(phase_s_rows))
     css = """
 body{font-family:-apple-system,'PingFang SC',sans-serif;max-width:1500px;margin:24px auto;color:#172033;background:#f7f8fa}

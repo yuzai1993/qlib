@@ -13,6 +13,7 @@ SCRIPTS = ROOT / "backtest/scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import finalize_strategy_neighborhood_full as finalizer  # noqa: E402
+import build_strategy_stability_report as stability_report  # noqa: E402
 import run_strategy_neighborhood_full as runner  # noqa: E402
 import strategy_neighborhood_protocol as neighborhood  # noqa: E402
 from phase_s_protocol import load_frozen_model  # noqa: E402
@@ -442,3 +443,57 @@ def test_cli_has_no_legacy_neighborhood_report_output_target():
     assert "strategy_neighborhood_report.html" not in json.dumps(
         vars(args), default=str
     )
+
+
+def test_full_baseline_comparison_correction_preserves_completed_result(
+    tmp_path: Path, completed_rows: list[dict]
+):
+    preregistered, protocol, results, results_path, manifest_path, _ = (
+        _preregistered_and_results(tmp_path, completed_rows)
+    )
+    completed = finalizer.build_complete_row(
+        preregistered,
+        protocol,
+        results,
+        results_path=results_path,
+        prediction_manifest_path=manifest_path,
+    )
+
+    correction = finalizer.build_full_baseline_comparison_correction(
+        completed, results, results_path=results_path
+    )
+
+    assert correction["state"] == "correction"
+    assert correction["correction_of"] == finalizer.EXP_ID
+    assert correction["full_result_sha256"] == finalizer.sha256_file(results_path)
+    assert correction["same_run_baseline"]["candidate_id"] == "topk-t30-d2-h20-r095"
+    assert correction["robust_winner"]["candidate_id"] == completed[
+        "selected_candidate_id"
+    ]
+    assert correction["selection_rationale"] == "neighbor_ir_p25_not_own_metric"
+
+
+def test_full_neighborhood_report_shows_same_run_baseline_before_winner(
+    tmp_path: Path, completed_rows: list[dict]
+):
+    preregistered, protocol, results, results_path, manifest_path, _ = (
+        _preregistered_and_results(tmp_path, completed_rows)
+    )
+    completed = finalizer.build_complete_row(
+        preregistered,
+        protocol,
+        results,
+        results_path=results_path,
+        prediction_manifest_path=manifest_path,
+    )
+    correction = finalizer.build_full_baseline_comparison_correction(
+        completed, results, results_path=results_path
+    )
+
+    html = stability_report._full_neighborhood_section(completed, correction)
+
+    assert html.index("topk-t30-d2-h20-r095") < html.index(
+        completed["selected_candidate_id"]
+    )
+    assert "自身指标更弱" in html
+    assert "邻域 IR P25" in html

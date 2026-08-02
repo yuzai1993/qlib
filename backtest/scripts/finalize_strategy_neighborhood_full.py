@@ -47,6 +47,9 @@ from strategy_neighborhood_protocol import (  # noqa: E402
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 DEFAULT_PROTOCOL = DEFAULT_OUTPUT_ROOT / "protocol.json"
 DEFAULT_RESULTS = DEFAULT_OUTPUT_ROOT / "full_results.json"
+CORRECTION_EXP_ID = f"{EXP_ID}-correction-v1"
+DEFAULT_CORRECTION = DEFAULT_OUTPUT_ROOT / "full_baseline_comparison_correction_v1.json"
+B2_S_FULL_CANDIDATE_ID = "topk-t30-d2-h20-r095"
 
 
 def _resolve_path(path: Path | str) -> Path:
@@ -396,6 +399,85 @@ def build_complete_row(
     return complete
 
 
+def _same_run_metrics(row: dict[str, Any]) -> dict[str, Any]:
+    keys = (
+        "candidate_id",
+        IR_KEY,
+        ANN_KEY,
+        MDD_KEY,
+        TURNOVER_KEY,
+        "yearly_ir",
+    )
+    return {key: copy.deepcopy(row.get(key)) for key in keys}
+
+
+def build_full_baseline_comparison_correction(
+    completed: dict[str, Any], results: dict[str, Any], *, results_path: Path
+) -> dict[str, Any]:
+    """Build an append-only audit correction; never rewrite a completed result row."""
+    if completed.get("exp_id") != EXP_ID or completed.get("state") != "complete":
+        raise ValueError("correction requires the completed full-period experiment")
+    result_file = _resolve_path(results_path)
+    if not result_file.is_file() or _read_json(result_file) != results:
+        raise ValueError("correction requires the exact stored full results")
+    if completed.get("full_result_sha256") != sha256_file(result_file):
+        raise ValueError("correction full-result SHA differs from completed row")
+    rows = results.get("all_rows") or []
+    baseline_matches = [
+        row for row in rows if row.get("candidate_id") == B2_S_FULL_CANDIDATE_ID
+    ]
+    winner_matches = [
+        row
+        for row in rows
+        if row.get("candidate_id") == completed.get("selected_candidate_id")
+    ]
+    if len(baseline_matches) != 1 or len(winner_matches) != 1:
+        raise ValueError("correction requires unique same-run baseline and winner rows")
+    baseline = baseline_matches[0]
+    winner = winner_matches[0]
+    if baseline.get("status") != "success" or winner.get("status") != "success":
+        raise ValueError("correction requires successful same-run rows")
+    return {
+        "schema_version": 1,
+        "exp_id": CORRECTION_EXP_ID,
+        "phase": "S",
+        "state": "correction",
+        "correction_of": EXP_ID,
+        "date": str(date.today()),
+        "evaluation_mode": EVALUATION_MODE,
+        "selection_segment": list(FULL_SEGMENT),
+        "baseline_ref": "B2-S v1.0",
+        "frozen_model_ref": "B6 v1.0",
+        "full_result_path": _path_text(result_file),
+        "full_result_sha256": sha256_file(result_file),
+        "same_run_baseline": _same_run_metrics(baseline),
+        "robust_winner": _same_run_metrics(winner),
+        "selection_rationale": "neighbor_ir_p25_not_own_metric",
+        "note": (
+            "更正记录：同一冻结预测、同一全历史区间的 B2-S 基线在自身扣费超额"
+            "指标上优于稳健胜者；胜者仍仅因预登记的轴向邻域 IR P25 规则入选，"
+            "不自动提升 B2-S。"
+        ),
+    }
+
+
+def append_registry_correction(registry: Path, correction: dict[str, Any]) -> None:
+    if correction.get("exp_id") != CORRECTION_EXP_ID:
+        raise ValueError("unsupported correction exp_id")
+    rows = load_registry(registry)
+    matches = [row for row in rows if row.get("exp_id") == CORRECTION_EXP_ID]
+    if matches:
+        if len(matches) != 1 or matches[0] != correction:
+            raise ValueError("correction history is immutable")
+        return
+    if len([row for row in rows if row.get("exp_id") == EXP_ID]) != 1:
+        raise ValueError("correction requires exactly one original experiment row")
+    with registry.open("a", encoding="utf-8") as handle:
+        handle.write(
+            json.dumps(correction, ensure_ascii=False, separators=(",", ":")) + "\n"
+        )
+
+
 def load_registry(path: Path) -> list[dict[str, Any]]:
     if not path.is_file():
         return []
@@ -460,18 +542,39 @@ def _unique_row(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("preregister", "finalize"))
+    parser.add_argument(
+        "mode", choices=("preregister", "finalize", "append-correction")
+    )
     parser.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL)
     parser.add_argument(
         "--prediction-manifest", type=Path, default=DEFAULT_PREDICTION_MANIFEST
     )
     parser.add_argument("--results", type=Path, default=DEFAULT_RESULTS)
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
+    parser.add_argument("--correction", type=Path, default=DEFAULT_CORRECTION)
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
+    if args.mode == "append-correction":
+        completed = _unique_row(load_registry(args.registry))
+        results = _read_json(args.results)
+        correction = build_full_baseline_comparison_correction(
+            completed, results, results_path=args.results
+        )
+        correction_path = _resolve_path(args.correction)
+        if correction_path.exists() and _read_json(correction_path) != correction:
+            raise ValueError("existing correction artifact is immutable")
+        correction_path.parent.mkdir(parents=True, exist_ok=True)
+        if not correction_path.exists():
+            correction_path.write_text(
+                json.dumps(correction, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+        append_registry_correction(args.registry, correction)
+        print(f"{args.mode}: {CORRECTION_EXP_ID} -> {args.registry}")
+        return
     protocol = _read_json(args.protocol)
     manifest = _read_json(args.prediction_manifest)
     if args.mode == "preregister":

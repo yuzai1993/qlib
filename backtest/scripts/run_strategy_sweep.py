@@ -257,7 +257,7 @@ def write_comparison(
         "ranked": ranked,
         "all_rows": rows,
     }
-    if segment == "valid":
+    if segment in {"full", "valid"}:
         payload["winner"] = select_valid_winner(rows)
     (out_dir / "comparison.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -268,7 +268,7 @@ def write_comparison(
         f"- 基线: `{BASELINE_CANDIDATE_ID}`",
     ]
     if payload.get("winner"):
-        lines.append(f"- valid 胜者: `{payload['winner']['candidate_id']}`")
+        lines.append(f"- {segment} 胜者: `{payload['winner']['candidate_id']}`")
     lines.extend(
         [
             "",
@@ -302,7 +302,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--config", required=True)
     parser.add_argument("--model-ref", required=True, choices=MODEL_REFS)
     parser.add_argument("--pool", choices=tuple(POOL_BENCHMARKS), default="csi1000")
-    parser.add_argument("--segment", choices=("valid", "test"), default="valid")
+    parser.add_argument(
+        "--segment",
+        choices=("full", "valid", "test"),
+        default="full",
+        help="full is the active selection interval; valid/test are historical audit modes",
+    )
     parser.add_argument("--candidate-id", action="append")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--configs-dir", type=Path)
@@ -439,7 +444,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         )
     print(f"结果目录: {out_dir}")
     if payload.get("winner"):
-        print(f"valid 胜者: {payload['winner']['candidate_id']}")
+        print(f"{args.segment} 胜者: {payload['winner']['candidate_id']}")
 
 
 if __name__ == "__main__":

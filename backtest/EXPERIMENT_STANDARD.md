@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v2.2（2026-08-01）
+版本：v2.3（2026-08-02）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -13,7 +13,7 @@
 2. 模型与策略**分开迭代**：当前进入 Phase S，只使用 `backtest/models/baselines/<model-ref>/manifest.json` 指向的单一冻结模型，只改策略；当前研究策略基线为 B2-S。Phase M 的五种子训练与评估要求不变。
 3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
 4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi1000/csi300/csi500）上评估 IC/RankIC，**研究主目标池为 CSI1000**。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
-5. 默认时间划分固定（第 3 节）：评估集 2020-01-13 ~ 2021-07-15；Phase M 正式 test 截止 2026-07-16，Phase S 正式 test 经用户批准扩展至 2026-07-31。**禁止用测试集调参**。仅第 3.4 节由用户明确批准的 post-2020 forward 成对实验使用其专用时间切分。
+5. 默认时间划分固定（第 3 节）：Phase M 的评估集为 2020-01-13 ~ 2021-07-15、正式 test 截止 2026-07-16，**禁止用测试集调参**。Phase S：CSI1000 2020-01-13 ~ 2026-07-31 全历史连续区间允许用于策略比较与选型；该结果属于 `full_history_in_sample`，不得表述为样本外检验。仅第 3.4 节由用户明确批准的 post-2020 forward 成对实验使用其专用时间切分。
 6. 每个实验必须登记到 `backtest/experiments/registry.jsonl`（配置路径 + 结果路径），并更新 HTML 报告（每个实验方向一张独立表格）。
 7. **实验结束后必须同时清理 `mlruns/` 和 `backtest/result/`**（见第 6.3 节）。当前 Phase M 自动清理只保留模型 baseline 与超过它的最佳候选实验组，避免磁盘被打爆。
 
@@ -49,8 +49,9 @@
 | 基线版本 | `B2-S v1.0`（2026-08-01，由用户明确要求将 B6-M valid 冻结胜者提升） |
 | 冻结模型 | `B6 v1.0`；artifact 与 SHA-256 见 `backtest/models/baselines/b6-m/manifest.json` |
 | 策略 | `TopkDropoutStrategy(topk=30, n_drop=2, risk_degree=0.95, hold_thresh=20, only_tradable=false, forbid_all_trade_at_limit=false)` |
-| 选型 | CSI1000 valid 2020-01-13 ~ 2021-07-15；按扣费超额 IR、年化、最大回撤、换手、candidate_id 依次并列裁决 |
-| 正式测试 | csi1000 / csi300 / csi500，2021-07-16 ~ 2026-07-31；registry `baseline/b2-s-on-b6-m` |
+| 历史选型记录 | CSI1000 valid 2020-01-13 ~ 2021-07-15；按扣费超额 IR、年化、最大回撤、换手、candidate_id 依次并列裁决 |
+| 历史正式测试记录 | csi1000 / csi300 / csi500，2021-07-16 ~ 2026-07-31；registry `baseline/b2-s-on-b6-m` |
+| 后续策略选型 | CSI1000 full 2020-01-13 ~ 2026-07-31；属于 `full_history_in_sample`，不得表述为样本外检验 |
 | 成交价 | close |
 | 涨跌停限制 | limit_threshold=0.095 |
 | 费率 | open_cost=0.00021, close_cost=0.00071, min_cost=5, trade_unit=100（按 QMT 2026-07-16 实际费用校准） |
@@ -94,8 +95,9 @@ Phase M（模型迭代）            Phase S（策略迭代）
 | 分段 | 区间 | 用途 |
 |---|---|---|
 | 训练集 train | 见 3.2，止于 2020-01-10 | 拟合模型 |
-| 评估集 valid | 2020-01-13 ~ 2021-07-15 | 早停、调参、中间筛选 |
-| 测试集 test | Phase M：2021-07-16 ~ 2026-07-16；Phase S：2021-07-16 ~ 2026-07-31 | 最终评估（禁止参与任何调参决策） |
+| 评估集 valid | Phase M：2020-01-13 ~ 2021-07-15；Phase S 仅历史审计/复现 | Phase M 早停、调参、中间筛选；Phase S 不作新选型 |
+| 测试集 test | Phase M：2021-07-16 ~ 2026-07-16；Phase S：2021-07-16 ~ 2026-07-31（仅历史审计/复现） | Phase M 最终评估（禁止参与任何调参决策） |
+| Phase S 全历史 full | CSI1000：2020-01-13 ~ 2026-07-31 | 策略比较与选型；`full_history_in_sample`，非样本外检验 |
 
 handler 时间：`start_time=2003-01-02`，Phase M `end_time >= 2026-07-16`、Phase S `end_time >= 2026-07-31`，`fit_start_time/fit_end_time` = 对应池的 train 区间。
 
@@ -111,7 +113,7 @@ handler 时间：`start_time=2003-01-02`，Phase M `end_time >= 2026-07-16`、Ph
 - **默认训练池 = 基线训练池 CSI1000**（train 2016-01-02 ~ 2020-01-10）；**默认测试集 = csi1000 / csi300 / csi500**，其中 CSI1000 为研究主目标池。用同一个训练好的模型分别打分评估（跨池推理只需取数打分，无需重训）。
 - **全A**：暂不纳入默认测试矩阵；若实验显式要求评估全A，剔除评估日距该股数据起始不足 60 个交易日的股票（次新股）；ST 股在股票名称缓存可用时一并剔除（`eval_ic_multi_pool.py --st-names`），不可用时在结果中注明"未剔除 ST"。
 - 上表中其余池的训练配置仅用于**训练样本类实验**（direction 如 `train-data`：更换训练池、调整训练起点、样本加权等）；此类实验须在 registry 中注明所用训练池，并与相同训练池的基线组对比。
-- Phase S 默认在**研究主目标池**（当前 CSI1000）上执行，其余池作稳健性参考。当前实盘配置仍为 CSI300；研究目标池变更不自动修改实盘配置或 B1。
+- Phase S 默认在**研究主目标池**（当前 CSI1000）的连续全历史 `full` 段（2020-01-13 ~ 2026-07-31）执行比较与选型；`valid` / `test` 只供历史审计或复现，其余池作稳健性参考。所有 full 结果必须标注 `full_history_in_sample`，不得表述为样本外检验。当前实盘配置仍为 CSI300；研究目标池变更不自动修改实盘配置或 B1。
 
 ### 3.3 种子
 
@@ -187,8 +189,8 @@ Phase M 固定 5 个种子：`[42, 1000, 2000, 3000, 4000]`。不得增删或挑
 **选型与报告要求**：
 
 1. 首先校验所评估 model-ref 的 baseline manifest、模型路径与 SHA-256；记录 raw prediction 路径、SHA-256、精确索引覆盖、handler/config SHA 与数据版本。Phase S 不做多种子集成。
-2. 策略网格、主指标与并列规则须预先登记；**只允许在 valid 段选型**，test 不得参与参数筛选。
-3. valid 冻结胜者后，B2-S 对照与胜者各只打开一次 test；在同一份冻结分数上齐报扣费超额 IR/年化/最大回撤及扣费分年度 IR。
+2. 策略网格、主指标与并列规则须在运行前预登记；在 CSI1000 `full` 段（2020-01-13 ~ 2026-07-31）对 B2-S 与全部预登记候选作统一比较和选型。该比较必须显式标注 `full_history_in_sample`，不得表述为样本外检验。
+3. 将 full-period 比较、胜者、B2-S 对照、扣费超额 IR/年化/最大回撤及扣费分年度 IR 一并登记到 registry，并从 registry 重建统一 HTML 报告；不得再把 `valid` 冻结胜者和一次性 `test` 打开作为新 Phase S 的选型流程。
 4. 新 Phase S 方向使用 `baseline_ref: B2-S v1.0`，并准确填写 `frozen_model_ref: B6 v1.0`。若未来更换冻结模型，须在该模型上重新建立策略对照锚点，不得跨模型复用数值。
 
 ### 5.3 历史教训
@@ -269,7 +271,7 @@ Phase M 固定 5 个种子：`[42, 1000, 2000, 3000, 4000]`。不得增删或挑
 - 上述两项仍相同时，以三池 RankIC 平均增量作为第二并列规则；
 - Phase M 与 Phase S 指标不可混排。当前清理器只自动评选 Phase M；进入 Phase S 前须先为第 5.2 节三项策略指标补齐独立 baseline/候选 schema 与清理测试，不得套用 RankIC 规则。
 
-Phase S 的预测与回测 bundle 使用独立 retention schema：只长期保留 registry 中最新、显式 `cleanup_retention_eligible: true` 的策略 baseline 锚点所引用的三池正式 test session；历史扫参、旧策略 baseline、诊断回测不长期保留运行目录。单一冻结模型校验、精确预测覆盖校验及清理测试必须持续通过。
+Phase S 的预测与回测 bundle 使用独立 retention schema：只长期保留 registry 中最新、显式 `cleanup_retention_eligible: true` 的策略 baseline 锚点所引用的 CSI1000 full-period 正式比较 session；历史 valid/test 扫参、旧策略 baseline、诊断回测不长期保留运行目录。单一冻结模型校验、精确预测覆盖校验及清理测试必须持续通过。
 
 **`mlruns/` 保留内容**：
 
@@ -306,10 +308,10 @@ Phase M 已以 B6-M 收尾。Phase S checklist：
 ```
 [ ] 1. 从 `backtest/models/baselines/<model-ref>/manifest.json` 校验单一冻结模型；生成并冻结 raw predictions（路径 + SHA + 精确覆盖）
 [ ] 2. 以 B2-S 建立组内 baseline，并冻结费用/benchmark/回测配置
-[ ] 3. 在 registry 预登记策略网格、valid 选型指标和并列规则
-[ ] 4. 只在 valid 扫参；冻结胜者后，胜者与 B2-S 对照各做一次 test 回测
-[ ] 5. 齐报扣费超额 IR/年化/最大回撤与扣费分年度 IR
-[ ] 6. 登记 registry、重建 HTML；提升获批后只保留当前 Phase S baseline 的三池正式 test session
+[ ] 3. 在 registry 预登记策略网格、CSI1000 full-period 选型指标和并列规则，并标记 `full_history_in_sample`
+[ ] 4. 在 CSI1000 2020-01-13 ~ 2026-07-31 全历史连续区间统一比较 B2-S 与全部预登记候选并选型；不得称为样本外检验
+[ ] 5. 齐报 full-period 扣费超额 IR/年化/最大回撤与扣费分年度 IR，并将 B2-S 对照和胜者一并登记
+[ ] 6. 从 registry 重建统一 HTML 报告；提升获批后只保留当前 Phase S baseline 的 CSI1000 full-period 正式比较 session
 ```
 
 ---

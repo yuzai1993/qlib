@@ -15,6 +15,10 @@ sys.path.insert(0, str(SCRIPTS))
 import phase_s_protocol as protocol  # noqa: E402
 
 
+def test_phase_s_full_segment_is_the_selection_contract():
+    assert protocol.FULL_SEGMENT == ("2020-01-13", "2026-07-31")
+
+
 def test_current_phase_s_model_set_excludes_cleaned_historical_b1():
     assert protocol.CURRENT_MODEL_REFS == ("b6-m",)
     assert "b1-m" in protocol.MODEL_REFS

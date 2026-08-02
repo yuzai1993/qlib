@@ -57,6 +57,93 @@ def test_valid_config_uses_csi1000_dates_500k_and_live_costs():
     }
 
 
+def test_sweep_config_supports_full_period_selection():
+    candidate = protocol.strategy_grid("b6-m")[0]
+
+    config = sweep.build_sweep_config(
+        _base(), candidate, pool="csi1000", segment="full"
+    )
+
+    assert config["segments"]["test"] == ["2020-01-13", "2026-07-31"]
+    assert config["phase_s"]["selection_segment"] == "full"
+
+
+def test_cli_accepts_full_period_selection_segment():
+    args = sweep.parse_args(
+        [
+            "--pred",
+            "prediction.pkl",
+            "--prediction-manifest",
+            "manifest.json",
+            "--config",
+            "base.yaml",
+            "--model-ref",
+            "b6-m",
+            "--segment",
+            "full",
+        ]
+    )
+
+    assert args.segment == "full"
+
+
+def test_cli_defaults_to_full_period_selection_segment():
+    args = sweep.parse_args(
+        [
+            "--pred",
+            "prediction.pkl",
+            "--prediction-manifest",
+            "manifest.json",
+            "--config",
+            "base.yaml",
+            "--model-ref",
+            "b6-m",
+        ]
+    )
+
+    assert args.segment == "full"
+
+
+def test_full_period_comparison_selects_and_reports_winner(tmp_path):
+    rows = [
+        {
+            "candidate_id": protocol.BASELINE_CANDIDATE_ID,
+            "strategy_class": "TopkDropoutStrategy",
+            "topk": 10,
+            "n_drop": 2,
+            "hold_thresh": 1,
+            "status": "success",
+            sweep.IR_KEY: 0.10,
+            sweep.ANN_KEY: 0.08,
+            sweep.MDD_KEY: -0.15,
+            "annualized_one_way_turnover": 8.0,
+            "result_dir": "baseline-result",
+        },
+        {
+            "candidate_id": "topk-t20-d2-h10",
+            "strategy_class": "TopkDropoutStrategy",
+            "topk": 20,
+            "n_drop": 2,
+            "hold_thresh": 10,
+            "status": "success",
+            sweep.IR_KEY: 0.20,
+            sweep.ANN_KEY: 0.10,
+            sweep.MDD_KEY: -0.10,
+            "annualized_one_way_turnover": 6.0,
+            "result_dir": "winner-result",
+        },
+    ]
+
+    comparison = sweep.write_comparison(
+        tmp_path, rows, model_ref="b6-m", pool="csi1000", segment="full"
+    )
+
+    assert comparison["winner"]["candidate_id"] == "topk-t20-d2-h10"
+    assert "full 胜者: `topk-t20-d2-h10`" in (tmp_path / "COMPARISON.md").read_text(
+        encoding="utf-8"
+    )
+
+
 def test_topk_config_uses_candidate_risk_degree_when_preregistered():
     candidate = {
         "candidate_id": "topk-t30-d2-h20-r090",

@@ -15,7 +15,9 @@ BASELINE_CANDIDATE_ID = "topk-t10-d2-h1"
 CURRENT_STRATEGY_BASELINE_ID = "topk-t30-d2-h20"
 VALID_SEGMENT = ("2020-01-13", "2021-07-15")
 TEST_SEGMENT = ("2021-07-16", "2026-07-31")
-FULL_SEGMENT = (VALID_SEGMENT[0], TEST_SEGMENT[1])
+# The only active Phase S selection interval.  The split segments remain for
+# reproducing and auditing historical valid/test sweeps.
+FULL_SEGMENT = ("2020-01-13", "2026-07-31")
 POOL_BENCHMARKS = {
     "csi1000": "SH000852",
     "csi300": "SH000300",

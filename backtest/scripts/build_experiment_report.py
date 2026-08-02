@@ -477,14 +477,27 @@ def _build_stability_audit_table(rows: Sequence[dict]) -> str:
 
 
 def build_html(rows: Sequence[dict]) -> str:
+    phase_s_count = sum(_phase_of(row) == "S" for row in rows)
     by_direction: dict[str, list[dict]] = {}
     for r in rows:
+        if _phase_of(r) == "S":
+            continue
         by_direction.setdefault(r.get("direction") or "uncategorized", []).append(r)
 
     toc_items = [
         '<li><a href="#phase-m-metrics">Phase M 指标说明</a></li>'
     ]
-    sections = []
+    if phase_s_count:
+        toc_items.append(
+            '<li><a href="#phase-s-report">Phase S 统一报告</a>'
+            f"（{phase_s_count} 条登记）</li>"
+        )
+    sections = [
+        '<section class="legend" id="phase-s-report"><h3>Phase S 统一报告</h3>'
+        '<p class="meta">Phase S 的当前基线、全历史稳定性、策略选型与所有历史审计登记统一发布于 '
+        '<a href="strategy_stability_report.html">strategy_stability_report.html</a>；'
+        "本 Phase M 报告不渲染竞争性的策略选型表。</p></section>"
+    ] if phase_s_count else []
     for direction in sorted(by_direction):
         group = sorted(by_direction[direction], key=lambda r: str(r.get("date") or ""))
         is_stability_diagnostic = (

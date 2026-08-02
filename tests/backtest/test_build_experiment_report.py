@@ -133,7 +133,7 @@ def test_current_b6_baseline_has_complete_phase_m_metrics():
             assert metric in metrics, f"{pool} missing {metric}"
 
 
-def test_phase_s_direction_never_injects_phase_m_model_baseline():
+def test_canonical_report_routes_phase_s_to_only_unified_report():
     rows = [
         {
             "exp_id": "baseline/b6-m",
@@ -152,14 +152,18 @@ def test_phase_s_direction_never_injects_phase_m_model_baseline():
         },
     ]
 
-    section = report.build_html(rows).split("id='direction-strategy-sweep-b6-m'", 1)[1]
+    html = report.build_html(rows)
+    soup = BeautifulSoup(html, "html.parser")
+    phase_s = soup.select_one("#phase-s-report")
 
-    assert "strategy-sweep/b6-m" in section
-    assert "baseline/b6-m" not in section
-    assert "1.2000" in section
+    assert phase_s is not None
+    assert "strategy_stability_report.html" in str(phase_s)
+    assert "strategy-sweep/b6-m" not in html
+    assert "direction-strategy-sweep-b6-m" not in html
+    assert "strategy_neighborhood_report.html" not in html
 
 
-def test_phase_s_direction_injects_matching_baseline_strategy_anchor_first():
+def test_canonical_report_does_not_render_competing_phase_s_selection_tables():
     rows = [
         {
             "exp_id": "baseline/b2-s-on-b6-m",
@@ -178,16 +182,16 @@ def test_phase_s_direction_injects_matching_baseline_strategy_anchor_first():
         },
     ]
 
-    section = report.build_html(rows).split(
-        "id='direction-strategy-neighborhood-b2-s'", 1
-    )[1]
+    html = report.build_html(rows)
+    soup = BeautifulSoup(html, "html.parser")
 
-    assert section.index("baseline/b2-s-on-b6-m") < section.index(
-        "strategy-neighborhood/b2-s-local-v1"
-    )
+    assert soup.select_one("#phase-s-report") is not None
+    assert soup.select_one("#direction-strategy-neighborhood-b2-s") is None
+    assert "baseline/b2-s-on-b6-m" not in html
+    assert "strategy-neighborhood/b2-s-local-v1" not in html
 
 
-def test_non_selecting_stability_direction_uses_honest_audit_table_without_ir():
+def test_canonical_report_routes_stability_diagnostics_to_unified_report():
     rows = [
         {
             "exp_id": f"strategy-stability-full-period/{model_ref}",
@@ -202,16 +206,16 @@ def test_non_selecting_stability_direction_uses_honest_audit_table_without_ir():
         for model_ref, count in (("b1-m", 18), ("b6-m", 22))
     ]
 
-    soup = BeautifulSoup(report.build_html(rows), "html.parser")
-    section = soup.select_one("#direction-strategy-stability-full-period")
-    headers = [item.get_text(strip=True) for item in section.select("th")]
+    html = report.build_html(rows)
+    soup = BeautifulSoup(html, "html.parser")
+    section = soup.select_one("#phase-s-report")
 
-    assert "扣费超额IR" not in headers
-    assert headers == ["实验名", "模型", "状态", "成功/无效/失败", "详细报告"]
-    assert "表格第一行" not in section.get_text()
-    assert "B2-S 基线位于独立报告首行" in section.get_text()
-    assert "strategy-stability-full-period/b6-m" in section.get_text()
-    assert "strategy-stability-full-period/b1-m" not in section.get_text()
+    assert section is not None
+    assert "Phase S" in section.get_text()
+    assert "strategy_stability_report.html" in str(section)
+    assert soup.select_one("#direction-strategy-stability-full-period") is None
+    assert "strategy-stability-full-period/b6-m" not in html
+    assert "strategy-stability-full-period/b1-m" not in html
 
 
 def test_baseline_table_is_chronological_but_historical_b5_group_keeps_b5():

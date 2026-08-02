@@ -89,6 +89,54 @@ def _baseline_row():
     }
 
 
+def _full_neighborhood_row():
+    top50 = []
+    for rank in range(1, 51):
+        top50.append(
+            {
+                "candidate_id": f"candidate-{rank:03d}",
+                "neighbor_ir_p25": 1.5 - rank / 100,
+                "excess_with_cost_information_ratio": 1.6 - rank / 100,
+                "excess_with_cost_annualized_return": 0.20 - rank / 1000,
+                "excess_with_cost_max_drawdown": -0.18,
+                "annualized_one_way_turnover": 3.5,
+            }
+        )
+    winner = {
+        **top50[0],
+        "yearly_ir": {"2020": 0.5, "2021": 1.1},
+        "absolute_portfolio": {
+            "sharpe_ratio": 1.25,
+            "calmar_ratio": 0.90,
+            "annualized_volatility": 0.17,
+        },
+    }
+    return {
+        "exp_id": "strategy-neighborhood/b2-s-local-full-v2",
+        "direction": "strategy-neighborhood-b2-s-full",
+        "phase": "S",
+        "state": "complete",
+        "baseline_ref": "B2-S v1.0",
+        "frozen_model_ref": "B6 v1.0",
+        "evaluation_mode": "full_history_in_sample",
+        "selection_pool": "csi1000",
+        "selection_segment": ["2020-01-13", "2026-07-31"],
+        "selected_candidate_id": winner["candidate_id"],
+        "selected_strategy": {
+            "candidate_id": winner["candidate_id"],
+            "topk": 32,
+            "n_drop": 1,
+            "hold_thresh": 20,
+            "risk_degree": 0.9,
+        },
+        "full_winner_metrics": winner,
+        "robust_top50": top50,
+        "protocol_path": "backtest/experiments/full/protocol.json",
+        "full_result_path": "backtest/experiments/full/full_results.json",
+        "cleanup_retention_eligible": False,
+    }
+
+
 def test_report_keeps_only_b6_full_period_and_neighborhood_snapshot():
     html = report.build_html([_baseline_row(), _row("b1-m"), _row("b6-m")])
     soup = BeautifulSoup(html, "html.parser")
@@ -155,3 +203,60 @@ def test_report_requires_exactly_one_current_strategy_baseline():
         report.build_html([diagnostic])
     with pytest.raises(ValueError, match="exactly one B2-S"):
         report.build_html([_baseline_row(), _baseline_row(), diagnostic])
+
+
+def test_unified_report_adds_full_winner_top50_and_audits_every_phase_s_row():
+    other_rows = [
+        {
+            "exp_id": "strategy-neighborhood/b2-s-local-v1",
+            "phase": "S",
+            "state": "test_complete",
+            "conclusion": "candidate_complete",
+            "valid_result_path": "backtest/experiments/v1/valid_results.json",
+        },
+        {
+            "exp_id": "strategy-sweep/b1-m",
+            "phase": "S",
+            "state": "test_complete",
+            "conclusion": "historical_audit",
+        },
+        {
+            "exp_id": "model/phase-m-only",
+            "phase": "M",
+        },
+    ]
+    rows = [
+        _baseline_row(),
+        _row("b1-m"),
+        _row("b6-m"),
+        _full_neighborhood_row(),
+        *other_rows,
+    ]
+
+    html = report.build_html(rows)
+    soup = BeautifulSoup(html, "html.parser")
+
+    first_table = soup.select_one("table")
+    assert first_table is not None
+    assert "baseline" in (first_table.get("class") or [])
+    assert "B2-S v1.0" in first_table.get_text()
+    full = soup.select_one("#full-neighborhood")
+    assert full is not None
+    assert "strategy-neighborhood/b2-s-local-full-v2" in full.get_text()
+    claim = full.select_one(".winner-claim")
+    assert claim is not None
+    assert "full_history_in_sample" in claim.get_text()
+    assert "样本外" not in claim.get_text()
+    assert len(full.select("table.robust-top50 tbody tr")) == 50
+    assert "candidate-001" in full.select_one("#full-neighborhood-winner").get_text()
+
+    phase_s_ids = {
+        row["exp_id"] for row in rows if row.get("phase") == "S"
+    }
+    for exp_id in phase_s_ids:
+        assert exp_id in html
+    audit_text = soup.select_one("#phase-s-audit-index").get_text(" ", strip=True)
+    assert "strategy-neighborhood/b2-s-local-v1" in audit_text
+    assert "strategy-sweep/b1-m" in audit_text
+    assert "model/phase-m-only" not in audit_text
+    assert "strategy_neighborhood_report.html" not in html

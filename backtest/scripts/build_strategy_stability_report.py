@@ -15,6 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 DEFAULT_OUTPUT = REPO_ROOT / "backtest/experiments/strategy_stability_report.html"
 CURRENT_STRATEGY_BASELINE_EXP_ID = "baseline/b2-s-on-b6-m"
+FULL_NEIGHBORHOOD_EXP_ID = "strategy-neighborhood/b2-s-local-full-v2"
 METRICS = (
     ("annualized_return", "扣费年化", True),
     ("sharpe_ratio", "夏普", False),
@@ -131,10 +132,152 @@ def _baseline_section(baseline_row: dict, candidates: Sequence[dict]) -> str:
     )
 
 
+def _full_neighborhood_section(row: dict[str, Any]) -> str:
+    if row.get("state") != "complete":
+        raise ValueError("full-period neighborhood row must be complete")
+    if row.get("evaluation_mode") != "full_history_in_sample":
+        raise ValueError("full-period neighborhood row lacks evaluation disclosure")
+    if row.get("selection_pool") != "csi1000" or row.get(
+        "selection_segment"
+    ) != ["2020-01-13", "2026-07-31"]:
+        raise ValueError("full-period neighborhood selection contract differs")
+    winner = row.get("full_winner_metrics") or {}
+    strategy = row.get("selected_strategy") or {}
+    top50 = row.get("robust_top50") or []
+    if len(top50) != 50:
+        raise ValueError("full-period neighborhood robust Top 50 is incomplete")
+    selected_id = row.get("selected_candidate_id")
+    if not selected_id or top50[0].get("candidate_id") != selected_id:
+        raise ValueError("full-period neighborhood winner differs from robust ranking")
+
+    metric_specs = (
+        ("neighbor_ir_p25", "邻域 IR P25", False),
+        ("excess_with_cost_information_ratio", "扣费超额 IR", False),
+        ("excess_with_cost_annualized_return", "扣费超额年化", True),
+        ("excess_with_cost_max_drawdown", "扣费最大回撤", True),
+        ("annualized_one_way_turnover", "年化单边换手", False),
+    )
+    absolute = winner.get("absolute_portfolio") or {}
+    winner_headers = "".join(
+        f"<th>{label}</th>" for _, label, _ in metric_specs
+    ) + "<th>绝对收益夏普</th><th>绝对收益卡玛</th><th>年化波动</th>"
+    winner_cells = "".join(
+        f'<td class="num">{_fmt(winner.get(key), percent)}</td>'
+        for key, _, percent in metric_specs
+    ) + "".join(
+        f'<td class="num">{_fmt(absolute.get(key), percent)}</td>'
+        for key, percent in (
+            ("sharpe_ratio", False),
+            ("calmar_ratio", False),
+            ("annualized_volatility", True),
+        )
+    )
+    params = (
+        f"Top{_esc(strategy.get('topk'))} / d{_esc(strategy.get('n_drop'))} / "
+        f"h{_esc(strategy.get('hold_thresh'))} / r{_fmt(strategy.get('risk_degree'))}"
+    )
+    winner_table = (
+        '<table class="full-winner"><thead><tr><th>实验</th><th>候选</th><th>策略参数</th>'
+        f"{winner_headers}</tr></thead><tbody><tr>"
+        f"<td>{_esc(row.get('exp_id'))}</td><td>{_esc(selected_id)}</td>"
+        f"<td>{params}</td>{winner_cells}</tr></tbody></table>"
+    )
+
+    yearly_rows = "".join(
+        f'<tr><td>{_esc(year)}</td><td class="num">{_fmt(value)}</td></tr>'
+        for year, value in sorted((winner.get("yearly_ir") or {}).items())
+    )
+    yearly_table = (
+        '<table class="winner-yearly-ir"><thead><tr><th>年度</th>'
+        f"<th>扣费超额 IR</th></tr></thead><tbody>{yearly_rows}</tbody></table>"
+    )
+    ranking_rows = "".join(
+        "<tr>"
+        f'<td class="num">{rank}</td><td>{_esc(candidate.get("candidate_id"))}</td>'
+        + "".join(
+            f'<td class="num">{_fmt(candidate.get(key), percent)}</td>'
+            for key, _, percent in metric_specs
+        )
+        + "</tr>"
+        for rank, candidate in enumerate(top50, 1)
+    )
+    ranking_headers = "".join(
+        f"<th>{label}</th>" for _, label, _ in metric_specs
+    )
+    ranking_table = (
+        '<table class="robust-top50"><thead><tr><th>排名</th><th>候选</th>'
+        f"{ranking_headers}</tr></thead><tbody>{ranking_rows}</tbody></table>"
+    )
+    return (
+        '<section id="full-neighborhood"><h2>B2-S 全历史邻域比较</h2>'
+        '<p class="winner-claim"><code>full_history_in_sample</code>：使用 CSI1000 '
+        "2020-01-13 至 2026-07-31 全历史连续区间比较和选型；"
+        "该胜者仅为研究候选，不是独立 holdout 结论，也不自动提升 B2-S。</p>"
+        '<div id="full-neighborhood-winner"><h3>全历史稳健胜者</h3>'
+        f"{winner_table}<h3>胜者扣费分年度 IR</h3>{yearly_table}</div>"
+        '<h3>稳健排名 Top 50</h3><p class="note">按轴向邻域扣费超额 IR '
+        "25% 分位、候选自身 IR、年化、最大回撤、换手及候选 ID 依次并列排序。</p>"
+        f"{ranking_table}</section>"
+    )
+
+
+def _artifact_link(path: Any) -> str:
+    value = str(path or "").strip()
+    if not value:
+        return ""
+    if value.startswith("backtest/experiments/"):
+        href = value.removeprefix("backtest/experiments/")
+    elif value.startswith("backtest/"):
+        href = "../" + value.removeprefix("backtest/")
+    elif Path(value).is_absolute():
+        return _esc(value)
+    else:
+        href = value
+    return f'<a href="{_esc(href)}">{_esc(Path(value).name)}</a>'
+
+
+def _phase_s_audit_index(rows: Sequence[dict[str, Any]]) -> str:
+    body = []
+    artifact_keys = (
+        "protocol_path",
+        "full_result_path",
+        "valid_result_path",
+        "test_result_path",
+        "prediction_manifest",
+    )
+    for row in sorted(rows, key=lambda item: str(item.get("exp_id") or "")):
+        artifacts = "、".join(
+            link
+            for link in (_artifact_link(row.get(key)) for key in artifact_keys)
+            if link
+        ) or "—"
+        segment = row.get("selection_segment") or []
+        segment_text = " 至 ".join(str(item) for item in segment) if segment else "—"
+        body.append(
+            "<tr>"
+            f"<td>{_esc(row.get('exp_id'))}</td>"
+            f"<td>{_esc(row.get('baseline_ref'))}</td>"
+            f"<td>{_esc(row.get('state'))}</td>"
+            f"<td>{_esc(row.get('evaluation_mode') or 'historical_audit')}</td>"
+            f"<td>{_esc(segment_text)}</td>"
+            f"<td>{_esc(row.get('conclusion'))}</td>"
+            f"<td>{artifacts}</td></tr>"
+        )
+    return (
+        '<section id="phase-s-audit-index"><h2>Phase S registry 审计索引</h2>'
+        '<p class="note">覆盖 registry 中每一条 Phase S exp_id；历史 valid/test '
+        "登记仅供审计，不作为当前选型表。</p>"
+        '<table class="phase-s-audit"><thead><tr><th>实验</th><th>对照</th>'
+        "<th>状态</th><th>评估模式</th><th>选型区间</th><th>结论</th><th>追踪产物</th>"
+        f"</tr></thead><tbody>{''.join(body)}</tbody></table></section>"
+    )
+
+
 def build_html(rows: Sequence[dict]) -> str:
+    phase_s_rows = [row for row in rows if str(row.get("phase") or "").upper() == "S"]
     b6_matches = [
         row
-        for row in rows
+        for row in phase_s_rows
         if row.get("exp_id") == "strategy-stability-full-period/b6-m"
         and row.get("conclusion") == "diagnostic_no_selection"
     ]
@@ -147,7 +290,9 @@ def build_html(rows: Sequence[dict]) -> str:
     if actual_ids != expected_ids or len(b6) != len(expected_ids):
         raise ValueError("B6-M stability diagnostic candidate set is incomplete")
     baseline_matches = [
-        row for row in rows if row.get("exp_id") == CURRENT_STRATEGY_BASELINE_EXP_ID
+        row
+        for row in phase_s_rows
+        if row.get("exp_id") == CURRENT_STRATEGY_BASELINE_EXP_ID
     ]
     if len(baseline_matches) != 1:
         raise ValueError("report requires exactly one B2-S baseline row")
@@ -171,6 +316,14 @@ def build_html(rows: Sequence[dict]) -> str:
         + _table(neighborhood, table_class="full-period")
         + "</section>"
     )
+    full_matches = [
+        row for row in phase_s_rows if row.get("exp_id") == FULL_NEIGHBORHOOD_EXP_ID
+    ]
+    if len(full_matches) > 1:
+        raise ValueError("report requires at most one full-period neighborhood row")
+    if full_matches:
+        sections.append(_full_neighborhood_section(full_matches[0]))
+    sections.append(_phase_s_audit_index(phase_s_rows))
     css = """
 body{font-family:-apple-system,'PingFang SC',sans-serif;max-width:1500px;margin:24px auto;color:#172033;background:#f7f8fa}
 h1{font-size:24px}h2{margin-top:34px;border-bottom:2px solid #355f9d;padding-bottom:7px}h3{font-size:15px;margin-top:20px}
@@ -181,11 +334,13 @@ table{border-collapse:collapse;width:100%;background:#fff;margin:10px 0 24px;fon
     return (
         '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        f"<title>Phase S 全周期稳定性诊断</title><style>{css}</style></head><body>"
-        '<h1>Phase S 全周期稳定性诊断（仅 CSI1000）</h1>'
+        f"<title>Phase S 统一研究报告</title><style>{css}</style></head><body>"
+        '<h1>Phase S 统一研究报告（研究主目标池 CSI1000）</h1>'
         f'<div class="card"><p class="meta">生成时间：{generated}</p>'
-        '<p>50 万账户、当前实盘费率；同一组合从 2020-01-13 连续运行至 2026-07-31。结果只用于回看稳定性，不产生策略胜者，也不改变实盘配置。</p>'
-        '<p class="note">指标均为扣费后的绝对收益口径；夏普无风险利率取 0。不使用相对绩效指标。</p></div>'
+        '<p><code>full_history_in_sample</code>：50 万元账户、当前费率与 CSI1000 '
+        "benchmark；2020-01-13 至 2026-07-31 全历史连续区间允许用于策略比较。"
+        "这些结果不属于独立 holdout 检验，也不自动改变 B2-S 或实盘配置。</p>"
+        '<p class="note">稳定性表为扣费绝对收益口径；邻域选型表为扣费超额收益口径；夏普无风险利率取 0。</p></div>'
         + "".join(sections)
         + "</body></html>"
     )

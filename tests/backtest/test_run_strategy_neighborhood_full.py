@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -512,6 +513,87 @@ def test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics(
         expected_return / expected_volatility
     )
     assert result["absolute_portfolio"]["calmar_ratio"] is not None
+
+
+def test_run_candidate_accepts_complete_real_metrics_payload_with_success_status(
+    tmp_path: Path, monkeypatch
+):
+    candidate = protocol.strategy_neighborhood_grid()[0]
+    result_dir = tmp_path / "result"
+    run_dir = result_dir / "run_01"
+    run_dir.mkdir(parents=True)
+    prediction_sha = "frozen-prediction-sha"
+    (result_dir / "meta.json").write_text(
+        json.dumps({"source_pred_sha256": prediction_sha}), encoding="utf-8"
+    )
+    real_metrics_payload = {
+        "run": 1,
+        "status": "success",
+        "excess_with_cost_mean": 0.0003710174954030254,
+        "excess_with_cost_std": 0.010413363730053731,
+        "excess_with_cost_annualized_return": 0.0923002427804045,
+        "excess_with_cost_information_ratio": 0.5496570841594484,
+        "excess_with_cost_max_drawdown": -0.41742603472501005,
+        "excess_no_cost_mean": 0.0003952894489520631,
+        "excess_no_cost_std": 0.010413934930957318,
+        "excess_no_cost_annualized_return": 0.09862599057619859,
+        "excess_no_cost_information_ratio": 0.5855835134836722,
+        "excess_no_cost_max_drawdown": -0.41166006603026384,
+        "portfolio_cum_return": 1.5889075969404618,
+        "benchmark_cum_return": 0.20909595489501953,
+        "excess_cum_return": 1.3798116420454423,
+        "portfolio_mean": 0.0006238388270298767,
+        "portfolio_std": 0.011836936565324557,
+        "portfolio_annualized_return": 0.16000851809176697,
+        "portfolio_information_ratio": 0.8130580603033768,
+        "portfolio_max_drawdown": -0.2341006822321069,
+        "benchmark_mean": 0.00011968612670898438,
+        "benchmark_std": 0.015803014859557152,
+        "benchmark_annualized_return": 0.028884291648864746,
+        "benchmark_information_ratio": 0.11684021132516621,
+        "benchmark_max_drawdown": -0.46708500385284424,
+        "annualized_one_way_turnover": 6.316854920493451,
+        "cumulative_trade_cost": 35314.03872709765,
+        "backtest_recorder_id": "bed2a7966e8543bb87fd6fe7bb69de1d",
+        "backtest_experiment_id": "255933261929739874",
+        "backtest_experiment_name": "backtest_full_candidate_run01",
+    }
+    (run_dir / "metrics.json").write_text(
+        json.dumps(real_metrics_payload), encoding="utf-8"
+    )
+    report = pd.DataFrame(
+        {
+            "datetime": pd.to_datetime(["2021-01-04", "2021-01-05", "2021-01-06"]),
+            "return": [0.02, -0.01, 0.01],
+            "cost": [0.001, 0.001, 0.001],
+            "bench": [0.002, -0.002, 0.001],
+            "turnover": [0.2, 0.2, 0.2],
+        }
+    )
+    report.to_csv(run_dir / "report_normal.csv", index=False)
+    monkeypatch.setattr(
+        runner.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=0,
+            stdout=f"结果目录: {result_dir}\n",
+            stderr="",
+        ),
+    )
+
+    row = runner._run_candidate(
+        runner.load_config(str(runner.DEFAULT_BASE_CONFIG)),
+        candidate,
+        pred_path=tmp_path / "prediction.pkl",
+        prediction_entry={"prediction_sha256": prediction_sha},
+        configs_dir=tmp_path / "configs",
+    )
+
+    assert row["status"] == "success"
+    assert row[protocol.IR_KEY] == real_metrics_payload[protocol.IR_KEY]
+    assert row["run"] == 1
+    assert row["absolute_portfolio"]["sharpe_ratio"] is not None
+    assert set(row["yearly_ir"]) == {"2021"}
 
 
 def test_checkpoint_contract_stores_all_frozen_input_hashes(tmp_path: Path):

@@ -374,7 +374,14 @@ def _run_candidate(
         meta = json.loads((result_dir / "meta.json").read_text(encoding="utf-8"))
         if meta.get("source_pred_sha256") != prediction_entry["prediction_sha256"]:
             raise ValueError("session prediction SHA differs from frozen prediction")
-        row.update(status="success", **load_result_metrics(result_dir))
+        metrics = load_result_metrics(result_dir)
+        metrics_status = metrics.pop("status", None)
+        if metrics_status != "success":
+            raise ValueError(
+                f"backtest metrics status must be success: {metrics_status!r}"
+            )
+        row.update(metrics)
+        row["status"] = "success"
         classify_strategy_outcome(row)
     except Exception as exc:
         row.update(

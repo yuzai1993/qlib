@@ -194,6 +194,7 @@ def test_canonical_manifest_binds_model_and_actual_prediction_frame(
     _write_authoritative_manifest(manifest_path, entry)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     monkeypatch.setattr(runner, "DEFAULT_PREDICTION_MANIFEST", manifest_path)
+    monkeypatch.setattr(runner, "FULL_PREDICTION_COVERAGE", entry["coverage"])
 
     verified, coverage = runner.validate_full_prediction_manifest(
         manifest, manifest_path
@@ -276,6 +277,7 @@ def test_prediction_artifact_requires_exact_full_coverage_and_sha(
         authoritative_manifest,
         raising=False,
     )
+    monkeypatch.setattr(runner, "FULL_PREDICTION_COVERAGE", entry["coverage"])
 
     coverage = runner.validate_prediction_artifact(entry, path)
 
@@ -303,15 +305,16 @@ def test_self_consistent_endpoint_only_prediction_is_rejected_by_tracked_manifes
     authoritative_path = tmp_path / "authoritative_full.pkl"
     authoritative.to_pickle(authoritative_path)
     authoritative_manifest = tmp_path / "tracked_prediction_manifest.json"
-    _write_authoritative_manifest(
-        authoritative_manifest,
-        _prediction_entry(authoritative_path, authoritative),
-    )
+    authoritative_entry = _prediction_entry(authoritative_path, authoritative)
+    _write_authoritative_manifest(authoritative_manifest, authoritative_entry)
     monkeypatch.setattr(
         runner,
         "DEFAULT_PREDICTION_MANIFEST",
         authoritative_manifest,
         raising=False,
+    )
+    monkeypatch.setattr(
+        runner, "FULL_PREDICTION_COVERAGE", authoritative_entry["coverage"]
     )
 
     endpoint_index = pd.MultiIndex.from_arrays(
@@ -326,7 +329,7 @@ def test_self_consistent_endpoint_only_prediction_is_rejected_by_tracked_manifes
     endpoint_only.to_pickle(endpoint_path)
     self_consistent_entry = _prediction_entry(endpoint_path, endpoint_only)
 
-    with pytest.raises(ValueError, match="authoritative tracked manifest"):
+    with pytest.raises(ValueError, match="canonical coverage"):
         runner.validate_prediction_artifact(self_consistent_entry, endpoint_path)
 
 
@@ -609,3 +612,179 @@ def test_checkpoint_contract_stores_all_frozen_input_hashes(tmp_path: Path):
         "prediction_manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
         "base_config_sha256": hashlib.sha256(base.read_bytes()).hexdigest(),
     }
+
+
+def test_completed_resume_is_a_byte_preserving_noop(
+    tmp_path: Path, monkeypatch, capsys
+):
+    output_root = tmp_path / "output"
+    configs_dir = tmp_path / "configs"
+    configs_dir.mkdir()
+    sentinel_config = configs_dir / "sentinel.yaml"
+    sentinel_config.write_text("untouched: true\n", encoding="utf-8")
+    manifest_path = tmp_path / "prediction_manifest.json"
+    manifest_path.write_text('{"predictions": []}\n', encoding="utf-8")
+    prediction_path = tmp_path / "prediction.pkl"
+    prediction_path.write_bytes(b"frozen prediction")
+    prediction_sha = hashlib.sha256(prediction_path.read_bytes()).hexdigest()
+    prediction_entry = {
+        "path": str(prediction_path),
+        "prediction_sha256": prediction_sha,
+    }
+    grid = protocol.strategy_neighborhood_grid()
+    base = runner.load_config(str(runner.DEFAULT_BASE_CONFIG))
+    rows = _successful_grid_rows()
+    for row, candidate in zip(rows, grid):
+        row["source_pred_sha256"] = prediction_sha
+        row["effective_config_sha256"] = runner.effective_config_sha256(
+            base, candidate
+        )
+
+    protocol_payload = runner.protocol_payload(grid, runner.DEFAULT_BASE_CONFIG)
+    protocol_path = output_root / "protocol.json"
+    runner.write_json_atomic(protocol_path, protocol_payload)
+    protocol_sha = runner.sha256_file(protocol_path)
+    run_contract = runner.build_checkpoint_contract(
+        protocol_sha, manifest_path, runner.DEFAULT_BASE_CONFIG
+    )
+    completed = runner.completed_results_payload(
+        rows,
+        grid,
+        protocol_sha256=protocol_sha,
+        run_contract=run_contract,
+    )
+    completed.update(
+        {
+            "updated_at": "2000-01-01T00:00:00",
+            "prediction_manifest": runner._repo_path(manifest_path),
+            "base_config": runner._repo_path(runner.DEFAULT_BASE_CONFIG),
+            "source_pred": runner._repo_path(prediction_path),
+            "source_pred_sha256": prediction_sha,
+        }
+    )
+    results_path = output_root / "full_results.json"
+    runner.write_json_atomic(results_path, completed)
+    before = {
+        path.relative_to(tmp_path): path.read_bytes()
+        for path in tmp_path.rglob("*")
+        if path.is_file()
+    }
+
+    monkeypatch.setattr(
+        runner,
+        "validate_full_prediction_manifest",
+        lambda manifest, path: (prediction_entry, {"n_rows": 1}),
+    )
+    monkeypatch.setattr(
+        runner,
+        "_run_candidate",
+        lambda *args, **kwargs: pytest.fail("completed resume ran a candidate"),
+    )
+
+    runner.main(
+        [
+            "--prediction-manifest",
+            str(manifest_path),
+            "--output-root",
+            str(output_root),
+            "--configs-dir",
+            str(configs_dir),
+            "--base-config",
+            str(runner.DEFAULT_BASE_CONFIG),
+        ]
+    )
+
+    after = {
+        path.relative_to(tmp_path): path.read_bytes()
+        for path in tmp_path.rglob("*")
+        if path.is_file()
+    }
+    output = capsys.readouterr().out
+    assert after == before
+    assert "already full_complete" in output
+    assert "no files rewritten" in output
+
+
+def test_completed_resume_with_missing_protocol_fails_before_any_write(
+    tmp_path: Path, monkeypatch
+):
+    output_root = tmp_path / "output"
+    manifest_path = tmp_path / "prediction_manifest.json"
+    manifest_path.write_text('{"predictions": []}\n', encoding="utf-8")
+    prediction_path = tmp_path / "prediction.pkl"
+    prediction_path.write_bytes(b"frozen prediction")
+    prediction_sha = hashlib.sha256(prediction_path.read_bytes()).hexdigest()
+    prediction_entry = {
+        "path": str(prediction_path),
+        "prediction_sha256": prediction_sha,
+    }
+    grid = protocol.strategy_neighborhood_grid()
+    base = runner.load_config(str(runner.DEFAULT_BASE_CONFIG))
+    rows = _successful_grid_rows()
+    for row, candidate in zip(rows, grid):
+        row["source_pred_sha256"] = prediction_sha
+        row["effective_config_sha256"] = runner.effective_config_sha256(
+            base, candidate
+        )
+
+    protocol_payload = runner.protocol_payload(grid, runner.DEFAULT_BASE_CONFIG)
+    protocol_path = output_root / "protocol.json"
+    runner.write_json_atomic(protocol_path, protocol_payload)
+    protocol_sha = runner.sha256_file(protocol_path)
+    run_contract = runner.build_checkpoint_contract(
+        protocol_sha, manifest_path, runner.DEFAULT_BASE_CONFIG
+    )
+    completed = runner.completed_results_payload(
+        rows,
+        grid,
+        protocol_sha256=protocol_sha,
+        run_contract=run_contract,
+    )
+    completed.update(
+        {
+            "prediction_manifest": runner._repo_path(manifest_path),
+            "base_config": runner._repo_path(runner.DEFAULT_BASE_CONFIG),
+            "source_pred": runner._repo_path(prediction_path),
+            "source_pred_sha256": prediction_sha,
+        }
+    )
+    results_path = output_root / "full_results.json"
+    runner.write_json_atomic(results_path, completed)
+    protocol_path.unlink()
+    before = {
+        path.relative_to(tmp_path): path.read_bytes()
+        for path in tmp_path.rglob("*")
+        if path.is_file()
+    }
+    monkeypatch.setattr(
+        runner,
+        "validate_full_prediction_manifest",
+        lambda manifest, path: (prediction_entry, {"n_rows": 1}),
+    )
+    monkeypatch.setattr(
+        runner,
+        "_run_candidate",
+        lambda *args, **kwargs: pytest.fail("completed resume ran a candidate"),
+    )
+
+    with pytest.raises(ValueError, match="completed.*protocol"):
+        runner.main(
+            [
+                "--prediction-manifest",
+                str(manifest_path),
+                "--output-root",
+                str(output_root),
+                "--configs-dir",
+                str(tmp_path / "configs"),
+                "--base-config",
+                str(runner.DEFAULT_BASE_CONFIG),
+            ]
+        )
+
+    after = {
+        path.relative_to(tmp_path): path.read_bytes()
+        for path in tmp_path.rglob("*")
+        if path.is_file()
+    }
+    assert after == before
+    assert not protocol_path.exists()

@@ -25,12 +25,12 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from config_loader import load_config  # noqa: E402
 from eval_protocol import yearly_ir  # noqa: E402
 from generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
+import phase_s_prediction_validation as full_prediction_validation  # noqa: E402
 from phase_s_protocol import (  # noqa: E402
     ACCOUNT,
     EXCHANGE_KWARGS,
     FULL_SEGMENT,
     POOL_BENCHMARKS,
-    load_frozen_model,
     sha256_file,
 )
 from run_strategy_neighborhood import (  # noqa: E402
@@ -59,7 +59,10 @@ EVALUATION_MODE = "full_history_in_sample"
 MODEL_REF = "b6-m"
 POOL = "csi1000"
 SEGMENT = "full"
-DATA_VERSION = "2026-07-31"
+DATA_VERSION = full_prediction_validation.FULL_DATA_VERSION
+FULL_PREDICTION_COVERAGE = copy.deepcopy(
+    full_prediction_validation.FULL_PREDICTION_COVERAGE
+)
 DEFAULT_OUTPUT_ROOT = (
     REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260802_b2s_local_full"
 )
@@ -94,10 +97,7 @@ def _repo_path(path: Path) -> str:
 
 
 def _prediction_path(entry: dict[str, Any]) -> Path:
-    path = Path(str(entry.get("path") or "")).expanduser()
-    if not str(entry.get("path") or "").strip():
-        raise ValueError("full prediction path is required")
-    return path.resolve() if path.is_absolute() else (REPO_ROOT / path).resolve()
+    return full_prediction_validation.prediction_path(entry, REPO_ROOT)
 
 
 def protocol_payload(
@@ -133,33 +133,11 @@ def protocol_payload(
 
 def full_prediction_entry(manifest: dict[str, Any]) -> dict[str, Any]:
     """Return the sole legal full-period prediction entry, failing closed."""
-    matches = [
-        entry
-        for entry in manifest.get("predictions") or []
-        if (entry.get("model_ref"), entry.get("pool"), entry.get("segment"))
-        == (MODEL_REF, POOL, SEGMENT)
-    ]
-    if len(matches) != 1:
-        raise ValueError(
-            "prediction manifest requires exactly one b6-m/csi1000/full artifact"
-        )
-    return copy.deepcopy(matches[0])
+    return full_prediction_validation.full_prediction_entry(manifest)
 
 
 def _prediction_frame(path: Path) -> pd.DataFrame:
-    frame = pd.read_pickle(path)
-    if isinstance(frame, pd.Series):
-        frame = frame.rename("score").to_frame()
-    if not isinstance(frame, pd.DataFrame) or frame.shape[1] != 1:
-        raise ValueError("full prediction must be a one-column DataFrame")
-    if not isinstance(frame.index, pd.MultiIndex) or list(frame.index.names) != [
-        "datetime",
-        "instrument",
-    ]:
-        raise ValueError("full prediction index must be datetime/instrument")
-    if frame.index.has_duplicates:
-        raise ValueError("full prediction contains duplicate index rows")
-    return frame.sort_index()
+    return full_prediction_validation.prediction_frame(path)
 
 
 def _authoritative_full_prediction_entry() -> dict[str, Any]:
@@ -171,27 +149,13 @@ def _authoritative_full_prediction_entry() -> dict[str, Any]:
 
 def validate_prediction_artifact(entry: dict[str, Any], path: Path) -> dict[str, Any]:
     """Verify the score against its entry and the tracked coverage authority."""
-    prediction_path = Path(path).expanduser().resolve()
-    if not prediction_path.is_file():
-        raise FileNotFoundError(f"full prediction file missing: {prediction_path}")
-    if _prediction_path(entry) != prediction_path:
-        raise ValueError("full prediction path differs from manifest")
-    if sha256_file(prediction_path) != entry.get("prediction_sha256"):
-        raise ValueError("full prediction file SHA differs from manifest")
-    frame = _prediction_frame(prediction_path)
-    dates = pd.DatetimeIndex(frame.index.get_level_values("datetime"))
-    actual = {
-        "start": str(dates.min().date()),
-        "end": str(dates.max().date()),
-        "n_dates": int(dates.nunique()),
-        "n_rows": int(len(frame)),
-        "index_sha256": prediction_index_sha256(frame.index),
-    }
-    if (actual["start"], actual["end"]) != FULL_SEGMENT:
-        raise ValueError("full prediction does not cover the exact selection period")
+    actual = full_prediction_validation.validate_prediction_artifact(
+        entry,
+        path,
+        repo_root=REPO_ROOT,
+        expected_coverage=FULL_PREDICTION_COVERAGE,
+    )
     declared = entry.get("coverage") or {}
-    if any(declared.get(key) != value for key, value in actual.items()):
-        raise ValueError("full prediction coverage differs from manifest")
     authoritative = _authoritative_full_prediction_entry()
     same_identity = (
         (
@@ -216,45 +180,13 @@ def validate_full_prediction_manifest(
     manifest: dict[str, Any], manifest_path: Path
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Validate the one authoritative B6-M full prediction and its dataframe."""
-    declared_path = Path(manifest_path).expanduser().resolve()
-    authoritative_path = DEFAULT_PREDICTION_MANIFEST.expanduser().resolve()
-    if declared_path != authoritative_path:
-        raise ValueError(
-            "full prediction manifest differs from authoritative manifest path"
-        )
-    if not authoritative_path.is_file():
-        raise FileNotFoundError(
-            f"authoritative full prediction manifest missing: {authoritative_path}"
-        )
-    authoritative = json.loads(authoritative_path.read_text(encoding="utf-8"))
-    if manifest != authoritative:
-        raise ValueError("full prediction manifest differs from authoritative manifest")
-    if manifest.get("schema_version") != 1:
-        raise ValueError("full prediction manifest schema_version must be 1")
-    if manifest.get("data_version") != DATA_VERSION:
-        raise ValueError(
-            f"full prediction manifest data_version must be {DATA_VERSION}"
-        )
-    if len(manifest.get("predictions") or []) != 1:
-        raise ValueError("authoritative manifest requires exactly one prediction")
-
-    entry = full_prediction_entry(manifest)
-    if entry.get("data_version") != DATA_VERSION:
-        raise ValueError(f"full prediction data_version must be {DATA_VERSION}")
-    frozen = load_frozen_model(REPO_ROOT, MODEL_REF)
-    model_path = Path(str(entry.get("model_path") or "")).expanduser()
-    if not model_path.is_absolute():
-        model_path = REPO_ROOT / model_path
-    if (
-        model_path.resolve() != frozen.model_path.resolve()
-        or entry.get("model_sha256") != frozen.model_sha256
-    ):
-        raise ValueError(
-            "full prediction requires the tracked B6-M seed-4000 model binding"
-        )
-    prediction_path = _prediction_path(entry)
-    coverage = validate_prediction_artifact(entry, prediction_path)
-    return copy.deepcopy(entry), coverage
+    return full_prediction_validation.validate_full_prediction_manifest(
+        manifest,
+        manifest_path,
+        repo_root=REPO_ROOT,
+        authoritative_manifest_path=DEFAULT_PREDICTION_MANIFEST,
+        expected_coverage=FULL_PREDICTION_COVERAGE,
+    )
 
 
 def effective_config_sha256(base: dict[str, Any], candidate: dict[str, Any]) -> str:
@@ -474,6 +406,53 @@ def completed_results_payload(
     }
 
 
+def validate_completed_checkpoint(
+    checkpoint: dict[str, Any],
+    rows: Sequence[dict[str, Any]],
+    grid: Sequence[dict[str, Any]],
+    *,
+    protocol_sha256: str,
+    run_contract: dict[str, str],
+    manifest_path: Path,
+    base_config_path: Path,
+    prediction_entry: dict[str, Any],
+    prediction_path: Path,
+) -> None:
+    """Fail closed unless an immutable completed checkpoint matches all inputs."""
+    recomputed = completed_results_payload(
+        rows,
+        grid,
+        protocol_sha256=protocol_sha256,
+        run_contract=run_contract,
+    )
+    immutable_keys = (
+        "schema_version",
+        "state",
+        "exp_id",
+        "evaluation_mode",
+        "protocol_sha256",
+        "run_contract",
+        "model_ref",
+        "pool",
+        "segment",
+        "selection_segment",
+        "all_rows",
+        "winner",
+    )
+    for key in immutable_keys:
+        if checkpoint.get(key) != recomputed.get(key):
+            raise ValueError(f"completed full checkpoint {key} differs from recomputation")
+    expected_artifacts = {
+        "prediction_manifest": _repo_path(manifest_path),
+        "base_config": _repo_path(base_config_path),
+        "source_pred": _repo_path(prediction_path),
+        "source_pred_sha256": prediction_entry["prediction_sha256"],
+    }
+    for key, expected in expected_artifacts.items():
+        if checkpoint.get(key) != expected:
+            raise ValueError(f"completed full checkpoint {key} differs from current inputs")
+
+
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prediction-manifest", required=True, type=Path)
@@ -533,12 +512,26 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     grid = strategy_neighborhood_grid()
     protocol = protocol_payload(grid, base_config_path)
     protocol_path = output_root / "protocol.json"
+    results_path = output_root / "full_results.json"
+    checkpoint_payload = (
+        json.loads(results_path.read_text(encoding="utf-8"))
+        if results_path.exists()
+        else {}
+    )
     if protocol_path.exists():
         if json.loads(protocol_path.read_text(encoding="utf-8")) != protocol:
             raise ValueError(
                 "existing protocol differs from preregistered full protocol"
             )
     else:
+        if (
+            checkpoint_payload.get("state") == "full_complete"
+            and not args.prepare_only
+        ):
+            raise ValueError(
+                "completed full checkpoint requires its existing protocol; "
+                "no files rewritten"
+            )
         write_json_atomic(protocol_path, protocol)
     protocol_sha = sha256_file(protocol_path)
     print(
@@ -553,12 +546,6 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     run_contract = build_checkpoint_contract(
         protocol_sha, manifest_path, base_config_path
     )
-    results_path = output_root / "full_results.json"
-    checkpoint_payload = (
-        json.loads(results_path.read_text(encoding="utf-8"))
-        if results_path.exists()
-        else {}
-    )
     validate_checkpoint_contract(checkpoint_payload, run_contract, "full")
     rows = list(checkpoint_payload.get("all_rows") or [])
     pending = pending_candidates(
@@ -567,6 +554,27 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         base=base,
         prediction_sha256=str(verified_entry["prediction_sha256"]),
     )
+    if checkpoint_payload.get("state") == "full_complete":
+        if pending:
+            raise ValueError(
+                "completed full checkpoint contains stale or missing candidate rows"
+            )
+        validate_completed_checkpoint(
+            checkpoint_payload,
+            rows,
+            grid,
+            protocol_sha256=protocol_sha,
+            run_contract=run_contract,
+            manifest_path=manifest_path,
+            base_config_path=base_config_path,
+            prediction_entry=verified_entry,
+            prediction_path=pred_path,
+        )
+        print(
+            f"status: already full_complete; no files rewritten: {results_path}",
+            flush=True,
+        )
+        return
     started = time.monotonic()
 
     def run_candidate(candidate: dict[str, Any]) -> dict[str, Any]:

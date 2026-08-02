@@ -29,6 +29,24 @@ def _use_test_authoritative_manifest(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(
         runner, "DEFAULT_PREDICTION_MANIFEST", tmp_path / "prediction_manifest.json"
     )
+    index = pd.MultiIndex.from_arrays(
+        [
+            pd.to_datetime(["2020-01-13", "2020-01-14", "2026-07-31"]),
+            ["SH600000", "SH600000", "SH600000"],
+        ],
+        names=["datetime", "instrument"],
+    )
+    monkeypatch.setattr(
+        runner,
+        "FULL_PREDICTION_COVERAGE",
+        {
+            "start": "2020-01-13",
+            "end": "2026-07-31",
+            "n_dates": 3,
+            "n_rows": 3,
+            "index_sha256": runner.prediction_index_sha256(index),
+        },
+    )
 
 
 def _inputs(tmp_path: Path) -> tuple[dict, dict, Path, Path, Path]:

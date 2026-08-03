@@ -204,6 +204,41 @@ def test_publish_rechecks_postclose_after_taking_publish_lock(tmp_path):
     assert "postclose pipeline holds" in result.stderr
 
 
+def test_publish_wrappers_load_run_mode_from_cron_env_file(tmp_path):
+    for name in ("run_publish_cron.sh", "run_publish_catchup_cron.sh"):
+        root = tmp_path / name / "repo"
+        live_dir = root / "live_trading"
+        live_dir.mkdir(parents=True)
+        wrapper = live_dir / name
+        shutil.copy2(REPO_ROOT / "live_trading" / name, wrapper)
+
+        home = tmp_path / name / "home"
+        home.mkdir()
+        (home / ".qlib_live_env").write_text(
+            "export QMT_SIM_ACCOUNT_ID='paper-account'\n"
+            "export LIVE_RUN_MODE='LIVE'\n",
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env["HOME"] = str(home)
+        for key in (
+            "QMT_SIM_ACCOUNT_ID", "LIVE_RUN_MODE", "LIVE_TRADING_CONFIRM",
+        ):
+            env.pop(key, None)
+
+        result = subprocess.run(
+            ["bash", str(wrapper), "csi1000_b6m_b2s_postclose"],
+            cwd=root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        assert result.returncode == 1, (name, result.stdout, result.stderr)
+        assert "LIVE_TRADING_CONFIRM=YES" in result.stderr
+
+
 def test_wrappers_are_configurable_and_default_to_new_simulation_system():
     for name in WRAPPERS:
         text = (REPO_ROOT / "live_trading" / name).read_text(encoding="utf-8")

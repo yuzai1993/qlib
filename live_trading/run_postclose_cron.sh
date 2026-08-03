@@ -37,7 +37,7 @@ if [[ -d "$PUBLISH_LOCK_DIR" ]]; then
     exit 75
 fi
 
-exec > >(tee -a "$LOG_FILE") 2>&1
+exec >>"$LOG_FILE" 2>&1
 
 run_stage() {
     local name="$1"

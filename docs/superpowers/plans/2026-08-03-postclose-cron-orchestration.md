@@ -66,7 +66,7 @@ Expected: failures because `run_postclose_cron.sh` is missing.
 
 - [ ] **Step 3: Implement the minimal wrapper**
 
-Use `set -uo pipefail`, the standard config fallback, a directory lock, and an EXIT trap. Implement a `run_stage` helper that records nonzero status without terminating the pipeline. Run import, postmarket, and update in order; run report only when update returns zero. Write the summary log and return nonzero when any executed stage failed.
+Use `set -uo pipefail`, the standard config fallback, a directory lock, and an EXIT trap. Implement a `run_stage` helper that records nonzero status without terminating the pipeline. Run import, postmarket, and update in order; run report only when update returns zero. Append directly to the summary log without Bash process substitution (`/dev/fd` is not reliable in the cron/test sandbox), and return nonzero when any executed stage failed.
 
 - [ ] **Step 4: Run GREEN**
 

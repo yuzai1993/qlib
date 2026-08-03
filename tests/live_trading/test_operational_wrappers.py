@@ -90,33 +90,43 @@ def _run_postclose_fixture(
     )
     trace = trace_path.read_text(encoding="utf-8").splitlines() \
         if trace_path.exists() else []
-    return result, trace
+    log_path = (
+        live_dir / "logs" /
+        "csi1000_b6m_b2s_postclose_postclose_cron.log"
+    )
+    log_text = log_path.read_text(encoding="utf-8") \
+        if log_path.exists() else ""
+    return result, trace, log_text
 
 
 def test_postclose_continues_to_update_after_import_failure(tmp_path):
-    result, trace = _run_postclose_fixture(tmp_path, import_status=1)
+    result, trace, _log = _run_postclose_fixture(tmp_path, import_status=1)
 
     assert result.returncode != 0
     assert trace == ["import", "postmarket", "update", "report"]
 
 
 def test_postclose_skips_report_when_update_fails(tmp_path):
-    result, trace = _run_postclose_fixture(tmp_path, update_status=1)
+    result, trace, log = _run_postclose_fixture(tmp_path, update_status=1)
 
     assert result.returncode != 0
     assert trace == ["import", "postmarket", "update"]
-    assert "report skipped: market data update failed" in result.stdout
+    assert "report skipped: market data update failed" in log
 
 
 def test_postclose_success_is_serial_and_zero(tmp_path):
-    result, trace = _run_postclose_fixture(tmp_path)
+    result, trace, log = _run_postclose_fixture(tmp_path)
 
     assert result.returncode == 0
+    assert result.stderr == ""
     assert trace == ["import", "postmarket", "update", "report"]
+    assert "postclose summary: import=0 postmarket=0 update=0 report=0" in log
 
 
 def test_postclose_refuses_active_publish(tmp_path):
-    result, trace = _run_postclose_fixture(tmp_path, publish_lock=True)
+    result, trace, _log = _run_postclose_fixture(
+        tmp_path, publish_lock=True,
+    )
 
     assert result.returncode == 75
     assert trace == []

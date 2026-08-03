@@ -1,6 +1,9 @@
 """Operational wrappers must default to the controlled CSI1000 deployment."""
 
+import os
+import shutil
 import sqlite3
+import subprocess
 from pathlib import Path
 
 from live_trading.scripts.batch_status import find_active_batch_id
@@ -8,11 +11,102 @@ from live_trading.scripts.batch_status import find_active_batch_id
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WRAPPERS = [
+    "run_postclose_cron.sh",
     "run_publish_cron.sh",
     "run_publish_catchup_cron.sh",
     "run_import_cron.sh",
     "run_monitor_cron.sh",
 ]
+
+
+def _write_executable(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    path.chmod(0o755)
+
+
+def _run_postclose_fixture(
+    tmp_path,
+    *,
+    import_status=0,
+    postmarket_status=0,
+    update_status=0,
+    report_status=0,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    source = REPO_ROOT / "live_trading" / "run_postclose_cron.sh"
+    assert source.exists(), "run_postclose_cron.sh must exist"
+    wrapper = live_dir / source.name
+    shutil.copy2(source, wrapper)
+
+    _write_executable(
+        live_dir / "run_import_cron.sh",
+        "#!/usr/bin/env bash\n"
+        "printf 'import\\n' >> \"$POSTCLOSE_TEST_TRACE\"\n"
+        "exit \"${FAKE_IMPORT_STATUS:-0}\"\n",
+    )
+    _write_executable(
+        live_dir / "run_monitor_cron.sh",
+        "#!/usr/bin/env bash\n"
+        "if [[ \"$1\" == \"postmarket\" ]]; then\n"
+        "  printf 'postmarket\\n' >> \"$POSTCLOSE_TEST_TRACE\"\n"
+        "  exit \"${FAKE_POSTMARKET_STATUS:-0}\"\n"
+        "fi\n"
+        "printf 'report\\n' >> \"$POSTCLOSE_TEST_TRACE\"\n"
+        "exit \"${FAKE_REPORT_STATUS:-0}\"\n",
+    )
+    _write_executable(
+        root / "scripts/data_collector/tushare/run_update_to_bin.sh",
+        "#!/usr/bin/env bash\n"
+        "printf 'update\\n' >> \"$POSTCLOSE_TEST_TRACE\"\n"
+        "exit \"${FAKE_UPDATE_STATUS:-0}\"\n",
+    )
+
+    trace_path = tmp_path / "trace.txt"
+    env = os.environ.copy()
+    env.update({
+        "HOME": str(tmp_path / "home"),
+        "POSTCLOSE_TEST_TRACE": str(trace_path),
+        "FAKE_IMPORT_STATUS": str(import_status),
+        "FAKE_POSTMARKET_STATUS": str(postmarket_status),
+        "FAKE_UPDATE_STATUS": str(update_status),
+        "FAKE_REPORT_STATUS": str(report_status),
+    })
+    result = subprocess.run(
+        ["bash", str(wrapper), "csi1000_b6m_b2s_postclose"],
+        cwd=root,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    trace = trace_path.read_text(encoding="utf-8").splitlines() \
+        if trace_path.exists() else []
+    return result, trace
+
+
+def test_postclose_continues_to_update_after_import_failure(tmp_path):
+    result, trace = _run_postclose_fixture(tmp_path, import_status=1)
+
+    assert result.returncode != 0
+    assert trace == ["import", "postmarket", "update", "report"]
+
+
+def test_postclose_skips_report_when_update_fails(tmp_path):
+    result, trace = _run_postclose_fixture(tmp_path, update_status=1)
+
+    assert result.returncode != 0
+    assert trace == ["import", "postmarket", "update"]
+    assert "report skipped: market data update failed" in result.stdout
+
+
+def test_postclose_success_is_serial_and_zero(tmp_path):
+    result, trace = _run_postclose_fixture(tmp_path)
+
+    assert result.returncode == 0
+    assert trace == ["import", "postmarket", "update", "report"]
 
 
 def test_wrappers_are_configurable_and_default_to_new_simulation_system():

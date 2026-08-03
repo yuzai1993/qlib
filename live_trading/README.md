@@ -2,7 +2,7 @@
 
 当前活动候选系统是 `csi1000_b6m_b2s_postclose`。它使用冻结的 B6-M seed 4000、CSI1000、Top30/Drop2/Hold20，以及每天 Top2 的渐进建仓；QMT 仅在盘后定价时段使用 `prType=49`。
 
-本仓库只完成了代码、配置、测试和部署模板。以下外部动作尚未执行：创建/绑定新 QMT 模拟账户、安装 Windows 策略、挂载 SMB、安装 crontab、创建 `LIVE_OK`、晋级全额模拟盘。旧 `csi300_topk10_live.yaml` 仅作历史材料，不应再调度。
+Windows QMT 模拟策略、SMB 桥接和 Server酱通知已经完成基础连接验收。实际 crontab、正确 opening cash 的首次账本初始化、`LIVE_OK` 和后续晋级仍是显式部署步骤。旧 `csi300_topk10_live.yaml` 仅作历史材料，不应再调度。
 
 ## 固定契约
 
@@ -103,24 +103,31 @@ test -w /Volumes/qmt_bridge/inbox
 
 [crontab.csi1000_postclose.example](crontab.csi1000_postclose.example) 是唯一的新调度模板：
 
-- 15:32：导入回执后运行 `postmarket`；
-- 15:35：在日线数据已更新的前提下运行 `report`；
-- 21:00：发布下一交易日；
-- 22:05：只在缺少持久化批次时 catch-up；
-- 22:15：运行 `evening` 发布完整性检查。
+- 20:00：串行运行回执导入、`postmarket`、Tushare 行情更新；仅在行情更新成功后运行 `report`；
+- 21:30：发布下一交易日；
+- 22:30：运行 `evening` 发布完整性检查。
 
-所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。它们使用原子目录锁防止同类任务并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被 `|| true` 吞掉。
+`run_postclose_cron.sh` 即使遇到导入或 postmarket 告警也会继续更新行情，避免回执问题连带造成下一交易日缺数；行情更新失败时跳过日报，由更新脚本直接告警。它在整个流水线期间持有 `.locks/<config>_postclose.lock`，发布和人工补发发现该锁时会失败关闭，避免读取正在改写的数据。
+
+所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。它们使用原子目录锁防止同类任务并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动补发，22:30 告警后必须先检查原因再人工恢复。
 
 不要在本仓库内自动执行 `crontab` 修改。安装前先检查现有任务，确保旧 CSI300 条目已停用且没有同一时间的重复任务。
 
 ## 日常命令
 
 ```bash
+# 20:00 收盘流水线（导入 → 检查 → 更新 → 日报）
+bash live_trading/run_postclose_cron.sh csi1000_b6m_b2s_postclose
+
 # Shadow 发布下一开市日
 bash live_trading/run_publish_cron.sh csi1000_b6m_b2s_postclose
 
-# 只在该交易日没有活动批次时补发
+# 数据库没有下一交易日批次时，检查发布日志后人工补发
 bash live_trading/run_publish_catchup_cron.sh csi1000_b6m_b2s_postclose
+
+# 数据库已有批次但共享文件缺失时，按明确交易日幂等重发
+bash live_trading/run_publish_cron.sh \
+  csi1000_b6m_b2s_postclose YYYY-MM-DD
 
 # 导入并打印 planned/terminal/missing
 bash live_trading/run_import_cron.sh csi1000_b6m_b2s_postclose
@@ -130,6 +137,9 @@ bash live_trading/run_monitor_cron.sh postmarket csi1000_b6m_b2s_postclose
 bash live_trading/run_monitor_cron.sh report csi1000_b6m_b2s_postclose
 bash live_trading/run_monitor_cron.sh evening csi1000_b6m_b2s_postclose
 ```
+
+人工恢复前先查看
+`live_trading/logs/csi1000_b6m_b2s_postclose_publish_cron.log`。若 SMB 不可访问，先恢复挂载；若 `postclose` 锁存在，先确认 20:00 流水线是否仍在运行。
 
 ## 失败关闭与恢复
 

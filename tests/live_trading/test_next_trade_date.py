@@ -59,7 +59,10 @@ def test_evening_monitor_does_not_hide_failed_friday_publish(monkeypatch, tmp_pa
     )
     findings = run_monitor.run_evening(
         "2026-07-17", EmptyRecorder(),
-        {"live": {"bridge_root": str(tmp_path)}},
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": "csi1000_b6m_b2s_postclose",
+        }},
     )
 
     assert len(findings) == 1
@@ -88,7 +91,10 @@ def test_evening_monitor_ignores_superseded_higher_sequence(monkeypatch, tmp_pat
 
     findings = run_monitor.run_evening(
         "2026-07-17", recorder,
-        {"live": {"bridge_root": str(tmp_path)}},
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": "csi1000_b6m_b2s_postclose",
+        }},
     )
 
     assert findings == []

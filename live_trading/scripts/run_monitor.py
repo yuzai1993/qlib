@@ -103,9 +103,10 @@ def fetch_benchmark_close(benchmark: str, date: str):
 def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
+    config_id = config["live"]["strategy_id"]
     candidates = recorder.get_active_batches_by_date(next_day)
     if not candidates:
-        return check_evening(next_day, None, [])
+        return check_evening(next_day, None, [], config_id)
     # 同一交易日取最新 seq（batch_id 结尾为三位 seq）。
     candidates.sort(key=lambda batch: batch["batch_id"])
     batch = candidates[-1]
@@ -114,7 +115,7 @@ def run_evening(date, recorder, config) -> list:
     inbox_files = None
     if inbox.exists():
         inbox_files = [p.name for p in inbox.iterdir()]
-    return check_evening(next_day, batch, inbox_files)
+    return check_evening(next_day, batch, inbox_files, config_id)
 
 
 def run_postmarket(date, recorder, store, config) -> list:

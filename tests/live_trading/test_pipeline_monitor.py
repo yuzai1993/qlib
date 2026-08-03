@@ -19,6 +19,8 @@ from live_trading.scripts import run_monitor
 BATCH = {"batch_id": "20260714_csi300_topk10_001", "trade_date": "2026-07-14"}
 FILES_OK = ["signal_20260714_csi300_topk10_001.jsonl",
             "signal_20260714_csi300_topk10_001.done"]
+CONFIG_ID = "csi1000_b6m_b2s_postclose"
+PUBLISH_LOG = f"live_trading/logs/{CONFIG_ID}_publish_cron.log"
 
 
 def _rules(findings):
@@ -28,23 +30,36 @@ def _rules(findings):
 # ---------- evening ----------
 
 def test_evening_ok():
-    assert check_evening("2026-07-14", BATCH, FILES_OK) == []
+    assert check_evening("2026-07-14", BATCH, FILES_OK, CONFIG_ID) == []
 
 
 def test_evening_no_batch():
-    f = check_evening("2026-07-14", None, [])
+    f = check_evening("2026-07-14", None, [], CONFIG_ID)
     assert _rules(f) == ["PUBLISH_MISSING"] and f[0].level == "CRIT"
+    assert PUBLISH_LOG in f[0].message
+    assert f"run_publish_catchup_cron.sh {CONFIG_ID}" in f[0].message
 
 
 def test_evening_missing_done_file():
-    f = check_evening("2026-07-14", BATCH, [FILES_OK[0]])
+    f = check_evening("2026-07-14", BATCH, [FILES_OK[0]], CONFIG_ID)
     assert _rules(f) == ["PUBLISH_MISSING"]
+    assert PUBLISH_LOG in f[0].message
+    assert (
+        f"run_publish_cron.sh {CONFIG_ID} 2026-07-14"
+        in f[0].message
+    )
 
 
 def test_evening_inbox_unavailable():
-    f = check_evening("2026-07-14", BATCH, None)
+    f = check_evening("2026-07-14", BATCH, None, CONFIG_ID)
     assert _rules(f) == ["PUBLISH_MISSING"]
     assert "不可访问" in f[0].message
+    assert "先恢复 SMB 挂载" in f[0].message
+    assert PUBLISH_LOG in f[0].message
+    assert (
+        f"run_publish_cron.sh {CONFIG_ID} 2026-07-14"
+        in f[0].message
+    )
 
 
 # ---------- postmarket ----------

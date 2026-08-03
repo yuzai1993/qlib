@@ -22,20 +22,42 @@ DEFAULT_THRESHOLDS = {
 }
 
 
-def check_evening(next_trade_date, batch, inbox_files) -> list:
+def _publish_recovery_hint(config_id, trade_date, has_batch):
+    log_path = f"live_trading/logs/{config_id}_publish_cron.log"
+    if has_batch:
+        command = (
+            f"bash live_trading/run_publish_cron.sh {config_id} {trade_date}"
+        )
+    else:
+        command = (
+            f"bash live_trading/run_publish_catchup_cron.sh {config_id}"
+        )
+    return f"；发布日志：{log_path}；人工恢复：{command}"
+
+
+def check_evening(next_trade_date, batch, inbox_files, config_id) -> list:
     """发布检查：下一交易日批次已入库且 inbox 有 jsonl + done。
 
     Args:
         next_trade_date: 下一交易日 YYYY-MM-DD
         batch: 该日 batches 行（dict）或 None
         inbox_files: inbox 目录文件名列表；挂载点不可用传 None
+        config_id: 部署配置 ID，用于生成可执行的人工恢复命令
     """
     if inbox_files is None:
         return [Finding("PUBLISH_MISSING", CRIT,
-                        f"{next_trade_date} 批次检查失败：bridge inbox 不可访问（SMB 挂载丢失？）")]
+                        f"{next_trade_date} 批次检查失败：bridge inbox 不可访问"
+                        "（SMB 挂载丢失？）；先恢复 SMB 挂载"
+                        + _publish_recovery_hint(
+                            config_id, next_trade_date, batch is not None,
+                        ))]
     if batch is None:
         return [Finding("PUBLISH_MISSING", CRIT,
-                        f"{next_trade_date} 无信号批次记录，明日将空仓不动（若非刻意停发请立即补发）")]
+                        f"{next_trade_date} 无信号批次记录，明日将空仓不动"
+                        "（若非刻意停发请立即补发）"
+                        + _publish_recovery_hint(
+                            config_id, next_trade_date, False,
+                        ))]
     jsonl = f"signal_{batch['batch_id']}.jsonl"
     done = f"signal_{batch['batch_id']}.done"
     files = set(inbox_files)
@@ -43,7 +65,10 @@ def check_evening(next_trade_date, batch, inbox_files) -> list:
         return [Finding("PUBLISH_MISSING", CRIT,
                         f"批次 {batch['batch_id']} 已入库但 inbox 缺文件"
                         f"（jsonl={'有' if jsonl in files else '无'}, "
-                        f"done={'有' if done in files else '无'}），请重新发布")]
+                        f"done={'有' if done in files else '无'}），请重新发布"
+                        + _publish_recovery_hint(
+                            config_id, next_trade_date, True,
+                        ))]
     return []
 
 

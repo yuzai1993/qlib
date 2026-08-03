@@ -422,18 +422,22 @@ def test_wrappers_log_the_real_exit_status_while_releasing_locks():
         assert 'exit "$job_status"' in text
 
 
-def test_crontab_matches_controlled_postclose_schedule():
+def test_crontab_uses_one_durable_scheduler_entry():
     text = (
         REPO_ROOT / "live_trading" / "crontab.csi1000_postclose.example"
     ).read_text(encoding="utf-8")
+    commands = [
+        line.strip() for line in text.splitlines()
+        if line.strip()
+        and not line.lstrip().startswith("#")
+        and not line.startswith(("SHELL=", "PATH="))
+    ]
 
-    assert "0 20 * * 1-5" in text and "run_postclose_cron.sh" in text
-    assert "30 21 * * 1-5" in text and "run_publish_cron.sh" in text
-    assert "30 22 * * 1-5" in text and "run_monitor_cron.sh evening" in text
+    assert commands == [
+        "* * * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
+        "run_scheduler_cron.sh csi1000_b6m_b2s_postclose"
+    ]
     assert "run_publish_catchup_cron.sh" not in text
-    assert "32 15" not in text
-    assert "35 15" not in text
-    assert "\n0 21 " not in text
 
 
 def test_batch_status_finds_latest_active_batch(tmp_path):

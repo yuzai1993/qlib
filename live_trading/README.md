@@ -103,19 +103,32 @@ test -w /Volumes/qmt_bridge/inbox
 
 [crontab.csi1000_postclose.example](crontab.csi1000_postclose.example) 是唯一的新调度模板：
 
+- crontab 只维护一行，每个工作日每分钟调用一次轻量调度器；没有到期阶段时立即退出；
 - 20:00：串行运行回执导入、`postmarket`、Tushare 行情更新；仅在行情更新成功后运行 `report`；
 - 21:30：发布下一交易日；
 - 22:30：运行 `evening` 发布完整性检查。
 
+三个时点只定义在活动 YAML 的 `schedule` 中。调度器把每日阶段回执原子写到
+`live_trading/.scheduler/<config>/<YYYY-MM-DD>/<stage>.json`。Mac 在当天到点时睡眠或重启，恢复后会按 postclose → publish → evening 的顺序补齐已到期阶段；无论成功还是失败，每阶段每天都只自动尝试一次，失败后仍按告警提示人工恢复，不会形成盲目重试。
+
 `run_postclose_cron.sh` 即使遇到导入或 postmarket 告警也会继续更新行情，避免回执问题连带造成下一交易日缺数；行情更新失败时跳过日报，由更新脚本直接告警。它在整个流水线期间持有 `.locks/<config>_postclose.lock`，并与发布任务执行双向锁检查；任一方向发现并发都失败关闭，避免读取正在改写的数据。
 
-所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。它们使用原子目录锁防止同类任务并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动补发，22:30 告警后必须先检查原因再人工恢复。
+所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。调度器和阶段 wrapper 都使用原子目录锁防止并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动重试失败阶段或补发，22:30 告警后必须先检查原因再人工恢复。
 
-部署或迁移机器时先检查现有任务，确保旧 CSI300 条目已停用且没有同一时间的重复任务，再使用该模板恢复调度。
+部署或迁移机器时先检查现有任务，确保旧 CSI300 条目已停用且没有重复任务，再安装该单行模板：
+
+```bash
+crontab live_trading/crontab.csi1000_postclose.example
+crontab -l
+```
 
 ## 日常命令
 
 ```bash
+# 查看今天三个阶段的自动尝试状态
+find live_trading/.scheduler/csi1000_b6m_b2s_postclose/$(date +%Y-%m-%d) \
+  -maxdepth 1 -name '*.json' -print
+
 # 20:00 收盘流水线（导入 → 检查 → 更新 → 日报）
 bash live_trading/run_postclose_cron.sh csi1000_b6m_b2s_postclose
 

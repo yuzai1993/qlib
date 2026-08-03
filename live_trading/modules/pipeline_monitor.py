@@ -165,7 +165,10 @@ def _oversold_codes(fills, prev_positions) -> list:
 
 def check_broker_reconcile(trade_date, broker_account, broker_positions,
                            ledger_positions, ledger_cash,
-                           cash_tolerance=None, check_cash=True) -> list:
+                           cash_tolerance=None, check_cash=True,
+                           ledger_value_adjustment=0.0,
+                           broker_position_market_values=None,
+                           value_tolerance=None) -> list:
     """二道对账：券商快照 vs 本地账本。
 
     回执只反映策略「以为」成交了什么；券商快照是账户自己的口径，
@@ -180,6 +183,10 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
         check_cash: False 时跳过现金类告警（CASH_NEGATIVE /
             BROKER_CASH_MISMATCH），只对持仓。QMT 模拟盘的可用资金口径
             不可信、以账本为准时用；切真实账户后应恢复 True。
+        ledger_value_adjustment: 账本中不属于普通持仓的账户价值调整。
+        broker_position_market_values: 券商逐仓市值；字段不完整时跳过
+            账户价值调整对账。
+        value_tolerance: 账户价值调整差额容忍额，默认与现金一致。
     """
     tol = DEFAULT_THRESHOLDS["cash_tolerance"] if cash_tolerance is None \
         else float(cash_tolerance)
@@ -220,6 +227,32 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
                 f"{trade_date} 现金与券商差 {gap:.2f} 元"
                 f"（账本 {ledger_cash:.2f} / 券商可用 {float(broker_cash):.2f}），"
                 f"超过容忍 {tol:.2f}，核对后用 record_cash_flow CORRECTION 校正"))
+
+    aggregate_market_value = (
+        broker_account.get("market_value") if broker_account is not None else None
+    )
+    position_values_complete = (
+        broker_position_market_values is not None
+        and set(broker_position_market_values) == set(broker_positions)
+        and all(
+            value is not None
+            for value in broker_position_market_values.values()
+        )
+    )
+    if aggregate_market_value is not None and position_values_complete:
+        broker_residual = float(aggregate_market_value) - sum(
+            float(value) for value in broker_position_market_values.values()
+        )
+        adjustment_gap = broker_residual - float(ledger_value_adjustment)
+        adjustment_tol = tol if value_tolerance is None else float(value_tolerance)
+        if abs(adjustment_gap) > adjustment_tol:
+            findings.append(Finding(
+                "BROKER_VALUE_ADJUSTMENT_MISMATCH", CRIT,
+                f"{trade_date} 券商隐含账户价值调整与账本差 "
+                f"{adjustment_gap:.2f} 元（券商 {broker_residual:.2f} / "
+                f"账本 {float(ledger_value_adjustment):.2f}），超过容忍 "
+                f"{adjustment_tol:.2f}；停止次日发布并核对 QMT 总市值",
+            ))
     return findings
 
 

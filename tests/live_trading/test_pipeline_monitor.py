@@ -278,8 +278,12 @@ def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_pa
 
 # ---------- 二道对账 ----------
 
-def _account(cash=1000.0):
-    return {"account_id": "1", "available_cash": cash}
+def _account(cash=1000.0, market_value=None):
+    return {
+        "account_id": "1",
+        "available_cash": cash,
+        "market_value": market_value,
+    }
 
 
 def test_broker_reconcile_ok():
@@ -345,6 +349,55 @@ def test_broker_reconcile_tolerates_account_query_without_cash():
         "2026-07-28", {"account_id": "1", "available_cash": None},
         {"600000.SH": 100}, {"600000.SH": 100}, 1000.0,
     )
+    assert findings == []
+
+
+def test_broker_reconcile_accepts_matching_negative_value_residual():
+    findings = check_broker_reconcile(
+        "2026-08-03",
+        _account(9_949_714.06, market_value=-681_126.98),
+        {},
+        {},
+        9_949_714.06,
+        ledger_value_adjustment=-681_126.98,
+        broker_position_market_values={},
+        value_tolerance=100.0,
+    )
+
+    assert findings == []
+
+
+def test_broker_reconcile_detects_value_adjustment_drift():
+    findings = check_broker_reconcile(
+        "2026-08-03",
+        _account(9_949_714.06, market_value=-680_000.0),
+        {},
+        {},
+        9_949_714.06,
+        ledger_value_adjustment=-681_126.98,
+        broker_position_market_values={},
+        value_tolerance=100.0,
+    )
+
+    finding = next(
+        f for f in findings if f.rule == "BROKER_VALUE_ADJUSTMENT_MISMATCH"
+    )
+    assert finding.level == "CRIT"
+    assert "1126.98" in finding.message
+
+
+def test_broker_reconcile_skips_value_check_when_position_value_missing():
+    findings = check_broker_reconcile(
+        "2026-08-03",
+        _account(1_000.0, market_value=2_000.0),
+        {"600000.SH": 100},
+        {"600000.SH": 100},
+        1_000.0,
+        ledger_value_adjustment=0.0,
+        broker_position_market_values={"600000.SH": None},
+        value_tolerance=100.0,
+    )
+
     assert findings == []
 
 

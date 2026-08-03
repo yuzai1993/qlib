@@ -777,6 +777,9 @@ def test_import_broker_snapshot_stores_and_archives(env):
     account = recorder.get_broker_account_snapshot("2026-07-14")
     assert account["available_cash"] == pytest.approx(123456.78)
     assert recorder.get_broker_positions("2026-07-14") == {"688223.SH": 244500}
+    assert recorder.get_broker_position_market_values("2026-07-14") == {
+        "688223.SH": pytest.approx(244500 * 4.14),
+    }
     assert not list((bridge_root / "outbound").glob("account_*"))
     assert len(list((bridge_root / "archive").glob("account_*"))) == 2
 
@@ -797,6 +800,20 @@ def test_import_broker_snapshot_is_idempotent_and_overwrites(env):
     assert recorder.get_broker_account_snapshot("2026-07-14")["available_cash"] \
         == pytest.approx(999.0)
     assert recorder.get_broker_positions("2026-07-14") == {"600000.SH": 100}
+
+
+def test_latest_empty_broker_snapshot_does_not_reuse_older_positions(env):
+    _, recorder, _ = env
+    later_batch = "20260714_csi300_topk10_002"
+    account = _snapshot_rows()[0]
+    position = _snapshot_rows()[1]
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    recorder.save_broker_snapshot(BATCH_ID, account, [position])
+    recorder.record_batch(later_batch, "2026-07-14", "LIVE", 0)
+    recorder.save_broker_snapshot(later_batch, account, [])
+
+    assert recorder.get_broker_positions("2026-07-14") == {}
+    assert recorder.get_broker_position_market_values("2026-07-14") == {}
 
 
 def test_broker_snapshot_without_done_is_not_imported(env):

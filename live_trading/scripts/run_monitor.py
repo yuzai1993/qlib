@@ -146,6 +146,11 @@ def run_postmarket(date, recorder, store, config) -> list:
             recorder.get_cash(),
             cash_tolerance=thresholds["cash_tolerance"],
             check_cash=bool(reconcile_cfg.get("cash_check", True)),
+            ledger_value_adjustment=recorder.get_value_adjustment(),
+            broker_position_market_values=(
+                recorder.get_broker_position_market_values(date)
+            ),
+            value_tolerance=thresholds["cash_tolerance"],
         )
     return findings
 

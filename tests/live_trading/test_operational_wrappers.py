@@ -109,6 +109,39 @@ def test_postclose_success_is_serial_and_zero(tmp_path):
     assert trace == ["import", "postmarket", "update", "report"]
 
 
+def test_publish_wrappers_refuse_postclose_overlap(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    lock_dir = (
+        live_dir / ".locks" /
+        "csi1000_b6m_b2s_postclose_postclose.lock"
+    )
+    lock_dir.mkdir(parents=True)
+    env = os.environ.copy()
+    env.update({
+        "HOME": str(tmp_path / "home"),
+        "QMT_SIM_ACCOUNT_ID": "test-account",
+        "LIVE_RUN_MODE": "SIMULATE",
+    })
+
+    for name in ("run_publish_cron.sh", "run_publish_catchup_cron.sh"):
+        source = REPO_ROOT / "live_trading" / name
+        wrapper = live_dir / name
+        shutil.copy2(source, wrapper)
+
+        result = subprocess.run(
+            ["bash", str(wrapper), "csi1000_b6m_b2s_postclose"],
+            cwd=root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        assert result.returncode == 75, (name, result.stdout, result.stderr)
+        assert "postclose pipeline holds" in result.stderr
+
+
 def test_wrappers_are_configurable_and_default_to_new_simulation_system():
     for name in WRAPPERS:
         text = (REPO_ROOT / "live_trading" / name).read_text(encoding="utf-8")

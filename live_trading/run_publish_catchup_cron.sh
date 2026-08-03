@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 漏发兜底：若下一交易日尚无 LIVE 批次，则补跑发布（休眠漏 cron 时用）
-# 建议 crontab：5 22 * * 1-5（evening 检查前/后均可；幂等）
+# 人工漏发恢复：若下一交易日尚无持久化批次，则补跑发布。
+# 仅限收到 evening 告警并核对原因后人工执行；禁止加入 crontab。
 # 用法：bash live_trading/run_publish_catchup_cron.sh [config_id]
 
 set -euo pipefail
@@ -23,11 +23,17 @@ if [[ "$RUN_MODE" == "LIVE" && "${LIVE_TRADING_CONFIRM:-}" != "YES" ]]; then
     exit 1
 fi
 
+LOCK_ROOT="${SCRIPT_DIR}/.locks"
+mkdir -p "$LOCK_ROOT"
+POSTCLOSE_LOCK_DIR="${LOCK_ROOT}/${CONFIG_ID}_postclose.lock"
+if [[ -d "$POSTCLOSE_LOCK_DIR" ]]; then
+    echo "postclose pipeline holds $POSTCLOSE_LOCK_DIR; refusing publish" >&2
+    exit 75
+fi
+
 mkdir -p "${SCRIPT_DIR}/logs"
 LOG_FILE="${SCRIPT_DIR}/logs/${CONFIG_ID}_publish_cron.log"
-LOCK_ROOT="${SCRIPT_DIR}/.locks"
 LOCK_DIR="${LOCK_ROOT}/${CONFIG_ID}_publish.lock"
-mkdir -p "$LOCK_ROOT"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
     echo "another publish/catch-up job holds $LOCK_DIR" >&2
     exit 75

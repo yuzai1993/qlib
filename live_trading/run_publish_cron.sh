@@ -25,6 +25,14 @@ if [[ "$RUN_MODE" == "LIVE" && "${LIVE_TRADING_CONFIRM:-}" != "YES" ]]; then
     exit 1
 fi
 
+LOCK_ROOT="${SCRIPT_DIR}/.locks"
+mkdir -p "$LOCK_ROOT"
+POSTCLOSE_LOCK_DIR="${LOCK_ROOT}/${CONFIG_ID}_postclose.lock"
+if [[ -d "$POSTCLOSE_LOCK_DIR" ]]; then
+    echo "postclose pipeline holds $POSTCLOSE_LOCK_DIR; refusing publish" >&2
+    exit 75
+fi
+
 if [[ -n "${2:-}" ]]; then
     TRADE_DATE="$2"
 else
@@ -34,9 +42,7 @@ fi
 
 mkdir -p "${SCRIPT_DIR}/logs"
 LOG_FILE="${SCRIPT_DIR}/logs/${CONFIG_ID}_publish_cron.log"
-LOCK_ROOT="${SCRIPT_DIR}/.locks"
 LOCK_DIR="${LOCK_ROOT}/${CONFIG_ID}_publish.lock"
-mkdir -p "$LOCK_ROOT"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
     echo "another publish/catch-up job holds $LOCK_DIR" >&2
     exit 75

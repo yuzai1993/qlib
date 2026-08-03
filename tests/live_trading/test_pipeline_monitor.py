@@ -27,6 +27,25 @@ def _rules(findings):
     return [f.rule for f in findings]
 
 
+def test_daily_report_discloses_nonzero_account_value_adjustment():
+    snap = {
+        "total_value": 9_268_587.08,
+        "cash": 9_949_714.06,
+        "account_value_adjustment": -681_126.98,
+        "daily_return": None,
+        "cumulative_return": 0.0,
+        "excess_return": None,
+        "position_count": 0,
+        "turnover": None,
+    }
+
+    report = run_monitor._daily_report_md(
+        "2026-08-03", snap, [], [], [],
+    )
+
+    assert "账户价值调整 -681,126.98" in report
+
+
 # ---------- evening ----------
 
 def test_evening_ok():

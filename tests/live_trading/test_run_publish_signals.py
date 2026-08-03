@@ -78,3 +78,18 @@ def test_signal_date_requires_the_requested_trade_date_to_be_open():
 
     with pytest.raises(SystemExit, match="not a trading day"):
         publish.resolve_signal_calendar(calendar, "2026-08-02")
+
+
+def test_account_value_uses_adjustment_without_reducing_spendable_cash():
+    positions = {
+        "SH600000": {"shares": 100, "cost_price": 10.0},
+    }
+
+    total = publish.calculate_account_value(
+        cash=9_949_714.06,
+        positions=positions,
+        prices={"SH600000": 10.0},
+        value_adjustment=-681_126.98,
+    )
+
+    assert total == pytest.approx(9_269_587.08)

@@ -31,6 +31,12 @@ finish_job() {
 }
 trap finish_job EXIT
 
+PUBLISH_LOCK_DIR="${LOCK_ROOT}/${CONFIG_ID}_publish.lock"
+if [[ -d "$PUBLISH_LOCK_DIR" ]]; then
+    echo "publish job holds $PUBLISH_LOCK_DIR; refusing postclose pipeline" >&2
+    exit 75
+fi
+
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 run_stage() {

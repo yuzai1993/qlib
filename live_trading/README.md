@@ -107,7 +107,7 @@ test -w /Volumes/qmt_bridge/inbox
 - 21:30：发布下一交易日；
 - 22:30：运行 `evening` 发布完整性检查。
 
-`run_postclose_cron.sh` 即使遇到导入或 postmarket 告警也会继续更新行情，避免回执问题连带造成下一交易日缺数；行情更新失败时跳过日报，由更新脚本直接告警。它在整个流水线期间持有 `.locks/<config>_postclose.lock`，发布和人工补发发现该锁时会失败关闭，避免读取正在改写的数据。
+`run_postclose_cron.sh` 即使遇到导入或 postmarket 告警也会继续更新行情，避免回执问题连带造成下一交易日缺数；行情更新失败时跳过日报，由更新脚本直接告警。它在整个流水线期间持有 `.locks/<config>_postclose.lock`，并与发布任务执行双向锁检查；任一方向发现并发都失败关闭，避免读取正在改写的数据。
 
 所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。它们使用原子目录锁防止同类任务并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动补发，22:30 告警后必须先检查原因再人工恢复。
 

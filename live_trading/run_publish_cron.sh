@@ -56,6 +56,14 @@ finish_job() {
     exit "$job_status"
 }
 trap finish_job EXIT
+
+# Close the race with postclose starting after the first preflight but before
+# this job acquired its own lock. Conservative double-failure is preferable
+# to reading a provider while it is being rewritten.
+if [[ -d "$POSTCLOSE_LOCK_DIR" ]]; then
+    echo "postclose pipeline holds $POSTCLOSE_LOCK_DIR; refusing publish" >&2
+    exit 75
+fi
 export JOBLIB_MULTIPROCESSING="${JOBLIB_MULTIPROCESSING:-0}"
 export MPLCONFIGDIR="${MPLCONFIGDIR:-/tmp/mplconfig-live}"
 mkdir -p "$MPLCONFIGDIR"

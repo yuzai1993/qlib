@@ -47,6 +47,11 @@ finish_job() {
     exit "$job_status"
 }
 trap finish_job EXIT
+
+if [[ -d "$POSTCLOSE_LOCK_DIR" ]]; then
+    echo "postclose pipeline holds $POSTCLOSE_LOCK_DIR; refusing publish" >&2
+    exit 75
+fi
 export JOBLIB_MULTIPROCESSING="${JOBLIB_MULTIPROCESSING:-0}"
 export MPLCONFIGDIR="${MPLCONFIGDIR:-/tmp/mplconfig-live}"
 mkdir -p "$MPLCONFIGDIR"

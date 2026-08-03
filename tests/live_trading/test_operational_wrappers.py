@@ -32,6 +32,7 @@ def _run_postclose_fixture(
     postmarket_status=0,
     update_status=0,
     report_status=0,
+    publish_lock=False,
 ):
     root = tmp_path / "repo"
     live_dir = root / "live_trading"
@@ -40,6 +41,11 @@ def _run_postclose_fixture(
     assert source.exists(), "run_postclose_cron.sh must exist"
     wrapper = live_dir / source.name
     shutil.copy2(source, wrapper)
+    if publish_lock:
+        (
+            live_dir / ".locks" /
+            "csi1000_b6m_b2s_postclose_publish.lock"
+        ).mkdir(parents=True)
 
     _write_executable(
         live_dir / "run_import_cron.sh",
@@ -109,6 +115,14 @@ def test_postclose_success_is_serial_and_zero(tmp_path):
     assert trace == ["import", "postmarket", "update", "report"]
 
 
+def test_postclose_refuses_active_publish(tmp_path):
+    result, trace = _run_postclose_fixture(tmp_path, publish_lock=True)
+
+    assert result.returncode == 75
+    assert trace == []
+    assert "publish job holds" in result.stderr
+
+
 def test_publish_wrappers_refuse_postclose_overlap(tmp_path):
     root = tmp_path / "repo"
     live_dir = root / "live_trading"
@@ -140,6 +154,44 @@ def test_publish_wrappers_refuse_postclose_overlap(tmp_path):
 
         assert result.returncode == 75, (name, result.stdout, result.stderr)
         assert "postclose pipeline holds" in result.stderr
+
+
+def test_publish_rechecks_postclose_after_taking_publish_lock(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    scripts_dir = live_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+    postclose_lock = (
+        live_dir / ".locks" /
+        "csi1000_b6m_b2s_postclose_postclose.lock"
+    )
+    next_date_script = scripts_dir / "next_trade_date.py"
+    next_date_script.write_text(
+        "from pathlib import Path\n"
+        f"Path({str(postclose_lock)!r}).mkdir(parents=True)\n"
+        "print('2026-08-04')\n",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env.update({
+        "HOME": str(tmp_path / "home"),
+        "QMT_SIM_ACCOUNT_ID": "test-account",
+        "LIVE_RUN_MODE": "SIMULATE",
+    })
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "csi1000_b6m_b2s_postclose"],
+        cwd=root,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 75, (result.stdout, result.stderr)
+    assert "postclose pipeline holds" in result.stderr
 
 
 def test_wrappers_are_configurable_and_default_to_new_simulation_system():

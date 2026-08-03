@@ -23,7 +23,7 @@ WRAPPERS = [
 
 
 def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):
-    from live_trading.scripts.run_scheduler import run_due_stages
+    from live_trading.scripts.run_scheduler import run_pipeline
 
     root = tmp_path / "repo"
     live_dir = root / "live_trading"
@@ -47,13 +47,7 @@ def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):
         "#!/usr/bin/env bash\n"
         "printf '%s\\n' \"$1\" >> \"$SCHEDULER_TEST_TRACE\"\n",
     )
-    config = {"schedule": {
-        "import_after": "20:00",
-        "report_after": "after_data_update",
-        "publish_after": "21:30",
-        "integrity_after": "22:30",
-    }}
-    return root, trace, config, run_due_stages
+    return root, trace, run_pipeline
 
 
 def _trace_lines(path):
@@ -61,71 +55,62 @@ def _trace_lines(path):
         if path.exists() else []
 
 
-def test_scheduler_runs_each_due_stage_once_in_time_order(tmp_path, monkeypatch):
-    root, trace, config, run_due_stages = _scheduler_fixture(
+def test_scheduler_runs_all_stages_once_serially(tmp_path, monkeypatch):
+    root, trace, run_pipeline = _scheduler_fixture(
         tmp_path, monkeypatch,
     )
 
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 19, 59),
-    ) == 0
-    assert _trace_lines(trace) == []
-
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 20, 0),
-    ) == 0
-    assert _trace_lines(trace) == ["postclose"]
-
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 21, 30),
-    ) == 0
-    assert _trace_lines(trace) == ["postclose", "publish"]
-
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 22, 30),
+    assert run_pipeline(
+        "paper", root, datetime(2026, 8, 3, 20, 0),
     ) == 0
     assert _trace_lines(trace) == ["postclose", "publish", "evening"]
 
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 23, 0),
+    assert run_pipeline(
+        "paper", root, datetime(2026, 8, 3, 20, 1),
     ) == 0
     assert _trace_lines(trace) == ["postclose", "publish", "evening"]
 
 
-def test_scheduler_catches_up_all_due_stages_after_same_day_wake(
+def test_scheduler_skips_attempted_stage_and_runs_remaining_stages(
     tmp_path, monkeypatch,
 ):
-    root, trace, config, run_due_stages = _scheduler_fixture(
+    root, trace, run_pipeline = _scheduler_fixture(
         tmp_path, monkeypatch,
     )
+    receipt_dir = root / "live_trading/.scheduler/paper/2026-08-03"
+    receipt_dir.mkdir(parents=True)
+    (receipt_dir / "postclose.json").write_text(
+        '{"stage":"postclose","exit_code":0}\n', encoding="utf-8",
+    )
 
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 22, 31),
+    assert run_pipeline(
+        "paper", root, datetime(2026, 8, 3, 20, 0),
     ) == 0
 
-    assert _trace_lines(trace) == ["postclose", "publish", "evening"]
+    assert _trace_lines(trace) == ["publish", "evening"]
 
 
 def test_scheduler_records_failed_stage_without_automatic_retry(
     tmp_path, monkeypatch,
 ):
-    root, trace, config, run_due_stages = _scheduler_fixture(
+    root, trace, run_pipeline = _scheduler_fixture(
         tmp_path, monkeypatch, postclose_status=2,
     )
 
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 20, 0),
+    assert run_pipeline(
+        "paper", root, datetime(2026, 8, 3, 20, 0),
     ) == 1
-    assert run_due_stages(
-        config, "paper", root, datetime(2026, 8, 3, 20, 1),
+    assert _trace_lines(trace) == ["postclose", "publish", "evening"]
+
+    assert run_pipeline(
+        "paper", root, datetime(2026, 8, 3, 20, 1),
     ) == 0
-    assert _trace_lines(trace) == ["postclose"]
+    assert _trace_lines(trace) == ["postclose", "publish", "evening"]
 
     receipt = json.loads((
         root / "live_trading/.scheduler/paper/2026-08-03/postclose.json"
     ).read_text(encoding="utf-8"))
     assert receipt["stage"] == "postclose"
-    assert receipt["scheduled_for"] == "20:00"
     assert receipt["exit_code"] == 2
 
 
@@ -258,6 +243,7 @@ def _run_postclose_fixture(
     import_status=0,
     postmarket_status=0,
     update_status=0,
+    stock_names_status=0,
     report_status=0,
     publish_lock=False,
 ):
@@ -296,15 +282,30 @@ def _run_postclose_fixture(
         "printf 'update\\n' >> \"$POSTCLOSE_TEST_TRACE\"\n"
         "exit \"${FAKE_UPDATE_STATUS:-0}\"\n",
     )
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\n"
+        "[[ \"$STOCK_NAMES_ENV_TEST\" == \"loaded\" ]] || exit 9\n"
+        "printf 'stock_names\\n' >> \"$POSTCLOSE_TEST_TRACE\"\n"
+        "exit \"${FAKE_STOCK_NAMES_STATUS:-0}\"\n",
+    )
 
     trace_path = tmp_path / "trace.txt"
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".qlib_live_env").write_text(
+        "export STOCK_NAMES_ENV_TEST='loaded'\n", encoding="utf-8",
+    )
     env = os.environ.copy()
     env.update({
-        "HOME": str(tmp_path / "home"),
+        "HOME": str(home),
+        "QLIB_LIVE_PYTHON": str(fake_python),
         "POSTCLOSE_TEST_TRACE": str(trace_path),
         "FAKE_IMPORT_STATUS": str(import_status),
         "FAKE_POSTMARKET_STATUS": str(postmarket_status),
         "FAKE_UPDATE_STATUS": str(update_status),
+        "FAKE_STOCK_NAMES_STATUS": str(stock_names_status),
         "FAKE_REPORT_STATUS": str(report_status),
     })
     result = subprocess.run(
@@ -330,14 +331,16 @@ def test_postclose_continues_to_update_after_import_failure(tmp_path):
     result, trace, _log = _run_postclose_fixture(tmp_path, import_status=1)
 
     assert result.returncode != 0
-    assert trace == ["import", "postmarket", "update", "report"]
+    assert trace == [
+        "import", "postmarket", "update", "stock_names", "report",
+    ]
 
 
 def test_postclose_skips_report_when_update_fails(tmp_path):
     result, trace, log = _run_postclose_fixture(tmp_path, update_status=1)
 
     assert result.returncode != 0
-    assert trace == ["import", "postmarket", "update"]
+    assert trace == ["import", "postmarket", "update", "stock_names"]
     assert "report skipped: market data update failed" in log
 
 
@@ -346,8 +349,25 @@ def test_postclose_success_is_serial_and_zero(tmp_path):
 
     assert result.returncode == 0
     assert result.stderr == ""
-    assert trace == ["import", "postmarket", "update", "report"]
-    assert "postclose summary: import=0 postmarket=0 update=0 report=0" in log
+    assert trace == [
+        "import", "postmarket", "update", "stock_names", "report",
+    ]
+    assert (
+        "postclose summary: import=0 postmarket=0 update=0 "
+        "stock_names=0 report=0"
+    ) in log
+
+
+def test_postclose_name_refresh_failure_does_not_skip_report(tmp_path):
+    result, trace, log = _run_postclose_fixture(
+        tmp_path, stock_names_status=3,
+    )
+
+    assert result.returncode != 0
+    assert trace == [
+        "import", "postmarket", "update", "stock_names", "report",
+    ]
+    assert "stock_names=3 report=0" in log
 
 
 def test_postclose_refuses_active_publish(tmp_path):
@@ -507,7 +527,7 @@ def test_crontab_uses_one_durable_scheduler_entry():
     ]
 
     assert commands == [
-        "* * * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
+        "0 20 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
         "run_scheduler_cron.sh csi1000_b6m_b2s_postclose"
     ]
     assert "run_publish_catchup_cron.sh" not in text

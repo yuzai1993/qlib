@@ -6,6 +6,11 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# shellcheck disable=SC1090
+[[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
+
+PYTHON="${QLIB_LIVE_PYTHON:-/opt/anaconda3/envs/qlib/bin/python}"
 CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-csi1000_b6m_b2s_postclose}}}"
 
 mkdir -p "${SCRIPT_DIR}/logs"
@@ -64,6 +69,11 @@ run_stage update \
     "${PROJECT_ROOT}/scripts/data_collector/tushare/run_update_to_bin.sh"
 update_status=$?
 
+run_stage stock_names \
+    "$PYTHON" "${SCRIPT_DIR}/scripts/refresh_stock_names.py" \
+    --config "$CONFIG_ID"
+stock_names_status=$?
+
 if [[ "$update_status" -eq 0 ]]; then
     run_stage report \
         "${SCRIPT_DIR}/run_monitor_cron.sh" report "$CONFIG_ID"
@@ -73,5 +83,5 @@ else
 fi
 
 # Keep the explicit values in the summary for incident diagnosis.
-echo "postclose summary: import=${import_status} postmarket=${postmarket_status} update=${update_status} report=${report_status:-SKIPPED}"
+echo "postclose summary: import=${import_status} postmarket=${postmarket_status} update=${update_status} stock_names=${stock_names_status} report=${report_status:-SKIPPED}"
 exit "$OVERALL_STATUS"

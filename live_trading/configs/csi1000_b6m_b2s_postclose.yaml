@@ -85,12 +85,6 @@ storage:
   db_path: "live_trading/data/csi1000_b6m_b2s_postclose.db"
   log_dir: "live_trading/logs/csi1000_b6m_b2s_postclose"
 
-schedule:
-  import_after: "20:00"
-  report_after: "after_data_update"
-  publish_after: "21:30"
-  integrity_after: "22:30"
-
 fees:
   commission_rate: 0.00020
   min_commission: 5.0

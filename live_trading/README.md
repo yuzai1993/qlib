@@ -24,10 +24,8 @@ Windows QMT 模拟策略、SMB 桥接和 Server酱通知已经完成基础连接
 ## 文件与数据流
 
 ```text
-T 日 20:00 导入/对账 → 更新收盘数据 → 日报
-                                  │
-                                  ▼
-T 日 21:30 生成预测 → 发布 T+1 protocol-v2 批次 → 22:30 完整性检查
+T 日 20:00 导入/对账 → 更新收盘数据/名称 → 日报
+             → 生成预测 → 发布 T+1 protocol-v2 批次 → 完整性检查
                                   │
                                   ▼
 T+1 日 Windows QMT 15:05–15:31 → prType=49 → fills/account 回执
@@ -103,17 +101,18 @@ test -w /Volumes/qmt_bridge/inbox
 
 [crontab.csi1000_postclose.example](crontab.csi1000_postclose.example) 是唯一的新调度模板：
 
-- crontab 只维护一行，每个工作日每分钟调用一次轻量调度器；没有到期阶段时立即退出；
-- 20:00：串行运行回执导入、`postmarket`、Tushare 行情更新；仅在行情更新成功后运行 `report`；
-- 21:30：发布下一交易日；
-- 22:30：运行 `evening` 发布完整性检查。
+- crontab 只维护一行，每个工作日 20:00 启动一次；
+- 先串行运行回执导入、`postmarket`、Tushare 行情更新和股票名称缓存刷新；仅在行情更新成功后运行 `report`；
+- postclose 完成后立即发布下一交易日，发布完成后立即运行 `evening` 完整性检查；
+- 三个阶段之间没有额外定时或等待。
 
-三个时点只定义在活动 YAML 的 `schedule` 中。调度器把每日阶段回执原子写到
-`live_trading/.scheduler/<config>/<YYYY-MM-DD>/<stage>.json`。Mac 在当天到点时睡眠或重启，恢复后会按 postclose → publish → evening 的顺序补齐已到期阶段；无论成功还是失败，每阶段每天都只自动尝试一次，失败后仍按告警提示人工恢复，不会形成盲目重试。
+调度器把每日阶段回执原子写到
+`live_trading/.scheduler/<config>/<YYYY-MM-DD>/<stage>.json`。每次调用都会按
+postclose → publish → evening 的固定顺序补齐尚无回执的阶段；无论成功还是失败，每阶段每天都只自动尝试一次。某阶段失败会让整条流水线最终返回非零，但不会阻止后续阶段执行，失败后仍按告警提示人工恢复，不会形成盲目重试。
 
-`run_postclose_cron.sh` 即使遇到导入或 postmarket 告警也会继续更新行情，避免回执问题连带造成下一交易日缺数；行情更新失败时跳过日报，由更新脚本直接告警。它在整个流水线期间持有 `.locks/<config>_postclose.lock`，并与发布任务执行双向锁检查；任一方向发现并发都失败关闭，避免读取正在改写的数据。
+`run_postclose_cron.sh` 即使遇到导入、postmarket 或股票名称刷新告警也会继续后续步骤，避免非关键问题连带阻断信号发布；行情更新失败时跳过日报，由更新脚本直接告警。股票名称从 Tushare 刷新到本地 SQLite 缓存，Web 页面只读本地数据，不在请求期间访问外网。该脚本在整个流水线期间持有 `.locks/<config>_postclose.lock`，并与发布任务执行双向锁检查；任一方向发现并发都失败关闭，避免读取正在改写的数据。
 
-所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。调度器和阶段 wrapper 都使用原子目录锁防止并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动重试失败阶段或补发，22:30 告警后必须先检查原因再人工恢复。
+所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。调度器和阶段 wrapper 都使用原子目录锁防止并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动重试失败阶段或补发，`evening` 告警后必须先检查原因再人工恢复。
 
 部署或迁移机器时先检查现有任务，确保旧 CSI300 条目已停用且没有重复任务，再安装该单行模板：
 

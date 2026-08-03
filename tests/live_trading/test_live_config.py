@@ -74,12 +74,7 @@ def test_load_new_csi1000_paper_config():
     assert cfg["live"]["default_mode"] == "SIMULATE"
     assert cfg["live"]["after_hours_price_type"] == 49
     assert cfg["web"] == {"host": "127.0.0.1", "port": 8081}
-    assert cfg["schedule"] == {
-        "import_after": "20:00",
-        "report_after": "after_data_update",
-        "publish_after": "21:30",
-        "integrity_after": "22:30",
-    }
+    assert "schedule" not in cfg
     assert cfg["storage"]["db_path"].endswith(
         "csi1000_b6m_b2s_postclose.db"
     )

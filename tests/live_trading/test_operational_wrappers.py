@@ -1,6 +1,9 @@
 """Operational wrappers must default to the controlled CSI1000 deployment."""
 
+from datetime import datetime
+import json
 import os
+import plistlib
 import shutil
 import sqlite3
 import subprocess
@@ -17,6 +20,230 @@ WRAPPERS = [
     "run_import_cron.sh",
     "run_monitor_cron.sh",
 ]
+
+
+def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):
+    from live_trading.scripts.run_scheduler import run_due_stages
+
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    trace = tmp_path / "scheduler-trace.txt"
+    monkeypatch.setenv("SCHEDULER_TEST_TRACE", str(trace))
+
+    _write_executable(
+        live_dir / "run_postclose_cron.sh",
+        "#!/usr/bin/env bash\n"
+        "printf 'postclose\\n' >> \"$SCHEDULER_TEST_TRACE\"\n"
+        f"exit {postclose_status}\n",
+    )
+    _write_executable(
+        live_dir / "run_publish_cron.sh",
+        "#!/usr/bin/env bash\n"
+        "printf 'publish\\n' >> \"$SCHEDULER_TEST_TRACE\"\n",
+    )
+    _write_executable(
+        live_dir / "run_monitor_cron.sh",
+        "#!/usr/bin/env bash\n"
+        "printf '%s\\n' \"$1\" >> \"$SCHEDULER_TEST_TRACE\"\n",
+    )
+    config = {"schedule": {
+        "import_after": "20:00",
+        "report_after": "after_data_update",
+        "publish_after": "21:30",
+        "integrity_after": "22:30",
+    }}
+    return root, trace, config, run_due_stages
+
+
+def _trace_lines(path):
+    return path.read_text(encoding="utf-8").splitlines() \
+        if path.exists() else []
+
+
+def test_scheduler_runs_each_due_stage_once_in_time_order(tmp_path, monkeypatch):
+    root, trace, config, run_due_stages = _scheduler_fixture(
+        tmp_path, monkeypatch,
+    )
+
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 19, 59),
+    ) == 0
+    assert _trace_lines(trace) == []
+
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 20, 0),
+    ) == 0
+    assert _trace_lines(trace) == ["postclose"]
+
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 21, 30),
+    ) == 0
+    assert _trace_lines(trace) == ["postclose", "publish"]
+
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 22, 30),
+    ) == 0
+    assert _trace_lines(trace) == ["postclose", "publish", "evening"]
+
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 23, 0),
+    ) == 0
+    assert _trace_lines(trace) == ["postclose", "publish", "evening"]
+
+
+def test_scheduler_catches_up_all_due_stages_after_same_day_wake(
+    tmp_path, monkeypatch,
+):
+    root, trace, config, run_due_stages = _scheduler_fixture(
+        tmp_path, monkeypatch,
+    )
+
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 22, 31),
+    ) == 0
+
+    assert _trace_lines(trace) == ["postclose", "publish", "evening"]
+
+
+def test_scheduler_records_failed_stage_without_automatic_retry(
+    tmp_path, monkeypatch,
+):
+    root, trace, config, run_due_stages = _scheduler_fixture(
+        tmp_path, monkeypatch, postclose_status=2,
+    )
+
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 20, 0),
+    ) == 1
+    assert run_due_stages(
+        config, "paper", root, datetime(2026, 8, 3, 20, 1),
+    ) == 0
+    assert _trace_lines(trace) == ["postclose"]
+
+    receipt = json.loads((
+        root / "live_trading/.scheduler/paper/2026-08-03/postclose.json"
+    ).read_text(encoding="utf-8"))
+    assert receipt["stage"] == "postclose"
+    assert receipt["scheduled_for"] == "20:00"
+    assert receipt["exit_code"] == 2
+
+
+def test_scheduler_cron_wrapper_loads_env_and_forwards_config(
+    tmp_path, monkeypatch,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_scheduler_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+
+    trace = tmp_path / "wrapper-trace.txt"
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\n"
+        "printf '%s|%s|%s\\n' \"$SCHEDULER_ENV_TEST\" \"$1\" \"$3\" "
+        "> \"$SCHEDULER_WRAPPER_TRACE\"\n",
+    )
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".qlib_live_env").write_text(
+        "export SCHEDULER_ENV_TEST='loaded'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("QLIB_LIVE_PYTHON", str(fake_python))
+    monkeypatch.setenv("SCHEDULER_WRAPPER_TRACE", str(trace))
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "custom-paper"],
+        cwd=root,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    loaded, script_path, config_id = trace.read_text(
+        encoding="utf-8"
+    ).strip().split("|")
+    assert loaded == "loaded"
+    assert script_path.endswith("live_trading/scripts/run_scheduler.py")
+    assert config_id == "custom-paper"
+
+
+def test_web_service_wrapper_loads_env_and_forwards_config(
+    tmp_path, monkeypatch,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_web_service.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+
+    trace = tmp_path / "web-wrapper-trace.txt"
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\n"
+        "printf '%s|%s|%s\\n' \"$WEB_ENV_TEST\" \"$1\" \"$3\" "
+        "> \"$WEB_WRAPPER_TRACE\"\n",
+    )
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".qlib_live_env").write_text(
+        "export WEB_ENV_TEST='loaded'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("QLIB_LIVE_PYTHON", str(fake_python))
+    monkeypatch.setenv("WEB_WRAPPER_TRACE", str(trace))
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "custom-paper"],
+        cwd=root,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    loaded, script_path, config_id = trace.read_text(
+        encoding="utf-8"
+    ).strip().split("|")
+    assert loaded == "loaded"
+    assert script_path.endswith("live_trading/scripts/run_web.py")
+    assert config_id == "custom-paper"
+
+
+def test_monitor_launch_agent_owns_loopback_service():
+    path = (
+        REPO_ROOT / "live_trading/launchd/"
+        "com.yuxianqi.qlib-live-monitor.plist"
+    )
+    with path.open("rb") as handle:
+        plist = plistlib.load(handle)
+
+    assert plist["Label"] == "com.yuxianqi.qlib-live-monitor"
+    assert plist["RunAtLoad"] is True
+    assert plist["KeepAlive"] is True
+    assert plist["ThrottleInterval"] == 10
+    assert plist["ProcessType"] == "Background"
+    assert plist["WorkingDirectory"] == "/Users/yuxianqi/Project/qlib"
+    assert plist["ProgramArguments"] == [
+        "/bin/bash",
+        "/Users/yuxianqi/Project/qlib/live_trading/run_web_service.sh",
+        "csi1000_b6m_b2s_postclose",
+    ]
+    assert plist["StandardOutPath"].endswith(
+        "csi1000_b6m_b2s_postclose_web_service.stdout.log"
+    )
+    assert plist["StandardErrorPath"].endswith(
+        "csi1000_b6m_b2s_postclose_web_service.stderr.log"
+    )
 
 
 def _write_executable(path: Path, text: str) -> None:
@@ -268,18 +495,22 @@ def test_wrappers_log_the_real_exit_status_while_releasing_locks():
         assert 'exit "$job_status"' in text
 
 
-def test_crontab_matches_controlled_postclose_schedule():
+def test_crontab_uses_one_durable_scheduler_entry():
     text = (
         REPO_ROOT / "live_trading" / "crontab.csi1000_postclose.example"
     ).read_text(encoding="utf-8")
+    commands = [
+        line.strip() for line in text.splitlines()
+        if line.strip()
+        and not line.lstrip().startswith("#")
+        and not line.startswith(("SHELL=", "PATH="))
+    ]
 
-    assert "0 20 * * 1-5" in text and "run_postclose_cron.sh" in text
-    assert "30 21 * * 1-5" in text and "run_publish_cron.sh" in text
-    assert "30 22 * * 1-5" in text and "run_monitor_cron.sh evening" in text
+    assert commands == [
+        "* * * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
+        "run_scheduler_cron.sh csi1000_b6m_b2s_postclose"
+    ]
     assert "run_publish_catchup_cron.sh" not in text
-    assert "32 15" not in text
-    assert "35 15" not in text
-    assert "\n0 21 " not in text
 
 
 def test_batch_status_finds_latest_active_batch(tmp_path):

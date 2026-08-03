@@ -4,11 +4,6 @@
 SHELL=/bin/bash
 PATH=/opt/anaconda3/envs/qlib/bin:/usr/local/bin:/usr/bin:/bin
 
-# Import receipts, check them, update Qlib data, then report on update success.
-0 20 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_postclose_cron.sh csi1000_b6m_b2s_postclose
-
-# Publish T+1 from the latest T close data. LIVE_RUN_MODE defaults to SIMULATE.
-30 21 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_publish_cron.sh csi1000_b6m_b2s_postclose
-
-# Alert on missing/incomplete publication; recovery remains manual.
-30 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_monitor_cron.sh evening csi1000_b6m_b2s_postclose
+# The dispatcher reads 20:00 / 21:30 / 22:30 from the live YAML and records
+# one atomic attempt receipt per due stage. Failed stages remain manual recovery.
+* * * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_scheduler_cron.sh csi1000_b6m_b2s_postclose

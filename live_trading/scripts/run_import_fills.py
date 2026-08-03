@@ -35,6 +35,9 @@ def main():
         str(PROJECT_ROOT / config["storage"]["db_path"]),
         fees=fees_from_config(config),
         opening_cash=config.get("account", {}).get("opening_cash"),
+        opening_value_adjustment=config.get("account", {}).get(
+            "opening_value_adjustment"
+        ),
     )
     importer = FillImporter(config["live"]["bridge_root"], recorder)
 

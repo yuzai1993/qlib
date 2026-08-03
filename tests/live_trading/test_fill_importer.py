@@ -105,6 +105,31 @@ def test_opening_cash_seeds_only_a_fresh_ledger(tmp_path):
     assert reopened.get_cash() == pytest.approx(490_000.0)
 
 
+def test_opening_value_adjustment_seeds_only_a_fresh_ledger(tmp_path):
+    db_path = tmp_path / "fresh-adjusted.db"
+
+    recorder = LiveRecorder(
+        str(db_path),
+        opening_cash=9_949_714.06,
+        opening_value_adjustment=-681_126.98,
+    )
+    assert recorder.get_cash() == pytest.approx(9_949_714.06)
+    assert recorder.get_value_adjustment() == pytest.approx(-681_126.98)
+
+    reopened = LiveRecorder(
+        str(db_path),
+        opening_cash=9_949_714.06,
+        opening_value_adjustment=-123.0,
+    )
+    assert reopened.get_value_adjustment() == pytest.approx(-681_126.98)
+
+
+def test_missing_opening_value_adjustment_defaults_to_zero(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "legacy.db"), opening_cash=500_000.0)
+
+    assert recorder.get_value_adjustment() == 0.0
+
+
 def test_opening_cash_refuses_to_seed_an_already_used_ledger(tmp_path):
     db_path = tmp_path / "used.db"
     recorder = LiveRecorder(str(db_path))
@@ -112,6 +137,15 @@ def test_opening_cash_refuses_to_seed_an_already_used_ledger(tmp_path):
 
     with pytest.raises(SchemaError, match="opening_cash"):
         LiveRecorder(str(db_path), opening_cash=500_000.0)
+
+
+def test_opening_value_adjustment_refuses_used_ledger_migration(tmp_path):
+    db_path = tmp_path / "used-adjustment.db"
+    recorder = LiveRecorder(str(db_path), opening_cash=500_000.0)
+    recorder.record_batch("used", "2026-07-14", "SIMULATE", 0)
+
+    with pytest.raises(SchemaError, match="opening_value_adjustment"):
+        LiveRecorder(str(db_path), opening_value_adjustment=-100.0)
 
 
 def test_batch_ledger_refuses_real_account_environment(tmp_path):

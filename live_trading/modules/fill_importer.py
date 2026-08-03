@@ -42,6 +42,7 @@ class LiveRecorder:
         db_path: str,
         fees: dict = None,
         opening_cash: float | None = None,
+        opening_value_adjustment: float | None = None,
     ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -52,6 +53,7 @@ class LiveRecorder:
         self._backup_legacy_db()
         self._init_db()
         self._seed_opening_cash(opening_cash)
+        self._seed_opening_value_adjustment(opening_value_adjustment)
 
     def _seed_opening_cash(self, opening_cash: float | None) -> None:
         if opening_cash is None:
@@ -80,6 +82,39 @@ class LiveRecorder:
             conn.execute(
                 "INSERT INTO account_state (key, value) VALUES ('cash', ?)",
                 (float(opening_cash),),
+            )
+
+    def _seed_opening_value_adjustment(
+        self, opening_value_adjustment: float | None,
+    ) -> None:
+        if opening_value_adjustment is None:
+            return
+        if (
+            isinstance(opening_value_adjustment, bool)
+            or not isinstance(opening_value_adjustment, (int, float))
+            or not math.isfinite(opening_value_adjustment)
+        ):
+            raise ValueError(
+                "opening_value_adjustment must be a finite number"
+            )
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT value FROM account_state WHERE key='value_adjustment'"
+            ).fetchone()
+            if existing is not None:
+                return
+            used = sum(
+                conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in ("batches", "fills", "positions")
+            )
+            if used:
+                raise SchemaError(
+                    "opening_value_adjustment cannot seed an already-used live ledger"
+                )
+            conn.execute(
+                "INSERT INTO account_state (key, value) "
+                "VALUES ('value_adjustment', ?)",
+                (float(opening_value_adjustment),),
             )
 
     def _backup_legacy_db(self) -> None:
@@ -1325,6 +1360,13 @@ class LiveRecorder:
         with self._conn() as conn:
             row = conn.execute(
                 "SELECT value FROM account_state WHERE key='cash'"
+            ).fetchone()
+            return float(row["value"]) if row else 0.0
+
+    def get_value_adjustment(self) -> float:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT value FROM account_state WHERE key='value_adjustment'"
             ).fetchone()
             return float(row["value"]) if row else 0.0
 

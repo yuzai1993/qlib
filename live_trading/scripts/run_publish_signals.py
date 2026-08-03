@@ -195,6 +195,9 @@ def main():
         str(PROJECT_ROOT / config["storage"]["db_path"]),
         fees=config.get("fees"),
         opening_cash=config.get("account", {}).get("opening_cash"),
+        opening_value_adjustment=config.get("account", {}).get(
+            "opening_value_adjustment"
+        ),
     )
 
     if mode == "LIVE":

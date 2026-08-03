@@ -1,4 +1,5 @@
 """MonitorStore：建表、upsert 幂等、告警去重。"""
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -36,6 +37,42 @@ def test_reopen_existing_db(tmp_path):
     db = str(tmp_path / "live.db")
     MonitorStore(db)
     MonitorStore(db)  # 建表幂等
+
+
+def test_existing_snapshot_table_migrates_account_value_adjustment(tmp_path):
+    db = str(tmp_path / "legacy.db")
+    with sqlite3.connect(db) as conn:
+        conn.execute("""
+            CREATE TABLE daily_snapshot (
+                date TEXT PRIMARY KEY,
+                cash REAL NOT NULL,
+                market_value REAL NOT NULL,
+                receivables REAL NOT NULL DEFAULT 0,
+                pending_market_value REAL NOT NULL DEFAULT 0,
+                tax_provision REAL NOT NULL DEFAULT 0,
+                total_value REAL NOT NULL,
+                daily_return REAL,
+                cumulative_return REAL,
+                benchmark_close REAL,
+                benchmark_daily_return REAL,
+                benchmark_cumulative_return REAL,
+                excess_return REAL,
+                position_count INTEGER NOT NULL,
+                turnover REAL,
+                fees REAL NOT NULL DEFAULT 0,
+                external_flow REAL NOT NULL DEFAULT 0
+            )
+        """)
+
+    migrated = MonitorStore(db)
+    row = _snapshot_row(total=9_268_587.08)
+    row["cash"] = 9_949_714.06
+    row["market_value"] = 0.0
+    row["account_value_adjustment"] = -681_126.98
+    migrated.upsert_daily_snapshot(row)
+
+    snapshot = migrated.get_latest_snapshot()
+    assert snapshot["account_value_adjustment"] == pytest.approx(-681_126.98)
 
 
 def test_upsert_daily_snapshot_overwrites(store):

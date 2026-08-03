@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "production_model_id": "b6-m-seed4000",
+  "baseline_exp_id": "baseline/b6-m",
+  "baseline_ref": "B6 v1.0",
+  "selected_seed": 4000,
+  "model_class": "backtest.models.rankic_early_stop.RankICEarlyStoppingDEnsembleModel",
+  "artifact": {
+    "path": "live_trading/models/b6_m/seed4000/trained_model",
+    "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+    "size_bytes": 3391157
+  },
+  "source": {
+    "repository": "/Users/yuxianqi/Project/qlib_exp",
+    "manifest": "backtest/models/baselines/b6-m/manifest.json",
+    "artifact": "backtest/models/baselines/b6-m/seed4000/trained_model",
+    "config": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+    "config_sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11",
+    "strategy_baseline_config": "backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml",
+    "strategy_baseline_sha256": "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+  },
+  "handler": {
+    "class": "backtest.features.technical.Alpha158Technical",
+    "feature_groups": ["range"],
+    "instruments": "csi1000",
+    "start_time": "2003-01-02",
+    "fit_start_time": "2016-01-02",
+    "fit_end_time": "2020-01-10",
+    "infer_processors": [{"class": "ProcessInf"}]
+  },
+  "copied_at": "2026-08-02"
+}

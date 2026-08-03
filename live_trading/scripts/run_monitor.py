@@ -3,7 +3,8 @@
 
 用法（三个 stage 对应三个 cron 时点，见 live_trading/README.md）：
     python live_trading/scripts/run_monitor.py \
-        --config csi300_topk10_live --stage {postmarket,report,evening} [--date YYYY-MM-DD]
+        --config csi1000_b6m_b2s_postclose \
+        --stage {postmarket,report,evening} [--date YYYY-MM-DD]
 
 退出码：0 全部 OK；1 有 WARN；2 有 CRIT/FAIL。
 设计文档：docs/superpowers/specs/2026-07-13-live-monitor-platform-design.md
@@ -102,9 +103,10 @@ def fetch_benchmark_close(benchmark: str, date: str):
 def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
+    config_id = config["live"]["strategy_id"]
     candidates = recorder.get_active_batches_by_date(next_day)
     if not candidates:
-        return check_evening(next_day, None, [])
+        return check_evening(next_day, None, [], config_id)
     # 同一交易日取最新 seq（batch_id 结尾为三位 seq）。
     candidates.sort(key=lambda batch: batch["batch_id"])
     batch = candidates[-1]
@@ -113,7 +115,7 @@ def run_evening(date, recorder, config) -> list:
     inbox_files = None
     if inbox.exists():
         inbox_files = [p.name for p in inbox.iterdir()]
-    return check_evening(next_day, batch, inbox_files)
+    return check_evening(next_day, batch, inbox_files, config_id)
 
 
 def run_postmarket(date, recorder, store, config) -> list:
@@ -144,6 +146,11 @@ def run_postmarket(date, recorder, store, config) -> list:
             recorder.get_cash(),
             cash_tolerance=thresholds["cash_tolerance"],
             check_cash=bool(reconcile_cfg.get("cash_check", True)),
+            ledger_value_adjustment=recorder.get_value_adjustment(),
+            broker_position_market_values=(
+                recorder.get_broker_position_market_values(date)
+            ),
+            value_tolerance=thresholds["cash_tolerance"],
         )
     return findings
 
@@ -271,6 +278,7 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
         receivables=corporate["receivables"],
         pending_shares=corporate["pending_shares"],
         tax_provision=corporate["tax_provision"],
+        account_value_adjustment=recorder.get_value_adjustment(),
     )
     store.upsert_daily_snapshot(daily_row)
     store.upsert_position_snapshots(date, position_rows)
@@ -306,10 +314,17 @@ def _fmt_pct(v):
 def _daily_report_md(date, snap, fills, findings, corp_applied=None) -> str:
     traded = [f for f in fills if f["mode"] == "LIVE"
               and f["status"] in {"FILLED", "PARTIAL"}]
+    account_details = [
+        f"现金 {snap['cash']:,.2f}",
+        f"应收 {snap.get('receivables', 0):,.2f}",
+        f"红利税准备 {snap.get('tax_provision', 0):,.2f}",
+    ]
+    if snap.get("account_value_adjustment"):
+        account_details.append(
+            f"账户价值调整 {snap['account_value_adjustment']:+,.2f}"
+        )
     lines = [
-        f"**总资产** {snap['total_value']:,.2f}（现金 {snap['cash']:,.2f}，"
-        f"应收 {snap.get('receivables', 0):,.2f}，"
-        f"红利税准备 {snap.get('tax_provision', 0):,.2f}）",
+        f"**总资产** {snap['total_value']:,.2f}（{'，'.join(account_details)}）",
         f"**日收益** {_fmt_pct(snap['daily_return'])}"
         f"　累计 {_fmt_pct(snap['cumulative_return'])}"
         f"　超额 {_fmt_pct(snap['excess_return'])}",
@@ -367,7 +382,14 @@ def main():
     date = args.date or _date.today().strftime("%Y-%m-%d")
 
     db_path = str(PROJECT_ROOT / config["storage"]["db_path"])
-    recorder = LiveRecorder(db_path, fees=fees_from_config(config))
+    recorder = LiveRecorder(
+        db_path,
+        fees=fees_from_config(config),
+        opening_cash=config.get("account", {}).get("opening_cash"),
+        opening_value_adjustment=config.get("account", {}).get(
+            "opening_value_adjustment"
+        ),
+    )
     store = MonitorStore(db_path)
     notifier = create_notifier(config.get("monitor", {}))
 

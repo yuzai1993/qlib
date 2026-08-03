@@ -2,7 +2,8 @@
 """导入 QMT 回执并对账。
 
 用法：
-    python live_trading/scripts/run_import_fills.py --config csi300_topk10_live
+    python live_trading/scripts/run_import_fills.py \
+        --config csi1000_b6m_b2s_postclose
 """
 
 import argparse
@@ -30,8 +31,14 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
     config = load_live_config(CONFIGS_DIR / f"{args.config}.yaml", PROJECT_ROOT)
-    recorder = LiveRecorder(str(PROJECT_ROOT / config["storage"]["db_path"]),
-                            fees=fees_from_config(config))
+    recorder = LiveRecorder(
+        str(PROJECT_ROOT / config["storage"]["db_path"]),
+        fees=fees_from_config(config),
+        opening_cash=config.get("account", {}).get("opening_cash"),
+        opening_value_adjustment=config.get("account", {}).get(
+            "opening_value_adjustment"
+        ),
+    )
     importer = FillImporter(config["live"]["bridge_root"], recorder)
 
     n = importer.import_fills()

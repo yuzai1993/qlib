@@ -14,25 +14,25 @@ sys.path.insert(0, str(REPO_ROOT))
 from live_trading.modules.signal_generator import SignalGenerator
 
 
-class DummyLGB:
-    """记录 predict 收到的矩阵。"""
-
-    def __init__(self):
-        self.last_X = None
-
-    def predict(self, X):
-        self.last_X = np.asarray(X, dtype=float)
-        return np.arange(len(X), dtype=float)
-
-
 class DummyQlibModel:
     def __init__(self):
-        self.model = DummyLGB()
+        self.last_features = None
+
+    def predict(self, dataset, segment="test"):
+        self.last_features = dataset.prepare(
+            segment,
+            col_set="feature",
+            data_key="infer",
+        ).copy()
+        return pd.Series(
+            np.arange(len(self.last_features), dtype=float),
+            index=self.last_features.index,
+        )
 
 
 def _make_generator():
     gen = SignalGenerator(config={}, project_root=Path("."))
-    gen._lgb_model = DummyLGB()
+    gen._model = DummyQlibModel()
     return gen
 
 
@@ -44,10 +44,11 @@ def test_nan_features_passed_through_not_filled_with_zero():
     )
     scores = gen._score_features(df, "2026-07-10")
 
-    assert gen._lgb_model.last_X is not None
+    received = gen._model.last_features
+    assert received is not None
     # 核心断言：NaN 不能被替换为 0
-    assert np.isnan(gen._lgb_model.last_X).sum() == 2
-    assert (gen._lgb_model.last_X == 0).sum() == 0
+    assert received.isna().to_numpy().sum() == 2
+    assert (received.to_numpy() == 0).sum() == 0
     assert list(scores.index) == ["SH600000", "SZ000001"]
 
 
@@ -62,9 +63,44 @@ def test_all_nan_rows_are_dropped():
     assert list(scores.index) == ["SH600000"]
 
 
+def test_model_output_must_match_feature_index_exactly():
+    class WrongIndexModel:
+        def predict(self, dataset, segment="test"):
+            return pd.Series([1.0], index=pd.Index(["SH999999"]))
+
+    gen = SignalGenerator(config={}, project_root=Path("."))
+    gen._model = WrongIndexModel()
+    features = pd.DataFrame(
+        {"F1": [1.0]},
+        index=pd.Index(["SH600000"], name="instrument"),
+    )
+
+    with pytest.raises(ValueError, match="index must exactly match"):
+        gen._score_features(features, "2026-07-10")
+
+
+def test_non_finite_model_scores_are_excluded():
+    class NonFiniteModel:
+        def predict(self, dataset, segment="test"):
+            features = dataset.prepare(
+                segment, col_set="feature", data_key="infer",
+            )
+            return pd.Series([1.0, np.inf], index=features.index)
+
+    gen = SignalGenerator(config={}, project_root=Path("."))
+    gen._model = NonFiniteModel()
+    features = pd.DataFrame(
+        {"F1": [1.0, 2.0]},
+        index=pd.Index(["SH600000", "SZ000001"], name="instrument"),
+    )
+
+    scores = gen._score_features(features, "2026-07-10")
+
+    assert scores.to_dict() == {"SH600000": 1.0}
+
+
 def _generator_with_features(last_date="2026-07-14"):
     gen = _make_generator()
-    gen._model = object()
     gen._handler = object()
     gen._handler_end_date = "2099-12-31"
     index = pd.MultiIndex.from_tuples(
@@ -81,9 +117,16 @@ def test_predict_strict_rejects_stale_feature_date():
         gen.predict("2026-07-15", allow_stale=False)
 
 
-def test_predict_default_keeps_stale_fallback():
+def test_predict_default_rejects_stale_feature_date():
     gen = _generator_with_features()
-    scores = gen.predict("2026-07-15")
+
+    with pytest.raises(ValueError, match="not in features"):
+        gen.predict("2026-07-15")
+
+
+def test_predict_explicit_diagnostic_allows_stale_fallback():
+    gen = _generator_with_features()
+    scores = gen.predict("2026-07-15", allow_stale=True)
     assert list(scores.index) == ["SH600000"]
 
 
@@ -104,14 +147,15 @@ def test_handler_uses_explicit_training_fit_window(monkeypatch):
     )
     gen = SignalGenerator(
         config={
-            "data": {"instruments": "csi300"},
+            "data": {"instruments": "csi1000"},
             "handler": {
-                "class": "Alpha158",
-                "module": "qlib.contrib.data.handler",
+                "class": "Alpha158Technical",
+                "module": "backtest.features.technical",
                 "start_time": "2003-01-02",
                 "fit_start_time": "2006-01-02",
                 "fit_end_time": "2020-01-10",
                 "infer_processors": [{"class": "ProcessInf"}],
+                "feature_groups": ["range"],
             },
         },
         project_root=Path("."),
@@ -123,6 +167,7 @@ def test_handler_uses_explicit_training_fit_window(monkeypatch):
     assert kwargs["fit_start_time"] == "2006-01-02"
     assert kwargs["fit_end_time"] == "2020-01-10"
     assert kwargs["infer_processors"] == [{"class": "ProcessInf"}]
+    assert kwargs["feature_groups"] == ["range"]
 
 
 def test_load_model_from_git_tracked_relative_path(tmp_path):
@@ -143,7 +188,6 @@ def test_load_model_from_git_tracked_relative_path(tmp_path):
     gen.load_model()
 
     assert isinstance(gen._model, DummyQlibModel)
-    assert isinstance(gen._lgb_model, DummyLGB)
 
 
 def test_load_model_rejects_sha256_mismatch(tmp_path):

@@ -48,6 +48,57 @@ def _validate_performance_baseline(config: dict) -> None:
             )
 
 
+def _validate_simulation_config(config: dict) -> None:
+    live = config.get("live", {})
+    if "broker_environment" not in live:
+        return
+    if live.get("broker_environment") != "SIMULATION":
+        raise ValueError("live.broker_environment must be SIMULATION")
+    if live.get("allow_real_money") is not False:
+        raise ValueError("live.allow_real_money must be false")
+    if live.get("after_hours_price_type") != 49:
+        raise ValueError("live.after_hours_price_type must be 49")
+
+    opening_cash = config.get("account", {}).get("opening_cash")
+    if (
+        isinstance(opening_cash, bool)
+        or not isinstance(opening_cash, (int, float))
+        or not math.isfinite(opening_cash)
+        or opening_cash <= 0
+    ):
+        raise ValueError("account.opening_cash must be a positive number")
+
+    opening_value_adjustment = config.get("account", {}).get(
+        "opening_value_adjustment", 0.0,
+    )
+    if (
+        isinstance(opening_value_adjustment, bool)
+        or not isinstance(opening_value_adjustment, (int, float))
+        or not math.isfinite(opening_value_adjustment)
+    ):
+        raise ValueError(
+            "account.opening_value_adjustment must be a finite number"
+        )
+    if opening_cash + opening_value_adjustment <= 0:
+        raise ValueError(
+            "account economic opening value must be positive"
+        )
+
+    strategy = config.get("strategy", {})
+    topk = strategy.get("topk")
+    initial_buy_count = strategy.get("initial_buy_count")
+    if (
+        isinstance(initial_buy_count, bool)
+        or not isinstance(initial_buy_count, int)
+        or not isinstance(topk, int)
+        or initial_buy_count <= 0
+        or initial_buy_count > topk
+    ):
+        raise ValueError(
+            "strategy.initial_buy_count must be a positive integer no greater than topk"
+        )
+
+
 def load_live_config(config_path, project_root=None) -> dict:
     """Load one self-contained Live Trading YAML file.
 
@@ -65,6 +116,7 @@ def load_live_config(config_path, project_root=None) -> dict:
         raise ValueError("live config must be standalone; base_config is forbidden")
 
     _validate_performance_baseline(merged)
+    _validate_simulation_config(merged)
     merged["_config_path"] = str(config_path)
     merged["_config_id"] = config_path.stem
     return merged

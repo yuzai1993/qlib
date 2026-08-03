@@ -1,158 +1,112 @@
-# QMT 内置桥接策略部署说明（Windows）
+# QMT 盘后定价桥接部署（仅模拟账户）
 
-对应设计：`docs/superpowers/specs/2026-07-11-qmt-live-signal-bridge-design.md`
-Mac 侧部署与日常运维：`live_trading/README.md` 第二节（建议先完成本文件的 Windows 侧，再做 Mac 侧）
+`qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并使用盘后定价 `prType=49`。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
 
-## 1. 目录准备
+本说明不会授权真实资金。策略、批次和 Mac 配置都要求 `account_environment=SIMULATION`。
 
-在 Windows 上创建共享目录（与 `qmt_signal_bridge.py` 中 `BRIDGE_ROOT` 一致，默认 `D:\qmt_bridge`）：
+## 1. Windows 目录
 
-```
+默认根目录是 `D:\qmt_bridge`：
+
+```text
 D:\qmt_bridge\
-  inbox\        # 研究机写入信号（SMB 共享此目录给 Mac）
+  inbox\
   processing\
   outbound\
   archive\
-  state\         # processed_batches、当日 LIVE_OK、执行中 active_*.json
+  state\
   logs\
 ```
 
-策略首次运行会自动补齐缺失子目录。将整个 `D:\qmt_bridge` 设为 SMB 共享（步骤见下节），Mac 挂载后路径写入
-`live_trading/configs/csi300_topk10_live.yaml` 的 `live.bridge_root`。
-
-## 1.5 设置 SMB 共享（Windows 侧）
-
-### 第一步：建议先建一个专用账号（更安全，可选但推荐）
-
-不想把 Windows 登录密码给 Mac 用，就建一个只用于共享的本地账号：
-
-1. `Win+R` → `netplwiz` →「添加」→ 选「不使用 Microsoft 账户登录」→ 本地帐户
-2. 用户名如 `qmtshare`，设置密码（Mac 挂载时用它）
-3. 该账号不需要管理员权限
-
-### 第二步：共享文件夹
-
-1. 右键 `D:\qmt_bridge` →「属性」→「共享」选项卡 →「高级共享」
-2. 勾选「共享此文件夹」，共享名保持 `qmt_bridge`
-3. 点「权限」→ 移除 `Everyone`，添加 `qmtshare`（或你的登录账号），勾选「完全控制」
-   —— Mac 需要**写** inbox、**读** outbound，必须给写权限
-4. 回到「安全」选项卡确认该账号对文件夹也有「修改」权限（NTFS 权限与共享权限取交集）
-
-### 第三步：网络与防火墙
-
-1. 设置 → 网络和 Internet → 当前网络 → 网络配置文件设为「**专用**」（公用网络默认禁共享）
-2. 控制面板 →「网络和共享中心」→「高级共享设置」→ 专用网络下：
-   - 启用「网络发现」
-   - 启用「文件和打印机共享」
-3. 防火墙一般会自动放行「文件和打印机共享(SMB-In, TCP 445)」；如被安全软件拦截需手动放行
-
-### 第四步：拿到 IP 并固定
-
-```bat
-ipconfig | findstr IPv4
-```
-
-记下局域网 IP（如 `192.168.1.100`）。**建议在路由器上给这台 Windows 绑定静态 DHCP**，
-否则 IP 变化后 Mac 挂载会失效、晚间发布信号会写不进去。
-
-### 第五步：在 Windows 本机自测
-
-```bat
-net share            REM 应能看到 qmt_bridge
-```
-
-然后在 Mac 上验证（见 `live_trading/README.md` §2.1）：
-
-```bash
-# Finder ⌘K → smb://192.168.1.100/qmt_bridge，用 qmtshare 登录
-ls /Volumes/qmt_bridge
-touch /Volumes/qmt_bridge/inbox/_t && rm /Volumes/qmt_bridge/inbox/_t
-```
-
-常见失败：
-
-| 现象 | 原因 |
-|------|------|
-| Mac 连不上 445 端口 | 网络配置文件是「公用」/ 防火墙拦截 / 不在同一网段 |
-| 能连上但要密码反复失败 | 用了 Microsoft 账户在线密码；改用本地账号 `qmtshare` |
-| 能读不能写 | 共享权限或 NTFS 安全权限少了「写入/修改」 |
-| 第二天挂载失效 | Windows IP 变了（去路由器固定）或 Windows 睡眠断网（电源设置改为不睡眠） |
-
-> 注意：QMT 实盘机白天不能睡眠、不能自动更新重启。电源计划设「高性能」，
-> Windows 更新设置活动时间避开交易时段。
+首次运行会创建子目录。通过 SMB 把根目录共享给 Mac；Mac 上的配置应指向 `/Volumes/qmt_bridge`。共享账户只需该目录的读写权限，不要给管理员权限。Windows 应使用固定局域网 IP，并在交易时段禁用睡眠和自动重启。
 
 ## 2. 导入策略
 
-1. 打开大 QMT →「模型交易」/ 策略编辑器 → 新建 Python 策略
-2. 将 `qmt_signal_bridge.py` 全文粘贴（或本地导入）；文件头 `#coding:gbk` 必须保留
-3. 顶部配置项按需修改：
-   - `BRIDGE_ROOT`：共享目录
-   - `ACCOUNT_ID`：留空则使用信号文件 header 中的账号；填写则强制覆盖
-4. 编译通过后关闭编辑器
+1. 在大 QMT 的模型交易/策略编辑器中新建内置 Python 策略；
+2. 导入 `qmt_signal_bridge.py`；
+3. 设置 `BRIDGE_ROOT`；
+4. 把 `ACCOUNT_ID` 填为新模拟账户 ID。非空时，header 中的账户必须完全一致；
+5. 保持 `ACCOUNT_TYPE = "STOCK"`；
+6. 保持 `MAX_ORDER_QUANTITY = 100`，这是首次一手模拟盘的硬上限；
+7. 编译后，在模型交易界面明确绑定同一个模拟账户。
 
-## 3. 挂载运行
+不要把真实账户 ID 写入这个策略。账户环境无法从一个普通环境变量切换。
 
-1. 模型交易 → 新建策略交易，选择本策略
-2. 主图代码任选（如 `000001.SZ`），周期 `1m`（实盘按 tick 驱动，周期不影响本策略）
-3. 账号选目标柜台账号（极速柜台需资金已划入）
-4. 运行模式先选「**模拟**」
+## 3. 定时与状态机
 
-## 4. 模拟验收（上线前必做）
+策略在 `init` 中注册 `ContextInfo.schedule_run`，从 15:04:55 起每 3 秒唤醒。旧 QMT 没有新版接口时退回 `run_time`。`handlebar` 只作兼容唤醒，因此 15:00 后没有行情 tick 也能继续执行。
 
-1. 研究机发布一个 `mode=SIMULATE` 批次：
+执行顺序：
+
+1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、日期、账户和 SIMULATION 环境；
+2. 15:05 提交 SELL；
+3. 无论卖单是否提前终态，都从首次提交阶段起固定等待 240 秒；
+4. 查询实际可用现金，用 QMT `lastPrice` 作为官方收盘价，将 BUY `target_value` 换算为整手并预留佣金/过户费；
+5. `passorder(..., orderType=1101, prType=49, price=0, quantity, ..., quickTrade=2, client_order_id, ContextInfo)`；
+6. 15:28 撤销未完成订单；
+7. 15:30 写最终 fills marker；
+8. 15:31 重写账户与持仓快照。
+
+如果 `lastPrice` 缺失或非正数，BUY 失败关闭，不使用盘口价、滑点、昨收或信号价格回退。
+
+## 4. Shadow 验收
+
+Mac 侧保持：
 
 ```bash
-python live_trading/scripts/run_publish_signals.py \
-  --config csi300_topk10_live --trade-date <今天> --mode SIMULATE
+export QMT_SIM_ACCOUNT_ID='新模拟账户ID'
+export LIVE_RUN_MODE='SIMULATE'
 ```
 
-2. 观察 QMT 策略输出日志（`[qlib_bridge]` 前缀）：应看到 claimed batch
-   - 批次执行期间信号保留在 `processing`；完成后才移入 `archive`
-   - QMT/策略重启后会从 `processing` 和 `state/active_*.json` 恢复，已标记提交的订单不会重提
-3. 检查 `outbound\fills_*.jsonl`：每单一条 `SKIPPED simulated`，且有 `.done`
-   （SIMULATE 不产出 `account_*.jsonl`，实盘批次才有券商快照）
-4. 研究机导入：`python live_trading/scripts/run_import_fills.py --config csi300_topk10_live`
-5. 验证幂等：把 archive 里的信号文件复制回 inbox → 应整批 `SKIPPED duplicate`
-6. 验证过期：发布 `--trade-date` 为昨天的批次 → 应整批 `SKIPPED expired`
+不要创建 `LIVE_OK`。发布：
 
-## 5. 切换实盘（双开关）
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/run_publish_signals.py \
+  --config csi1000_b6m_b2s_postclose \
+  --trade-date YYYY-MM-DD --mode SIMULATE
+```
 
-真实下单需要**同时**满足：
+预期：
 
-1. 信号文件 `mode=LIVE`（研究机 `--mode LIVE` + 环境变量 `LIVE_TRADING_CONFIRM=YES`）
-2. Windows 当日开关文件存在：`D:\qmt_bridge\state\LIVE_OK_2026-07-14`（每天人工创建，内容任意）
+- inbox 文件被移动到 processing，再归档；
+- 每个计划订单得到 `SKIPPED simulated`；
+- BUY 回执的 `requested_qty` 是按收盘价推导的正整手；
+- 无订单日也生成空 `fills_*.jsonl` 和 `.done`；
+- SIMULATE 不查询券商账户、不生成账户快照；
+- 重放相同 batch 会标记 duplicate，不会下单。
 
-人工核对项（程序不检测）：策略交易界面的运行模式已切到「实盘」。
+## 5. 一手模拟盘双开关
 
-删除 `LIVE_OK` 只阻止尚未提交的新单；已经提交的 LIVE 委托仍会继续查询状态，
-并在收盘前按计划撤单，避免失去对在途委托的管理。
+Shadow 通过后，必须同时满足：
 
-首次实盘建议：手工构造只含 1 只股票 100 股的批次，确认委托、成交、回执、导入全链路后再放开。
+1. Mac 发布 `mode=LIVE`，且进程环境有 `LIVE_TRADING_CONFIRM=YES`；
+2. Windows 当天存在 `D:\qmt_bridge\state\LIVE_OK_YYYY-MM-DD`。
 
-进入买入阶段时，策略只读取一次可用资金，并逐单预占委托金额、最低佣金和过户费；这用于隔离
-QMT 本地资金缓存的刷新延迟。预算不足时按整手缩单，不足一手则跳过。
+此外保持 `MAX_ORDER_QUANTITY = 100`。这会把每个可执行买卖订单限制为一手。每天开盘前确认 QMT UI 绑定的是模拟账户，收盘后逐单核对价格类型、官方收盘价、数量、委托状态和回执。
 
-**大单拆单**：科创板限价单单笔上限 10 万股，柜台会把一笔 `passorder` 拆成多个合同编号，
-它们的 `remark`（= `client_order_id`）相同。策略按 remark 汇总所有子单的成交量与成交额，
-只有累计成交量达到委托量才写 `FILLED`，收盘撤单也会逐个子单撤。回执里 `qmt_order_id`
-为逗号分隔的多个合同编号（如 `175,176,177`）。
+删除 `LIVE_OK` 只禁止后续新提交。已经提交的 LIVE 订单仍会继续查询、撤单和终结。
+执行决定在 15:05 首次交易唤醒时冻结；首次缺少 `LIVE_OK` 的批次即使稍后补建开关，也会整批保持 simulated，避免只执行后半段买单。
 
-**券商快照（二道对账）**：批次终结时策略额外写 `outbound\account_{batch}.jsonl` + `.done`，
-内容为 `ACCOUNT` 查询的可用资金/总资产和 `POSITION` 查询的逐股持仓。终结时（14:45~14:57）
-写的是盘中口径（兜底），同时在 `state\` 留 `snapshot_refresh_*.json` 标记；15:01 后策略
-用收盘后的账户状态覆盖重写快照（早于 Mac 侧 16:00 导入）。当日 QMT 提前关闭则保留兜底
-快照，隔日标记自动丢弃。Mac 侧导入后与本地账本逐股比对，差异告 CRIT。查询失败只记日志，
-不影响批次终结；SIMULATE 批次不查询。
+## 6. 全额模拟盘
 
-## 6. 日常排障
+一手阶段连续验收后，人工把已安装策略的 `MAX_ORDER_QUANTITY` 改为 `0`，重新编译并复核账户。该操作只解除数量上限，不改变 SIMULATION 门禁、双开关和每日人工 `LIVE_OK`。
 
-| 现象 | 排查 |
-|------|------|
-| 策略无输出 | 是否有行情 tick（非交易时间 handlebar 不触发）；`is_last_bar` |
-| 批次不消费 | inbox 是否有 `.done`；`trade_date` 是否为当日；state 里是否已 processed |
-| 重启后批次未恢复 | `processing` 中信号对是否完整；`state/active_<batch>.json` 是否可读 |
-| 下单无委托 | LIVE_OK 文件是否存在；QMT 界面消息栏被拒原因；账号资金是否在所选柜台 |
-| 回执缺失 | 14:55 前策略必须在运行且有 tick；查 `XtClient_FormulaOutput_*.log` |
-| 中文乱码 | 策略文件必须 GBK；本文件内策略源码为纯 ASCII 可避免 |
+系统没有真实账户晋级路径。
 
-日志位置：`{QMT安装目录}\userdata\log\XtClient_FormulaOutput_*.log`
+## 7. 恢复与排障
+
+| 现象 | 检查 |
+|---|---|
+| 批次不消费 | QMT 策略是否运行；inbox 是否同时有 jsonl/done；trade_date 是否为今天 |
+| 15:00 后停止 | QMT 日志是否显示 timer 注册；版本是否退回 `run_time` |
+| LIVE 全部 simulated | 当日 `LIVE_OK` 是否存在；header mode 是否 LIVE |
+| BUY `official close unavailable` | `get_full_tick` 的 `lastPrice` 是否已更新为正数 |
+| 账户查询失败 | QMT UI 绑定账号、`ACCOUNT_ID`、header account ID 是否一致 |
+| 回执缺失 | `processing/` 与 `state/active_<batch>.json` 是否完整；查看 FormulaOutput 日志 |
+| 重启后未恢复 | processing 的信号对是否完整；active state JSON 是否可读 |
+| Mac 报持仓漂移 | 对照 QMT 委托/成交、`account_*.jsonl` 和本地 fills，先停下一日 LIVE |
+
+日志通常位于 `{QMT安装目录}\userdata\log\XtClient_FormulaOutput_*.log`。
+
+QMT 官方知识库中，`ContextInfo.schedule_run` 是不依赖 bar 的定时器；`prType=49` 定义为盘后定价。部署前应在当前券商 QMT 版本的模拟账户中再次验证接口可用性。

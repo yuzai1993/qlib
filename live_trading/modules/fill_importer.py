@@ -37,7 +37,13 @@ EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW"}
 class LiveRecorder:
     """实盘账簿 SQLite 存储（batches / fills / positions / cash_flows）。"""
 
-    def __init__(self, db_path: str, fees: dict = None):
+    def __init__(
+        self,
+        db_path: str,
+        fees: dict = None,
+        opening_cash: float | None = None,
+        opening_value_adjustment: float | None = None,
+    ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.fees = dict(DEFAULT_FEES)
@@ -46,6 +52,70 @@ class LiveRecorder:
         self.fees = validate_fees(self.fees)
         self._backup_legacy_db()
         self._init_db()
+        self._seed_opening_cash(opening_cash)
+        self._seed_opening_value_adjustment(opening_value_adjustment)
+
+    def _seed_opening_cash(self, opening_cash: float | None) -> None:
+        if opening_cash is None:
+            return
+        if (
+            isinstance(opening_cash, bool)
+            or not isinstance(opening_cash, (int, float))
+            or not math.isfinite(opening_cash)
+            or opening_cash <= 0
+        ):
+            raise ValueError("opening_cash must be a positive finite number")
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT value FROM account_state WHERE key='cash'"
+            ).fetchone()
+            if existing is not None:
+                return
+            used = sum(
+                conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in ("batches", "fills", "positions")
+            )
+            if used:
+                raise SchemaError(
+                    "opening_cash cannot seed an already-used live ledger"
+                )
+            conn.execute(
+                "INSERT INTO account_state (key, value) VALUES ('cash', ?)",
+                (float(opening_cash),),
+            )
+
+    def _seed_opening_value_adjustment(
+        self, opening_value_adjustment: float | None,
+    ) -> None:
+        if opening_value_adjustment is None:
+            return
+        if (
+            isinstance(opening_value_adjustment, bool)
+            or not isinstance(opening_value_adjustment, (int, float))
+            or not math.isfinite(opening_value_adjustment)
+        ):
+            raise ValueError(
+                "opening_value_adjustment must be a finite number"
+            )
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT value FROM account_state WHERE key='value_adjustment'"
+            ).fetchone()
+            if existing is not None:
+                return
+            used = sum(
+                conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in ("batches", "fills", "positions")
+            )
+            if used:
+                raise SchemaError(
+                    "opening_value_adjustment cannot seed an already-used live ledger"
+                )
+            conn.execute(
+                "INSERT INTO account_state (key, value) "
+                "VALUES ('value_adjustment', ?)",
+                (float(opening_value_adjustment),),
+            )
 
     def _backup_legacy_db(self) -> None:
         """首次联合主键迁移前保留一个一致的 SQLite 备份。"""
@@ -97,6 +167,7 @@ class LiveRecorder:
                     signal_date TEXT,
                     account_id TEXT,
                     account_type TEXT,
+                    account_environment TEXT NOT NULL DEFAULT 'SIMULATION',
                     order_checksum TEXT,
                     superseded_by TEXT,
                     superseded_at TEXT,
@@ -126,6 +197,7 @@ class LiveRecorder:
                     stock_code TEXT PRIMARY KEY,
                     shares INTEGER NOT NULL,
                     avg_cost REAL NOT NULL,
+                    opened_trade_date TEXT,
                     updated_at TEXT DEFAULT (datetime('now', 'localtime'))
                 );
 
@@ -141,6 +213,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
                     priority INTEGER,
@@ -241,10 +314,30 @@ class LiveRecorder:
             ):
                 if col not in batch_cols:
                     conn.execute(f"ALTER TABLE batches ADD COLUMN {col} TEXT")
+            if "account_environment" not in batch_cols:
+                conn.execute(
+                    "ALTER TABLE batches ADD COLUMN account_environment "
+                    "TEXT NOT NULL DEFAULT 'SIMULATION'"
+                )
             cols = {r["name"] for r in conn.execute("PRAGMA table_info(fills)")}
             if "applied_fee" not in cols:
                 conn.execute(
                     "ALTER TABLE fills ADD COLUMN applied_fee REAL NOT NULL DEFAULT 0"
+                )
+            position_cols = {
+                r["name"] for r in conn.execute("PRAGMA table_info(positions)")
+            }
+            if "opened_trade_date" not in position_cols:
+                conn.execute(
+                    "ALTER TABLE positions ADD COLUMN opened_trade_date TEXT"
+                )
+            order_cols = {
+                r["name"] for r in conn.execute("PRAGMA table_info(signal_orders)")
+            }
+            if "target_value" not in order_cols:
+                conn.execute(
+                    "ALTER TABLE signal_orders ADD COLUMN target_value "
+                    "REAL NOT NULL DEFAULT 0"
                 )
             self._migrate_composite_keys(conn)
 
@@ -309,6 +402,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
                     priority INTEGER,
@@ -317,10 +411,11 @@ class LiveRecorder:
                 );
                 INSERT INTO signal_orders (
                     batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, price_type, limit_price, priority, reason
+                    side, quantity, target_value, price_type, limit_price,
+                    priority, reason
                 )
                 SELECT batch_id, client_order_id, stock_code, instrument_qlib,
-                       side, quantity, price_type, limit_price, priority, reason
+                       side, quantity, 0, price_type, limit_price, priority, reason
                 FROM signal_orders_legacy;
                 DROP TABLE signal_orders_legacy;
             """)
@@ -332,8 +427,16 @@ class LiveRecorder:
 
     # ---------- batches ----------
 
-    def record_batch(self, batch_id: str, trade_date: str, mode: str,
-                     planned_orders: int) -> None:
+    def record_batch(
+        self,
+        batch_id: str,
+        trade_date: str,
+        mode: str,
+        planned_orders: int,
+        account_environment: str = "SIMULATION",
+    ) -> None:
+        if account_environment != "SIMULATION":
+            raise SchemaError("account_environment must be SIMULATION")
         with self._conn() as conn:
             existing = conn.execute(
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
@@ -343,6 +446,7 @@ class LiveRecorder:
                     existing["trade_date"] == trade_date
                     and existing["mode"] == mode
                     and existing["planned_orders"] == planned_orders
+                    and existing["account_environment"] == account_environment
                 ):
                     return
                 raise SchemaError(
@@ -350,12 +454,17 @@ class LiveRecorder:
                 )
             conn.execute(
                 """INSERT INTO batches
-                   (batch_id, trade_date, mode, planned_orders) VALUES (?,?,?,?)
+                   (batch_id, trade_date, mode, planned_orders,
+                    account_environment) VALUES (?,?,?,?,?)
                    ON CONFLICT(batch_id) DO UPDATE SET
                        trade_date=excluded.trade_date,
                        mode=excluded.mode,
-                       planned_orders=excluded.planned_orders""",
-                (batch_id, trade_date, mode, planned_orders),
+                       planned_orders=excluded.planned_orders,
+                       account_environment=excluded.account_environment""",
+                (
+                    batch_id, trade_date, mode, planned_orders,
+                    account_environment,
+                ),
             )
 
     def get_batch(self, batch_id: str):
@@ -444,6 +553,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
                 get("priority"),
@@ -462,8 +572,9 @@ class LiveRecorder:
             conn.executemany(
                 """INSERT INTO signal_orders
                    (client_order_id, batch_id, stock_code, instrument_qlib,
-                    side, quantity, price_type, limit_price, priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    side, quantity, target_value, price_type, limit_price,
+                    priority, reason)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
@@ -476,6 +587,8 @@ class LiveRecorder:
         the database commit and shared-file publication), but it may never
         replace a plan for an existing batch id.
         """
+        if header.account_environment != "SIMULATION":
+            raise SchemaError("account_environment must be SIMULATION")
         batch_id = header.batch_id
         order_checksum = compute_checksum([
             order.to_json_line() for order in orders
@@ -493,6 +606,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
                 get("priority"),
@@ -513,12 +627,14 @@ class LiveRecorder:
                     and existing_batch["signal_date"] == header.signal_date
                     and existing_batch["account_id"] == header.account_id
                     and existing_batch["account_type"] == header.account_type
+                    and existing_batch["account_environment"]
+                    == header.account_environment
                     and existing_batch["order_checksum"] == order_checksum
                 )
                 existing_rows = [tuple(row) for row in conn.execute(
                     """SELECT batch_id, client_order_id, stock_code,
-                              instrument_qlib, side, quantity, price_type,
-                              limit_price, priority, reason
+                              instrument_qlib, side, quantity, target_value,
+                              price_type, limit_price, priority, reason
                        FROM signal_orders WHERE batch_id=?
                        ORDER BY client_order_id""",
                     (batch_id,),
@@ -532,19 +648,22 @@ class LiveRecorder:
             conn.execute(
                 """INSERT INTO batches
                    (batch_id, trade_date, mode, planned_orders, strategy_id,
-                    signal_date, account_id, account_type, order_checksum)
-                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                    signal_date, account_id, account_type, account_environment,
+                    order_checksum)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (
                     batch_id, header.trade_date, header.mode, len(rows),
                     header.strategy_id, header.signal_date, header.account_id,
-                    header.account_type, order_checksum,
+                    header.account_type, header.account_environment,
+                    order_checksum,
                 ),
             )
             conn.executemany(
                 """INSERT INTO signal_orders
                    (batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, price_type, limit_price, priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    side, quantity, target_value, price_type, limit_price,
+                    priority, reason)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
@@ -764,15 +883,25 @@ class LiveRecorder:
                 raise SchemaError(
                     f"fill side mismatch: {fill.side!r} != {order['side']!r}"
                 )
-            if (
-                fill.requested_qty <= 0
-                or fill.requested_qty > order["quantity"]
-                or fill.requested_qty % 100 != 0
-            ):
+            if fill.requested_qty <= 0 or fill.requested_qty % 100 != 0:
                 raise SchemaError(
                     f"fill requested_qty invalid for plan: {fill.requested_qty!r} "
-                    f"> planned {order['quantity']!r} or not a whole lot"
+                    "must be a positive whole lot"
                 )
+            if fill.side == "SELL" and fill.requested_qty > order["quantity"]:
+                raise SchemaError(
+                    f"SELL requested_qty {fill.requested_qty!r} exceeds "
+                    f"planned {order['quantity']!r}"
+                )
+            if fill.side == "BUY":
+                if order["quantity"] != 0 or order["target_value"] <= 0:
+                    raise SchemaError("BUY plan must use a positive target_value")
+                fill_gross = float(fill.filled_qty) * float(fill.avg_price)
+                if fill_gross > float(order["target_value"]) + 1e-6:
+                    raise SchemaError(
+                        f"BUY fill gross {fill_gross:.6f} exceeds target_value "
+                        f"{order['target_value']:.6f}"
+                    )
 
             row = conn.execute(
                 "SELECT * FROM fills WHERE batch_id=? AND client_order_id=?",
@@ -804,7 +933,11 @@ class LiveRecorder:
                     raise SchemaError("fill applied quantity/amount cannot decrease")
                 if delta_qty > 0 or delta_amount > 1e-9:
                     self._apply_position_delta(
-                        conn, fill, delta_qty, delta_amount,
+                        conn,
+                        fill,
+                        delta_qty,
+                        delta_amount,
+                        trade_date=batch["trade_date"],
                     )
                     self._apply_cash_delta(conn, fill, delta_amount)
                     fee_delta = self._apply_fee_delta(conn, fill, applied_fee)
@@ -834,20 +967,29 @@ class LiveRecorder:
 
     @staticmethod
     def _apply_position_delta(
-        conn, fill: FillEvent, delta_qty: int, delta_amount: float,
+        conn,
+        fill: FillEvent,
+        delta_qty: int,
+        delta_amount: float,
+        *,
+        trade_date: str,
     ) -> None:
         row = conn.execute(
-            "SELECT shares, avg_cost FROM positions WHERE stock_code=?",
+            "SELECT shares, avg_cost, opened_trade_date FROM positions "
+            "WHERE stock_code=?",
             (fill.stock_code,),
         ).fetchone()
         old_shares = row["shares"] if row else 0
         old_cost = row["avg_cost"] if row else 0.0
+        opened_trade_date = row["opened_trade_date"] if row else None
 
         if fill.side == "BUY":
             new_shares = old_shares + delta_qty
             if new_shares <= 0:
                 raise SchemaError("BUY fill did not produce a positive position")
             new_cost = (old_shares * old_cost + delta_amount) / new_shares
+            if old_shares == 0:
+                opened_trade_date = trade_date
         else:  # SELL
             if delta_qty > old_shares:
                 raise SchemaError(
@@ -859,9 +1001,15 @@ class LiveRecorder:
 
         if new_shares > 0:
             conn.execute(
-                "INSERT OR REPLACE INTO positions (stock_code, shares, avg_cost) "
-                "VALUES (?,?,?)",
-                (fill.stock_code, new_shares, new_cost),
+                "INSERT OR REPLACE INTO positions "
+                "(stock_code, shares, avg_cost, opened_trade_date) "
+                "VALUES (?,?,?,?)",
+                (
+                    fill.stock_code,
+                    new_shares,
+                    new_cost,
+                    opened_trade_date,
+                ),
             )
         else:
             conn.execute(
@@ -1215,6 +1363,13 @@ class LiveRecorder:
             ).fetchone()
             return float(row["value"]) if row else 0.0
 
+    def get_value_adjustment(self) -> float:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT value FROM account_state WHERE key='value_adjustment'"
+            ).fetchone()
+            return float(row["value"]) if row else 0.0
+
     def list_batches(self, limit: int = 10) -> list:
         with self._conn() as conn:
             rows = conn.execute(
@@ -1289,14 +1444,29 @@ class LiveRecorder:
 
     # ---------- positions ----------
 
-    def upsert_position(self, stock_code: str, shares: int, avg_cost: float) -> None:
+    def upsert_position(
+        self,
+        stock_code: str,
+        shares: int,
+        avg_cost: float,
+        opened_trade_date: str | None = None,
+    ) -> None:
         """人工 seed / 校正持仓入口。"""
         with self._conn() as conn:
             if shares > 0:
                 conn.execute(
-                    "INSERT OR REPLACE INTO positions (stock_code, shares, avg_cost) "
-                    "VALUES (?,?,?)",
-                    (stock_code, shares, avg_cost),
+                    """INSERT INTO positions
+                       (stock_code, shares, avg_cost, opened_trade_date)
+                       VALUES (?,?,?,?)
+                       ON CONFLICT(stock_code) DO UPDATE SET
+                           shares=excluded.shares,
+                           avg_cost=excluded.avg_cost,
+                           opened_trade_date=COALESCE(
+                               excluded.opened_trade_date,
+                               positions.opened_trade_date
+                           ),
+                           updated_at=datetime('now', 'localtime')""",
+                    (stock_code, shares, avg_cost, opened_trade_date),
                 )
             else:
                 conn.execute(
@@ -1348,10 +1518,16 @@ class LiveRecorder:
     def get_positions(self) -> dict:
         with self._conn() as conn:
             rows = conn.execute("SELECT * FROM positions").fetchall()
-            return {
-                r["stock_code"]: {"shares": r["shares"], "avg_cost": r["avg_cost"]}
-                for r in rows
-            }
+            positions = {}
+            for row in rows:
+                value = {
+                    "shares": row["shares"],
+                    "avg_cost": row["avg_cost"],
+                }
+                if row["opened_trade_date"]:
+                    value["opened_trade_date"] = row["opened_trade_date"]
+                positions[row["stock_code"]] = value
+            return positions
 
     # ---------- 券商快照（二道对账）----------
 
@@ -1416,22 +1592,42 @@ class LiveRecorder:
             ).fetchone()
             return dict(row) if row else None
 
+    @staticmethod
+    def _latest_broker_snapshot_batch_id(conn, trade_date: str):
+        row = conn.execute(
+            "SELECT batch_id FROM ("
+            "SELECT batch_id FROM broker_account_snapshot WHERE trade_date=? "
+            "UNION SELECT batch_id FROM broker_position_snapshot WHERE trade_date=?"
+            ") ORDER BY batch_id DESC LIMIT 1",
+            (trade_date, trade_date),
+        ).fetchone()
+        return row["batch_id"] if row else None
+
     def get_broker_positions(self, trade_date: str) -> dict:
         """当日最新批次的券商持仓 {stock_code: shares}；无快照则空 dict。"""
         with self._conn() as conn:
-            batch = conn.execute(
-                "SELECT batch_id FROM broker_position_snapshot WHERE trade_date=? "
-                "ORDER BY batch_id DESC LIMIT 1",
-                (trade_date,),
-            ).fetchone()
-            if batch is None:
+            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if batch_id is None:
                 return {}
             rows = conn.execute(
                 "SELECT stock_code, shares FROM broker_position_snapshot "
                 "WHERE batch_id=?",
-                (batch["batch_id"],),
+                (batch_id,),
             ).fetchall()
             return {r["stock_code"]: r["shares"] for r in rows}
+
+    def get_broker_position_market_values(self, trade_date: str) -> dict:
+        """当日最新券商快照的逐仓市值；缺失值保留为 None。"""
+        with self._conn() as conn:
+            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if batch_id is None:
+                return {}
+            rows = conn.execute(
+                "SELECT stock_code, market_value FROM broker_position_snapshot "
+                "WHERE batch_id=?",
+                (batch_id,),
+            ).fetchall()
+            return {r["stock_code"]: r["market_value"] for r in rows}
 
 
 class FillImporter:

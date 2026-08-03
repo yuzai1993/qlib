@@ -10,6 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.signal_schema import (
+    SCHEMA_VERSION,
     BatchHeader,
     SignalOrder,
     FillEvent,
@@ -29,8 +30,9 @@ def _order(**kwargs) -> SignalOrder:
         stock_code="600000.SH",
         side="SELL",
         quantity=800,
-        price_type="FIX",
-        limit_price=10.41,
+        target_value=0.0,
+        price_type="AFTER_HOURS_CLOSE",
+        limit_price=0.0,
         priority=10,
         instrument_qlib="SH600000",
         reason="topk_drop",
@@ -47,6 +49,7 @@ def _header(**kwargs) -> BatchHeader:
         signal_date="2026-07-11",
         account_id="123456",
         account_type="STOCK",
+        account_environment="SIMULATION",
         mode="SIMULATE",
         created_at="2026-07-11T21:05:00+08:00",
         order_count=1,
@@ -98,6 +101,7 @@ def test_order_json_roundtrip():
     d = json.loads(o.to_json_line())
     assert d["type"] == "order"
     assert SignalOrder.from_dict(d) == o
+    assert d["target_value"] == 0.0
 
 
 def test_header_json_roundtrip():
@@ -105,12 +109,18 @@ def test_header_json_roundtrip():
     d = json.loads(h.to_json_line())
     assert d["type"] == "batch_header"
     assert BatchHeader.from_dict(d) == h
+    assert d["schema_version"] == SCHEMA_VERSION == "2.0"
+    assert d["account_environment"] == "SIMULATION"
 
 
 # ---------- validation ----------
 
 def test_validate_order_accepts_good():
     validate_order(_order())
+    validate_order(_order(
+        side="BUY", quantity=0, target_value=15_833.33,
+        client_order_id="20260714001002B", priority=20,
+    ))
 
 
 @pytest.mark.parametrize("bad_kwargs", [
@@ -118,8 +128,9 @@ def test_validate_order_accepts_good():
     {"quantity": 0},
     {"quantity": -100},
     {"quantity": 150},          # 非整手
-    {"limit_price": 0},
-    {"limit_price": -1.0},
+    {"target_value": 1.0},
+    {"limit_price": 1.0},
+    {"price_type": "FIX"},
     {"stock_code": "SH600000"},  # qlib 格式未转换
 ])
 def test_validate_order_rejects_bad(bad_kwargs):
@@ -127,9 +138,32 @@ def test_validate_order_rejects_bad(bad_kwargs):
         validate_order(_order(**bad_kwargs))
 
 
+@pytest.mark.parametrize("bad_kwargs", [
+    {"quantity": 100},
+    {"target_value": 0.0},
+    {"target_value": -1.0},
+    {"limit_price": 10.0},
+    {"price_type": "FIX"},
+])
+def test_validate_buy_order_rejects_broker_sized_plan_fields(bad_kwargs):
+    buy = dict(
+        side="BUY", quantity=0, target_value=15_833.33,
+        client_order_id="20260714001002B", priority=20,
+    )
+    buy.update(bad_kwargs)
+    with pytest.raises(SchemaError):
+        validate_order(_order(**buy))
+
+
 def test_validate_batch_checks_order_count_and_ids():
     h = _header(order_count=2)
-    orders = [_order(), _order(client_order_id="20260714002B", side="BUY")]
+    orders = [
+        _order(),
+        _order(
+            client_order_id="20260714002B", side="BUY", quantity=0,
+            target_value=15_000.0, priority=20,
+        ),
+    ]
     validate_batch(h, orders)
 
     with pytest.raises(SchemaError):
@@ -149,6 +183,10 @@ def test_validate_batch_rejects_bad_mode_and_date():
         validate_batch(_header(mode="REAL"), [_order()])
     with pytest.raises(SchemaError):
         validate_batch(_header(trade_date="20260714"), [_order()])
+    with pytest.raises(SchemaError):
+        validate_batch(_header(account_environment="REAL"), [_order()])
+    with pytest.raises(SchemaError):
+        validate_batch(_header(schema_version="1.0"), [_order()])
 
 
 # ---------- fill ----------
@@ -180,10 +218,14 @@ def test_validate_fill_requires_mode():
 
 @pytest.mark.parametrize("changes", [
     {"requested_qty": -1},
+    {"requested_qty": True},
     {"filled_qty": -1},
+    {"filled_qty": True},
     {"requested_qty": 100, "filled_qty": 200},
     {"filled_qty": 1, "avg_price": 0.0},
     {"filled_qty": 0, "avg_price": -1.0},
+    {"avg_price": float("nan")},
+    {"avg_price": float("inf")},
 ])
 def test_validate_fill_rejects_bad_quantities_and_prices(changes):
     f = FillEvent(

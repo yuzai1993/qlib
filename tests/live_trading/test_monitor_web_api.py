@@ -32,7 +32,7 @@ def _fill_event(coid, status="FILLED", side="BUY", code="600000.SH",
 @pytest.fixture
 def client(tmp_path):
     db = tmp_path / "live.db"
-    recorder = LiveRecorder(str(db))
+    recorder = LiveRecorder(str(db), opening_value_adjustment=-681_126.98)
     recorder.set_cash(100000.0)
     order_dicts = [
         {
@@ -41,9 +41,10 @@ def client(tmp_path):
             "stock_code": "600000.SH",
             "instrument_qlib": "SH600000",
             "side": "BUY",
-            "quantity": 800,
-            "price_type": "FIX",
-            "limit_price": 10.6,
+            "quantity": 0,
+            "target_value": 8_500.0,
+            "price_type": "AFTER_HOURS_CLOSE",
+            "limit_price": 0.0,
             "priority": 20,
             "reason": "topk_dropout",
         },
@@ -53,9 +54,10 @@ def client(tmp_path):
             "stock_code": "000001.SZ",
             "instrument_qlib": "SZ000001",
             "side": "BUY",
-            "quantity": 500,
-            "price_type": "FIX",
-            "limit_price": 12.1,
+            "quantity": 0,
+            "target_value": 6_100.0,
+            "price_type": "AFTER_HOURS_CLOSE",
+            "limit_price": 0.0,
             "priority": 20,
             "reason": "topk_dropout",
         },
@@ -68,6 +70,7 @@ def client(tmp_path):
         signal_date="2026-07-12",
         account_id="88813528",
         account_type="STOCK",
+        account_environment="SIMULATION",
         mode="LIVE",
         created_at="2026-07-12T20:00:00+08:00",
         order_count=len(orders),
@@ -133,6 +136,7 @@ def test_overview(client):
     fees = (order_total_fee("BUY", 8400.0, DEFAULT_FEES)
             + order_total_fee("BUY", 6000.0, DEFAULT_FEES))
     assert data["cash"] == pytest.approx(85600.0 - fees + 380.0)
+    assert data["account_value_adjustment"] == pytest.approx(-681_126.98)
     assert data["position_count"] == 2
     assert len(data["recent_alerts"]) == 1
 

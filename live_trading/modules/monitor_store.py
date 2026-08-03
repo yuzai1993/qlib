@@ -11,7 +11,8 @@ from pathlib import Path
 # daily_snapshot 的全部列（upsert 时按此顺序取值）
 _SNAPSHOT_COLS = [
     "date", "cash", "market_value", "receivables",
-    "pending_market_value", "tax_provision", "total_value",
+    "pending_market_value", "tax_provision", "account_value_adjustment",
+    "total_value",
     "daily_return", "cumulative_return",
     "benchmark_close", "benchmark_daily_return", "benchmark_cumulative_return",
     "excess_return", "position_count", "turnover",
@@ -56,6 +57,7 @@ class MonitorStore:
                     receivables REAL NOT NULL DEFAULT 0,
                     pending_market_value REAL NOT NULL DEFAULT 0,
                     tax_provision REAL NOT NULL DEFAULT 0,
+                    account_value_adjustment REAL NOT NULL DEFAULT 0,
                     total_value REAL NOT NULL,
                     daily_return REAL,
                     cumulative_return REAL,
@@ -110,6 +112,7 @@ class MonitorStore:
             for col in (
                 "fees", "external_flow", "receivables",
                 "pending_market_value", "tax_provision",
+                "account_value_adjustment",
             ):
                 if col not in cols:
                     conn.execute(
@@ -125,7 +128,7 @@ class MonitorStore:
         with self._conn() as conn:
             zero_default = {
                 "receivables", "pending_market_value", "tax_provision",
-                "fees", "external_flow",
+                "account_value_adjustment", "fees", "external_flow",
             }
             values = [
                 (row.get(c) if row.get(c) is not None else 0.0)

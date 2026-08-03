@@ -6,13 +6,15 @@ JSON Lines 单文件：首行 batch_header，后续每行一个 order。
 
 import hashlib
 import json
+import math
 import re
 from dataclasses import dataclass, asdict, fields
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "2.0"
 
 VALID_SIDES = {"BUY", "SELL"}
 VALID_MODES = {"SIMULATE", "LIVE"}
+VALID_ACCOUNT_ENVIRONMENTS = {"SIMULATION"}
 VALID_FILL_STATUS = {
     "ACCEPTED", "FILLED", "PARTIAL", "REJECTED", "SKIPPED", "EXPIRED", "ERROR",
 }
@@ -47,6 +49,7 @@ class BatchHeader:
     signal_date: str
     account_id: str
     account_type: str
+    account_environment: str
     mode: str
     created_at: str
     order_count: int
@@ -68,6 +71,7 @@ class SignalOrder:
     stock_code: str
     side: str
     quantity: int
+    target_value: float
     price_type: str
     limit_price: float
     priority: int
@@ -134,12 +138,35 @@ def compute_checksum(order_lines: list) -> str:
 def validate_order(order: SignalOrder) -> None:
     if order.side not in VALID_SIDES:
         raise SchemaError(f"invalid side: {order.side!r}")
-    if not isinstance(order.quantity, int) or order.quantity <= 0:
-        raise SchemaError(f"quantity must be positive int: {order.quantity!r}")
-    if order.quantity % TRADE_UNIT != 0:
-        raise SchemaError(f"quantity must be multiple of {TRADE_UNIT}: {order.quantity}")
-    if not (order.limit_price > 0):
-        raise SchemaError(f"limit_price must be > 0: {order.limit_price!r}")
+    if order.price_type != "AFTER_HOURS_CLOSE":
+        raise SchemaError(f"price_type must be AFTER_HOURS_CLOSE: {order.price_type!r}")
+    if (
+        isinstance(order.limit_price, bool)
+        or not isinstance(order.limit_price, (int, float))
+        or not math.isfinite(float(order.limit_price))
+        or float(order.limit_price) != 0.0
+    ):
+        raise SchemaError(f"limit_price must be 0 for after-hours close: {order.limit_price!r}")
+    if (
+        isinstance(order.target_value, bool)
+        or not isinstance(order.target_value, (int, float))
+        or not math.isfinite(float(order.target_value))
+    ):
+        raise SchemaError(f"target_value must be finite: {order.target_value!r}")
+    if order.side == "BUY":
+        if not isinstance(order.quantity, int) or isinstance(order.quantity, bool) or order.quantity != 0:
+            raise SchemaError(f"BUY quantity must be 0 for broker sizing: {order.quantity!r}")
+        if order.target_value <= 0:
+            raise SchemaError(f"BUY target_value must be > 0: {order.target_value!r}")
+    else:
+        if not isinstance(order.quantity, int) or isinstance(order.quantity, bool) or order.quantity <= 0:
+            raise SchemaError(f"SELL quantity must be positive int: {order.quantity!r}")
+        if order.quantity % TRADE_UNIT != 0:
+            raise SchemaError(
+                f"SELL quantity must be multiple of {TRADE_UNIT}: {order.quantity}"
+            )
+        if float(order.target_value) != 0.0:
+            raise SchemaError(f"SELL target_value must be 0: {order.target_value!r}")
     if len(order.client_order_id) > CLIENT_ORDER_ID_MAX_LEN:
         raise SchemaError(f"client_order_id too long: {order.client_order_id!r}")
     # stock_code 必须为 QMT 格式（600000.SH）
@@ -151,8 +178,17 @@ def validate_order(order: SignalOrder) -> None:
 
 
 def validate_batch(header: BatchHeader, orders: list) -> None:
+    if header.schema_version != SCHEMA_VERSION:
+        raise SchemaError(
+            f"schema_version must be {SCHEMA_VERSION}: {header.schema_version!r}"
+        )
     if header.mode not in VALID_MODES:
         raise SchemaError(f"invalid mode: {header.mode!r}")
+    if header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
+        raise SchemaError(
+            "account_environment must be SIMULATION: "
+            f"{header.account_environment!r}"
+        )
     if not _DATE_RE.match(header.trade_date):
         raise SchemaError(f"trade_date must be YYYY-MM-DD: {header.trade_date!r}")
     if not _DATE_RE.match(header.signal_date):
@@ -180,12 +216,17 @@ def validate_fill(fill: FillEvent) -> None:
         raise SchemaError(f"invalid fill status: {fill.status!r}")
     if fill.side not in VALID_SIDES:
         raise SchemaError(f"invalid fill side: {fill.side!r}")
-    if not isinstance(fill.requested_qty, int) or fill.requested_qty < 0:
+    if (
+        isinstance(fill.requested_qty, bool)
+        or not isinstance(fill.requested_qty, int)
+        or fill.requested_qty < 0
+    ):
         raise SchemaError(
             f"requested_qty must be a non-negative int: {fill.requested_qty!r}"
         )
     if (
-        not isinstance(fill.filled_qty, int)
+        isinstance(fill.filled_qty, bool)
+        or not isinstance(fill.filled_qty, int)
         or fill.filled_qty < 0
         or fill.filled_qty > fill.requested_qty
     ):
@@ -193,7 +234,13 @@ def validate_fill(fill: FillEvent) -> None:
             "filled_qty must be a non-negative int no greater than "
             f"requested_qty: {fill.filled_qty!r}/{fill.requested_qty!r}"
         )
-    if fill.avg_price < 0 or (fill.filled_qty > 0 and fill.avg_price <= 0):
+    if (
+        isinstance(fill.avg_price, bool)
+        or not isinstance(fill.avg_price, (int, float))
+        or not math.isfinite(float(fill.avg_price))
+        or fill.avg_price < 0
+        or (fill.filled_qty > 0 and fill.avg_price <= 0)
+    ):
         raise SchemaError(
             f"avg_price must be positive when filled_qty > 0: {fill.avg_price!r}"
         )

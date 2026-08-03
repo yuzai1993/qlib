@@ -64,6 +64,21 @@ def test_connection_error_not_raised(mock_post):
     assert PushPlusNotifier("T").send("t", "c") is False
 
 
+@patch("live_trading.modules.notifier.requests.post")
+def test_connection_error_logs_never_expose_notification_secret(
+    mock_post, caplog,
+):
+    serverchan_key = "SCT_SUPER_SECRET"
+    mock_post.side_effect = requests.ConnectionError(
+        f"failed https://sctapi.ftqq.com/{serverchan_key}.send"
+    )
+
+    assert ServerChanNotifier(serverchan_key).send("t", "c") is False
+
+    assert serverchan_key not in caplog.text
+    assert "ConnectionError" in caplog.text
+
+
 def test_factory_none_channel():
     assert isinstance(create_notifier({"notify": {"channel": "none"}}), NullNotifier)
     assert isinstance(create_notifier({}), NullNotifier)

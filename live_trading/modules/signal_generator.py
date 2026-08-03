@@ -5,14 +5,24 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import qlib
-from qlib.data import D
-from qlib.utils import init_instance_by_config
 from qlib.data.dataset.handler import DataHandlerLP
+from qlib.utils import init_instance_by_config
 
 from live_trading.modules.model_artifact import load_model_artifact
 
 logger = logging.getLogger("live_trading.signal")
+
+
+class _InferenceDataset:
+    """Minimal DatasetH-compatible view over one inference feature frame."""
+
+    def __init__(self, features: pd.DataFrame):
+        self.features = features
+
+    def prepare(self, segment, *, col_set, data_key):
+        if col_set != "feature" or data_key != DataHandlerLP.DK_I:
+            raise ValueError("inference dataset only provides infer features")
+        return self.features
 
 
 class SignalGenerator:
@@ -26,7 +36,6 @@ class SignalGenerator:
         self.config = config
         self.project_root = project_root
         self._model = None
-        self._lgb_model = None
         self._handler = None
         self._features = None
         self._handler_end_date = None
@@ -50,8 +59,6 @@ class SignalGenerator:
             expected_sha256,
             project_root=self.project_root,
         )
-
-        self._lgb_model = self._model.model
         logger.info("Model loaded from %s (sha256=%s)", model_path, expected_sha256)
 
     def _ensure_handler(self, end_date: str):
@@ -65,17 +72,20 @@ class SignalGenerator:
         logger.info(
             "Initializing %s handler (end_date=%s)...", handler_cfg["class"], end_date
         )
+        handler_kwargs = {
+            "instruments": data_cfg["instruments"],
+            "start_time": handler_cfg["start_time"],
+            "end_time": end_date,
+            "fit_start_time": handler_cfg["fit_start_time"],
+            "fit_end_time": handler_cfg["fit_end_time"],
+            "infer_processors": handler_cfg["infer_processors"],
+        }
+        if "feature_groups" in handler_cfg:
+            handler_kwargs["feature_groups"] = handler_cfg["feature_groups"]
         self._handler = init_instance_by_config({
             "class": handler_cfg["class"],
             "module_path": handler_cfg["module"],
-            "kwargs": {
-                "instruments": data_cfg["instruments"],
-                "start_time": handler_cfg["start_time"],
-                "end_time": end_date,
-                "fit_start_time": handler_cfg["fit_start_time"],
-                "fit_end_time": handler_cfg["fit_end_time"],
-                "infer_processors": handler_cfg["infer_processors"],
-            },
+            "kwargs": handler_kwargs,
         })
         self._features = self._handler.fetch(
             col_set="feature", data_key=DataHandlerLP.DK_I
@@ -92,19 +102,28 @@ class SignalGenerator:
         self._ensure_handler(end_date)
 
     def _score_features(self, day_features: pd.DataFrame, target_date: str) -> pd.Series:
-        """对单日特征打分。NaN 原样传给 LightGBM（与训练口径一致，LGB 原生处理缺失）。"""
+        """Score one day through the frozen Qlib model's public interface."""
         day_features = day_features.dropna(how="all")
-        raw_scores = self._lgb_model.predict(day_features.values)
-        scores = pd.Series(raw_scores, index=day_features.index, name="score")
-        scores = scores.dropna()
+        raw_scores = self._model.predict(_InferenceDataset(day_features), segment="test")
+        if not isinstance(raw_scores, pd.Series):
+            raise TypeError("model.predict must return a pandas Series")
+        if raw_scores.index.has_duplicates:
+            raise ValueError("model prediction index contains duplicates")
+        if not raw_scores.index.equals(day_features.index):
+            raise ValueError("model prediction index must exactly match feature index")
+        scores = raw_scores.astype(float).rename("score")
+        scores = scores[np.isfinite(scores)]
 
-        logger.info(
-            "Generated predictions for %s: %d instruments, top=%.6f, bottom=%.6f",
-            target_date, len(scores), scores.max(), scores.min(),
-        )
+        if scores.empty:
+            logger.warning("Generated no finite predictions for %s", target_date)
+        else:
+            logger.info(
+                "Generated predictions for %s: %d instruments, top=%.6f, bottom=%.6f",
+                target_date, len(scores), scores.max(), scores.min(),
+            )
         return scores
 
-    def predict(self, target_date: str, allow_stale: bool = True) -> pd.Series:
+    def predict(self, target_date: str, allow_stale: bool = False) -> pd.Series:
         """Generate prediction scores for all instruments on target_date.
 
         Reuses cached handler/features when available.

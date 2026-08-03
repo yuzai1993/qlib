@@ -9,6 +9,11 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.live_config import load_live_config
 
+NEW_LIVE_PATH = (
+    REPO_ROOT / "live_trading" / "configs" /
+    "csi1000_b6m_b2s_postclose.yaml"
+)
+
 
 def test_load_real_live_config_is_standalone():
     import yaml
@@ -41,6 +46,136 @@ def test_load_standalone_minimal_config(tmp_path):
     p.write_text("live:\n  strategy_id: s1\n", encoding="utf-8")
     cfg = load_live_config(p, project_root=tmp_path)
     assert cfg["live"]["strategy_id"] == "s1"
+
+
+def test_load_new_csi1000_paper_config():
+    cfg = load_live_config(NEW_LIVE_PATH, project_root=REPO_ROOT)
+
+    assert cfg["data"]["instruments"] == "csi1000"
+    assert cfg["data"]["benchmark"] == "SH000852"
+    assert cfg["account"]["opening_cash"] == pytest.approx(9_949_714.06)
+    assert cfg["account"]["opening_value_adjustment"] == pytest.approx(
+        -681_126.98
+    )
+    assert cfg["handler"]["class"] == "Alpha158Technical"
+    assert cfg["handler"]["feature_groups"] == ["range"]
+    assert cfg["strategy"] == {
+        "class": "TopkDropoutStrategy",
+        "topk": 30,
+        "n_drop": 2,
+        "initial_buy_count": 2,
+        "risk_degree": 0.95,
+        "hold_thresh": 20,
+        "only_tradable": False,
+        "forbid_all_trade_at_limit": False,
+    }
+    assert cfg["live"]["broker_environment"] == "SIMULATION"
+    assert cfg["live"]["allow_real_money"] is False
+    assert cfg["live"]["default_mode"] == "SIMULATE"
+    assert cfg["live"]["after_hours_price_type"] == 49
+    assert cfg["web"] == {"host": "127.0.0.1", "port": 8081}
+    assert "schedule" not in cfg
+    assert cfg["storage"]["db_path"].endswith(
+        "csi1000_b6m_b2s_postclose.db"
+    )
+    assert cfg["provenance"]["strategy_baseline_config"].endswith(
+        "strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml"
+    )
+    assert cfg["provenance"]["strategy_baseline_sha256"] == (
+        "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+    )
+
+
+@pytest.mark.parametrize(
+    "change,message",
+    [
+        (("live", "broker_environment", "REAL"), "broker_environment"),
+        (("live", "allow_real_money", True), "allow_real_money"),
+        (("account", "opening_cash", 0), "opening_cash"),
+        (("strategy", "initial_buy_count", 0), "initial_buy_count"),
+        (("strategy", "initial_buy_count", 31), "initial_buy_count"),
+    ],
+)
+def test_simulation_config_safety_fields_fail_closed(tmp_path, change, message):
+    import yaml
+
+    config = {
+        "account": {"opening_cash": 500_000.0},
+        "strategy": {"topk": 30, "initial_buy_count": 2},
+        "live": {
+            "strategy_id": "paper",
+            "broker_environment": "SIMULATION",
+            "allow_real_money": False,
+            "after_hours_price_type": 49,
+        },
+    }
+    section, key, value = change
+    config[section][key] = value
+    path = tmp_path / "paper.yaml"
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_live_config(path, project_root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    "opening_cash,adjustment,message",
+    [
+        (500_000.0, float("inf"), "opening_value_adjustment"),
+        (500_000.0, True, "opening_value_adjustment"),
+        (500_000.0, -500_000.0, "economic opening value"),
+        (500_000.0, -600_000.0, "economic opening value"),
+    ],
+)
+def test_simulation_account_adjustment_fails_closed(
+    tmp_path, opening_cash, adjustment, message,
+):
+    import yaml
+
+    config = {
+        "account": {
+            "opening_cash": opening_cash,
+            "opening_value_adjustment": adjustment,
+        },
+        "strategy": {"topk": 30, "initial_buy_count": 2},
+        "live": {
+            "strategy_id": "paper",
+            "broker_environment": "SIMULATION",
+            "allow_real_money": False,
+            "after_hours_price_type": 49,
+        },
+    }
+    path = tmp_path / "paper.yaml"
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_live_config(path, project_root=tmp_path)
+
+
+def test_simulation_account_accepts_negative_adjustment_with_positive_nav(tmp_path):
+    import yaml
+
+    config = {
+        "account": {
+            "opening_cash": 9_949_714.06,
+            "opening_value_adjustment": -681_126.98,
+        },
+        "strategy": {"topk": 30, "initial_buy_count": 2},
+        "live": {
+            "strategy_id": "paper",
+            "broker_environment": "SIMULATION",
+            "allow_real_money": False,
+            "after_hours_price_type": 49,
+        },
+    }
+    path = tmp_path / "paper.yaml"
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    loaded = load_live_config(path, project_root=tmp_path)
+
+    assert loaded["account"]["opening_value_adjustment"] == pytest.approx(
+        -681_126.98
+    )
 
 
 def _write_baseline_config(tmp_path, baseline):

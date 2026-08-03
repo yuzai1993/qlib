@@ -21,6 +21,11 @@ def _get(mapping: dict, path: str):
     return current
 
 
+def _optional(mapping: dict, path: str):
+    value = _get(mapping, path)
+    return None if isinstance(value, str) and value.startswith("<missing:") else value
+
+
 def _equal(left, right) -> bool:
     if (
         isinstance(left, (int, float))
@@ -40,6 +45,15 @@ def validate_backtest_parity(live: dict, backtest: dict) -> None:
         + float(live_fees.get("transfer_fee_rate", 0.0))
     )
     sell_cost = buy_cost + float(live_fees.get("stamp_duty_rate", 0.0))
+    opening_cash = _optional(live, "account.opening_cash")
+    if opening_cash is None:
+        opening_account = _get(
+            live, "monitor.performance_baseline.opening_total_value"
+        )
+    else:
+        opening_account = float(opening_cash) + float(
+            _optional(live, "account.opening_value_adjustment") or 0.0
+        )
 
     comparisons = [
         ("model.experiment_name", _get(live, "model.experiment_name"),
@@ -71,12 +85,17 @@ def validate_backtest_parity(live: dict, backtest: dict) -> None:
          _get(backtest, "data.handler.fit_end_time")),
         ("handler.infer_processors", _get(live, "handler.infer_processors"),
          _get(backtest, "data.handler.infer_processors")),
+        ("handler.feature_groups", _optional(live, "handler.feature_groups"),
+         _optional(backtest, "data.handler.feature_groups")),
         ("strategy.class", _get(live, "strategy.class"),
          _get(backtest, "strategy.class")),
         ("strategy.topk", _get(live, "strategy.topk"),
          _get(backtest, "strategy.topk")),
         ("strategy.n_drop", _get(live, "strategy.n_drop"),
          _get(backtest, "strategy.n_drop")),
+        ("strategy.initial_buy_count",
+         _optional(live, "strategy.initial_buy_count"),
+         _optional(backtest, "strategy.kwargs.initial_buy_count")),
         ("strategy.risk_degree", _get(live, "strategy.risk_degree"),
          _get(backtest, "strategy.kwargs.risk_degree")),
         ("strategy.hold_thresh", _get(live, "strategy.hold_thresh"),
@@ -86,7 +105,7 @@ def validate_backtest_parity(live: dict, backtest: dict) -> None:
         ("strategy.forbid_all_trade_at_limit",
          _get(live, "strategy.forbid_all_trade_at_limit"),
          _get(backtest, "strategy.kwargs.forbid_all_trade_at_limit")),
-        ("backtest.account", _get(live, "monitor.performance_baseline.opening_total_value"),
+        ("backtest.account", opening_account,
          _get(backtest, "backtest.account")),
         ("exchange.freq", _get(live, "exchange.freq"),
          _get(backtest, "backtest.exchange_kwargs.freq")),
@@ -108,6 +127,12 @@ def validate_backtest_parity(live: dict, backtest: dict) -> None:
          _get(backtest, "backtest.exchange_kwargs.close_cost")),
         ("backtest.min_cost", _get(live, "fees.min_commission"),
          _get(backtest, "backtest.exchange_kwargs.min_cost")),
+        ("live.broker_environment",
+         _optional(live, "live.broker_environment"),
+         _optional(backtest, "parity.broker_environment")),
+        ("live.after_hours_price_type",
+         _optional(live, "live.after_hours_price_type"),
+         _optional(backtest, "parity.after_hours_price_type")),
     ]
 
     mismatches = [

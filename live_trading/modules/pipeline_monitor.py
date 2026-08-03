@@ -22,20 +22,42 @@ DEFAULT_THRESHOLDS = {
 }
 
 
-def check_evening(next_trade_date, batch, inbox_files) -> list:
+def _publish_recovery_hint(config_id, trade_date, has_batch):
+    log_path = f"live_trading/logs/{config_id}_publish_cron.log"
+    if has_batch:
+        command = (
+            f"bash live_trading/run_publish_cron.sh {config_id} {trade_date}"
+        )
+    else:
+        command = (
+            f"bash live_trading/run_publish_catchup_cron.sh {config_id}"
+        )
+    return f"；发布日志：{log_path}；人工恢复：{command}"
+
+
+def check_evening(next_trade_date, batch, inbox_files, config_id) -> list:
     """发布检查：下一交易日批次已入库且 inbox 有 jsonl + done。
 
     Args:
         next_trade_date: 下一交易日 YYYY-MM-DD
         batch: 该日 batches 行（dict）或 None
         inbox_files: inbox 目录文件名列表；挂载点不可用传 None
+        config_id: 部署配置 ID，用于生成可执行的人工恢复命令
     """
     if inbox_files is None:
         return [Finding("PUBLISH_MISSING", CRIT,
-                        f"{next_trade_date} 批次检查失败：bridge inbox 不可访问（SMB 挂载丢失？）")]
+                        f"{next_trade_date} 批次检查失败：bridge inbox 不可访问"
+                        "（SMB 挂载丢失？）；先恢复 SMB 挂载"
+                        + _publish_recovery_hint(
+                            config_id, next_trade_date, batch is not None,
+                        ))]
     if batch is None:
         return [Finding("PUBLISH_MISSING", CRIT,
-                        f"{next_trade_date} 无信号批次记录，明日将空仓不动（若非刻意停发请立即补发）")]
+                        f"{next_trade_date} 无信号批次记录，明日将空仓不动"
+                        "（若非刻意停发请立即补发）"
+                        + _publish_recovery_hint(
+                            config_id, next_trade_date, False,
+                        ))]
     jsonl = f"signal_{batch['batch_id']}.jsonl"
     done = f"signal_{batch['batch_id']}.done"
     files = set(inbox_files)
@@ -43,7 +65,10 @@ def check_evening(next_trade_date, batch, inbox_files) -> list:
         return [Finding("PUBLISH_MISSING", CRIT,
                         f"批次 {batch['batch_id']} 已入库但 inbox 缺文件"
                         f"（jsonl={'有' if jsonl in files else '无'}, "
-                        f"done={'有' if done in files else '无'}），请重新发布")]
+                        f"done={'有' if done in files else '无'}），请重新发布"
+                        + _publish_recovery_hint(
+                            config_id, next_trade_date, True,
+                        ))]
     return []
 
 
@@ -65,7 +90,9 @@ def check_postmarket(trade_date, batches, reconciles, fills,
     for b in batches:
         r = reconciles.get(b["batch_id"], {})
         missing = r.get("missing", 0)
-        if missing > 0 or r.get("terminal", 0) == 0:
+        planned = int(r.get("planned", b.get("planned_orders", 0)) or 0)
+        terminal = int(r.get("terminal", 0) or 0)
+        if missing > 0 or (planned > 0 and terminal == 0):
             findings.append(Finding(
                 "FILLS_MISSING", CRIT,
                 f"批次 {b['batch_id']} 回执不全：planned={r.get('planned')} "
@@ -138,7 +165,10 @@ def _oversold_codes(fills, prev_positions) -> list:
 
 def check_broker_reconcile(trade_date, broker_account, broker_positions,
                            ledger_positions, ledger_cash,
-                           cash_tolerance=None, check_cash=True) -> list:
+                           cash_tolerance=None, check_cash=True,
+                           ledger_value_adjustment=0.0,
+                           broker_position_market_values=None,
+                           value_tolerance=None) -> list:
     """二道对账：券商快照 vs 本地账本。
 
     回执只反映策略「以为」成交了什么；券商快照是账户自己的口径，
@@ -153,6 +183,10 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
         check_cash: False 时跳过现金类告警（CASH_NEGATIVE /
             BROKER_CASH_MISMATCH），只对持仓。QMT 模拟盘的可用资金口径
             不可信、以账本为准时用；切真实账户后应恢复 True。
+        ledger_value_adjustment: 账本中不属于普通持仓的账户价值调整。
+        broker_position_market_values: 券商逐仓市值；字段不完整时跳过
+            账户价值调整对账。
+        value_tolerance: 账户价值调整差额容忍额，默认与现金一致。
     """
     tol = DEFAULT_THRESHOLDS["cash_tolerance"] if cash_tolerance is None \
         else float(cash_tolerance)
@@ -193,6 +227,32 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
                 f"{trade_date} 现金与券商差 {gap:.2f} 元"
                 f"（账本 {ledger_cash:.2f} / 券商可用 {float(broker_cash):.2f}），"
                 f"超过容忍 {tol:.2f}，核对后用 record_cash_flow CORRECTION 校正"))
+
+    aggregate_market_value = (
+        broker_account.get("market_value") if broker_account is not None else None
+    )
+    position_values_complete = (
+        broker_position_market_values is not None
+        and set(broker_position_market_values) == set(broker_positions)
+        and all(
+            value is not None
+            for value in broker_position_market_values.values()
+        )
+    )
+    if aggregate_market_value is not None and position_values_complete:
+        broker_residual = float(aggregate_market_value) - sum(
+            float(value) for value in broker_position_market_values.values()
+        )
+        adjustment_gap = broker_residual - float(ledger_value_adjustment)
+        adjustment_tol = tol if value_tolerance is None else float(value_tolerance)
+        if abs(adjustment_gap) > adjustment_tol:
+            findings.append(Finding(
+                "BROKER_VALUE_ADJUSTMENT_MISMATCH", CRIT,
+                f"{trade_date} 券商隐含账户价值调整与账本差 "
+                f"{adjustment_gap:.2f} 元（券商 {broker_residual:.2f} / "
+                f"账本 {float(ledger_value_adjustment):.2f}），超过容忍 "
+                f"{adjustment_tol:.2f}；停止次日发布并核对 QMT 总市值",
+            ))
     return findings
 
 

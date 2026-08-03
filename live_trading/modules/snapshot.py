@@ -23,7 +23,7 @@ def sum_live_fills_amount(fills: list) -> float:
 def build_snapshot(date, positions, cash, prices, bench_close,
                    prev_snapshot, fills_amount, external_flow=0.0,
                    fees=0.0, receivables=0.0, pending_shares=None,
-                   tax_provision=0.0):
+                   tax_provision=0.0, account_value_adjustment=0.0):
     """构建每日快照。
 
     Args:
@@ -77,7 +77,7 @@ def build_snapshot(date, positions, cash, prices, bench_close,
 
     total_value = (
         cash + market_value + float(receivables) + pending_market_value
-        - float(tax_provision)
+        - float(tax_provision) + float(account_value_adjustment)
     )
     for row in position_rows:
         row["weight"] = (row["market_value"] / total_value) if total_value else None
@@ -120,6 +120,7 @@ def build_snapshot(date, positions, cash, prices, bench_close,
         "receivables": float(receivables),
         "pending_market_value": pending_market_value,
         "tax_provision": float(tax_provision),
+        "account_value_adjustment": float(account_value_adjustment),
         "total_value": total_value,
         "daily_return": daily_return,
         "cumulative_return": cumulative_return,

@@ -141,21 +141,30 @@ def to_strategy_positions(qmt_positions: dict) -> dict:
     }
 
 
-def resolve_signal_calendar(calendar, trade_date: str) -> tuple[str, list[str]]:
-    """Validate an open trade date and return its prior signal session."""
+def resolve_signal_calendar(
+    calendar,
+    trade_date: str,
+    next_open_resolver=None,
+) -> tuple[str, list[str]]:
+    """Return the latest local signal session before a validated target."""
     import pandas as pd
 
     sessions = sorted({pd.Timestamp(value) for value in calendar})
     target = pd.Timestamp(trade_date)
-    if target not in sessions:
-        raise SystemExit(f"trade_date {trade_date} is not a trading day")
     prior = [value for value in sessions if value < target]
     if not prior:
         raise SystemExit(f"no trading day before {trade_date} in calendar")
-    return (
-        prior[-1].strftime("%Y-%m-%d"),
-        [value.strftime("%Y-%m-%d") for value in sessions if value < target],
-    )
+    signal_date = prior[-1].strftime("%Y-%m-%d")
+    if next_open_resolver is not None:
+        expected = next_open_resolver(signal_date)
+        if expected != trade_date:
+            raise SystemExit(
+                f"trade_date {trade_date} is not the next open trading day "
+                f"after signal_date {signal_date} (expected {expected})"
+            )
+    return signal_date, [
+        value.strftime("%Y-%m-%d") for value in sessions if value < target
+    ]
 
 
 def get_signal_date_and_scores(config, trade_date: str):
@@ -167,8 +176,12 @@ def get_signal_date_and_scores(config, trade_date: str):
         provider_uri=str(Path(config["data"]["qlib_dir"]).expanduser()),
         region=config["data"]["region"],
     )
+    from live_trading.scripts.next_trade_date import next_open_date
+
     signal_date, trade_dates = resolve_signal_calendar(
-        D.calendar(end_time=trade_date), trade_date,
+        D.calendar(end_time=trade_date),
+        trade_date,
+        next_open_resolver=next_open_date,
     )
 
     from live_trading.modules.signal_generator import SignalGenerator

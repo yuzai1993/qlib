@@ -66,18 +66,26 @@ def test_strategy_positions_preserve_opening_trade_date():
     }
 
 
-def test_signal_date_requires_the_requested_trade_date_to_be_open():
+def test_signal_date_allows_the_next_session_beyond_local_qlib_calendar():
     calendar = ["2026-07-31", "2026-08-03"]
 
     signal_date, dates = publish.resolve_signal_calendar(
-        calendar, "2026-08-03",
+        calendar, "2026-08-04",
     )
 
-    assert signal_date == "2026-07-31"
-    assert dates == ["2026-07-31"]
+    assert signal_date == "2026-08-03"
+    assert dates == ["2026-07-31", "2026-08-03"]
 
-    with pytest.raises(SystemExit, match="not a trading day"):
-        publish.resolve_signal_calendar(calendar, "2026-08-02")
+
+def test_signal_date_requires_target_to_be_next_tushare_open_day():
+    calendar = ["2026-07-31", "2026-08-03"]
+
+    with pytest.raises(SystemExit, match="next open trading day"):
+        publish.resolve_signal_calendar(
+            calendar,
+            "2026-08-05",
+            next_open_resolver=lambda signal_date: "2026-08-04",
+        )
 
 
 def test_account_value_uses_adjustment_without_reducing_spendable_cash():

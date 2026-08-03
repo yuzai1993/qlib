@@ -50,6 +50,7 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
         return {
             "snapshot": latest,
             "cash": recorder.get_cash(),
+            "account_value_adjustment": recorder.get_value_adjustment(),
             "position_count": len(recorder.get_positions()),
             "today": today,
             "stages": stage_status,

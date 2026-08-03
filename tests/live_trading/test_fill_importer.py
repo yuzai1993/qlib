@@ -105,6 +105,31 @@ def test_opening_cash_seeds_only_a_fresh_ledger(tmp_path):
     assert reopened.get_cash() == pytest.approx(490_000.0)
 
 
+def test_opening_value_adjustment_seeds_only_a_fresh_ledger(tmp_path):
+    db_path = tmp_path / "fresh-adjusted.db"
+
+    recorder = LiveRecorder(
+        str(db_path),
+        opening_cash=9_949_714.06,
+        opening_value_adjustment=-681_126.98,
+    )
+    assert recorder.get_cash() == pytest.approx(9_949_714.06)
+    assert recorder.get_value_adjustment() == pytest.approx(-681_126.98)
+
+    reopened = LiveRecorder(
+        str(db_path),
+        opening_cash=9_949_714.06,
+        opening_value_adjustment=-123.0,
+    )
+    assert reopened.get_value_adjustment() == pytest.approx(-681_126.98)
+
+
+def test_missing_opening_value_adjustment_defaults_to_zero(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "legacy.db"), opening_cash=500_000.0)
+
+    assert recorder.get_value_adjustment() == 0.0
+
+
 def test_opening_cash_refuses_to_seed_an_already_used_ledger(tmp_path):
     db_path = tmp_path / "used.db"
     recorder = LiveRecorder(str(db_path))
@@ -112,6 +137,15 @@ def test_opening_cash_refuses_to_seed_an_already_used_ledger(tmp_path):
 
     with pytest.raises(SchemaError, match="opening_cash"):
         LiveRecorder(str(db_path), opening_cash=500_000.0)
+
+
+def test_opening_value_adjustment_refuses_used_ledger_migration(tmp_path):
+    db_path = tmp_path / "used-adjustment.db"
+    recorder = LiveRecorder(str(db_path), opening_cash=500_000.0)
+    recorder.record_batch("used", "2026-07-14", "SIMULATE", 0)
+
+    with pytest.raises(SchemaError, match="opening_value_adjustment"):
+        LiveRecorder(str(db_path), opening_value_adjustment=-100.0)
 
 
 def test_batch_ledger_refuses_real_account_environment(tmp_path):
@@ -743,6 +777,9 @@ def test_import_broker_snapshot_stores_and_archives(env):
     account = recorder.get_broker_account_snapshot("2026-07-14")
     assert account["available_cash"] == pytest.approx(123456.78)
     assert recorder.get_broker_positions("2026-07-14") == {"688223.SH": 244500}
+    assert recorder.get_broker_position_market_values("2026-07-14") == {
+        "688223.SH": pytest.approx(244500 * 4.14),
+    }
     assert not list((bridge_root / "outbound").glob("account_*"))
     assert len(list((bridge_root / "archive").glob("account_*"))) == 2
 
@@ -763,6 +800,20 @@ def test_import_broker_snapshot_is_idempotent_and_overwrites(env):
     assert recorder.get_broker_account_snapshot("2026-07-14")["available_cash"] \
         == pytest.approx(999.0)
     assert recorder.get_broker_positions("2026-07-14") == {"600000.SH": 100}
+
+
+def test_latest_empty_broker_snapshot_does_not_reuse_older_positions(env):
+    _, recorder, _ = env
+    later_batch = "20260714_csi300_topk10_002"
+    account = _snapshot_rows()[0]
+    position = _snapshot_rows()[1]
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    recorder.save_broker_snapshot(BATCH_ID, account, [position])
+    recorder.record_batch(later_batch, "2026-07-14", "LIVE", 0)
+    recorder.save_broker_snapshot(later_batch, account, [])
+
+    assert recorder.get_broker_positions("2026-07-14") == {}
+    assert recorder.get_broker_position_market_values("2026-07-14") == {}
 
 
 def test_broker_snapshot_without_done_is_not_imported(env):

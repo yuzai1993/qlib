@@ -53,7 +53,10 @@ def test_load_new_csi1000_paper_config():
 
     assert cfg["data"]["instruments"] == "csi1000"
     assert cfg["data"]["benchmark"] == "SH000852"
-    assert cfg["account"]["opening_cash"] == pytest.approx(500_000.0)
+    assert cfg["account"]["opening_cash"] == pytest.approx(9_949_714.06)
+    assert cfg["account"]["opening_value_adjustment"] == pytest.approx(
+        -681_126.98
+    )
     assert cfg["handler"]["class"] == "Alpha158Technical"
     assert cfg["handler"]["feature_groups"] == ["range"]
     assert cfg["strategy"] == {
@@ -117,6 +120,66 @@ def test_simulation_config_safety_fields_fail_closed(tmp_path, change, message):
 
     with pytest.raises(ValueError, match=message):
         load_live_config(path, project_root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    "opening_cash,adjustment,message",
+    [
+        (500_000.0, float("inf"), "opening_value_adjustment"),
+        (500_000.0, True, "opening_value_adjustment"),
+        (500_000.0, -500_000.0, "economic opening value"),
+        (500_000.0, -600_000.0, "economic opening value"),
+    ],
+)
+def test_simulation_account_adjustment_fails_closed(
+    tmp_path, opening_cash, adjustment, message,
+):
+    import yaml
+
+    config = {
+        "account": {
+            "opening_cash": opening_cash,
+            "opening_value_adjustment": adjustment,
+        },
+        "strategy": {"topk": 30, "initial_buy_count": 2},
+        "live": {
+            "strategy_id": "paper",
+            "broker_environment": "SIMULATION",
+            "allow_real_money": False,
+            "after_hours_price_type": 49,
+        },
+    }
+    path = tmp_path / "paper.yaml"
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_live_config(path, project_root=tmp_path)
+
+
+def test_simulation_account_accepts_negative_adjustment_with_positive_nav(tmp_path):
+    import yaml
+
+    config = {
+        "account": {
+            "opening_cash": 9_949_714.06,
+            "opening_value_adjustment": -681_126.98,
+        },
+        "strategy": {"topk": 30, "initial_buy_count": 2},
+        "live": {
+            "strategy_id": "paper",
+            "broker_environment": "SIMULATION",
+            "allow_real_money": False,
+            "after_hours_price_type": 49,
+        },
+    }
+    path = tmp_path / "paper.yaml"
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    loaded = load_live_config(path, project_root=tmp_path)
+
+    assert loaded["account"]["opening_value_adjustment"] == pytest.approx(
+        -681_126.98
+    )
 
 
 def _write_baseline_config(tmp_path, baseline):

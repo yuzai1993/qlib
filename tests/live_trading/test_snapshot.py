@@ -166,6 +166,18 @@ def test_cash_only_account():
     assert daily["position_count"] == 0
 
 
+def test_account_value_adjustment_changes_nav_not_cash():
+    daily, rows, missing = build_snapshot(
+        "2026-08-03", {}, 9_949_714.06, {}, 5000.0, None, 0.0,
+        account_value_adjustment=-681_126.98,
+    )
+
+    assert rows == [] and missing == []
+    assert daily["cash"] == pytest.approx(9_949_714.06)
+    assert daily["account_value_adjustment"] == pytest.approx(-681_126.98)
+    assert daily["total_value"] == pytest.approx(9_268_587.08)
+
+
 def test_sum_live_fills_amount():
     fills = [
         {"mode": "LIVE", "status": "FILLED", "filled_qty": 100, "avg_price": 10.0},

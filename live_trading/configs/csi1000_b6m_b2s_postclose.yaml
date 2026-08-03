@@ -8,7 +8,10 @@ data:
   benchmark: "SH000852"
 
 account:
-  opening_cash: 500000.0
+  # QMT 可用资金；下单现金口径不扣减下方的非持仓价值调整。
+  opening_cash: 9949714.06
+  # QMT 空仓后的总市值仍为负，令经济净值精确等于 9268587.08。
+  opening_value_adjustment: -681126.98
 
 provenance:
   repository: "/Users/yuxianqi/Project/qlib_exp"

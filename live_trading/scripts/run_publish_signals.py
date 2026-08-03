@@ -42,6 +42,23 @@ logger = logging.getLogger("live_trading.publish")
 CONFIGS_DIR = PROJECT_ROOT / "live_trading" / "configs"
 
 
+def calculate_account_value(
+    cash: float,
+    positions: dict,
+    prices: dict,
+    value_adjustment: float = 0.0,
+) -> float:
+    """Economic NAV used for target sizing; cash remains spendable cash."""
+    return (
+        float(cash)
+        + float(value_adjustment)
+        + sum(
+            p["shares"] * prices.get(instrument, 0.0)
+            for instrument, p in positions.items()
+        )
+    )
+
+
 def get_price_instruments(scores, current_positions: dict, topk: int) -> list:
     """Return the deterministic candidate/holding universe needing prices."""
     candidates = stable_rank_scores(scores).head(topk * 2).index
@@ -195,6 +212,9 @@ def main():
         str(PROJECT_ROOT / config["storage"]["db_path"]),
         fees=config.get("fees"),
         opening_cash=config.get("account", {}).get("opening_cash"),
+        opening_value_adjustment=config.get("account", {}).get(
+            "opening_value_adjustment"
+        ),
     )
 
     if mode == "LIVE":
@@ -226,9 +246,11 @@ def main():
 
     # 4. TopkDropout 意图
     from live_trading.modules.order_manager import OrderManager
-    total_value = cash + sum(
-        p["shares"] * prev_close.get(inst, 0)
-        for inst, p in current_positions.items()
+    total_value = calculate_account_value(
+        cash,
+        current_positions,
+        prev_close,
+        recorder.get_value_adjustment(),
     )
     intents = OrderManager(config).generate_orders(
         scores,

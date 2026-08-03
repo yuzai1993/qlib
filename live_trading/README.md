@@ -2,7 +2,7 @@
 
 当前活动候选系统是 `csi1000_b6m_b2s_postclose`。它使用冻结的 B6-M seed 4000、CSI1000、Top30/Drop2/Hold20，以及每天 Top2 的渐进建仓；QMT 仅在盘后定价时段使用 `prType=49`。
 
-Windows QMT 模拟策略、SMB 桥接和 Server酱通知已经完成基础连接验收。实际 crontab、正确 opening cash 的首次账本初始化、`LIVE_OK` 和后续晋级仍是显式部署步骤。旧 `csi300_topk10_live.yaml` 仅作历史材料，不应再调度。
+Windows QMT 模拟策略、SMB 桥接和 Server酱通知已经完成基础连接验收。`LIVE_OK` 和后续晋级仍是显式步骤。旧 `csi300_topk10_live.yaml` 仅作历史材料，不应再调度。
 
 ## 固定契约
 
@@ -11,7 +11,7 @@ Windows QMT 模拟策略、SMB 桥接和 Server酱通知已经完成基础连接
 | 活动配置 | `live_trading/configs/csi1000_b6m_b2s_postclose.yaml` |
 | 对照配置 | `backtest/configs/csi1000_b6m_b2s_postclose_parity.yaml` |
 | 股票池 / benchmark | CSI1000 / `SH000852` |
-| 初始资金 | 500,000 元，空仓 |
+| 账户口径 | 可用资金 9,949,714.06 元；账户价值调整 -681,126.98 元；经济净值 9,268,587.08 元；普通股票空仓 |
 | 策略 | Top30 / Drop2 / initial Top2 / Hold20 / risk 0.95 |
 | 研究策略基线 | `qlib_exp/backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml` |
 | 模型 | B6-M seed 4000，SHA-256 `368a503c...e6325` |
@@ -24,13 +24,13 @@ Windows QMT 模拟策略、SMB 桥接和 Server酱通知已经完成基础连接
 ## 文件与数据流
 
 ```text
-T 日收盘数据 → 21:00 生成 T 日预测 → 发布 T+1 protocol-v2 批次
-                                           │
-                                           ▼
-Windows QMT timer 15:05–15:31 → prType=49 → fills/account 回执
-                                           │
-                                           ▼
-Mac 15:32 导入 → 15:35 对账、快照、日报
+T 日 20:00 导入/对账 → 更新收盘数据 → 日报
+                                  │
+                                  ▼
+T 日 21:30 生成预测 → 发布 T+1 protocol-v2 批次 → 22:30 完整性检查
+                                  │
+                                  ▼
+T+1 日 Windows QMT 15:05–15:31 → prType=49 → fills/account 回执
 ```
 
 BUY 计划只携带 `target_value`，计划股数为 0。QMT 在卖出后固定等待四分钟，再读取实际现金和官方收盘价，向下取整为整手并预留费用。SELL 计划携带账本股数。批次最多接受 40 单；即使当天没有订单，也会发布 header-only 批次并得到空回执文件；`planned=0, terminal=0, missing=0` 是正常终态，不是漏跑。
@@ -59,7 +59,7 @@ openssl dgst -sha256 \
 
 ```bash
 export TUSHARE_TOKEN='...'
-export QMT_SIM_ACCOUNT_ID='新模拟账户ID'
+export QMT_SIM_ACCOUNT_ID='当前模拟账户ID'
 export LIVE_CONFIG_ID='csi1000_b6m_b2s_postclose'
 export LIVE_RUN_MODE='SIMULATE'
 ```
@@ -99,7 +99,7 @@ test -w /Volumes/qmt_bridge/inbox
 
 一手阶段通过后，人工把 QMT 本地副本的 `MAX_ORDER_QUANTITY` 改为 `0`，才解除一手上限。其余模拟账户门禁和每日 `LIVE_OK` 均保留。系统不会自动晋级。
 
-## 调度模板（未安装）
+## 调度
 
 [crontab.csi1000_postclose.example](crontab.csi1000_postclose.example) 是唯一的新调度模板：
 
@@ -111,7 +111,7 @@ test -w /Volumes/qmt_bridge/inbox
 
 所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。它们使用原子目录锁防止同类任务并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动补发，22:30 告警后必须先检查原因再人工恢复。
 
-不要在本仓库内自动执行 `crontab` 修改。安装前先检查现有任务，确保旧 CSI300 条目已停用且没有同一时间的重复任务。
+部署或迁移机器时先检查现有任务，确保旧 CSI300 条目已停用且没有同一时间的重复任务，再使用该模板恢复调度。
 
 ## 日常命令
 
@@ -152,4 +152,6 @@ bash live_trading/run_monitor_cron.sh evening csi1000_b6m_b2s_postclose
 - 15:28 后不再提交新单；15:30 将未完成订单写为终态；
 - 回滚：停用新 cron、停止 QMT strategy ID、保留 SQLite 与 bridge archive。不要自动恢复旧 CSI300 调度。
 
-发生账本/券商持仓差异时，先停止下一日 LIVE 发布并按 QMT 委托、成交和账户快照核对。任何人工账本修正都应使用现有 cash-flow/position 管理入口留下审计记录。
+发生账本/券商持仓差异时，先停止下一日 LIVE 发布并按 QMT 委托、成交和账户快照核对。当前模拟账户的 `opening_value_adjustment=-681126.98` 只表示 QMT 没有普通 POSITION 行的负总市值：它计入净值与下单目标预算，但不减少可用现金，也不计作出入金或收益。对账会比较“QMT 总市值减普通持仓市值”的残差；残差变化会触发 `BROKER_VALUE_ADJUSTMENT_MISMATCH`。
+
+切换到另一个模拟或真实账户时必须使用新的账本文件，并分别录入该账户的可用资金和价值调整（通常为 0）；不能复用这笔 `-681126.98`，也不能通过现金流水伪造它。任何人工账本修正都应使用有审计记录的管理入口。

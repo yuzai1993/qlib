@@ -42,6 +42,7 @@ class LiveRecorder:
         db_path: str,
         fees: dict = None,
         opening_cash: float | None = None,
+        opening_value_adjustment: float | None = None,
     ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -52,6 +53,7 @@ class LiveRecorder:
         self._backup_legacy_db()
         self._init_db()
         self._seed_opening_cash(opening_cash)
+        self._seed_opening_value_adjustment(opening_value_adjustment)
 
     def _seed_opening_cash(self, opening_cash: float | None) -> None:
         if opening_cash is None:
@@ -80,6 +82,39 @@ class LiveRecorder:
             conn.execute(
                 "INSERT INTO account_state (key, value) VALUES ('cash', ?)",
                 (float(opening_cash),),
+            )
+
+    def _seed_opening_value_adjustment(
+        self, opening_value_adjustment: float | None,
+    ) -> None:
+        if opening_value_adjustment is None:
+            return
+        if (
+            isinstance(opening_value_adjustment, bool)
+            or not isinstance(opening_value_adjustment, (int, float))
+            or not math.isfinite(opening_value_adjustment)
+        ):
+            raise ValueError(
+                "opening_value_adjustment must be a finite number"
+            )
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT value FROM account_state WHERE key='value_adjustment'"
+            ).fetchone()
+            if existing is not None:
+                return
+            used = sum(
+                conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                for table in ("batches", "fills", "positions")
+            )
+            if used:
+                raise SchemaError(
+                    "opening_value_adjustment cannot seed an already-used live ledger"
+                )
+            conn.execute(
+                "INSERT INTO account_state (key, value) "
+                "VALUES ('value_adjustment', ?)",
+                (float(opening_value_adjustment),),
             )
 
     def _backup_legacy_db(self) -> None:
@@ -1328,6 +1363,13 @@ class LiveRecorder:
             ).fetchone()
             return float(row["value"]) if row else 0.0
 
+    def get_value_adjustment(self) -> float:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT value FROM account_state WHERE key='value_adjustment'"
+            ).fetchone()
+            return float(row["value"]) if row else 0.0
+
     def list_batches(self, limit: int = 10) -> list:
         with self._conn() as conn:
             rows = conn.execute(
@@ -1550,22 +1592,42 @@ class LiveRecorder:
             ).fetchone()
             return dict(row) if row else None
 
+    @staticmethod
+    def _latest_broker_snapshot_batch_id(conn, trade_date: str):
+        row = conn.execute(
+            "SELECT batch_id FROM ("
+            "SELECT batch_id FROM broker_account_snapshot WHERE trade_date=? "
+            "UNION SELECT batch_id FROM broker_position_snapshot WHERE trade_date=?"
+            ") ORDER BY batch_id DESC LIMIT 1",
+            (trade_date, trade_date),
+        ).fetchone()
+        return row["batch_id"] if row else None
+
     def get_broker_positions(self, trade_date: str) -> dict:
         """当日最新批次的券商持仓 {stock_code: shares}；无快照则空 dict。"""
         with self._conn() as conn:
-            batch = conn.execute(
-                "SELECT batch_id FROM broker_position_snapshot WHERE trade_date=? "
-                "ORDER BY batch_id DESC LIMIT 1",
-                (trade_date,),
-            ).fetchone()
-            if batch is None:
+            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if batch_id is None:
                 return {}
             rows = conn.execute(
                 "SELECT stock_code, shares FROM broker_position_snapshot "
                 "WHERE batch_id=?",
-                (batch["batch_id"],),
+                (batch_id,),
             ).fetchall()
             return {r["stock_code"]: r["shares"] for r in rows}
+
+    def get_broker_position_market_values(self, trade_date: str) -> dict:
+        """当日最新券商快照的逐仓市值；缺失值保留为 None。"""
+        with self._conn() as conn:
+            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if batch_id is None:
+                return {}
+            rows = conn.execute(
+                "SELECT stock_code, market_value FROM broker_position_snapshot "
+                "WHERE batch_id=?",
+                (batch_id,),
+            ).fetchall()
+            return {r["stock_code"]: r["market_value"] for r in rows}
 
 
 class FillImporter:

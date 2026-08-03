@@ -53,6 +53,19 @@ def test_new_csi1000_live_and_parity_configs_match():
     validate_backtest_parity(live, backtest)
 
 
+def test_parity_uses_economic_opening_value_after_account_adjustment():
+    live, backtest = _new_configs()
+    live = copy.deepcopy(live)
+    backtest = copy.deepcopy(backtest)
+    live["account"] = {
+        "opening_cash": 9_949_714.06,
+        "opening_value_adjustment": -681_126.98,
+    }
+    backtest["backtest"]["account"] = 9_268_587.08
+
+    validate_backtest_parity(live, backtest)
+
+
 @pytest.mark.parametrize(
     "side,path,value,reported_path",
     [
@@ -103,6 +116,7 @@ def test_live_config_points_to_designated_backtest():
         ("strategy.initial_buy_count", 3, "strategy.initial_buy_count"),
         ("handler.feature_groups", ["momentum"], "handler.feature_groups"),
         ("account.opening_cash", 600_000.0, "backtest.account"),
+        ("account.opening_value_adjustment", 1.0, "backtest.account"),
     ],
 )
 def test_new_parity_gate_reports_initialization_and_handler_drift(

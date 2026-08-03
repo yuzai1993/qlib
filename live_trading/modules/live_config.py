@@ -68,6 +68,22 @@ def _validate_simulation_config(config: dict) -> None:
     ):
         raise ValueError("account.opening_cash must be a positive number")
 
+    opening_value_adjustment = config.get("account", {}).get(
+        "opening_value_adjustment", 0.0,
+    )
+    if (
+        isinstance(opening_value_adjustment, bool)
+        or not isinstance(opening_value_adjustment, (int, float))
+        or not math.isfinite(opening_value_adjustment)
+    ):
+        raise ValueError(
+            "account.opening_value_adjustment must be a finite number"
+        )
+    if opening_cash + opening_value_adjustment <= 0:
+        raise ValueError(
+            "account economic opening value must be positive"
+        )
+
     strategy = config.get("strategy", {})
     topk = strategy.get("topk")
     initial_buy_count = strategy.get("initial_buy_count")

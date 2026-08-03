@@ -57,7 +57,7 @@ strategy:
     forbid_all_trade_at_limit: false
 
 backtest:
-  account: 500000.0
+  account: 9268587.08
   exchange_kwargs:
     freq: "day"
     deal_price: "close"

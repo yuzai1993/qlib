@@ -146,6 +146,11 @@ def run_postmarket(date, recorder, store, config) -> list:
             recorder.get_cash(),
             cash_tolerance=thresholds["cash_tolerance"],
             check_cash=bool(reconcile_cfg.get("cash_check", True)),
+            ledger_value_adjustment=recorder.get_value_adjustment(),
+            broker_position_market_values=(
+                recorder.get_broker_position_market_values(date)
+            ),
+            value_tolerance=thresholds["cash_tolerance"],
         )
     return findings
 
@@ -273,6 +278,7 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
         receivables=corporate["receivables"],
         pending_shares=corporate["pending_shares"],
         tax_provision=corporate["tax_provision"],
+        account_value_adjustment=recorder.get_value_adjustment(),
     )
     store.upsert_daily_snapshot(daily_row)
     store.upsert_position_snapshots(date, position_rows)
@@ -308,10 +314,17 @@ def _fmt_pct(v):
 def _daily_report_md(date, snap, fills, findings, corp_applied=None) -> str:
     traded = [f for f in fills if f["mode"] == "LIVE"
               and f["status"] in {"FILLED", "PARTIAL"}]
+    account_details = [
+        f"现金 {snap['cash']:,.2f}",
+        f"应收 {snap.get('receivables', 0):,.2f}",
+        f"红利税准备 {snap.get('tax_provision', 0):,.2f}",
+    ]
+    if snap.get("account_value_adjustment"):
+        account_details.append(
+            f"账户价值调整 {snap['account_value_adjustment']:+,.2f}"
+        )
     lines = [
-        f"**总资产** {snap['total_value']:,.2f}（现金 {snap['cash']:,.2f}，"
-        f"应收 {snap.get('receivables', 0):,.2f}，"
-        f"红利税准备 {snap.get('tax_provision', 0):,.2f}）",
+        f"**总资产** {snap['total_value']:,.2f}（{'，'.join(account_details)}）",
         f"**日收益** {_fmt_pct(snap['daily_return'])}"
         f"　累计 {_fmt_pct(snap['cumulative_return'])}"
         f"　超额 {_fmt_pct(snap['excess_return'])}",
@@ -373,6 +386,9 @@ def main():
         db_path,
         fees=fees_from_config(config),
         opening_cash=config.get("account", {}).get("opening_cash"),
+        opening_value_adjustment=config.get("account", {}).get(
+            "opening_value_adjustment"
+        ),
     )
     store = MonitorStore(db_path)
     notifier = create_notifier(config.get("monitor", {}))

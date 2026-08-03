@@ -53,7 +53,10 @@ def test_load_new_csi1000_paper_config():
 
     assert cfg["data"]["instruments"] == "csi1000"
     assert cfg["data"]["benchmark"] == "SH000852"
-    assert cfg["account"]["opening_cash"] == pytest.approx(500_000.0)
+    assert cfg["account"]["opening_cash"] == pytest.approx(9_949_714.06)
+    assert cfg["account"]["opening_value_adjustment"] == pytest.approx(
+        -681_126.98
+    )
     assert cfg["handler"]["class"] == "Alpha158Technical"
     assert cfg["handler"]["feature_groups"] == ["range"]
     assert cfg["strategy"] == {

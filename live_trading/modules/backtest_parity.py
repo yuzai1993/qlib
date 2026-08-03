@@ -45,10 +45,14 @@ def validate_backtest_parity(live: dict, backtest: dict) -> None:
         + float(live_fees.get("transfer_fee_rate", 0.0))
     )
     sell_cost = buy_cost + float(live_fees.get("stamp_duty_rate", 0.0))
-    opening_account = _optional(live, "account.opening_cash")
-    if opening_account is None:
+    opening_cash = _optional(live, "account.opening_cash")
+    if opening_cash is None:
         opening_account = _get(
             live, "monitor.performance_baseline.opening_total_value"
+        )
+    else:
+        opening_account = float(opening_cash) + float(
+            _optional(live, "account.opening_value_adjustment") or 0.0
         )
 
     comparisons = [

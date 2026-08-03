@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.yuxianqi.qlib-live-monitor</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/yuxianqi/Project/qlib/live_trading/run_web_service.sh</string>
+        <string>csi1000_b6m_b2s_postclose</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/yuxianqi/Project/qlib</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/anaconda3/envs/qlib/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/csi1000_b6m_b2s_postclose_web_service.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/csi1000_b6m_b2s_postclose_web_service.stderr.log</string>
+</dict>
+</plist>

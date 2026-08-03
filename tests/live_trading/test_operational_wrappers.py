@@ -3,6 +3,7 @@
 from datetime import datetime
 import json
 import os
+import plistlib
 import shutil
 import sqlite3
 import subprocess
@@ -171,6 +172,78 @@ def test_scheduler_cron_wrapper_loads_env_and_forwards_config(
     assert loaded == "loaded"
     assert script_path.endswith("live_trading/scripts/run_scheduler.py")
     assert config_id == "custom-paper"
+
+
+def test_web_service_wrapper_loads_env_and_forwards_config(
+    tmp_path, monkeypatch,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_web_service.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+
+    trace = tmp_path / "web-wrapper-trace.txt"
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\n"
+        "printf '%s|%s|%s\\n' \"$WEB_ENV_TEST\" \"$1\" \"$3\" "
+        "> \"$WEB_WRAPPER_TRACE\"\n",
+    )
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".qlib_live_env").write_text(
+        "export WEB_ENV_TEST='loaded'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("QLIB_LIVE_PYTHON", str(fake_python))
+    monkeypatch.setenv("WEB_WRAPPER_TRACE", str(trace))
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "custom-paper"],
+        cwd=root,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    loaded, script_path, config_id = trace.read_text(
+        encoding="utf-8"
+    ).strip().split("|")
+    assert loaded == "loaded"
+    assert script_path.endswith("live_trading/scripts/run_web.py")
+    assert config_id == "custom-paper"
+
+
+def test_monitor_launch_agent_owns_loopback_service():
+    path = (
+        REPO_ROOT / "live_trading/launchd/"
+        "com.yuxianqi.qlib-live-monitor.plist"
+    )
+    with path.open("rb") as handle:
+        plist = plistlib.load(handle)
+
+    assert plist["Label"] == "com.yuxianqi.qlib-live-monitor"
+    assert plist["RunAtLoad"] is True
+    assert plist["KeepAlive"] is True
+    assert plist["ThrottleInterval"] == 10
+    assert plist["ProcessType"] == "Background"
+    assert plist["WorkingDirectory"] == "/Users/yuxianqi/Project/qlib"
+    assert plist["ProgramArguments"] == [
+        "/bin/bash",
+        "/Users/yuxianqi/Project/qlib/live_trading/run_web_service.sh",
+        "csi1000_b6m_b2s_postclose",
+    ]
+    assert plist["StandardOutPath"].endswith(
+        "csi1000_b6m_b2s_postclose_web_service.stdout.log"
+    )
+    assert plist["StandardErrorPath"].endswith(
+        "csi1000_b6m_b2s_postclose_web_service.stderr.log"
+    )
 
 
 def _write_executable(path: Path, text: str) -> None:

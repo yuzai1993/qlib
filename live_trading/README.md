@@ -122,6 +122,27 @@ crontab live_trading/crontab.csi1000_postclose.example
 crontab -l
 ```
 
+## 监控服务
+
+只读 Web 监控由 macOS `launchd` 常驻托管，登录后自动启动，异常退出后自动拉起。服务只监听本机
+`127.0.0.1:8081`，不会直接暴露给局域网。仓库内的受控模板是
+`live_trading/launchd/com.yuxianqi.qlib-live-monitor.plist`，部署到
+`~/Library/LaunchAgents/` 后由 `launchctl` 加载。
+
+```bash
+# 服务状态与健康检查
+launchctl print gui/$(id -u)/com.yuxianqi.qlib-live-monitor
+curl --fail http://127.0.0.1:8081/api/overview
+
+# 本机浏览器访问
+open http://127.0.0.1:8081
+```
+
+标准输出与错误日志分别写入
+`live_trading/logs/csi1000_b6m_b2s_postclose_web_service.stdout.log` 和
+`live_trading/logs/csi1000_b6m_b2s_postclose_web_service.stderr.log`。服务入口
+`run_web_service.sh` 会加载 `~/.qlib_live_env`，与 cron 使用同一套运行环境和活动配置。
+
 ## 日常命令
 
 ```bash

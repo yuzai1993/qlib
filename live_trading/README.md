@@ -132,7 +132,7 @@ crontab -l
 ```bash
 # 服务状态与健康检查
 launchctl print gui/$(id -u)/com.yuxianqi.qlib-live-monitor
-curl --fail http://127.0.0.1:8081/api/overview
+curl --noproxy 127.0.0.1 --fail http://127.0.0.1:8081/api/overview
 
 # 本机浏览器访问
 open http://127.0.0.1:8081

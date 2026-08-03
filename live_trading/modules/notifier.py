@@ -52,7 +52,7 @@ class ServerChanNotifier(Notifier):
                 return False
             return True
         except Exception as e:
-            logger.error("serverchan send failed: %s", e)
+            logger.error("serverchan send failed: %s", type(e).__name__)
             return False
 
 
@@ -83,7 +83,7 @@ class PushPlusNotifier(Notifier):
                 return False
             return True
         except Exception as e:
-            logger.error("pushplus send failed: %s", e)
+            logger.error("pushplus send failed: %s", type(e).__name__)
             return False
 
 

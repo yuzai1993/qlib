@@ -35,7 +35,7 @@ QMT 只有在新批次为 LIVE、账户环境为 SIMULATION、账户 ID 匹配�
 
 ## 监控基准
 
-底层数据配置 `data.benchmark` 与 `monitor.benchmark` 已是 `SH000852`，无需迁移数据库或重算历史快照。本次只将前端净值图的硬编码图例与 series 名称从“沪深300”改为“中证1000”，并增加回归测试，防止展示名称再次与配置脱节。
+底层数据配置 `data.benchmark` 与 `monitor.benchmark` 已是 `SH000852`，无需迁移数据库或重算历史快照。本次新增展示配置 `monitor.benchmark_name=中证1000`，由监控 API 返回并供前端净值图的图例与 series 使用，避免展示名称再次与底层配置脱节。
 
 ## 测试
 

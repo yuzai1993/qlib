@@ -30,7 +30,7 @@
 **Interfaces:**
 - Consumes: existing `LiveRecorder.get_batch(batch_id: str)` and the `batches`, `fills` tables.
 - Produces: `LiveRecorder.promote_shadow_batch(source_batch_id: str, replacement_batch_id: str) -> bool`.
-- CLI: `link_shadow_promotion.py --config ID --source-batch ID --replacement-batch ID`.
+- CLI: `link_shadow_promotion.py --db-path PATH --source-batch ID --replacement-batch ID`.
 
 - [ ] **Step 1: Write the failing happy-path test**
 
@@ -80,7 +80,7 @@ Expected: all tests pass.
 
 - [ ] **Step 6: Add the narrow ledger-link CLI**
 
-Load the named standalone live config, open its configured SQLite database with `LiveRecorder`, call `promote_shadow_batch`, print a JSON result containing source, replacement and whether the row changed, and return nonzero on `SchemaError`. The CLI performs no SMB operation and accepts no mode override.
+Open the explicitly named SQLite database with `LiveRecorder`, call `promote_shadow_batch`, print a JSON result containing source, replacement and whether the row changed, and return nonzero on `SchemaError`. The CLI performs no SMB operation and accepts no mode override.
 
 - [ ] **Step 7: Commit Task 1**
 
@@ -149,44 +149,40 @@ git commit -m "feat(live): retire claimed shadow batches safely"
 ### Task 3: CSI1000 Monitor Presentation
 
 **Files:**
+- Modify: `live_trading/configs/csi1000_b6m_b2s_postclose.yaml`
+- Modify: `live_trading/web/api.py`
 - Modify: `live_trading/web/static/js/app.js`
-- Modify: `tests/live_trading/test_repository_boundaries.py`
+- Modify: `tests/live_trading/test_live_config.py`
+- Modify: `tests/live_trading/test_monitor_web_api.py`
 
 **Interfaces:**
 - Consumes: existing monitor snapshots whose benchmark values already come from `monitor.benchmark=SH000852`.
-- Produces: ECharts legend and benchmark series named `中证1000`.
+- Produces: API field `benchmark_name` and ECharts legend/series named `中证1000`.
 
-- [ ] **Step 1: Write the failing static asset test**
+- [ ] **Step 1: Write failing config and API behavior tests**
 
-```python
-def test_monitor_labels_csi1000_benchmark():
-    script = (REPO_ROOT / "live_trading/web/static/js/app.js").read_text(
-        encoding="utf-8"
-    )
-    assert "中证1000" in script
-    assert "沪深300" not in script
-```
+Assert the production CSI1000 config loads `monitor.benchmark_name == "中证1000"`, and `/api/overview` returns that value from a real temporary monitor app.
 
 - [ ] **Step 2: Run the test and verify RED**
 
-Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/test_repository_boundaries.py::test_monitor_labels_csi1000_benchmark -q`
+Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/test_live_config.py::test_load_new_csi1000_paper_config tests/live_trading/test_monitor_web_api.py::test_overview_exposes_active_account_and_batch -q`
 
-Expected: FAIL because `沪深300` remains and `中证1000` is absent.
+Expected: FAIL because the config and overview response lack `benchmark_name`.
 
 - [ ] **Step 3: Make the minimal presentation change**
 
-Replace both ECharts occurrences of `沪深300` with `中证1000`. Do not change snapshot calculations or historical data.
+Add `monitor.benchmark_name: "中证1000"`, expose it from `/api/overview`, and pass it into `drawNavChart` for both the legend and series name. Do not change snapshot calculations or historical data.
 
 - [ ] **Step 4: Verify GREEN**
 
-Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/test_repository_boundaries.py tests/live_trading/test_monitor_web_api.py tests/live_trading/test_snapshot.py -q`
+Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/test_live_config.py tests/live_trading/test_monitor_web_api.py tests/live_trading/test_snapshot.py -q`
 
 Expected: all tests pass.
 
 - [ ] **Step 5: Commit Task 3**
 
 ```bash
-git add live_trading/web/static/js/app.js tests/live_trading/test_repository_boundaries.py
+git add live_trading/configs/csi1000_b6m_b2s_postclose.yaml live_trading/web/api.py live_trading/web/static/js/app.js tests/live_trading/test_live_config.py tests/live_trading/test_monitor_web_api.py
 git commit -m "fix(live): label monitor benchmark as csi1000"
 ```
 
@@ -244,7 +240,7 @@ Run:
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/link_shadow_promotion.py \
-  --config csi1000_b6m_b2s_postclose \
+  --db-path live_trading/data/csi1000_b6m_b2s_postclose.db \
   --source-batch 20260805_csi1000_b6m_b2s_postclose_001 \
   --replacement-batch 20260805_csi1000_b6m_b2s_postclose_002
 ```

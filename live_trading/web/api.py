@@ -57,6 +57,9 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             "recent_alerts": alerts,
             "strategy_id": config["live"].get("strategy_id", ""),
             "mode": config["live"].get("default_mode", ""),
+            "benchmark_name": config.get("monitor", {}).get(
+                "benchmark_name", "基准",
+            ),
             "account_id": active.get("account_id", "") if active else "",
             "active_batch_id": active.get("batch_id", "") if active else "",
         }

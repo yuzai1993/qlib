@@ -146,6 +146,7 @@ def test_overview_exposes_active_account_and_batch(client):
     data = client.get("/api/overview").json()
     assert data["account_id"] == "88813528"
     assert data["active_batch_id"] == BATCH
+    assert data["mode"] == "LIVE"
     assert data["benchmark_name"] == "中证1000"
 
 

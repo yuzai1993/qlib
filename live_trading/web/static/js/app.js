@@ -91,10 +91,10 @@ async function renderDashboard() {
     }
 
     content.innerHTML = html;
-    drawNavChart(nav);
+    drawNavChart(nav, ov.benchmark_name || '基准');
 }
 
-function drawNavChart(nav) {
+function drawNavChart(nav, benchmarkName) {
     const el = document.getElementById('nav-chart');
     if (!el || !nav.length) return;
     const chart = echarts.init(el, 'dark');
@@ -105,14 +105,14 @@ function drawNavChart(nav) {
     chart.setOption({
         backgroundColor: 'transparent',
         tooltip: { trigger: 'axis', valueFormatter: v => v == null ? '—' : v + '%' },
-        legend: { data: ['账户', '沪深300'] },
+        legend: { data: ['账户', benchmarkName] },
         grid: { left: 50, right: 20, top: 40, bottom: 30 },
         xAxis: { type: 'category', data: dates },
         yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
         series: [
             { name: '账户', type: 'line', data: acct, showSymbol: false,
               lineStyle: { width: 2 } },
-            { name: '沪深300', type: 'line', data: bench, showSymbol: false,
+            { name: benchmarkName, type: 'line', data: bench, showSymbol: false,
               lineStyle: { width: 1.5, type: 'dashed' } },
         ],
     });

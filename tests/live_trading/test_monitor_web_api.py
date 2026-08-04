@@ -121,6 +121,7 @@ def client(tmp_path):
     config = {
         "live": {"bridge_root": str(tmp_path / "bridge"),
                  "strategy_id": "csi300_topk10", "default_mode": "SIMULATE"},
+        "monitor": {"benchmark_name": "中证1000"},
         "storage": {"db_path": str(db)},
     }
     app = create_app(config, Path("/"))
@@ -145,6 +146,8 @@ def test_overview_exposes_active_account_and_batch(client):
     data = client.get("/api/overview").json()
     assert data["account_id"] == "88813528"
     assert data["active_batch_id"] == BATCH
+    assert data["mode"] == "LIVE"
+    assert data["benchmark_name"] == "中证1000"
 
 
 def test_nav(client):

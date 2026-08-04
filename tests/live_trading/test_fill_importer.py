@@ -345,6 +345,78 @@ def test_supersede_batch_rejects_invalid_or_conflicting_relationships(env):
         recorder.supersede_batch(old, alternate)
 
 
+def test_promote_shadow_batch_marks_unexecuted_same_session_replacement(env):
+    _, recorder, _ = env
+    old = "20260805_csi1000_b6m_b2s_postclose_001"
+    new = "20260805_csi1000_b6m_b2s_postclose_002"
+    recorder.record_batch(old, "2026-08-05", "SIMULATE", 2)
+    recorder.record_batch(new, "2026-08-05", "LIVE", 2)
+
+    assert recorder.promote_shadow_batch(old, new)
+    assert not recorder.promote_shadow_batch(old, new)
+    assert recorder.get_batch(old)["superseded_by"] == new
+
+
+def test_promote_shadow_batch_rejects_wrong_modes_date_or_strategy(env):
+    _, recorder, _ = env
+    recorder.record_batch("20260805_same_001", "2026-08-05", "LIVE", 1)
+    recorder.record_batch("20260805_same_002", "2026-08-05", "LIVE", 1)
+    recorder.record_batch("20260805_same_003", "2026-08-05", "SIMULATE", 1)
+    recorder.record_batch("20260805_same_004", "2026-08-05", "SIMULATE", 1)
+    recorder.record_batch("20260806_same_002", "2026-08-06", "LIVE", 1)
+    recorder.record_batch("20260805_other_002", "2026-08-05", "LIVE", 1)
+
+    with pytest.raises(SchemaError, match="source must be an unexecuted SIMULATE"):
+        recorder.promote_shadow_batch("20260805_same_001", "20260805_same_002")
+    with pytest.raises(SchemaError, match="replacement must be LIVE"):
+        recorder.promote_shadow_batch("20260805_same_003", "20260805_same_004")
+    with pytest.raises(SchemaError, match="trade_date"):
+        recorder.promote_shadow_batch("20260805_same_003", "20260806_same_002")
+    with pytest.raises(SchemaError, match="strategy"):
+        recorder.promote_shadow_batch("20260805_same_003", "20260805_other_002")
+
+
+def test_promote_shadow_batch_rejects_source_with_any_fill(env):
+    _, recorder, _ = env
+    old = "20260805_same_001"
+    new = "20260805_same_002"
+    skipped = _fill(
+        batch_id=old,
+        client_order_id="20260805001B",
+        mode="SIMULATE",
+        status="SKIPPED",
+        side="BUY",
+        requested=100,
+        filled=0,
+        price=0.0,
+    )
+    _record_plan(
+        recorder, [skipped], batch_id=old, mode="SIMULATE",
+        trade_date="2026-08-05",
+    )
+    recorder.apply_fill(FillEvent.from_dict(skipped))
+    recorder.record_batch(new, "2026-08-05", "LIVE", 1)
+
+    with pytest.raises(SchemaError, match="source must be an unexecuted SIMULATE"):
+        recorder.promote_shadow_batch(old, new)
+
+
+def test_promote_shadow_batch_rejects_conflicting_relationships(env):
+    _, recorder, _ = env
+    old = "20260805_same_001"
+    new = "20260805_same_002"
+    alternate = "20260805_same_003"
+    recorder.record_batch(old, "2026-08-05", "SIMULATE", 1)
+    recorder.record_batch(new, "2026-08-05", "LIVE", 1)
+    recorder.record_batch(alternate, "2026-08-05", "LIVE", 1)
+
+    with pytest.raises(SchemaError, match="same batch"):
+        recorder.promote_shadow_batch(old, old)
+    assert recorder.promote_shadow_batch(old, new)
+    with pytest.raises(SchemaError, match="already superseded"):
+        recorder.promote_shadow_batch(old, alternate)
+
+
 def test_fill_must_match_recorded_order_before_mutating_ledger(env):
     _, recorder, _ = env
     recorder.set_cash(100000.0)

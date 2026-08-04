@@ -536,6 +536,73 @@ class LiveRecorder:
             )
             return True
 
+    def promote_shadow_batch(
+        self, source_batch_id: str, replacement_batch_id: str,
+    ) -> bool:
+        """Replace one unexecuted SIMULATE plan with a same-session LIVE plan.
+
+        This is intentionally narrower than :meth:`supersede_batch`.  It is
+        only for the controlled one-lot promotion path and never accepts a
+        source batch that has produced any fill event, including SKIPPED.
+        """
+        if source_batch_id == replacement_batch_id:
+            raise SchemaError("a batch cannot promote to the same batch")
+
+        with self._conn() as conn:
+            source = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?", (source_batch_id,),
+            ).fetchone()
+            if source is None:
+                raise SchemaError(
+                    f"unknown source batch: {source_batch_id!r}"
+                )
+            replacement = conn.execute(
+                "SELECT * FROM batches WHERE batch_id=?",
+                (replacement_batch_id,),
+            ).fetchone()
+            if replacement is None:
+                raise SchemaError(
+                    f"unknown replacement batch: {replacement_batch_id!r}"
+                )
+
+            if source["superseded_by"]:
+                if source["superseded_by"] == replacement_batch_id:
+                    return False
+                raise SchemaError(
+                    f"batch {source_batch_id!r} already superseded by "
+                    f"{source['superseded_by']!r}"
+                )
+            if replacement["superseded_by"]:
+                raise SchemaError(
+                    f"replacement batch {replacement_batch_id!r} is superseded"
+                )
+
+            fill_count = conn.execute(
+                "SELECT COUNT(*) FROM fills WHERE batch_id=?",
+                (source_batch_id,),
+            ).fetchone()[0]
+            if source["mode"] != "SIMULATE" or fill_count:
+                raise SchemaError(
+                    "promotion source must be an unexecuted SIMULATE batch"
+                )
+            if replacement["mode"] != "LIVE":
+                raise SchemaError("promotion replacement must be LIVE")
+            if source["trade_date"] != replacement["trade_date"]:
+                raise SchemaError("promoted batches must share trade_date")
+            if self._batch_strategy_key(source) != self._batch_strategy_key(
+                replacement
+            ):
+                raise SchemaError("promoted batches must share strategy")
+
+            conn.execute(
+                """UPDATE batches
+                   SET superseded_by=?,
+                       superseded_at=datetime('now', 'localtime')
+                   WHERE batch_id=?""",
+                (replacement_batch_id, source_batch_id),
+            )
+            return True
+
     # ---------- signal_orders（发布时写入，回执前可看执行计划）----------
 
     def record_orders(self, batch_id: str, orders: list) -> None:

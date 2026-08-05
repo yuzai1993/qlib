@@ -107,6 +107,11 @@ def parse_args():
 
 def resolve_mode(args, config) -> str:
     mode = args.mode or config["live"].get("default_mode", "SIMULATE")
+    if (
+        config["live"].get("broker_environment") == "REAL"
+        and mode != "LIVE"
+    ):
+        raise SystemExit("REAL broker environment requires LIVE mode")
     if mode == "LIVE" and os.environ.get("LIVE_TRADING_CONFIRM") != "YES":
         raise SystemExit(
             "refusing LIVE mode: set env LIVE_TRADING_CONFIRM=YES to confirm"
@@ -116,15 +121,22 @@ def resolve_mode(args, config) -> str:
 
 def resolve_account_id(config) -> str:
     live_cfg = config["live"]
-    if live_cfg.get("broker_environment") != "SIMULATION":
-        raise SystemExit("refusing non-SIMULATION broker environment")
-    account_id = live_cfg.get("account_id") or os.environ.get(
-        "QMT_SIM_ACCOUNT_ID", ""
-    )
+    environment = live_cfg.get("broker_environment")
+    if environment == "REAL":
+        if live_cfg.get("allow_real_money") is not True:
+            raise SystemExit(
+                "refusing REAL broker environment without allow_real_money"
+            )
+        variable = "QMT_REAL_ACCOUNT_ID"
+        account_id = os.environ.get(variable, "")
+    elif environment == "SIMULATION":
+        variable = "QMT_SIM_ACCOUNT_ID"
+        account_id = live_cfg.get("account_id") or os.environ.get(variable, "")
+    else:
+        raise SystemExit("unsupported broker environment")
     if not account_id:
         raise SystemExit(
-            "simulation account_id missing: set live.account_id or "
-            "QMT_SIM_ACCOUNT_ID"
+            f"{environment} account_id missing: set {variable}"
         )
     return account_id
 

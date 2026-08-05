@@ -28,14 +28,20 @@ import traceback
 # ======================= user settings =======================
 
 BRIDGE_ROOT = r"D:\qmt_bridge"
-ACCOUNT_ID = ""            # simulation account only; must match header if set
+ACCOUNT_ID = ""            # QMT-local account id; must match header if set
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
 ACCOUNT_ENVIRONMENT = "SIMULATION"
+# REAL deployments must set all four values deliberately in the QMT-local
+# copy. Keeping the repository default False prevents an accidental cutover.
+ALLOW_REAL_MONEY = False
+REAL_EXPECTED_INITIAL_CASH = 1000000.0
+REAL_INITIAL_CASH_TOLERANCE = 100.0
+REAL_REQUIRE_EMPTY_POSITIONS = True
 AFTER_HOURS_PRICE_TYPE = 49
-# Safety rollout gate. 100 means one-lot paper execution; set to 0 only after
-# shadow and one-lot acceptance are complete. This never enables real money.
+# Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
+# explicitly selected account environment has passed one-lot acceptance.
 MAX_ORDER_QUANTITY = 100
 MAX_ORDERS_PER_BATCH = 40
 MAX_BATCH_BYTES = 256 * 1024
@@ -585,7 +591,14 @@ def _parse_and_check(jsonl_path, done_path):
     if header.get("schema_version") != SCHEMA_VERSION:
         return reject("schema_version must be %s" % SCHEMA_VERSION)
     if header.get("account_environment") != ACCOUNT_ENVIRONMENT:
-        return reject("account_environment must be SIMULATION")
+        return reject("account_environment does not match QMT configuration")
+    if ACCOUNT_ENVIRONMENT == "REAL":
+        if not ALLOW_REAL_MONEY:
+            return reject("REAL execution requires ALLOW_REAL_MONEY=True")
+        if not ACCOUNT_ID:
+            return reject("REAL execution requires configured ACCOUNT_ID")
+        if header.get("mode") != "LIVE":
+            return reject("REAL execution requires LIVE mode")
     if header.get("mode") not in ("SIMULATE", "LIVE"):
         return reject("mode must be SIMULATE or LIVE")
     if header.get("account_type") != ACCOUNT_TYPE:
@@ -593,7 +606,7 @@ def _parse_and_check(jsonl_path, done_path):
     if not header.get("account_id"):
         return reject("account_id missing")
     if ACCOUNT_ID and str(header.get("account_id")) != str(ACCOUNT_ID):
-        return reject("account_id does not match configured simulation account")
+        return reject("account_id does not match configured QMT account")
     if header.get("trade_date") != _today():
         return reject("expired: trade_date=%s today=%s"
                       % (header.get("trade_date"), _today()))
@@ -856,6 +869,45 @@ def _get_available_cash(account_id):
     return available
 
 
+def _real_account_preflight(account_id):
+    """Validate the first REAL rollout account before any passorder call."""
+    if ACCOUNT_ENVIRONMENT != "REAL":
+        return True, ""
+    if not ALLOW_REAL_MONEY:
+        return False, "ALLOW_REAL_MONEY is not enabled"
+    if not ACCOUNT_ID or str(account_id) != str(ACCOUNT_ID):
+        return False, "configured account id mismatch"
+    try:
+        accounts = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ACCOUNT")
+    except Exception:
+        return False, "ACCOUNT query failed"
+    if not accounts:
+        return False, "ACCOUNT query returned no rows"
+    account = accounts[0]
+    returned_id = str(getattr(account, "m_strAccountID", "") or "")
+    if returned_id != str(account_id):
+        return False, "ACCOUNT query returned a different account id"
+    try:
+        available = float(getattr(account, "m_dAvailable", None))
+    except (TypeError, ValueError):
+        return False, "available cash is unavailable"
+    if (not math.isfinite(available)
+            or abs(available - REAL_EXPECTED_INITIAL_CASH)
+            > REAL_INITIAL_CASH_TOLERANCE):
+        return False, "available cash %.2f outside expected range" % available
+    if REAL_REQUIRE_EMPTY_POSITIONS:
+        try:
+            positions = get_trade_detail_data(
+                account_id, ACCOUNT_TYPE, "POSITION")
+        except Exception:
+            return False, "POSITION query failed"
+        held = [p for p in (positions or [])
+                if int(getattr(p, "m_nVolume", 0) or 0) > 0]
+        if held:
+            return False, "real account is not empty"
+    return True, ""
+
+
 def _positive_price(value):
     try:
         price = float(value)
@@ -1015,6 +1067,23 @@ def _process_batch(ContextInfo, batch):
             and batch.header.get("mode") == "LIVE"
             and _live_ok(batch.header.get("trade_date", ""))
         )
+        if batch.execution_authorized and ACCOUNT_ENVIRONMENT == "REAL":
+            preflight_ok, preflight_message = _real_account_preflight(
+                _account_id(batch))
+            if not preflight_ok:
+                batch.broker_authorized = False
+                batch.execution_authorized = False
+                batch.execution_live = False
+                for order in batch.orders:
+                    coid = order["client_order_id"]
+                    batch.submitted[coid] = True
+                    _write_fill(
+                        batch, order, "SKIPPED", 0, 0.0, "",
+                        "REAL preflight failed: " + preflight_message,
+                    )
+                _save_active_state(batch)
+                _finalize_batch(batch)
+                return
         batch.execution_live = batch.execution_authorized
         _save_active_state(batch)
 

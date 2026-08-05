@@ -106,7 +106,7 @@ def _order(coid="20260714001S", side="SELL", priority=10):
 
 def _write_batch(
     bridge, trade_date, orders, checksum=None, batch_id=BATCH_ID,
-    mode="SIMULATE",
+    mode="SIMULATE", account_environment="SIMULATION", account_id="1",
 ):
     order_lines = [json.dumps(o, sort_keys=True, separators=(",", ":")) for o in orders]
     if checksum is None:
@@ -114,8 +114,8 @@ def _write_batch(
     header = {
         "type": "batch_header", "schema_version": "2.0", "batch_id": batch_id,
         "strategy_id": "s", "trade_date": trade_date, "signal_date": trade_date,
-        "account_id": "1", "account_type": "STOCK",
-        "account_environment": "SIMULATION", "mode": mode,
+        "account_id": account_id, "account_type": "STOCK",
+        "account_environment": account_environment, "mode": mode,
         "created_at": "t", "order_count": len(orders), "checksum": checksum,
     }
     inbox = Path(bridge.BRIDGE_ROOT) / "inbox"
@@ -242,6 +242,83 @@ def test_protocol_v2_and_simulation_account_are_fail_closed(
 
     assert bridge.g.batch is None
     assert reason in _read_fills(bridge)[0]["message"]
+
+
+def test_real_batch_requires_explicit_qmt_real_money_opt_in(
+    bridge, monkeypatch,
+):
+    bridge.ACCOUNT_ENVIRONMENT = "REAL"
+    bridge.ACCOUNT_ID = "8890116049"
+    bridge.ALLOW_REAL_MONEY = False
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    _write_batch(
+        bridge, bridge._today(), [order], mode="LIVE",
+        account_environment="REAL", account_id="8890116049",
+    )
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("real opt-in missing; must not submit"),
+        raising=False,
+    )
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch is None
+    fills = _read_fills(bridge)
+    assert fills[0]["status"] == "SKIPPED"
+    assert "ALLOW_REAL_MONEY" in fills[0]["message"]
+
+
+class _RealAccountRow:
+    m_strAccountID = "8890116049"
+    m_dAvailable = 1_000_000.0
+
+
+def test_real_account_preflight_accepts_exact_empty_account(bridge, monkeypatch):
+    bridge.ACCOUNT_ENVIRONMENT = "REAL"
+    bridge.ACCOUNT_ID = "8890116049"
+    bridge.ALLOW_REAL_MONEY = True
+
+    def query(account_id, account_type, kind):
+        return [_RealAccountRow()] if kind == "ACCOUNT" else []
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", query, raising=False,
+    )
+
+    assert bridge._real_account_preflight("8890116049") == (True, "")
+
+
+@pytest.mark.parametrize("available,positions,reason", [
+    (999_000.0, [], "available cash"),
+    (1_000_000.0, [object()], "not empty"),
+])
+def test_real_account_preflight_rejects_unexpected_state(
+    bridge, monkeypatch, available, positions, reason,
+):
+    bridge.ACCOUNT_ENVIRONMENT = "REAL"
+    bridge.ACCOUNT_ID = "8890116049"
+    bridge.ALLOW_REAL_MONEY = True
+
+    class Account:
+        m_strAccountID = "8890116049"
+        m_dAvailable = available
+
+    class Position:
+        m_nVolume = 100
+
+    def query(account_id, account_type, kind):
+        if kind == "ACCOUNT":
+            return [Account()]
+        return [Position()] if positions else []
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", query, raising=False,
+    )
+
+    ok, message = bridge._real_account_preflight("8890116049")
+    assert ok is False
+    assert reason in message
 
 
 def test_batch_order_count_is_bounded_before_execution(bridge):

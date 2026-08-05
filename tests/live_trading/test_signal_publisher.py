@@ -175,10 +175,11 @@ def test_publish_retry_cannot_change_account_or_signal_date(tmp_path):
     ):
         with pytest.raises(SchemaError, match="conflicts with durable plan"):
             recorder.record_publish_plan(changed, _orders())
-    with pytest.raises(SchemaError, match="SIMULATION"):
+    with pytest.raises(SchemaError, match="conflicts with durable plan"):
         recorder.record_publish_plan(
-            dataclasses.replace(_header(), account_environment="REAL"),
-            _orders(),
+            dataclasses.replace(
+                _header(), account_environment="REAL", mode="LIVE",
+            ), _orders(),
         )
 
     batch = recorder.get_batch(BATCH_ID)
@@ -188,6 +189,20 @@ def test_publish_retry_cannot_change_account_or_signal_date(tmp_path):
         recorder.record_orders(BATCH_ID, _orders())
     with pytest.raises(SchemaError, match="immutable durable plan"):
         recorder.record_batch(BATCH_ID, "2026-07-15", "LIVE", 2)
+
+
+def test_real_publish_plan_is_durable(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "real.db"))
+    header = dataclasses.replace(
+        _header(), account_environment="REAL", mode="LIVE",
+        account_id="8890116049",
+    )
+
+    recorder.record_publish_plan(header, _orders())
+
+    batch = recorder.get_batch(BATCH_ID)
+    assert batch["account_environment"] == "REAL"
+    assert batch["account_id"] == "8890116049"
 
 
 def test_publish_guard_refuses_unreconciled_prior_live_batch(tmp_path):

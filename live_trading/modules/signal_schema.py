@@ -14,7 +14,7 @@ SCHEMA_VERSION = "2.0"
 
 VALID_SIDES = {"BUY", "SELL"}
 VALID_MODES = {"SIMULATE", "LIVE"}
-VALID_ACCOUNT_ENVIRONMENTS = {"SIMULATION"}
+VALID_ACCOUNT_ENVIRONMENTS = {"SIMULATION", "REAL"}
 VALID_FILL_STATUS = {
     "ACCEPTED", "FILLED", "PARTIAL", "REJECTED", "SKIPPED", "EXPIRED", "ERROR",
 }
@@ -186,9 +186,11 @@ def validate_batch(header: BatchHeader, orders: list) -> None:
         raise SchemaError(f"invalid mode: {header.mode!r}")
     if header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
         raise SchemaError(
-            "account_environment must be SIMULATION: "
+            "account_environment must be SIMULATION or REAL: "
             f"{header.account_environment!r}"
         )
+    if header.account_environment == "REAL" and header.mode != "LIVE":
+        raise SchemaError("REAL account_environment requires LIVE mode")
     if not _DATE_RE.match(header.trade_date):
         raise SchemaError(f"trade_date must be YYYY-MM-DD: {header.trade_date!r}")
     if not _DATE_RE.match(header.signal_date):

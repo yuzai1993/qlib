@@ -183,8 +183,13 @@ def test_validate_batch_rejects_bad_mode_and_date():
         validate_batch(_header(mode="REAL"), [_order()])
     with pytest.raises(SchemaError):
         validate_batch(_header(trade_date="20260714"), [_order()])
-    with pytest.raises(SchemaError):
-        validate_batch(_header(account_environment="REAL"), [_order()])
+    validate_batch(
+        _header(account_environment="REAL", mode="LIVE"), [_order()]
+    )
+    with pytest.raises(SchemaError, match="REAL.*LIVE"):
+        validate_batch(
+            _header(account_environment="REAL", mode="SIMULATE"), [_order()]
+        )
     with pytest.raises(SchemaError):
         validate_batch(_header(schema_version="1.0"), [_order()])
 

@@ -13,6 +13,10 @@ NEW_LIVE_PATH = (
     REPO_ROOT / "live_trading" / "configs" /
     "csi1000_b6m_b2s_postclose.yaml"
 )
+REAL_LIVE_PATH = (
+    REPO_ROOT / "live_trading" / "configs" /
+    "csi1000_b6m_b2s_postclose_real.yaml"
+)
 
 
 def test_load_real_live_config_is_standalone():
@@ -84,6 +88,24 @@ def test_load_new_csi1000_paper_config():
     )
     assert cfg["provenance"]["strategy_baseline_sha256"] == (
         "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+    )
+
+
+def test_load_csi1000_real_config_is_isolated_and_live_only():
+    cfg = load_live_config(REAL_LIVE_PATH, project_root=REPO_ROOT)
+
+    assert cfg["account"] == {
+        "opening_cash": 1_000_000.0,
+        "opening_value_adjustment": 0.0,
+    }
+    assert cfg["live"]["strategy_id"] == (
+        "csi1000_b6m_b2s_postclose_real"
+    )
+    assert cfg["live"]["broker_environment"] == "REAL"
+    assert cfg["live"]["allow_real_money"] is True
+    assert cfg["live"]["default_mode"] == "LIVE"
+    assert cfg["storage"]["db_path"].endswith(
+        "csi1000_b6m_b2s_postclose_real.db"
     )
 
 

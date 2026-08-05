@@ -8,16 +8,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 PYTHON="/opt/anaconda3/envs/qlib/bin/python"
-CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-csi1000_b6m_b2s_postclose}}}"
+CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-csi1000_b6m_b2s_postclose_real}}}"
 
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
 RUN_MODE="${LIVE_RUN_MODE:-SIMULATE}"
 
-if [[ -z "${QMT_SIM_ACCOUNT_ID:-}" ]]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: QMT_SIM_ACCOUNT_ID unset" >&2
-    exit 1
-fi
 if [[ "$RUN_MODE" == "LIVE" && "${LIVE_TRADING_CONFIRM:-}" != "YES" ]]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: LIVE mode requires LIVE_TRADING_CONFIRM=YES" >&2
     exit 1

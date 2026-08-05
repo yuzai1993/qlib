@@ -21,6 +21,7 @@ from live_trading.modules.signal_schema import (
     FillEvent,
     SchemaError,
     TERMINAL_FILL_STATUS,
+    VALID_ACCOUNT_ENVIRONMENTS,
     compute_checksum,
     validate_fill,
 )
@@ -435,8 +436,12 @@ class LiveRecorder:
         planned_orders: int,
         account_environment: str = "SIMULATION",
     ) -> None:
-        if account_environment != "SIMULATION":
-            raise SchemaError("account_environment must be SIMULATION")
+        if account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
+            raise SchemaError(
+                "account_environment must be SIMULATION or REAL"
+            )
+        if account_environment == "REAL" and mode != "LIVE":
+            raise SchemaError("REAL account_environment requires LIVE mode")
         with self._conn() as conn:
             existing = conn.execute(
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
@@ -654,8 +659,12 @@ class LiveRecorder:
         the database commit and shared-file publication), but it may never
         replace a plan for an existing batch id.
         """
-        if header.account_environment != "SIMULATION":
-            raise SchemaError("account_environment must be SIMULATION")
+        if header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
+            raise SchemaError(
+                "account_environment must be SIMULATION or REAL"
+            )
+        if header.account_environment == "REAL" and header.mode != "LIVE":
+            raise SchemaError("REAL account_environment requires LIVE mode")
         batch_id = header.batch_id
         order_checksum = compute_checksum([
             order.to_json_line() for order in orders

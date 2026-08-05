@@ -8,7 +8,7 @@
     <array>
         <string>/bin/bash</string>
         <string>/Users/yuxianqi/Project/qlib/live_trading/run_web_service.sh</string>
-        <string>csi1000_b6m_b2s_postclose</string>
+        <string>csi1000_b6m_b2s_postclose_real</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/yuxianqi/Project/qlib</string>
@@ -28,8 +28,8 @@
     <key>ProcessType</key>
     <string>Background</string>
     <key>StandardOutPath</key>
-    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/csi1000_b6m_b2s_postclose_web_service.stdout.log</string>
+    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/csi1000_b6m_b2s_postclose_real_web_service.stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/csi1000_b6m_b2s_postclose_web_service.stderr.log</string>
+    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/csi1000_b6m_b2s_postclose_real_web_service.stderr.log</string>
 </dict>
 </plist>

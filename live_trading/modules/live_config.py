@@ -48,14 +48,26 @@ def _validate_performance_baseline(config: dict) -> None:
             )
 
 
-def _validate_simulation_config(config: dict) -> None:
+def _validate_trading_config(config: dict) -> None:
     live = config.get("live", {})
     if "broker_environment" not in live:
         return
-    if live.get("broker_environment") != "SIMULATION":
-        raise ValueError("live.broker_environment must be SIMULATION")
-    if live.get("allow_real_money") is not False:
-        raise ValueError("live.allow_real_money must be false")
+    environment = live.get("broker_environment")
+    allow_real_money = live.get("allow_real_money")
+    if environment not in {"SIMULATION", "REAL"}:
+        raise ValueError(
+            "live.broker_environment must be SIMULATION or REAL"
+        )
+    if environment == "SIMULATION" and allow_real_money is not False:
+        raise ValueError(
+            "SIMULATION broker_environment requires allow_real_money=false"
+        )
+    if environment == "REAL" and allow_real_money is not True:
+        raise ValueError(
+            "REAL broker_environment requires allow_real_money=true"
+        )
+    if environment == "REAL" and live.get("default_mode") != "LIVE":
+        raise ValueError("REAL broker_environment requires default_mode=LIVE")
     if live.get("after_hours_price_type") != 49:
         raise ValueError("live.after_hours_price_type must be 49")
 
@@ -116,7 +128,7 @@ def load_live_config(config_path, project_root=None) -> dict:
         raise ValueError("live config must be standalone; base_config is forbidden")
 
     _validate_performance_baseline(merged)
-    _validate_simulation_config(merged)
+    _validate_trading_config(merged)
     merged["_config_path"] = str(config_path)
     merged["_config_id"] = config_path.stem
     return merged

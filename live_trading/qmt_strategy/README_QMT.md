@@ -1,8 +1,8 @@
-# QMT 盘后定价桥接部署（仅模拟账户）
+# QMT 盘后定价桥接部署
 
 `qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并使用盘后定价 `prType=49`。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
 
-本说明不会授权真实资金。策略、批次和 Mac 配置都要求 `account_environment=SIMULATION`。
+仓库源码默认失败关闭为 `SIMULATION` 且 `ALLOW_REAL_MONEY=False`。真实资金只能在 QMT 本地副本中显式选择 `REAL`，并与 Mac 的 REAL 批次双向匹配。
 
 ## 1. Windows 目录
 
@@ -25,12 +25,13 @@ D:\qmt_bridge\
 1. 在大 QMT 的模型交易/策略编辑器中新建内置 Python 策略；
 2. 导入 `qmt_signal_bridge.py`；
 3. 设置 `BRIDGE_ROOT`；
-4. 把 `ACCOUNT_ID` 填为新模拟账户 ID。非空时，header 中的账户必须完全一致；
+4. 把 `ACCOUNT_ID` 填为当前选定账户 ID。非空时，header 中的账户必须完全一致；
 5. 保持 `ACCOUNT_TYPE = "STOCK"`；
-6. 保持 `MAX_ORDER_QUANTITY = 100`，这是首次一手模拟盘的硬上限；
-7. 编译后，在模型交易界面明确绑定同一个模拟账户。
+6. 保持 `MAX_ORDER_QUANTITY = 100`，这是首次一手验收的硬上限；
+7. 实盘本地副本设置 `ACCOUNT_ENVIRONMENT = "REAL"` 和 `ALLOW_REAL_MONEY = True`，并保持 `REAL_EXPECTED_INITIAL_CASH = 1000000.0`、`REAL_INITIAL_CASH_TOLERANCE = 100.0`、`REAL_REQUIRE_EMPTY_POSITIONS = True`；
+8. 编译后，在模型交易界面明确绑定同一个账户。
 
-不要把真实账户 ID 写入这个策略。账户环境无法从一个普通环境变量切换。
+真实账户 ID 只能写在 QMT 本地运行副本中，不提交到 Git。账户环境无法从普通环境变量动态切换。
 
 ## 3. 定时与状态机
 
@@ -38,7 +39,7 @@ D:\qmt_bridge\
 
 执行顺序：
 
-1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、日期、账户和 SIMULATION 环境；
+1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、日期、账户和配置的账户环境；
 2. 15:05 提交 SELL；
 3. 无论卖单是否提前终态，都从首次提交阶段起固定等待 240 秒；
 4. 查询实际可用现金，用 QMT `lastPrice` 作为官方收盘价，将 BUY `target_value` 换算为整手并预留佣金/过户费；
@@ -88,11 +89,9 @@ Shadow 通过后，必须同时满足：
 删除 `LIVE_OK` 只禁止后续新提交。已经提交的 LIVE 订单仍会继续查询、撤单和终结。
 执行决定在 15:05 首次交易唤醒时冻结；首次缺少 `LIVE_OK` 的批次即使稍后补建开关，也会整批保持 simulated，避免只执行后半段买单。
 
-## 6. 全额模拟盘
+## 6. 实盘一手验收
 
-一手阶段连续验收后，人工把已安装策略的 `MAX_ORDER_QUANTITY` 改为 `0`，重新编译并复核账户。该操作只解除数量上限，不改变 SIMULATION 门禁、双开关和每日人工 `LIVE_OK`。
-
-系统没有真实账户晋级路径。
+当前实盘账户为 `8890116049`，首日只在空仓、可用资金 `1,000,000±100` 元时允许提交。Mac 批次必须是 `account_environment=REAL` 与 `mode=LIVE`，QMT 仍要求当日 `LIVE_OK`。一手结果验收前不得改动数量上限或初始账户预检。
 
 ## 7. 恢复与排障
 

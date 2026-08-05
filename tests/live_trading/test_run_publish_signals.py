@@ -31,12 +31,25 @@ def test_account_resolution_never_falls_back_to_real_account_variable(monkeypatc
         publish.resolve_account_id(_config())
 
 
-def test_account_resolution_refuses_non_simulation_configuration(monkeypatch):
+def test_real_account_resolution_uses_real_specific_environment(monkeypatch):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
     monkeypatch.setenv("QMT_SIM_ACCOUNT_ID", "sim-123")
     config = _config()
     config["live"]["broker_environment"] = "REAL"
+    config["live"]["allow_real_money"] = True
 
-    with pytest.raises(SystemExit, match="SIMULATION"):
+    assert publish.resolve_account_id(config) == "8890116049"
+
+
+def test_real_account_resolution_requires_real_specific_environment(monkeypatch):
+    monkeypatch.delenv("QMT_REAL_ACCOUNT_ID", raising=False)
+    monkeypatch.setenv("QMT_SIM_ACCOUNT_ID", "sim-123")
+    config = _config()
+    config["live"].update(
+        broker_environment="REAL", allow_real_money=True,
+    )
+
+    with pytest.raises(SystemExit, match="QMT_REAL_ACCOUNT_ID"):
         publish.resolve_account_id(config)
 
 
@@ -46,6 +59,17 @@ def test_live_protocol_mode_still_requires_explicit_process_confirmation(monkeyp
 
     with pytest.raises(SystemExit, match="LIVE_TRADING_CONFIRM"):
         publish.resolve_mode(args, _config())
+
+
+def test_real_account_cannot_publish_simulate_mode():
+    args = SimpleNamespace(mode="SIMULATE")
+    config = _config()
+    config["live"].update(
+        broker_environment="REAL", allow_real_money=True,
+    )
+
+    with pytest.raises(SystemExit, match="REAL.*LIVE"):
+        publish.resolve_mode(args, config)
 
 
 def test_strategy_positions_preserve_opening_trade_date():

@@ -1,0 +1,109 @@
+# CSI1000 real account: frozen B6-M + B2-S steady state + staged Top2 build.
+# Account ID is private and must come from QMT_REAL_ACCOUNT_ID.
+
+data:
+  qlib_dir: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "csi1000"
+  benchmark: "SH000852"
+
+account:
+  opening_cash: 1000000.0
+  opening_value_adjustment: 0.0
+
+provenance:
+  repository: "/Users/yuxianqi/Project/qlib_exp"
+  strategy_baseline_config: "backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml"
+  strategy_baseline_sha256: "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+
+model:
+  experiment_name: "baseline/b6-m"
+  experiment_id: "frozen-baseline"
+  recorder_id: "seed4000"
+  baseline_ref: "B6 v1.0"
+  model_class: "backtest.models.rankic_early_stop.RankICEarlyStoppingDEnsembleModel"
+  model_path: "live_trading/models/b6_m/seed4000/trained_model"
+  manifest_path: "live_trading/models/b6_m/seed4000/manifest.json"
+  sha256: "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325"
+
+handler:
+  class: "Alpha158Technical"
+  module: "backtest.features.technical"
+  start_time: "2003-01-02"
+  fit_start_time: "2016-01-02"
+  fit_end_time: "2020-01-10"
+  infer_processors:
+    - class: "ProcessInf"
+  feature_groups:
+    - "range"
+
+stock_names:
+  source: "tushare"
+
+strategy:
+  class: "TopkDropoutStrategy"
+  topk: 30
+  n_drop: 2
+  initial_buy_count: 2
+  risk_degree: 0.95
+  hold_thresh: 20
+  only_tradable: false
+  forbid_all_trade_at_limit: false
+
+exchange:
+  freq: "day"
+  deal_price: "close"
+  limit_threshold: 0.095
+  open_cost: 0.00021
+  close_cost: 0.00071
+  min_cost: 5.0
+  trade_unit: 100
+
+parity:
+  backtest_config: "backtest/configs/csi1000_b6m_b2s_postclose_parity.yaml"
+
+live:
+  bridge_root: "/Volumes/qmt_bridge"
+  strategy_id: "csi1000_b6m_b2s_postclose_real"
+  account_id: ""
+  account_type: "STOCK"
+  broker_environment: "REAL"
+  allow_real_money: true
+  default_mode: "LIVE"
+  execution_session: "AFTER_HOURS_FIXED_PRICE"
+  after_hours_price_type: 49
+  submit_after: "15:05:00"
+  sell_wait_seconds: 240
+  cancel_at: "15:28:00"
+  finalize_at: "15:30:00"
+  snapshot_after: "15:31:00"
+  max_orders_per_day: 40
+
+storage:
+  db_path: "live_trading/data/csi1000_b6m_b2s_postclose_real.db"
+  log_dir: "live_trading/logs/csi1000_b6m_b2s_postclose_real"
+
+fees:
+  commission_rate: 0.00020
+  min_commission: 5.0
+  stamp_duty_rate: 0.0005
+  transfer_fee_rate: 0.00001
+  dividend_tax_rate: 0.20
+
+monitor:
+  benchmark: "SH000852"
+  benchmark_name: "中证1000"
+  notify:
+    channel: "serverchan"
+    daily_report: true
+  thresholds:
+    daily_loss: -0.03
+    consecutive_loss_days: 5
+    reject_rate: 0.5
+    cash_tolerance: 100.0
+  broker_reconcile:
+    cash_check: true
+
+web:
+  host: "127.0.0.1"
+  port: 8081

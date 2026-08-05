@@ -148,13 +148,24 @@ def test_opening_value_adjustment_refuses_used_ledger_migration(tmp_path):
         LiveRecorder(str(db_path), opening_value_adjustment=-100.0)
 
 
-def test_batch_ledger_refuses_real_account_environment(tmp_path):
-    recorder = LiveRecorder(str(tmp_path / "simulation-only.db"))
+def test_batch_ledger_accepts_real_account_environment(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "real.db"))
 
-    with pytest.raises(SchemaError, match="SIMULATION"):
+    recorder.record_batch(
+        "real", "2026-07-14", "LIVE", 1,
+        account_environment="REAL",
+    )
+
+    assert recorder.get_batch("real")["account_environment"] == "REAL"
+
+
+def test_batch_ledger_rejects_unknown_account_environment(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "invalid.db"))
+
+    with pytest.raises(SchemaError, match="account_environment"):
         recorder.record_batch(
-            "real", "2026-07-14", "LIVE", 1,
-            account_environment="REAL",
+            "bad", "2026-07-14", "LIVE", 1,
+            account_environment="UNKNOWN",
         )
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the CSI1000 post-close pipeline once per date.
 
-The cron entry invokes this dispatcher once at 20:00. Each attempted stage gets
+The cron entry invokes this dispatcher once at 16:00. Each attempted stage gets
 an atomic receipt, including failures, so manual reruns never duplicate work.
 """
 

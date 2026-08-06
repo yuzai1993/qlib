@@ -28,14 +28,14 @@ def _orders():
         SignalOrder(
             batch_id=BATCH_ID, client_order_id="20260714001S",
             stock_code="000001.SZ", side="SELL", quantity=800,
-            target_value=0.0, price_type="AFTER_HOURS_CLOSE", limit_price=0.0,
+            target_value=0.0, price_type="CLOSE_AUCTION_LIMIT", limit_price=0.0,
             priority=10,
             instrument_qlib="SZ000001", reason="topk_drop",
         ),
         SignalOrder(
             batch_id=BATCH_ID, client_order_id="20260714002B",
             stock_code="600000.SH", side="BUY", quantity=0,
-            target_value=15_833.33, price_type="AFTER_HOURS_CLOSE",
+            target_value=15_833.33, price_type="CLOSE_AUCTION_LIMIT",
             limit_price=0.0, priority=20,
             instrument_qlib="SH600000", reason="topk_add",
         ),

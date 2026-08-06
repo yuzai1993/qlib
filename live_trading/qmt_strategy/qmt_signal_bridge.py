@@ -8,12 +8,10 @@
 # Flow per batch:
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
-#     -> 15:05 after-hours fixed-price window:
-#        phase SELL: passorder all sells, then hold a fixed four-minute gate
-#        phase BUY : read actual cash and size target-value buys at official close
-#     -> QMT prType=49, price=0 (after-hours fixed price)
+#     -> 14:57 close auction: submit sells and buys with explicit daily limits
+#     -> QMT prType=11; BUY=UpStopPrice, SELL=DownStopPrice
 #     -> poll order status by remark (client_order_id)
-#     -> 15:28 cancel pending; 15:30 finalize; 15:31 account snapshot
+#     -> 15:00:05 cancel pending; 15:00:30 finalize; 15:01 account snapshot
 #
 # LIVE double switch: header.mode == "LIVE" AND state/LIVE_OK_{trade_date} exists.
 # Otherwise orders are simulated: fill status SKIPPED, message "simulated".
@@ -39,7 +37,7 @@ ALLOW_REAL_MONEY = False
 REAL_EXPECTED_INITIAL_CASH = 1000000.0
 REAL_INITIAL_CASH_TOLERANCE = 100.0
 REAL_REQUIRE_EMPTY_POSITIONS = True
-AFTER_HOURS_PRICE_TYPE = 49
+LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
 MAX_ORDER_QUANTITY = 100
@@ -47,11 +45,11 @@ MAX_ORDERS_PER_BATCH = 40
 MAX_BATCH_BYTES = 256 * 1024
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
-SELL_WAIT_TIMEOUT_SEC = 4 * 60    # fixed sell settlement wait before buys
-TRADE_START = "15:05:00"
-CANCEL_AT = "15:28:00"
-FINALIZE_AT = "15:30:00"
-SNAPSHOT_REFRESH_AT = "15:31:00"
+SELL_WAIT_TIMEOUT_SEC = 0
+TRADE_START = "14:57:05"
+CANCEL_AT = "15:00:05"
+FINALIZE_AT = "15:00:30"
+SNAPSHOT_REFRESH_AT = "15:01:00"
 
 # BUY-side fee estimate used only for local cash reservation.
 COMMISSION_RATE = 0.00020
@@ -109,7 +107,45 @@ g = State()
 
 
 def _log(msg):
-    print("[qlib_bridge] " + str(msg))
+    message = str(msg)
+    print("[qlib_bridge] " + message)
+    try:
+        _append_log_line(
+            "qmt_bridge_%s.log" % _today(),
+            "%s [qlib_bridge] %s" % (
+                datetime.datetime.now().isoformat(), message),
+        )
+    except Exception:
+        pass
+
+
+def _append_log_line(name, line):
+    log_dir = _path("logs")
+    if not os.path.isdir(log_dir):
+        os.makedirs(log_dir)
+    with open(os.path.join(log_dir, name), "a", encoding="utf-8") as f:
+        f.write(str(line) + "\n")
+        f.flush()
+
+
+def _log_event(event_type, **fields):
+    event = {
+        "ts": datetime.datetime.now().isoformat(),
+        "event": str(event_type),
+    }
+    event.update(fields)
+    try:
+        _append_log_line(
+            "qmt_events_%s.jsonl" % _today(),
+            json.dumps(event, ensure_ascii=True, sort_keys=True),
+        )
+        message = fields.get("message", "")
+        _append_log_line(
+            "qmt_bridge_%s.log" % _today(),
+            "%s [%s] %s" % (event["ts"], event["event"], message),
+        )
+    except Exception:
+        print("[qlib_bridge] log persistence failed:\n" + traceback.format_exc())
 
 
 def _now_hms():
@@ -403,7 +439,7 @@ def _snapshot_marker_path(batch_id):
 def _write_snapshot_marker(batch):
     """Ask the post-close pass to rewrite this batch's broker snapshot.
 
-    The finalize-time snapshot (15:28~15:30) carries final cash and shares
+    The finalize-time snapshot (15:00~15:01) carries final cash and shares
     but intraday prices; on the sim account even the account values can be
     stale. After SNAPSHOT_REFRESH_AT the marker triggers a rewrite with
     close values, before the 15:32 Mac-side import.
@@ -424,7 +460,7 @@ def _write_snapshot_marker(batch):
 
 
 def _refresh_account_snapshots_after_close():
-    """Rewrite pending broker snapshots once the close is in (>= 15:31)."""
+    """Rewrite pending broker snapshots once the close is in (>= 15:01)."""
     if _now_hms() < SNAPSHOT_REFRESH_AT:
         return
     state_dir = _path("state")
@@ -636,8 +672,8 @@ def _parse_and_check(jsonl_path, done_path):
         seen.add(coid)
         if side not in ("BUY", "SELL"):
             return reject("invalid order side")
-        if order.get("price_type") != "AFTER_HOURS_CLOSE":
-            return reject("price_type must be AFTER_HOURS_CLOSE")
+        if order.get("price_type") != "CLOSE_AUCTION_LIMIT":
+            return reject("price_type must be CLOSE_AUCTION_LIMIT")
         if order.get("limit_price") != 0 and order.get("limit_price") != 0.0:
             return reject("limit_price must be zero")
         if side == "BUY":
@@ -935,11 +971,30 @@ def _get_tick(ContextInfo, stock_code):
 
 
 def _official_close(ContextInfo, stock_code):
-    """Return QMT lastPrice after close; never infer or add slippage."""
+    """Return current QMT lastPrice for target sizing."""
     tick = _get_tick(ContextInfo, stock_code)
     if tick is None:
         return 0.0
     return _positive_price(_tick_field(tick, "lastPrice"))
+
+
+def _instrument_limit_price(ContextInfo, stock_code, side):
+    getter = getattr(ContextInfo, "get_instrument_detail", None)
+    if getter is None:
+        getter = getattr(ContextInfo, "get_instrumentdetail", None)
+    if getter is None:
+        raise ValueError("instrument detail API unavailable")
+    try:
+        detail = getter(stock_code)
+    except Exception:
+        raise ValueError("instrument detail unavailable for %s" % stock_code)
+    field = "UpStopPrice" if side == "BUY" else "DownStopPrice"
+    raw = detail.get(field) if isinstance(detail, dict) else getattr(
+        detail, field, None)
+    price = _positive_price(raw)
+    if price <= 0.0:
+        raise ValueError("invalid %s limit price for %s" % (side, stock_code))
+    return price
 
 
 def _estimated_buy_cost(quantity, price):
@@ -973,7 +1028,7 @@ def _target_buy_quantity(cash, price, target_value):
     return _max_affordable_quantity(cash, price, requested)
 
 
-def _submit(ContextInfo, batch, order, live, official_close=None):
+def _submit(ContextInfo, batch, order, live, limit_price=None):
     """Submit one order. Returns True if submitted (or simulated)."""
     coid = order["client_order_id"]
     if coid in batch.submitted:
@@ -984,21 +1039,42 @@ def _submit(ContextInfo, batch, order, live, official_close=None):
         _write_fill(batch, order, "SKIPPED", 0, 0.0, "", "simulated")
         return True
 
+    try:
+        if limit_price is None:
+            limit_price = _instrument_limit_price(
+                ContextInfo, order["stock_code"], order["side"])
+    except Exception as exc:
+        batch.submitted[coid] = True
+        _save_active_state(batch)
+        _write_fill(batch, order, "ERROR", 0, 0.0, "", str(exc))
+        _log_event(
+            "PRICE_ERROR", batch_id=batch.batch_id(),
+            client_order_id=coid, stock_code=order["stock_code"],
+            message=str(exc),
+        )
+        return False
+
     op_type = 23 if order["side"] == "BUY" else 24
     # Persist before passorder. On a crash, an uncertain order is never
     # submitted twice; the safer failure direction is a missed order.
     batch.submitted[coid] = True
     _save_active_state(batch)
     try:
-        # orderType=1101 single stock by shares; prType=49 after-hours close;
+        # orderType=1101 single stock by shares; prType=11 explicit limit;
         # quickTrade=2 submit immediately; userOrderId -> m_strRemark
         passorder(op_type, 1101, _account_id(batch), order["stock_code"],
-                  AFTER_HOURS_PRICE_TYPE, 0, int(order["quantity"]),
+                  LIMIT_PRICE_TYPE, float(limit_price), int(order["quantity"]),
                   STRATEGY_NAME, 2, coid, ContextInfo)
-        _write_fill(batch, order, "ACCEPTED", 0, 0.0, "", "submitted")
-        _log("passorder %s %s x%d prType=49 close=%s (%s)"
+        _log_event(
+            "SUBMITTED_UNCONFIRMED", batch_id=batch.batch_id(),
+            client_order_id=coid, side=order["side"],
+            stock_code=order["stock_code"], quantity=int(order["quantity"]),
+            price_type=LIMIT_PRICE_TYPE, limit_price=float(limit_price),
+            message="passorder returned; awaiting QMT order",
+        )
+        _log("passorder %s %s x%d prType=11 limit=%s (%s)"
              % (order["side"], order["stock_code"], order["quantity"],
-                official_close, coid))
+                limit_price, coid))
         return True
     except Exception:
         _write_fill(batch, order, "ERROR", 0, 0.0, "",
@@ -1163,11 +1239,24 @@ def _process_batch(ContextInfo, batch):
                             "target_value below one board lot")
                 continue
 
-            quantity = _target_buy_quantity(
-                batch.remaining_cash if mode_live else None,
-                close_price,
-                float(order["target_value"]),
-            )
+            limit_price = None
+            if mode_live:
+                try:
+                    limit_price = _instrument_limit_price(
+                        ContextInfo, order["stock_code"], "BUY")
+                except Exception as exc:
+                    order["quantity"] = target_requested
+                    batch.submitted[order["client_order_id"]] = True
+                    _save_active_state(batch)
+                    _write_fill(batch, order, "ERROR", 0, 0.0, "", str(exc))
+                    continue
+                requested = _target_requested_quantity(
+                    close_price, float(order["target_value"]))
+                quantity = _max_affordable_quantity(
+                    batch.remaining_cash, limit_price, requested)
+            else:
+                quantity = _target_buy_quantity(
+                    None, close_price, float(order["target_value"]))
             if mode_live and MAX_ORDER_QUANTITY > 0:
                 quantity = min(
                     quantity, (int(MAX_ORDER_QUANTITY) // 100) * 100,
@@ -1182,12 +1271,12 @@ def _process_batch(ContextInfo, batch):
                 continue
             order["quantity"] = quantity
             if mode_live:
-                reserved = _estimated_buy_cost(quantity, close_price)
+                reserved = _estimated_buy_cost(quantity, limit_price)
                 batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
                 _save_active_state(batch)
                 _submit(
                     ContextInfo, batch, order, True,
-                    official_close=close_price,
+                    limit_price=limit_price,
                 )
             else:
                 _submit(ContextInfo, batch, order, False)
@@ -1233,6 +1322,11 @@ def _force_finalize_if_near_close(ContextInfo, batch):
                 elif traded > 0:
                     _write_fill(batch, order, "PARTIAL", traded, price, "",
                                 "expired at close")
+                elif coid in batch.submitted and fill is None:
+                    _write_fill(
+                        batch, order, "ERROR", 0, 0.0, "",
+                        "QMT order not observed after passorder",
+                    )
                 else:
                     _write_fill(batch, order, "EXPIRED", 0, 0.0, "",
                                 "expired at close")
@@ -1270,7 +1364,7 @@ def _register_postclose_timer(ContextInfo):
     if g.timer_registered:
         return
     day = datetime.date.today()
-    first_compact = day.strftime("%Y%m%d") + "150455"
+    first_compact = day.strftime("%Y%m%d") + "145655"
     # Some QMT builds invoke an overdue callback synchronously while the
     # timer is registered. Mark it first so callback -> init cannot recurse.
     g.timer_registered = True
@@ -1284,7 +1378,7 @@ def _register_postclose_timer(ContextInfo):
                 "qlib_postclose_poll",
             )
         else:
-            first_legacy = day.strftime("%Y-%m-%d") + " 15:04:55"
+            first_legacy = day.strftime("%Y-%m-%d") + " 14:56:55"
             ContextInfo.run_time(
                 "timer_callback", "%dnSecond" % int(POLL_SECONDS), first_legacy,
             )
@@ -1295,6 +1389,12 @@ def _register_postclose_timer(ContextInfo):
 
 def init(ContextInfo):
     _ensure_dirs()
+    if ACCOUNT_ID:
+        ContextInfo.set_account(ACCOUNT_ID)
+        _log_event(
+            "ACCOUNT_BOUND", account_id=ACCOUNT_ID,
+            message="QMT account callback binding enabled",
+        )
     _load_processed()
     _recover_processing_batch()
     g.loaded = True
@@ -1305,6 +1405,52 @@ def init(ContextInfo):
         raise
     _log("initialized, bridge_root=%s, %d processed batches"
          % (BRIDGE_ROOT, len(g.processed)))
+    _log_event(
+        "START", bridge_root=BRIDGE_ROOT,
+        message="qmt bridge initialized",
+    )
+
+
+def _callback_value(obj, *names):
+    for name in names:
+        value = getattr(obj, name, None)
+        if value not in (None, ""):
+            return value
+    return ""
+
+
+def orderError_callback(ContextInfo, orderArgs, errMsg):
+    """Persist asynchronous broker rejection details across QMT restarts."""
+    remark = str(_callback_value(
+        orderArgs, "userOrderId", "m_strRemark", "orderRemark"))
+    strategy = str(_callback_value(
+        orderArgs, "strategyName", "m_strStrategyName"))
+    if not remark and "&&&_" in strategy:
+        remark = strategy.rsplit("&&&_", 1)[-1]
+    code = str(_callback_value(
+        orderArgs, "orderCode", "m_strInstrumentID"))
+    op_type = _callback_value(orderArgs, "opType", "m_nOpType")
+    message = str(errMsg)
+    _log_event(
+        "ORDER_REJECTED", client_order_id=remark, stock_code=code,
+        op_type=op_type, message=message,
+    )
+    batch = g.batch
+    if batch is None:
+        return
+    candidates = []
+    for order in batch.orders:
+        if remark and order["client_order_id"] == remark:
+            candidates = [order]
+            break
+        digits = "".join(ch for ch in code if ch.isdigit())
+        if digits and order["stock_code"].split(".")[0] == digits:
+            candidates.append(order)
+    if len(candidates) == 1:
+        order = candidates[0]
+        batch.submitted[order["client_order_id"]] = True
+        _save_active_state(batch)
+        _write_fill(batch, order, "REJECTED", 0, 0.0, "", message)
 
 
 def handlebar(ContextInfo):

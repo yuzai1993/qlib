@@ -90,7 +90,15 @@ class OrderManager:
             len(sell_from_candidates) + self.topk - len(current_positions),
             0,
         )
-        buy_list = selection.buy[:buy_count]
+        if len(current_positions) > self.topk:
+            logger.warning(
+                "positions=%d exceed topk=%d; suppress BUY until excess "
+                "positions are sold",
+                len(current_positions), self.topk,
+            )
+            buy_list = ()
+        else:
+            buy_list = selection.buy[:buy_count]
 
         orders = []
 

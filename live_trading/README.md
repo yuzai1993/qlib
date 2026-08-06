@@ -1,6 +1,6 @@
-# CSI1000 B6-M 盘后实盘交易
+# CSI1000 B6-M 收盘集合竞价实盘交易
 
-当前活动系统是 `csi1000_b6m_b2s_postclose_real`。它使用冻结的 B6-M seed 4000、CSI1000、Top30/Drop2/Hold20，以及每天 Top2 的渐进建仓；QMT 仅在盘后定价时段使用 `prType=49`。
+当前活动系统是 `csi1000_b6m_b2s_postclose_real`。它使用冻结的 B6-M seed 4000、CSI1000、Top30/Drop2/Hold20，以及每天 Top2 的渐进建仓；QMT 在 14:57 收盘集合竞价使用 `prType=11` 显式限价。
 
 Windows QMT、SMB 桥接和 Server酱通知已完成基础连接验收。2026-08-06 从资金账号 `8890116049` 的一手实盘开始；`LIVE_OK` 和后续晋级仍是显式步骤。旧模拟盘配置仅作历史材料，不应再调度。
 
@@ -9,17 +9,17 @@ Windows QMT、SMB 桥接和 Server酱通知已完成基础连接验收。2026-08
 | 项目 | 值 |
 |---|---|
 | 活动配置 | `live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml` |
-| 对照配置 | `backtest/configs/csi1000_b6m_b2s_postclose_parity.yaml` |
+| 对照配置 | `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml` |
 | 股票池 / benchmark | CSI1000 / `SH000852` |
 | 账户口径 | 资金账号 `8890116049`；可用资金/总资产 1,000,000 元；价值调整 0；普通股票空仓 |
-| 策略 | Top30 / Drop2 / initial Top2 / Hold20 / risk 0.95 |
+| 策略 | Top30 / Drop2 / initial Top2 / Hold20 / risk 0.93（保留 7% 现金） |
 | 研究策略基线 | `qlib_exp/backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml` |
 | 模型 | B6-M seed 4000，SHA-256 `368a503c...e6325` |
 | 账本 | `live_trading/data/csi1000_b6m_b2s_postclose_real.db` |
 | 账户环境 | `REAL`，`allow_real_money: true`，每单最多 100 股 |
-| 执行时间 | 15:05 卖出，固定等待 4 分钟后买入，15:28 撤单，15:30 终结，15:31 快照 |
+| 执行时间 | 14:57:05 买卖同时进入收盘集合竞价，15:00:30 终结，15:01 快照 |
 
-欠仓阶段在实际持仓达到 30 只前不卖出，每天最多买入两只未持仓股票。每只买入目标毛市值始终是 `当前总资产 × 0.95 / 30`，不会把剩余现金平均分给当天候选。达到 30 只后的下一交易日才进入 Drop2。
+欠仓阶段在实际持仓达到 30 只前不卖出，每天最多买入两只未持仓股票。每只买入目标毛市值始终是 `当前总资产 × 0.93 / 30`。持仓超过 30 只时禁止新增买单，优先恢复目标持仓数。
 
 ## 文件与数据流
 
@@ -28,10 +28,10 @@ T 日 16:00 导入/对账 → 更新收盘数据/名称 → 日报
              → 生成预测 → 发布 T+1 protocol-v2 批次 → 完整性检查
                                   │
                                   ▼
-T+1 日 Windows QMT 15:05–15:31 → prType=49 → fills/account 回执
+T+1 日 Windows QMT 14:57–15:01 → prType=11 → fills/account 回执
 ```
 
-BUY 计划只携带 `target_value`，计划股数为 0。QMT 在卖出后固定等待四分钟，再读取实际现金和官方收盘价，向下取整为整手并预留费用。SELL 计划携带账本股数。批次最多接受 40 单；即使当天没有订单，也会发布 header-only 批次并得到空回执文件；`planned=0, terminal=0, missing=0` 是正常终态，不是漏跑。
+BUY 计划只携带 `target_value`，计划股数为 0。QMT 用实时参考价计算整手数量，以当日涨停价校验冻结资金；SELL 使用当日跌停价。只有查询到真实委托号才记录 `ACCEPTED`。持久日志位于共享目录 `D:\qmt_bridge\logs`。
 
 ## 本地只读检查
 
@@ -91,7 +91,7 @@ test -w /Volumes/qmt_bridge/inbox
 - 逐单核对 QMT 委托类型 49、官方收盘价、成交回报、账本现金与持仓。
 
 删除 `LIVE_OK` 只会阻止尚未提交的新单；已提交订单仍会查询、撤单和终结，避免在途订单失管。
-当天是否执行会冻结在 15:05 的首次交易唤醒：若当时缺少 `LIVE_OK`，盘中补建也不会让后半批订单突然转为执行，必须等下一交易日重新授权。
+当天是否执行会冻结在 14:57:05 的首次交易唤醒：若当时缺少 `LIVE_OK`，补建也不会让该批订单突然转为执行，必须等下一交易日重新授权。
 
 ### 3. 实盘晋级
 
@@ -182,7 +182,7 @@ bash live_trading/run_monitor_cron.sh evening csi1000_b6m_b2s_postclose_real
 - QMT 重启：从 `processing/` 和 `state/active_*.json` 恢复，已标记提交的订单不重提；
 - 活动状态损坏：保留 `.corrupt_*` 证据并把整批视为可能已提交，只查询/撤单/终结，绝不重提；
 - 畸形或超限批次：移入 archive；已有同名归档不覆盖，使用 `.repeat_*` 保留两份；
-- 15:28 后不再提交新单；15:30 将未完成订单写为终态；
+- 15:00:05 后不再提交新单；15:00:30 将未完成订单写为终态；
 - 回滚：停用新 cron、停止 QMT strategy ID、保留 SQLite 与 bridge archive。不要自动恢复旧 CSI300 调度。
 
 发生账本/券商持仓或现金差异时，先停止下一日 LIVE 发布并按 QMT 委托、成交和账户快照核对。当前实盘账本价值调整固定为 0；任何人工账本修正都应使用有审计记录的管理入口。

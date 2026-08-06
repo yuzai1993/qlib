@@ -47,15 +47,17 @@ def test_qmt_cash_reservation_fees_match_live_config(bridge):
 
 
 def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
-    assert bridge.TRADE_START == "15:05:00"
-    assert bridge.SELL_WAIT_TIMEOUT_SEC == 240
-    assert bridge.CANCEL_AT == "15:28:00"
-    assert bridge.FINALIZE_AT == "15:30:00"
-    assert bridge.SNAPSHOT_REFRESH_AT == "15:31:00"
+    assert bridge.TRADE_START == "14:57:05"
+    assert bridge.CANCEL_AT == "15:00:05"
+    assert bridge.FINALIZE_AT == "15:00:30"
+    assert bridge.SNAPSHOT_REFRESH_AT == "15:01:00"
     assert bridge.MAX_ORDER_QUANTITY == 100
     calls = []
 
     class Context:
+        def set_account(self, account_id):
+            self.account_id = account_id
+
         def schedule_run(self, *args):
             calls.append(args)
             return 1
@@ -65,7 +67,7 @@ def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
     assert len(calls) == 1
     callback, first_at, repeats, interval, name = calls[0]
     assert callback is bridge.timer_callback
-    assert first_at.endswith("150455")
+    assert first_at.endswith("145655")
     assert repeats == -1
     assert interval.total_seconds() == bridge.POLL_SECONDS
     assert name == "qlib_postclose_poll"
@@ -98,7 +100,7 @@ def _order(coid="20260714001S", side="SELL", priority=10):
         "stock_code": "000001.SZ", "side": side,
         "quantity": 0 if is_buy else 800,
         "target_value": 8_000.0 if is_buy else 0.0,
-        "price_type": "AFTER_HOURS_CLOSE", "limit_price": 0.0,
+        "price_type": "CLOSE_AUCTION_LIMIT", "limit_price": 0.0,
         "priority": priority,
         "instrument_qlib": "SZ000001", "reason": "test",
     }
@@ -207,7 +209,7 @@ def test_valid_batch_claimed_sells_first(bridge):
 def test_empty_batch_finalizes_with_empty_receipt_file(bridge, monkeypatch):
     _write_batch(bridge, bridge._today(), [])
     bridge._claim_new_batch()
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:00")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:05")
 
     bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
 
@@ -467,7 +469,7 @@ def test_target_buy_quantity_respects_target_value_cash_and_fees(bridge):
     assert bridge._target_buy_quantity(1_000.0, 10.0, 8_000.0) == 0
 
 
-def test_sell_phase_waits_full_four_minutes_before_any_buy(
+def test_sell_and_buy_are_submitted_in_same_close_auction_pass(
     bridge, monkeypatch,
 ):
     sell = _order(coid="20260714001001S", side="SELL", priority=10)
@@ -477,15 +479,9 @@ def test_sell_phase_waits_full_four_minutes_before_any_buy(
     batch = bridge.g.batch
     batch.trading_started = True
     batch.phase_started = 100.0
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
     monkeypatch.setattr(bridge.time, "time", lambda: 101.0)
 
-    bridge._process_batch(_TickCtx(10.0), batch)
-
-    assert batch.phase == "SELL"
-    assert buy["client_order_id"] not in batch.submitted
-
-    monkeypatch.setattr(bridge.time, "time", lambda: 341.0)
     bridge._process_batch(_TickCtx(10.0), batch)
 
     fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
@@ -499,7 +495,7 @@ def test_live_execution_gate_is_frozen_at_first_trading_pass(
     buy = _order(coid="20260714001002B", side="BUY", priority=20)
     _write_batch(bridge, bridge._today(), [sell, buy], mode="LIVE")
     bridge._claim_new_batch()
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
     monkeypatch.setattr(bridge.time, "time", lambda: 101.0)
     submitted = []
     account_queries = []
@@ -516,12 +512,11 @@ def test_live_execution_gate_is_frozen_at_first_trading_pass(
         raising=False,
     )
 
+    trade_date = bridge.g.batch.header["trade_date"]
     bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
     (Path(bridge.BRIDGE_ROOT) / "state" /
-     ("LIVE_OK_" + bridge.g.batch.header["trade_date"])).write_text("")
-    assert bridge._live_ok(bridge.g.batch.header["trade_date"])
-    monkeypatch.setattr(bridge.time, "time", lambda: 341.0)
-    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+     ("LIVE_OK_" + trade_date)).write_text("")
+    assert bridge._live_ok(trade_date)
 
     assert submitted == []
     assert account_queries == []
@@ -529,7 +524,7 @@ def test_live_execution_gate_is_frozen_at_first_trading_pass(
     assert fills[buy["client_order_id"]]["message"] == "simulated"
 
 
-def test_removing_live_gate_blocks_later_buys_but_keeps_sell_management(
+def test_missing_live_gate_blocks_all_close_auction_orders(
     bridge, monkeypatch,
 ):
     sell = _order(coid="20260714001001S", side="SELL", priority=10)
@@ -539,9 +534,8 @@ def test_removing_live_gate_blocks_later_buys_but_keeps_sell_management(
         Path(bridge.BRIDGE_ROOT) / "state" /
         ("LIVE_OK_" + bridge._today())
     )
-    gate.write_text("")
     bridge._claim_new_batch()
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
     monkeypatch.setattr(bridge.time, "time", lambda: 101.0)
     monkeypatch.setattr(bridge, "_get_can_use_volume", lambda *args: 800)
     monkeypatch.setattr(
@@ -554,12 +548,8 @@ def test_removing_live_gate_blocks_later_buys_but_keeps_sell_management(
     )
 
     bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
-    gate.unlink()
-    monkeypatch.setattr(bridge.time, "time", lambda: 341.0)
-    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
 
-    assert [args[0] for args in submitted] == [24]
-    assert bridge.g.batch.execution_live is True
+    assert submitted == []
     fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
     assert fills[buy["client_order_id"]]["message"] == "simulated"
 
@@ -577,7 +567,7 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
      ("LIVE_OK_" + bridge._today())).write_text("")
     bridge._claim_new_batch()
     bridge.TRADE_START = "00:00:00"
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:00")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
 
     cash_reads = []
     monkeypatch.setattr(
@@ -593,12 +583,12 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
         })
 
     monkeypatch.setattr(bridge, "passorder", fake_passorder, raising=False)
-    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0), bridge.g.batch)
 
     assert len(cash_reads) == 1
     assert [row["quantity"] for row in submitted] == [800, 100]
-    assert all(row["price_type"] == 49 for row in submitted)
-    assert all(row["price"] == 0.0 for row in submitted)
+    assert all(row["price_type"] == 11 for row in submitted)
+    assert all(row["price"] == 11.0 for row in submitted)
 
 
 def test_available_cash_distinguishes_empty_query_from_real_zero(
@@ -627,7 +617,7 @@ def test_buy_phase_waits_when_account_cash_unavailable(bridge, monkeypatch):
      ("LIVE_OK_" + bridge._today())).write_text("")
     bridge._claim_new_batch()
     bridge.TRADE_START = "00:00:00"
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:00")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
     monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: None)
     monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
     monkeypatch.setattr(
@@ -654,7 +644,7 @@ def test_cash_unavailable_at_close_writes_explicit_error(bridge, monkeypatch):
     batch.phase = "BUY"
     batch.trading_started = True
     bridge.g.batch = batch
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:30:00")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:00:30")
     monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
 
     bridge._force_finalize_if_near_close(object(), batch)
@@ -688,7 +678,7 @@ def test_removing_live_switch_still_cancels_already_submitted_orders(
         m_dTradedPrice = 0.0
 
     canceled = []
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:28:30")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:00:10")
     monkeypatch.setattr(
         bridge, "_get_orders_by_remark",
         lambda account_id: {order["client_order_id"]: [Detail()]},
@@ -715,7 +705,7 @@ def test_no_new_orders_are_submitted_after_cancel_cutoff(bridge, monkeypatch):
     batch.phase = "BUY"
     (Path(bridge.BRIDGE_ROOT) / "state" /
      ("LIVE_OK_" + bridge._today())).write_text("")
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:28:30")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:00:10")
     submitted = []
     monkeypatch.setattr(
         bridge, "passorder", lambda *args: submitted.append(args), raising=False,
@@ -769,6 +759,86 @@ class _TickCtx:
         }
 
 
+def test_close_auction_limit_price_uses_daily_side_limit(bridge):
+    ctx = _TickCtx(10.0, up_stop=11.0, down_stop=9.0)
+    assert bridge._instrument_limit_price(ctx, "000001.SZ", "BUY") == 11.0
+    assert bridge._instrument_limit_price(ctx, "000001.SZ", "SELL") == 9.0
+
+
+@pytest.mark.parametrize("side", ["BUY", "SELL"])
+def test_close_auction_limit_price_fails_closed(bridge, side):
+    with pytest.raises(ValueError, match="limit price"):
+        bridge._instrument_limit_price(_TickCtx(10.0), "000001.SZ", side)
+
+
+def test_persistent_log_appends_text_and_jsonl(bridge):
+    bridge._log_event("START", message="first")
+    bridge._log_event("START", message="second")
+    day = bridge._today()
+    rows = (Path(bridge.BRIDGE_ROOT) / "logs" /
+            ("qmt_events_%s.jsonl" % day)).read_text().splitlines()
+    assert [json.loads(row)["message"] for row in rows] == ["first", "second"]
+    text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
+                ("qmt_bridge_%s.log" % day)).read_text()
+    assert "first" in text_log and "second" in text_log
+
+
+def test_passorder_return_is_not_broker_acceptance(bridge, monkeypatch):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    batch = bridge.Batch(header, [order])
+    monkeypatch.setattr(bridge, "passorder", lambda *args: None, raising=False)
+
+    assert bridge._submit(object(), batch, order, True, limit_price=11.0)
+    assert batch.fills == {}
+    events = (Path(bridge.BRIDGE_ROOT) / "logs" /
+              ("qmt_events_%s.jsonl" % bridge._today())).read_text()
+    assert "SUBMITTED_UNCONFIRMED" in events
+
+
+def test_order_error_callback_persists_rejection(bridge):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    bridge.g.batch = bridge.Batch(header, [order])
+
+    class Args:
+        userOrderId = order["client_order_id"]
+        orderCode = order["stock_code"]
+        opType = 23
+
+    bridge.orderError_callback(object(), Args(), "broker rejected")
+
+    assert bridge.g.batch.fills[order["client_order_id"]]["status"] == "REJECTED"
+    assert "broker rejected" in (Path(bridge.BRIDGE_ROOT) / "logs" /
+                                  ("qmt_events_%s.jsonl" % bridge._today())).read_text()
+
+
+def test_init_binds_configured_account_for_callbacks(bridge):
+    bridge.ACCOUNT_ID = "8890116049"
+
+    class Context:
+        def __init__(self):
+            self.bound = []
+
+        def set_account(self, account_id):
+            self.bound.append(account_id)
+
+        def schedule_run(self, *args):
+            return 1
+
+    context = Context()
+    bridge.init(context)
+    assert context.bound == ["8890116049"]
+
+
 def test_official_close_uses_last_price_without_book_slippage(bridge):
     ctx = _TickCtx(10.50, ask_price=10.99, bid_price=9.01)
 
@@ -785,7 +855,7 @@ def test_official_close_fails_closed_without_positive_last_price(
 def test_simulate_batch_processes_without_qmt_api(bridge, monkeypatch):
     """SIMULATE 模式下全流程不触碰 QMT API，直接产出 simulated 回执。"""
     bridge.TRADE_START = "00:00:00"  # 允许任何时间提交
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:00")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
     _write_batch(bridge, bridge._today(), [
         _order(coid="20260714001S", side="SELL", priority=10),
         _order(coid="20260714002B", side="BUY", priority=20),
@@ -900,7 +970,7 @@ def test_force_finalize_cancels_all_split_children(bridge, monkeypatch):
         m_nVolumeTraded = 0
         m_dTradedPrice = 0.0
 
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:28:30")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:00:10")
     monkeypatch.setattr(
         bridge, "_get_orders_by_remark",
         lambda account_id: {
@@ -1048,14 +1118,14 @@ def test_post_close_refresh_rewrites_snapshot_with_close_values(
         [_PositionRow("688223", "SH", 244500, cost=4.14)],
         raising=False)
 
-    # Before 15:31, leave the marker untouched.
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:30:59")
+    # Before 15:01, leave the marker untouched.
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:00:59")
     bridge._refresh_account_snapshots_after_close()
     assert _read_account_snapshot(bridge)[0]["available_cash"] == \
         pytest.approx(123456.78)
     assert marker.exists()
 
-    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:31:30")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:01:30")
     bridge._refresh_account_snapshots_after_close()
     rows = _read_account_snapshot(bridge)
     account = next(r for r in rows if r["type"] == "account_snapshot")

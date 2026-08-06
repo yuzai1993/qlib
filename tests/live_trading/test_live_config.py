@@ -77,7 +77,9 @@ def test_load_new_csi1000_paper_config():
     assert cfg["live"]["broker_environment"] == "SIMULATION"
     assert cfg["live"]["allow_real_money"] is False
     assert cfg["live"]["default_mode"] == "SIMULATE"
-    assert cfg["live"]["after_hours_price_type"] == 49
+    assert cfg["live"]["execution_session"] == "CLOSE_AUCTION"
+    assert cfg["live"]["close_auction_price_type"] == 11
+    assert cfg["live"]["submit_after"] == "14:57:05"
     assert cfg["web"] == {"host": "127.0.0.1", "port": 8081}
     assert "schedule" not in cfg
     assert cfg["storage"]["db_path"].endswith(
@@ -104,6 +106,10 @@ def test_load_csi1000_real_config_is_isolated_and_live_only():
     assert cfg["live"]["broker_environment"] == "REAL"
     assert cfg["live"]["allow_real_money"] is True
     assert cfg["live"]["default_mode"] == "LIVE"
+    assert cfg["strategy"]["risk_degree"] == pytest.approx(0.93)
+    assert cfg["live"]["execution_session"] == "CLOSE_AUCTION"
+    assert cfg["live"]["close_auction_price_type"] == 11
+    assert cfg["live"]["submit_after"] == "14:57:05"
     assert cfg["storage"]["db_path"].endswith(
         "csi1000_b6m_b2s_postclose_real.db"
     )
@@ -129,7 +135,9 @@ def test_simulation_config_safety_fields_fail_closed(tmp_path, change, message):
             "strategy_id": "paper",
             "broker_environment": "SIMULATION",
             "allow_real_money": False,
-            "after_hours_price_type": 49,
+            "execution_session": "CLOSE_AUCTION",
+            "close_auction_price_type": 11,
+            "submit_after": "14:57:05",
         },
     }
     section, key, value = change
@@ -165,7 +173,9 @@ def test_simulation_account_adjustment_fails_closed(
             "strategy_id": "paper",
             "broker_environment": "SIMULATION",
             "allow_real_money": False,
-            "after_hours_price_type": 49,
+            "execution_session": "CLOSE_AUCTION",
+            "close_auction_price_type": 11,
+            "submit_after": "14:57:05",
         },
     }
     path = tmp_path / "paper.yaml"
@@ -188,7 +198,9 @@ def test_simulation_account_accepts_negative_adjustment_with_positive_nav(tmp_pa
             "strategy_id": "paper",
             "broker_environment": "SIMULATION",
             "allow_real_money": False,
-            "after_hours_price_type": 49,
+            "execution_session": "CLOSE_AUCTION",
+            "close_auction_price_type": 11,
+            "submit_after": "14:57:05",
         },
     }
     path = tmp_path / "paper.yaml"

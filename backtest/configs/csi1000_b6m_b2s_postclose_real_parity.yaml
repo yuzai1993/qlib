@@ -1,21 +1,21 @@
-# Deployment-parity config for csi1000_b6m_b2s_postclose.
-# The staged initialization overlay is production behavior, not a new research baseline.
+# Deployment-parity config for the csi1000_b6m_b2s_postclose REAL account.
+# Strategy/model settings match the simulation parity config; account identity differs.
 
 run:
   mode: backtest_only
-  note: "csi1000_b6m_b2s_postclose_parity"
+  note: "csi1000_b6m_b2s_postclose_real_parity"
   n_runs: 1
   generate_figures: false
 
 parity:
-  live_config: "live_trading/configs/csi1000_b6m_b2s_postclose.yaml"
+  live_config: "live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml"
   model_experiment_name: "baseline/b6-m"
   model_experiment_id: "frozen-baseline"
   model_recorder_id: "seed4000"
   model_path: "live_trading/models/b6_m/seed4000/trained_model"
   model_sha256: "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325"
   execution_price_proxy: "close"
-  broker_environment: "SIMULATION"
+  broker_environment: "REAL"
   close_auction_price_type: 11
 
 data:
@@ -51,13 +51,13 @@ strategy:
   n_drop: 2
   kwargs:
     initial_buy_count: 2
-    risk_degree: 0.95
+    risk_degree: 0.93
     hold_thresh: 20
     only_tradable: false
     forbid_all_trade_at_limit: false
 
 backtest:
-  account: 9268587.08
+  account: 1000000.0
   exchange_kwargs:
     freq: "day"
     deal_price: "close"

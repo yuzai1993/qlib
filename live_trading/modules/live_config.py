@@ -68,8 +68,12 @@ def _validate_trading_config(config: dict) -> None:
         )
     if environment == "REAL" and live.get("default_mode") != "LIVE":
         raise ValueError("REAL broker_environment requires default_mode=LIVE")
-    if live.get("after_hours_price_type") != 49:
-        raise ValueError("live.after_hours_price_type must be 49")
+    if live.get("execution_session") != "CLOSE_AUCTION":
+        raise ValueError("live.execution_session must be CLOSE_AUCTION")
+    if live.get("close_auction_price_type") != 11:
+        raise ValueError("live.close_auction_price_type must be 11")
+    if live.get("submit_after") != "14:57:05":
+        raise ValueError("live.submit_after must be 14:57:05")
 
     opening_cash = config.get("account", {}).get("opening_cash")
     if (

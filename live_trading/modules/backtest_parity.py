@@ -130,9 +130,9 @@ def validate_backtest_parity(live: dict, backtest: dict) -> None:
         ("live.broker_environment",
          _optional(live, "live.broker_environment"),
          _optional(backtest, "parity.broker_environment")),
-        ("live.after_hours_price_type",
-         _optional(live, "live.after_hours_price_type"),
-         _optional(backtest, "parity.after_hours_price_type")),
+        ("live.close_auction_price_type",
+         _optional(live, "live.close_auction_price_type"),
+         _optional(backtest, "parity.close_auction_price_type")),
     ]
 
     mismatches = [

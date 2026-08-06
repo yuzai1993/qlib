@@ -72,13 +72,11 @@ live:
   broker_environment: "SIMULATION"
   allow_real_money: false
   default_mode: "SIMULATE"
-  execution_session: "AFTER_HOURS_FIXED_PRICE"
-  after_hours_price_type: 49
-  submit_after: "15:05:00"
-  sell_wait_seconds: 240
-  cancel_at: "15:28:00"
-  finalize_at: "15:30:00"
-  snapshot_after: "15:31:00"
+  execution_session: "CLOSE_AUCTION"
+  close_auction_price_type: 11
+  submit_after: "14:57:05"
+  finalize_at: "15:00:30"
+  snapshot_after: "15:01:00"
   max_orders_per_day: 40
 
 storage:

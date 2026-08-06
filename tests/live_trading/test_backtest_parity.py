@@ -19,6 +19,12 @@ NEW_LIVE_PATH = (
 NEW_BACKTEST_PATH = (
     REPO_ROOT / "backtest/configs/csi1000_b6m_b2s_postclose_parity.yaml"
 )
+REAL_LIVE_PATH = (
+    REPO_ROOT / "live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml"
+)
+REAL_BACKTEST_PATH = (
+    REPO_ROOT / "backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml"
+)
 
 
 def _configs():
@@ -50,6 +56,18 @@ def test_real_live_and_designated_backtest_configs_match():
 def test_new_csi1000_live_and_parity_configs_match():
     live, backtest = _new_configs()
 
+    validate_backtest_parity(live, backtest)
+
+
+def test_csi1000_real_live_and_designated_parity_configs_match():
+    live = load_live_config(REAL_LIVE_PATH, REPO_ROOT)
+    backtest = yaml.safe_load(
+        REAL_BACKTEST_PATH.read_text(encoding="utf-8")
+    )
+
+    assert live["parity"]["backtest_config"] == str(
+        REAL_BACKTEST_PATH.relative_to(REPO_ROOT)
+    )
     validate_backtest_parity(live, backtest)
 
 

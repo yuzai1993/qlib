@@ -4,7 +4,7 @@
 BUY 使用 ``target_value``。
 
 规则：
-- 买卖均使用盘后定价协议；价格由 QMT 使用官方收盘价，不携带昨收限价
+- 买卖均使用收盘集合竞价协议；价格由 QMT 在执行时解析当日涨跌停价
 - BUY 的股数由 QMT 按成交前实际可用资金和目标金额计算
 - SELL 非整手向下取整到 trade_unit，取整后为 0 则丢弃
 - 同 code 同向合并；卖单 priority=10 先于买单 priority=20
@@ -96,7 +96,7 @@ class OrderPlanner:
                     side=side,
                     quantity=quantity,
                     target_value=target_value,
-                    price_type="AFTER_HOURS_CLOSE",
+                    price_type="CLOSE_AUCTION_LIMIT",
                     limit_price=0.0,
                     priority=priority,
                     instrument_qlib=inst,

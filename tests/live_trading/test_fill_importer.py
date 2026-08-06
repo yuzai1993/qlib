@@ -77,7 +77,7 @@ def _record_plan(
                     * max(float(f["avg_price"]), 1.0),
                 )
             ),
-            "price_type": "AFTER_HOURS_CLOSE",
+            "price_type": "CLOSE_AUCTION_LIMIT",
             "limit_price": 0.0,
             "priority": 10 if f["side"] == "SELL" else 20,
             "reason": "test",

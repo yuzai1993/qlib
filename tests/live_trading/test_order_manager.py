@@ -55,6 +55,18 @@ def test_full_portfolio_rotates_two_positions():
     ]
 
 
+def test_positions_above_topk_preserve_sells_but_block_new_buys():
+    scores = _scores()
+    held = list(scores.index[:9]) + list(scores.index[10:12])
+
+    orders = _manager().generate_orders(
+        scores, _positions(held), 10_000.0, _prices(scores), 20_000.0,
+    )
+
+    assert _instruments(orders, "SELL")
+    assert _instruments(orders, "BUY") == []
+
+
 def test_underfilled_portfolio_rotates_and_fills_gap():
     scores = _scores()
     held = list(scores.index[:7]) + list(scores.index[10:12])
@@ -126,7 +138,7 @@ def test_empty_effective_scores_with_positions_generate_no_orders(scores):
     assert orders == []
 
 
-def test_eleven_positions_sell_two_and_buy_one_to_reach_topk():
+def test_eleven_positions_sell_two_without_adding_until_reconciled():
     scores = _scores()
     held = list(scores.index[:9]) + list(scores.index[10:12])
 
@@ -137,8 +149,8 @@ def test_eleven_positions_sell_two_and_buy_one_to_reach_topk():
     sells = _instruments(orders, "SELL")
     buys = _instruments(orders, "BUY")
     assert set(sells) == set(scores.index[10:12])
-    assert buys == [scores.index[9]]
-    assert len(held) - len(sells) + len(buys) == 10
+    assert buys == []
+    assert len(held) - len(sells) + len(buys) == 9
 
 
 def test_eleven_top_ranked_positions_sell_one_and_buy_none_to_reach_topk():

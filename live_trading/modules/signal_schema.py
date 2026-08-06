@@ -138,15 +138,21 @@ def compute_checksum(order_lines: list) -> str:
 def validate_order(order: SignalOrder) -> None:
     if order.side not in VALID_SIDES:
         raise SchemaError(f"invalid side: {order.side!r}")
-    if order.price_type != "AFTER_HOURS_CLOSE":
-        raise SchemaError(f"price_type must be AFTER_HOURS_CLOSE: {order.price_type!r}")
+    if order.price_type != "CLOSE_AUCTION_LIMIT":
+        raise SchemaError(
+            "price_type must be CLOSE_AUCTION_LIMIT: "
+            f"{order.price_type!r}"
+        )
     if (
         isinstance(order.limit_price, bool)
         or not isinstance(order.limit_price, (int, float))
         or not math.isfinite(float(order.limit_price))
         or float(order.limit_price) != 0.0
     ):
-        raise SchemaError(f"limit_price must be 0 for after-hours close: {order.limit_price!r}")
+        raise SchemaError(
+            "limit_price must be 0 for QMT close-auction resolution: "
+            f"{order.limit_price!r}"
+        )
     if (
         isinstance(order.target_value, bool)
         or not isinstance(order.target_value, (int, float))

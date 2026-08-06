@@ -31,7 +31,7 @@ def _order(**kwargs) -> SignalOrder:
         side="SELL",
         quantity=800,
         target_value=0.0,
-        price_type="AFTER_HOURS_CLOSE",
+        price_type="CLOSE_AUCTION_LIMIT",
         limit_price=0.0,
         priority=10,
         instrument_qlib="SH600000",
@@ -121,6 +121,11 @@ def test_validate_order_accepts_good():
         side="BUY", quantity=0, target_value=15_833.33,
         client_order_id="20260714001002B", priority=20,
     ))
+
+
+def test_validate_order_rejects_legacy_after_hours_price_type():
+    with pytest.raises(SchemaError, match="CLOSE_AUCTION_LIMIT"):
+        validate_order(_order(price_type="AFTER_HOURS_CLOSE"))
 
 
 @pytest.mark.parametrize("bad_kwargs", [

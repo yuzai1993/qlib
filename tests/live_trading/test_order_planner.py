@@ -45,7 +45,7 @@ def test_sell_before_buy_with_priority_and_seq():
     assert sell.target_value == 0.0
     assert buy.quantity == 0
     assert buy.target_value == pytest.approx(15_000.0)
-    assert {sell.price_type, buy.price_type} == {"AFTER_HOURS_CLOSE"}
+    assert {sell.price_type, buy.price_type} == {"CLOSE_AUCTION_LIMIT"}
     assert sell.limit_price == buy.limit_price == 0.0
 
 
@@ -68,7 +68,7 @@ def test_after_hours_close_orders_do_not_use_previous_close_or_slippage():
     sell = next(o for o in orders if o.side == "SELL")
     buy = next(o for o in orders if o.side == "BUY")
     assert sell.limit_price == buy.limit_price == 0.0
-    assert sell.price_type == buy.price_type == "AFTER_HOURS_CLOSE"
+    assert sell.price_type == buy.price_type == "CLOSE_AUCTION_LIMIT"
 
 
 def test_sell_quantity_rounded_down_to_lot_and_zero_dropped():

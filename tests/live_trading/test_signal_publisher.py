@@ -13,6 +13,7 @@ from live_trading.modules.signal_publisher import SignalPublisher, PublishError
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.signal_schema import (
     BatchHeader,
+    FillEvent,
     SchemaError,
     SignalOrder,
     compute_checksum,
@@ -214,4 +215,24 @@ def test_publish_guard_refuses_unreconciled_prior_live_batch(tmp_path):
     with pytest.raises(SystemExit, match=r"20260716_csi300_topk10_001.*2 missing"):
         run_publish_signals.ensure_prior_live_batches_terminal(
             recorder, "2026-07-17",
+        )
+
+
+def test_publish_guard_refuses_prior_failed_sell(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    header = dataclasses.replace(
+        _header(order_count=2), mode="LIVE",
+        checksum=compute_checksum([o.to_json_line() for o in _orders()]),
+    )
+    recorder.record_publish_plan(header, _orders())
+    recorder.apply_fill(FillEvent(
+        batch_id=BATCH_ID, client_order_id="20260714001S", mode="LIVE",
+        stock_code="000001.SZ", side="SELL", status="ERROR",
+        requested_qty=800, filled_qty=0, avg_price=0.0,
+        qmt_order_id="", message="not observed", ts="2026-07-14T15:00:30",
+    ))
+
+    with pytest.raises(SystemExit, match=r"failed prior SELL.*20260714001S"):
+        run_publish_signals.ensure_no_failed_prior_sells(
+            recorder, "2026-07-15",
         )

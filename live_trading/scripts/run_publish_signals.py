@@ -94,6 +94,19 @@ def ensure_prior_live_batches_terminal(recorder, trade_date: str) -> None:
     )
 
 
+def ensure_no_failed_prior_sells(recorder, trade_date: str) -> None:
+    blockers = recorder.get_failed_live_sells_before(trade_date)
+    if not blockers:
+        return
+    details = ", ".join(
+        f"{row['client_order_id']}={row['status']}" for row in blockers
+    )
+    raise SystemExit(
+        "refusing LIVE publish: failed prior SELL requires reconciliation: "
+        + details
+    )
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Publish QMT signal batch")
     p.add_argument("--config", required=True, help="live config id (configs/*.yaml)")
@@ -244,6 +257,7 @@ def main():
 
     if mode == "LIVE":
         ensure_prior_live_batches_terminal(recorder, trade_date)
+        ensure_no_failed_prior_sells(recorder, trade_date)
 
     # 1. 预测分数
     signal_date, scores, trade_dates = get_signal_date_and_scores(

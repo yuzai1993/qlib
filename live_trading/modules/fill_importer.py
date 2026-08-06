@@ -1505,6 +1505,24 @@ class LiveRecorder:
             ).fetchall()
             return [dict(row) for row in rows]
 
+    def get_failed_live_sells_before(self, trade_date: str) -> list:
+        """Return prior LIVE sell intents whose latest terminal result did not fill."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT b.trade_date, o.batch_id, o.client_order_id,
+                          o.stock_code, f.status, f.filled_qty, f.message
+                     FROM signal_orders o
+                     JOIN batches b ON b.batch_id=o.batch_id
+                     JOIN fills f ON f.batch_id=o.batch_id
+                                 AND f.client_order_id=o.client_order_id
+                    WHERE b.mode='LIVE' AND b.trade_date < ?
+                      AND b.superseded_by IS NULL AND o.side='SELL'
+                      AND f.status IN ('REJECTED','SKIPPED','EXPIRED','ERROR')
+                    ORDER BY b.trade_date, o.client_order_id""",
+                (trade_date,),
+            ).fetchall()
+            return [dict(row) for row in rows]
+
     def get_fills_by_dates(self, trade_dates: list) -> list:
         """按 batches.trade_date 关联取回执（监控用）。"""
         if not trade_dates:

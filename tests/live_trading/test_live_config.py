@@ -43,6 +43,10 @@ def test_load_operator_probe_config_is_isolated_from_strategy_publishing():
     assert cfg["live"]["close_auction_price_type"] == 49
     assert cfg["live"]["bridge_root"] == "/Volumes/qmt_bridge/pr49_probe"
     assert cfg["live"]["max_orders_per_day"] == 100
+    assert cfg["live"]["submit_after"] == "15:05:00"
+    assert cfg["live"]["cancel_at"] == "15:28:00"
+    assert cfg["live"]["finalize_at"] == "15:30:00"
+    assert cfg["live"]["snapshot_after"] == "15:31:00"
     assert cfg["storage"]["db_path"] == (
         "live_trading/data/csi1000_b6m_b2s_postclose_real.db"
     )
@@ -84,6 +88,95 @@ def test_strategy_config_rejects_fixed_price_profile(tmp_path, change, message):
 
 
 @pytest.mark.parametrize(
+    "field,wrong_value",
+    [
+        ("submit_after", "14:57:06"),
+        ("cancel_at", "15:00:06"),
+        ("finalize_at", "15:00:31"),
+        ("snapshot_after", "15:01:01"),
+    ],
+)
+def test_strategy_timing_fields_are_required_and_profile_bound(
+    tmp_path, field, wrong_value,
+):
+    import yaml
+
+    config = {
+        "account": {"opening_cash": 1_000_000.0},
+        "strategy": {"topk": 30, "initial_buy_count": 2},
+        "live": {
+            "kind": "STRATEGY",
+            "strategy_id": "main",
+            "broker_environment": "REAL",
+            "allow_real_money": True,
+            "default_mode": "LIVE",
+            "execution_session": "CLOSE_AUCTION",
+            "close_auction_price_type": 11,
+            "submit_after": "14:57:05",
+            "cancel_at": "15:00:05",
+            "finalize_at": "15:00:30",
+            "snapshot_after": "15:01:00",
+        },
+    }
+    path = tmp_path / "strategy.yaml"
+
+    config["live"].pop(field)
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    with pytest.raises(ValueError, match=field):
+        load_live_config(path, project_root=tmp_path)
+
+    config["live"][field] = wrong_value
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    with pytest.raises(ValueError, match=field):
+        load_live_config(path, project_root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    "field,wrong_value",
+    [
+        ("submit_after", "15:05:01"),
+        ("cancel_at", "15:28:01"),
+        ("finalize_at", "15:30:01"),
+        ("snapshot_after", "15:31:01"),
+    ],
+)
+def test_operator_probe_timing_fields_are_required_and_profile_bound(
+    tmp_path, field, wrong_value,
+):
+    import yaml
+
+    config = {
+        "account": {"opening_cash": 1_000_000.0},
+        "live": {
+            "kind": "OPERATOR_PROBE",
+            "strategy_id": "csi1000_pr49_one_lot_probe",
+            "bridge_root": "/Volumes/qmt_bridge/pr49_probe",
+            "broker_environment": "REAL",
+            "allow_real_money": True,
+            "default_mode": "LIVE",
+            "execution_session": "AFTER_HOURS_FIXED_PRICE",
+            "close_auction_price_type": 49,
+            "submit_after": "15:05:00",
+            "cancel_at": "15:28:00",
+            "finalize_at": "15:30:00",
+            "snapshot_after": "15:31:00",
+            "max_orders_per_day": 100,
+        },
+    }
+    path = tmp_path / "probe.yaml"
+
+    config["live"].pop(field)
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    with pytest.raises(ValueError, match=field):
+        load_live_config(path, project_root=tmp_path)
+
+    config["live"][field] = wrong_value
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    with pytest.raises(ValueError, match=field):
+        load_live_config(path, project_root=tmp_path)
+
+
+@pytest.mark.parametrize(
     "change,message",
     [
         (("live", "close_auction_price_type", 11), "price_type"),
@@ -108,6 +201,9 @@ def test_operator_probe_rejects_cross_profile_or_shared_bridge(
             "execution_session": "AFTER_HOURS_FIXED_PRICE",
             "close_auction_price_type": 49,
             "submit_after": "15:05:00",
+            "cancel_at": "15:28:00",
+            "finalize_at": "15:30:00",
+            "snapshot_after": "15:31:00",
             "max_orders_per_day": 100,
         },
     }
@@ -151,6 +247,9 @@ def test_operator_probe_requires_real_live_and_one_lot_limit(
             "execution_session": "AFTER_HOURS_FIXED_PRICE",
             "close_auction_price_type": 49,
             "submit_after": "15:05:00",
+            "cancel_at": "15:28:00",
+            "finalize_at": "15:30:00",
+            "snapshot_after": "15:31:00",
             "max_orders_per_day": 100,
         },
     }
@@ -281,6 +380,9 @@ def test_simulation_config_safety_fields_fail_closed(tmp_path, change, message):
             "execution_session": "CLOSE_AUCTION",
             "close_auction_price_type": 11,
             "submit_after": "14:57:05",
+            "cancel_at": "15:00:05",
+            "finalize_at": "15:00:30",
+            "snapshot_after": "15:01:00",
         },
     }
     section, key, value = change
@@ -319,6 +421,9 @@ def test_simulation_account_adjustment_fails_closed(
             "execution_session": "CLOSE_AUCTION",
             "close_auction_price_type": 11,
             "submit_after": "14:57:05",
+            "cancel_at": "15:00:05",
+            "finalize_at": "15:00:30",
+            "snapshot_after": "15:01:00",
         },
     }
     path = tmp_path / "paper.yaml"
@@ -344,6 +449,9 @@ def test_simulation_account_accepts_negative_adjustment_with_positive_nav(tmp_pa
             "execution_session": "CLOSE_AUCTION",
             "close_auction_price_type": 11,
             "submit_after": "14:57:05",
+            "cancel_at": "15:00:05",
+            "finalize_at": "15:00:30",
+            "snapshot_after": "15:01:00",
         },
     }
     path = tmp_path / "paper.yaml"

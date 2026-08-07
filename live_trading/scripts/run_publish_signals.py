@@ -26,6 +26,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.backtest_parity import validate_configured_backtest
+from live_trading.modules.execution_profile import get_execution_profile
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.order_planner import OrderPlanner
@@ -235,15 +236,32 @@ def get_prev_close(config, instruments: list, signal_date: str) -> dict:
     return result
 
 
+def build_order_planner(config: dict, execution_profile=None) -> OrderPlanner:
+    """Bind generic strategy orders to the selected broker profile."""
+    live_cfg = config["live"]
+    profile = execution_profile or get_execution_profile(
+        live_cfg["execution_session"],
+    )
+    return OrderPlanner({
+        "max_orders_per_day": live_cfg["max_orders_per_day"],
+        "trade_unit": config["exchange"]["trade_unit"],
+        "execution_session": profile.name,
+        "signal_price_type": profile.signal_price_type,
+    })
+
+
 def main():
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
     config_path = CONFIGS_DIR / f"{args.config}.yaml"
     config = load_live_config(config_path, PROJECT_ROOT)
+    live_cfg = config["live"]
+    if live_cfg.get("kind", "STRATEGY") != "STRATEGY":
+        raise SystemExit("generic signal publisher only supports STRATEGY configs")
     parity_path = validate_configured_backtest(config, PROJECT_ROOT)
     logger.info("Live/Backtest parity gate passed: %s", parity_path)
-    live_cfg = config["live"]
+    execution_profile = get_execution_profile(live_cfg["execution_session"])
 
     mode = resolve_mode(args, config)
     account_id = resolve_account_id(config)
@@ -310,10 +328,7 @@ def main():
         logger.info("no orders planned for %s; publishing terminal empty batch", trade_date)
 
     # 5. 订单行
-    planner = OrderPlanner({
-        "max_orders_per_day": live_cfg["max_orders_per_day"],
-        "trade_unit": config["exchange"]["trade_unit"],
-    })
+    planner = build_order_planner(config, execution_profile)
     orders = planner.plan(
         intents, prev_close, batch_id, trade_date, batch_seq=args.seq,
     )

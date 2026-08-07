@@ -125,3 +125,35 @@ def test_account_value_uses_adjustment_without_reducing_spendable_cash():
     )
 
     assert total == pytest.approx(9_269_587.08)
+
+
+def test_generic_publisher_rejects_operator_probe_before_parity(monkeypatch):
+    monkeypatch.setattr(
+        publish, "parse_args",
+        lambda: SimpleNamespace(config="csi1000_pr49_one_lot_probe"),
+    )
+    monkeypatch.setattr(
+        publish, "load_live_config",
+        lambda *args: {"live": {"kind": "OPERATOR_PROBE"}},
+    )
+    monkeypatch.setattr(
+        publish, "validate_configured_backtest",
+        lambda *args: pytest.fail("operator probe reached parity validation"),
+    )
+
+    with pytest.raises(SystemExit, match="STRATEGY"):
+        publish.main()
+
+
+def test_generic_publisher_binds_planner_to_selected_execution_profile():
+    config = {
+        "live": {
+            "execution_session": "CLOSE_AUCTION",
+            "max_orders_per_day": 40,
+        },
+        "exchange": {"trade_unit": 100},
+    }
+
+    planner = publish.build_order_planner(config)
+
+    assert planner.signal_price_type == "CLOSE_AUCTION_LIMIT"

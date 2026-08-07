@@ -87,9 +87,11 @@ def _validate_trading_config(config: dict) -> None:
             f"price_type {profile.qmt_price_type}"
         )
     for field in ("submit_after", "cancel_at", "finalize_at", "snapshot_after"):
-        configured = live.get(field)
+        if field not in live:
+            raise ValueError(f"live.{field} is required")
+        configured = live[field]
         expected = getattr(profile, field)
-        if configured is not None and configured != expected:
+        if configured != expected:
             raise ValueError(
                 f"live.{field} must match execution profile: {expected}"
             )

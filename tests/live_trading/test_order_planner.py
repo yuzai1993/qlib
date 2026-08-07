@@ -72,12 +72,23 @@ def test_after_hours_close_orders_do_not_use_previous_close_or_slippage():
 
 
 def test_planner_emits_its_configured_signal_price_type():
-    orders = _planner(signal_price_type="AFTER_HOURS_CLOSE").plan(
+    orders = _planner(
+        execution_session="AFTER_HOURS_FIXED_PRICE",
+        signal_price_type="AFTER_HOURS_CLOSE",
+    ).plan(
         [{"instrument": "SH600000", "direction": "BUY", "target_value": 10_000.0}],
         {}, BATCH_ID, TRADE_DATE,
     )
 
     assert [order.price_type for order in orders] == ["AFTER_HOURS_CLOSE"]
+
+
+def test_planner_rejects_signal_type_mismatched_to_execution_session():
+    with pytest.raises(PlanError, match="signal_price_type"):
+        _planner(
+            execution_session="CLOSE_AUCTION",
+            signal_price_type="AFTER_HOURS_CLOSE",
+        )
 
 
 def test_sell_quantity_rounded_down_to_lot_and_zero_dropped():

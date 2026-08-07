@@ -121,7 +121,7 @@ def run_evening(date, recorder, config) -> list:
 
 
 def run_postmarket(date, recorder, store, config) -> list:
-    strategy_id = config["live"].get("strategy_id")
+    strategy_id = config["live"]["strategy_id"]
     batches = recorder.get_active_batches_by_date(
         date, strategy_id=strategy_id,
     )
@@ -401,7 +401,7 @@ def main():
     init_qlib(config)
     calendar = get_calendar_dates()
     active_batches = recorder.get_active_batches_by_date(
-        date, strategy_id=config["live"].get("strategy_id"),
+        date, strategy_id=config["live"]["strategy_id"],
     )
     if date not in calendar:
         if _may_run_with_stale_calendar(args.stage, active_batches):

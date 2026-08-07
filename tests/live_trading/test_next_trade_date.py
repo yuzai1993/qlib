@@ -123,3 +123,56 @@ def test_postmarket_with_active_batch_may_run_before_calendar_update():
     assert not run_monitor._may_run_with_stale_calendar(
         "report", [{"batch_id": "b"}],
     )
+
+
+def test_postmarket_requires_strategy_id_before_querying_shared_ledger(tmp_path):
+    from live_trading.scripts import run_monitor
+
+    class FailingRecorder:
+        @staticmethod
+        def get_active_batches_by_date(*_args, **_kwargs):
+            raise AssertionError("must not make an unfiltered ledger query")
+
+    with pytest.raises(KeyError, match="strategy_id"):
+        run_monitor.run_postmarket(
+            "2026-07-20", FailingRecorder(), object(),
+            {"live": {"bridge_root": str(tmp_path)}},
+        )
+
+
+def test_monitor_main_requires_strategy_id_before_calendar_batch_query(
+    monkeypatch, tmp_path,
+):
+    from live_trading.scripts import run_monitor
+
+    class FailingRecorder:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        @staticmethod
+        def get_active_batches_by_date(*_args, **_kwargs):
+            raise AssertionError("must not make an unfiltered ledger query")
+
+    monkeypatch.setattr(
+        run_monitor, "parse_args",
+        lambda: type("Args", (), {
+            "config": "test",
+            "date": "2026-07-20",
+            "stage": "postmarket",
+        })(),
+    )
+    monkeypatch.setattr(
+        run_monitor, "load_live_config",
+        lambda *_args: {
+            "storage": {"db_path": str(tmp_path / "live.db")},
+            "live": {"bridge_root": str(tmp_path)},
+        },
+    )
+    monkeypatch.setattr(run_monitor, "LiveRecorder", FailingRecorder)
+    monkeypatch.setattr(run_monitor, "MonitorStore", lambda *_args: object())
+    monkeypatch.setattr(run_monitor, "create_notifier", lambda *_args: object())
+    monkeypatch.setattr(run_monitor, "init_qlib", lambda *_args: None)
+    monkeypatch.setattr(run_monitor, "get_calendar_dates", lambda: [])
+
+    with pytest.raises(KeyError, match="strategy_id"):
+        run_monitor.main()

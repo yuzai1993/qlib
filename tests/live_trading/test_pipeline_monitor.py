@@ -27,6 +27,15 @@ def _rules(findings):
     return [f.rule for f in findings]
 
 
+def _set_batch_strategy(recorder, batch_id, strategy_id=CONFIG_ID):
+    """Make direct batch fixtures match the durable publish-plan metadata."""
+    with recorder._conn() as conn:
+        conn.execute(
+            "UPDATE batches SET strategy_id=? WHERE batch_id=?",
+            (strategy_id, batch_id),
+        )
+
+
 def test_daily_report_discloses_nonzero_account_value_adjustment():
     snap = {
         "total_value": 9_268_587.08,
@@ -218,6 +227,8 @@ def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):
     active = "20260715_csi300_topk10_003"
     recorder.record_batch(old, "2026-07-15", "LIVE", 10)
     recorder.record_batch(active, "2026-07-15", "LIVE", 10)
+    _set_batch_strategy(recorder, old)
+    _set_batch_strategy(recorder, active)
     recorder.supersede_batch(old, active)
     reconciled = []
 
@@ -231,7 +242,10 @@ def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):
     )
     findings = run_monitor.run_postmarket(
         "2026-07-15", recorder, store,
-        {"live": {"bridge_root": str(tmp_path)}},
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": CONFIG_ID,
+        }},
     )
 
     assert findings == []
@@ -244,6 +258,7 @@ def test_run_postmarket_flags_missing_broker_snapshot(monkeypatch, tmp_path):
     store = MonitorStore(str(db))
     batch_id = "20260715_csi300_topk10_001"
     recorder.record_batch(batch_id, "2026-07-15", "LIVE", 1)
+    _set_batch_strategy(recorder, batch_id)
     monkeypatch.setattr(
         run_monitor.FillImporter, "reconcile",
         lambda _self, _bid: {"planned": 1, "terminal": 1, "missing": 0},
@@ -251,7 +266,10 @@ def test_run_postmarket_flags_missing_broker_snapshot(monkeypatch, tmp_path):
 
     findings = run_monitor.run_postmarket(
         "2026-07-15", recorder, store,
-        {"live": {"bridge_root": str(tmp_path)}},
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": CONFIG_ID,
+        }},
     )
 
     assert _rules(findings) == ["BROKER_SNAPSHOT_MISSING"]
@@ -263,6 +281,7 @@ def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_pa
     store = MonitorStore(str(db))
     batch_id = "20260715_csi300_topk10_001"
     recorder.record_batch(batch_id, "2026-07-15", "SIMULATE", 1)
+    _set_batch_strategy(recorder, batch_id)
     monkeypatch.setattr(
         run_monitor.FillImporter, "reconcile",
         lambda _self, _bid: {"planned": 1, "terminal": 1, "missing": 0},
@@ -270,7 +289,10 @@ def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_pa
 
     findings = run_monitor.run_postmarket(
         "2026-07-15", recorder, store,
-        {"live": {"bridge_root": str(tmp_path)}},
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": CONFIG_ID,
+        }},
     )
 
     assert findings == []

@@ -228,6 +228,29 @@ def test_publish_guard_refuses_unreconciled_prior_live_batch(tmp_path):
         )
 
 
+def test_publish_guard_ignores_unreconciled_other_strategy(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    main_batch_id = "20260716_csi1000_b6m_b2s_postclose_real_001"
+    probe_batch_id = "20260716_csi1000_pr49_one_lot_probe_001"
+    recorder.record_batch(main_batch_id, "2026-07-16", "LIVE", 1)
+    recorder.record_batch(probe_batch_id, "2026-07-16", "LIVE", 0)
+    with recorder._conn() as conn:
+        conn.executemany(
+            "UPDATE batches SET strategy_id=? WHERE batch_id=?",
+            [
+                ("csi1000_b6m_b2s_postclose_real", main_batch_id),
+                ("csi1000_pr49_one_lot_probe", probe_batch_id),
+            ],
+        )
+
+    assert recorder.get_unreconciled_active_live_batches_before(
+        "2026-07-17", strategy_id="csi1000_pr49_one_lot_probe",
+    ) == []
+    run_publish_signals.ensure_prior_live_batches_terminal(
+        recorder, "2026-07-17", "csi1000_pr49_one_lot_probe",
+    )
+
+
 def test_publish_guard_refuses_prior_failed_sell(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     header = dataclasses.replace(

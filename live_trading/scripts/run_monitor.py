@@ -104,7 +104,9 @@ def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
     config_id = config["live"]["strategy_id"]
-    candidates = recorder.get_active_batches_by_date(next_day)
+    candidates = recorder.get_active_batches_by_date(
+        next_day, strategy_id=config_id,
+    )
     if not candidates:
         return check_evening(next_day, None, [], config_id)
     # 同一交易日取最新 seq（batch_id 结尾为三位 seq）。
@@ -119,7 +121,10 @@ def run_evening(date, recorder, config) -> list:
 
 
 def run_postmarket(date, recorder, store, config) -> list:
-    batches = recorder.get_active_batches_by_date(date)
+    strategy_id = config["live"].get("strategy_id")
+    batches = recorder.get_active_batches_by_date(
+        date, strategy_id=strategy_id,
+    )
     importer = FillImporter(config["live"]["bridge_root"], recorder)
     reconciles = {b["batch_id"]: importer.reconcile(b["batch_id"]) for b in batches}
     fills = recorder.get_fills_by_dates([date])
@@ -395,7 +400,9 @@ def main():
 
     init_qlib(config)
     calendar = get_calendar_dates()
-    active_batches = recorder.get_active_batches_by_date(date)
+    active_batches = recorder.get_active_batches_by_date(
+        date, strategy_id=config["live"].get("strategy_id"),
+    )
     if date not in calendar:
         if _may_run_with_stale_calendar(args.stage, active_batches):
             logger.warning(

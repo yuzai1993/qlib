@@ -9,6 +9,8 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+from live_trading.modules.signal_schema import BatchHeader
+
 
 class FakePro:
     def __init__(self, rows):
@@ -49,8 +51,9 @@ def test_evening_monitor_does_not_hide_failed_friday_publish(monkeypatch, tmp_pa
 
     class EmptyRecorder:
         @staticmethod
-        def get_active_batches_by_date(trade_date):
+        def get_active_batches_by_date(trade_date, strategy_id=None):
             assert trade_date == "2026-07-20"
+            assert strategy_id == "csi1000_b6m_b2s_postclose"
             return []
 
     monkeypatch.setattr(
@@ -77,8 +80,20 @@ def test_evening_monitor_ignores_superseded_higher_sequence(monkeypatch, tmp_pat
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     active = "20260720_csi300_topk10_003"
     superseded = "20260720_csi300_topk10_004"
-    recorder.record_batch(active, "2026-07-20", "LIVE", 10)
-    recorder.record_batch(superseded, "2026-07-20", "LIVE", 10)
+    for batch_id in (active, superseded):
+        recorder.record_publish_plan(BatchHeader(
+            batch_id=batch_id,
+            strategy_id="csi1000_b6m_b2s_postclose",
+            trade_date="2026-07-20",
+            signal_date="2026-07-17",
+            account_id="test-account",
+            account_type="STOCK",
+            account_environment="SIMULATION",
+            mode="LIVE",
+            created_at="2026-07-17T21:00:00+08:00",
+            order_count=0,
+            checksum="",
+        ), [])
     recorder.supersede_batch(superseded, active)
     inbox = tmp_path / "inbox"
     inbox.mkdir()

@@ -11,7 +11,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
-from live_trading.modules.signal_schema import FillEvent, SchemaError
+from live_trading.modules.signal_schema import BatchHeader, FillEvent, SchemaError
 
 BATCH_ID = "20260714_csi300_topk10_001"
 
@@ -320,6 +320,51 @@ def test_supersede_batch_is_idempotent_and_active_queries_exclude_old(env):
     assert history[batch_ids[0]]["superseded_at"]
     assert history[batch_ids[1]]["superseded_by"] == batch_ids[2]
     assert history[batch_ids[2]]["superseded_by"] is None
+
+
+def test_batch_queries_can_be_scoped_to_one_strategy(env):
+    _, recorder, _ = env
+    day = "2026-08-07"
+    main_strategy_id = "csi1000_b6m_b2s_postclose_real"
+    probe_strategy_id = "csi1000_pr49_one_lot_probe"
+    main_batch_id = "20260807_csi1000_b6m_b2s_postclose_real_001"
+    probe_batch_id = "20260807_csi1000_pr49_one_lot_probe_001"
+
+    for batch_id, strategy_id in (
+        (main_batch_id, main_strategy_id),
+        (probe_batch_id, probe_strategy_id),
+    ):
+        recorder.record_publish_plan(BatchHeader(
+            batch_id=batch_id,
+            strategy_id=strategy_id,
+            trade_date=day,
+            signal_date="2026-08-06",
+            account_id="test-account",
+            account_type="STOCK",
+            account_environment="SIMULATION",
+            mode="SIMULATE",
+            created_at="2026-08-06T21:00:00+08:00",
+            order_count=0,
+            checksum="",
+        ), [])
+
+    assert {b["strategy_id"] for b in recorder.get_batches_by_date(day)} == {
+        main_strategy_id,
+        probe_strategy_id,
+    }
+    assert [b["batch_id"] for b in recorder.get_batches_by_date(
+        day, strategy_id=probe_strategy_id,
+    )] == [probe_batch_id]
+    assert {
+        b["strategy_id"]
+        for b in recorder.get_active_batches_by_date(day)
+    } == {
+        "csi1000_b6m_b2s_postclose_real",
+        "csi1000_pr49_one_lot_probe",
+    }
+    assert [b["batch_id"] for b in recorder.get_active_batches_by_date(
+        day, strategy_id="csi1000_pr49_one_lot_probe",
+    )] == [probe_batch_id]
 
 
 def test_supersede_batch_rejects_invalid_or_conflicting_relationships(env):

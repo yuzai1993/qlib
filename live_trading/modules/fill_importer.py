@@ -1454,21 +1454,37 @@ class LiveRecorder:
             ).fetchall()
             return [dict(r) for r in rows]
 
-    def get_batches_by_date(self, trade_date: str) -> list:
+    def get_batches_by_date(
+        self, trade_date: str, strategy_id: str | None = None,
+    ) -> list:
+        clauses = ["trade_date=?"]
+        params = [trade_date]
+        if strategy_id is not None:
+            clauses.append("strategy_id=?")
+            params.append(strategy_id)
         with self._conn() as conn:
             rows = conn.execute(
-                "SELECT * FROM batches WHERE trade_date=? ORDER BY batch_id",
-                (trade_date,),
+                "SELECT * FROM batches WHERE "
+                + " AND ".join(clauses)
+                + " ORDER BY batch_id",
+                params,
             ).fetchall()
             return [dict(r) for r in rows]
 
-    def get_active_batches_by_date(self, trade_date: str) -> list:
+    def get_active_batches_by_date(
+        self, trade_date: str, strategy_id: str | None = None,
+    ) -> list:
+        clauses = ["trade_date=?", "superseded_by IS NULL"]
+        params = [trade_date]
+        if strategy_id is not None:
+            clauses.append("strategy_id=?")
+            params.append(strategy_id)
         with self._conn() as conn:
             rows = conn.execute(
-                """SELECT * FROM batches
-                   WHERE trade_date=? AND superseded_by IS NULL
-                   ORDER BY batch_id""",
-                (trade_date,),
+                "SELECT * FROM batches WHERE "
+                + " AND ".join(clauses)
+                + " ORDER BY batch_id",
+                params,
             ).fetchall()
             return [dict(r) for r in rows]
 
@@ -1484,11 +1500,20 @@ class LiveRecorder:
             return dict(row) if row else None
 
     def get_unreconciled_active_live_batches_before(
-        self, trade_date: str,
+        self, trade_date: str, strategy_id: str | None = None,
     ) -> list:
         """Return earlier active LIVE batches lacking terminal fill events."""
         statuses = sorted(TERMINAL_FILL_STATUS)
         marks = ",".join("?" for _ in statuses)
+        clauses = [
+            "b.mode='LIVE'",
+            "b.trade_date < ?",
+            "b.superseded_by IS NULL",
+        ]
+        params = [*statuses, trade_date]
+        if strategy_id is not None:
+            clauses.append("b.strategy_id=?")
+            params.append(strategy_id)
         with self._conn() as conn:
             rows = conn.execute(
                 f"""SELECT b.*,
@@ -1496,12 +1521,11 @@ class LiveRecorder:
                      FROM batches b
                      LEFT JOIN fills f
                        ON f.batch_id=b.batch_id AND f.status IN ({marks})
-                     WHERE b.mode='LIVE' AND b.trade_date < ?
-                           AND b.superseded_by IS NULL
+                     WHERE {' AND '.join(clauses)}
                      GROUP BY b.batch_id
                      HAVING terminal_orders < b.planned_orders
                      ORDER BY b.trade_date, b.batch_id""",
-                [*statuses, trade_date],
+                params,
             ).fetchall()
             return [dict(row) for row in rows]
 

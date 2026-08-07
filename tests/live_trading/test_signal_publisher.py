@@ -207,14 +207,24 @@ def test_real_publish_plan_is_durable(tmp_path):
 
 
 def test_publish_guard_refuses_unreconciled_prior_live_batch(tmp_path):
-    recorder = LiveRecorder(str(tmp_path / "live.db"))
-    recorder.record_batch(
-        "20260716_csi300_topk10_001", "2026-07-16", "LIVE", 2,
-    )
+    class FakeRecorder:
+        @staticmethod
+        def get_unreconciled_active_live_batches_before(
+            trade_date, strategy_id=None,
+        ):
+            assert trade_date == "2026-07-17"
+            assert strategy_id == "csi1000_pr49_one_lot_probe"
+            return [{
+                "batch_id": "20260716_csi300_topk10_001",
+                "planned_orders": 2,
+                "terminal_orders": 0,
+            }]
 
-    with pytest.raises(SystemExit, match=r"20260716_csi300_topk10_001.*2 missing"):
+    with pytest.raises(
+        SystemExit, match=r"20260716_csi300_topk10_001.*2 missing",
+    ):
         run_publish_signals.ensure_prior_live_batches_terminal(
-            recorder, "2026-07-17",
+            FakeRecorder(), "2026-07-17", "csi1000_pr49_one_lot_probe",
         )
 
 

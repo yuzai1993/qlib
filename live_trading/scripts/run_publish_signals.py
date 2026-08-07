@@ -79,9 +79,13 @@ def publish_recorded_plan(recorder, publisher, header, orders):
     return publisher.publish(validated_header, orders)
 
 
-def ensure_prior_live_batches_terminal(recorder, trade_date: str) -> None:
+def ensure_prior_live_batches_terminal(
+    recorder, trade_date: str, strategy_id: str | None = None,
+) -> None:
     """Refuse a new LIVE plan while an earlier live batch is unreconciled."""
-    blockers = recorder.get_unreconciled_active_live_batches_before(trade_date)
+    blockers = recorder.get_unreconciled_active_live_batches_before(
+        trade_date, strategy_id=strategy_id,
+    )
     if not blockers:
         return
     details = ", ".join(
@@ -256,7 +260,9 @@ def main():
     )
 
     if mode == "LIVE":
-        ensure_prior_live_batches_terminal(recorder, trade_date)
+        ensure_prior_live_batches_terminal(
+            recorder, trade_date, live_cfg["strategy_id"],
+        )
         ensure_no_failed_prior_sells(recorder, trade_date)
 
     # 1. 预测分数

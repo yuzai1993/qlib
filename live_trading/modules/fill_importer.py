@@ -17,6 +17,10 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee, validate_fees
+from live_trading.modules.execution_state import (
+    get_execution_state as _get_execution_state,
+    set_execution_state as _set_execution_state,
+)
 from live_trading.modules.signal_schema import (
     FillEvent,
     SchemaError,
@@ -312,6 +316,13 @@ class LiveRecorder:
                     avg_cost REAL,
                     market_value REAL,
                     PRIMARY KEY (batch_id, stock_code)
+                );
+
+                CREATE TABLE IF NOT EXISTS execution_state (
+                    strategy_id TEXT PRIMARY KEY,
+                    state TEXT NOT NULL,
+                    reason TEXT NOT NULL,
+                    changed_at TEXT NOT NULL
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
@@ -1455,6 +1466,28 @@ class LiveRecorder:
             return total_delta
 
     # ---------- account ----------
+
+    # ---------- execution state ----------
+
+    def get_execution_state(self, strategy_id: str) -> dict:
+        """Return a durable strategy state, defaulting to non-persisted ACTIVE."""
+        with self._conn() as conn:
+            return _get_execution_state(conn, strategy_id)
+
+    def set_execution_state(
+        self,
+        strategy_id: str,
+        state: str,
+        reason: str,
+        changed_at: str | None = None,
+    ) -> dict:
+        """Persist the explicit execution state used by publishers and monitors."""
+        if self.read_only:
+            raise SchemaError("cannot set execution state through a read-only ledger")
+        with self._conn() as conn:
+            return _set_execution_state(
+                conn, strategy_id, state, reason, changed_at,
+            )
 
     def set_cash(self, cash: float) -> None:
         """人工 seed / 校正现金入口。"""

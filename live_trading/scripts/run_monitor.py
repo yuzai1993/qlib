@@ -11,6 +11,7 @@
 """
 
 import argparse
+import json
 import logging
 import sys
 from datetime import date as _date
@@ -104,11 +105,18 @@ def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
     config_id = config["live"]["strategy_id"]
+    get_state = getattr(recorder, "get_execution_state", None)
+    execution_state = (
+        get_state(config_id) if get_state is not None else {"state": "ACTIVE"}
+    )
+    audit_preview = _load_audit_preview(config_id, next_day)
     candidates = recorder.get_active_batches_by_date(
         next_day, strategy_id=config_id,
     )
     if not candidates:
-        return check_evening(next_day, None, [], config_id)
+        return check_evening(
+            next_day, None, [], config_id, execution_state, audit_preview,
+        )
     # 同一交易日取最新 seq（batch_id 结尾为三位 seq）。
     candidates.sort(key=lambda batch: batch["batch_id"])
     batch = candidates[-1]
@@ -117,7 +125,23 @@ def run_evening(date, recorder, config) -> list:
     inbox_files = None
     if inbox.exists():
         inbox_files = [p.name for p in inbox.iterdir()]
-    return check_evening(next_day, batch, inbox_files, config_id)
+    return check_evening(
+        next_day, batch, inbox_files, config_id, execution_state, audit_preview,
+    )
+
+
+def _load_audit_preview(strategy_id: str, trade_date: str) -> dict | None:
+    """Load one preview conservatively; malformed evidence is not a valid pause."""
+    path = (
+        PROJECT_ROOT / "live_trading" / "logs" / strategy_id / "previews"
+        / f"signal_{trade_date}.json"
+    )
+    try:
+        with path.open(encoding="utf-8") as stream:
+            payload = json.load(stream)
+    except (OSError, ValueError):
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def run_postmarket(date, recorder, store, config) -> list:

@@ -451,6 +451,113 @@ def test_publish_rechecks_postclose_after_taking_publish_lock(tmp_path):
     assert "postclose pipeline holds" in result.stderr
 
 
+def test_paused_publish_cron_only_requests_an_audit_preview(tmp_path):
+    """A PAUSED LIVE cron run must not need confirmation or create a batch/inbox."""
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    scripts_dir = live_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+    trace = tmp_path / "publish-args.json"
+    _write_executable(
+        scripts_dir / "set_execution_state.py",
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "print('strategy-main' if '--get-strategy-id' in sys.argv else 'PAUSED')\n",
+    )
+    _write_executable(
+        scripts_dir / "next_trade_date.py",
+        "#!/usr/bin/env python3\nprint('2026-08-11')\n",
+    )
+    _write_executable(
+        scripts_dir / "run_publish_signals.py",
+        "#!/usr/bin/env python3\n"
+        "import json, os, sys\n"
+        "open(os.environ['PAUSED_PUBLISH_TRACE'], 'w').write(json.dumps(sys.argv[1:]))\n",
+    )
+    fake_bin = tmp_path / "bin"
+    _write_executable(
+        fake_bin / "caffeinate",
+        "#!/usr/bin/env bash\nshift\nexec \"$@\"\n",
+    )
+    env = os.environ.copy()
+    env.update({
+        "HOME": str(tmp_path / "home"),
+        "LIVE_RUN_MODE": "LIVE",
+        "PAUSED_PUBLISH_TRACE": str(trace),
+        "PATH": f"{fake_bin}:{env['PATH']}",
+    })
+    env.pop("LIVE_TRADING_CONFIRM", None)
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=env,
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    args = json.loads(trace.read_text(encoding="utf-8"))
+    assert args[:6] == [
+        "--config", "main", "--trade-date", "2026-08-11", "--mode", "LIVE",
+    ]
+    assert "--dry-run" in args
+    preview_path = Path(args[args.index("--audit-preview") + 1])
+    assert preview_path == (
+        live_dir / "logs" / "strategy-main" / "previews" / "signal_2026-08-11.json"
+    )
+    assert not (live_dir / "inbox").exists()
+    assert not list(root.rglob("*.db"))
+    log = (live_dir / "logs" / "main_publish_cron.log").read_text(
+        encoding="utf-8",
+    )
+    assert "publish paused preview-only" in log
+
+
+def test_publish_cron_fails_closed_for_an_unknown_execution_state(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    scripts_dir = live_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+    trace = tmp_path / "unexpected-publish.txt"
+    _write_executable(
+        scripts_dir / "set_execution_state.py",
+        "#!/usr/bin/env python3\nprint('UNKNOWN')\n",
+    )
+    _write_executable(
+        scripts_dir / "next_trade_date.py",
+        "#!/usr/bin/env python3\nprint('2026-08-11')\n",
+    )
+    _write_executable(
+        scripts_dir / "run_publish_signals.py",
+        "#!/usr/bin/env python3\n"
+        "import os\nopen(os.environ['UNKNOWN_STATE_TRACE'], 'w').write('ran')\n",
+    )
+    fake_bin = tmp_path / "bin"
+    _write_executable(
+        fake_bin / "caffeinate",
+        "#!/usr/bin/env bash\nshift\nexec \"$@\"\n",
+    )
+    env = os.environ.copy()
+    env.update({
+        "HOME": str(tmp_path / "home"),
+        "LIVE_RUN_MODE": "LIVE",
+        "LIVE_TRADING_CONFIRM": "YES",
+        "UNKNOWN_STATE_TRACE": str(trace),
+        "PATH": f"{fake_bin}:{env['PATH']}",
+    })
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=env,
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 1
+    assert "execution state query failed" in result.stderr
+    assert not trace.exists()
+
+
 def test_publish_wrappers_load_run_mode_from_cron_env_file(tmp_path):
     for name in ("run_publish_cron.sh", "run_publish_catchup_cron.sh"):
         root = tmp_path / name / "repo"

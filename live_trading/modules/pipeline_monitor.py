@@ -35,7 +35,14 @@ def _publish_recovery_hint(config_id, trade_date, has_batch):
     return f"；发布日志：{log_path}；人工恢复：{command}"
 
 
-def check_evening(next_trade_date, batch, inbox_files, config_id) -> list:
+def check_evening(
+    next_trade_date,
+    batch,
+    inbox_files,
+    config_id,
+    execution_state: dict | None = None,
+    audit_preview: dict | None = None,
+) -> list:
     """发布检查：下一交易日批次已入库且 inbox 有 jsonl + done。
 
     Args:
@@ -43,7 +50,18 @@ def check_evening(next_trade_date, batch, inbox_files, config_id) -> list:
         batch: 该日 batches 行（dict）或 None
         inbox_files: inbox 目录文件名列表；挂载点不可用传 None
         config_id: 部署配置 ID，用于生成可执行的人工恢复命令
+        execution_state: durable strategy state; PAUSED requires a current preview
+        audit_preview: decoded evidence-only preview, if one was written
     """
+    if execution_state and execution_state.get("state") == "PAUSED":
+        if audit_preview and audit_preview.get("trade_date") == next_trade_date:
+            return []
+        return [Finding(
+            "PAUSED_PREVIEW_MISSING", WARN,
+            f"{next_trade_date} 策略已暂停，但没有当日经审计的信号预览；"
+            "暂停状态不会发布 QMT 批次，请检查预览任务和发布日志："
+            f"live_trading/logs/{config_id}/previews/signal_{next_trade_date}.json",
+        )]
     if inbox_files is None:
         return [Finding("PUBLISH_MISSING", CRIT,
                         f"{next_trade_date} 批次检查失败：bridge inbox 不可访问"

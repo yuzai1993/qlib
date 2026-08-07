@@ -1,10 +1,12 @@
 """Safety and metadata tests for the CSI1000 publish entry point."""
 
+import json
 from types import SimpleNamespace
 
 import pytest
 
 from live_trading.scripts import run_publish_signals as publish
+from live_trading.modules.fill_importer import LiveRecorder
 
 
 def _config():
@@ -157,3 +159,41 @@ def test_generic_publisher_binds_planner_to_selected_execution_profile():
     planner = publish.build_order_planner(config)
 
     assert planner.signal_price_type == "CLOSE_AUCTION_LIMIT"
+
+
+def test_paused_strategy_fails_closed_for_direct_live_publication(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    recorder.set_execution_state(
+        "main", "PAUSED", "operator verification pending", "2026-08-10T20:00:00+08:00",
+    )
+
+    with pytest.raises(publish.ExecutionPausedError, match="main.*PAUSED"):
+        publish.ensure_execution_is_active(recorder, "main", "LIVE")
+
+    publish.ensure_execution_is_active(recorder, "main", "SIMULATE")
+
+
+def test_audit_preview_is_atomic_complete_and_does_not_need_a_batch(tmp_path):
+    destination = tmp_path / "previews" / "signal_2026-08-11.json"
+    order = SimpleNamespace(
+        side="BUY", stock_code="600000.SH", quantity=0, max_quantity=100,
+        target_value=1_000.0, limit_price=10.0, client_order_id="order-1",
+        batch_id="20260811_main_001", to_json_line=lambda: '{"side":"BUY"}',
+    )
+
+    publish.write_audit_preview(
+        destination, strategy_id="main", signal_date="2026-08-10",
+        trade_date="2026-08-11", current_positions={"SH600000": {"shares": 100}},
+        orders=[order], generated_at="2026-08-10T20:00:00+08:00",
+    )
+
+    assert not list(destination.parent.glob("*.tmp"))
+    preview = json.loads(destination.read_text(encoding="utf-8"))
+    assert preview["strategy_id"] == "main"
+    assert preview["signal_date"] == "2026-08-10"
+    assert preview["trade_date"] == "2026-08-11"
+    assert preview["current_positions"] == {"SH600000": {"shares": 100}}
+    assert preview["order_count"] == 1
+    assert preview["buy_count"] == 1
+    assert preview["sell_count"] == 0
+    assert preview["orders"] == [{"side": "BUY"}]

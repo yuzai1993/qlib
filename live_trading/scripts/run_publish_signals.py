@@ -15,6 +15,7 @@
 
 import argparse
 import dataclasses
+import json
 import logging
 import os
 import sys
@@ -27,6 +28,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.backtest_parity import validate_configured_backtest
 from live_trading.modules.execution_profile import get_execution_profile
+from live_trading.modules.execution_state import ExecutionPausedError
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.order_planner import OrderPlanner
@@ -112,6 +114,58 @@ def ensure_no_failed_prior_sells(recorder, trade_date: str) -> None:
     )
 
 
+def ensure_execution_is_active(recorder, strategy_id: str, mode: str) -> None:
+    """Reject a durable pause before a LIVE plan can reach the journal/inbox."""
+    if mode != "LIVE":
+        return
+    state = recorder.get_execution_state(strategy_id)
+    if state["state"] == "PAUSED":
+        reason = state["reason"] or "no reason recorded"
+        raise ExecutionPausedError(
+            f"refusing LIVE publish: strategy {strategy_id} is PAUSED ({reason})"
+        )
+
+
+def write_audit_preview(
+    destination: Path,
+    *,
+    strategy_id: str,
+    signal_date: str,
+    trade_date: str,
+    current_positions: dict,
+    orders: list,
+    generated_at: str | None = None,
+) -> None:
+    """Atomically write an evidence-only plan without creating a batch or inbox file."""
+    rendered_orders = [json.loads(order.to_json_line()) for order in orders]
+    payload = {
+        "strategy_id": strategy_id,
+        "signal_date": signal_date,
+        "trade_date": trade_date,
+        "generated_at": generated_at or datetime.now().astimezone().isoformat(
+            timespec="seconds",
+        ),
+        "current_positions": current_positions,
+        "order_count": len(rendered_orders),
+        "buy_count": sum(order["side"] == "BUY" for order in rendered_orders),
+        "sell_count": sum(order["side"] == "SELL" for order in rendered_orders),
+        "orders": rendered_orders,
+    }
+    destination = Path(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+    try:
+        with temporary.open("w", encoding="utf-8") as stream:
+            json.dump(payload, stream, ensure_ascii=False, indent=2, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, destination)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Publish QMT signal batch")
     p.add_argument("--config", required=True, help="live config id (configs/*.yaml)")
@@ -120,6 +174,10 @@ def parse_args():
                    help="default: live.default_mode from config")
     p.add_argument("--seq", type=int, default=1, help="batch seq of the day")
     p.add_argument("--dry-run", action="store_true", help="print orders, do not write files")
+    p.add_argument(
+        "--audit-preview", type=Path, default=None,
+        help="atomically write an evidence-only proposed plan (implies --dry-run)",
+    )
     return p.parse_args()
 
 
@@ -130,7 +188,11 @@ def resolve_mode(args, config) -> str:
         and mode != "LIVE"
     ):
         raise SystemExit("REAL broker environment requires LIVE mode")
-    if mode == "LIVE" and os.environ.get("LIVE_TRADING_CONFIRM") != "YES":
+    if (
+        mode == "LIVE"
+        and getattr(args, "audit_preview", None) is None
+        and os.environ.get("LIVE_TRADING_CONFIRM") != "YES"
+    ):
         raise SystemExit(
             "refusing LIVE mode: set env LIVE_TRADING_CONFIRM=YES to confirm"
         )
@@ -277,7 +339,8 @@ def main():
         ),
     )
 
-    if mode == "LIVE":
+    if mode == "LIVE" and args.audit_preview is None:
+        ensure_execution_is_active(recorder, live_cfg["strategy_id"], mode)
         ensure_prior_live_batches_terminal(
             recorder, trade_date, live_cfg["strategy_id"],
         )
@@ -290,7 +353,8 @@ def main():
     logger.info("signal_date=%s, scored %d instruments", signal_date, len(scores))
 
     # 持久化全市场分数供监控查询（dry-run 不落库）
-    if not args.dry_run:
+    preview_only = args.dry_run or args.audit_preview is not None
+    if not preview_only:
         saved = recorder.save_predictions(signal_date, scores)
         logger.info("saved %d prediction scores for %s", saved, signal_date)
 
@@ -333,7 +397,18 @@ def main():
         intents, prev_close, batch_id, trade_date, batch_seq=args.seq,
     )
 
-    if args.dry_run:
+    if args.audit_preview is not None:
+        write_audit_preview(
+            args.audit_preview,
+            strategy_id=live_cfg["strategy_id"],
+            signal_date=signal_date,
+            trade_date=trade_date,
+            current_positions=current_positions,
+            orders=orders,
+        )
+        logger.info("wrote audit preview to %s", args.audit_preview)
+
+    if preview_only:
         print(f"[dry-run] batch {batch_id} mode={mode} ({len(orders)} orders):")
         for o in orders:
             target = (

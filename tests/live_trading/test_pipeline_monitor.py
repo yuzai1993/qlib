@@ -90,6 +90,25 @@ def test_evening_inbox_unavailable():
     )
 
 
+def test_evening_paused_with_current_audit_preview_is_ok():
+    assert check_evening(
+        "2026-07-14", None, [], CONFIG_ID,
+        execution_state={"state": "PAUSED"},
+        audit_preview={"trade_date": "2026-07-14"},
+    ) == []
+
+
+def test_evening_paused_with_stale_audit_preview_warns():
+    findings = check_evening(
+        "2026-07-14", None, [], CONFIG_ID,
+        execution_state={"state": "PAUSED"},
+        audit_preview={"trade_date": "2026-07-13"},
+    )
+
+    assert _rules(findings) == ["PAUSED_PREVIEW_MISSING"]
+    assert findings[0].level == "WARN"
+
+
 # ---------- postmarket ----------
 
 def _fill(status="FILLED", side="BUY", code="600000.SH", qty=100, mode="LIVE",

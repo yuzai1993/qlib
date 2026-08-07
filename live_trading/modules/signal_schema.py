@@ -13,6 +13,7 @@ from dataclasses import dataclass, asdict, fields
 SCHEMA_VERSION = "2.0"
 
 VALID_SIDES = {"BUY", "SELL"}
+VALID_PRICE_TYPES = {"CLOSE_AUCTION_LIMIT", "AFTER_HOURS_CLOSE"}
 VALID_MODES = {"SIMULATE", "LIVE"}
 VALID_ACCOUNT_ENVIRONMENTS = {"SIMULATION", "REAL"}
 VALID_FILL_STATUS = {
@@ -138,9 +139,9 @@ def compute_checksum(order_lines: list) -> str:
 def validate_order(order: SignalOrder) -> None:
     if order.side not in VALID_SIDES:
         raise SchemaError(f"invalid side: {order.side!r}")
-    if order.price_type != "CLOSE_AUCTION_LIMIT":
+    if order.price_type not in VALID_PRICE_TYPES:
         raise SchemaError(
-            "price_type must be CLOSE_AUCTION_LIMIT: "
+            "price_type must be CLOSE_AUCTION_LIMIT or AFTER_HOURS_CLOSE: "
             f"{order.price_type!r}"
         )
     if (

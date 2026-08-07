@@ -123,9 +123,8 @@ def test_validate_order_accepts_good():
     ))
 
 
-def test_validate_order_rejects_legacy_after_hours_price_type():
-    with pytest.raises(SchemaError, match="CLOSE_AUCTION_LIMIT"):
-        validate_order(_order(price_type="AFTER_HOURS_CLOSE"))
+def test_validate_order_accepts_after_hours_fixed_price_protocol():
+    validate_order(_order(price_type="AFTER_HOURS_CLOSE"))
 
 
 @pytest.mark.parametrize("bad_kwargs", [

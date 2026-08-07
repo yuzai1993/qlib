@@ -34,6 +34,9 @@ class OrderPlanner:
     def __init__(self, config: dict):
         self.max_orders_per_day = int(config.get("max_orders_per_day", 20))
         self.trade_unit = int(config.get("trade_unit", 100))
+        self.signal_price_type = config.get(
+            "signal_price_type", "CLOSE_AUCTION_LIMIT",
+        )
 
     def plan(
         self,
@@ -96,7 +99,7 @@ class OrderPlanner:
                     side=side,
                     quantity=quantity,
                     target_value=target_value,
-                    price_type="CLOSE_AUCTION_LIMIT",
+                    price_type=self.signal_price_type,
                     limit_price=0.0,
                     priority=priority,
                     instrument_qlib=inst,

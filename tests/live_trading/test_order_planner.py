@@ -71,6 +71,15 @@ def test_after_hours_close_orders_do_not_use_previous_close_or_slippage():
     assert sell.price_type == buy.price_type == "CLOSE_AUCTION_LIMIT"
 
 
+def test_planner_emits_its_configured_signal_price_type():
+    orders = _planner(signal_price_type="AFTER_HOURS_CLOSE").plan(
+        [{"instrument": "SH600000", "direction": "BUY", "target_value": 10_000.0}],
+        {}, BATCH_ID, TRADE_DATE,
+    )
+
+    assert [order.price_type for order in orders] == ["AFTER_HOURS_CLOSE"]
+
+
 def test_sell_quantity_rounded_down_to_lot_and_zero_dropped():
     intents = [
         {"instrument": "SH600000", "direction": "SELL", "target_shares": 150},

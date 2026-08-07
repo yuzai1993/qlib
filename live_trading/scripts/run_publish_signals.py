@@ -28,7 +28,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.backtest_parity import validate_configured_backtest
 from live_trading.modules.execution_profile import get_execution_profile
-from live_trading.modules.execution_state import ExecutionPausedError
+from live_trading.modules.execution_state import (
+    ExecutionPausedError,
+    validate_identifier,
+)
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.order_planner import OrderPlanner
@@ -119,10 +122,11 @@ def ensure_execution_is_active(recorder, strategy_id: str, mode: str) -> None:
     if mode != "LIVE":
         return
     state = recorder.get_execution_state(strategy_id)
-    if state["state"] == "PAUSED":
+    if state["state"] != "ACTIVE":
         reason = state["reason"] or "no reason recorded"
         raise ExecutionPausedError(
-            f"refusing LIVE publish: strategy {strategy_id} is PAUSED ({reason})"
+            f"refusing LIVE publish: strategy {strategy_id} has state "
+            f"{state['state']!r} ({reason})"
         )
 
 
@@ -316,11 +320,13 @@ def main():
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
-    config_path = CONFIGS_DIR / f"{args.config}.yaml"
+    config_id = validate_identifier(args.config, "config")
+    config_path = CONFIGS_DIR / f"{config_id}.yaml"
     config = load_live_config(config_path, PROJECT_ROOT)
     live_cfg = config["live"]
     if live_cfg.get("kind", "STRATEGY") != "STRATEGY":
         raise SystemExit("generic signal publisher only supports STRATEGY configs")
+    strategy_id = validate_identifier(live_cfg["strategy_id"], "strategy_id")
     parity_path = validate_configured_backtest(config, PROJECT_ROOT)
     logger.info("Live/Backtest parity gate passed: %s", parity_path)
     execution_profile = get_execution_profile(live_cfg["execution_session"])
@@ -328,7 +334,7 @@ def main():
     mode = resolve_mode(args, config)
     account_id = resolve_account_id(config)
     trade_date = args.trade_date
-    batch_id = f"{trade_date.replace('-', '')}_{live_cfg['strategy_id']}_{args.seq:03d}"
+    batch_id = f"{trade_date.replace('-', '')}_{strategy_id}_{args.seq:03d}"
 
     recorder = LiveRecorder(
         str(PROJECT_ROOT / config["storage"]["db_path"]),
@@ -340,9 +346,9 @@ def main():
     )
 
     if mode == "LIVE" and args.audit_preview is None:
-        ensure_execution_is_active(recorder, live_cfg["strategy_id"], mode)
+        ensure_execution_is_active(recorder, strategy_id, mode)
         ensure_prior_live_batches_terminal(
-            recorder, trade_date, live_cfg["strategy_id"],
+            recorder, trade_date, strategy_id,
         )
         ensure_no_failed_prior_sells(recorder, trade_date)
 
@@ -400,7 +406,7 @@ def main():
     if args.audit_preview is not None:
         write_audit_preview(
             args.audit_preview,
-            strategy_id=live_cfg["strategy_id"],
+            strategy_id=strategy_id,
             signal_date=signal_date,
             trade_date=trade_date,
             current_positions=current_positions,
@@ -425,7 +431,7 @@ def main():
     # 6. 发布
     header = BatchHeader(
         batch_id=batch_id,
-        strategy_id=live_cfg["strategy_id"],
+        strategy_id=strategy_id,
         trade_date=trade_date,
         signal_date=signal_date,
         account_id=account_id,

@@ -1,9 +1,12 @@
 """Durable per-strategy operating state for signal publication."""
 
 from datetime import datetime
+import re
+import sqlite3
 
 
 VALID_EXECUTION_STATES = {"ACTIVE", "PAUSED"}
+_IDENTIFIER_RE = re.compile(r"[A-Za-z0-9_-]+")
 
 
 class ExecutionStateError(ValueError):
@@ -34,7 +37,7 @@ def get_execution_state(conn, strategy_id: str) -> dict:
             "FROM execution_state WHERE strategy_id=?",
             (strategy_id,),
         ).fetchone()
-    except Exception as exc:
+    except sqlite3.OperationalError as exc:
         # Read-only access to a pre-migration ledger must remain safe.  Avoid
         # hiding unrelated SQLite errors such as a locked or corrupt database.
         if "no such table: execution_state" not in str(exc):
@@ -57,8 +60,8 @@ def set_execution_state(
     if not isinstance(reason, str):
         raise ExecutionStateError("reason must be a string")
     reason = reason.strip()
-    if state == "PAUSED" and not reason:
-        raise ExecutionStateError("PAUSED execution state requires a reason")
+    if not reason:
+        raise ExecutionStateError("execution state transition requires a reason")
     if changed_at is None:
         changed_at = datetime.now().astimezone().isoformat(timespec="seconds")
     if not isinstance(changed_at, str) or not changed_at.strip():
@@ -81,5 +84,13 @@ def set_execution_state(
 
 
 def _require_strategy_id(strategy_id: str) -> None:
-    if not isinstance(strategy_id, str) or not strategy_id.strip():
-        raise ExecutionStateError("strategy_id must be a nonempty string")
+    validate_identifier(strategy_id, "strategy_id")
+
+
+def validate_identifier(value: str, label: str = "identifier") -> str:
+    """Return one conservative filesystem-safe identifier segment."""
+    if not isinstance(value, str) or not _IDENTIFIER_RE.fullmatch(value):
+        raise ExecutionStateError(
+            f"{label} must be a safe identifier [A-Za-z0-9_-]+"
+        )
+    return value

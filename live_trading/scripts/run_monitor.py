@@ -26,6 +26,7 @@ from live_trading.modules.corporate_actions import (
 )
 from live_trading.modules.fees import fees_from_config
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
+from live_trading.modules.execution_state import validate_identifier
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.monitor_store import MonitorStore
 from live_trading.modules.notifier import create_notifier
@@ -104,7 +105,7 @@ def fetch_benchmark_close(benchmark: str, date: str):
 def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
-    config_id = config["live"]["strategy_id"]
+    config_id = validate_identifier(config["live"]["strategy_id"], "strategy_id")
     get_state = getattr(recorder, "get_execution_state", None)
     execution_state = (
         get_state(config_id) if get_state is not None else {"state": "ACTIVE"}
@@ -132,6 +133,7 @@ def run_evening(date, recorder, config) -> list:
 
 def _load_audit_preview(strategy_id: str, trade_date: str) -> dict | None:
     """Load one preview conservatively; malformed evidence is not a valid pause."""
+    strategy_id = validate_identifier(strategy_id, "strategy_id")
     path = (
         PROJECT_ROOT / "live_trading" / "logs" / strategy_id / "previews"
         / f"signal_{trade_date}.json"
@@ -407,7 +409,11 @@ def main():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
-    config = load_live_config(CONFIGS_DIR / f"{args.config}.yaml", PROJECT_ROOT)
+    config_id = validate_identifier(args.config, "config")
+    config = load_live_config(CONFIGS_DIR / f"{config_id}.yaml", PROJECT_ROOT)
+    config["live"]["strategy_id"] = validate_identifier(
+        config["live"]["strategy_id"], "strategy_id",
+    )
     date = args.date or _date.today().strftime("%Y-%m-%d")
 
     db_path = str(PROJECT_ROOT / config["storage"]["db_path"])

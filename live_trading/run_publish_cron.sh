@@ -9,6 +9,16 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 PYTHON="/opt/anaconda3/envs/qlib/bin/python"
 CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-csi1000_b6m_b2s_postclose_real}}}"
+STATE_HELPER="$PROJECT_ROOT/live_trading/scripts/set_execution_state.py"
+
+if [[ ! "$CONFIG_ID" =~ ^[A-Za-z0-9_-]+$ ]]; then
+    echo "invalid config identifier: ${CONFIG_ID@Q}" >&2
+    exit 1
+fi
+if [[ -f "$STATE_HELPER" ]] && ! "$PYTHON" "$STATE_HELPER" --validate-config-id "$CONFIG_ID" >/dev/null; then
+    echo "invalid config identifier: ${CONFIG_ID@Q}" >&2
+    exit 1
+fi
 
 # cron 环境无交互 shell；密钥放 ~/.qlib_live_env（sh 语法，勿进 git）
 # 注意不要 source ~/.zshrc——它是 zsh 专用（oh-my-zsh），bash 下会中途退出
@@ -27,7 +37,6 @@ fi
 # State is queried before LIVE confirmation so an intentional PAUSED strategy
 # can make its evidence-only preview without an authorization token.  A failed
 # query never permits a confirmed LIVE publish.
-STATE_HELPER="$PROJECT_ROOT/live_trading/scripts/set_execution_state.py"
 EXECUTION_STATE="ACTIVE"
 STATE_QUERY_FAILED=0
 if [[ -f "$STATE_HELPER" ]]; then
@@ -56,6 +65,14 @@ if [[ "$STATE_QUERY_FAILED" -ne 0 ]]; then
 fi
 if [[ "$EXECUTION_STATE" == "PAUSED" ]]; then
     if ! PREVIEW_STRATEGY_ID="$("$PYTHON" "$STATE_HELPER" --config "$CONFIG_ID" --get-strategy-id)" || [[ -z "$PREVIEW_STRATEGY_ID" ]]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: strategy id query failed" >&2
+        exit 1
+    fi
+    if [[ ! "$PREVIEW_STRATEGY_ID" =~ ^[A-Za-z0-9_-]+$ ]]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: strategy id query failed" >&2
+        exit 1
+    fi
+    if ! "$PYTHON" "$STATE_HELPER" --validate-strategy-id "$PREVIEW_STRATEGY_ID" >/dev/null; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: strategy id query failed" >&2
         exit 1
     fi

@@ -558,6 +558,67 @@ def test_publish_cron_fails_closed_for_an_unknown_execution_state(tmp_path):
     assert not trace.exists()
 
 
+def test_publish_cron_rejects_unsafe_config_before_creating_lock_paths(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "../main"], cwd=root, env=os.environ.copy(),
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode != 0
+    assert "invalid config identifier" in result.stderr
+    assert not (live_dir / ".locks").exists()
+
+
+def test_paused_publish_cron_rejects_unsafe_strategy_id_from_helper(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    scripts_dir = live_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+    trace = tmp_path / "unexpected-publish.txt"
+    _write_executable(
+        scripts_dir / "set_execution_state.py",
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "print('../escape' if '--get-strategy-id' in sys.argv else 'PAUSED')\n",
+    )
+    _write_executable(
+        scripts_dir / "next_trade_date.py",
+        "#!/usr/bin/env python3\nprint('2026-08-11')\n",
+    )
+    _write_executable(
+        scripts_dir / "run_publish_signals.py",
+        "#!/usr/bin/env python3\n"
+        "import os\nopen(os.environ['UNSAFE_STRATEGY_TRACE'], 'w').write('ran')\n",
+    )
+    fake_bin = tmp_path / "bin"
+    _write_executable(
+        fake_bin / "caffeinate",
+        "#!/usr/bin/env bash\nshift\nexec \"$@\"\n",
+    )
+    env = os.environ.copy()
+    env.update({
+        "LIVE_RUN_MODE": "LIVE", "UNSAFE_STRATEGY_TRACE": str(trace),
+        "PATH": f"{fake_bin}:{env['PATH']}",
+    })
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=env,
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 1
+    assert "strategy id query failed" in result.stderr
+    assert not trace.exists()
+
+
 def test_publish_wrappers_load_run_mode_from_cron_env_file(tmp_path):
     for name in ("run_publish_cron.sh", "run_publish_catchup_cron.sh"):
         root = tmp_path / name / "repo"

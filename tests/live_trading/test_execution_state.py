@@ -1,8 +1,13 @@
 """Durable, per-strategy execution state contracts."""
 
+import sys
+
 import pytest
 
-from live_trading.modules.execution_state import ExecutionStateError
+from live_trading.modules.execution_state import (
+    ExecutionStateError,
+    validate_identifier,
+)
 from live_trading.modules.fill_importer import LiveRecorder
 
 
@@ -34,6 +39,55 @@ def test_paused_execution_state_requires_a_reason(tmp_path):
         "reason": "operator verification pending",
         "changed_at": "2026-08-10T20:00:00+08:00",
     }
+
+
+def test_active_execution_state_also_requires_a_reason(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+
+    with pytest.raises(ExecutionStateError, match="reason"):
+        recorder.set_execution_state(
+            "main", "ACTIVE", " \n ", "2026-08-10T20:00:00+08:00",
+        )
+
+
+@pytest.mark.parametrize("state", ["ACTIVE", "PAUSED"])
+def test_execution_state_cli_rejects_blank_transition_reason(
+    monkeypatch, capsys, state,
+):
+    from live_trading.scripts import set_execution_state
+
+    monkeypatch.setattr(
+        sys, "argv", [
+            "set_execution_state.py", "--config", "main", "--state", state,
+            "--reason", " \n ",
+        ],
+    )
+
+    with pytest.raises(SystemExit):
+        set_execution_state.parse_args()
+    assert "reason" in capsys.readouterr().err
+
+
+def test_execution_state_cli_rejects_unsafe_config_before_loading_it(
+    monkeypatch, capsys,
+):
+    from live_trading.scripts import set_execution_state
+
+    monkeypatch.setattr(
+        sys, "argv", [
+            "set_execution_state.py", "--config", "../main", "--get",
+        ],
+    )
+
+    with pytest.raises(SystemExit):
+        set_execution_state.parse_args()
+    assert "safe identifier" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("value", ["..", "../main", "main/name", "main\\name", "/main", "main id", "main\nnext"])
+def test_identifier_validator_rejects_path_and_whitespace_values(value):
+    with pytest.raises(ExecutionStateError, match="identifier"):
+        validate_identifier(value, "strategy_id")
 
 
 def test_execution_state_rejects_unknown_values(tmp_path):

@@ -2,6 +2,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
@@ -13,6 +15,7 @@ from live_trading.modules.pipeline_monitor import (
     check_report,
 )
 from live_trading.modules.fill_importer import LiveRecorder
+from live_trading.modules.execution_state import ExecutionStateError
 from live_trading.modules.monitor_store import MonitorStore
 from live_trading.scripts import run_monitor
 
@@ -107,6 +110,11 @@ def test_evening_paused_with_stale_audit_preview_warns():
 
     assert _rules(findings) == ["PAUSED_PREVIEW_MISSING"]
     assert findings[0].level == "WARN"
+
+
+def test_audit_preview_loader_rejects_unsafe_strategy_path():
+    with pytest.raises(ExecutionStateError, match="safe identifier"):
+        run_monitor._load_audit_preview("../other", "2026-07-14")
 
 
 # ---------- postmarket ----------

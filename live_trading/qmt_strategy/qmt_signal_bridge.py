@@ -5,16 +5,16 @@
 # Runtime:  QMT built-in Python 3.6. ASCII only (file declares gbk; ascii is a
 #           strict subset, so it is valid in both encodings).
 #
-# Flow per batch:
+# Flow per batch (selected by EXECUTION_PROFILE):
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
-#     -> 14:57 close auction: submit sells and buys with explicit daily limits
-#     -> QMT prType=11; BUY=UpStopPrice, SELL=DownStopPrice
+#     -> CLOSE_AUCTION: 14:57 / prType=11 / explicit daily side limits
+#     -> AFTER_HOURS_FIXED_PRICE: 15:05 / prType=49 / price=0
 #     -> poll order status by remark (client_order_id)
-#     -> 15:00:05 cancel pending; 15:00:30 finalize; 15:01 account snapshot
+#     -> profile-specific cancel, finalize, and account snapshot times
 #
-# LIVE double switch: header.mode == "LIVE" AND state/LIVE_OK_{trade_date} exists.
-# Otherwise orders are simulated: fill status SKIPPED, message "simulated".
+# LIVE double switch: header.mode == "LIVE" AND the selected profile's marker
+# exists. If both profiles' markers exist, both instances fail closed.
 
 import json
 import math
@@ -25,7 +25,11 @@ import traceback
 
 # ======================= user settings =======================
 
+EXECUTION_PROFILE = "CLOSE_AUCTION"
+# A separately compiled AFTER_HOURS_FIXED_PRICE instance must swap these two
+# roots. Keeping both explicit lets each instance inspect the other's marker.
 BRIDGE_ROOT = r"D:\qmt_bridge"
+OTHER_BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"
 ACCOUNT_ID = ""            # QMT-local account id; must match header if set
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
@@ -50,6 +54,33 @@ TRADE_START = "14:57:05"
 CANCEL_AT = "15:00:05"
 FINALIZE_AT = "15:00:30"
 SNAPSHOT_REFRESH_AT = "15:01:00"
+
+_EXECUTION_PROFILES = {
+    "CLOSE_AUCTION": {
+        "signal_price_type": "CLOSE_AUCTION_LIMIT",
+        "qmt_price_type": 11,
+        "submit_after": "14:57:05",
+        "cancel_at": "15:00:05",
+        "finalize_at": "15:00:30",
+        "snapshot_after": "15:01:00",
+        "authorization_prefix": "LIVE_OK_",
+        "other_authorization_prefix": "PR49_LIVE_OK_",
+        "sell_wait_seconds": 0,
+        "timer_start": "14:56:55",
+    },
+    "AFTER_HOURS_FIXED_PRICE": {
+        "signal_price_type": "AFTER_HOURS_CLOSE",
+        "qmt_price_type": 49,
+        "submit_after": "15:05:00",
+        "cancel_at": "15:28:00",
+        "finalize_at": "15:30:00",
+        "snapshot_after": "15:31:00",
+        "authorization_prefix": "PR49_LIVE_OK_",
+        "other_authorization_prefix": "LIVE_OK_",
+        "sell_wait_seconds": 4 * 60,
+        "timer_start": "15:04:55",
+    },
+}
 
 # BUY-side fee estimate used only for local cash reservation.
 COMMISSION_RATE = 0.00020
@@ -77,6 +108,7 @@ class Batch(object):
         self.trading_started = False  # phase timer resets on first trade pass
         self.execution_authorized = False  # frozen first-pass LIVE eligibility
         self.execution_live = False   # true only after both LIVE safety gates
+        self.dual_authorization_blocked = False
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
         self.remaining_cash = None    # one broker cash snapshot for BUY phase
@@ -98,6 +130,7 @@ class State(object):
         self.batch = None             # current Batch or None
         self.processed = set()        # batch ids finished (persisted)
         self.loaded = False
+        self.trading_enabled = False
         self.timer_registered = False
 
 
@@ -156,6 +189,33 @@ def _today():
     return datetime.date.today().strftime("%Y-%m-%d")
 
 
+def _profile_settings():
+    try:
+        return dict(_EXECUTION_PROFILES[EXECUTION_PROFILE])
+    except KeyError:
+        raise ValueError("unknown execution profile: %r" % EXECUTION_PROFILE)
+
+
+def _expected_signal_price_type():
+    return _profile_settings()["signal_price_type"]
+
+
+def _activate_profile_settings():
+    settings = _profile_settings()
+    global LIMIT_PRICE_TYPE
+    global SELL_WAIT_TIMEOUT_SEC
+    global TRADE_START
+    global CANCEL_AT
+    global FINALIZE_AT
+    global SNAPSHOT_REFRESH_AT
+    LIMIT_PRICE_TYPE = settings["qmt_price_type"]
+    SELL_WAIT_TIMEOUT_SEC = settings["sell_wait_seconds"]
+    TRADE_START = settings["submit_after"]
+    CANCEL_AT = settings["cancel_at"]
+    FINALIZE_AT = settings["finalize_at"]
+    SNAPSHOT_REFRESH_AT = settings["snapshot_after"]
+
+
 def _path(*parts):
     return os.path.join(BRIDGE_ROOT, *parts)
 
@@ -196,8 +256,22 @@ def _sha256_of_lines(lines):
     return "sha256:" + h.hexdigest()
 
 
+def _authorization_path(trade_date):
+    prefix = _profile_settings()["authorization_prefix"]
+    return os.path.join(BRIDGE_ROOT, "state", prefix + trade_date)
+
+
+def _other_authorization_path(trade_date):
+    prefix = _profile_settings()["other_authorization_prefix"]
+    return os.path.join(OTHER_BRIDGE_ROOT, "state", prefix + trade_date)
+
+
 def _live_ok(trade_date):
-    return os.path.isfile(_path("state", "LIVE_OK_" + trade_date))
+    return os.path.isfile(_authorization_path(trade_date))
+
+
+def _other_profile_authorized(trade_date):
+    return os.path.isfile(_other_authorization_path(trade_date))
 
 
 def _active_state_path(batch_id):
@@ -212,6 +286,7 @@ def _save_active_state(batch):
         "trading_started": batch.trading_started,
         "execution_authorized": batch.execution_authorized,
         "execution_live": batch.execution_live,
+        "dual_authorization_blocked": batch.dual_authorization_blocked,
         "submitted": sorted(batch.submitted.keys()),
         "fills": batch.fills,
         "remaining_cash": batch.remaining_cash,
@@ -243,6 +318,9 @@ def _load_active_state(batch):
         "execution_authorized", payload.get("execution_live", False),
     ))
     batch.execution_live = bool(payload.get("execution_live", False))
+    batch.dual_authorization_blocked = bool(payload.get(
+        "dual_authorization_blocked", False,
+    ))
     batch.submitted = dict((coid, True) for coid in payload.get("submitted", []))
     batch.fills = payload.get("fills", {})
     batch.remaining_cash = payload.get("remaining_cash")
@@ -673,9 +751,11 @@ def _parse_and_check(jsonl_path, done_path):
         seen.add(coid)
         if side not in ("BUY", "SELL"):
             return reject("invalid order side")
-        if order.get("price_type") not in (
-                "CLOSE_AUCTION_LIMIT", "AFTER_HOURS_CLOSE"):
-            return reject("invalid price_type")
+        if order.get("price_type") != _expected_signal_price_type():
+            return reject(
+                "price_type must match execution profile: " +
+                _expected_signal_price_type()
+            )
         if order.get("limit_price") != 0 and order.get("limit_price") != 0.0:
             return reject("limit_price must be zero")
         if side == "BUY":
@@ -1038,7 +1118,9 @@ def _target_buy_quantity(cash, price, target_value):
     return _max_affordable_quantity(cash, price, requested)
 
 
-def _submit(ContextInfo, batch, order, live, limit_price=None):
+def _submit(
+        ContextInfo, batch, order, live,
+        limit_price=None, official_close=None):
     """Submit one order. Returns True if submitted (or simulated)."""
     coid = order["client_order_id"]
     if coid in batch.submitted:
@@ -1049,10 +1131,21 @@ def _submit(ContextInfo, batch, order, live, limit_price=None):
         _write_fill(batch, order, "SKIPPED", 0, 0.0, "", "simulated")
         return True
 
+    fixed_price = EXECUTION_PROFILE == "AFTER_HOURS_FIXED_PRICE"
     try:
-        if limit_price is None:
-            limit_price = _instrument_limit_price(
-                ContextInfo, order["stock_code"], order["side"])
+        if fixed_price:
+            if official_close is None:
+                official_close = _official_close(
+                    ContextInfo, order["stock_code"])
+            official_close = _positive_price(official_close)
+            if official_close <= 0.0:
+                raise ValueError("official close unavailable")
+            api_price = 0.0
+        else:
+            if limit_price is None:
+                limit_price = _instrument_limit_price(
+                    ContextInfo, order["stock_code"], order["side"])
+            api_price = float(limit_price)
     except Exception as exc:
         batch.submitted[coid] = True
         _save_active_state(batch)
@@ -1070,21 +1163,32 @@ def _submit(ContextInfo, batch, order, live, limit_price=None):
     batch.submitted[coid] = True
     _save_active_state(batch)
     try:
-        # orderType=1101 single stock by shares; prType=11 explicit limit;
+        # orderType=1101 single stock by shares; profile selects prType/price;
         # quickTrade=2 submit immediately; userOrderId -> m_strRemark
         passorder(op_type, 1101, _account_id(batch), order["stock_code"],
-                  LIMIT_PRICE_TYPE, float(limit_price), int(order["quantity"]),
+                  LIMIT_PRICE_TYPE, api_price, int(order["quantity"]),
                   STRATEGY_NAME, 2, coid, ContextInfo)
-        _log_event(
-            "SUBMITTED_UNCONFIRMED", batch_id=batch.batch_id(),
-            client_order_id=coid, side=order["side"],
-            stock_code=order["stock_code"], quantity=int(order["quantity"]),
-            price_type=LIMIT_PRICE_TYPE, limit_price=float(limit_price),
-            message="passorder returned; awaiting QMT order",
-        )
-        _log("passorder %s %s x%d prType=11 limit=%s (%s)"
-             % (order["side"], order["stock_code"], order["quantity"],
-                limit_price, coid))
+        event_fields = {
+            "batch_id": batch.batch_id(),
+            "client_order_id": coid,
+            "side": order["side"],
+            "stock_code": order["stock_code"],
+            "quantity": int(order["quantity"]),
+            "price_type": LIMIT_PRICE_TYPE,
+            "limit_price": api_price,
+            "message": "passorder returned; awaiting QMT order",
+        }
+        if fixed_price:
+            event_fields["official_close_reference"] = official_close
+        _log_event("SUBMITTED_UNCONFIRMED", **event_fields)
+        if fixed_price:
+            _log("passorder %s %s x%d prType=49 price=0 close=%s (%s)"
+                 % (order["side"], order["stock_code"], order["quantity"],
+                    official_close, coid))
+        else:
+            _log("passorder %s %s x%d prType=11 limit=%s (%s)"
+                 % (order["side"], order["stock_code"], order["quantity"],
+                    limit_price, coid))
         return True
     except Exception:
         _write_fill(batch, order, "ERROR", 0, 0.0, "",
@@ -1134,6 +1238,31 @@ def _poll_status(batch):
         )
 
 
+def _finalize_dual_authorization_block(batch):
+    trade_date = batch.header.get("trade_date", "")
+    authorization_path = _authorization_path(trade_date)
+    other_authorization_path = _other_authorization_path(trade_date)
+    _log_event(
+        "DUAL_AUTHORIZATION_BLOCKED",
+        batch_id=batch.batch_id(),
+        execution_profile=EXECUTION_PROFILE,
+        authorization_path=authorization_path,
+        other_authorization_path=other_authorization_path,
+        message="both execution profiles are authorized; all trading disabled",
+    )
+    for order in batch.orders:
+        coid = order["client_order_id"]
+        if _order_is_terminal(batch, coid):
+            continue
+        batch.submitted[coid] = True
+        _save_active_state(batch)
+        _write_fill(
+            batch, order, "SKIPPED", 0, 0.0, "",
+            "dual authorization blocked",
+        )
+    _finalize_batch(batch)
+
+
 def _process_batch(ContextInfo, batch):
     now = _now_hms()
     if now < TRADE_START:
@@ -1142,16 +1271,31 @@ def _process_batch(ContextInfo, batch):
         # _force_finalize_if_near_close owns polling/cancel from this point.
         # Never place a fresh order after the cancellation cutoff.
         return
+    if batch.dual_authorization_blocked:
+        _finalize_dual_authorization_block(batch)
+        return
     if not batch.trading_started:
         # batch may have been claimed hours before the trade window opens;
         # freeze both the sell-wait timer and LIVE safety decision at the
         # first trading pass. A late LIVE_OK file cannot enable half a batch.
         batch.trading_started = True
         batch.phase_started = time.time()
+        trade_date = batch.header.get("trade_date", "")
+        batch.dual_authorization_blocked = (
+            batch.header.get("mode") == "LIVE"
+            and os.path.isfile(_authorization_path(trade_date))
+            and _other_profile_authorized(trade_date)
+        )
+        if batch.dual_authorization_blocked:
+            batch.execution_authorized = False
+            batch.execution_live = False
+            _save_active_state(batch)
+            _finalize_dual_authorization_block(batch)
+            return
         batch.execution_authorized = (
             batch.broker_authorized
             and batch.header.get("mode") == "LIVE"
-            and _live_ok(batch.header.get("trade_date", ""))
+            and _live_ok(trade_date)
         )
         if batch.execution_authorized and ACCOUNT_ENVIRONMENT == "REAL":
             preflight_ok, preflight_message = _real_account_preflight(
@@ -1250,20 +1394,25 @@ def _process_batch(ContextInfo, batch):
                 continue
 
             limit_price = None
+            reservation_price = close_price
             if mode_live:
-                try:
-                    limit_price = _instrument_limit_price(
-                        ContextInfo, order["stock_code"], "BUY")
-                except Exception as exc:
-                    order["quantity"] = target_requested
-                    batch.submitted[order["client_order_id"]] = True
-                    _save_active_state(batch)
-                    _write_fill(batch, order, "ERROR", 0, 0.0, "", str(exc))
-                    continue
+                if EXECUTION_PROFILE == "CLOSE_AUCTION":
+                    try:
+                        limit_price = _instrument_limit_price(
+                            ContextInfo, order["stock_code"], "BUY")
+                    except Exception as exc:
+                        order["quantity"] = target_requested
+                        batch.submitted[order["client_order_id"]] = True
+                        _save_active_state(batch)
+                        _write_fill(
+                            batch, order, "ERROR", 0, 0.0, "", str(exc),
+                        )
+                        continue
+                    reservation_price = limit_price
                 requested = _target_requested_quantity(
                     close_price, float(order["target_value"]))
                 quantity = _max_affordable_quantity(
-                    batch.remaining_cash, limit_price, requested)
+                    batch.remaining_cash, reservation_price, requested)
             else:
                 quantity = _target_buy_quantity(
                     None, close_price, float(order["target_value"]))
@@ -1287,13 +1436,19 @@ def _process_batch(ContextInfo, batch):
                 continue
             order["quantity"] = quantity
             if mode_live:
-                reserved = _estimated_buy_cost(quantity, limit_price)
+                reserved = _estimated_buy_cost(quantity, reservation_price)
                 batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
                 _save_active_state(batch)
-                _submit(
-                    ContextInfo, batch, order, True,
-                    limit_price=limit_price,
-                )
+                if EXECUTION_PROFILE == "AFTER_HOURS_FIXED_PRICE":
+                    _submit(
+                        ContextInfo, batch, order, True,
+                        official_close=close_price,
+                    )
+                else:
+                    _submit(
+                        ContextInfo, batch, order, True,
+                        limit_price=limit_price,
+                    )
             else:
                 _submit(ContextInfo, batch, order, False)
 
@@ -1352,6 +1507,8 @@ def _force_finalize_if_near_close(ContextInfo, batch):
 
 
 def _advance(ContextInfo):
+    if not g.trading_enabled:
+        return
     now = time.time()
     if now - g.last_poll < POLL_SECONDS:
         return
@@ -1380,7 +1537,8 @@ def _register_postclose_timer(ContextInfo):
     if g.timer_registered:
         return
     day = datetime.date.today()
-    first_compact = day.strftime("%Y%m%d") + "145655"
+    timer_start = _profile_settings()["timer_start"]
+    first_compact = day.strftime("%Y%m%d") + timer_start.replace(":", "")
     # Some QMT builds invoke an overdue callback synchronously while the
     # timer is registered. Mark it first so callback -> init cannot recurse.
     g.timer_registered = True
@@ -1394,7 +1552,7 @@ def _register_postclose_timer(ContextInfo):
                 "qlib_postclose_poll",
             )
         else:
-            first_legacy = day.strftime("%Y-%m-%d") + " 14:56:55"
+            first_legacy = day.strftime("%Y-%m-%d") + " " + timer_start
             ContextInfo.run_time(
                 "timer_callback", "%dnSecond" % int(POLL_SECONDS), first_legacy,
             )
@@ -1405,6 +1563,31 @@ def _register_postclose_timer(ContextInfo):
 
 def init(ContextInfo):
     _ensure_dirs()
+    try:
+        _activate_profile_settings()
+    except ValueError as exc:
+        g.loaded = True
+        g.trading_enabled = False
+        _log_event(
+            "INVALID_EXECUTION_PROFILE",
+            execution_profile=EXECUTION_PROFILE,
+            message=str(exc),
+        )
+        return
+    current_root = os.path.normcase(os.path.abspath(BRIDGE_ROOT))
+    other_root = os.path.normcase(os.path.abspath(OTHER_BRIDGE_ROOT))
+    if current_root == other_root:
+        g.loaded = True
+        g.trading_enabled = False
+        _log_event(
+            "PROFILE_ISOLATION_ERROR",
+            execution_profile=EXECUTION_PROFILE,
+            bridge_root=BRIDGE_ROOT,
+            other_bridge_root=OTHER_BRIDGE_ROOT,
+            message="BRIDGE_ROOT and OTHER_BRIDGE_ROOT must be distinct",
+        )
+        return
+    g.trading_enabled = True
     if ACCOUNT_ID:
         ContextInfo.set_account(ACCOUNT_ID)
         _log_event(
@@ -1418,6 +1601,7 @@ def init(ContextInfo):
         _register_postclose_timer(ContextInfo)
     except Exception:
         g.loaded = False
+        g.trading_enabled = False
         raise
     _log("initialized, bridge_root=%s, %d processed batches"
          % (BRIDGE_ROOT, len(g.processed)))

@@ -34,6 +34,27 @@ def bridge(tmp_path, monkeypatch):
     return mod
 
 
+class _ScheduleContext:
+    def __init__(self):
+        self.calls = []
+
+    def set_account(self, account_id):
+        self.account_id = account_id
+
+    def schedule_run(self, *args):
+        self.calls.append(args)
+        return 1
+
+
+def _activate_profile(bridge, profile, bridge_root, other_bridge_root):
+    bridge.EXECUTION_PROFILE = profile
+    bridge.BRIDGE_ROOT = str(bridge_root)
+    bridge.OTHER_BRIDGE_ROOT = str(other_bridge_root)
+    context = _ScheduleContext()
+    bridge.init(context)
+    return context
+
+
 def test_qmt_cash_reservation_fees_match_live_config(bridge):
     config_path = (
         REPO_ROOT / "live_trading" / "configs" /
@@ -44,6 +65,111 @@ def test_qmt_cash_reservation_fees_match_live_config(bridge):
     assert bridge.COMMISSION_RATE == pytest.approx(fees["commission_rate"])
     assert bridge.MIN_COMMISSION == pytest.approx(fees["min_commission"])
     assert bridge.TRANSFER_FEE_RATE == pytest.approx(fees["transfer_fee_rate"])
+
+
+def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
+    main_root = tmp_path / "main"
+    probe_root = tmp_path / "probe"
+
+    context = _activate_profile(
+        bridge, "CLOSE_AUCTION", main_root, probe_root,
+    )
+
+    assert bridge._profile_settings() == {
+        "signal_price_type": "CLOSE_AUCTION_LIMIT",
+        "qmt_price_type": 11,
+        "submit_after": "14:57:05",
+        "cancel_at": "15:00:05",
+        "finalize_at": "15:00:30",
+        "snapshot_after": "15:01:00",
+        "authorization_prefix": "LIVE_OK_",
+        "other_authorization_prefix": "PR49_LIVE_OK_",
+        "sell_wait_seconds": 0,
+        "timer_start": "14:56:55",
+    }
+    assert bridge._expected_signal_price_type() == "CLOSE_AUCTION_LIMIT"
+    assert bridge.LIMIT_PRICE_TYPE == 11
+    assert bridge.TRADE_START == "14:57:05"
+    assert bridge.CANCEL_AT == "15:00:05"
+    assert bridge.FINALIZE_AT == "15:00:30"
+    assert bridge.SNAPSHOT_REFRESH_AT == "15:01:00"
+    assert Path(bridge._authorization_path("2026-08-08")) == (
+        main_root / "state" / "LIVE_OK_2026-08-08"
+    )
+    assert context.calls[0][1].endswith("145655")
+
+
+def test_after_hours_profile_activates_isolated_pr49_contract(bridge, tmp_path):
+    probe_root = tmp_path / "probe"
+    main_root = tmp_path / "main"
+
+    context = _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", probe_root, main_root,
+    )
+
+    assert bridge._profile_settings() == {
+        "signal_price_type": "AFTER_HOURS_CLOSE",
+        "qmt_price_type": 49,
+        "submit_after": "15:05:00",
+        "cancel_at": "15:28:00",
+        "finalize_at": "15:30:00",
+        "snapshot_after": "15:31:00",
+        "authorization_prefix": "PR49_LIVE_OK_",
+        "other_authorization_prefix": "LIVE_OK_",
+        "sell_wait_seconds": 240,
+        "timer_start": "15:04:55",
+    }
+    assert bridge._expected_signal_price_type() == "AFTER_HOURS_CLOSE"
+    assert bridge.LIMIT_PRICE_TYPE == 49
+    assert bridge.TRADE_START == "15:05:00"
+    assert bridge.CANCEL_AT == "15:28:00"
+    assert bridge.FINALIZE_AT == "15:30:00"
+    assert bridge.SNAPSHOT_REFRESH_AT == "15:31:00"
+    assert Path(bridge._authorization_path("2026-08-08")) == (
+        probe_root / "state" / "PR49_LIVE_OK_2026-08-08"
+    )
+    assert context.calls[0][1].endswith("150455")
+
+
+def test_invalid_execution_profile_disables_runtime_with_structured_error(
+    bridge, tmp_path,
+):
+    bridge.EXECUTION_PROFILE = "TYPO_PROFILE"
+    bridge.BRIDGE_ROOT = str(tmp_path / "current")
+    bridge.OTHER_BRIDGE_ROOT = str(tmp_path / "other")
+    context = _ScheduleContext()
+
+    bridge.init(context)
+
+    assert bridge.g.loaded is True
+    assert bridge.g.trading_enabled is False
+    assert context.calls == []
+    rows = (
+        Path(bridge.BRIDGE_ROOT) / "logs" /
+        ("qmt_events_%s.jsonl" % bridge._today())
+    ).read_text().splitlines()
+    event = json.loads(rows[-1])
+    assert event["event"] == "INVALID_EXECUTION_PROFILE"
+    assert event["execution_profile"] == "TYPO_PROFILE"
+
+
+def test_shared_profile_roots_disable_runtime_before_timer_registration(
+    bridge, tmp_path,
+):
+    shared_root = tmp_path / "shared"
+    bridge.EXECUTION_PROFILE = "CLOSE_AUCTION"
+    bridge.BRIDGE_ROOT = str(shared_root)
+    bridge.OTHER_BRIDGE_ROOT = str(shared_root)
+    context = _ScheduleContext()
+
+    bridge.init(context)
+
+    assert bridge.g.trading_enabled is False
+    assert context.calls == []
+    rows = (
+        shared_root / "logs" / ("qmt_events_%s.jsonl" % bridge._today())
+    ).read_text().splitlines()
+    assert json.loads(rows[-1])["event"] == "PROFILE_ISOLATION_ERROR"
 
 
 def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
@@ -132,6 +258,130 @@ def _read_fills(bridge, batch_id=BATCH_ID):
     if not p.exists():
         return []
     return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+
+
+@pytest.mark.parametrize(
+    "profile,price_type,current_prefix,other_prefix,now",
+    [
+        (
+            "CLOSE_AUCTION", "CLOSE_AUCTION_LIMIT",
+            "LIVE_OK_", "PR49_LIVE_OK_", "14:57:30",
+        ),
+        (
+            "AFTER_HOURS_FIXED_PRICE", "AFTER_HOURS_CLOSE",
+            "PR49_LIVE_OK_", "LIVE_OK_", "15:05:30",
+        ),
+    ],
+)
+def test_dual_authorization_closes_either_profile_before_passorder(
+    bridge, monkeypatch, tmp_path,
+    profile, price_type, current_prefix, other_prefix, now,
+):
+    current_root = tmp_path / "current"
+    other_root = tmp_path / "other"
+    _activate_profile(bridge, profile, current_root, other_root)
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    order["price_type"] = price_type
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    current_marker = (
+        current_root / "state" / (current_prefix + bridge._today())
+    )
+    other_marker = other_root / "state" / (other_prefix + bridge._today())
+    current_marker.write_text("")
+    other_marker.parent.mkdir(parents=True)
+    other_marker.write_text("")
+    bridge._claim_new_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: now)
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("dual authorization reached passorder"),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        bridge, "_get_can_use_volume",
+        lambda *args: pytest.fail("dual authorization reached broker state"),
+    )
+
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch)
+
+    assert bridge.g.batch is None
+    fills = _read_fills(bridge)
+    assert [(row["status"], row["message"]) for row in fills] == [
+        ("SKIPPED", "dual authorization blocked"),
+    ]
+    event_rows = (
+        current_root / "logs" / ("qmt_events_%s.jsonl" % bridge._today())
+    ).read_text().splitlines()
+    blocked = [
+        json.loads(row) for row in event_rows
+        if json.loads(row)["event"] == "DUAL_AUTHORIZATION_BLOCKED"
+    ]
+    assert len(blocked) == 1
+    assert blocked[0]["authorization_path"] == str(current_marker)
+    assert blocked[0]["other_authorization_path"] == str(other_marker)
+
+
+def test_dual_authorization_decision_survives_restart_after_markers_removed(
+    bridge, monkeypatch, tmp_path,
+):
+    current_root = tmp_path / "main"
+    other_root = tmp_path / "probe"
+    _activate_profile(
+        bridge, "CLOSE_AUCTION", current_root, other_root,
+    )
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    current_marker = Path(bridge._authorization_path(bridge._today()))
+    other_marker = Path(bridge._other_authorization_path(bridge._today()))
+    current_marker.write_text("")
+    other_marker.parent.mkdir(parents=True)
+    other_marker.write_text("")
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.trading_started = True
+    batch.dual_authorization_blocked = True
+    bridge._save_active_state(batch)
+    current_marker.unlink()
+    other_marker.unlink()
+    bridge.g.batch = None
+
+    bridge._recover_processing_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("frozen dual block reached passorder"),
+        raising=False,
+    )
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert bridge.g.batch is None
+    assert _read_fills(bridge)[0]["message"] == "dual authorization blocked"
+
+
+@pytest.mark.parametrize(
+    "profile,wrong_price_type",
+    [
+        ("CLOSE_AUCTION", "AFTER_HOURS_CLOSE"),
+        ("AFTER_HOURS_FIXED_PRICE", "CLOSE_AUCTION_LIMIT"),
+    ],
+)
+def test_batch_price_type_must_match_selected_qmt_profile(
+    bridge, tmp_path, profile, wrong_price_type,
+):
+    _activate_profile(
+        bridge, profile, tmp_path / "current", tmp_path / "other",
+    )
+    order = _order()
+    order["price_type"] = wrong_price_type
+    _write_batch(bridge, bridge._today(), [order])
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch is None
+    assert _read_fills(bridge)[0]["message"] == (
+        "price_type must match execution profile: " +
+        bridge._expected_signal_price_type()
+    )
 
 
 def test_expired_batch_skipped(bridge):
@@ -874,6 +1124,113 @@ def test_official_close_fails_closed_without_positive_last_price(
     bridge, last_price,
 ):
     assert bridge._official_close(_TickCtx(last_price), "000001.SZ") == 0.0
+
+
+@pytest.mark.parametrize("side", ["BUY", "SELL"])
+def test_fixed_price_requires_positive_official_close_before_api(
+    bridge, monkeypatch, tmp_path, side,
+):
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE",
+        tmp_path / "probe", tmp_path / "main",
+    )
+    order = _order(coid="20260714001001" + side[0], side=side)
+    order["price_type"] = "AFTER_HOURS_CLOSE"
+    order["quantity"] = 100
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    batch = bridge.Batch(header, [order])
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("invalid close reference reached passorder"),
+        raising=False,
+    )
+
+    assert bridge._submit(_TickCtx(0.0), batch, order, True) is False
+    assert batch.submitted == {order["client_order_id"]: True}
+    assert batch.fills[order["client_order_id"]]["status"] == "ERROR"
+    assert batch.fills[order["client_order_id"]]["message"] == (
+        "official close unavailable"
+    )
+
+
+def test_fixed_price_passes_zero_and_logs_positive_close_reference_before_api(
+    bridge, monkeypatch, tmp_path,
+):
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE",
+        tmp_path / "probe", tmp_path / "main",
+    )
+    order = _order(coid="20260714001001S", side="SELL")
+    order.update(price_type="AFTER_HOURS_CLOSE", quantity=100)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    batch = bridge.Batch(header, [order])
+    calls = []
+
+    def passorder_after_state(*args):
+        active = (
+            Path(bridge.BRIDGE_ROOT) / "state" /
+            ("active_" + BATCH_ID + ".json")
+        )
+        assert json.loads(active.read_text())["submitted"] == [
+            order["client_order_id"],
+        ]
+        calls.append(args)
+
+    monkeypatch.setattr(bridge, "passorder", passorder_after_state, raising=False)
+
+    assert bridge._submit(_TickCtx(10.50), batch, order, True)
+
+    assert len(calls) == 1
+    assert calls[0][4] == 49
+    assert calls[0][5] == 0.0
+    events = [
+        json.loads(row) for row in (
+            Path(bridge.BRIDGE_ROOT) / "logs" /
+            ("qmt_events_%s.jsonl" % bridge._today())
+        ).read_text().splitlines()
+    ]
+    submitted = [
+        row for row in events if row["event"] == "SUBMITTED_UNCONFIRMED"
+    ]
+    assert submitted[0]["official_close_reference"] == 10.50
+    assert submitted[0]["limit_price"] == 0.0
+
+
+def test_fixed_price_buy_sizes_and_reserves_at_close_but_passes_zero(
+    bridge, monkeypatch, tmp_path,
+):
+    probe_root = tmp_path / "probe"
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", probe_root, tmp_path / "main",
+    )
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(price_type="AFTER_HOURS_CLOSE", max_quantity=100)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    Path(bridge._authorization_path(bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 10000.0)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert len(submitted) == 1
+    assert submitted[0][4:7] == (49, 0.0, 100)
+    assert bridge.g.batch.remaining_cash == pytest.approx(
+        10000.0 - bridge._estimated_buy_cost(100, 10.0)
+    )
 
 
 def test_simulate_batch_processes_without_qmt_api(bridge, monkeypatch):

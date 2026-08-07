@@ -44,17 +44,26 @@ class LiveRecorder:
         fees: dict = None,
         opening_cash: float | None = None,
         opening_value_adjustment: float | None = None,
+        read_only: bool = False,
     ):
         self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.read_only = read_only
+        if self.read_only:
+            if not self.db_path.is_file():
+                raise SchemaError(
+                    f"live ledger unavailable for read-only access: {self.db_path}"
+                )
+        else:
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.fees = dict(DEFAULT_FEES)
         if fees:
             self.fees.update(fees)
         self.fees = validate_fees(self.fees)
-        self._backup_legacy_db()
-        self._init_db()
-        self._seed_opening_cash(opening_cash)
-        self._seed_opening_value_adjustment(opening_value_adjustment)
+        if not self.read_only:
+            self._backup_legacy_db()
+            self._init_db()
+            self._seed_opening_cash(opening_cash)
+            self._seed_opening_value_adjustment(opening_value_adjustment)
 
     def _seed_opening_cash(self, opening_cash: float | None) -> None:
         if opening_cash is None:
@@ -144,9 +153,15 @@ class LiveRecorder:
 
     @contextmanager
     def _conn(self):
-        conn = sqlite3.connect(str(self.db_path))
+        if self.read_only:
+            conn = sqlite3.connect(
+                f"file:{self.db_path}?mode=ro", uri=True,
+            )
+        else:
+            conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
+        if not self.read_only:
+            conn.execute("PRAGMA journal_mode=WAL")
         try:
             yield conn
             conn.commit()
@@ -1733,6 +1748,36 @@ class LiveRecorder:
                 (batch_id,),
             ).fetchall()
             return {r["stock_code"]: r["shares"] for r in rows}
+
+    def get_broker_position_details(self, trade_date: str) -> dict[str, dict]:
+        """Return the complete latest broker position snapshot for a date.
+
+        An absent snapshot is an operational data failure.  Returning an empty
+        mapping would make a stale or failed QMT account query look like an
+        account with no positions, which is unsafe for operator-created orders.
+        An empty *present* snapshot remains a valid empty mapping.
+        """
+        with self._conn() as conn:
+            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if batch_id is None:
+                raise SchemaError(
+                    f"broker position snapshot missing for {trade_date}"
+                )
+            rows = conn.execute(
+                """SELECT stock_code, shares, can_use_volume, avg_cost,
+                          market_value
+                   FROM broker_position_snapshot WHERE batch_id=?""",
+                (batch_id,),
+            ).fetchall()
+            return {
+                row["stock_code"]: {
+                    "shares": row["shares"],
+                    "can_use_volume": row["can_use_volume"],
+                    "avg_cost": row["avg_cost"],
+                    "market_value": row["market_value"],
+                }
+                for row in rows
+            }
 
     def get_broker_position_market_values(self, trade_date: str) -> dict:
         """当日最新券商快照的逐仓市值；缺失值保留为 None。"""

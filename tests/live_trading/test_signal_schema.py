@@ -102,7 +102,37 @@ def test_order_json_roundtrip():
     assert d["type"] == "order"
     assert SignalOrder.from_dict(d) == o
     assert d["target_value"] == 0.0
-    assert d["max_quantity"] == 0
+    assert "max_quantity" not in d
+
+
+def test_default_maximum_preserves_exact_v2_order_bytes():
+    legacy_line = (
+        '{"batch_id":"20260714_csi300_topk10_001",'
+        '"client_order_id":"20260714001S",'
+        '"instrument_qlib":"SH600000","limit_price":0.0,'
+        '"price_type":"CLOSE_AUCTION_LIMIT","priority":10,'
+        '"quantity":800,"reason":"topk_drop","side":"SELL",'
+        '"stock_code":"600000.SH","target_value":0.0,"type":"order"}'
+    )
+
+    order = SignalOrder.from_dict(json.loads(legacy_line))
+
+    assert order.max_quantity == 0
+    assert order.to_json_line() == legacy_line
+
+
+def test_capped_order_serializes_its_maximum_into_checksum_bytes():
+    order = _order(
+        side="BUY", quantity=0, max_quantity=100, target_value=15_833.33,
+        client_order_id="20260714001002B", priority=20,
+    )
+
+    line = order.to_json_line()
+
+    assert json.loads(line)["max_quantity"] == 100
+    assert compute_checksum([line]) != compute_checksum([
+        dataclasses.replace(order, max_quantity=0).to_json_line(),
+    ])
 
 
 def test_header_json_roundtrip():

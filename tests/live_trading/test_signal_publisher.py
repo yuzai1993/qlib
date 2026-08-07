@@ -85,6 +85,26 @@ def test_publish_exact_retry_is_idempotent(tmp_path):
     assert second.read_bytes() == first_bytes
 
 
+def test_legacy_default_order_checksum_retries_against_durable_plan(tmp_path):
+    legacy_line = (
+        '{"batch_id":"20260714_csi300_topk10_001",'
+        '"client_order_id":"20260714001S",'
+        '"instrument_qlib":"SZ000001","limit_price":0.0,'
+        '"price_type":"CLOSE_AUCTION_LIMIT","priority":10,'
+        '"quantity":800,"reason":"topk_drop","side":"SELL",'
+        '"stock_code":"000001.SZ","target_value":0.0,"type":"order"}'
+    )
+    # This was the exact schema v2.0 byte sequence before max_quantity existed.
+    order = SignalOrder.from_dict(json.loads(legacy_line))
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    expected_checksum = compute_checksum([legacy_line])
+
+    recorder.record_publish_plan(_header(), [order])
+    recorder.record_publish_plan(_header(), [order])
+
+    assert recorder.get_batch(BATCH_ID)["order_checksum"] == expected_checksum
+
+
 def test_publish_conflicting_retry_is_rejected(tmp_path):
     pub = SignalPublisher(tmp_path)
     pub.publish(_header(), _orders())

@@ -84,7 +84,14 @@ class SignalOrder:
     max_quantity: int = 0
 
     def to_json_line(self) -> str:
-        return _to_json_line(self, "order")
+        # Schema v2.0 predates max_quantity.  Keep bytes (and therefore
+        # checksums/durable retries) exactly stable for ordinary uncapped
+        # orders; capped operator BUYs explicitly carry their authorization.
+        d = {"type": "order"}
+        d.update(asdict(self))
+        if d.get("max_quantity") in (0, None):
+            d.pop("max_quantity")
+        return json.dumps(d, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     @classmethod
     def from_dict(cls, d: dict) -> "SignalOrder":

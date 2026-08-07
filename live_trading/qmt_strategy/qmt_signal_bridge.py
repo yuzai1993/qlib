@@ -664,6 +664,7 @@ def _parse_and_check(jsonl_path, done_path):
         coid = order.get("client_order_id", "")
         side = order.get("side")
         quantity = order.get("quantity")
+        max_quantity = order.get("max_quantity", 0)
         target_value = order.get("target_value")
         if order.get("batch_id") != batch_id:
             return reject("order batch_id mismatch")
@@ -672,8 +673,9 @@ def _parse_and_check(jsonl_path, done_path):
         seen.add(coid)
         if side not in ("BUY", "SELL"):
             return reject("invalid order side")
-        if order.get("price_type") != "CLOSE_AUCTION_LIMIT":
-            return reject("price_type must be CLOSE_AUCTION_LIMIT")
+        if order.get("price_type") not in (
+                "CLOSE_AUCTION_LIMIT", "AFTER_HOURS_CLOSE"):
+            return reject("invalid price_type")
         if order.get("limit_price") != 0 and order.get("limit_price") != 0.0:
             return reject("limit_price must be zero")
         if side == "BUY":
@@ -691,6 +693,14 @@ def _parse_and_check(jsonl_path, done_path):
                 return reject("SELL quantity must be a positive whole lot")
             if target_value != 0 and target_value != 0.0:
                 return reject("SELL target_value must be zero")
+        if max_quantity is None:
+            max_quantity = 0
+        if (not isinstance(max_quantity, int)
+                or isinstance(max_quantity, bool) or max_quantity < 0
+                or max_quantity % 100 != 0):
+            return reject("max_quantity must be zero or a whole lot")
+        if side == "SELL" and max_quantity != 0:
+            return reject("SELL max_quantity must be zero")
 
     # sells first by priority, stable by client_order_id
     orders.sort(key=lambda o: (o.get("priority", 99), o.get("client_order_id", "")))
@@ -1261,8 +1271,14 @@ def _process_batch(ContextInfo, batch):
                 quantity = min(
                     quantity, (int(MAX_ORDER_QUANTITY) // 100) * 100,
                 )
+            authorized_max = int(order.get("max_quantity", 0) or 0)
+            if authorized_max > 0:
+                quantity = min(quantity, authorized_max)
             if quantity <= 0:
-                order["quantity"] = target_requested
+                order["quantity"] = (
+                    min(target_requested, authorized_max)
+                    if authorized_max > 0 else target_requested
+                )
                 batch.submitted[order["client_order_id"]] = True
                 _save_active_state(batch)
                 _write_fill(batch, order, "SKIPPED", 0, 0.0, "",

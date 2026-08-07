@@ -102,6 +102,7 @@ def test_order_json_roundtrip():
     assert d["type"] == "order"
     assert SignalOrder.from_dict(d) == o
     assert d["target_value"] == 0.0
+    assert d["max_quantity"] == 0
 
 
 def test_header_json_roundtrip():
@@ -120,6 +121,14 @@ def test_validate_order_accepts_good():
     validate_order(_order(
         side="BUY", quantity=0, target_value=15_833.33,
         client_order_id="20260714001002B", priority=20,
+    ))
+    validate_order(_order(
+        side="BUY", quantity=0, max_quantity=100, target_value=15_833.33,
+        client_order_id="20260714001003B", priority=20,
+    ))
+    validate_order(_order(
+        side="BUY", quantity=0, max_quantity=None, target_value=15_833.33,
+        client_order_id="20260714001004B", priority=20,
     ))
 
 
@@ -157,6 +166,16 @@ def test_validate_buy_order_rejects_broker_sized_plan_fields(bad_kwargs):
     buy.update(bad_kwargs)
     with pytest.raises(SchemaError):
         validate_order(_order(**buy))
+
+
+@pytest.mark.parametrize("max_quantity", [-100, 50, True])
+def test_validate_order_rejects_invalid_immutable_buy_maximum(max_quantity):
+    with pytest.raises(SchemaError, match="max_quantity"):
+        validate_order(_order(
+            side="BUY", quantity=0, max_quantity=max_quantity,
+            target_value=15_833.33, client_order_id="20260714001002B",
+            priority=20,
+        ))
 
 
 def test_validate_batch_checks_order_count_and_ids():

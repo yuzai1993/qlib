@@ -78,6 +78,10 @@ class SignalOrder:
     priority: int
     instrument_qlib: str
     reason: str
+    # BUYs normally use 0 (or omit the legacy field).  A positive whole-lot
+    # value is an immutable broker-side ceiling for explicitly authorized
+    # operator orders.
+    max_quantity: int = 0
 
     def to_json_line(self) -> str:
         return _to_json_line(self, "order")
@@ -174,6 +178,21 @@ def validate_order(order: SignalOrder) -> None:
             )
         if float(order.target_value) != 0.0:
             raise SchemaError(f"SELL target_value must be 0: {order.target_value!r}")
+    if order.max_quantity is None:
+        max_quantity = 0
+    else:
+        max_quantity = order.max_quantity
+    if (
+        isinstance(max_quantity, bool)
+        or not isinstance(max_quantity, int)
+        or max_quantity < 0
+        or max_quantity % TRADE_UNIT != 0
+    ):
+        raise SchemaError(
+            f"max_quantity must be 0 or a positive whole lot: {max_quantity!r}"
+        )
+    if order.side == "SELL" and max_quantity != 0:
+        raise SchemaError("SELL max_quantity must be 0")
     if len(order.client_order_id) > CLIENT_ORDER_ID_MAX_LEN:
         raise SchemaError(f"client_order_id too long: {order.client_order_id!r}")
     # stock_code 必须为 QMT 格式（600000.SH）

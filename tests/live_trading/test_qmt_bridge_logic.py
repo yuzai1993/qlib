@@ -591,6 +591,30 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
     assert all(row["price"] == 11.0 for row in submitted)
 
 
+def test_immutable_buy_maximum_caps_submission_when_rollout_cap_increases(
+    bridge, monkeypatch,
+):
+    bridge.MAX_ORDER_QUANTITY = 1_000
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(max_quantity=100, target_value=8_000.0)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    bridge.TRADE_START = "00:00:00"
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 10000.0)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0), bridge.g.batch)
+
+    assert [args[6] for args in submitted] == [100]
+
+
 def test_available_cash_distinguishes_empty_query_from_real_zero(
     bridge, monkeypatch,
 ):

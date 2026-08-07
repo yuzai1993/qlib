@@ -229,6 +229,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    max_quantity INTEGER NOT NULL DEFAULT 0,
                     target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
@@ -355,6 +356,11 @@ class LiveRecorder:
                     "ALTER TABLE signal_orders ADD COLUMN target_value "
                     "REAL NOT NULL DEFAULT 0"
                 )
+            if "max_quantity" not in order_cols:
+                conn.execute(
+                    "ALTER TABLE signal_orders ADD COLUMN max_quantity "
+                    "INTEGER NOT NULL DEFAULT 0"
+                )
             self._migrate_composite_keys(conn)
 
     @staticmethod
@@ -418,6 +424,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    max_quantity INTEGER NOT NULL DEFAULT 0,
                     target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
@@ -427,11 +434,11 @@ class LiveRecorder:
                 );
                 INSERT INTO signal_orders (
                     batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, target_value, price_type, limit_price,
+                    side, quantity, max_quantity, target_value, price_type, limit_price,
                     priority, reason
                 )
                 SELECT batch_id, client_order_id, stock_code, instrument_qlib,
-                       side, quantity, 0, price_type, limit_price, priority, reason
+                       side, quantity, 0, 0, price_type, limit_price, priority, reason
                 FROM signal_orders_legacy;
                 DROP TABLE signal_orders_legacy;
             """)
@@ -640,6 +647,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                int(get("max_quantity", 0) or 0),
                 float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
@@ -659,9 +667,9 @@ class LiveRecorder:
             conn.executemany(
                 """INSERT INTO signal_orders
                    (client_order_id, batch_id, stock_code, instrument_qlib,
-                    side, quantity, target_value, price_type, limit_price,
+                    side, quantity, max_quantity, target_value, price_type, limit_price,
                     priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
@@ -697,6 +705,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                int(get("max_quantity", 0) or 0),
                 float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
@@ -724,8 +733,8 @@ class LiveRecorder:
                 )
                 existing_rows = [tuple(row) for row in conn.execute(
                     """SELECT batch_id, client_order_id, stock_code,
-                              instrument_qlib, side, quantity, target_value,
-                              price_type, limit_price, priority, reason
+                              instrument_qlib, side, quantity, max_quantity,
+                              target_value, price_type, limit_price, priority, reason
                        FROM signal_orders WHERE batch_id=?
                        ORDER BY client_order_id""",
                     (batch_id,),
@@ -752,9 +761,9 @@ class LiveRecorder:
             conn.executemany(
                 """INSERT INTO signal_orders
                    (batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, target_value, price_type, limit_price,
+                    side, quantity, max_quantity, target_value, price_type, limit_price,
                     priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
@@ -987,6 +996,14 @@ class LiveRecorder:
             if fill.side == "BUY":
                 if order["quantity"] != 0 or order["target_value"] <= 0:
                     raise SchemaError("BUY plan must use a positive target_value")
+                if (
+                    order["max_quantity"] > 0
+                    and fill.requested_qty > order["max_quantity"]
+                ):
+                    raise SchemaError(
+                        f"BUY requested_qty {fill.requested_qty!r} exceeds "
+                        f"authorized max {order['max_quantity']!r}"
+                    )
                 fill_gross = float(fill.filled_qty) * float(fill.avg_price)
                 if fill_gross > float(order["target_value"]) + 1e-6:
                     raise SchemaError(

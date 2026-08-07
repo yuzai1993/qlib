@@ -48,32 +48,37 @@ def _require_trade_date(value: str) -> None:
         raise SchemaError(f"trade_date must be YYYY-MM-DD: {value!r}") from exc
 
 
-def _probe_live_config(config: dict) -> dict:
+def _operator_live_config(config: dict) -> dict:
     live = config.get("live", {})
-    if live.get("kind") != "OPERATOR_PROBE":
-        raise SchemaError("operator probe requires live.kind OPERATOR_PROBE")
-    if live.get("strategy_id") != PROBE_STRATEGY_ID:
-        raise SchemaError(
-            f"operator probe requires strategy_id {PROBE_STRATEGY_ID}"
-        )
-    bridge_root = live.get("bridge_root")
-    if (
-        not isinstance(bridge_root, str)
-        or not bridge_root.rstrip("/").endswith("/pr49_probe")
-    ):
-        raise SchemaError("operator probe requires an isolated /pr49_probe root")
     if live.get("broker_environment") != "REAL":
-        raise SchemaError("operator probe requires REAL broker environment")
+        raise SchemaError("operator tool requires REAL broker environment")
     if live.get("allow_real_money") is not True:
-        raise SchemaError("operator probe requires allow_real_money=true")
+        raise SchemaError("operator tool requires allow_real_money=true")
     if live.get("default_mode") != "LIVE":
-        raise SchemaError("operator probe requires default_mode=LIVE")
+        raise SchemaError("operator tool requires default_mode=LIVE")
     try:
         profile = get_execution_profile(live["execution_session"])
     except (KeyError, ValueError) as exc:
-        raise SchemaError("operator probe execution profile is invalid") from exc
-    if profile.name != "AFTER_HOURS_FIXED_PRICE":
-        raise SchemaError("operator probe requires AFTER_HOURS_FIXED_PRICE")
+        raise SchemaError("operator execution profile is invalid") from exc
+    kind = live.get("kind", "STRATEGY")
+    if kind == "OPERATOR_PROBE":
+        if live.get("strategy_id") != PROBE_STRATEGY_ID:
+            raise SchemaError(
+                f"operator probe requires strategy_id {PROBE_STRATEGY_ID}"
+            )
+        if profile.name != "AFTER_HOURS_FIXED_PRICE":
+            raise SchemaError("operator probe requires AFTER_HOURS_FIXED_PRICE")
+        bridge_root = live.get("bridge_root")
+        if (
+            not isinstance(bridge_root, str)
+            or not bridge_root.rstrip("/").endswith("/pr49_probe")
+        ):
+            raise SchemaError("operator probe requires an isolated /pr49_probe root")
+    elif kind == "STRATEGY":
+        if profile.name != "CLOSE_AUCTION":
+            raise SchemaError("main operator tool requires CLOSE_AUCTION")
+    else:
+        raise SchemaError("operator tool requires STRATEGY or OPERATOR_PROBE")
     return live
 
 
@@ -102,7 +107,7 @@ def _validate_request(request: OperatorProbeRequest, config: dict) -> dict:
         raise SchemaError(
             f"operator probe stock_code is unknown or invalid: {request.stock_code!r}"
         ) from exc
-    return _probe_live_config(config)
+    return _operator_live_config(config)
 
 
 def _batch_id(request: OperatorProbeRequest, live: dict) -> str:
@@ -161,6 +166,7 @@ def _make_operator_order(
         priority=priority,
         instrument_qlib=qmt_to_qlib(request.stock_code),
         reason=request.reason,
+        max_quantity=ONE_LOT if request.side == "BUY" else 0,
     )
 
 
@@ -186,6 +192,12 @@ def build_operator_order(
             "broker position snapshot must be from the operator trade_date"
         )
     details = recorder.get_broker_position_details(broker_trade_date)
+    approved = recorder.get_stock_names()
+    if request.stock_code not in approved:
+        raise SchemaError(
+            f"stock_code is not in the approved trade-date universe: "
+            f"{request.stock_code!r}"
+        )
     positions = recorder.get_positions()
     held = positions.get(request.stock_code, {}).get("shares", 0)
 
@@ -201,6 +213,9 @@ def build_operator_order(
     else:
         if held > 0:
             raise SchemaError("BUY rejected: stock is already held in live ledger")
+        broker = details.get(request.stock_code)
+        if broker is not None and broker.get("shares", 0) > 0:
+            raise SchemaError("BUY rejected: stock is held in latest broker snapshot")
     return _make_operator_order(request, live)
 
 
@@ -226,6 +241,34 @@ def _validate_real_account(live: dict, account_id: str) -> None:
         raise SchemaError("resolved account_id does not match QMT_REAL_ACCOUNT_ID")
 
 
+def _validate_publish_root(live: dict, publisher) -> Path:
+    """Bind REAL publication to one canonical, non-symlinked bridge root."""
+    configured = live.get("bridge_root")
+    if not isinstance(configured, str):
+        raise SchemaError("configured bridge root is required")
+    configured_path = Path(configured).expanduser()
+    if not configured_path.is_absolute():
+        raise SchemaError("configured bridge root must be absolute")
+    try:
+        canonical = configured_path.resolve(strict=True)
+    except OSError as exc:
+        raise SchemaError("configured bridge root is missing") from exc
+    if configured_path != canonical:
+        raise SchemaError("configured bridge root must not use a symlink")
+    if not canonical.is_dir() or not os.access(str(canonical), os.W_OK | os.X_OK):
+        raise SchemaError("configured bridge root is not writable")
+    try:
+        publisher_path = Path(publisher.bridge_root).expanduser()
+        publisher_canonical = publisher_path.resolve(strict=True)
+    except (AttributeError, OSError) as exc:
+        raise SchemaError("publisher root is missing") from exc
+    if publisher_path != publisher_canonical:
+        raise SchemaError("publisher root must not use a symlink")
+    if publisher_canonical != canonical:
+        raise SchemaError("publisher root does not match configured bridge root")
+    return canonical
+
+
 def publish_operator_probe(
     request: OperatorProbeRequest, config: dict, recorder, publisher, account_id: str,
 ) -> Path:
@@ -234,6 +277,7 @@ def publish_operator_probe(
         raise SchemaError("refusing operator publish without LIVE_TRADING_CONFIRM=YES")
     live = _validate_request(request, config)
     _validate_real_account(live, account_id)
+    _validate_publish_root(live, publisher)
     header = _header(request, live, account_id)
 
     if recorder.get_batch(header.batch_id) is not None:
@@ -251,6 +295,7 @@ def publish_operator_probe(
         publisher.ensure_publishable(header, [order])
     except PublishError as exc:
         raise SchemaError(str(exc)) from exc
-    if recorder.get_batch(header.batch_id) is None:
-        recorder.record_publish_plan(header, [order])
+    # The durable record is the atomic serialization point even when another
+    # invocation interleaves after the read-only SMB preflight.
+    recorder.record_publish_plan(header, [order])
     return publisher.publish(header, [order])

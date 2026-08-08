@@ -372,6 +372,166 @@ def test_batch_queries_can_be_scoped_to_one_strategy(env):
     )] == [probe_batch_id]
 
 
+def test_live_ledger_initializes_exact_operator_probe_lifecycle_schema(tmp_path):
+    db = tmp_path / "shared.db"
+    LiveRecorder(str(db))
+
+    with sqlite3.connect(db) as conn:
+        columns = [
+            row[1] for row in conn.execute(
+                "PRAGMA table_info(operator_probe_lifecycle)"
+            )
+        ]
+
+    assert columns == [
+        "strategy_id", "stock_code", "buy_batch_id", "buy_trade_date",
+        "sell_batch_id", "sell_trade_date", "state", "updated_at",
+    ]
+
+
+def test_legacy_read_only_ledger_without_probe_table_has_no_lifecycle(tmp_path):
+    db = tmp_path / "legacy-shared.db"
+    LiveRecorder(str(db))
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE operator_probe_lifecycle")
+
+    recorder = LiveRecorder(str(db), read_only=True)
+
+    assert recorder.get_operator_probe_lifecycle() is None
+
+
+def test_probe_terminal_fill_receipt_is_immutable(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"), opening_cash=100_000.0)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    recorder.record_publish_plan(BatchHeader(
+        batch_id=batch_id,
+        strategy_id="csi1000_pr49_one_lot_probe",
+        trade_date="2026-08-07",
+        signal_date="2026-08-07",
+        account_id="real-account",
+        account_type="STOCK",
+        account_environment="REAL",
+        mode="LIVE",
+        created_at="2026-08-07T00:00:00+08:00",
+        order_count=1,
+        checksum="",
+    ), [SignalOrder(
+        batch_id=batch_id,
+        client_order_id="20260807900001B",
+        stock_code="600000.SH",
+        side="BUY",
+        quantity=0,
+        target_value=1_000_000.0,
+        price_type="AFTER_HOURS_CLOSE",
+        limit_price=0.0,
+        priority=20,
+        instrument_qlib="SH600000",
+        reason="probe",
+        max_quantity=100,
+    )], probe_transition={"side": "BUY", "stock_code": "600000.SH"})
+    rejected = FillEvent.from_dict(_fill(
+        batch_id=batch_id,
+        client_order_id="20260807900001B",
+        stock_code="600000.SH",
+        side="BUY",
+        requested=100,
+        filled=0,
+        price=0.0,
+        status="REJECTED",
+    ))
+    recorder.apply_fill(rejected)
+    recorder.save_broker_snapshot(batch_id, {"account_id": "real-account"}, [])
+    assert recorder.get_operator_probe_lifecycle()["state"] == "FAILED"
+
+    with pytest.raises(SchemaError, match="terminal probe fill is immutable"):
+        recorder.apply_fill(FillEvent.from_dict({
+            **_fill(
+                batch_id=batch_id,
+                client_order_id="20260807900001B",
+                stock_code="600000.SH",
+                side="BUY",
+                requested=100,
+                filled=100,
+                price=10.0,
+                status="FILLED",
+            ),
+            "qmt_order_id": "late-order",
+        }))
+
+    assert "600000.SH" not in recorder.get_positions()
+
+
+def test_probe_import_archives_only_inside_probe_root(env):
+    probe_root, recorder, importer = env
+    main_root = probe_root / "main"
+    main_outbound = main_root / "outbound"
+    main_outbound.mkdir(parents=True)
+    main_fill = main_outbound / "fills_main.jsonl"
+    main_done = main_outbound / "fills_main.done"
+    main_fill.write_text("main\n", encoding="utf-8")
+    main_done.write_text("done\n", encoding="utf-8")
+    fill = _fill(mode="SIMULATE")
+    _record_plan(recorder, [fill])
+    _write_fills(probe_root, [fill])
+
+    assert importer.import_fills() == 1
+
+    assert (probe_root / "archive" / f"fills_{BATCH_ID}.jsonl").is_file()
+    assert (probe_root / "archive" / f"fills_{BATCH_ID}.done").is_file()
+    assert main_fill.is_file()
+    assert main_done.is_file()
+
+
+def test_import_cli_reconciles_only_configured_probe_strategy(
+    tmp_path, monkeypatch, capsys,
+):
+    from live_trading.scripts import run_import_fills
+
+    db = tmp_path / "shared.db"
+    recorder = LiveRecorder(str(db), opening_cash=100_000.0)
+    day = "2026-08-07"
+    for strategy_id in (
+        "csi1000_b6m_b2s_postclose_real",
+        "csi1000_pr49_one_lot_probe",
+    ):
+        recorder.record_publish_plan(BatchHeader(
+            batch_id=f"20260807_{strategy_id}_001",
+            strategy_id=strategy_id,
+            trade_date=day,
+            signal_date=day,
+            account_id="test-account",
+            account_type="STOCK",
+            account_environment="SIMULATION",
+            mode="SIMULATE",
+            created_at="2026-08-07T00:00:00+08:00",
+            order_count=0,
+            checksum="",
+        ), [])
+    config = {
+        "live": {
+            "kind": "OPERATOR_PROBE",
+            "strategy_id": "csi1000_pr49_one_lot_probe",
+            "bridge_root": str(tmp_path / "pr49_probe"),
+        },
+        "storage": {"db_path": str(db)},
+        "account": {"opening_cash": 100_000.0},
+        "fees": DEFAULT_FEES,
+    }
+    monkeypatch.setattr(
+        run_import_fills, "load_live_config", lambda *args: config,
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["run_import_fills.py", "--config", "probe"],
+    )
+
+    run_import_fills.main()
+
+    output = capsys.readouterr().out
+    assert "20260807_csi1000_pr49_one_lot_probe_001" in output
+    assert "20260807_csi1000_b6m_b2s_postclose_real_001" not in output
+    assert "probe lifecycle state=" in output
+
+
 def test_unreconciled_live_batches_exclude_other_strategy(env):
     _, recorder, _ = env
     day = "2026-08-07"

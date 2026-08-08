@@ -25,6 +25,7 @@ OPERATOR_ORDER_SEQUENCE = 1
 ONE_LOT = 100
 BUY_TARGET_VALUE = 1_000_000.0
 PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+PROBE_ACTIVE_STATES = {"BUY_PLANNED", "BUY_FILLED", "SELL_PLANNED"}
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class OperatorProbeRequest:
     side: str
     quantity: int
     reason: str
+    eligibility_confirmed: bool = False
 
 
 def _require_trade_date(value: str) -> None:
@@ -179,6 +181,120 @@ def _normalized_header(header: BatchHeader, order: SignalOrder) -> BatchHeader:
     return normalized
 
 
+def _qlib_trade_dates(start_date: str, end_date: str) -> list[str]:
+    """Load the authoritative local Qlib A-share calendar fail-closed."""
+    try:
+        import qlib
+        from qlib.data import D
+
+        provider_uri = Path(os.environ.get(
+            "QLIB_CN_DATA_DIR", "~/.qlib/qlib_data/cn_data",
+        )).expanduser()
+        if not provider_uri.is_dir():
+            raise SchemaError(
+                f"Qlib calendar data directory is missing: {provider_uri}"
+            )
+        qlib.init(
+            provider_uri=str(provider_uri), region="cn", kernels=1,
+        )
+        values = D.calendar(start_time=start_date, end_time=end_date)
+    except SchemaError:
+        raise
+    except Exception as exc:
+        raise SchemaError(f"Qlib trade calendar unavailable: {exc}") from exc
+    return [str(value)[:10] for value in values]
+
+
+def _require_later_qlib_trade_date(
+    buy_trade_date: str, sell_trade_date: str,
+) -> None:
+    if sell_trade_date <= buy_trade_date:
+        raise SchemaError("SELL requires a later Qlib trade date than BUY")
+    dates = _qlib_trade_dates(buy_trade_date, sell_trade_date)
+    if buy_trade_date not in dates or sell_trade_date not in dates:
+        raise SchemaError("BUY and SELL must both be Qlib trade dates")
+    if dates.index(sell_trade_date) <= dates.index(buy_trade_date):
+        raise SchemaError("SELL requires a later Qlib trade date than BUY")
+
+
+def validate_probe_transition(
+    request: OperatorProbeRequest, recorder,
+) -> None:
+    """Validate one probe transition from imported fills and broker evidence."""
+    if not isinstance(request, OperatorProbeRequest):
+        raise TypeError("request must be an OperatorProbeRequest")
+    _require_trade_date(request.trade_date)
+    details = recorder.get_broker_position_details(request.trade_date)
+    positions = recorder.get_positions()
+    held = positions.get(request.stock_code, {}).get("shares", 0)
+    broker = details.get(request.stock_code)
+
+    lifecycle = recorder.get_operator_probe_lifecycle(PROBE_STRATEGY_ID)
+    if request.side == "BUY":
+        if request.eligibility_confirmed is not True:
+            raise SchemaError("BUY requires explicit --eligibility-confirmed")
+        unresolved = recorder.get_unreconciled_active_live_batches_before(
+            request.trade_date, strategy_id=PROBE_STRATEGY_ID,
+        )
+        if unresolved:
+            raise SchemaError(
+                "unresolved prior probe batch blocks a new transition: "
+                f"{unresolved[0]['batch_id']}"
+            )
+        if lifecycle is not None and lifecycle["state"] in PROBE_ACTIVE_STATES:
+            raise SchemaError(
+                f"BUY rejected: probe lifecycle is {lifecycle['state']}"
+            )
+        if held > 0:
+            raise SchemaError("BUY rejected: stock is already held in live ledger")
+        if broker is not None and broker.get("shares", 0) > 0:
+            raise SchemaError("BUY rejected: stock is held in latest broker snapshot")
+        return
+
+    if request.side != "SELL":
+        raise SchemaError(f"invalid side: {request.side!r}")
+    if lifecycle is None:
+        if held < ONE_LOT:
+            raise SchemaError("SELL requires at least one lot in the live ledger")
+        available = None if broker is None else broker.get("can_use_volume")
+        if available is None or available < ONE_LOT:
+            raise SchemaError(
+                "SELL requires at least one lot available in latest broker snapshot"
+            )
+        raise SchemaError("SELL requires an actual applied BUY probe holding")
+    if lifecycle["stock_code"] != request.stock_code:
+        raise SchemaError("SELL symbol must match the BUY lifecycle symbol")
+    applied_buy = recorder.get_operator_probe_applied_quantity(
+        lifecycle["buy_batch_id"], "BUY", lifecycle["stock_code"],
+    )
+    if applied_buy != ONE_LOT:
+        raise SchemaError(
+            "SELL requires actual applied BUY quantity exactly 100 shares"
+        )
+    if lifecycle["state"] != "BUY_FILLED":
+        raise SchemaError(
+            f"SELL requires BUY_FILLED lifecycle, got {lifecycle['state']}"
+        )
+    _require_later_qlib_trade_date(
+        lifecycle["buy_trade_date"], request.trade_date,
+    )
+    unresolved = recorder.get_unreconciled_active_live_batches_before(
+        request.trade_date, strategy_id=PROBE_STRATEGY_ID,
+    )
+    if unresolved:
+        raise SchemaError(
+            "unresolved prior probe batch blocks a new transition: "
+            f"{unresolved[0]['batch_id']}"
+        )
+    if held < ONE_LOT:
+        raise SchemaError("SELL requires at least one lot in the live ledger")
+    available = None if broker is None else broker.get("can_use_volume")
+    if available is None or available < ONE_LOT:
+        raise SchemaError(
+            "SELL requires at least one lot available in latest broker snapshot"
+        )
+
+
 def build_operator_order(
     request: OperatorProbeRequest,
     config: dict,
@@ -198,24 +314,28 @@ def build_operator_order(
             f"stock_code is not in the approved trade-date universe: "
             f"{request.stock_code!r}"
         )
-    positions = recorder.get_positions()
-    held = positions.get(request.stock_code, {}).get("shares", 0)
-
-    if request.side == "SELL":
-        if held < ONE_LOT:
-            raise SchemaError("SELL requires at least one lot in the live ledger")
-        broker = details.get(request.stock_code)
-        available = None if broker is None else broker.get("can_use_volume")
-        if available is None or available < ONE_LOT:
-            raise SchemaError(
-                "SELL requires at least one lot available in latest broker snapshot"
-            )
+    if live.get("kind") == "OPERATOR_PROBE":
+        validate_probe_transition(request, recorder)
     else:
-        if held > 0:
-            raise SchemaError("BUY rejected: stock is already held in live ledger")
-        broker = details.get(request.stock_code)
-        if broker is not None and broker.get("shares", 0) > 0:
-            raise SchemaError("BUY rejected: stock is held in latest broker snapshot")
+        positions = recorder.get_positions()
+        held = positions.get(request.stock_code, {}).get("shares", 0)
+        if request.side == "SELL":
+            if held < ONE_LOT:
+                raise SchemaError("SELL requires at least one lot in the live ledger")
+            broker = details.get(request.stock_code)
+            available = None if broker is None else broker.get("can_use_volume")
+            if available is None or available < ONE_LOT:
+                raise SchemaError(
+                    "SELL requires at least one lot available in latest broker snapshot"
+                )
+        else:
+            if held > 0:
+                raise SchemaError("BUY rejected: stock is already held in live ledger")
+            broker = details.get(request.stock_code)
+            if broker is not None and broker.get("shares", 0) > 0:
+                raise SchemaError(
+                    "BUY rejected: stock is held in latest broker snapshot"
+                )
     return _make_operator_order(request, live)
 
 
@@ -276,6 +396,12 @@ def publish_operator_probe(
     if os.environ.get("LIVE_TRADING_CONFIRM") != "YES":
         raise SchemaError("refusing operator publish without LIVE_TRADING_CONFIRM=YES")
     live = _validate_request(request, config)
+    if (
+        live.get("kind") == "OPERATOR_PROBE"
+        and request.side == "BUY"
+        and request.eligibility_confirmed is not True
+    ):
+        raise SchemaError("BUY requires explicit --eligibility-confirmed")
     _validate_real_account(live, account_id)
     _validate_publish_root(live, publisher)
     header = _header(request, live, account_id)
@@ -286,7 +412,11 @@ def publish_operator_probe(
         # do not re-check mutable holdings or broker availability on recovery.
         order = _make_operator_order(request, live)
         header = _normalized_header(header, order)
-        recorder.record_publish_plan(header, [order])
+        recorder.record_publish_plan(
+            header, [order], probe_transition={
+                "side": order.side, "stock_code": order.stock_code,
+            } if live.get("kind") == "OPERATOR_PROBE" else None,
+        )
     else:
         header, order = preview_operator_probe(
             request, config, recorder, account_id,
@@ -297,5 +427,9 @@ def publish_operator_probe(
         raise SchemaError(str(exc)) from exc
     # The durable record is the atomic serialization point even when another
     # invocation interleaves after the read-only SMB preflight.
-    recorder.record_publish_plan(header, [order])
+    recorder.record_publish_plan(
+        header, [order], probe_transition={
+            "side": order.side, "stock_code": order.stock_code,
+        } if live.get("kind") == "OPERATOR_PROBE" else None,
+    )
     return publisher.publish(header, [order])

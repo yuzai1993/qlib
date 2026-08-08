@@ -204,6 +204,83 @@ def test_web_service_wrapper_loads_env_and_forwards_config(
     assert config_id == "custom-paper"
 
 
+def test_probe_import_wrapper_is_fixed_to_isolated_probe_config(
+    tmp_path, monkeypatch,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    source = REPO_ROOT / "live_trading" / "run_probe_import.sh"
+    assert source.exists(), "run_probe_import.sh must exist"
+    wrapper = live_dir / source.name
+    shutil.copy2(source, wrapper)
+
+    trace = tmp_path / "probe-import-trace.json"
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\n"
+        "[[ \"$PROBE_ENV_LOADED\" == \"yes\" ]] || exit 9\n"
+        "python3 -c 'import json,os,sys; "
+        "open(os.environ[\"PROBE_IMPORT_TRACE\"],\"w\").write("
+        "json.dumps(sys.argv[1:]))' \"$@\"\n",
+    )
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".qlib_live_env").write_text(
+        "export PROBE_ENV_LOADED='yes'\n"
+        "CONFIG_ID='csi1000_b6m_b2s_postclose_real'\n"
+        "PROJECT_ROOT='/tmp/not-the-repository'\n"
+        "SCRIPT_DIR='/tmp/not-the-probe-wrapper'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("QLIB_LIVE_PYTHON", str(fake_python))
+    monkeypatch.setenv("PROBE_IMPORT_TRACE", str(trace))
+
+    result = subprocess.run(
+        ["bash", str(wrapper)], cwd=root, env=os.environ.copy(),
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    assert json.loads(trace.read_text(encoding="utf-8")) == [
+        str(live_dir / "scripts/run_import_fills.py"),
+        "--config", "csi1000_pr49_one_lot_probe",
+    ]
+    assert not (live_dir / "archive").exists()
+
+
+def test_probe_import_wrapper_rejects_config_override_without_activity(
+    tmp_path, monkeypatch,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    source = REPO_ROOT / "live_trading" / "run_probe_import.sh"
+    assert source.exists(), "run_probe_import.sh must exist"
+    wrapper = live_dir / source.name
+    shutil.copy2(source, wrapper)
+    trace = tmp_path / "unexpected-python"
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\ntouch \"$PROBE_UNEXPECTED_TRACE\"\n",
+    )
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("QLIB_LIVE_PYTHON", str(fake_python))
+    monkeypatch.setenv("PROBE_UNEXPECTED_TRACE", str(trace))
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=os.environ.copy(),
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode != 0
+    assert "does not accept a config override" in result.stderr
+    assert not trace.exists()
+
+
 def test_monitor_launch_agent_owns_loopback_service():
     path = (
         REPO_ROOT / "live_trading/launchd/"

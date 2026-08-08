@@ -38,7 +38,7 @@ _POSITION_STATUS = {"FILLED", "PARTIAL"}
 # 计入外部出入金（日收益计算时剔除）的流水类型
 EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW"}
 
-
+OPERATOR_PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
 class LiveRecorder:
     """实盘账簿 SQLite 存储（batches / fills / positions / cash_flows）。"""
 
@@ -323,6 +323,22 @@ class LiveRecorder:
                     state TEXT NOT NULL,
                     reason TEXT NOT NULL,
                     changed_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS operator_probe_lifecycle (
+                    strategy_id TEXT PRIMARY KEY,
+                    stock_code TEXT NOT NULL,
+                    buy_batch_id TEXT NOT NULL,
+                    buy_trade_date TEXT NOT NULL,
+                    sell_batch_id TEXT,
+                    sell_trade_date TEXT,
+                    state TEXT NOT NULL CHECK (
+                        state IN (
+                            'BUY_PLANNED', 'BUY_FILLED', 'SELL_PLANNED',
+                            'CLOSED', 'FAILED'
+                        )
+                    ),
+                    updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
@@ -685,7 +701,7 @@ class LiveRecorder:
             )
 
     def record_publish_plan(
-        self, header, orders: list,
+        self, header, orders: list, probe_transition: dict | None = None,
     ) -> None:
         """Atomically persist an immutable plan before exposing it to QMT.
 
@@ -754,6 +770,10 @@ class LiveRecorder:
                     raise SchemaError(
                         f"batch {batch_id!r} conflicts with durable plan"
                     )
+                if probe_transition is not None:
+                    self._record_operator_probe_plan_conn(
+                        conn, header, rows, probe_transition,
+                    )
                 return
 
             conn.execute(
@@ -777,6 +797,108 @@ class LiveRecorder:
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
+            if probe_transition is not None:
+                self._record_operator_probe_plan_conn(
+                    conn, header, rows, probe_transition,
+                )
+
+    @staticmethod
+    def _record_operator_probe_plan_conn(
+        conn, header, rows: list, transition: dict,
+    ) -> None:
+        """Persist the probe plan state in the same transaction as its plan."""
+        if header.strategy_id != OPERATOR_PROBE_STRATEGY_ID:
+            raise SchemaError("probe lifecycle requires the probe strategy")
+        if len(rows) != 1:
+            raise SchemaError("probe lifecycle requires exactly one order")
+        side = rows[0][4]
+        stock_code = rows[0][2]
+        if transition != {"side": side, "stock_code": stock_code}:
+            raise SchemaError("probe lifecycle transition does not match plan")
+        lifecycle = conn.execute(
+            "SELECT * FROM operator_probe_lifecycle WHERE strategy_id=?",
+            (header.strategy_id,),
+        ).fetchone()
+
+        if side == "BUY":
+            if lifecycle is not None and lifecycle["buy_batch_id"] == header.batch_id:
+                return
+            if lifecycle is not None and lifecycle["state"] not in {"CLOSED", "FAILED"}:
+                raise SchemaError(
+                    "an operator probe lifecycle is already unresolved"
+                )
+            conn.execute(
+                """INSERT INTO operator_probe_lifecycle
+                   (strategy_id, stock_code, buy_batch_id, buy_trade_date,
+                    sell_batch_id, sell_trade_date, state, updated_at)
+                   VALUES (?,?,?,?,NULL,NULL,'BUY_PLANNED',datetime('now','localtime'))
+                   ON CONFLICT(strategy_id) DO UPDATE SET
+                       stock_code=excluded.stock_code,
+                       buy_batch_id=excluded.buy_batch_id,
+                       buy_trade_date=excluded.buy_trade_date,
+                       sell_batch_id=NULL,
+                       sell_trade_date=NULL,
+                       state='BUY_PLANNED',
+                       updated_at=datetime('now','localtime')""",
+                (
+                    header.strategy_id, stock_code, header.batch_id,
+                    header.trade_date,
+                ),
+            )
+            return
+
+        if side != "SELL":
+            raise SchemaError(f"invalid probe lifecycle side: {side!r}")
+        if lifecycle is not None and lifecycle["sell_batch_id"] == header.batch_id:
+            return
+        if lifecycle is None or lifecycle["state"] != "BUY_FILLED":
+            raise SchemaError("SELL requires a BUY_FILLED probe lifecycle")
+        if lifecycle["stock_code"] != stock_code:
+            raise SchemaError("SELL probe symbol does not match BUY lifecycle")
+        conn.execute(
+            """UPDATE operator_probe_lifecycle
+                  SET sell_batch_id=?, sell_trade_date=?, state='SELL_PLANNED',
+                      updated_at=datetime('now','localtime')
+                WHERE strategy_id=?""",
+            (header.batch_id, header.trade_date, header.strategy_id),
+        )
+
+    def get_operator_probe_lifecycle(
+        self, strategy_id: str = OPERATOR_PROBE_STRATEGY_ID,
+    ) -> dict | None:
+        with self._conn() as conn:
+            table = conn.execute(
+                "SELECT 1 FROM sqlite_master "
+                "WHERE type='table' AND name='operator_probe_lifecycle'"
+            ).fetchone()
+            if table is None:
+                return None
+            row = conn.execute(
+                "SELECT * FROM operator_probe_lifecycle WHERE strategy_id=?",
+                (strategy_id,),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def get_operator_probe_applied_quantity(
+        self, batch_id: str, side: str, stock_code: str,
+    ) -> int:
+        """Return actual applied shares, scoped to one durable probe plan."""
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT COALESCE(SUM(f.applied_qty), 0) AS quantity
+                     FROM fills f
+                     JOIN batches b ON b.batch_id=f.batch_id
+                     JOIN signal_orders o
+                       ON o.batch_id=f.batch_id
+                      AND o.client_order_id=f.client_order_id
+                    WHERE b.strategy_id=? AND f.batch_id=?
+                      AND f.side=? AND f.stock_code=?
+                      AND o.side=f.side AND o.stock_code=f.stock_code""",
+                (
+                    OPERATOR_PROBE_STRATEGY_ID, batch_id, side, stock_code,
+                ),
+            ).fetchone()
+            return int(row["quantity"])
 
     def get_orders(self, batch_id: str) -> list:
         with self._conn() as conn:
@@ -1026,6 +1148,18 @@ class LiveRecorder:
                 "SELECT * FROM fills WHERE batch_id=? AND client_order_id=?",
                 (fill.batch_id, fill.client_order_id),
             ).fetchone()
+            if (
+                row is not None
+                and batch["strategy_id"] == OPERATOR_PROBE_STRATEGY_ID
+                and row["status"] in TERMINAL_FILL_STATUS
+                and any(
+                    getattr(fill, field) != row[field]
+                    for field in (
+                        "status", "filled_qty", "avg_price", "qmt_order_id",
+                    )
+                )
+            ):
+                raise SchemaError("terminal probe fill is immutable")
             applied_qty = row["applied_qty"] if row else 0
             applied_amount = row["applied_amount"] if row else 0.0
             applied_fee = row["applied_fee"] if row else 0.0
@@ -1083,6 +1217,77 @@ class LiveRecorder:
                  applied_qty + delta_qty, applied_amount + delta_amount,
                  applied_fee + fee_delta),
             )
+            self._refresh_operator_probe_lifecycle_conn(conn)
+
+    @staticmethod
+    def _refresh_operator_probe_lifecycle_conn(conn) -> None:
+        """Advance only when terminal applied fills and its snapshot agree."""
+        lifecycle = conn.execute(
+            "SELECT * FROM operator_probe_lifecycle WHERE strategy_id=?",
+            (OPERATOR_PROBE_STRATEGY_ID,),
+        ).fetchone()
+        if lifecycle is None:
+            return
+
+        if lifecycle["state"] == "BUY_PLANNED":
+            batch_id = lifecycle["buy_batch_id"]
+            side = "BUY"
+            success_state = "BUY_FILLED"
+            expected_broker_shares = None
+        elif lifecycle["state"] == "SELL_PLANNED":
+            batch_id = lifecycle["sell_batch_id"]
+            side = "SELL"
+            success_state = "CLOSED"
+            expected_broker_shares = None
+        else:
+            return
+
+        marks = ",".join("?" for _ in TERMINAL_FILL_STATUS)
+        fill = conn.execute(
+            f"""SELECT f.applied_qty
+                   FROM fills f
+                   JOIN batches b ON b.batch_id=f.batch_id
+                  WHERE b.strategy_id=? AND f.batch_id=?
+                    AND f.side=? AND f.stock_code=?
+                    AND f.status IN ({marks})""",
+            (
+                OPERATOR_PROBE_STRATEGY_ID, batch_id, side,
+                lifecycle["stock_code"], *sorted(TERMINAL_FILL_STATUS),
+            ),
+        ).fetchone()
+        if fill is None:
+            return
+        snapshot = conn.execute(
+            """SELECT 1 FROM broker_account_snapshot WHERE batch_id=?
+               UNION ALL
+               SELECT 1 FROM broker_position_snapshot WHERE batch_id=?
+               LIMIT 1""",
+            (batch_id, batch_id),
+        ).fetchone()
+        if snapshot is None:
+            return
+        broker = conn.execute(
+            """SELECT shares FROM broker_position_snapshot
+                WHERE batch_id=? AND stock_code=?""",
+            (batch_id, lifecycle["stock_code"]),
+        ).fetchone()
+        broker_shares = int(broker["shares"]) if broker else 0
+        applied_qty = int(fill["applied_qty"])
+        if side == "BUY":
+            expected_broker_shares = applied_qty
+        else:
+            expected_broker_shares = 100 - applied_qty
+        state = (
+            success_state
+            if applied_qty == 100 and broker_shares == expected_broker_shares
+            else "FAILED"
+        )
+        conn.execute(
+            """UPDATE operator_probe_lifecycle
+                  SET state=?, updated_at=datetime('now','localtime')
+                WHERE strategy_id=?""",
+            (state, OPERATOR_PROBE_STRATEGY_ID),
+        )
 
     @staticmethod
     def _apply_position_delta(
@@ -1511,11 +1716,20 @@ class LiveRecorder:
             ).fetchone()
             return float(row["value"]) if row else 0.0
 
-    def list_batches(self, limit: int = 10) -> list:
+    def list_batches(
+        self, limit: int = 10, strategy_id: str | None = None,
+    ) -> list:
+        clauses = []
+        params = []
+        if strategy_id is not None:
+            clauses.append("strategy_id=?")
+            params.append(strategy_id)
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        params.append(limit)
         with self._conn() as conn:
             rows = conn.execute(
-                "SELECT * FROM batches "
-                "ORDER BY trade_date DESC, batch_id DESC LIMIT ?", (limit,)
+                "SELECT * FROM batches" + where
+                + " ORDER BY trade_date DESC, batch_id DESC LIMIT ?", params,
             ).fetchall()
             return [dict(r) for r in rows]
 
@@ -1764,6 +1978,7 @@ class LiveRecorder:
                     for p in positions
                 ],
             )
+            self._refresh_operator_probe_lifecycle_conn(conn)
 
     def get_broker_account_snapshot(self, trade_date: str):
         """当日最新批次的券商账户快照；无则 None。"""

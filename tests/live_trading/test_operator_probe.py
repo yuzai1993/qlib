@@ -12,6 +12,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.fill_importer import LiveRecorder
+from live_trading.modules.signal_schema import FillEvent
+from live_trading.modules import operator_probe
 from live_trading.modules.operator_probe import (
     OperatorProbeRequest,
     build_operator_order,
@@ -69,14 +71,80 @@ def _request(**changes):
         "side": "SELL",
         "quantity": 100,
         "reason": "operator_sell_probe",
+        "eligibility_confirmed": False,
     }
     data.update(changes)
     return OperatorProbeRequest(**data)
 
 
+def _record_probe_buy_plan(recorder, tmp_path, monkeypatch, *,
+                           trade_date="2026-08-07", stock_code=STOCK_CODE):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    _save_snapshot(
+        recorder, trade_date=trade_date, shares=0, can_use_volume=0,
+        stock_code=stock_code,
+    )
+    config = _config(tmp_path)
+    request = _request(
+        trade_date=trade_date, stock_code=stock_code, side="BUY",
+        reason="operator_buy_probe", eligibility_confirmed=True,
+    )
+    publish_operator_probe(
+        request, config, recorder,
+        SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+    )
+    return request
+
+
+def _apply_probe_buy_fill(recorder, request, *, filled_qty=100,
+                          status="FILLED", with_snapshot=True):
+    batch_id = (
+        f"{request.trade_date.replace('-', '')}_{STRATEGY_ID}_900"
+    )
+    recorder.apply_fill(FillEvent.from_dict({
+        "type": "fill_event",
+        "batch_id": batch_id,
+        "client_order_id": (
+            f"{request.trade_date.replace('-', '')}900001B"
+        ),
+        "mode": "LIVE",
+        "stock_code": request.stock_code,
+        "side": "BUY",
+        "status": status,
+        "requested_qty": 100,
+        "filled_qty": filled_qty,
+        "avg_price": 10.0 if filled_qty else 0.0,
+        "qmt_order_id": "probe-buy-1",
+        "message": "",
+        "ts": f"{request.trade_date}T15:06:00+08:00",
+    }))
+    if with_snapshot:
+        recorder.save_broker_snapshot(
+            batch_id,
+            {"account_id": "8890116049"},
+            [] if filled_qty == 0 else [{
+                "stock_code": request.stock_code,
+                "shares": filled_qty,
+                "can_use_volume": 0,
+                "avg_cost": 10.0,
+                "market_value": filled_qty * 10.0,
+            }],
+        )
+
+
+def _prepare_probe_sell(recorder, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    _apply_probe_buy_fill(recorder, buy)
+
+
 def _save_snapshot(recorder, *, trade_date=TRADE_DATE, shares=100,
                    can_use_volume=100, stock_code=STOCK_CODE):
-    batch_id = f"{trade_date.replace('-', '')}_snapshot_001"
+    batch_id = f"{trade_date.replace('-', '')}_000_snapshot"
     recorder.record_batch(batch_id, trade_date, "LIVE", 0)
     recorder.save_broker_snapshot(
         batch_id,
@@ -157,7 +225,10 @@ def test_buy_rejects_a_held_ledger_stock(recorder, tmp_path):
     _save_snapshot(recorder)
 
     with pytest.raises(SchemaError, match="already held"):
-        build_operator_order(_request(side="BUY"), _config(tmp_path), recorder, TRADE_DATE)
+        build_operator_order(
+            _request(side="BUY", eligibility_confirmed=True),
+            _config(tmp_path), recorder, TRADE_DATE,
+        )
 
 
 def test_buy_rejects_a_stock_held_only_in_latest_broker_snapshot(
@@ -166,7 +237,10 @@ def test_buy_rejects_a_stock_held_only_in_latest_broker_snapshot(
     _save_snapshot(recorder, shares=100, can_use_volume=100)
 
     with pytest.raises(SchemaError, match="broker"):
-        build_operator_order(_request(side="BUY"), _config(tmp_path), recorder, TRADE_DATE)
+        build_operator_order(
+            _request(side="BUY", eligibility_confirmed=True),
+            _config(tmp_path), recorder, TRADE_DATE,
+        )
 
 
 def test_probe_requires_a_current_broker_snapshot(recorder, tmp_path):
@@ -202,8 +276,10 @@ def test_operator_tool_accepts_main_close_auction_config(recorder, tmp_path):
     assert order.price_type == "CLOSE_AUCTION_LIMIT"
 
 
-def test_builds_a_one_lot_sell_for_the_fixed_price_profile(recorder, tmp_path):
-    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+def test_builds_a_one_lot_sell_for_the_fixed_price_profile(
+    recorder, tmp_path, monkeypatch,
+):
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
     _save_snapshot(recorder)
 
     order = build_operator_order(_request(), _config(tmp_path), recorder, TRADE_DATE)
@@ -220,7 +296,8 @@ def test_operator_buy_carries_immutable_one_lot_maximum(recorder, tmp_path):
     _save_snapshot(recorder, shares=0, can_use_volume=0)
 
     order = build_operator_order(
-        _request(side="BUY"), _config(tmp_path), recorder, TRADE_DATE,
+        _request(side="BUY", eligibility_confirmed=True),
+        _config(tmp_path), recorder, TRADE_DATE,
     )
 
     assert order.quantity == 0
@@ -234,7 +311,7 @@ def test_publish_persists_and_serializes_operator_buy_maximum(
     monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
     _save_snapshot(recorder, shares=0, can_use_volume=0)
     config = _config(tmp_path)
-    request = _request(side="BUY")
+    request = _request(side="BUY", eligibility_confirmed=True)
 
     path = publish_operator_probe(
         request, config, recorder,
@@ -247,10 +324,26 @@ def test_publish_persists_and_serializes_operator_buy_maximum(
     assert json.loads(path.read_text().splitlines()[1])["max_quantity"] == 100
 
 
+def test_durable_buy_retry_still_requires_eligibility_confirmation(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    config = _config(tmp_path)
+
+    with pytest.raises(SchemaError, match="eligibility-confirmed"):
+        publish_operator_probe(
+            dataclasses.replace(request, eligibility_confirmed=False),
+            config,
+            recorder,
+            SignalPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+
 def test_publish_records_plan_before_exposing_batch(recorder, tmp_path, monkeypatch):
     monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
     monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
-    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
     _save_snapshot(recorder)
     request = _request()
     config = _config(tmp_path)
@@ -278,7 +371,7 @@ def test_publish_uses_record_plan_as_the_atomic_pre_publish_gate(
 ):
     monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
     monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
-    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
     _save_snapshot(recorder)
 
     class InterleavingPublisher:
@@ -376,7 +469,7 @@ def test_identical_publish_retry_is_idempotent_but_conflict_is_rejected(
 ):
     monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
     monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
-    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
     _save_snapshot(recorder)
     request = _request()
     config = _config(tmp_path)
@@ -401,7 +494,7 @@ def test_durable_retry_does_not_recheck_mutable_sell_eligibility(
 ):
     monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
     monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
-    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
     _save_snapshot(recorder, can_use_volume=100)
     request = _request()
     config = _config(tmp_path)
@@ -482,7 +575,7 @@ def test_cli_preview_does_not_create_an_inbox_or_mutate_the_ledger(
         "instrument": "SH600000",
         "name": "浦发银行",
     }])
-    writable.upsert_position(STOCK_CODE, 100, 10.0)
+    _prepare_probe_sell(writable, tmp_path, monkeypatch)
     _save_snapshot(writable)
     before = db_path.read_bytes()
     config = _config(tmp_path)
@@ -525,3 +618,253 @@ def test_broker_detail_accessor_preserves_latest_snapshot_metadata(recorder):
 def test_broker_detail_accessor_refuses_missing_snapshot(recorder):
     with pytest.raises(SchemaError, match="snapshot"):
         recorder.get_broker_position_details(TRADE_DATE)
+
+
+def test_probe_trade_calendar_initializes_standalone_qlib(
+    tmp_path, monkeypatch,
+):
+    data_root = tmp_path / "cn_data"
+    calendars = data_root / "calendars"
+    calendars.mkdir(parents=True)
+    (calendars / "day.txt").write_text(
+        "2026-08-07\n2026-08-10\n", encoding="utf-8",
+    )
+    monkeypatch.setenv("QLIB_CN_DATA_DIR", str(data_root))
+
+    assert operator_probe._qlib_trade_dates(
+        "2026-08-07", "2026-08-10",
+    ) == ["2026-08-07", "2026-08-10"]
+
+
+def test_probe_buy_requires_explicit_eligibility_confirmation(recorder, tmp_path):
+    _save_snapshot(recorder, shares=0, can_use_volume=0)
+
+    with pytest.raises(SchemaError, match="eligibility-confirmed"):
+        operator_probe.validate_probe_transition(
+            _request(side="BUY"), recorder,
+        )
+
+
+def test_probe_buy_plan_and_actual_fill_advance_lifecycle(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+
+    lifecycle = recorder.get_operator_probe_lifecycle(STRATEGY_ID)
+    assert lifecycle["state"] == "BUY_PLANNED"
+    assert lifecycle["stock_code"] == STOCK_CODE
+    assert lifecycle["buy_batch_id"] == (
+        "20260807_csi1000_pr49_one_lot_probe_900"
+    )
+
+    _apply_probe_buy_fill(recorder, request, with_snapshot=False)
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "BUY_PLANNED"
+
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    recorder.save_broker_snapshot(
+        batch_id,
+        {"account_id": "8890116049"},
+        [{
+            "stock_code": STOCK_CODE,
+            "shares": 100,
+            "can_use_volume": 0,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+
+    lifecycle = recorder.get_operator_probe_lifecycle(STRATEGY_ID)
+    assert lifecycle["state"] == "BUY_FILLED"
+
+
+def test_terminal_probe_failure_marks_lifecycle_failed(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+
+    _apply_probe_buy_fill(
+        recorder, request, filled_qty=0, status="REJECTED",
+    )
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "FAILED"
+
+
+def test_probe_lifecycle_accepts_snapshot_before_terminal_fill(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    recorder.save_broker_snapshot(
+        batch_id,
+        {"account_id": "8890116049"},
+        [{
+            "stock_code": STOCK_CODE,
+            "shares": 100,
+            "can_use_volume": 0,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+
+    _apply_probe_buy_fill(recorder, request, with_snapshot=False)
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "BUY_FILLED"
+
+
+def test_probe_lifecycle_fails_on_contradictory_terminal_snapshot(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    _apply_probe_buy_fill(recorder, request, with_snapshot=False)
+
+    recorder.save_broker_snapshot(
+        "20260807_csi1000_pr49_one_lot_probe_900",
+        {"account_id": "8890116049"},
+        [],
+    )
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "FAILED"
+
+
+def test_probe_sell_requires_later_actual_available_same_symbol_buy(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    _apply_probe_buy_fill(recorder, buy)
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100,
+    )
+    sell = _request(trade_date="2026-08-10")
+
+    assert operator_probe.validate_probe_transition(sell, recorder) is None
+
+    for invalid, message in (
+        (_request(trade_date="2026-08-07"), "later Qlib trade date"),
+        (_request(trade_date="2026-08-10", stock_code="000001.SZ"), "symbol"),
+    ):
+        with pytest.raises(SchemaError, match=message):
+            operator_probe.validate_probe_transition(invalid, recorder)
+
+
+def test_probe_sell_rejects_plan_only_buy_quantity(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    recorder.upsert_position(STOCK_CODE, 100, 10.0, "2026-08-07")
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100,
+    )
+
+    with pytest.raises(SchemaError, match="actual applied BUY"):
+        operator_probe.validate_probe_transition(
+            _request(trade_date="2026-08-10"), recorder,
+        )
+
+
+def test_probe_sell_rejects_unresolved_prior_probe_batch(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    _apply_probe_buy_fill(recorder, buy)
+    recorder.record_publish_plan(
+        dataclasses.replace(
+            operator_probe._header(
+                _request(
+                    trade_date="2026-08-08", side="BUY",
+                    eligibility_confirmed=True,
+                ),
+                _config(tmp_path)["live"], "8890116049",
+            ),
+            batch_id="20260808_csi1000_pr49_one_lot_probe_901",
+        ),
+        [dataclasses.replace(
+            operator_probe._make_operator_order(
+                _request(
+                    trade_date="2026-08-08", side="BUY",
+                    eligibility_confirmed=True,
+                ),
+                _config(tmp_path)["live"],
+            ),
+            batch_id="20260808_csi1000_pr49_one_lot_probe_901",
+            client_order_id="20260808901001B",
+        )],
+    )
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100,
+    )
+
+    with pytest.raises(SchemaError, match="unresolved prior probe batch"):
+        operator_probe.validate_probe_transition(
+            _request(trade_date="2026-08-10"), recorder,
+        )
+
+
+def test_probe_sell_terminal_fill_closes_lifecycle(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    _apply_probe_buy_fill(recorder, buy)
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100,
+    )
+    config = _config(tmp_path)
+    sell = _request(trade_date="2026-08-10")
+    publish_operator_probe(
+        sell, config, recorder,
+        SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+    )
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "SELL_PLANNED"
+
+    recorder.apply_fill(FillEvent.from_dict({
+        "type": "fill_event",
+        "batch_id": "20260810_csi1000_pr49_one_lot_probe_900",
+        "client_order_id": "20260810900001S",
+        "mode": "LIVE",
+        "stock_code": STOCK_CODE,
+        "side": "SELL",
+        "status": "FILLED",
+        "requested_qty": 100,
+        "filled_qty": 100,
+        "avg_price": 10.5,
+        "qmt_order_id": "probe-sell-1",
+        "message": "",
+        "ts": "2026-08-10T15:06:00+08:00",
+    }))
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "SELL_PLANNED"
+
+    recorder.save_broker_snapshot(
+        "20260810_csi1000_pr49_one_lot_probe_900",
+        {"account_id": "8890116049"},
+        [],
+    )
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "CLOSED"

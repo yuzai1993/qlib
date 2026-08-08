@@ -33,6 +33,10 @@ def parse_args():
     parser.add_argument("--quantity", type=int, default=100)
     parser.add_argument("--reason", required=True)
     parser.add_argument(
+        "--eligibility-confirmed", action="store_true",
+        help="confirm the operator independently checked BUY eligibility",
+    )
+    parser.add_argument(
         "--publish", action="store_true",
         help="write the recorded plan and QMT inbox files (requires confirmation)",
     )
@@ -70,6 +74,7 @@ def main():
         side=args.side,
         quantity=args.quantity,
         reason=args.reason,
+        eligibility_confirmed=getattr(args, "eligibility_confirmed", False),
     )
 
     if not args.publish:

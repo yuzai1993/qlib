@@ -355,9 +355,36 @@ class LiveRecorder:
                     import_sequence INTEGER NOT NULL UNIQUE,
                     imported_at TEXT NOT NULL,
                     lifecycle_evidence INTEGER NOT NULL DEFAULT 0,
+                    evidence_strategy_id TEXT,
+                    evidence_purpose TEXT,
+                    source_kind TEXT,
                     ordering_trusted INTEGER NOT NULL DEFAULT 0,
                     is_fresh INTEGER NOT NULL DEFAULT 0
                 );
+
+                CREATE TABLE IF NOT EXISTS account_snapshot_requests (
+                    request_id TEXT PRIMARY KEY,
+                    trade_date TEXT NOT NULL,
+                    collector_execution_profile TEXT NOT NULL,
+                    collector_bridge_root TEXT NOT NULL,
+                    requested_for_strategy_id TEXT NOT NULL,
+                    evidence_purpose TEXT NOT NULL,
+                    account_id TEXT NOT NULL,
+                    account_type TEXT NOT NULL,
+                    account_environment TEXT NOT NULL,
+                    account_id_masked TEXT NOT NULL,
+                    account_fingerprint TEXT NOT NULL,
+                    schema_version TEXT NOT NULL,
+                    request_checksum TEXT NOT NULL,
+                    request_json TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    response_checksum TEXT,
+                    response_json TEXT,
+                    created_at TEXT NOT NULL,
+                    imported_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS idx_account_snapshot_request_date
+                    ON account_snapshot_requests(trade_date, imported_at);
                 CREATE INDEX IF NOT EXISTS idx_broker_snapshot_import_order
                     ON broker_snapshot_imports(
                         trade_date, import_sequence DESC, batch_id DESC
@@ -453,6 +480,14 @@ class LiveRecorder:
                     "ALTER TABLE broker_snapshot_imports ADD COLUMN "
                     "is_fresh INTEGER NOT NULL DEFAULT 0"
                 )
+            for column in (
+                "evidence_strategy_id", "evidence_purpose", "source_kind",
+            ):
+                if column not in snapshot_import_cols:
+                    conn.execute(
+                        f"ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                        f"{column} TEXT"
+                    )
             # Repeat this classification on every startup so an interrupted
             # three-column DDL upgrade can resume. Successful legacy rows are
             # normalized with a ``legacy:`` prefix below and cannot be
@@ -2270,6 +2305,264 @@ class LiveRecorder:
 
     # ---------- 券商快照（二道对账）----------
 
+    def record_account_snapshot_request(
+        self, payload: dict, account_id: str,
+    ) -> None:
+        """Persist one immutable observation request without a LIVE batch."""
+        from live_trading.modules.operator_probe import (
+            SNAPSHOT_EVIDENCE_PURPOSE,
+            SNAPSHOT_REQUEST_SCHEMA_VERSION,
+            account_identity_fingerprint,
+            snapshot_artifact_checksum,
+        )
+
+        if payload.get("type") != "account_snapshot_request":
+            raise SchemaError("invalid account snapshot request type")
+        if payload.get("schema_version") != SNAPSHOT_REQUEST_SCHEMA_VERSION:
+            raise SchemaError("invalid account snapshot request schema")
+        if payload.get("evidence_purpose") != SNAPSHOT_EVIDENCE_PURPOSE:
+            raise SchemaError("invalid account snapshot evidence purpose")
+        checksum = snapshot_artifact_checksum(payload)
+        if payload.get("checksum") != checksum:
+            raise SchemaError("account snapshot request checksum mismatch")
+        expected_fingerprint = account_identity_fingerprint(
+            account_id,
+            payload.get("account_type", ""),
+            payload.get("account_environment", ""),
+        )
+        if payload.get("account_fingerprint") != expected_fingerprint:
+            raise SchemaError("account snapshot request identity mismatch")
+        if payload.get("account_id_masked") != _mask_account_id(account_id):
+            raise SchemaError("account snapshot request masked identity mismatch")
+        request_json = json.dumps(
+            payload, ensure_ascii=True, sort_keys=True, separators=(",", ":"),
+        )
+        values = (
+            payload["request_id"], payload["trade_date"],
+            payload["collector_execution_profile"],
+            payload["collector_bridge_root"],
+            payload["requested_for_strategy_id"], payload["evidence_purpose"],
+            account_id, payload["account_type"],
+            payload["account_environment"], payload["account_id_masked"],
+            payload["account_fingerprint"], payload["schema_version"],
+            checksum, request_json, "PREPARED", payload["created_at"],
+        )
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (payload["request_id"],),
+            ).fetchone()
+            if existing is not None:
+                if (
+                    existing["request_checksum"] == checksum
+                    and existing["request_json"] == request_json
+                    and existing["account_id"] == account_id
+                ):
+                    return
+                raise SchemaError("conflicting durable account snapshot request")
+            conn.execute(
+                """INSERT INTO account_snapshot_requests
+                   (request_id, trade_date, collector_execution_profile,
+                    collector_bridge_root, requested_for_strategy_id,
+                    evidence_purpose, account_id, account_type,
+                    account_environment, account_id_masked,
+                    account_fingerprint, schema_version, request_checksum,
+                    request_json, status, created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                values,
+            )
+
+    def get_account_snapshot_request(self, request_id: str):
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (request_id,),
+            ).fetchone()
+            return dict(row) if row is not None else None
+
+    def mark_account_snapshot_request_published(
+        self, request_id: str, request_checksum: str,
+    ) -> None:
+        """Commit the durable exposure intent before QMT-visible files."""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (request_id,),
+            ).fetchone()
+            if row is None:
+                raise SchemaError("unknown prepared account snapshot request")
+            if row["request_checksum"] != request_checksum:
+                raise SchemaError("prepared account snapshot checksum changed")
+            if row["status"] == "REQUESTED":
+                return
+            if row["status"] != "PREPARED":
+                raise SchemaError("account snapshot request is already terminal")
+            conn.execute(
+                "UPDATE account_snapshot_requests SET status='REQUESTED' "
+                "WHERE request_id=?",
+                (request_id,),
+            )
+
+    def save_account_snapshot_response(
+        self, response: dict, *, before_commit=None,
+    ) -> bool:
+        """Import a bound terminal response; exact replay is a no-op."""
+        from live_trading.modules.operator_probe import (
+            SNAPSHOT_EVIDENCE_PURPOSE,
+            SNAPSHOT_REQUEST_SCHEMA_VERSION,
+            account_identity_fingerprint,
+            snapshot_artifact_checksum,
+        )
+
+        if response.get("type") != "account_snapshot_response":
+            raise SchemaError("invalid account snapshot response type")
+        if response.get("schema_version") != SNAPSHOT_REQUEST_SCHEMA_VERSION:
+            raise SchemaError("invalid account snapshot response schema")
+        response_checksum = snapshot_artifact_checksum(response)
+        if response.get("checksum") != response_checksum:
+            raise SchemaError("account snapshot response checksum mismatch")
+        response_json = json.dumps(
+            response, ensure_ascii=True, sort_keys=True,
+            separators=(",", ":"),
+        )
+        request_id = response.get("request_id", "")
+        with (
+            self.probe_snapshot_gate(),
+            self.operator_publish_gate(),
+            self._conn() as conn,
+        ):
+            request = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (request_id,),
+            ).fetchone()
+            if request is None:
+                raise SchemaError("unknown account snapshot request_id")
+            if request["response_checksum"] is not None:
+                if (
+                    request["response_checksum"] == response_checksum
+                    and request["response_json"] == response_json
+                ):
+                    return False
+                raise SchemaError("terminal account snapshot response changed")
+            if request["status"] != "REQUESTED":
+                raise SchemaError("account snapshot response has no published request")
+            bindings = {
+                "trade_date": request["trade_date"],
+                "collector_execution_profile": request[
+                    "collector_execution_profile"
+                ],
+                "collector_bridge_root": request["collector_bridge_root"],
+                "requested_for_strategy_id": request[
+                    "requested_for_strategy_id"
+                ],
+                "evidence_purpose": SNAPSHOT_EVIDENCE_PURPOSE,
+                "account_type": request["account_type"],
+                "account_environment": request["account_environment"],
+                "account_id_masked": request["account_id_masked"],
+                "account_fingerprint": request["account_fingerprint"],
+                "request_checksum": request["request_checksum"],
+            }
+            for field, expected in bindings.items():
+                if response.get(field) != expected:
+                    raise SchemaError(
+                        f"account snapshot response {field} mismatch"
+                    )
+            if request["schema_version"] != SNAPSHOT_REQUEST_SCHEMA_VERSION:
+                raise SchemaError("durable account snapshot request schema mismatch")
+            status = response.get("status")
+            if status not in {"COMPLETE", "DIAGNOSTIC_POSITIONS_ONLY", "ERROR"}:
+                raise SchemaError("invalid account snapshot response status")
+            account = response.get("account")
+            positions = response.get("positions")
+            if not isinstance(positions, list) or any(
+                not isinstance(row, dict) for row in positions
+            ):
+                raise SchemaError("account snapshot response positions invalid")
+            if status == "COMPLETE":
+                if not isinstance(account, dict):
+                    raise SchemaError("complete account snapshot requires ACCOUNT row")
+                if account.get("request_id") != request_id:
+                    raise SchemaError("ACCOUNT row request_id mismatch")
+                if account.get("account_id_masked") != request["account_id_masked"]:
+                    raise SchemaError("ACCOUNT row identity mismatch")
+                if account.get("account_fingerprint") != request[
+                    "account_fingerprint"
+                ]:
+                    raise SchemaError("ACCOUNT row fingerprint mismatch")
+            elif account is not None:
+                raise SchemaError("non-complete response cannot carry ACCOUNT row")
+            if status == "ERROR" and positions:
+                raise SchemaError("error response cannot carry positions")
+            for row in positions:
+                if row.get("request_id") != request_id:
+                    raise SchemaError("position row request_id mismatch")
+                if row.get("trade_date") != request["trade_date"]:
+                    raise SchemaError("position response trade_date mismatch")
+            source_id = request_id
+            conn.execute(
+                "DELETE FROM broker_account_snapshot WHERE batch_id=?",
+                (source_id,),
+            )
+            conn.execute(
+                "DELETE FROM broker_position_snapshot WHERE batch_id=?",
+                (source_id,),
+            )
+            if status == "COMPLETE":
+                conn.execute(
+                    """INSERT INTO broker_account_snapshot
+                       (batch_id, trade_date, account_id, available_cash,
+                        total_asset, market_value, frozen_cash, ts)
+                       VALUES (?,?,?,?,?,?,?,?)""",
+                    (
+                        source_id, request["trade_date"], request["account_id"],
+                        account.get("available_cash"), account.get("total_asset"),
+                        account.get("market_value"), account.get("frozen_cash"),
+                        account.get("ts"),
+                    ),
+                )
+            conn.executemany(
+                """INSERT INTO broker_position_snapshot
+                   (batch_id, trade_date, stock_code, shares, can_use_volume,
+                    avg_cost, market_value)
+                   VALUES (?,?,?,?,?,?,?)""",
+                [(
+                    source_id, request["trade_date"], row["stock_code"],
+                    int(row["shares"]), row.get("can_use_volume"),
+                    row.get("avg_cost"), row.get("market_value"),
+                ) for row in positions],
+            )
+            sequence = conn.execute(
+                "SELECT COALESCE(MAX(import_sequence), 0) + 1 AS value "
+                "FROM broker_snapshot_imports"
+            ).fetchone()["value"]
+            conn.execute(
+                """INSERT INTO broker_snapshot_imports
+                   (batch_id, trade_date, import_sequence, imported_at,
+                    lifecycle_evidence, evidence_strategy_id,
+                    evidence_purpose, source_kind,
+                    ordering_trusted, is_fresh)
+                   VALUES (?,?,?,strftime('%Y-%m-%dT%H:%M:%f','now','localtime'),
+                           ?,?,?,?,1,1)""",
+                (
+                    source_id, request["trade_date"], sequence,
+                    int(status == "COMPLETE"),
+                    request["requested_for_strategy_id"],
+                    request["evidence_purpose"],
+                    "SNAPSHOT_REQUEST",
+                ),
+            )
+            conn.execute(
+                """UPDATE account_snapshot_requests
+                      SET status=?, response_checksum=?, response_json=?,
+                          imported_at=strftime('%Y-%m-%dT%H:%M:%f','now','localtime')
+                    WHERE request_id=?""",
+                ("IMPORTED_" + status, response_checksum, response_json, request_id),
+            )
+            self._refresh_operator_probe_lifecycle_conn(conn)
+            if before_commit is not None:
+                before_commit()
+        return True
+
     def save_broker_snapshot(self, batch_id: str, account: dict,
                             positions: list) -> None:
         """存券商 ACCOUNT/POSITION 快照（覆盖式，重复导入幂等）。
@@ -2278,7 +2571,7 @@ class LiveRecorder:
             account: 账户行 dict，或 None（ACCOUNT 查询为空时）
             positions: 持仓行 dict 列表
         """
-        with self.probe_snapshot_gate():
+        with self.probe_snapshot_gate(), self.operator_publish_gate():
             self._save_broker_snapshot_locked(batch_id, account, positions)
 
     def _save_broker_snapshot_locked(self, batch_id: str, account: dict,
@@ -2372,14 +2665,19 @@ class LiveRecorder:
             conn.execute(
                 """INSERT INTO broker_snapshot_imports
                    (batch_id, trade_date, import_sequence, imported_at,
-                    lifecycle_evidence, ordering_trusted, is_fresh)
+                    lifecycle_evidence, evidence_strategy_id,
+                    evidence_purpose, source_kind,
+                    ordering_trusted, is_fresh)
                    VALUES (?,?,?,strftime('%Y-%m-%dT%H:%M:%f','now','localtime'),
-                           ?,1,1)
+                           ?,?,?,?,1,1)
                    ON CONFLICT(batch_id) DO UPDATE SET
                        trade_date=excluded.trade_date,
                        import_sequence=excluded.import_sequence,
                        imported_at=excluded.imported_at,
                        lifecycle_evidence=excluded.lifecycle_evidence,
+                       evidence_strategy_id=excluded.evidence_strategy_id,
+                       evidence_purpose=excluded.evidence_purpose,
+                       source_kind=excluded.source_kind,
                        ordering_trusted=1,
                        is_fresh=1""",
                 (
@@ -2390,6 +2688,9 @@ class LiveRecorder:
                         normalized_account is not None
                         and batch["account_environment"] == "REAL"
                     ),
+                    batch["strategy_id"],
+                    "BATCH_RECONCILIATION",
+                    "TRADING_BATCH",
                 ),
             )
             self._refresh_operator_probe_lifecycle_conn(conn)
@@ -2442,7 +2743,7 @@ class LiveRecorder:
 
     @classmethod
     def _require_latest_broker_snapshot_lifecycle_evidence_conn(
-        cls, conn, trade_date: str,
+        cls, conn, trade_date: str, evidence_strategy_id: str | None = None,
     ) -> str:
         batch_id = cls._latest_broker_snapshot_batch_id(conn, trade_date)
         if batch_id is None:
@@ -2450,7 +2751,7 @@ class LiveRecorder:
                 f"broker position snapshot missing for {trade_date}"
             )
         evidence = conn.execute(
-            """SELECT lifecycle_evidence
+            """SELECT lifecycle_evidence, evidence_strategy_id
                  FROM broker_snapshot_imports WHERE batch_id=?""",
             (batch_id,),
         ).fetchone()
@@ -2458,6 +2759,14 @@ class LiveRecorder:
             raise SchemaError(
                 "latest broker snapshot lacks matched REAL "
                 f"ACCOUNT evidence for {trade_date}"
+            )
+        if (
+            evidence_strategy_id is not None
+            and evidence["evidence_strategy_id"] != evidence_strategy_id
+        ):
+            raise SchemaError(
+                "latest broker snapshot ACCOUNT evidence belongs to another "
+                f"strategy for {trade_date}"
             )
         return batch_id
 
@@ -2479,6 +2788,7 @@ class LiveRecorder:
         trade_date: str,
         *,
         require_lifecycle_evidence: bool = False,
+        evidence_strategy_id: str | None = None,
     ) -> dict[str, dict]:
         """Return the complete latest broker position snapshot for a date.
 
@@ -2494,7 +2804,7 @@ class LiveRecorder:
             if require_lifecycle_evidence:
                 batch_id = (
                     self._require_latest_broker_snapshot_lifecycle_evidence_conn(
-                        conn, trade_date,
+                        conn, trade_date, evidence_strategy_id,
                     )
                 )
             else:
@@ -2542,6 +2852,9 @@ class FillImporter:
         self.bridge_root = Path(bridge_root)
         self.outbound = self.bridge_root / "outbound"
         self.archive = self.bridge_root / "archive"
+        self.snapshot_request_root = self.bridge_root / "snapshot_requests"
+        self.snapshot_responses = self.snapshot_request_root / "responses"
+        self.snapshot_archive = self.snapshot_request_root / "archive"
         self.recorder = recorder
 
     def import_fills(self) -> int:
@@ -2576,6 +2889,82 @@ class FillImporter:
             self._archive(jsonl_path)
             self._archive(done_path)
         return count
+
+    def import_account_snapshot_responses(self) -> int:
+        """Serialize response import/archive across importer processes."""
+        self.snapshot_request_root.mkdir(parents=True, exist_ok=True)
+        lock = FileLock(str(self.snapshot_request_root / "response_import.lock"))
+        with lock:
+            return self._import_account_snapshot_responses_locked()
+
+    def _import_account_snapshot_responses_locked(self) -> int:
+        """Import terminal snapshot-only responses, never trading receipts."""
+        request_ids = set()
+        for root in (self.snapshot_responses, self.snapshot_archive):
+            if not root.exists():
+                continue
+            for path in root.glob("response_snapshot_*.*"):
+                name = path.name
+                if name.endswith(".json") or name.endswith(".done"):
+                    request_ids.add(name[len("response_"):].rsplit(".", 1)[0])
+        count = 0
+        for request_id in sorted(request_ids):
+            json_path = self._snapshot_response_file(request_id, ".json")
+            done_path = self._snapshot_response_file(request_id, ".done")
+            if json_path is None or done_path is None:
+                logger.warning(
+                    "partial snapshot response retained for recovery: %s",
+                    request_id,
+                )
+                continue
+            try:
+                response_bytes = json_path.read_bytes()
+                done_bytes = done_path.read_bytes()
+                payload = json.loads(response_bytes.decode("utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                raise SchemaError("invalid account snapshot response JSON") from exc
+            if not isinstance(payload, dict):
+                raise SchemaError("account snapshot response must be an object")
+            payload_request_id = payload.get("request_id", "")
+            expected_name = f"response_{request_id}.json"
+            if json_path.name != expected_name or payload_request_id != request_id:
+                raise SchemaError("account snapshot response filename mismatch")
+            done_checksum = done_bytes.decode("utf-8").strip()
+            if done_checksum != payload.get("checksum"):
+                raise SchemaError("account snapshot response done checksum mismatch")
+            def require_unchanged():
+                if (
+                    json_path.read_bytes() != response_bytes
+                    or done_path.read_bytes() != done_bytes
+                ):
+                    raise SchemaError(
+                        "account snapshot response changed during import"
+                    )
+
+            require_unchanged()
+            if self.recorder.save_account_snapshot_response(
+                payload, before_commit=require_unchanged,
+            ):
+                count += 1
+            if json_path.parent != self.snapshot_archive:
+                self._archive_snapshot_response(json_path)
+            if done_path.parent != self.snapshot_archive:
+                self._archive_snapshot_response(done_path)
+        return count
+
+    def _snapshot_response_file(self, request_id: str, suffix: str):
+        name = f"response_{request_id}{suffix}"
+        candidates = [
+            root / name for root in (
+                self.snapshot_responses, self.snapshot_archive,
+            ) if (root / name).is_file()
+        ]
+        if len(candidates) > 1:
+            if candidates[0].read_bytes() != candidates[1].read_bytes():
+                raise SchemaError("conflicting duplicate snapshot response file")
+            # Prefer the response copy so normal archival removes the duplicate.
+            return candidates[0]
+        return candidates[0] if candidates else None
 
     def _import_snapshot(self, jsonl_path: Path) -> bool:
         account = None
@@ -2648,6 +3037,16 @@ class FillImporter:
     def _archive(self, path: Path) -> None:
         self.archive.mkdir(parents=True, exist_ok=True)
         os.replace(path, self.archive / path.name)
+
+    def _archive_snapshot_response(self, path: Path) -> None:
+        self.snapshot_archive.mkdir(parents=True, exist_ok=True)
+        target = self.snapshot_archive / path.name
+        if target.exists():
+            if target.read_bytes() == path.read_bytes():
+                path.unlink()
+                return
+            raise SchemaError("account snapshot response archive conflict")
+        os.replace(path, target)
 
     def reconcile(self, batch_id: str) -> dict:
         """对账：计划订单数 vs 已到终态回执数。"""

@@ -104,6 +104,28 @@ def test_pr49_checklist_stops_for_fresh_confirmation_and_preserves_evidence():
     assert 'throw "authorization cutoff has passed"' in marker_script
 
 
+def test_snapshot_bootstrap_runbooks_and_cli_stop_before_authorization():
+    main, qmt, checklist = _read_runbooks()
+    combined = main + qmt + checklist
+    for token in (
+        "request_account_snapshot.py",
+        "SNAPSHOT_OBSERVATION_CONFIRM=YES",
+        "SNAPSHOT_REQUEST_RECEIVED",
+        "SNAPSHOT_REQUEST_TERMINAL",
+        "IMPORTED_COMPLETE",
+        "DIAGNOSTIC_POSITIONS_ONLY",
+        "不会创建或依赖任何 marker",
+    ):
+        assert token in combined
+    script = (
+        REPO_ROOT / "live_trading/scripts/request_account_snapshot.py"
+    ).read_text(encoding="utf-8")
+    assert "snapshot observation trade date must equal today" in script
+    assert "LIVE_TRADING_CONFIRM" not in script
+    assert "LIVE_OK_" not in script
+    assert "passorder" not in script
+
+
 def test_runbooks_use_only_the_locked_marker_creator():
     main, _, checklist = _read_runbooks()
     combined = main + checklist

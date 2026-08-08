@@ -35,7 +35,7 @@ ACCOUNT_ID = ""            # QMT-local account id; must match header if set
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-08-08-task6"
+SOURCE_VERSION = "2026-08-08-task9a-snapshot-bootstrap"
 ACCOUNT_ENVIRONMENT = "SIMULATION"
 # REAL deployments must set all four values deliberately in the QMT-local
 # copy. Keeping the repository default False prevents an accidental cutover.
@@ -51,6 +51,7 @@ MAX_ORDERS_PER_BATCH = 40
 MAX_BATCH_BYTES = 256 * 1024
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
+SNAPSHOT_OBSERVER_START = "09:35:00"
 SELL_WAIT_TIMEOUT_SEC = 0
 TRADE_START = "14:57:05"
 CANCEL_AT = "15:00:05"
@@ -135,6 +136,7 @@ class State(object):
         self.loaded = False
         self.trading_enabled = False
         self.timer_registered = False
+        self.snapshot_timer_registered = False
         self.log_write_failure = None
         self.snapshot_accounts = {}
 
@@ -554,6 +556,11 @@ def _path(*parts):
 def _ensure_dirs():
     for d in ("inbox", "processing", "outbound", "archive", "state", "logs"):
         p = _path(d)
+        if not os.path.isdir(p):
+            os.makedirs(p)
+    request_root = _path("snapshot_requests")
+    for d in ("inbox", "processing", "archive", "responses"):
+        p = os.path.join(request_root, d)
         if not os.path.isdir(p):
             os.makedirs(p)
 
@@ -1459,6 +1466,496 @@ def _recover_processing_batch():
         _log("recovered batch %s: phase=%s submitted=%d"
              % (batch.batch_id(), batch.phase, len(batch.submitted)))
         return
+
+
+# ======================= snapshot-only observation requests =======================
+
+_SNAPSHOT_REQUEST_SCHEMA = "1.0"
+_SNAPSHOT_EVIDENCE_PURPOSE = "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT"
+_SNAPSHOT_REQUEST_STRATEGIES = (
+    "csi1000_b6m_b2s_postclose_real",
+    "csi1000_pr49_one_lot_probe",
+)
+
+
+def _snapshot_request_dir(name):
+    return _path("snapshot_requests", name)
+
+
+def _snapshot_artifact_checksum(payload):
+    import hashlib
+    body = dict(payload)
+    body.pop("checksum", None)
+    encoded = json.dumps(
+        body, ensure_ascii=True, sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _snapshot_account_fingerprint(account_id, account_type, environment):
+    import hashlib
+    material = "\0".join((
+        "qlib-account-snapshot-v1",
+        str(environment), str(account_type), str(account_id),
+    )).encode("utf-8")
+    return "sha256:" + hashlib.sha256(material).hexdigest()
+
+
+def _snapshot_request_id_valid(request_id):
+    return bool(re.match(
+        r"^snapshot_[0-9]{8}_[a-f0-9]{32}$", str(request_id or ""),
+    ))
+
+
+def _snapshot_root_matches(value):
+    try:
+        expected = os.path.normcase(os.path.realpath(os.path.abspath(BRIDGE_ROOT)))
+        observed = os.path.normcase(os.path.realpath(os.path.abspath(value)))
+    except Exception:
+        return False
+    return expected == observed
+
+
+def _validate_snapshot_request(payload, done_checksum):
+    if not isinstance(payload, dict):
+        raise ValueError("snapshot request must be an object")
+    if payload.get("type") != "account_snapshot_request":
+        raise ValueError("invalid snapshot request type")
+    if payload.get("schema_version") != _SNAPSHOT_REQUEST_SCHEMA:
+        raise ValueError("invalid snapshot request schema")
+    request_id = payload.get("request_id", "")
+    if not _snapshot_request_id_valid(request_id):
+        raise ValueError("invalid snapshot request_id")
+    if payload.get("trade_date") != _today():
+        raise ValueError("snapshot request must be for today")
+    if payload.get("collector_execution_profile") != EXECUTION_PROFILE:
+        raise ValueError("snapshot request execution profile mismatch")
+    if not _snapshot_root_matches(payload.get("collector_bridge_root", "")):
+        raise ValueError("snapshot request canonical bridge root mismatch")
+    if payload.get("requested_for_strategy_id") not in \
+            _SNAPSHOT_REQUEST_STRATEGIES:
+        raise ValueError("snapshot request strategy is not approved")
+    if payload.get("evidence_purpose") != _SNAPSHOT_EVIDENCE_PURPOSE:
+        raise ValueError("snapshot request evidence purpose mismatch")
+    if payload.get("account_type") != ACCOUNT_TYPE:
+        raise ValueError("snapshot request account type mismatch")
+    if payload.get("account_environment") != "REAL":
+        raise ValueError("snapshot request must bind REAL environment")
+    if ACCOUNT_ENVIRONMENT != "REAL" or ALLOW_REAL_MONEY is not True:
+        raise ValueError("QMT runtime is not explicitly bound to REAL observation")
+    if not ACCOUNT_ID:
+        raise ValueError("QMT runtime account binding is missing")
+    fingerprint = _snapshot_account_fingerprint(
+        ACCOUNT_ID, ACCOUNT_TYPE, ACCOUNT_ENVIRONMENT,
+    )
+    if payload.get("account_fingerprint") != fingerprint:
+        raise ValueError("snapshot request account fingerprint mismatch")
+    if payload.get("account_id_masked") != _mask_account(ACCOUNT_ID):
+        raise ValueError("snapshot request masked account mismatch")
+    checksum = _snapshot_artifact_checksum(payload)
+    if payload.get("checksum") != checksum or done_checksum != checksum:
+        raise ValueError("snapshot request checksum mismatch")
+    return checksum
+
+
+def _snapshot_query_response(payload):
+    """Query only ACCOUNT/POSITION. No trading API is reachable here."""
+    observed_at = datetime.datetime.now().isoformat()
+    account = None
+    positions = []
+    error = ""
+    try:
+        accounts = get_trade_detail_data(ACCOUNT_ID, ACCOUNT_TYPE, "ACCOUNT")
+        if accounts:
+            row = accounts[0]
+            account = {
+                "request_id": payload["request_id"],
+                "account_id_masked": _mask_account(ACCOUNT_ID),
+                "account_fingerprint": payload["account_fingerprint"],
+                "available_cash": _opt_float(row, "m_dAvailable"),
+                "total_asset": _opt_float(
+                    row, "m_dBalance", "m_dAssureAsset"),
+                "market_value": _opt_float(
+                    row, "m_dInstrumentValue", "m_dStockValue"),
+                "frozen_cash": _opt_float(row, "m_dFrozenCash"),
+                "ts": observed_at,
+            }
+        raw_positions = get_trade_detail_data(
+            ACCOUNT_ID, ACCOUNT_TYPE, "POSITION",
+        )
+        for row in raw_positions or []:
+            shares = int(getattr(row, "m_nVolume", 0) or 0)
+            if shares <= 0:
+                continue
+            positions.append({
+                "request_id": payload["request_id"],
+                "trade_date": payload["trade_date"],
+                "stock_code": _qmt_stock_code(
+                    getattr(row, "m_strInstrumentID", ""),
+                    getattr(row, "m_strExchangeID", ""),
+                ),
+                "shares": shares,
+                "can_use_volume": int(
+                    getattr(row, "m_nCanUseVolume", 0) or 0),
+                "frozen_shares": int(
+                    getattr(row, "m_nFrozenVolume", 0) or 0),
+                "avg_cost": _opt_float(
+                    row, "m_dOpenPrice", "m_dPositionCost"),
+                "market_value": _opt_float(row, "m_dMarketValue"),
+                "ts": observed_at,
+            })
+    except Exception as exc:
+        error = _bounded_text(exc, 512, (ACCOUNT_ID,))
+        account = None
+        positions = []
+    status = "ERROR" if error else (
+        "COMPLETE" if account is not None
+        else "DIAGNOSTIC_POSITIONS_ONLY"
+    )
+    response = {
+        "type": "account_snapshot_response",
+        "schema_version": payload["schema_version"],
+        "request_id": payload["request_id"],
+        "trade_date": payload["trade_date"],
+        "collector_execution_profile": payload[
+            "collector_execution_profile"],
+        "collector_bridge_root": payload["collector_bridge_root"],
+        "requested_for_strategy_id": payload[
+            "requested_for_strategy_id"],
+        "evidence_purpose": payload["evidence_purpose"],
+        "account_type": payload["account_type"],
+        "account_environment": payload["account_environment"],
+        "account_id_masked": payload["account_id_masked"],
+        "account_fingerprint": payload["account_fingerprint"],
+        "request_checksum": payload["checksum"],
+        "status": status,
+        "account": account,
+        "positions": positions,
+        "observed_at": observed_at,
+        "error": error,
+    }
+    response["checksum"] = _snapshot_artifact_checksum(response)
+    return response
+
+
+def _persist_snapshot_response(response):
+    request_id = response["request_id"]
+    response_dir = _snapshot_request_dir("responses")
+    json_path = os.path.join(
+        response_dir, "response_" + request_id + ".json")
+    done_path = os.path.join(
+        response_dir, "response_" + request_id + ".done")
+    encoded = json.dumps(response, ensure_ascii=True, sort_keys=True) + "\n"
+    if os.path.isfile(json_path) or os.path.isfile(done_path):
+        if os.path.isfile(json_path) and not os.path.isfile(done_path):
+            with open(json_path, "r") as handle:
+                if handle.read() != encoded:
+                    raise ValueError("partial terminal snapshot response changed")
+            tmp_done = done_path + ".tmp"
+            with open(tmp_done, "w") as handle:
+                handle.write(response["checksum"] + "\n")
+                handle.flush()
+            os.replace(tmp_done, done_path)
+            return True
+        if not (os.path.isfile(json_path) and os.path.isfile(done_path)):
+            raise ValueError("partial terminal snapshot response exists")
+        with open(json_path, "r") as handle:
+            prior_json = handle.read()
+        with open(done_path, "r") as handle:
+            prior_done = handle.read().strip()
+        if prior_json == encoded and prior_done == response["checksum"]:
+            return False
+        raise ValueError("terminal snapshot response conflicts")
+    tmp_json = json_path + ".tmp"
+    tmp_done = done_path + ".tmp"
+    with open(tmp_json, "w") as handle:
+        handle.write(encoded)
+        handle.flush()
+    with open(tmp_done, "w") as handle:
+        handle.write(response["checksum"] + "\n")
+        handle.flush()
+    os.replace(tmp_json, json_path)
+    os.replace(tmp_done, done_path)
+    return True
+
+
+def _archive_snapshot_request(json_path, done_path):
+    archive = _snapshot_request_dir("archive")
+    for path in (json_path, done_path):
+        target = os.path.join(archive, os.path.basename(path))
+        if os.path.isfile(target):
+            with open(path, "rb") as current:
+                current_bytes = current.read()
+            with open(target, "rb") as prior:
+                prior_bytes = prior.read()
+            if current_bytes != prior_bytes:
+                raise ValueError("archived snapshot request conflicts")
+            os.remove(path)
+        else:
+            os.replace(path, target)
+
+
+def _snapshot_request_already_terminal(payload, json_path, done_path):
+    request_id = payload["request_id"]
+    archive_json = os.path.join(
+        _snapshot_request_dir("archive"),
+        "request_" + request_id + ".json",
+    )
+    archive_done = os.path.join(
+        _snapshot_request_dir("archive"),
+        "request_" + request_id + ".done",
+    )
+    response_name = "response_" + request_id
+    roots = (
+        _snapshot_request_dir("responses"),
+        _snapshot_request_dir("archive"),
+    )
+    response_json = next((
+        os.path.join(root, response_name + ".json") for root in roots
+        if os.path.isfile(os.path.join(root, response_name + ".json"))
+    ), "")
+    response_done = next((
+        os.path.join(root, response_name + ".done") for root in roots
+        if os.path.isfile(os.path.join(root, response_name + ".done"))
+    ), "")
+    request_archive_present = (
+        os.path.isfile(archive_json) or os.path.isfile(archive_done)
+    )
+    if not response_json and not response_done and not request_archive_present:
+        return False
+    if not response_json or not response_done:
+        raise ValueError("partial terminal snapshot response evidence")
+    for current, archived in (
+        (json_path, archive_json), (done_path, archive_done),
+    ):
+        if not os.path.isfile(archived):
+            continue
+        with open(current, "rb") as handle:
+            current_bytes = handle.read()
+        with open(archived, "rb") as handle:
+            archived_bytes = handle.read()
+        if current_bytes != archived_bytes:
+            raise ValueError("terminal snapshot request replay changed")
+    with open(response_json, "r") as handle:
+        response = json.load(handle)
+    with open(response_done, "r") as handle:
+        response_marker = handle.read().strip()
+    checksum = _snapshot_artifact_checksum(response)
+    if response.get("checksum") != checksum or response_marker != checksum:
+        raise ValueError("terminal snapshot response evidence is corrupt")
+    if response.get("request_id") != request_id \
+            or response.get("request_checksum") != payload.get("checksum"):
+        raise ValueError("terminal snapshot response binding mismatch")
+    return True
+
+
+def _recover_partial_snapshot_response(payload):
+    request_id = payload["request_id"]
+    response_json = os.path.join(
+        _snapshot_request_dir("responses"),
+        "response_" + request_id + ".json",
+    )
+    response_done = response_json[:-5] + ".done"
+    if not os.path.isfile(response_json) and not os.path.isfile(response_done):
+        return None
+    if os.path.isfile(response_done) and not os.path.isfile(response_json):
+        raise ValueError("snapshot response marker exists without JSON")
+    if os.path.isfile(response_done):
+        return None
+    with open(response_json, "r") as handle:
+        response = json.load(handle)
+    checksum = _snapshot_artifact_checksum(response)
+    if response.get("checksum") != checksum:
+        raise ValueError("partial snapshot response checksum mismatch")
+    bindings = (
+        "request_id", "trade_date", "collector_execution_profile",
+        "collector_bridge_root", "requested_for_strategy_id",
+        "evidence_purpose", "account_type", "account_environment",
+        "account_id_masked", "account_fingerprint",
+    )
+    for field in bindings:
+        if response.get(field) != payload.get(field):
+            raise ValueError("partial snapshot response binding mismatch: " + field)
+    if response.get("request_checksum") != payload.get("checksum"):
+        raise ValueError("partial snapshot response request checksum mismatch")
+    _persist_snapshot_response(response)
+    return response
+
+
+def _snapshot_processor_lock_path():
+    return _path("snapshot_requests", "processor.lock")
+
+
+def _acquire_snapshot_processor_lock():
+    path = _snapshot_processor_lock_path()
+    flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
+    try:
+        descriptor = os.open(path, flags)
+    except OSError:
+        try:
+            stale = time.time() - os.path.getmtime(path) > 300
+        except OSError:
+            return False
+        if not stale:
+            return False
+        try:
+            os.remove(path)
+            descriptor = os.open(path, flags)
+        except OSError:
+            return False
+    try:
+        os.write(descriptor, datetime.datetime.now().isoformat().encode("ascii"))
+    finally:
+        os.close(descriptor)
+    return True
+
+
+def _process_snapshot_requests():
+    if not _acquire_snapshot_processor_lock():
+        # Another QMT worker (or a restart-stale lock) may be inside the
+        # observation critical section. Fail closed for order processing.
+        return True
+    try:
+        return _process_snapshot_requests_locked()
+    finally:
+        try:
+            os.remove(_snapshot_processor_lock_path())
+        except OSError:
+            pass
+
+
+def _process_snapshot_requests_locked():
+    """Claim and finish snapshot-only work independently of order batches."""
+    inbox = _snapshot_request_dir("inbox")
+    processing = _snapshot_request_dir("processing")
+    # Repair a crash between the two claim renames.
+    for name in list(os.listdir(processing)):
+        if name.endswith(".json"):
+            counterpart = name[:-5] + ".done"
+        elif name.endswith(".done"):
+            counterpart = name[:-5] + ".json"
+        else:
+            continue
+        source = os.path.join(inbox, counterpart)
+        target = os.path.join(processing, counterpart)
+        if os.path.isfile(source) and not os.path.isfile(target):
+            os.replace(source, target)
+        if not os.path.isfile(target):
+            archived = os.path.join(
+                _snapshot_request_dir("archive"), counterpart,
+            )
+            if os.path.isfile(archived):
+                with open(archived, "rb") as handle:
+                    archived_bytes = handle.read()
+                with open(target, "wb") as handle:
+                    handle.write(archived_bytes)
+                    handle.flush()
+    done_names = sorted(
+        name for name in os.listdir(inbox)
+        if name.startswith("request_snapshot_") and name.endswith(".done")
+    )
+    for done_name in done_names:
+        json_name = done_name[:-5] + ".json"
+        source_json = os.path.join(inbox, json_name)
+        source_done = os.path.join(inbox, done_name)
+        if not os.path.isfile(source_json):
+            continue
+        os.replace(source_json, os.path.join(processing, json_name))
+        os.replace(source_done, os.path.join(processing, done_name))
+    done_names = sorted(
+        name for name in os.listdir(processing)
+        if name.startswith("request_snapshot_") and name.endswith(".done")
+    )
+    handled = bool(done_names)
+    for done_name in done_names:
+        json_name = done_name[:-5] + ".json"
+        json_path = os.path.join(processing, json_name)
+        done_path = os.path.join(processing, done_name)
+        if not os.path.isfile(json_path):
+            continue
+        request_id = json_name[len("request_"):-len(".json")]
+        try:
+            if os.path.getsize(json_path) > MAX_BATCH_BYTES:
+                raise ValueError("snapshot request exceeds byte limit")
+            with open(json_path, "rb") as handle:
+                request_bytes = handle.read()
+            with open(done_path, "rb") as handle:
+                done_bytes = handle.read()
+            payload = json.loads(request_bytes.decode("utf-8"))
+            done_checksum = done_bytes.decode("utf-8").strip()
+            if payload.get("request_id") != request_id:
+                raise ValueError("snapshot request filename mismatch")
+            _validate_snapshot_request(payload, done_checksum)
+            _log_event(
+                "SNAPSHOT_REQUEST_RECEIVED",
+                request_id=request_id,
+                trade_date=payload.get("trade_date", ""),
+                collector_execution_profile=EXECUTION_PROFILE,
+                requested_for_strategy_id=payload.get(
+                    "requested_for_strategy_id", ""),
+                account_id_masked=_mask_account(ACCOUNT_ID),
+                bridge_root=BRIDGE_ROOT,
+                message="snapshot-only request validated",
+            )
+            recovered_response = _recover_partial_snapshot_response(payload)
+            if recovered_response is not None:
+                _archive_snapshot_request(json_path, done_path)
+                _log_event(
+                    "SNAPSHOT_REQUEST_TERMINAL",
+                    request_id=request_id,
+                    status=recovered_response["status"],
+                    response_checksum=recovered_response["checksum"],
+                    response_persisted=True,
+                    restart_recovered=True,
+                    account_id_masked=_mask_account(ACCOUNT_ID),
+                    position_count=len(recovered_response["positions"]),
+                    message="partial snapshot response recovered after restart",
+                )
+                continue
+            if _snapshot_request_already_terminal(
+                    payload, json_path, done_path):
+                _archive_snapshot_request(json_path, done_path)
+                _log_event(
+                    "SNAPSHOT_REQUEST_REPLAY",
+                    request_id=request_id,
+                    response_persisted=False,
+                    account_id_masked=_mask_account(ACCOUNT_ID),
+                    message="exact terminal snapshot request replay ignored",
+                )
+                continue
+            response = _snapshot_query_response(payload)
+            with open(json_path, "rb") as handle:
+                if handle.read() != request_bytes:
+                    raise ValueError("snapshot request changed during broker query")
+            with open(done_path, "rb") as handle:
+                if handle.read() != done_bytes:
+                    raise ValueError("snapshot request marker changed during query")
+            persisted = _persist_snapshot_response(response)
+            _archive_snapshot_request(json_path, done_path)
+            _log_event(
+                "SNAPSHOT_REQUEST_TERMINAL",
+                request_id=request_id,
+                status=response["status"],
+                response_checksum=response["checksum"],
+                response_persisted=bool(persisted),
+                account_id_masked=_mask_account(ACCOUNT_ID),
+                position_count=len(response["positions"]),
+                message="snapshot-only request completed",
+            )
+        except Exception as exc:
+            _log_event(
+                "SNAPSHOT_REQUEST_REJECTED",
+                request_id=request_id,
+                account_id_masked=_mask_account(ACCOUNT_ID),
+                error_type=type(exc).__name__,
+                reason=_bounded_text(exc, 512, (ACCOUNT_ID,)),
+                message="snapshot-only request rejected",
+            )
+            # Retain processing evidence for inspection and restart; an exact
+            # terminal replay will be harmless once the conflict is resolved.
+            continue
+    return handled
 
 # ======================= QMT API wrappers =======================
 # All QMT built-in API usage is isolated below so the pure logic above
@@ -2533,6 +3030,10 @@ def _force_finalize_if_near_close(ContextInfo, batch):
 def _advance(ContextInfo):
     if not g.trading_enabled:
         return
+    if _process_snapshot_requests():
+        # A snapshot-only wakeup is observation-exclusive: do not claim or
+        # execute any order batch in the same dynamic entry invocation.
+        return
     if g.batch is not None and g.batch.dual_authorization_blocked:
         _finalize_dual_authorization_block(g.batch)
         return
@@ -2561,6 +3062,74 @@ def timer_callback(ContextInfo):
         _advance(ContextInfo)
     except Exception:
         _log("timer_callback error:\n" + traceback.format_exc())
+
+
+def snapshot_timer_callback(ContextInfo):
+    """Read-only observer timer; it never calls the order state machine."""
+    try:
+        if not g.loaded:
+            init(ContextInfo)
+        if g.trading_enabled:
+            _process_snapshot_requests()
+    except Exception:
+        _log("snapshot_timer_callback error:\n" + traceback.format_exc())
+
+
+def _register_snapshot_timer(ContextInfo):
+    if g.snapshot_timer_registered:
+        return
+    day = datetime.date.today()
+    first_compact = (
+        day.strftime("%Y%m%d") + SNAPSHOT_OBSERVER_START.replace(":", "")
+    )
+    g.snapshot_timer_registered = True
+    method = "schedule_run" if hasattr(ContextInfo, "schedule_run") else "run_time"
+    first_wakeup = first_compact
+    timer_result = None
+    try:
+        if hasattr(ContextInfo, "schedule_run"):
+            timer_result = ContextInfo.schedule_run(
+                snapshot_timer_callback,
+                first_compact,
+                -1,
+                datetime.timedelta(seconds=POLL_SECONDS),
+                "qlib_snapshot_observer",
+            )
+        else:
+            first_legacy = (
+                day.strftime("%Y-%m-%d") + " " + SNAPSHOT_OBSERVER_START
+            )
+            first_wakeup = first_legacy
+            timer_result = ContextInfo.run_time(
+                "snapshot_timer_callback",
+                "%dnSecond" % int(POLL_SECONDS),
+                first_legacy,
+            )
+        _log_event(
+            "SNAPSHOT_TIMER_REGISTERED",
+            method=method,
+            registered=True,
+            first_wakeup=first_wakeup,
+            interval_seconds=int(POLL_SECONDS),
+            callback="snapshot_timer_callback",
+            timer_name="qlib_snapshot_observer",
+            return_repr=_bounded_text(repr(timer_result), 256),
+            message="snapshot-only observer timer registered",
+        )
+    except Exception as exc:
+        g.snapshot_timer_registered = False
+        _log_event(
+            "SNAPSHOT_TIMER_REGISTERED",
+            method=method,
+            registered=False,
+            first_wakeup=first_wakeup,
+            interval_seconds=int(POLL_SECONDS),
+            callback="snapshot_timer_callback",
+            error_type=type(exc).__name__,
+            error_message=_bounded_text(exc),
+            message="snapshot-only observer timer registration failed",
+        )
+        raise
 
 
 def _register_postclose_timer(ContextInfo):
@@ -2705,6 +3274,7 @@ def init(ContextInfo):
         cancel_at=CANCEL_AT,
         finalize_at=FINALIZE_AT,
         snapshot_after=SNAPSHOT_REFRESH_AT,
+        snapshot_observer_start=SNAPSHOT_OBSERVER_START,
         timer_start=profile["timer_start"],
         authorization_path=_authorization_path(_today()),
         authorization_present=os.path.isfile(_authorization_path(_today())),
@@ -2722,6 +3292,7 @@ def init(ContextInfo):
     _recover_processing_batch()
     g.loaded = True
     try:
+        _register_snapshot_timer(ContextInfo)
         _register_postclose_timer(ContextInfo)
     except Exception:
         g.loaded = False

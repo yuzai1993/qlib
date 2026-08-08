@@ -1,12 +1,16 @@
 """Audited, immutable operator batches for the isolated prType=49 probe."""
 
 import dataclasses
+import hashlib
+import json
 import os
 import re
+import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
+from filelock import FileLock
 
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.execution_profile import get_execution_profile
@@ -31,6 +35,213 @@ AUTHORIZATION_PROFILE_NAMES = (
     "CLOSE_AUCTION",
     "AFTER_HOURS_FIXED_PRICE",
 )
+SNAPSHOT_REQUEST_SCHEMA_VERSION = "1.0"
+SNAPSHOT_EVIDENCE_PURPOSE = "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT"
+MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
+SNAPSHOT_REQUEST_STRATEGIES = {MAIN_STRATEGY_ID, PROBE_STRATEGY_ID}
+QMT_PROFILE_BRIDGE_ROOTS = {
+    "CLOSE_AUCTION": r"D:\qmt_bridge",
+    "AFTER_HOURS_FIXED_PRICE": r"D:\qmt_bridge\pr49_probe",
+}
+
+
+def account_identity_fingerprint(
+    account_id: str, account_type: str, account_environment: str,
+) -> str:
+    """Return a domain-separated fingerprint without exposing the account."""
+    material = "\0".join((
+        "qlib-account-snapshot-v1",
+        str(account_environment), str(account_type), str(account_id),
+    )).encode("utf-8")
+    return "sha256:" + hashlib.sha256(material).hexdigest()
+
+
+def snapshot_artifact_checksum(payload: dict) -> str:
+    body = dict(payload)
+    body.pop("checksum", None)
+    encoded = json.dumps(
+        body, ensure_ascii=True, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+@dataclass(frozen=True)
+class AccountSnapshotRequest:
+    request_id: str
+    trade_date: str
+    collector_execution_profile: str
+    collector_bridge_root: str
+    requested_for_strategy_id: str
+    account_type: str
+    account_environment: str
+    account_id_masked: str
+    account_fingerprint: str
+    created_at: str
+    schema_version: str = SNAPSHOT_REQUEST_SCHEMA_VERSION
+    evidence_purpose: str = SNAPSHOT_EVIDENCE_PURPOSE
+
+    def to_dict(self) -> dict:
+        payload = {"type": "account_snapshot_request", **dataclasses.asdict(self)}
+        payload["checksum"] = snapshot_artifact_checksum(payload)
+        return payload
+
+
+def build_account_snapshot_request(
+    config: dict,
+    *,
+    trade_date: str,
+    collector_execution_profile: str,
+    requested_for_strategy_id: str,
+    account_id: str,
+    request_id: str | None = None,
+    created_at: str | None = None,
+) -> AccountSnapshotRequest:
+    """Build a read-only observation request, never a trading batch."""
+    live = _operator_live_config(config)
+    _require_trade_date(trade_date)
+    if collector_execution_profile not in QMT_PROFILE_BRIDGE_ROOTS:
+        raise SchemaError("unknown snapshot collector execution profile")
+    configured_profile = live.get("execution_session")
+    if configured_profile != collector_execution_profile:
+        raise SchemaError("collector profile does not match collector config")
+    if requested_for_strategy_id not in SNAPSHOT_REQUEST_STRATEGIES:
+        raise SchemaError("snapshot request strategy is not approved")
+    if not isinstance(account_id, str) or not account_id.strip():
+        raise SchemaError("snapshot request requires resolved REAL account")
+    if os.environ.get("QMT_REAL_ACCOUNT_ID") != account_id:
+        raise SchemaError("snapshot request account does not match runtime REAL account")
+    request_id = request_id or (
+        "snapshot_%s_%s" % (
+            trade_date.replace("-", ""), uuid.uuid4().hex,
+        )
+    )
+    if not re.fullmatch(r"snapshot_[0-9]{8}_[a-f0-9]{32}", request_id):
+        raise SchemaError("invalid durable snapshot request_id")
+    if request_id.split("_")[1] != trade_date.replace("-", ""):
+        raise SchemaError("snapshot request_id trade date mismatch")
+    timestamp = created_at or datetime.now(timezone.utc).isoformat()
+    try:
+        parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exc:
+        raise SchemaError("snapshot request created_at is invalid") from exc
+    if parsed.tzinfo is None:
+        raise SchemaError("snapshot request created_at must include timezone")
+    account_type = live.get("account_type", "")
+    return AccountSnapshotRequest(
+        request_id=request_id,
+        trade_date=trade_date,
+        collector_execution_profile=collector_execution_profile,
+        collector_bridge_root=QMT_PROFILE_BRIDGE_ROOTS[
+            collector_execution_profile
+        ],
+        requested_for_strategy_id=requested_for_strategy_id,
+        account_type=account_type,
+        account_environment="REAL",
+        account_id_masked=(
+            account_id[:2] + "*" * max(0, len(account_id) - 4) + account_id[-2:]
+            if len(account_id) > 4 else "*" * len(account_id)
+        ),
+        account_fingerprint=account_identity_fingerprint(
+            account_id, account_type, "REAL",
+        ),
+        created_at=timestamp,
+    )
+
+
+def prepare_account_snapshot_request(
+    request: AccountSnapshotRequest, recorder, account_id: str,
+) -> dict:
+    """Persist canonical immutable bytes without exposing them to QMT."""
+    payload = request.to_dict()
+    if account_identity_fingerprint(
+        account_id, request.account_type, request.account_environment,
+    ) != request.account_fingerprint:
+        raise SchemaError("runtime account changed before snapshot preparation")
+    recorder.record_account_snapshot_request(payload, account_id)
+    return payload
+
+
+def publish_account_snapshot_request(
+    request_id: str,
+    config: dict,
+    recorder,
+    bridge_root: Path,
+    account_id: str,
+) -> Path:
+    """Expose only the exact canonical bytes of a durable prepared request."""
+    durable = recorder.get_account_snapshot_request(request_id)
+    if durable is None:
+        raise SchemaError("unknown prepared account snapshot request")
+    try:
+        payload = json.loads(durable["request_json"])
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise SchemaError("prepared account snapshot artifact is corrupt") from exc
+    if not isinstance(payload, dict) or payload.get("request_id") != request_id:
+        raise SchemaError("prepared account snapshot request_id mismatch")
+    if snapshot_artifact_checksum(payload) != durable["request_checksum"]:
+        raise SchemaError("prepared account snapshot checksum mismatch")
+    if payload.get("checksum") != durable["request_checksum"]:
+        raise SchemaError("prepared account snapshot artifact checksum mismatch")
+    live = _operator_live_config(config)
+    if payload.get("collector_execution_profile") != live.get(
+        "execution_session"
+    ):
+        raise SchemaError("prepared snapshot collector profile mismatch")
+    if payload.get("collector_bridge_root") != QMT_PROFILE_BRIDGE_ROOTS[
+        live["execution_session"]
+    ]:
+        raise SchemaError("prepared snapshot canonical bridge root mismatch")
+    if payload.get("trade_date") != date.today().isoformat():
+        raise SchemaError("prepared snapshot request trade_date must equal today")
+    if durable["account_id"] != account_id:
+        raise SchemaError("prepared snapshot durable account mismatch")
+    if account_identity_fingerprint(
+        account_id, payload.get("account_type", ""),
+        payload.get("account_environment", ""),
+    ) != payload.get("account_fingerprint"):
+        raise SchemaError("prepared snapshot runtime account mismatch")
+    if payload.get("account_id_masked") != (
+        account_id[:2] + "*" * max(0, len(account_id) - 4) + account_id[-2:]
+        if len(account_id) > 4 else "*" * len(account_id)
+    ):
+        raise SchemaError("prepared snapshot masked account mismatch")
+    root = Path(bridge_root).expanduser()
+    if not root.is_absolute() or root.resolve(strict=True) != root:
+        raise SchemaError("snapshot request bridge root must be canonical")
+    configured_root = Path(live.get("bridge_root", "")).expanduser()
+    if configured_root != root:
+        raise SchemaError("snapshot request bridge root does not match config")
+    request_root = root / "snapshot_requests"
+    inbox = request_root / "inbox"
+    inbox.mkdir(parents=True, exist_ok=True)
+    target = inbox / ("request_%s.json" % request_id)
+    done = inbox / ("request_%s.done" % request_id)
+    encoded = durable["request_json"] + "\n"
+    lock = FileLock(str(request_root / "publish.lock"))
+    with lock:
+        recorder.mark_account_snapshot_request_published(
+            request_id, durable["request_checksum"],
+        )
+        if target.exists() or done.exists():
+            if target.is_file() and target.read_text(encoding="utf-8") == encoded:
+                if done.is_file():
+                    if done.read_text(encoding="utf-8").strip() != payload["checksum"]:
+                        raise SchemaError("snapshot request done checksum conflicts")
+                    return target
+                tmp_done = inbox / (done.name + ".tmp")
+                tmp_done.write_text(payload["checksum"] + "\n", encoding="utf-8")
+                os.replace(tmp_done, done)
+                return target
+            raise SchemaError("snapshot request artifact conflicts with durable request")
+        tmp_json = inbox / (target.name + ".tmp")
+        tmp_done = inbox / (done.name + ".tmp")
+        if tmp_json.exists() and tmp_json.read_text(encoding="utf-8") != encoded:
+            raise SchemaError("snapshot request temporary artifact conflicts")
+        tmp_json.write_text(encoded, encoding="utf-8")
+        tmp_done.write_text(payload["checksum"] + "\n", encoding="utf-8")
+        os.replace(tmp_json, target)
+        os.replace(tmp_done, done)
+        return target
 
 
 @dataclass(frozen=True)
@@ -230,7 +441,9 @@ def validate_probe_transition(
         raise TypeError("request must be an OperatorProbeRequest")
     _require_trade_date(request.trade_date)
     details = recorder.get_broker_position_details(
-        request.trade_date, require_lifecycle_evidence=True,
+        request.trade_date,
+        require_lifecycle_evidence=True,
+        evidence_strategy_id=PROBE_STRATEGY_ID,
     )
     positions = recorder.get_positions()
     held = positions.get(request.stock_code, {}).get("shares", 0)
@@ -323,7 +536,11 @@ def build_operator_order(
     if live.get("kind") == "OPERATOR_PROBE":
         validate_probe_transition(request, recorder)
     else:
-        details = recorder.get_broker_position_details(broker_trade_date)
+        details = recorder.get_broker_position_details(
+            broker_trade_date,
+            require_lifecycle_evidence=True,
+            evidence_strategy_id=live["strategy_id"],
+        )
         positions = recorder.get_positions()
         held = positions.get(request.stock_code, {}).get("shares", 0)
         if request.side == "SELL":
@@ -547,10 +764,11 @@ def publish_operator_probe(
             # A durable plan remains authoritative for immutable bytes and
             # mutable holdings/availability. ACCOUNT evidence is rechecked
             # because a query-failure snapshot cannot authorize real money.
-            if is_probe:
-                recorder.get_broker_position_details(
-                    request.trade_date, require_lifecycle_evidence=True,
-                )
+            recorder.get_broker_position_details(
+                request.trade_date,
+                require_lifecycle_evidence=True,
+                evidence_strategy_id=live["strategy_id"],
+            )
             order = _make_operator_order(request, live)
             header = _normalized_header(header, order)
             recorder.record_publish_plan(

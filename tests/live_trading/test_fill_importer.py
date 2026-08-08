@@ -3,6 +3,7 @@ import json
 import sqlite3
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,10 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
+from live_trading.modules.operator_probe import (
+    account_identity_fingerprint,
+    snapshot_artifact_checksum,
+)
 from live_trading.modules.signal_schema import (
     BatchHeader,
     FillEvent,
@@ -20,6 +25,7 @@ from live_trading.modules.signal_schema import (
 )
 
 BATCH_ID = "20260714_csi300_topk10_001"
+SNAPSHOT_REQUEST_ID = "snapshot_20260714_0123456789abcdef0123456789abcdef"
 
 
 def test_fill_importer_module_does_not_require_posix_fcntl():
@@ -1643,6 +1649,297 @@ def test_broker_snapshot_survives_missing_account_row(env):
     assert importer.import_broker_snapshots() == 1
     assert recorder.get_broker_account_snapshot("2026-07-14") is None
     assert recorder.get_broker_positions("2026-07-14") == {"688223.SH": 244500}
+
+
+def _snapshot_only_request_payload():
+    payload = {
+        "type": "account_snapshot_request",
+        "schema_version": "1.0",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "trade_date": "2026-07-14",
+        "collector_execution_profile": "CLOSE_AUCTION",
+        "collector_bridge_root": r"D:\qmt_bridge",
+        "requested_for_strategy_id": "csi1000_b6m_b2s_postclose_real",
+        "evidence_purpose": "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT",
+        "account_type": "STOCK",
+        "account_environment": "REAL",
+        "account_id_masked": "88******49",
+        "account_fingerprint": account_identity_fingerprint(
+            "8890116049", "STOCK", "REAL",
+        ),
+        "created_at": "2026-07-14T08:00:00+08:00",
+    }
+    payload["checksum"] = snapshot_artifact_checksum(payload)
+    return payload
+
+
+def _record_published_snapshot_only_request(recorder):
+    request = _snapshot_only_request_payload()
+    recorder.record_account_snapshot_request(request, "8890116049")
+    recorder.mark_account_snapshot_request_published(
+        request["request_id"], request["checksum"],
+    )
+    return request
+
+
+def _snapshot_only_response(status="COMPLETE"):
+    request = _snapshot_only_request_payload()
+    account = None if status != "COMPLETE" else {
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "account_id_masked": request["account_id_masked"],
+        "account_fingerprint": request["account_fingerprint"],
+        "available_cash": 900000.0,
+        "total_asset": 1000000.0,
+        "market_value": 100000.0,
+        "frozen_cash": 0.0,
+        "ts": "2026-07-14T15:00:00+08:00",
+    }
+    response = {
+        "type": "account_snapshot_response",
+        "schema_version": request["schema_version"],
+        "request_id": request["request_id"],
+        "trade_date": request["trade_date"],
+        "collector_execution_profile": request[
+            "collector_execution_profile"],
+        "collector_bridge_root": request["collector_bridge_root"],
+        "requested_for_strategy_id": request[
+            "requested_for_strategy_id"],
+        "evidence_purpose": request["evidence_purpose"],
+        "account_type": request["account_type"],
+        "account_environment": request["account_environment"],
+        "account_id_masked": request["account_id_masked"],
+        "account_fingerprint": request["account_fingerprint"],
+        "request_checksum": request["checksum"],
+        "status": status,
+        "account": account,
+        "positions": [{
+            "request_id": SNAPSHOT_REQUEST_ID,
+            "trade_date": "2026-07-14",
+            "stock_code": "600000.SH",
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }] if status != "ERROR" else [],
+        "observed_at": "2026-07-14T15:00:00+08:00",
+        "error": "query failed" if status == "ERROR" else "",
+    }
+    response["checksum"] = snapshot_artifact_checksum(response)
+    return response
+
+
+def _write_snapshot_only_response(root, response):
+    response_dir = root / "snapshot_requests" / "responses"
+    response_dir.mkdir(parents=True, exist_ok=True)
+    request_id = response["request_id"]
+    (response_dir / f"response_{request_id}.json").write_text(
+        json.dumps(response, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (response_dir / f"response_{request_id}.done").write_text(
+        response["checksum"] + "\n", encoding="utf-8",
+    )
+
+
+def test_snapshot_only_complete_response_becomes_trusted_without_batch(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_batch(SNAPSHOT_REQUEST_ID) is None
+    assert recorder.get_broker_position_details(
+        "2026-07-14", require_lifecycle_evidence=True,
+    )["600000.SH"]["can_use_volume"] == 100
+    durable = recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)
+    assert durable["status"] == "IMPORTED_COMPLETE"
+
+
+def test_snapshot_only_response_cannot_import_before_prepared_request_publish(env):
+    bridge_root, recorder, importer = env
+    request = _snapshot_only_request_payload()
+    recorder.record_account_snapshot_request(request, "8890116049")
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+
+    with pytest.raises(SchemaError, match="no published request"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "PREPARED"
+
+
+def test_snapshot_only_positions_response_is_diagnostic_not_authorizing(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(
+        bridge_root, _snapshot_only_response("DIAGNOSTIC_POSITIONS_ONLY"),
+    )
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_broker_position_details("2026-07-14")[
+        "600000.SH"
+    ]["shares"] == 100
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        recorder.get_broker_position_details(
+            "2026-07-14", require_lifecycle_evidence=True,
+        )
+
+
+def test_snapshot_only_terminal_changed_replay_fails_closed(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    first = _snapshot_only_response()
+    _write_snapshot_only_response(bridge_root, first)
+    assert importer.import_account_snapshot_responses() == 1
+    changed = _snapshot_only_response()
+    changed["account"]["available_cash"] = 1.0
+    changed["checksum"] = snapshot_artifact_checksum(changed)
+    _write_snapshot_only_response(bridge_root, changed)
+
+    with pytest.raises(
+        SchemaError, match="terminal.*changed|conflicting duplicate",
+    ):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_broker_account_snapshot("2026-07-14")[
+        "available_cash"
+    ] == pytest.approx(900000.0)
+
+
+def test_snapshot_only_response_profile_mismatch_is_atomic(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    response["collector_execution_profile"] = "AFTER_HOURS_FIXED_PRICE"
+    response["checksum"] = snapshot_artifact_checksum(response)
+    _write_snapshot_only_response(bridge_root, response)
+
+    with pytest.raises(SchemaError, match="profile mismatch"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+
+
+def test_snapshot_only_response_change_during_sqlite_import_rolls_back(
+    env, monkeypatch,
+):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    _write_snapshot_only_response(bridge_root, response)
+    response_path = (
+        bridge_root / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    original_refresh = recorder._refresh_operator_probe_lifecycle_conn
+
+    def mutate_during_transaction(conn):
+        response_path.write_text("{}\n", encoding="utf-8")
+        return original_refresh(conn)
+
+    monkeypatch.setattr(
+        recorder, "_refresh_operator_probe_lifecycle_conn",
+        mutate_during_transaction,
+    )
+
+    with pytest.raises(SchemaError, match="changed during import"):
+        importer.import_account_snapshot_responses()
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+
+
+def test_snapshot_only_two_importers_claim_response_once(env):
+    bridge_root, recorder, _ = env
+    request = _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    importers = [FillImporter(bridge_root, recorder) for _ in range(2)]
+    start = threading.Barrier(2)
+    results = []
+    errors = []
+
+    def run(importer):
+        try:
+            start.wait(timeout=5)
+            results.append(importer.import_account_snapshot_responses())
+        except Exception as exc:
+            errors.append(exc)
+
+    threads = [threading.Thread(target=run, args=(item,)) for item in importers]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+
+    assert not errors
+    assert sorted(results) == [0, 1]
+    archive = bridge_root / "snapshot_requests" / "archive"
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
+
+
+def test_snapshot_only_archive_without_db_terminal_recovers(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    _write_snapshot_only_response(bridge_root, response)
+    response_dir = bridge_root / "snapshot_requests" / "responses"
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    for suffix in ("json", "done"):
+        source = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.{suffix}"
+        source.replace(archive / source.name)
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+
+
+def test_snapshot_only_split_response_pair_recovers_before_db_terminal(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    responses = bridge_root / "snapshot_requests" / "responses"
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    done = responses / f"response_{SNAPSHOT_REQUEST_ID}.done"
+    done.replace(archive / done.name)
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
+
+
+def test_snapshot_only_split_archive_after_db_commit_converges(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    assert importer.import_account_snapshot_responses() == 1
+    responses = bridge_root / "snapshot_requests" / "responses"
+    responses.mkdir(parents=True, exist_ok=True)
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archived_json = archive / f"response_{SNAPSHOT_REQUEST_ID}.json"
+    archived_json.replace(responses / archived_json.name)
+
+    assert importer.import_account_snapshot_responses() == 0
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
+
+
+def test_snapshot_only_rejects_account_or_position_from_other_request(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    response["account"]["request_id"] = SNAPSHOT_REQUEST_ID
+    response["positions"][0]["request_id"] = (
+        "snapshot_20260714_ffffffffffffffffffffffffffffffff"
+    )
+    response["checksum"] = snapshot_artifact_checksum(response)
+    _write_snapshot_only_response(bridge_root, response)
+
+    with pytest.raises(SchemaError, match="position.*request_id"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
 
 
 def test_reconcile_counts(env):

@@ -3,6 +3,7 @@
 import dataclasses
 import json
 import threading
+from datetime import date
 from types import SimpleNamespace
 import sys
 from pathlib import Path
@@ -17,9 +18,14 @@ from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.signal_schema import BatchHeader, FillEvent
 from live_trading.modules import operator_probe
 from live_trading.modules.operator_probe import (
+    AccountSnapshotRequest,
     OperatorProbeRequest,
+    build_account_snapshot_request,
     build_operator_order,
+    prepare_account_snapshot_request,
+    publish_account_snapshot_request,
     publish_operator_probe,
+    snapshot_artifact_checksum,
 )
 from live_trading.modules.signal_publisher import SignalPublisher
 from live_trading.modules.signal_schema import SchemaError
@@ -28,6 +34,11 @@ from live_trading.modules.signal_schema import SchemaError
 TRADE_DATE = "2026-08-10"
 STOCK_CODE = "600000.SH"
 STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+SNAPSHOT_TRADE_DATE = date.today().isoformat()
+SNAPSHOT_REQUEST_ID = (
+    "snapshot_%s_0123456789abcdef0123456789abcdef"
+    % SNAPSHOT_TRADE_DATE.replace("-", "")
+)
 
 
 def _config(tmp_path):
@@ -63,6 +74,212 @@ def _main_config(tmp_path):
             "bridge_root": str(bridge_root),
         },
     }
+
+
+def _save_snapshot_request_evidence(
+    recorder, tmp_path, *, trade_date=TRADE_DATE,
+    strategy_id="csi1000_b6m_b2s_postclose_real",
+):
+    request_id = (
+        "snapshot_%s_11111111111111111111111111111111"
+        % trade_date.replace("-", "")
+    )
+    config = _main_config(tmp_path)
+    request = build_account_snapshot_request(
+        config,
+        trade_date=trade_date,
+        collector_execution_profile="CLOSE_AUCTION",
+        requested_for_strategy_id=strategy_id,
+        account_id="8890116049",
+        request_id=request_id,
+        created_at=trade_date + "T08:00:00+08:00",
+    ).to_dict()
+    recorder.record_account_snapshot_request(request, "8890116049")
+    recorder.mark_account_snapshot_request_published(
+        request_id, request["checksum"],
+    )
+    response = {
+        "type": "account_snapshot_response",
+        **{
+            key: request[key] for key in (
+                "schema_version", "request_id", "trade_date",
+                "collector_execution_profile", "collector_bridge_root",
+                "requested_for_strategy_id", "evidence_purpose",
+                "account_type", "account_environment",
+                "account_id_masked", "account_fingerprint",
+            )
+        },
+        "request_checksum": request["checksum"],
+        "status": "COMPLETE",
+        "account": {
+            "request_id": request_id,
+            "account_id_masked": request["account_id_masked"],
+            "account_fingerprint": request["account_fingerprint"],
+            "available_cash": 900000.0,
+            "total_asset": 1000000.0,
+            "market_value": 1000.0,
+            "frozen_cash": 0.0,
+            "ts": trade_date + "T14:55:00+08:00",
+        },
+        "positions": [{
+            "request_id": request_id,
+            "trade_date": trade_date,
+            "stock_code": STOCK_CODE,
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+        "observed_at": trade_date + "T14:55:00+08:00",
+        "error": "",
+    }
+    response["checksum"] = snapshot_artifact_checksum(response)
+    recorder.save_account_snapshot_response(response)
+
+
+def test_snapshot_request_is_durable_non_batch_and_exact_retry(
+    tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot.db"))
+    request = build_account_snapshot_request(
+        config,
+        trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049",
+        request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepared = prepare_account_snapshot_request(
+        request, recorder, "8890116049",
+    )
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "PREPARED"
+    prepared_inbox = (
+        Path(config["live"]["bridge_root"]) / "snapshot_requests" / "inbox"
+    )
+    assert not prepared_inbox.exists()
+    first = publish_account_snapshot_request(
+        request.request_id, config, recorder,
+        Path(config["live"]["bridge_root"]), "8890116049",
+    )
+    second = publish_account_snapshot_request(
+        request.request_id, config, recorder,
+        Path(config["live"]["bridge_root"]), "8890116049",
+    )
+
+    assert first == second
+    assert recorder.get_batch(SNAPSHOT_REQUEST_ID) is None
+    durable = recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)
+    assert durable["status"] == "REQUESTED"
+    assert durable["collector_execution_profile"] == \
+        "AFTER_HOURS_FIXED_PRICE"
+    assert "8890116049" not in first.read_text(encoding="utf-8")
+    assert first.read_text(encoding="utf-8") == json.dumps(
+        prepared, ensure_ascii=True, sort_keys=True, separators=(",", ":"),
+    ) + "\n"
+    state = Path(config["live"]["bridge_root"]) / "state"
+    if state.exists():
+        assert not list(state.glob("*LIVE_OK*"))
+
+
+def test_snapshot_publish_repairs_missing_done_from_same_prepared_bytes(
+    tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-repair.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    path = publish_account_snapshot_request(
+        SNAPSHOT_REQUEST_ID, config, recorder,
+        Path(config["live"]["bridge_root"]), "8890116049",
+    )
+    done = path.with_suffix(".done")
+    done.unlink()
+
+    assert publish_account_snapshot_request(
+        SNAPSHOT_REQUEST_ID, config, recorder,
+        Path(config["live"]["bridge_root"]), "8890116049",
+    ) == path
+    assert done.is_file()
+
+
+def test_snapshot_publish_rejects_tampered_prepared_row_and_wrong_profile(
+    tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-tamper.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    with pytest.raises(SchemaError, match="profile"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, _main_config(tmp_path), recorder,
+            Path(_main_config(tmp_path)["live"]["bridge_root"]),
+            "8890116049",
+        )
+    with recorder._conn() as conn:
+        conn.execute(
+            "UPDATE account_snapshot_requests SET request_json='{}' "
+            "WHERE request_id=?", (SNAPSHOT_REQUEST_ID,),
+        )
+    with pytest.raises(SchemaError, match="request_id|corrupt"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, config, recorder,
+            Path(config["live"]["bridge_root"]), "8890116049",
+        )
+
+
+def test_snapshot_request_rejects_profile_strategy_and_account_mismatch(
+    tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    common = dict(
+        config=config,
+        trade_date=SNAPSHOT_TRADE_DATE,
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049",
+        request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    with pytest.raises(SchemaError, match="collector profile"):
+        build_account_snapshot_request(
+            collector_execution_profile="CLOSE_AUCTION", **common,
+        )
+    with pytest.raises(SchemaError, match="strategy"):
+        build_account_snapshot_request(
+            collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+            **{**common, "requested_for_strategy_id": "wrong"},
+        )
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "different")
+    with pytest.raises(SchemaError, match="account"):
+        build_account_snapshot_request(
+            collector_execution_profile="AFTER_HOURS_FIXED_PRICE", **common,
+        )
+
+
+def test_snapshot_artifact_checksum_is_canonical_by_key_order():
+    first = {"type": "x", "nested": {"b": 2, "a": 1}, "items": [2, 1]}
+    second = {"items": [2, 1], "nested": {"a": 1, "b": 2}, "type": "x"}
+
+    assert snapshot_artifact_checksum(first) == snapshot_artifact_checksum(second)
 
 
 def _request(**changes):
@@ -150,10 +367,12 @@ def _remove_probe_inbox_pair(tmp_path, batch_id):
     (inbox / f"signal_{batch_id}.done").unlink()
 
 
-def _record_real_snapshot_batch(recorder, batch_id, trade_date):
+def _record_real_snapshot_batch(
+    recorder, batch_id, trade_date, strategy_id=STRATEGY_ID,
+):
     recorder.record_publish_plan(BatchHeader(
         batch_id=batch_id,
-        strategy_id="operator-probe-snapshot-test",
+        strategy_id=strategy_id,
         trade_date=trade_date,
         signal_date=trade_date,
         account_id="8890116049",
@@ -168,11 +387,14 @@ def _record_real_snapshot_batch(recorder, batch_id, trade_date):
 
 def _save_snapshot(recorder, *, trade_date=TRADE_DATE, shares=100,
                    can_use_volume=100, stock_code=STOCK_CODE,
-                   batch_sequence=0, with_account=True):
+                   batch_sequence=0, with_account=True,
+                   strategy_id=STRATEGY_ID):
     batch_id = (
         f"{trade_date.replace('-', '')}_{batch_sequence:03d}_snapshot"
     )
-    _record_real_snapshot_batch(recorder, batch_id, trade_date)
+    _record_real_snapshot_batch(
+        recorder, batch_id, trade_date, strategy_id=strategy_id,
+    )
     recorder.save_broker_snapshot(
         batch_id,
         {"account_id": "8890116049"} if with_account else None,
@@ -450,9 +672,12 @@ def test_probe_requires_hyphenated_iso_trade_date(recorder, tmp_path):
         )
 
 
-def test_operator_tool_accepts_main_close_auction_config(recorder, tmp_path):
+def test_operator_tool_accepts_main_close_auction_config(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
     recorder.upsert_position(STOCK_CODE, 100, 10.0)
-    _save_snapshot(recorder)
+    _save_snapshot_request_evidence(recorder, tmp_path)
     request = _request(config_id="csi1000_b6m_b2s_postclose_real")
 
     order = build_operator_order(request, _main_config(tmp_path), recorder, TRADE_DATE)
@@ -460,11 +685,83 @@ def test_operator_tool_accepts_main_close_auction_config(recorder, tmp_path):
     assert order.price_type == "CLOSE_AUCTION_LIMIT"
 
 
+def test_probe_collector_snapshot_can_authorize_main_shared_account_preflight(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    cross_id = "snapshot_20260810_abcdefabcdefabcdefabcdefabcdefab"
+    observation = build_account_snapshot_request(
+        _config(tmp_path),
+        trade_date=TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id="csi1000_b6m_b2s_postclose_real",
+        account_id="8890116049",
+        request_id=cross_id,
+        created_at="2026-08-10T08:00:00+08:00",
+    ).to_dict()
+    recorder.record_account_snapshot_request(observation, "8890116049")
+    recorder.mark_account_snapshot_request_published(
+        cross_id, observation["checksum"],
+    )
+    response = {
+        "type": "account_snapshot_response",
+        **{
+            key: observation[key] for key in (
+                "schema_version", "request_id", "trade_date",
+                "collector_execution_profile", "collector_bridge_root",
+                "requested_for_strategy_id", "evidence_purpose",
+                "account_type", "account_environment",
+                "account_id_masked", "account_fingerprint",
+            )
+        },
+        "request_checksum": observation["checksum"],
+        "status": "COMPLETE",
+        "account": {
+            "request_id": cross_id,
+            "account_id_masked": observation["account_id_masked"],
+            "account_fingerprint": observation["account_fingerprint"],
+            "available_cash": 900000.0,
+            "total_asset": 1000000.0,
+            "market_value": 1000.0,
+            "frozen_cash": 0.0,
+            "ts": "2026-08-10T14:55:00+08:00",
+        },
+        "positions": [{
+            "request_id": cross_id,
+            "trade_date": TRADE_DATE,
+            "stock_code": STOCK_CODE,
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+        "observed_at": "2026-08-10T14:55:00+08:00",
+        "error": "",
+    }
+    response["checksum"] = snapshot_artifact_checksum(response)
+    recorder.save_account_snapshot_response(response)
+    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+    request = _request(config_id="csi1000_b6m_b2s_postclose_real")
+
+    order = build_operator_order(
+        request, _main_config(tmp_path), recorder, TRADE_DATE,
+    )
+
+    assert order.side == "SELL"
+    assert recorder.get_batch(cross_id) is None
+    with pytest.raises(SchemaError, match="another strategy"):
+        recorder.get_broker_position_details(
+            TRADE_DATE,
+            require_lifecycle_evidence=True,
+            evidence_strategy_id=STRATEGY_ID,
+        )
+
+
 def _prepare_main_sell_publish(recorder, tmp_path, monkeypatch):
     monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
     monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
     recorder.upsert_position(STOCK_CODE, 100, 10.0)
-    _save_snapshot(recorder)
+    _save_snapshot_request_evidence(recorder, tmp_path)
     config = _main_config(tmp_path)
     request = _request(
         config_id="csi1000_b6m_b2s_postclose_real",

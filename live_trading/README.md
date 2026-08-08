@@ -177,8 +177,39 @@ batch 或 QMT artifact 都拒绝 seq900 发布或 DB-only recovery；即使 exac
 存在，只要 marker 已存在也会停止接管。不得删除旧证据来强行通过，应先查明并验收。
 
 首先确保账本和同一交易日的可信券商账户快照都显示 `$STOCK_CODE` 可用至少 100 股。
-若当日 snapshot 缺失，必须停止并等待受控 snapshot-only 前置入口，不能复用旧快照或
-伪造 account JSONL。
+若当日 snapshot 缺失，使用下面独立的 snapshot-only 观察入口；不能复用旧快照或伪造
+account JSONL。观察请求不是 LIVE batch，不创建/读取授权 marker，也没有下单路径。
+
+```bash
+# 先只读预览；collector 选择实际正在运行的 QMT 实例，for-config 记录证据用途。
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/request_account_snapshot.py \
+  --collector-config csi1000_b6m_b2s_postclose_real \
+  --for-config csi1000_b6m_b2s_postclose_real \
+  --trade-date "$TRADE_DATE"
+
+# prepare 只把 exact canonical bytes 写入 SQLite；记下输出的 request_id 后停止复核。
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/request_account_snapshot.py \
+  --collector-config csi1000_b6m_b2s_postclose_real \
+  --for-config csi1000_b6m_b2s_postclose_real \
+  --trade-date "$TRADE_DATE" --prepare
+
+REQUEST_ID=snapshot_YYYYMMDD_32位小写十六进制ID
+
+# 只按 durable request_id 暴露已复核的原字节；该确认变量不是交易授权。
+SNAPSHOT_OBSERVATION_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/request_account_snapshot.py \
+  --collector-config csi1000_b6m_b2s_postclose_real \
+  --publish-request-id "$REQUEST_ID"
+
+bash live_trading/run_import_cron.sh csi1000_b6m_b2s_postclose_real
+```
+
+QMT 的 `SNAPSHOT_REQUEST_RECEIVED`、`SNAPSHOT_REQUEST_TERMINAL` 和 Mac 状态
+`IMPORTED_COMPLETE` 必须匹配 request ID、当日日期、profile、root 和脱敏账号。
+`DIAGNOSTIC_POSITIONS_ONLY` 只能排障，不能通过 SELL preflight。导入后再次确认两个
+marker 仍不存在并停止；批次发布和 marker 创建属于后续独立停点。
 
 ```bash
 # 只读预览；stdout 应为一笔 100 股 CLOSE_AUCTION_LIMIT SELL

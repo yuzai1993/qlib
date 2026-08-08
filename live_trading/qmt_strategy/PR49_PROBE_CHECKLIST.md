@@ -101,9 +101,43 @@ find /Volumes/qmt_bridge/state /Volumes/qmt_bridge/pr49_probe/state \
 bash live_trading/run_probe_import.sh
 ```
 
-若输出或预览提示当天 broker snapshot 缺失，立即停止。当前版本还没有获准的
-snapshot-only 导出命令；必须等待该受控入口补齐后再继续。不得复用旧日快照，也不得
-手工制作 account JSONL 来绕过门禁。
+若输出或预览提示当天 broker snapshot 缺失，立即停止，并选择当前实际运行的一个 QMT
+实例作为 collector。下面示例由 probe 实例采集、证据归属于 probe preflight；也可把
+collector 改为 main 配置，但 profile/root 会随 collector 一起绑定，不能跨 root 搬文件：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/request_account_snapshot.py \
+  --collector-config csi1000_pr49_one_lot_probe \
+  --for-config csi1000_pr49_one_lot_probe \
+  --trade-date "$TRADE_DATE"
+
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/request_account_snapshot.py \
+  --collector-config csi1000_pr49_one_lot_probe \
+  --for-config csi1000_pr49_one_lot_probe \
+  --trade-date "$TRADE_DATE" --prepare
+
+# 从 prepare 输出逐字复核并复制 request_id；publish 不再接受业务字段重建。
+REQUEST_ID=snapshot_YYYYMMDD_32位小写十六进制ID
+SNAPSHOT_OBSERVATION_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/request_account_snapshot.py \
+  --collector-config csi1000_pr49_one_lot_probe \
+  --publish-request-id "$REQUEST_ID"
+
+bash live_trading/run_probe_import.sh
+```
+
+Windows 持久日志必须按顺序出现 `SNAPSHOT_REQUEST_RECEIVED` 和
+`SNAPSHOT_REQUEST_TERMINAL`，且没有 `PASSORDER_ATTEMPT`；Mac durable request 必须成为
+`IMPORTED_COMPLETE`。`DIAGNOSTIC_POSITIONS_ONLY`、ERROR、identity/profile/root/checksum
+mismatch 都不能授权 BUY/SELL。此请求不会创建或依赖任何 marker。导入后再次执行上面的
+marker `find`，仍应无输出，然后停在 operator batch 发布之前重新复核。不得复用旧日
+快照，也不得手工制作 account JSONL。
+
+当天启动 QMT 后先确认 `SNAPSHOT_TIMER_REGISTERED` 的 `first_wakeup` 为 09:35:00 且
+`registered=true`；不得等到 15:04:55 的交易 timer 才发观察请求。若只读 timer 缺失或
+processor lock 残留，停止，不得为赶上 15:05 绕过 snapshot preflight。
 
 ## 2. 第一天：BUY 100 股
 

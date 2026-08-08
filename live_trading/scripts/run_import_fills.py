@@ -48,6 +48,9 @@ def main():
     snapshots = importer.import_broker_snapshots()
     print(f"imported {snapshots} broker account snapshots")
 
+    observations = importer.import_account_snapshot_responses()
+    print(f"imported {observations} snapshot-only observations")
+
     for batch in recorder.list_batches(limit=5, strategy_id=strategy_id):
         r = importer.reconcile(batch["batch_id"])
         flag = "OK " if r["missing"] == 0 else "WARN"

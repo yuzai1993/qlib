@@ -113,7 +113,11 @@ intent 内容与对应批次后，才允许人工隔离该 intent；不得把它
 
 ## 3. 定时与状态机
 
-策略在 `init` 中绑定账户回调并注册 `ContextInfo.schedule_run`，从 14:56:55 起每 3 秒唤醒。旧 QMT 没有新版接口时退回 `run_time`。
+策略在 `init` 中绑定账户回调并注册两个 `ContextInfo.schedule_run`：独立的只读
+`qlib_snapshot_observer` 从 09:35:00 起每 3 秒只扫描 snapshot request；原交易 timer
+仍从 14:56:55（probe 为 15:04:55）起每 3 秒推进订单状态机。snapshot callback 不调用
+订单 `_advance`；若 snapshot processor lock 正被另一 worker 持有，交易 timer 也失败关闭，
+不会继续 claim/order/passorder。旧 QMT 没有新版接口时两个 timer 都退回 `run_time`。
 
 执行顺序：
 
@@ -183,8 +187,25 @@ DB-only recovery 和 visible inbox 接管全部失败关闭，禁止通过删除
 主策略 SELL 的 preview→人工发布→导入→postmarket→`PAUSED` 命令见上级
 [实盘 README](../README.md)。prType=49 BUY→下一交易日 SELL 的逐项门禁见
 [PR49_PROBE_CHECKLIST.md](PR49_PROBE_CHECKLIST.md)。两条流程都要求发布前存在同交易日、
-与真实账户可靠绑定的 broker snapshot；若 snapshot-only 受控入口尚未提供，必须停止，
-禁止手工编辑 account JSONL。
+与真实账户可靠绑定的 broker snapshot。受控入口是
+`live_trading/scripts/request_account_snapshot.py`：它只在所选实例的
+`snapshot_requests/inbox` 写独立 request/done；QMT 原子认领到 `processing`，只调用
+`get_trade_detail_data(..., "ACCOUNT"/"POSITION")`，把带 checksum 的 response/done 写到
+`responses` 后归档 request。该路径不解析 signal、不读取 `LIVE_OK`/`PR49_LIVE_OK`，也不
+调用 `passorder`。
+
+Mac CLI 先用 `--prepare` 把 canonical request/checksum 持久化为 `PREPARED`，但不写 SMB；
+人工逐字段复核 exact bytes 后，只能用 `--publish-request-id` 引用该 durable 行。publish
+不接受日期、用途或账号等业务字段重建，复核 profile/root/account/当天日期后原字节暴露，
+状态变为 `REQUESTED`。崩溃重试仍引用同一 request ID，不生成替代请求。
+
+两个实例可任选一个作为 collector，但 request 中的 profile、canonical Windows root、
+requested-for strategy、REAL account fingerprint 和 purpose 必须逐项匹配，不能把 main
+root 的请求放入 probe root 或反向复用。QMT 重启会恢复
+`snapshot_requests/processing`；相同 terminal request 只记录 replay，改变任何字段或
+checksum 都保留证据并失败关闭。`COMPLETE` 必须包含匹配 ACCOUNT；positions-only 只写
+`DIAGNOSTIC_POSITIONS_ONLY`，Mac 导入后不可用于发布门禁。观察完成后必须再次停止，确认
+没有授权 marker，再进入 operator batch 发布和用户确认流程。
 
 ## 7. 恢复与排障
 

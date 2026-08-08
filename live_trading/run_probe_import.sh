@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Import the isolated prType=49 outbound into the shared main-account ledger.
+# Import isolated fills, batch snapshots, and snapshot-only observations into
+# the shared ledger. This wrapper never creates a batch or authorization marker.
 
 set -euo pipefail
 

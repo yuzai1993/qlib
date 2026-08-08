@@ -10,6 +10,8 @@ import importlib.util
 import json
 import os
 import sys
+import ast
+import threading
 from pathlib import Path
 
 import pytest
@@ -22,6 +24,7 @@ from live_trading.modules.signal_schema import compute_checksum
 
 BRIDGE_PATH = REPO_ROOT / "live_trading" / "qmt_strategy" / "qmt_signal_bridge.py"
 BATCH_ID = "20260714_csi300_topk10_001"
+SNAPSHOT_REQUEST_ID = "snapshot_20260808_0123456789abcdef0123456789abcdef"
 
 
 @pytest.fixture
@@ -65,6 +68,388 @@ def _profile_roots(tmp_path, profile):
     return probe_root, main_root
 
 
+def _snapshot_request(bridge, **changes):
+    payload = {
+        "type": "account_snapshot_request",
+        "schema_version": "1.0",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "trade_date": bridge._today(),
+        "collector_execution_profile": bridge.EXECUTION_PROFILE,
+        "collector_bridge_root": bridge.BRIDGE_ROOT,
+        "requested_for_strategy_id": "csi1000_b6m_b2s_postclose_real",
+        "evidence_purpose": "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT",
+        "account_type": "STOCK",
+        "account_environment": "REAL",
+        "account_id_masked": bridge._mask_account(bridge.ACCOUNT_ID),
+        "account_fingerprint": bridge._snapshot_account_fingerprint(
+            bridge.ACCOUNT_ID, "STOCK", "REAL",
+        ),
+        "created_at": "2026-08-08T08:00:00+08:00",
+    }
+    payload.update(changes)
+    payload["checksum"] = bridge._snapshot_artifact_checksum(payload)
+    return payload
+
+
+def _write_snapshot_request(bridge, payload):
+    inbox = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "inbox"
+    request_id = payload["request_id"]
+    (inbox / f"request_{request_id}.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (inbox / f"request_{request_id}.done").write_text(
+        payload["checksum"] + "\n", encoding="utf-8",
+    )
+
+
+def _enable_snapshot_observation(bridge, monkeypatch):
+    bridge.ACCOUNT_ID = "8890116049"
+    bridge.ACCOUNT_TYPE = "STOCK"
+    bridge.ACCOUNT_ENVIRONMENT = "REAL"
+    bridge.ALLOW_REAL_MONEY = True
+    account = type("Account", (), {
+        "m_dAvailable": 900000.0,
+        "m_dBalance": 1000000.0,
+        "m_dInstrumentValue": 100000.0,
+        "m_dFrozenCash": 0.0,
+    })()
+    position = type("Position", (), {
+        "m_nVolume": 100,
+        "m_nCanUseVolume": 100,
+        "m_nFrozenVolume": 0,
+        "m_strInstrumentID": "600000",
+        "m_strExchangeID": "SH",
+        "m_dOpenPrice": 10.0,
+        "m_dMarketValue": 1000.0,
+    })()
+
+    def query(account_id, account_type, detail_type):
+        assert account_id == "8890116049"
+        assert account_type == "STOCK"
+        return [account] if detail_type == "ACCOUNT" else [position]
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", query, raising=False)
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("snapshot request reached passorder"),
+        raising=False,
+    )
+
+
+def test_snapshot_request_queries_account_without_marker_or_passorder(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+
+    bridge._process_snapshot_requests()
+
+    response_path = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    response = json.loads(response_path.read_text(encoding="utf-8"))
+    assert response["status"] == "COMPLETE"
+    assert response["request_checksum"] == payload["checksum"]
+    assert response["positions"][0]["stock_code"] == "600000.SH"
+    assert not list((Path(bridge.BRIDGE_ROOT) / "state").glob("*LIVE_OK*"))
+    assert not list((Path(bridge.BRIDGE_ROOT) / "outbound").iterdir())
+
+
+def test_snapshot_request_static_call_graph_cannot_reach_order_or_marker_paths(
+    bridge,
+):
+    tree = ast.parse(BRIDGE_PATH.read_text(encoding="utf-8"))
+    functions = {
+        node.name: node for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+    }
+    graph = {}
+    for name, node in functions.items():
+        graph[name] = {
+            call.func.id for call in ast.walk(node)
+            if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+        }
+    reachable = set()
+    pending = ["_process_snapshot_requests"]
+    while pending:
+        name = pending.pop()
+        if name in reachable:
+            continue
+        reachable.add(name)
+        pending.extend(graph.get(name, set()) - reachable)
+
+    assert not reachable.intersection({
+        "passorder", "_submit", "_process_batch", "_claim_new_batch",
+        "_live_ok", "_other_profile_authorized", "_authorization_path",
+        "_other_authorization_path",
+    })
+
+
+def test_real_timer_entry_returns_before_order_claim_after_snapshot(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("snapshot timer wakeup reached order claim"),
+    )
+    monkeypatch.setattr(
+        bridge, "_process_batch",
+        lambda *args: pytest.fail("snapshot timer wakeup reached order process"),
+    )
+
+    bridge._advance(object())
+
+    response = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.done"
+    )
+    assert response.is_file()
+
+
+def test_real_timer_entry_blocks_orders_while_snapshot_processor_lock_exists(
+    bridge, monkeypatch,
+):
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    lock = Path(bridge._snapshot_processor_lock_path())
+    lock.write_text("other snapshot worker", encoding="utf-8")
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("snapshot lock failure reached order claim"),
+    )
+    monkeypatch.setattr(
+        bridge, "_process_batch",
+        lambda *args: pytest.fail("snapshot lock failure reached order process"),
+    )
+
+    bridge._advance(object())
+
+    assert lock.is_file()
+
+
+def test_snapshot_request_two_processors_query_broker_once(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    original_query = bridge.get_trade_detail_data
+    counts = []
+    count_lock = threading.Lock()
+
+    def counted_query(*args):
+        with count_lock:
+            counts.append(args[-1])
+        return original_query(*args)
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", counted_query)
+    start = threading.Barrier(2)
+    errors = []
+
+    def run():
+        try:
+            start.wait(timeout=5)
+            bridge._process_snapshot_requests()
+        except Exception as exc:
+            errors.append(exc)
+
+    threads = [threading.Thread(target=run) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+
+    assert not errors
+    assert counts.count("ACCOUNT") == 1
+    assert counts.count("POSITION") == 1
+
+
+def test_snapshot_request_logs_redact_full_account_and_fingerprint(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+
+    bridge._process_snapshot_requests()
+
+    log_root = Path(bridge.BRIDGE_ROOT) / "logs"
+    logs = "\n".join(
+        path.read_text(encoding="utf-8") for path in log_root.iterdir()
+    )
+    assert bridge.ACCOUNT_ID not in logs
+    assert payload["account_fingerprint"] not in logs
+    assert bridge._mask_account(bridge.ACCOUNT_ID) in logs
+
+
+def test_snapshot_request_restart_exact_replay_is_noop(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    bridge._process_snapshot_requests()
+    response_path = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    original = response_path.read_bytes()
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    inbox = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "inbox"
+    for suffix in ("json", "done"):
+        source = archive / f"request_{SNAPSHOT_REQUEST_ID}.{suffix}"
+        (inbox / source.name).write_bytes(source.read_bytes())
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("exact terminal replay queried broker again"),
+    )
+    bridge._process_snapshot_requests()
+
+    assert response_path.read_bytes() == original
+    assert not list(inbox.iterdir())
+
+
+def test_snapshot_request_changed_during_broker_query_fails_before_response(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    processing_json = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "processing" /
+        f"request_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    original_query = bridge.get_trade_detail_data
+
+    def mutate_then_query(*args):
+        if processing_json.exists():
+            processing_json.write_text("{}\n", encoding="utf-8")
+        return original_query(*args)
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", mutate_then_query)
+
+    bridge._process_snapshot_requests()
+
+    responses = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    assert not list(responses.iterdir())
+    assert processing_json.exists()
+
+
+def test_snapshot_response_restart_repairs_exact_json_without_done(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    response = bridge._snapshot_query_response(payload)
+    response_dir = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    json_path = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.json"
+    done_path = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.done"
+    json_path.write_text(
+        json.dumps(response, ensure_ascii=True, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    assert bridge._persist_snapshot_response(response) is True
+    assert done_path.read_text(encoding="utf-8").strip() == response["checksum"]
+
+
+def test_snapshot_request_restart_repairs_partial_response_without_requery(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    original_persist = bridge._persist_snapshot_response
+    response_dir = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+
+    def crash_after_json(response):
+        path = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.json"
+        path.write_text(
+            json.dumps(response, ensure_ascii=True, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        raise RuntimeError("simulated crash before response done")
+
+    monkeypatch.setattr(bridge, "_persist_snapshot_response", crash_after_json)
+    bridge._process_snapshot_requests()
+    monkeypatch.setattr(bridge, "_persist_snapshot_response", original_persist)
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("restart re-queried broker after response JSON"),
+    )
+
+    bridge._process_snapshot_requests()
+
+    assert (
+        response_dir / f"response_{SNAPSHOT_REQUEST_ID}.done"
+    ).is_file()
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    assert (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").is_file()
+
+
+@pytest.mark.parametrize("split_archive", [False, True])
+def test_snapshot_request_restart_archives_after_terminal_response(
+    bridge, monkeypatch, split_archive,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    original_archive = bridge._archive_snapshot_request
+
+    def crash_archive(json_path, done_path):
+        if split_archive:
+            target = (
+                Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive" /
+                Path(json_path).name
+            )
+            os.replace(json_path, target)
+        raise RuntimeError("simulated crash before request archive completed")
+
+    monkeypatch.setattr(bridge, "_archive_snapshot_request", crash_archive)
+    bridge._process_snapshot_requests()
+    monkeypatch.setattr(bridge, "_archive_snapshot_request", original_archive)
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("terminal restart re-queried broker"),
+    )
+
+    bridge._process_snapshot_requests()
+
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    assert (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").is_file()
+    assert (archive / f"request_{SNAPSHOT_REQUEST_ID}.done").is_file()
+    processing = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "processing"
+    assert not list(processing.iterdir())
+
+
+@pytest.mark.parametrize("field,value", [
+    ("account_fingerprint", "sha256:" + "0" * 64),
+    ("collector_execution_profile", "AFTER_HOURS_FIXED_PRICE"),
+    ("collector_bridge_root", "/wrong/root"),
+])
+def test_snapshot_request_identity_mismatch_fails_closed(
+    bridge, monkeypatch, field, value,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge, **{field: value})
+    _write_snapshot_request(bridge, payload)
+
+    bridge._process_snapshot_requests()
+
+    responses = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    assert not list(responses.iterdir())
+    processing = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "processing"
+    assert len(list(processing.iterdir())) == 2
+
+
 def test_qmt_cash_reservation_fees_match_live_config(bridge):
     config_path = (
         REPO_ROOT / "live_trading" / "configs" /
@@ -106,7 +491,8 @@ def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
         main_root / "state" / "LIVE_OK_2026-08-08"
     )
     assert bridge.g.trading_enabled is True
-    assert context.calls[0][1].endswith("145655")
+    postclose = next(call for call in context.calls if call[4] == "qlib_postclose_poll")
+    assert postclose[1].endswith("145655")
 
 
 def test_after_hours_profile_activates_isolated_pr49_contract(bridge, tmp_path):
@@ -140,7 +526,8 @@ def test_after_hours_profile_activates_isolated_pr49_contract(bridge, tmp_path):
         probe_root / "state" / "PR49_LIVE_OK_2026-08-08"
     )
     assert bridge.g.trading_enabled is True
-    assert context.calls[0][1].endswith("150455")
+    postclose = next(call for call in context.calls if call[4] == "qlib_postclose_poll")
+    assert postclose[1].endswith("150455")
 
 
 def test_invalid_execution_profile_disables_runtime_with_structured_error(
@@ -253,13 +640,37 @@ def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
 
     bridge.init(Context())
 
-    assert len(calls) == 1
-    callback, first_at, repeats, interval, name = calls[0]
+    assert len(calls) == 2
+    callback, first_at, repeats, interval, name = next(
+        call for call in calls if call[4] == "qlib_postclose_poll"
+    )
     assert callback is bridge.timer_callback
     assert first_at.endswith("145655")
     assert repeats == -1
     assert interval.total_seconds() == bridge.POLL_SECONDS
     assert name == "qlib_postclose_poll"
+    observer = next(
+        call for call in calls if call[4] == "qlib_snapshot_observer"
+    )
+    assert observer[0] is bridge.snapshot_timer_callback
+    assert observer[1].endswith("093500")
+
+
+def test_snapshot_observer_timer_never_calls_order_advance(bridge, monkeypatch):
+    observed = []
+    bridge.g.loaded = True
+    bridge.g.trading_enabled = True
+    monkeypatch.setattr(
+        bridge, "_process_snapshot_requests", lambda: observed.append(True),
+    )
+    monkeypatch.setattr(
+        bridge, "_advance",
+        lambda context: pytest.fail("snapshot timer called order advance"),
+    )
+
+    bridge.snapshot_timer_callback(object())
+
+    assert observed == [True]
 
 
 def test_timer_registration_is_safe_when_qmt_invokes_overdue_timer_immediately(

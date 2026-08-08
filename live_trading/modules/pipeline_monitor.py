@@ -282,16 +282,19 @@ def check_probe_execution(
         )
 
     side = _probe_side(probe_orders)
-    successful_qty = sum(
-        int(fill.get("filled_qty") or 0)
-        for fill in probe_fills
+    traded_fills = [
+        fill for fill in probe_fills
         if fill.get("batch_id") == batch_id
         and fill.get("mode") == "LIVE"
         and fill.get("side") == side
         and fill.get("status") in _TRADED_STATUS
+    ]
+    successful_qty = sum(
+        int(fill.get("filled_qty") or 0)
+        for fill in traded_fills
     )
     broker_shares = int(broker_positions.get(stock, 0))
-    if snapshot_matches and successful_qty:
+    if snapshot_matches and traded_fills:
         expected_shares = 100 if side == "BUY" else 0
         if successful_qty != 100 or broker_shares != expected_shares:
             critical(

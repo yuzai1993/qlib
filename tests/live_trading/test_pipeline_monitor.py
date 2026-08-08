@@ -222,6 +222,91 @@ def test_probe_monitor_flags_position_drift_even_when_main_paused(
     assert expected in finding.message
 
 
+def _terminal_probe_case(side, status, filled_qty, broker_shares, state):
+    order = {**PROBE_ORDER, "side": side}
+    lifecycle = {
+        "strategy_id": PROBE_STRATEGY_ID,
+        "stock_code": order["stock_code"],
+        "buy_batch_id": (
+            PROBE_BATCH["batch_id"]
+            if side == "BUY" else "20260809_csi1000_pr49_one_lot_probe_001"
+        ),
+        "buy_trade_date": "2026-08-10" if side == "BUY" else "2026-08-09",
+        "sell_batch_id": PROBE_BATCH["batch_id"] if side == "SELL" else None,
+        "sell_trade_date": "2026-08-10" if side == "SELL" else None,
+        "state": state,
+    }
+    fill = {
+        **order,
+        "batch_id": PROBE_BATCH["batch_id"],
+        "status": status,
+        "filled_qty": filled_qty,
+        "mode": "LIVE",
+    }
+    return _probe_findings(
+        probe_orders=[order],
+        probe_fills=[fill],
+        broker_positions={order["stock_code"]: broker_shares},
+        lifecycle=lifecycle,
+    )
+
+
+@pytest.mark.parametrize("side", ["BUY", "SELL"])
+@pytest.mark.parametrize("status", ["FILLED", "PARTIAL"])
+def test_probe_monitor_flags_zero_quantity_traded_terminal_once(side, status):
+    broker_shares = 0 if side == "BUY" else 100
+
+    findings = _terminal_probe_case(
+        side, status, filled_qty=0, broker_shares=broker_shares, state="FAILED",
+    )
+
+    assert _rules(findings) == ["PROBE_POSITION_DRIFT"]
+    finding = findings[0]
+    _assert_complete_probe_evidence(finding)
+    assert "expected=filled_qty=100" in finding.message
+    assert f"observed=filled_qty=0 broker_shares={broker_shares}" \
+        in finding.message
+
+
+@pytest.mark.parametrize(
+    ("side", "broker_shares", "state"),
+    [("BUY", 100, "BUY_FILLED"), ("SELL", 0, "CLOSED")],
+)
+def test_probe_monitor_accepts_normal_one_lot_terminal(
+    side, broker_shares, state,
+):
+    assert _terminal_probe_case(
+        side, "FILLED", filled_qty=100,
+        broker_shares=broker_shares, state=state,
+    ) == []
+
+
+@pytest.mark.parametrize(
+    ("side", "broker_shares"),
+    [("BUY", 40), ("SELL", 60)],
+)
+def test_probe_monitor_flags_nonzero_partial_fill_once(side, broker_shares):
+    findings = _terminal_probe_case(
+        side, "PARTIAL", filled_qty=40,
+        broker_shares=broker_shares, state="FAILED",
+    )
+
+    assert _rules(findings) == ["PROBE_POSITION_DRIFT"]
+    assert "observed=filled_qty=40" in findings[0].message
+
+
+@pytest.mark.parametrize("side", ["BUY", "SELL"])
+def test_probe_monitor_does_not_call_untraded_failure_position_drift(side):
+    broker_shares = 0 if side == "BUY" else 100
+
+    findings = _terminal_probe_case(
+        side, "ERROR", filled_qty=0,
+        broker_shares=broker_shares, state="FAILED",
+    )
+
+    assert findings == []
+
+
 def test_probe_monitor_rejects_lifecycle_bound_to_another_batch():
     state = {
         "strategy_id": PROBE_STRATEGY_ID,

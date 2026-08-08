@@ -462,6 +462,40 @@ def test_run_probe_checks_rejects_unresolved_authorization_intent(tmp_path):
     assert str(intent) in finding.message
 
 
+def test_probe_config_monitor_uses_authoritative_main_strategy_id(
+    tmp_path, monkeypatch,
+):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"))
+    recorder.set_execution_state(
+        "csi1000_b6m_b2s_postclose_real", "ACTIVE", "actual main active",
+        "2026-08-10T15:31:00+08:00",
+    )
+    recorder.set_execution_state(
+        "paused_decoy", "PAUSED", "decoy paused",
+        "2026-08-10T15:31:01+08:00",
+    )
+    captured = {}
+
+    def capture_probe_state(_date, **kwargs):
+        captured["main_execution_state"] = kwargs["main_execution_state"]
+        return []
+
+    monkeypatch.setattr(run_monitor, "check_probe_execution", capture_probe_state)
+    probe_root = tmp_path / "bridge" / "pr49_probe"
+    run_monitor._run_probe_checks(
+        "2026-08-10", recorder,
+        {"live": {
+            "kind": "OPERATOR_PROBE",
+            "bridge_root": str(probe_root),
+            "strategy_id": PROBE_STRATEGY_ID,
+            "main_strategy_id": "paused_decoy",
+            "broker_environment": "REAL",
+        }},
+    )
+
+    assert captured["main_execution_state"] == "ACTIVE"
+
+
 def _set_batch_strategy(recorder, batch_id, strategy_id=CONFIG_ID):
     """Make direct batch fixtures match the durable publish-plan metadata."""
     with recorder._conn() as conn:

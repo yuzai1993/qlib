@@ -32,6 +32,8 @@ from live_trading.modules.live_config import load_live_config
 from live_trading.modules.monitor_store import MonitorStore
 from live_trading.modules.notifier import create_notifier
 from live_trading.modules.operator_probe import (
+    MAIN_STRATEGY_ID,
+    PROBE_STRATEGY_ID,
     SNAPSHOT_ADVANCE_GATE_NAME,
     snapshot_artifact_checksum,
 )
@@ -54,7 +56,6 @@ logger = logging.getLogger("live_trading.monitor")
 CONFIGS_DIR = PROJECT_ROOT / "live_trading" / "configs"
 
 STAGES = ("postmarket", "report", "evening")
-PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
 
 
 def parse_args():
@@ -251,7 +252,7 @@ def _run_probe_checks(date, recorder, config) -> list:
         probe_marker_path=str(probe_marker),
         main_execution_state=recorder.get_execution_state(
             (
-                config["live"].get("main_strategy_id")
+                MAIN_STRATEGY_ID
                 if config["live"].get("kind") == "OPERATOR_PROBE"
                 else config["live"]["strategy_id"]
             ),

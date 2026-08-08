@@ -1381,6 +1381,62 @@ def test_successful_error_persistence_redacts_external_message(
     assert "REDACTED" in combined
 
 
+def test_external_message_redaction_uses_active_batch_account_context(
+    bridge,
+):
+    bridge.ACCOUNT_ID = ""
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8890116049", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    bridge.g.batch = batch
+
+    class Args:
+        userOrderId = order["client_order_id"]
+        orderCode = order["stock_code"]
+        opType = 23
+
+    bridge.orderError_callback(
+        object(), Args(),
+        "Authorization: Bearer fake-token-123; "
+        "session credential fake-session-456; "
+        "session fake-session-789; credential fake-credential-789; "
+        "broker rejected account 8890116049",
+    )
+
+    persisted = "\n".join([
+        json.dumps(_read_events(bridge), sort_keys=True),
+        Path(bridge._fills_path(BATCH_ID)).read_text(),
+        (Path(bridge.BRIDGE_ROOT) / "logs" /
+         ("qmt_bridge_%s.log" % bridge._today())).read_text(),
+        Path(bridge._active_state_path(BATCH_ID)).read_text(),
+    ])
+    assert "fake-token-123" not in persisted
+    assert "fake-session-456" not in persisted
+    assert "fake-session-789" not in persisted
+    assert "fake-credential-789" not in persisted
+    assert "8890116049" not in persisted
+    assert "88******49" in persisted
+    assert "REDACTED" in persisted
+
+
+def test_contextual_redaction_preserves_prices_times_and_order_ids(bridge):
+    bridge.ACCOUNT_ID = ""
+    batch = _live_batch(bridge)
+    bridge.g.batch = batch
+    message = "price 10.50 at 15:05:00 order 20260714001001B"
+
+    bridge._log_event("NUMERIC_EVIDENCE", message=message)
+
+    event = _read_events(bridge)[-1]
+    assert event["message"] == message
+    text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
+                ("qmt_bridge_%s.log" % bridge._today())).read_text()
+    assert message in text_log
+
+
 def test_successful_order_persists_complete_evidence_sequence(
     bridge, monkeypatch,
 ):
@@ -2013,6 +2069,30 @@ def test_poll_status_sums_split_children(bridge, monkeypatch):
     assert fill["qmt_order_id"] == "175,176,177"
 
 
+def test_order_query_preserves_more_than_fifty_candidates(bridge):
+    order = _order(coid="20260714001004B", side="BUY", priority=20)
+    order["quantity"] = 6000
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    batch.execution_live = True
+    batch.submitted[order["client_order_id"]] = True
+    details = [
+        _OrderDetail("qmt-%03d" % index, -1, 0, 0.0)
+        for index in range(60)
+    ]
+
+    bridge._poll_status(batch, {order["client_order_id"]: details})
+
+    query = next(row for row in _read_events(bridge)
+                 if row["event"] == "ORDER_QUERY")
+    assert query["match_count"] == 60
+    assert len(query["candidates"]) == 60
+    assert query["candidates"][-1]["order_id"] == "qmt-059"
+
+
 def test_force_finalize_cancels_all_split_children(bridge, monkeypatch):
     order = _order(coid="20260714001004B", side="BUY", priority=20)
     order["quantity"] = 244500
@@ -2125,6 +2205,31 @@ def test_finalize_writes_broker_account_snapshot(bridge, monkeypatch):
             ("account_%s.done" % BATCH_ID)).exists()
 
 
+def test_account_snapshot_event_preserves_more_than_fifty_positions(
+    bridge, monkeypatch,
+):
+    batch = _live_batch(bridge)
+    positions = [
+        _PositionRow(str(600000 + index), "SH", 100 + index)
+        for index in range(60)
+    ]
+
+    def fake_query(account_id, account_type, kind):
+        return [_AccountRow()] if kind == "ACCOUNT" else positions
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", fake_query, raising=False,
+    )
+
+    bridge._write_account_snapshot(batch)
+
+    event = [row for row in _read_events(bridge)
+             if row["event"] == "ACCOUNT_SNAPSHOT"][-1]
+    assert event["position_count"] == 60
+    assert len(event["positions"]) == 60
+    assert event["positions"][-1]["stock_code"] == "600059.SH"
+
+
 def test_snapshot_failure_does_not_block_finalize(bridge, monkeypatch):
     batch = _live_batch(bridge)
 
@@ -2206,12 +2311,59 @@ def test_post_close_refresh_rewrites_snapshot_with_close_values(
     assert positions and positions[0]["stock_code"] == "688223.SH"
     assert not marker.exists()
 
-    # 标记已消费：再跑不应再查询券商
+    # The consumed marker must not trigger another broker query.
     monkeypatch.setattr(
         bridge, "get_trade_detail_data",
         lambda *a: pytest.fail("consumed marker must not re-query"),
         raising=False)
     bridge._refresh_account_snapshots_after_close()
+
+
+def test_post_close_refresh_recovers_account_from_archived_batch_after_restart(
+    bridge, monkeypatch,
+):
+    bridge.ACCOUNT_ID = ""
+    _write_batch(
+        bridge, bridge._today(), [_order()], mode="LIVE",
+        account_id="8881352838",
+    )
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.execution_live = True
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: [_AccountRow()] if args[2] == "ACCOUNT" else [],
+        raising=False,
+    )
+    bridge._finalize_batch(batch)
+
+    marker = _marker_path(bridge)
+    marker_text = marker.read_text()
+    assert "8881352838" not in marker_text
+    assert list((Path(bridge.BRIDGE_ROOT) / "archive").glob("signal_*.jsonl"))
+
+    bridge.g = bridge.State()
+    bridge.ACCOUNT_ID = ""
+    queried_accounts = []
+
+    def close_query(account_id, account_type, kind):
+        queried_accounts.append(account_id)
+        return [_AccountRow()] if kind == "ACCOUNT" else []
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", close_query, raising=False,
+    )
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:01:30")
+
+    bridge._refresh_account_snapshots_after_close()
+
+    assert queried_accounts == ["8881352838", "8881352838"]
+    assert not marker.exists()
+    snapshot_text = Path(bridge._account_snapshot_path(BATCH_ID)).read_text()
+    assert "8881352838" not in snapshot_text
+
+    bridge._refresh_account_snapshots_after_close()
+    assert queried_accounts == ["8881352838", "8881352838"]
 
 
 def test_stale_snapshot_marker_dropped_without_query(bridge, monkeypatch):

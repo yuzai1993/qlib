@@ -144,8 +144,8 @@ g = State()
 # ======================= small utils =======================
 
 
-def _log(msg):
-    message = _redact_text(msg)
+def _log(msg, account_ids=None):
+    message = _redact_text(msg, account_ids=account_ids)
     print("[qlib_bridge] " + message)
     try:
         _append_log_line(
@@ -168,7 +168,8 @@ def _append_log_line(name, line):
 
 _SECRET_KEY_PATTERN = (
     r"(?:access[_-]?token|refresh[_-]?token|token|password|passwd|secret|"
-    r"sendkey|api[_-]?key|apikey|client[_-]?secret)"
+    r"sendkey|api[_-]?key|apikey|client[_-]?secret|authorization|"
+    r"credential|session[_-]?credential)"
 )
 _ACCOUNT_KEY_PATTERN = r"(?:account[_-]?id|accountid|account)"
 _REDACTED = "***REDACTED***"
@@ -197,11 +198,76 @@ def _redact_keyed_text(text, key_pattern, replacement):
     return bare.sub(replace_bare, quoted.sub(replace_quoted, text))
 
 
-def _redact_text(value, limit=None):
-    text = str(value).replace("\r", " ").replace("\n", " ")
+def _known_account_ids(extra=None):
+    values = []
     configured = str(globals().get("ACCOUNT_ID", "") or "")
     if configured:
-        text = text.replace(configured, _mask_account(configured))
+        values.append(configured)
+    state = globals().get("g")
+    batch = getattr(state, "batch", None)
+    if batch is not None:
+        account_id = str(batch.header.get("account_id", "") or "")
+        if account_id:
+            values.append(account_id)
+    for account_id in getattr(state, "snapshot_accounts", {}).values():
+        account_id = str(account_id or "")
+        if account_id:
+            values.append(account_id)
+    if extra is not None:
+        if isinstance(extra, (list, tuple, set)):
+            supplied = extra
+        else:
+            supplied = (extra,)
+        for account_id in supplied:
+            account_id = str(account_id or "")
+            if account_id:
+                values.append(account_id)
+    return sorted(set(values), key=len, reverse=True)
+
+
+def _redact_text(value, limit=None, account_ids=None):
+    text = str(value).replace("\r", " ").replace("\n", " ")
+    for account_id in _known_account_ids(account_ids):
+        # Short test/config placeholders such as "1" are not broker account
+        # identifiers and would corrupt prices, timestamps, and order ids.
+        if len(account_id) < 5:
+            continue
+        pattern = re.compile(
+            r"(?<![A-Za-z0-9])" + re.escape(account_id)
+            + r"(?![A-Za-z0-9])"
+        )
+        text = pattern.sub(_mask_account(account_id), text)
+    authorization = re.compile(
+        r"(?i)(\bauthorization\s*[:=]\s*)([^,;}\]]+)"
+    )
+
+    def redact_authorization(match):
+        raw = match.group(2).strip()
+        prefix = "Bearer " if raw.lower().startswith("bearer ") else ""
+        return match.group(1) + prefix + _REDACTED
+
+    text = authorization.sub(redact_authorization, text)
+    bearer = re.compile(r"(?i)(\bbearer\s+)([^\s,;}\]]+)")
+    text = bearer.sub(lambda match: match.group(1) + _REDACTED, text)
+    session_credential = re.compile(
+        r"(?i)(\bsession[ _-]+credential\s*(?:[:=]\s*)?)"
+        r"([^\s,;}\]]+)"
+    )
+    text = session_credential.sub(
+        lambda match: match.group(1) + _REDACTED, text,
+    )
+    unkeyed_credential = re.compile(
+        r"(?i)(\bcredential\s+)([^\s,;}\]]+)"
+    )
+    text = unkeyed_credential.sub(
+        lambda match: match.group(1) + _REDACTED, text,
+    )
+    unkeyed_session = re.compile(
+        r"(?i)(\bsession\s+)(?!credential\b)([^\s,;}\]]+)"
+    )
+    text = unkeyed_session.sub(
+        lambda match: match.group(1) + _REDACTED, text,
+    )
     text = _redact_keyed_text(text, _SECRET_KEY_PATTERN, _REDACTED)
     text = _redact_keyed_text(text, _ACCOUNT_KEY_PATTERN, _mask_account)
     if limit is not None:
@@ -209,35 +275,52 @@ def _redact_text(value, limit=None):
     return text
 
 
-def _bounded_text(value, limit=240):
-    return _redact_text(value, limit)
+def _bounded_text(value, limit=240, account_ids=None):
+    return _redact_text(value, limit, account_ids)
 
 
 def _normalized_field_name(name):
     return re.sub(r"[^a-z0-9]", "", str(name).lower())
 
 
-def _sanitize_value(value, field_name=""):
+def _sanitize_value(
+        value, field_name="", account_ids=None, depth=0,
+        preserve_items=False):
     normalized = _normalized_field_name(field_name)
     secret_fragments = (
         "token", "password", "passwd", "secret", "sendkey", "apikey",
     )
-    if any(fragment in normalized for fragment in secret_fragments):
+    if any(fragment in normalized for fragment in secret_fragments) or \
+            normalized in ("authorization", "credential", "sessioncredential"):
         return _REDACTED
     if "accountid" in normalized or normalized == "account":
         return _mask_account(value)
     if value is None or isinstance(value, (bool, int, float)):
         return value
     if isinstance(value, str):
-        return _redact_text(value)
+        return _redact_text(value, 2048, account_ids)
+    if depth >= 6:
+        return "[MAX_DEPTH]"
     if isinstance(value, (list, tuple)):
-        return [_sanitize_value(item) for item in value[:50]]
+        items = value if preserve_items else value[:50]
+        return [
+            _sanitize_value(item, account_ids=account_ids, depth=depth + 1)
+            for item in items
+        ]
     if isinstance(value, dict):
+        items = list(value.items())
+        if depth > 0:
+            items = items[:50]
         return dict(
-            (str(key), _sanitize_value(item, key))
-            for key, item in list(value.items())[:50]
+            (str(key), _sanitize_value(
+                item, key, account_ids, depth + 1,
+                depth == 0 and _normalized_field_name(key) in (
+                    "positions", "candidates",
+                ),
+            ))
+            for key, item in items
         )
-    return _redact_text(repr(value), 512)
+    return _redact_text(repr(value), 512, account_ids)
 
 
 def _remember_log_write_failure(event_type, exc):
@@ -267,13 +350,13 @@ def _append_event_json(event):
     )
 
 
-def _log_event(event_type, **fields):
+def _log_event(event_type, _account_context=None, **fields):
     event = {
         "ts": datetime.datetime.now().isoformat(),
         "event": str(event_type),
     }
     event.update(fields)
-    event = _sanitize_value(event)
+    event = _sanitize_value(event, account_ids=_account_context)
     try:
         _append_event_json(event)
     except Exception as exc:
@@ -635,7 +718,8 @@ def _log_order_finalized(batch, order, fill):
 
 
 def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, message):
-    message = _redact_text(message, 512)
+    account_id = _account_id(batch)
+    message = _redact_text(message, 512, (account_id,))
     mode = batch.header.get("mode", "SIMULATE")
     requested_qty = int(order.get("quantity", 0) or 0)
     if requested_qty <= 0 and order.get("side") == "BUY":
@@ -667,6 +751,7 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
     if previous_status != status:
         _log_event(
             "ORDER_STATUS_CHANGED",
+            _account_context=account_id,
             batch_id=batch.batch_id(),
             client_order_id=order["client_order_id"],
             stock_code=order["stock_code"],
@@ -789,6 +874,7 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
         ]
         _log_event(
             "ACCOUNT_SNAPSHOT",
+            _account_context=account_id,
             batch_id=batch_id,
             trade_date=trade_date,
             label=label,
@@ -802,9 +888,17 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
             position_count=len(position_rows),
             message="broker account snapshot persisted",
         )
-        _log("account snapshot written (%s): %d rows" % (label, len(rows)))
+        _log(
+            "account snapshot written (%s): %d rows" % (label, len(rows)),
+            (account_id,),
+        )
+        return True
     except Exception:
-        _log("account snapshot failed:\n" + traceback.format_exc())
+        _log(
+            "account snapshot failed:\n" + traceback.format_exc(),
+            (account_id,),
+        )
+        return False
 
 
 def _write_account_snapshot(batch):
@@ -836,6 +930,11 @@ def _write_snapshot_marker(batch):
         "batch_id": batch.batch_id(),
         "trade_date": batch.header.get("trade_date", ""),
         "account_id_masked": _mask_account(_account_id(batch)),
+        "account_environment": batch.header.get(
+            "account_environment", ""),
+        "account_type": batch.header.get("account_type", ACCOUNT_TYPE),
+        "schema_version": batch.header.get("schema_version", ""),
+        "signal_checksum": batch.header.get("checksum", ""),
     }
     g.snapshot_accounts[batch.batch_id()] = _account_id(batch)
     try:
@@ -843,6 +942,87 @@ def _write_snapshot_marker(batch):
             f.write(json.dumps(payload, sort_keys=True))
     except Exception:
         _log("snapshot marker write failed:\n" + traceback.format_exc())
+
+
+def _trusted_snapshot_batch_header(info):
+    """Find the validated durable signal header for a refresh marker."""
+    batch_id = info.get("batch_id", "")
+    if not isinstance(batch_id, str) or not batch_id:
+        return None
+    signal_checksum = info.get("signal_checksum", "")
+    if not isinstance(signal_checksum, str) or not signal_checksum:
+        return None
+    exact_name = "signal_" + batch_id + ".jsonl"
+    repeat_prefix = "signal_" + batch_id + ".repeat_"
+    for directory in ("processing", "archive"):
+        root = _path(directory)
+        if not os.path.isdir(root):
+            continue
+        for name in sorted(os.listdir(root)):
+            if name != exact_name and not (
+                    name.startswith(repeat_prefix)
+                    and name.endswith(".jsonl")):
+                continue
+            path = os.path.join(root, name)
+            try:
+                with open(path, "r") as f:
+                    header = json.loads(f.readline().strip())
+            except Exception:
+                continue
+            if not isinstance(header, dict):
+                continue
+            if header.get("batch_id") != batch_id:
+                continue
+            if header.get("trade_date") != info.get("trade_date"):
+                continue
+            if header.get("mode") != "LIVE":
+                continue
+            if header.get("schema_version") != info.get("schema_version"):
+                continue
+            if header.get("schema_version") != SCHEMA_VERSION:
+                continue
+            if header.get("checksum") != signal_checksum:
+                continue
+            if header.get("account_environment") != info.get(
+                    "account_environment"):
+                continue
+            if header.get("account_environment") != ACCOUNT_ENVIRONMENT:
+                continue
+            if header.get("account_type") != info.get("account_type"):
+                continue
+            if header.get("account_type") != ACCOUNT_TYPE:
+                continue
+            account_id = str(header.get("account_id", "") or "")
+            if not account_id:
+                continue
+            if _mask_account(account_id) != info.get("account_id_masked"):
+                continue
+            return header
+    return None
+
+
+def _snapshot_account_binding(info):
+    """Resolve and verify the exact account without storing it in marker."""
+    if info.get("account_environment") != ACCOUNT_ENVIRONMENT:
+        return ""
+    if info.get("account_type") != ACCOUNT_TYPE:
+        return ""
+    batch_id = info.get("batch_id", "")
+    durable_header = _trusted_snapshot_batch_header(info)
+    durable_account = ""
+    if durable_header is not None:
+        durable_account = str(durable_header.get("account_id", "") or "")
+    account_id = str(
+        ACCOUNT_ID or g.snapshot_accounts.get(batch_id, "")
+        or durable_account
+    )
+    if not account_id:
+        return ""
+    if _mask_account(account_id) != info.get("account_id_masked"):
+        return ""
+    if durable_account and durable_account != account_id:
+        return ""
+    return account_id
 
 
 def _refresh_account_snapshots_after_close():
@@ -870,13 +1050,14 @@ def _refresh_account_snapshots_after_close():
             os.remove(path)
             continue
         batch_id = info.get("batch_id", "")
-        account_id = ACCOUNT_ID or g.snapshot_accounts.get(batch_id, "")
+        account_id = _snapshot_account_binding(info)
         if not account_id:
             _log("snapshot refresh account binding unavailable for %s" % batch_id)
             continue
-        _dump_broker_snapshot(
-            batch_id, info["trade_date"], account_id, "post-close",
-        )
+        refreshed = _dump_broker_snapshot(
+            batch_id, info["trade_date"], account_id, "post-close")
+        if not refreshed:
+            continue
         g.snapshot_accounts.pop(batch_id, None)
         os.remove(path)
 
@@ -1742,7 +1923,7 @@ def _submit(
             STRATEGY_NAME, 2, coid, ContextInfo,
         )
         elapsed_ms = max(0.0, (time.time() - api_started) * 1000.0)
-        return_repr = _bounded_text(repr(api_return), 512)
+        return_repr = _bounded_text(repr(api_return), 512, (account_id,))
         return_type = type(api_return).__name__
         evidence["api_returned"] = True
         evidence["api_return"] = {
@@ -1789,7 +1970,7 @@ def _submit(
         evidence["api_returned"] = False
         evidence["api_return"] = {
             "exception_type": type(exc).__name__,
-            "exception_message": _bounded_text(exc),
+            "exception_message": _bounded_text(exc, account_ids=(account_id,)),
             "elapsed_ms": elapsed_ms,
         }
         _save_active_state(batch)
@@ -1802,12 +1983,15 @@ def _submit(
             return_type="",
             elapsed_ms=elapsed_ms,
             exception_type=type(exc).__name__,
-            exception_message=_bounded_text(exc),
-            traceback=_bounded_text(traceback.format_exc(), 512),
+            exception_message=_bounded_text(
+                exc, account_ids=(account_id,)),
+            traceback=_bounded_text(
+                traceback.format_exc(), 512, (account_id,)),
             message="passorder raised an exception",
         )
         _write_fill(batch, order, "ERROR", 0, 0.0, "",
-                    "passorder exception: " + _bounded_text(exc, 200))
+                    "passorder exception: "
+                    + _bounded_text(exc, 200, (account_id,)))
         return False
 
 

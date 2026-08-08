@@ -427,9 +427,17 @@ def publish_operator_probe(
         raise SchemaError(str(exc)) from exc
     # The durable record is the atomic serialization point even when another
     # invocation interleaves after the read-only SMB preflight.
+    probe_transition = {
+        "side": order.side, "stock_code": order.stock_code,
+    } if live.get("kind") == "OPERATOR_PROBE" else None
     recorder.record_publish_plan(
-        header, [order], probe_transition={
-            "side": order.side, "stock_code": order.stock_code,
-        } if live.get("kind") == "OPERATOR_PROBE" else None,
+        header, [order], probe_transition=probe_transition,
     )
+    if probe_transition is not None:
+        return recorder.publish_recorded_operator_probe(
+            header,
+            [order],
+            probe_transition,
+            lambda: publisher.publish(header, [order]),
+        )
     return publisher.publish(header, [order])

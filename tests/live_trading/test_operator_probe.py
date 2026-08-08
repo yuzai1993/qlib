@@ -2,6 +2,7 @@
 
 import dataclasses
 import json
+import threading
 from types import SimpleNamespace
 import sys
 from pathlib import Path
@@ -140,6 +141,12 @@ def _prepare_probe_sell(recorder, tmp_path, monkeypatch):
     )
     buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
     _apply_probe_buy_fill(recorder, buy)
+
+
+def _remove_probe_inbox_pair(tmp_path, batch_id):
+    inbox = tmp_path / "pr49_probe" / "inbox"
+    (inbox / f"signal_{batch_id}.jsonl").unlink()
+    (inbox / f"signal_{batch_id}.done").unlink()
 
 
 def _save_snapshot(recorder, *, trade_date=TRADE_DATE, shares=100,
@@ -338,6 +345,150 @@ def test_durable_buy_retry_still_requires_eligibility_confirmation(
             SignalPublisher(config["live"]["bridge_root"]),
             "8890116049",
         )
+
+
+def test_post_fill_buy_retry_cannot_recreate_inbox_pair(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    _remove_probe_inbox_pair(tmp_path, batch_id)
+    _apply_probe_buy_fill(recorder, request)
+    config = _config(tmp_path)
+
+    with pytest.raises(SchemaError, match="durable probe retry"):
+        publish_operator_probe(
+            request, config, recorder,
+            SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert not list((tmp_path / "pr49_probe" / "inbox").glob(f"*{batch_id}*"))
+
+
+def test_durable_retry_publish_is_serialized_before_terminal_import(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    _remove_probe_inbox_pair(tmp_path, batch_id)
+    config = _config(tmp_path)
+    write_attempted = threading.Event()
+    original_apply_position_delta = LiveRecorder._apply_position_delta
+
+    def observing_apply_position_delta(*args, **kwargs):
+        write_attempted.set()
+        return original_apply_position_delta(*args, **kwargs)
+
+    monkeypatch.setattr(
+        LiveRecorder,
+        "_apply_position_delta",
+        staticmethod(observing_apply_position_delta),
+    )
+
+    class InterleavingPublisher(SignalPublisher):
+        def __init__(self, bridge_root):
+            super().__init__(bridge_root)
+            self.import_finished = threading.Event()
+            self.import_errors = []
+            self.import_thread = None
+
+        def publish(self, header, orders):
+            def import_terminal():
+                try:
+                    _apply_probe_buy_fill(
+                        recorder, request, with_snapshot=False,
+                    )
+                except BaseException as exc:  # surfaced in the test thread
+                    self.import_errors.append(exc)
+                finally:
+                    self.import_finished.set()
+
+            self.import_thread = threading.Thread(target=import_terminal)
+            self.import_thread.start()
+            assert write_attempted.wait(2)
+            assert not self.import_finished.wait(0.2)
+            return super().publish(header, orders)
+
+    publisher = InterleavingPublisher(config["live"]["bridge_root"])
+    path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    publisher.import_thread.join(timeout=5)
+
+    assert not publisher.import_thread.is_alive()
+    assert publisher.import_errors == []
+    assert path.is_file()
+    assert recorder.get_fills(batch_id)[0]["status"] == "FILLED"
+
+
+def test_post_close_sell_retry_cannot_recreate_inbox_pair(
+    recorder, tmp_path, monkeypatch,
+):
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
+    _save_snapshot(recorder, can_use_volume=100)
+    config = _config(tmp_path)
+    request = _request()
+    publisher = SignalPublisher(config["live"]["bridge_root"])
+    publish_operator_probe(request, config, recorder, publisher, "8890116049")
+    batch_id = "20260810_csi1000_pr49_one_lot_probe_900"
+    _remove_probe_inbox_pair(tmp_path, batch_id)
+    recorder.apply_fill(FillEvent.from_dict({
+        "type": "fill_event",
+        "batch_id": batch_id,
+        "client_order_id": "20260810900001S",
+        "mode": "LIVE",
+        "stock_code": STOCK_CODE,
+        "side": "SELL",
+        "status": "FILLED",
+        "requested_qty": 100,
+        "filled_qty": 100,
+        "avg_price": 10.5,
+        "qmt_order_id": "probe-sell-closed",
+        "message": "",
+        "ts": "2026-08-10T15:06:00+08:00",
+    }))
+    recorder.save_broker_snapshot(
+        batch_id, {"account_id": "8890116049"}, [],
+    )
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "CLOSED"
+
+    with pytest.raises(SchemaError, match="durable probe retry"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert not list((tmp_path / "pr49_probe" / "inbox").glob(f"*{batch_id}*"))
+
+
+def test_old_buy_retry_cannot_replace_newer_terminal_lifecycle(
+    recorder, tmp_path, monkeypatch,
+):
+    old = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    old_batch = "20260807_csi1000_pr49_one_lot_probe_900"
+    _remove_probe_inbox_pair(tmp_path, old_batch)
+    _apply_probe_buy_fill(
+        recorder, old, filled_qty=0, status="REJECTED",
+    )
+    newer = _record_probe_buy_plan(
+        recorder, tmp_path, monkeypatch, trade_date="2026-08-10",
+    )
+    _apply_probe_buy_fill(recorder, newer)
+    newer_batch = "20260810_csi1000_pr49_one_lot_probe_900"
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["buy_batch_id"] \
+        == newer_batch
+    config = _config(tmp_path)
+
+    with pytest.raises(SchemaError, match="durable probe retry"):
+        publish_operator_probe(
+            old, config, recorder,
+            SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    lifecycle = recorder.get_operator_probe_lifecycle(STRATEGY_ID)
+    assert lifecycle["buy_batch_id"] == newer_batch
+    assert lifecycle["state"] == "BUY_FILLED"
+    assert not list((tmp_path / "pr49_probe" / "inbox").glob(f"*{old_batch}*"))
 
 
 def test_publish_records_plan_before_exposing_batch(recorder, tmp_path, monkeypatch):
@@ -754,6 +905,44 @@ def test_probe_sell_requires_later_actual_available_same_symbol_buy(
     ):
         with pytest.raises(SchemaError, match=message):
             operator_probe.validate_probe_transition(invalid, recorder)
+
+
+def test_probe_sell_uses_latest_imported_snapshot_not_largest_batch_id(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    _apply_probe_buy_fill(recorder, buy)
+    old_batch = "20260810_zzz_snapshot"
+    recorder.record_batch(old_batch, "2026-08-10", "LIVE", 0)
+    recorder.save_broker_snapshot(
+        old_batch, {"account_id": "8890116049"}, [{
+            "stock_code": STOCK_CODE,
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+    new_batch = "20260810_aaa_snapshot"
+    recorder.record_batch(new_batch, "2026-08-10", "LIVE", 0)
+    recorder.save_broker_snapshot(
+        new_batch, {"account_id": "8890116049"}, [{
+            "stock_code": STOCK_CODE,
+            "shares": 100,
+            "can_use_volume": 0,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+
+    with pytest.raises(SchemaError, match="available"):
+        operator_probe.validate_probe_transition(
+            _request(trade_date="2026-08-10"), recorder,
+        )
 
 
 def test_probe_sell_rejects_plan_only_buy_quantity(

@@ -39,6 +39,17 @@ _POSITION_STATUS = {"FILLED", "PARTIAL"}
 EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW"}
 
 OPERATOR_PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+
+
+def _mask_account_id(account_id: str | None) -> str:
+    value = str(account_id or "")
+    if not value:
+        return ""
+    if len(value) <= 4:
+        return "*" * len(value)
+    return value[:2] + "*" * (len(value) - 4) + value[-2:]
+
+
 class LiveRecorder:
     """实盘账簿 SQLite 存储（batches / fills / positions / cash_flows）。"""
 
@@ -318,6 +329,17 @@ class LiveRecorder:
                     PRIMARY KEY (batch_id, stock_code)
                 );
 
+                CREATE TABLE IF NOT EXISTS broker_snapshot_imports (
+                    batch_id TEXT PRIMARY KEY,
+                    trade_date TEXT NOT NULL,
+                    import_sequence INTEGER NOT NULL UNIQUE,
+                    imported_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_broker_snapshot_import_order
+                    ON broker_snapshot_imports(
+                        trade_date, import_sequence DESC, batch_id DESC
+                    );
+
                 CREATE TABLE IF NOT EXISTS execution_state (
                     strategy_id TEXT PRIMARY KEY,
                     state TEXT NOT NULL,
@@ -388,7 +410,36 @@ class LiveRecorder:
                     "ALTER TABLE signal_orders ADD COLUMN max_quantity "
                     "INTEGER NOT NULL DEFAULT 0"
                 )
+            self._backfill_broker_snapshot_imports(conn)
             self._migrate_composite_keys(conn)
+
+    @staticmethod
+    def _backfill_broker_snapshot_imports(conn) -> None:
+        """Give legacy snapshots a deterministic order before new imports."""
+        sequence = conn.execute(
+            "SELECT COALESCE(MAX(import_sequence), 0) AS value "
+            "FROM broker_snapshot_imports"
+        ).fetchone()["value"]
+        rows = conn.execute(
+            """SELECT batch_id, trade_date FROM (
+                   SELECT batch_id, trade_date FROM broker_account_snapshot
+                   UNION
+                   SELECT batch_id, trade_date FROM broker_position_snapshot
+               ) AS snapshots
+               WHERE NOT EXISTS (
+                   SELECT 1 FROM broker_snapshot_imports imports
+                   WHERE imports.batch_id=snapshots.batch_id
+               )
+               ORDER BY trade_date, batch_id"""
+        ).fetchall()
+        for row in rows:
+            sequence += 1
+            conn.execute(
+                """INSERT INTO broker_snapshot_imports
+                   (batch_id, trade_date, import_sequence, imported_at)
+                   VALUES (?,?,?,datetime('now','localtime'))""",
+                (row["batch_id"], row["trade_date"], sequence),
+            )
 
     @staticmethod
     def _primary_key_columns(conn, table: str) -> list:
@@ -700,15 +751,8 @@ class LiveRecorder:
                 rows,
             )
 
-    def record_publish_plan(
-        self, header, orders: list, probe_transition: dict | None = None,
-    ) -> None:
-        """Atomically persist an immutable plan before exposing it to QMT.
-
-        A retry may reuse the exact same plan (for example after a crash between
-        the database commit and shared-file publication), but it may never
-        replace a plan for an existing batch id.
-        """
+    @staticmethod
+    def _publish_plan_values(header, orders: list) -> tuple[str, list]:
         if header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
             raise SchemaError(
                 "account_environment must be SIMULATION or REAL"
@@ -740,39 +784,63 @@ class LiveRecorder:
                 get("reason"),
             ))
         rows.sort(key=lambda row: row[1])
+        return order_checksum, rows
+
+    @staticmethod
+    def _require_exact_publish_plan_conn(
+        conn, header, order_checksum: str, rows: list,
+    ) -> bool:
+        existing_batch = conn.execute(
+            "SELECT * FROM batches WHERE batch_id=?", (header.batch_id,),
+        ).fetchone()
+        if existing_batch is None:
+            return False
+        batch_matches = (
+            existing_batch["trade_date"] == header.trade_date
+            and existing_batch["mode"] == header.mode
+            and existing_batch["planned_orders"] == len(rows)
+            and existing_batch["strategy_id"] == header.strategy_id
+            and existing_batch["signal_date"] == header.signal_date
+            and existing_batch["account_id"] == header.account_id
+            and existing_batch["account_type"] == header.account_type
+            and existing_batch["account_environment"]
+            == header.account_environment
+            and existing_batch["order_checksum"] == order_checksum
+        )
+        existing_rows = [tuple(row) for row in conn.execute(
+            """SELECT batch_id, client_order_id, stock_code,
+                      instrument_qlib, side, quantity, max_quantity,
+                      target_value, price_type, limit_price, priority, reason
+               FROM signal_orders WHERE batch_id=?
+               ORDER BY client_order_id""",
+            (header.batch_id,),
+        ).fetchall()]
+        if not batch_matches or existing_rows != rows:
+            raise SchemaError(
+                f"batch {header.batch_id!r} conflicts with durable plan"
+            )
+        return True
+
+    def record_publish_plan(
+        self, header, orders: list, probe_transition: dict | None = None,
+    ) -> None:
+        """Atomically persist an immutable plan before exposing it to QMT.
+
+        A retry may reuse the exact same plan (for example after a crash between
+        the database commit and shared-file publication), but it may never
+        replace a plan for an existing batch id.
+        """
+        order_checksum, rows = self._publish_plan_values(header, orders)
+        batch_id = header.batch_id
 
         with self._conn() as conn:
-            existing_batch = conn.execute(
-                "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
-            ).fetchone()
-            if existing_batch is not None:
-                batch_matches = (
-                    existing_batch["trade_date"] == header.trade_date
-                    and existing_batch["mode"] == header.mode
-                    and existing_batch["planned_orders"] == len(rows)
-                    and existing_batch["strategy_id"] == header.strategy_id
-                    and existing_batch["signal_date"] == header.signal_date
-                    and existing_batch["account_id"] == header.account_id
-                    and existing_batch["account_type"] == header.account_type
-                    and existing_batch["account_environment"]
-                    == header.account_environment
-                    and existing_batch["order_checksum"] == order_checksum
-                )
-                existing_rows = [tuple(row) for row in conn.execute(
-                    """SELECT batch_id, client_order_id, stock_code,
-                              instrument_qlib, side, quantity, max_quantity,
-                              target_value, price_type, limit_price, priority, reason
-                       FROM signal_orders WHERE batch_id=?
-                       ORDER BY client_order_id""",
-                    (batch_id,),
-                ).fetchall()]
-                if not batch_matches or existing_rows != rows:
-                    raise SchemaError(
-                        f"batch {batch_id!r} conflicts with durable plan"
-                    )
+            if self._require_exact_publish_plan_conn(
+                conn, header, order_checksum, rows,
+            ):
                 if probe_transition is not None:
                     self._record_operator_probe_plan_conn(
                         conn, header, rows, probe_transition,
+                        durable_retry=True,
                     )
                 return
 
@@ -800,11 +868,32 @@ class LiveRecorder:
             if probe_transition is not None:
                 self._record_operator_probe_plan_conn(
                     conn, header, rows, probe_transition,
+                    durable_retry=False,
                 )
+
+    def publish_recorded_operator_probe(
+        self, header, orders: list, probe_transition: dict, publish_callback,
+    ):
+        """Publish while holding the writer gate shared with probe imports."""
+        order_checksum, rows = self._publish_plan_values(header, orders)
+        with self._conn() as conn:
+            # SQLite's RESERVED writer lock serializes receipt/snapshot commits
+            # with the last lifecycle check and the filesystem publication.
+            conn.execute("BEGIN IMMEDIATE")
+            if not self._require_exact_publish_plan_conn(
+                conn, header, order_checksum, rows,
+            ):
+                raise SchemaError(
+                    f"batch {header.batch_id!r} has no durable publish plan"
+                )
+            self._record_operator_probe_plan_conn(
+                conn, header, rows, probe_transition, durable_retry=True,
+            )
+            return publish_callback()
 
     @staticmethod
     def _record_operator_probe_plan_conn(
-        conn, header, rows: list, transition: dict,
+        conn, header, rows: list, transition: dict, *, durable_retry: bool,
     ) -> None:
         """Persist the probe plan state in the same transaction as its plan."""
         if header.strategy_id != OPERATOR_PROBE_STRATEGY_ID:
@@ -820,9 +909,44 @@ class LiveRecorder:
             (header.strategy_id,),
         ).fetchone()
 
+        if durable_retry:
+            lifecycle_batch_id = None
+            expected_state = None
+            if side == "BUY":
+                lifecycle_batch_id = (
+                    lifecycle["buy_batch_id"] if lifecycle else None
+                )
+                expected_state = "BUY_PLANNED"
+            elif side == "SELL":
+                lifecycle_batch_id = (
+                    lifecycle["sell_batch_id"] if lifecycle else None
+                )
+                expected_state = "SELL_PLANNED"
+            if (
+                lifecycle_batch_id != header.batch_id
+                or lifecycle["state"] != expected_state
+            ):
+                raise SchemaError(
+                    "durable probe retry requires its exact planned lifecycle"
+                )
+            statuses = sorted(TERMINAL_FILL_STATUS)
+            marks = ",".join("?" for _ in statuses)
+            terminal = conn.execute(
+                f"""SELECT 1 FROM fills
+                      WHERE batch_id=? AND status IN ({marks}) LIMIT 1""",
+                (header.batch_id, *statuses),
+            ).fetchone()
+            snapshot = conn.execute(
+                "SELECT 1 FROM broker_snapshot_imports WHERE batch_id=?",
+                (header.batch_id,),
+            ).fetchone()
+            if terminal is not None or snapshot is not None:
+                raise SchemaError(
+                    "durable probe retry rejected after terminal evidence"
+                )
+            return
+
         if side == "BUY":
-            if lifecycle is not None and lifecycle["buy_batch_id"] == header.batch_id:
-                return
             if lifecycle is not None and lifecycle["state"] not in {"CLOSED", "FAILED"}:
                 raise SchemaError(
                     "an operator probe lifecycle is already unresolved"
@@ -849,8 +973,6 @@ class LiveRecorder:
 
         if side != "SELL":
             raise SchemaError(f"invalid probe lifecycle side: {side!r}")
-        if lifecycle is not None and lifecycle["sell_batch_id"] == header.batch_id:
-            return
         if lifecycle is None or lifecycle["state"] != "BUY_FILLED":
             raise SchemaError("SELL requires a BUY_FILLED probe lifecycle")
         if lifecycle["stock_code"] != stock_code:
@@ -1152,13 +1274,34 @@ class LiveRecorder:
                 row is not None
                 and batch["strategy_id"] == OPERATOR_PROBE_STRATEGY_ID
                 and row["status"] in TERMINAL_FILL_STATUS
-                and any(
-                    getattr(fill, field) != row[field]
-                    for field in (
-                        "status", "filled_qty", "avg_price", "qmt_order_id",
-                    )
-                )
             ):
+                receipt_fields = (
+                    "batch_id", "client_order_id", "mode", "stock_code",
+                    "side", "status", "requested_qty", "filled_qty",
+                    "avg_price", "qmt_order_id", "message", "ts",
+                )
+                exact_receipt = all(
+                    getattr(fill, field) == row[field]
+                    for field in receipt_fields
+                )
+                expected_qty = (
+                    int(fill.filled_qty)
+                    if fill.mode == "LIVE" and fill.status in _POSITION_STATUS
+                    else 0
+                )
+                expected_amount = expected_qty * float(fill.avg_price)
+                expected_fee = (
+                    order_total_fee(fill.side, expected_amount, self.fees)
+                    if expected_amount > 0 else 0.0
+                )
+                exact_economics = (
+                    int(row["applied_qty"]) == expected_qty
+                    and abs(float(row["applied_amount"]) - expected_amount)
+                    <= 1e-9
+                    and abs(float(row["applied_fee"]) - expected_fee) <= 1e-9
+                )
+                if exact_receipt and exact_economics:
+                    return
                 raise SchemaError("terminal probe fill is immutable")
             applied_qty = row["applied_qty"] if row else 0
             applied_amount = row["applied_amount"] if row else 0.0
@@ -1258,11 +1401,8 @@ class LiveRecorder:
         if fill is None:
             return
         snapshot = conn.execute(
-            """SELECT 1 FROM broker_account_snapshot WHERE batch_id=?
-               UNION ALL
-               SELECT 1 FROM broker_position_snapshot WHERE batch_id=?
-               LIMIT 1""",
-            (batch_id, batch_id),
+            "SELECT 1 FROM broker_snapshot_imports WHERE batch_id=?",
+            (batch_id,),
         ).fetchone()
         if snapshot is None:
             return
@@ -1638,7 +1778,8 @@ class LiveRecorder:
         with self._conn() as conn:
             rows = conn.execute(
                 """SELECT f.batch_id, f.client_order_id, f.side,
-                          f.applied_amount, f.applied_fee
+                          f.status, f.applied_amount, f.applied_fee,
+                          b.strategy_id
                    FROM fills f JOIN batches b ON f.batch_id = b.batch_id
                    WHERE b.trade_date=? AND f.mode='LIVE'
                          AND f.applied_amount > 0""",
@@ -1646,6 +1787,11 @@ class LiveRecorder:
             ).fetchall()
             total_delta = 0.0
             for row in rows:
+                if (
+                    row["strategy_id"] == OPERATOR_PROBE_STRATEGY_ID
+                    and row["status"] in TERMINAL_FILL_STATUS
+                ):
+                    continue
                 target = order_total_fee(
                     row["side"], row["applied_amount"], self.fees,
                 )
@@ -1943,8 +2089,46 @@ class LiveRecorder:
             if batch is None:
                 raise SchemaError(f"unknown snapshot batch_id: {batch_id!r}")
             trade_date = batch["trade_date"]
+            for row in ([account] if account is not None else []) + list(positions):
+                row_batch_id = row.get("batch_id")
+                if row_batch_id is not None and row_batch_id != batch_id:
+                    raise SchemaError("snapshot batch_id does not match durable batch")
+                row_trade_date = row.get("trade_date")
+                if row_trade_date is not None and row_trade_date != trade_date:
+                    raise SchemaError(
+                        "snapshot trade_date does not match durable batch"
+                    )
+            normalized_account = None if account is None else dict(account)
+            if account is not None and batch["account_environment"] == "REAL":
+                durable_account = str(batch["account_id"] or "")
+                if not durable_account:
+                    raise SchemaError(
+                        "REAL snapshot batch requires a durable account_id"
+                    )
+                full_account = account.get("account_id")
+                masked_account = account.get("account_id_masked")
+                if full_account is not None and full_account != durable_account:
+                    raise SchemaError(
+                        "snapshot account_id does not match durable REAL batch"
+                    )
+                if (
+                    masked_account is not None
+                    and masked_account != _mask_account_id(durable_account)
+                ):
+                    raise SchemaError(
+                        "masked snapshot account does not match durable REAL batch"
+                    )
+                if full_account is None and masked_account is None:
+                    raise SchemaError(
+                        "REAL account snapshot requires trusted account binding"
+                    )
+                normalized_account["account_id"] = durable_account
 
-            if account is not None:
+            conn.execute(
+                "DELETE FROM broker_account_snapshot WHERE batch_id=?",
+                (batch_id,),
+            )
+            if normalized_account is not None:
                 conn.execute(
                     """INSERT INTO broker_account_snapshot
                        (batch_id, trade_date, account_id, available_cash,
@@ -1957,10 +2141,12 @@ class LiveRecorder:
                            market_value=excluded.market_value,
                            frozen_cash=excluded.frozen_cash,
                            ts=excluded.ts""",
-                    (batch_id, trade_date, account.get("account_id"),
-                     account.get("available_cash"), account.get("total_asset"),
-                     account.get("market_value"), account.get("frozen_cash"),
-                     account.get("ts")),
+                    (batch_id, trade_date, normalized_account.get("account_id"),
+                     normalized_account.get("available_cash"),
+                     normalized_account.get("total_asset"),
+                     normalized_account.get("market_value"),
+                     normalized_account.get("frozen_cash"),
+                     normalized_account.get("ts")),
                 )
 
             conn.execute(
@@ -1978,26 +2164,41 @@ class LiveRecorder:
                     for p in positions
                 ],
             )
+            sequence = conn.execute(
+                "SELECT COALESCE(MAX(import_sequence), 0) + 1 AS value "
+                "FROM broker_snapshot_imports"
+            ).fetchone()["value"]
+            conn.execute(
+                """INSERT INTO broker_snapshot_imports
+                   (batch_id, trade_date, import_sequence, imported_at)
+                   VALUES (?,?,?,strftime('%Y-%m-%dT%H:%M:%f','now','localtime'))
+                   ON CONFLICT(batch_id) DO UPDATE SET
+                       trade_date=excluded.trade_date,
+                       import_sequence=excluded.import_sequence,
+                       imported_at=excluded.imported_at""",
+                (batch_id, trade_date, sequence),
+            )
             self._refresh_operator_probe_lifecycle_conn(conn)
 
     def get_broker_account_snapshot(self, trade_date: str):
         """当日最新批次的券商账户快照；无则 None。"""
         with self._conn() as conn:
+            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if batch_id is None:
+                return None
             row = conn.execute(
-                "SELECT * FROM broker_account_snapshot WHERE trade_date=? "
-                "ORDER BY batch_id DESC LIMIT 1",
-                (trade_date,),
+                "SELECT * FROM broker_account_snapshot WHERE batch_id=?",
+                (batch_id,),
             ).fetchone()
             return dict(row) if row else None
 
     @staticmethod
     def _latest_broker_snapshot_batch_id(conn, trade_date: str):
         row = conn.execute(
-            "SELECT batch_id FROM ("
-            "SELECT batch_id FROM broker_account_snapshot WHERE trade_date=? "
-            "UNION SELECT batch_id FROM broker_position_snapshot WHERE trade_date=?"
-            ") ORDER BY batch_id DESC LIMIT 1",
-            (trade_date, trade_date),
+            """SELECT batch_id FROM broker_snapshot_imports
+                WHERE trade_date=?
+                ORDER BY import_sequence DESC, batch_id DESC LIMIT 1""",
+            (trade_date,),
         ).fetchone()
         return row["batch_id"] if row else None
 
@@ -2103,20 +2304,46 @@ class FillImporter:
     def _import_snapshot(self, jsonl_path: Path) -> bool:
         account = None
         positions = []
-        batch_id = None
+        name = jsonl_path.name
+        prefix = "account_"
+        suffix = ".jsonl"
+        if not name.startswith(prefix) or not name.endswith(suffix):
+            raise SchemaError(f"invalid snapshot filename: {name!r}")
+        batch_id = name[len(prefix):-len(suffix)]
+        if not batch_id:
+            raise SchemaError("snapshot filename requires a batch_id")
+        row_count = 0
         for line in jsonl_path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line:
                 continue
             d = json.loads(line)
-            batch_id = batch_id or d.get("batch_id")
+            if not isinstance(d, dict):
+                raise SchemaError("snapshot row must be an object")
+            row_count += 1
+            if d.get("batch_id") != batch_id:
+                raise SchemaError(
+                    "snapshot batch_id must match filename for every row"
+                )
             if d.get("type") == "account_snapshot":
+                if account is not None:
+                    raise SchemaError("snapshot contains multiple account rows")
                 account = d
             elif d.get("type") == "broker_position":
                 positions.append(d)
-        if batch_id is None:
+            else:
+                raise SchemaError(f"unknown snapshot row type: {d.get('type')!r}")
+        if row_count == 0:
             logger.warning("empty broker snapshot: %s", jsonl_path.name)
             return False
+        batch = self.recorder.get_batch(batch_id)
+        if batch is None:
+            raise SchemaError(f"unknown snapshot batch_id: {batch_id!r}")
+        if any(
+            row.get("trade_date") != batch["trade_date"]
+            for row in ([account] if account is not None else []) + positions
+        ):
+            raise SchemaError("snapshot trade_date does not match durable batch")
         self.recorder.save_broker_snapshot(batch_id, account, positions)
         logger.info(
             "imported broker snapshot %s: cash=%s positions=%d",

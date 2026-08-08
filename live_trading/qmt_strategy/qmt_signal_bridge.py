@@ -167,9 +167,10 @@ def _append_log_line(name, line):
 
 
 _SECRET_KEY_PATTERN = (
-    r"(?:access[_-]?token|refresh[_-]?token|token|password|passwd|secret|"
-    r"sendkey|api[_-]?key|apikey|client[_-]?secret|authorization|"
-    r"credential|session[_-]?credential)"
+    r"(?:[a-z0-9_-]*(?:credential|password|passwd|secret|token|sendkey|"
+    r"api[_-]?key|apikey|cookie|authorization|"
+    r"session[_-]?(?:id|key|identifier))[a-z0-9_-]*|session|auth|"
+    r"auth[_-]?(?:value|header|data|info))"
 )
 _ACCOUNT_KEY_PATTERN = r"(?:account[_-]?id|accountid|account)"
 _REDACTED = "***REDACTED***"
@@ -283,15 +284,31 @@ def _normalized_field_name(name):
     return re.sub(r"[^a-z0-9]", "", str(name).lower())
 
 
+def _is_secret_field_name(name):
+    normalized = _normalized_field_name(name)
+    if normalized in (
+            "authorizationpath", "otherauthorizationpath",
+            "authorizationpresent", "otherauthorizationpresent"):
+        return False
+    if any(fragment in normalized for fragment in (
+            "credential", "password", "passwd", "secret", "token",
+            "sendkey", "apikey", "cookie", "authorization")):
+        return True
+    if normalized == "session" or any(
+            fragment in normalized for fragment in (
+                "sessionid", "sessionkey", "sessionidentifier",
+            )):
+        return True
+    return normalized in (
+        "auth", "authvalue", "authheader", "authdata", "authinfo",
+    )
+
+
 def _sanitize_value(
         value, field_name="", account_ids=None, depth=0,
         preserve_items=False):
     normalized = _normalized_field_name(field_name)
-    secret_fragments = (
-        "token", "password", "passwd", "secret", "sendkey", "apikey",
-    )
-    if any(fragment in normalized for fragment in secret_fragments) or \
-            normalized in ("authorization", "credential", "sessioncredential"):
+    if _is_secret_field_name(field_name):
         return _REDACTED
     if "accountid" in normalized or normalized == "account":
         return _mask_account(value)
@@ -935,6 +952,8 @@ def _write_snapshot_marker(batch):
         "account_type": batch.header.get("account_type", ACCOUNT_TYPE),
         "schema_version": batch.header.get("schema_version", ""),
         "signal_checksum": batch.header.get("checksum", ""),
+        "strategy_id": batch.header.get("strategy_id", ""),
+        "order_count": batch.header.get("order_count", len(batch.orders)),
     }
     g.snapshot_accounts[batch.batch_id()] = _account_id(batch)
     try:
@@ -944,14 +963,18 @@ def _write_snapshot_marker(batch):
         _log("snapshot marker write failed:\n" + traceback.format_exc())
 
 
-def _trusted_snapshot_batch_header(info):
-    """Find the validated durable signal header for a refresh marker."""
+def _trusted_snapshot_account_ids(info):
+    """Return exact accounts from fully validated durable batch sources."""
     batch_id = info.get("batch_id", "")
     if not isinstance(batch_id, str) or not batch_id:
-        return None
+        return set()
     signal_checksum = info.get("signal_checksum", "")
     if not isinstance(signal_checksum, str) or not signal_checksum:
-        return None
+        return set()
+    marker_order_count = info.get("order_count")
+    if not isinstance(marker_order_count, int) or marker_order_count < 0:
+        return set()
+    accounts = set()
     exact_name = "signal_" + batch_id + ".jsonl"
     repeat_prefix = "signal_" + batch_id + ".repeat_"
     for directory in ("processing", "archive"):
@@ -964,12 +987,36 @@ def _trusted_snapshot_batch_header(info):
                     and name.endswith(".jsonl")):
                 continue
             path = os.path.join(root, name)
+            done_path = os.path.join(root, name[:-6] + ".done")
+            if not os.path.isfile(done_path):
+                continue
             try:
+                if os.path.getsize(path) > MAX_BATCH_BYTES:
+                    continue
                 with open(path, "r") as f:
-                    header = json.loads(f.readline().strip())
+                    lines = [
+                        line.strip() for line in f.read().splitlines()
+                        if line.strip()
+                    ]
+                if not lines:
+                    continue
+                header = json.loads(lines[0])
+                order_lines = lines[1:]
+                orders = [json.loads(line) for line in order_lines]
+                with open(done_path, "r") as f:
+                    done_checksum = f.read().strip()
             except Exception:
                 continue
             if not isinstance(header, dict):
+                continue
+            if any(not isinstance(order, dict) for order in orders):
+                continue
+            calculated_checksum = _sha256_of_lines(order_lines)
+            if calculated_checksum != signal_checksum:
+                continue
+            if header.get("checksum") != calculated_checksum:
+                continue
+            if done_checksum != calculated_checksum:
                 continue
             if header.get("batch_id") != batch_id:
                 continue
@@ -981,7 +1028,7 @@ def _trusted_snapshot_batch_header(info):
                 continue
             if header.get("schema_version") != SCHEMA_VERSION:
                 continue
-            if header.get("checksum") != signal_checksum:
+            if header.get("strategy_id") != info.get("strategy_id"):
                 continue
             if header.get("account_environment") != info.get(
                     "account_environment"):
@@ -992,13 +1039,19 @@ def _trusted_snapshot_batch_header(info):
                 continue
             if header.get("account_type") != ACCOUNT_TYPE:
                 continue
+            if header.get("order_count") != marker_order_count:
+                continue
+            if header.get("order_count") != len(orders):
+                continue
+            if any(order.get("batch_id") != batch_id for order in orders):
+                continue
             account_id = str(header.get("account_id", "") or "")
             if not account_id:
                 continue
             if _mask_account(account_id) != info.get("account_id_masked"):
                 continue
-            return header
-    return None
+            accounts.add(account_id)
+    return accounts
 
 
 def _snapshot_account_binding(info):
@@ -1008,19 +1061,22 @@ def _snapshot_account_binding(info):
     if info.get("account_type") != ACCOUNT_TYPE:
         return ""
     batch_id = info.get("batch_id", "")
-    durable_header = _trusted_snapshot_batch_header(info)
-    durable_account = ""
-    if durable_header is not None:
-        durable_account = str(durable_header.get("account_id", "") or "")
-    account_id = str(
-        ACCOUNT_ID or g.snapshot_accounts.get(batch_id, "")
-        or durable_account
-    )
+    durable_accounts = _trusted_snapshot_account_ids(info)
+    if len(durable_accounts) > 1:
+        return ""
+    durable_account = next(iter(durable_accounts), "")
+    memory_account = str(g.snapshot_accounts.get(batch_id, "") or "")
+    configured_account = str(ACCOUNT_ID or "")
+    account_id = durable_account or memory_account
     if not account_id:
         return ""
-    if _mask_account(account_id) != info.get("account_id_masked"):
+    if durable_account and memory_account \
+            and durable_account != memory_account:
         return ""
-    if durable_account and durable_account != account_id:
+    if durable_account and configured_account \
+            and durable_account != configured_account:
+        return ""
+    if _mask_account(account_id) != info.get("account_id_masked"):
         return ""
     return account_id
 
@@ -1923,7 +1979,10 @@ def _submit(
             STRATEGY_NAME, 2, coid, ContextInfo,
         )
         elapsed_ms = max(0.0, (time.time() - api_started) * 1000.0)
-        return_repr = _bounded_text(repr(api_return), 512, (account_id,))
+        safe_api_return = _sanitize_value(
+            api_return, account_ids=(account_id,))
+        return_repr = _bounded_text(
+            repr(safe_api_return), 512, (account_id,))
         return_type = type(api_return).__name__
         evidence["api_returned"] = True
         evidence["api_return"] = {

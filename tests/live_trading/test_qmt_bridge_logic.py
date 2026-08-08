@@ -1325,8 +1325,18 @@ def test_successful_passorder_return_redacts_secrets_and_account(
             "api_key": "return-api-key",
             "secret_token": "return-secret-token",
             "sendkey": "return-send-key",
+            "credential_value": "return-credential-value",
+            "session_id": "return-session-id",
+            "nested": [{
+                "cookie_value": "return-cookie-value",
+                "auth_credential": "return-auth-credential",
+                "password_hint": "return-password-hint",
+            }],
             "returned_account_id": "8890116049",
             "status": "queued",
+            "order_id": "qmt-order-101",
+            "timestamp": "2026-08-08T15:05:00",
+            "price": 10.50,
         },
         raising=False,
     )
@@ -1342,9 +1352,18 @@ def test_successful_passorder_return_redacts_secrets_and_account(
     assert "return-api-key" not in combined
     assert "return-secret-token" not in combined
     assert "return-send-key" not in combined
+    assert "return-credential-value" not in combined
+    assert "return-session-id" not in combined
+    assert "return-cookie-value" not in combined
+    assert "return-auth-credential" not in combined
+    assert "return-password-hint" not in combined
     assert "8890116049" not in combined
     assert "88******49" in combined
     assert "REDACTED" in combined
+    assert "queued" in combined
+    assert "qmt-order-101" in combined
+    assert "2026-08-08T15:05:00" in combined
+    assert "10.5" in combined
 
 
 def test_successful_error_persistence_redacts_external_message(
@@ -2267,6 +2286,98 @@ def test_simulate_batch_writes_no_broker_snapshot(bridge, monkeypatch):
 def _marker_path(bridge, batch_id=BATCH_ID):
     return (Path(bridge.BRIDGE_ROOT) / "state" /
             ("snapshot_refresh_%s.json" % batch_id))
+
+
+def _snapshot_binding_marker(bridge, checksum):
+    return {
+        "batch_id": BATCH_ID,
+        "trade_date": bridge._today(),
+        "account_id_masked": "88******38",
+        "account_environment": "SIMULATION",
+        "account_type": "STOCK",
+        "schema_version": "2.0",
+        "signal_checksum": checksum,
+        "strategy_id": "s",
+        "order_count": 1,
+    }
+
+
+def _write_archived_signal(
+    bridge, suffix, account_id, order_line, header_checksum, done=True,
+):
+    header = {
+        "type": "batch_header", "schema_version": "2.0",
+        "batch_id": BATCH_ID, "strategy_id": "s",
+        "trade_date": bridge._today(), "signal_date": bridge._today(),
+        "account_id": account_id, "account_type": "STOCK",
+        "account_environment": "SIMULATION", "mode": "LIVE",
+        "created_at": "t", "order_count": 1,
+        "checksum": header_checksum,
+    }
+    archive = Path(bridge.BRIDGE_ROOT) / "archive"
+    stem = "signal_%s%s" % (BATCH_ID, suffix)
+    (archive / (stem + ".jsonl")).write_text(
+        json.dumps(header, sort_keys=True) + "\n" + order_line + "\n"
+    )
+    if done:
+        (archive / (stem + ".done")).write_text(header_checksum + "\n")
+
+
+def test_snapshot_binding_ignores_unpaired_and_body_mismatched_candidates(
+    bridge,
+):
+    current_account = "8881352838"
+    same_mask_account = "8899999938"
+    current_order_line = json.dumps(
+        _order(), sort_keys=True, separators=(",", ":"),
+    )
+    current_checksum = compute_checksum([current_order_line])
+    forged_order = _order(coid="20260714009999S")
+    forged_order_line = json.dumps(
+        forged_order, sort_keys=True, separators=(",", ":"),
+    )
+    marker = _snapshot_binding_marker(bridge, current_checksum)
+    _write_archived_signal(
+        bridge, "", same_mask_account, forged_order_line, current_checksum,
+    )
+    _write_archived_signal(
+        bridge, ".repeat_unpaired", same_mask_account,
+        current_order_line, current_checksum, done=False,
+    )
+    _write_archived_signal(
+        bridge, ".repeat_current", current_account,
+        current_order_line, current_checksum,
+    )
+    bridge.g = bridge.State()
+    bridge.ACCOUNT_ID = ""
+
+    resolved = bridge._snapshot_account_binding(marker)
+
+    assert resolved == current_account
+    assert current_account not in json.dumps(marker, sort_keys=True)
+    assert same_mask_account not in json.dumps(marker, sort_keys=True)
+
+
+def test_snapshot_binding_refuses_distinct_valid_accounts_with_same_mask(
+    bridge,
+):
+    current_account = "8881352838"
+    same_mask_account = "8899999938"
+    order_line = json.dumps(
+        _order(), sort_keys=True, separators=(",", ":"),
+    )
+    checksum = compute_checksum([order_line])
+    marker = _snapshot_binding_marker(bridge, checksum)
+    _write_archived_signal(
+        bridge, "", same_mask_account, order_line, checksum,
+    )
+    _write_archived_signal(
+        bridge, ".repeat_current", current_account, order_line, checksum,
+    )
+    bridge.g = bridge.State()
+    bridge.ACCOUNT_ID = ""
+
+    assert bridge._snapshot_account_binding(marker) == ""
 
 
 def test_post_close_refresh_rewrites_snapshot_with_close_values(

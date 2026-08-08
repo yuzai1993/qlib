@@ -8,7 +8,10 @@
 """
 import importlib.util
 import json
+import os
 import sys
+import ast
+import threading
 from pathlib import Path
 
 import pytest
@@ -21,6 +24,7 @@ from live_trading.modules.signal_schema import compute_checksum
 
 BRIDGE_PATH = REPO_ROOT / "live_trading" / "qmt_strategy" / "qmt_signal_bridge.py"
 BATCH_ID = "20260714_csi300_topk10_001"
+SNAPSHOT_REQUEST_ID = "snapshot_20260808_0123456789abcdef0123456789abcdef"
 
 
 @pytest.fixture
@@ -29,9 +33,968 @@ def bridge(tmp_path, monkeypatch):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     mod.BRIDGE_ROOT = str(tmp_path)
+    mod.OTHER_BRIDGE_ROOT = str(tmp_path / "pr49_probe")
     mod._ensure_dirs()
     mod._load_processed()
     return mod
+
+
+class _ScheduleContext:
+    def __init__(self):
+        self.calls = []
+
+    def set_account(self, account_id):
+        self.account_id = account_id
+
+    def schedule_run(self, *args):
+        self.calls.append(args)
+        return 1
+
+
+def _activate_profile(bridge, profile, bridge_root, other_bridge_root):
+    bridge.EXECUTION_PROFILE = profile
+    bridge.BRIDGE_ROOT = str(bridge_root)
+    bridge.OTHER_BRIDGE_ROOT = str(other_bridge_root)
+    context = _ScheduleContext()
+    bridge.init(context)
+    return context
+
+
+def _profile_roots(tmp_path, profile):
+    main_root = tmp_path / "main"
+    probe_root = main_root / "pr49_probe"
+    if profile == "CLOSE_AUCTION":
+        return main_root, probe_root
+    return probe_root, main_root
+
+
+def _snapshot_request(bridge, **changes):
+    payload = {
+        "type": "account_snapshot_request",
+        "schema_version": "1.0",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "trade_date": bridge._today(),
+        "collector_execution_profile": bridge.EXECUTION_PROFILE,
+        "collector_bridge_root": bridge.BRIDGE_ROOT,
+        "requested_for_strategy_id": "csi1000_b6m_b2s_postclose_real",
+        "evidence_purpose": "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT",
+        "publish_cutoff": "14:45:00",
+        "account_type": "STOCK",
+        "account_environment": "REAL",
+        "account_id_masked": bridge._mask_account(bridge.ACCOUNT_ID),
+        "account_fingerprint": bridge._snapshot_account_fingerprint(
+            bridge.ACCOUNT_ID, "STOCK", "REAL",
+        ),
+        "created_at": "2026-08-08T08:00:00+08:00",
+    }
+    payload.update(changes)
+    payload["checksum"] = bridge._snapshot_artifact_checksum(payload)
+    return payload
+
+
+def _write_snapshot_request(bridge, payload):
+    inbox = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "inbox"
+    request_id = payload["request_id"]
+    (inbox / f"request_{request_id}.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (inbox / f"request_{request_id}.done").write_text(
+        payload["checksum"] + "\n", encoding="utf-8",
+    )
+
+
+def _enable_snapshot_observation(bridge, monkeypatch):
+    bridge.ACCOUNT_ID = "8890116049"
+    bridge.ACCOUNT_TYPE = "STOCK"
+    bridge.ACCOUNT_ENVIRONMENT = "REAL"
+    bridge.ALLOW_REAL_MONEY = True
+    account = type("Account", (), {
+        "m_strAccountID": "8890116049",
+        "m_dAvailable": 900000.0,
+        "m_dBalance": 1000000.0,
+        "m_dInstrumentValue": 100000.0,
+        "m_dFrozenCash": 0.0,
+    })()
+    position = type("Position", (), {
+        "m_nVolume": 100,
+        "m_nCanUseVolume": 100,
+        "m_nFrozenVolume": 0,
+        "m_strInstrumentID": "600000",
+        "m_strExchangeID": "SH",
+        "m_dOpenPrice": 10.0,
+        "m_dMarketValue": 1000.0,
+    })()
+
+    def query(account_id, account_type, detail_type):
+        assert account_id == "8890116049"
+        assert account_type == "STOCK"
+        return [account] if detail_type == "ACCOUNT" else [position]
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", query, raising=False)
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("snapshot request reached passorder"),
+        raising=False,
+    )
+
+
+def test_snapshot_request_queries_account_without_marker_or_passorder(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+
+    bridge._process_snapshot_requests()
+
+    response_path = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    response = json.loads(response_path.read_text(encoding="utf-8"))
+    assert response["status"] == "COMPLETE"
+    assert response["request_checksum"] == payload["checksum"]
+    assert response["positions"][0]["stock_code"] == "600000.SH"
+    assert not list((Path(bridge.BRIDGE_ROOT) / "state").glob("*LIVE_OK*"))
+    assert not list((Path(bridge.BRIDGE_ROOT) / "outbound").iterdir())
+
+
+def test_snapshot_entry_static_call_graph_cannot_reach_order_or_marker_paths(
+    bridge,
+):
+    tree = ast.parse(BRIDGE_PATH.read_text(encoding="utf-8"))
+    functions = {
+        node.name: node for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+    }
+    graph = {}
+    for name, node in functions.items():
+        graph[name] = {
+            call.func.id for call in ast.walk(node)
+            if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+        }
+    reachable = set()
+    pending = ["snapshot_timer_callback"]
+    while pending:
+        name = pending.pop()
+        if name in reachable:
+            continue
+        reachable.add(name)
+        pending.extend(graph.get(name, set()) - reachable)
+
+    assert not reachable.intersection({
+        "init", "passorder", "_submit", "_process_batch", "_claim_new_batch",
+        "_recover_processing_batch", "_register_postclose_timer", "_advance",
+        "_live_ok", "_other_profile_authorized", "_authorization_path",
+        "_other_authorization_path",
+    })
+
+
+def test_snapshot_observer_cold_start_never_initializes_order_runtime(
+    bridge, monkeypatch, tmp_path,
+):
+    main_root, probe_root = _profile_roots(tmp_path, "CLOSE_AUCTION")
+    bridge.BRIDGE_ROOT = str(main_root)
+    bridge.OTHER_BRIDGE_ROOT = str(probe_root)
+    bridge.ACCOUNT_ID = "8890116049"
+    bridge.ACCOUNT_ENVIRONMENT = "REAL"
+    bridge.ALLOW_REAL_MONEY = True
+    bridge.g.loaded = False
+    bridge.g.trading_enabled = False
+    observed = []
+    monkeypatch.setattr(
+        bridge, "_process_snapshot_requests", lambda: observed.append(True),
+    )
+    for name in (
+        "_recover_processing_batch", "_register_postclose_timer", "_advance",
+        "_claim_new_batch", "_process_batch",
+    ):
+        monkeypatch.setattr(
+            bridge, name,
+            lambda *args, _name=name, **kwargs: pytest.fail(
+                "snapshot cold start reached %s" % _name
+            ),
+        )
+
+    class ImmediateContext:
+        def __init__(self):
+            self.schedule_calls = []
+
+        def set_account(self, account_id):
+            self.account_id = account_id
+
+        def schedule_run(self, callback, *args):
+            self.schedule_calls.append((callback,) + args)
+            callback(self)
+            return 1
+
+    context = ImmediateContext()
+    bridge.snapshot_timer_callback(context)
+
+    assert observed == [True]
+    assert context.schedule_calls == []
+    assert context.account_id == "8890116049"
+    assert bridge.g.loaded is False
+    assert bridge.g.snapshot_observer_loaded is True
+    assert not (main_root / "inbox").exists()
+    assert (main_root / "snapshot_requests" / "inbox").is_dir()
+
+
+def test_overdue_snapshot_timer_registration_stays_observation_only_when_cold(
+    bridge, monkeypatch, tmp_path,
+):
+    main_root, probe_root = _profile_roots(tmp_path, "CLOSE_AUCTION")
+    bridge.BRIDGE_ROOT = str(main_root)
+    bridge.OTHER_BRIDGE_ROOT = str(probe_root)
+    bridge.ACCOUNT_ID = "8890116049"
+    bridge.ACCOUNT_ENVIRONMENT = "REAL"
+    bridge.ALLOW_REAL_MONEY = True
+    observed = []
+    monkeypatch.setattr(
+        bridge, "_process_snapshot_requests", lambda: observed.append(True),
+    )
+    for name in (
+        "_recover_processing_batch", "_register_postclose_timer", "_advance",
+        "_claim_new_batch", "_process_batch",
+    ):
+        monkeypatch.setattr(
+            bridge, name,
+            lambda *args, _name=name, **kwargs: pytest.fail(
+                "overdue observer timer reached %s" % _name
+            ),
+        )
+
+    class ImmediateContext:
+        def set_account(self, account_id):
+            self.account_id = account_id
+
+        def schedule_run(self, callback, *args):
+            callback(self)
+            return 1
+
+    context = ImmediateContext()
+    bridge._register_snapshot_timer(context)
+
+    assert observed == [True]
+    assert bridge.g.loaded is False
+    assert bridge.g.snapshot_observer_loaded is True
+    assert bridge.g.timer_registered is False
+
+
+def test_real_timer_entry_returns_before_order_claim_after_snapshot(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("snapshot timer wakeup reached order claim"),
+    )
+    monkeypatch.setattr(
+        bridge, "_process_batch",
+        lambda *args: pytest.fail("snapshot timer wakeup reached order process"),
+    )
+
+    bridge._advance(object())
+
+    response = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.done"
+    )
+    assert response.is_file()
+
+
+def test_real_timer_entry_blocks_orders_while_snapshot_processor_lock_exists(
+    bridge, monkeypatch,
+):
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    lock = Path(bridge._snapshot_processor_lock_path())
+    lock.write_text("other snapshot worker", encoding="utf-8")
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("snapshot lock failure reached order claim"),
+    )
+    monkeypatch.setattr(
+        bridge, "_process_batch",
+        lambda *args: pytest.fail("snapshot lock failure reached order process"),
+    )
+
+    bridge._advance(object())
+
+    assert lock.is_file()
+
+
+@pytest.mark.parametrize("profile", [
+    "CLOSE_AUCTION", "AFTER_HOURS_FIXED_PRICE",
+])
+def test_real_timer_entry_blocks_orders_while_publish_advance_gate_exists(
+    bridge, monkeypatch, profile,
+):
+    main_root = Path(bridge.BRIDGE_ROOT)
+    probe_root = Path(bridge.OTHER_BRIDGE_ROOT)
+    bridge.EXECUTION_PROFILE = profile
+    if profile == "AFTER_HOURS_FIXED_PRICE":
+        bridge.BRIDGE_ROOT = str(probe_root)
+        bridge.OTHER_BRIDGE_ROOT = str(main_root)
+        bridge._ensure_dirs()
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    gate = Path(bridge._snapshot_advance_gate_path())
+    gate.write_text("Mac publisher owns gate", encoding="utf-8")
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("busy publication gate reached order claim"),
+    )
+
+    bridge._advance(object())
+
+    assert gate.is_file()
+    status = json.loads(
+        (Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "status.json")
+        .read_text(encoding="utf-8")
+    )
+    assert status["state"] == "ERROR"
+    assert status["classification"] == "ADVANCE_GATE_BUSY"
+
+
+def test_main_and_probe_qmt_profiles_share_snapshot_advance_gate(tmp_path, bridge):
+    main_root = tmp_path / "main"
+    probe_root = main_root / "pr49_probe"
+    bridge.EXECUTION_PROFILE = "CLOSE_AUCTION"
+    bridge.BRIDGE_ROOT = str(main_root)
+    bridge.OTHER_BRIDGE_ROOT = str(probe_root)
+    main_gate = bridge._snapshot_advance_gate_path()
+
+    bridge.EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"
+    bridge.BRIDGE_ROOT = str(probe_root)
+    bridge.OTHER_BRIDGE_ROOT = str(main_root)
+    probe_gate = bridge._snapshot_advance_gate_path()
+
+    assert main_gate == probe_gate
+    assert Path(main_gate) == main_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "content"),
+    [
+        ("inbox/request_snapshot_20260808_0123456789abcdef0123456789abcdef.json", "{}\n"),
+        ("inbox/request_snapshot_20260808_0123456789abcdef0123456789abcdef.done", "sha256:pending\n"),
+        ("inbox/request_snapshot_20260808_0123456789abcdef0123456789abcdef.json.tmp", "{}\n"),
+        ("inbox/request_snapshot_20260808_0123456789abcdef0123456789abcdef.intent", "pending\n"),
+        ("processing/request_snapshot_20260808_0123456789abcdef0123456789abcdef.json", "{}\n"),
+        ("processing/request_snapshot_20260808_0123456789abcdef0123456789abcdef.done", "sha256:pending\n"),
+        ("archive/request_snapshot_20260808_0123456789abcdef0123456789abcdef.json", "{}\n"),
+        ("archive/response_snapshot_20260808_0123456789abcdef0123456789abcdef.done", "sha256:pending\n"),
+        ("responses/response_snapshot_20260808_0123456789abcdef0123456789abcdef.json", "{}\n"),
+        ("responses/response_snapshot_20260808_0123456789abcdef0123456789abcdef.done", "sha256:pending\n"),
+    ],
+)
+def test_snapshot_residue_in_any_protocol_location_blocks_order_advance(
+    bridge, monkeypatch, relative_path, content,
+):
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    artifact = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / relative_path
+    )
+    artifact.write_text(content, encoding="utf-8")
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("snapshot residue reached order claim"),
+    )
+
+    bridge._advance(object())
+    bridge.g.last_poll = 0.0
+    bridge._advance(object())
+
+    assert artifact.is_file()
+    status = json.loads(
+        (Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "status.json")
+        .read_text(encoding="utf-8")
+    )
+    assert status["state"] == "ERROR"
+    assert status["blocking"] is True
+    assert relative_path in status["artifacts"]
+    events = (
+        Path(bridge.BRIDGE_ROOT) / "logs" /
+        ("qmt_events_%s.jsonl" % bridge._today())
+    ).read_text(encoding="utf-8")
+    assert "SNAPSHOT_RESIDUE_BLOCKED" in events
+
+
+def test_snapshot_response_waits_for_import_before_order_advance(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("unimported snapshot response reached order claim"),
+    )
+
+    bridge._advance(object())
+
+    responses = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    assert (responses / f"response_{SNAPSHOT_REQUEST_ID}.json").is_file()
+    status = json.loads(
+        (Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "status.json")
+        .read_text(encoding="utf-8")
+    )
+    assert status["classification"] == "PENDING_IMPORT"
+
+
+def test_transient_request_half_pair_blocks_until_complete_response_import(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    inbox = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "inbox"
+    request_json = inbox / f"request_{SNAPSHOT_REQUEST_ID}.json"
+    request_json.write_text(
+        json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    bridge.g.trading_enabled = True
+    claimed = []
+    monkeypatch.setattr(bridge, "_claim_new_batch", lambda: claimed.append(True))
+    monkeypatch.setattr(bridge, "_recover_processing_batch", lambda: None)
+    monkeypatch.setattr(bridge, "_refresh_account_snapshots_after_close", lambda: None)
+
+    bridge.g.last_poll = 0.0
+    bridge._advance(object())
+    assert claimed == []
+
+    (inbox / f"request_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        payload["checksum"] + "\n", encoding="utf-8",
+    )
+    bridge.g.last_poll = 0.0
+    bridge._advance(object())
+    assert claimed == []
+
+    responses = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    for suffix in ("json", "done"):
+        source = responses / f"response_{SNAPSHOT_REQUEST_ID}.{suffix}"
+        os.replace(source, archive / source.name)
+    bridge.g.last_poll = 0.0
+    bridge._advance(object())
+
+    assert claimed == [True]
+
+
+def test_fully_imported_complete_snapshot_archive_does_not_block_orders(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    response = bridge._snapshot_query_response(payload)
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        payload["checksum"] + "\n", encoding="utf-8",
+    )
+    (archive / f"response_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        json.dumps(response, ensure_ascii=True, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (archive / f"response_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        response["checksum"] + "\n", encoding="utf-8",
+    )
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    claimed = []
+    monkeypatch.setattr(bridge, "_claim_new_batch", lambda: claimed.append(True))
+    monkeypatch.setattr(bridge, "_recover_processing_batch", lambda: None)
+    monkeypatch.setattr(bridge, "_refresh_account_snapshots_after_close", lambda: None)
+
+    bridge._advance(object())
+
+    assert claimed == [True]
+    status = json.loads(
+        (Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "status.json")
+        .read_text(encoding="utf-8")
+    )
+    assert status["state"] == "CLEAR"
+
+
+def test_corrupt_complete_archive_is_persistently_blocking_not_an_exception(
+    bridge, monkeypatch,
+):
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        '"not-an-object"\n', encoding="utf-8",
+    )
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        "bad-request-checksum\n", encoding="utf-8",
+    )
+    (archive / f"response_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        '{}\n', encoding="utf-8",
+    )
+    (archive / f"response_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        "bad-response-checksum\n", encoding="utf-8",
+    )
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("corrupt snapshot archive reached order claim"),
+    )
+
+    bridge._advance(object())
+
+    status = json.loads(
+        (Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "status.json")
+        .read_text(encoding="utf-8")
+    )
+    assert status["state"] == "ERROR"
+    assert status["classification"] == "INVALID_RESIDUE"
+
+
+def test_complete_archive_does_not_clear_without_runtime_account_binding(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    response = bridge._snapshot_query_response(payload)
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        payload["checksum"] + "\n", encoding="utf-8",
+    )
+    (archive / f"response_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        json.dumps(response, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (archive / f"response_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        response["checksum"] + "\n", encoding="utf-8",
+    )
+    bridge.ACCOUNT_ID = ""
+    bridge.g.trading_enabled = True
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("unbound archive reached order claim"),
+    )
+
+    bridge._advance(object())
+
+    status = json.loads(
+        (Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "status.json")
+        .read_text(encoding="utf-8")
+    )
+    assert status["state"] == "ERROR"
+
+
+def test_snapshot_directory_scan_error_blocks_orders_as_unknown_state(
+    bridge, monkeypatch,
+):
+    original_listdir = bridge.os.listdir
+    responses = str(
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    )
+
+    def fail_responses_scan(path):
+        if path == responses:
+            raise OSError("simulated SMB visibility failure")
+        return original_listdir(path)
+
+    monkeypatch.setattr(bridge.os, "listdir", fail_responses_scan)
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("unknown snapshot directory state reached claim"),
+    )
+
+    bridge._advance(object())
+
+    status = json.loads(
+        (Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "status.json")
+        .read_text(encoding="utf-8")
+    )
+    assert status["state"] == "ERROR"
+    assert status["classification"] == "PROTOCOL_SCAN_ERROR"
+    assert status["artifacts"] == ["responses/<scan-error>"]
+
+
+def test_snapshot_status_write_failure_remains_in_memory_blocking(
+    bridge, monkeypatch,
+):
+    bridge.g.trading_enabled = True
+    bridge.g.last_poll = 0.0
+    monkeypatch.setattr(
+        bridge, "_persist_snapshot_protocol_state",
+        lambda status: (_ for _ in ()).throw(OSError("SMB status write failed")),
+    )
+    monkeypatch.setattr(
+        bridge, "_claim_new_batch",
+        lambda: pytest.fail("snapshot status failure reached order claim"),
+    )
+
+    bridge._advance(object())
+
+    assert bridge.g.snapshot_residue_signature == (
+        "ERROR", "STATUS_WRITE_ERROR", ("snapshot_requests/status.json",),
+    )
+    assert not Path(bridge._snapshot_advance_gate_path()).exists()
+
+
+@pytest.mark.parametrize("account_rows", [
+    [type("Wrong", (), {"m_strAccountID": "OTHER_ACCOUNT"})()],
+    [type("Missing", (), {})()],
+    [
+        type("Right", (), {"m_strAccountID": "8890116049"})(),
+        type("Other", (), {"m_strAccountID": "OTHER_ACCOUNT"})(),
+    ],
+])
+def test_snapshot_account_rows_must_bind_unique_runtime_account(
+    bridge, monkeypatch, account_rows,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda account_id, account_type, detail_type: (
+            account_rows if detail_type == "ACCOUNT" else []
+        ),
+    )
+
+    response = bridge._snapshot_query_response(_snapshot_request(bridge))
+
+    assert response["status"] == "ERROR"
+    assert response["account"] is None
+    assert response["positions"] == []
+    assert response["account_fingerprint"] is None
+    assert bridge.ACCOUNT_ID not in response["error"]
+
+
+def test_snapshot_account_identity_accepts_only_exact_full_match(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    account = type("Account", (), {
+        "m_strAccountID": "8890116049",
+        "m_dAvailable": 900000.0,
+        "m_dBalance": 1000000.0,
+        "m_dInstrumentValue": 100000.0,
+        "m_dFrozenCash": 0.0,
+    })()
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda account_id, account_type, detail_type: (
+            [account] if detail_type == "ACCOUNT" else []
+        ),
+    )
+
+    response = bridge._snapshot_query_response(_snapshot_request(bridge))
+
+    assert response["status"] == "COMPLETE"
+    assert response["account_id_masked"] == "88******49"
+    assert response["account"]["account_id_masked"] == "88******49"
+    assert response["account_fingerprint"] == bridge._snapshot_account_fingerprint(
+        bridge.ACCOUNT_ID, bridge.ACCOUNT_TYPE, bridge.ACCOUNT_ENVIRONMENT,
+    )
+    assert bridge.ACCOUNT_ID not in json.dumps(response, sort_keys=True)
+
+
+@pytest.mark.parametrize("returned_id", [
+    "88******49",
+    "8899999949",
+])
+def test_snapshot_account_identity_rejects_mask_and_same_mask_other_full(
+    bridge, monkeypatch, returned_id,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    account = type("Account", (), {
+        "m_strAccountID": returned_id,
+        "m_dAvailable": 900000.0,
+    })()
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda account_id, account_type, detail_type: (
+            [account] if detail_type == "ACCOUNT" else []
+        ),
+    )
+
+    response = bridge._snapshot_query_response(_snapshot_request(bridge))
+
+    assert response["status"] == "ERROR"
+    assert response["account"] is None
+    assert response["account_fingerprint"] is None
+    assert bridge.ACCOUNT_ID not in response["error"]
+
+
+def test_snapshot_position_exposed_wrong_account_identity_fails_closed(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    account = type("Account", (), {
+        "m_strAccountID": "8890116049",
+    })()
+    position = type("Position", (), {
+        "m_strAccountID": "OTHER_ACCOUNT",
+        "m_nVolume": 100,
+    })()
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda account_id, account_type, detail_type: (
+            [account] if detail_type == "ACCOUNT" else [position]
+        ),
+    )
+
+    response = bridge._snapshot_query_response(_snapshot_request(bridge))
+
+    assert response["status"] == "ERROR"
+    assert response["account"] is None
+    assert response["positions"] == []
+
+
+def test_snapshot_position_masked_identity_cannot_authorize(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    account = type("Account", (), {"m_strAccountID": "8890116049"})()
+    position = type("Position", (), {
+        "m_strAccountID": "88******49",
+        "m_nVolume": 100,
+    })()
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda account_id, account_type, detail_type: (
+            [account] if detail_type == "ACCOUNT" else [position]
+        ),
+    )
+
+    response = bridge._snapshot_query_response(_snapshot_request(bridge))
+
+    assert response["status"] == "ERROR"
+    assert response["account"] is None
+    assert response["positions"] == []
+
+
+def test_snapshot_request_two_processors_query_broker_once(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    original_query = bridge.get_trade_detail_data
+    counts = []
+    count_lock = threading.Lock()
+
+    def counted_query(*args):
+        with count_lock:
+            counts.append(args[-1])
+        return original_query(*args)
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", counted_query)
+    start = threading.Barrier(2)
+    errors = []
+
+    def run():
+        try:
+            start.wait(timeout=5)
+            bridge._process_snapshot_requests()
+        except Exception as exc:
+            errors.append(exc)
+
+    threads = [threading.Thread(target=run) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+
+    assert not errors
+    assert counts.count("ACCOUNT") == 1
+    assert counts.count("POSITION") == 1
+
+
+def test_snapshot_request_logs_redact_full_account_and_fingerprint(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+
+    bridge._process_snapshot_requests()
+
+    log_root = Path(bridge.BRIDGE_ROOT) / "logs"
+    logs = "\n".join(
+        path.read_text(encoding="utf-8") for path in log_root.iterdir()
+    )
+    assert bridge.ACCOUNT_ID not in logs
+    assert payload["account_fingerprint"] not in logs
+    assert bridge._mask_account(bridge.ACCOUNT_ID) in logs
+
+
+def test_snapshot_request_restart_exact_replay_is_noop(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    bridge._process_snapshot_requests()
+    response_path = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    original = response_path.read_bytes()
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    inbox = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "inbox"
+    for suffix in ("json", "done"):
+        source = archive / f"request_{SNAPSHOT_REQUEST_ID}.{suffix}"
+        (inbox / source.name).write_bytes(source.read_bytes())
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("exact terminal replay queried broker again"),
+    )
+    bridge._process_snapshot_requests()
+
+    assert response_path.read_bytes() == original
+    assert not list(inbox.iterdir())
+
+
+def test_snapshot_request_changed_during_broker_query_fails_before_response(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    processing_json = (
+        Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "processing" /
+        f"request_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    original_query = bridge.get_trade_detail_data
+
+    def mutate_then_query(*args):
+        if processing_json.exists():
+            processing_json.write_text("{}\n", encoding="utf-8")
+        return original_query(*args)
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", mutate_then_query)
+
+    bridge._process_snapshot_requests()
+
+    responses = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    assert not list(responses.iterdir())
+    assert processing_json.exists()
+
+
+def test_snapshot_response_restart_repairs_exact_json_without_done(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    response = bridge._snapshot_query_response(payload)
+    response_dir = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    json_path = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.json"
+    done_path = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.done"
+    json_path.write_text(
+        json.dumps(response, ensure_ascii=True, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    assert bridge._persist_snapshot_response(response) is True
+    assert done_path.read_text(encoding="utf-8").strip() == response["checksum"]
+
+
+def test_snapshot_request_restart_repairs_partial_response_without_requery(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    original_persist = bridge._persist_snapshot_response
+    response_dir = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+
+    def crash_after_json(response):
+        path = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.json"
+        path.write_text(
+            json.dumps(response, ensure_ascii=True, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        raise RuntimeError("simulated crash before response done")
+
+    monkeypatch.setattr(bridge, "_persist_snapshot_response", crash_after_json)
+    bridge._process_snapshot_requests()
+    monkeypatch.setattr(bridge, "_persist_snapshot_response", original_persist)
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("restart re-queried broker after response JSON"),
+    )
+
+    bridge._process_snapshot_requests()
+
+    assert (
+        response_dir / f"response_{SNAPSHOT_REQUEST_ID}.done"
+    ).is_file()
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    assert (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").is_file()
+
+
+@pytest.mark.parametrize("split_archive", [False, True])
+def test_snapshot_request_restart_archives_after_terminal_response(
+    bridge, monkeypatch, split_archive,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge)
+    _write_snapshot_request(bridge, payload)
+    original_archive = bridge._archive_snapshot_request
+
+    def crash_archive(json_path, done_path):
+        if split_archive:
+            target = (
+                Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive" /
+                Path(json_path).name
+            )
+            os.replace(json_path, target)
+        raise RuntimeError("simulated crash before request archive completed")
+
+    monkeypatch.setattr(bridge, "_archive_snapshot_request", crash_archive)
+    bridge._process_snapshot_requests()
+    monkeypatch.setattr(bridge, "_archive_snapshot_request", original_archive)
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("terminal restart re-queried broker"),
+    )
+
+    bridge._process_snapshot_requests()
+
+    archive = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "archive"
+    assert (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").is_file()
+    assert (archive / f"request_{SNAPSHOT_REQUEST_ID}.done").is_file()
+    processing = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "processing"
+    assert not list(processing.iterdir())
+
+
+@pytest.mark.parametrize("field,value", [
+    ("account_fingerprint", "sha256:" + "0" * 64),
+    ("collector_execution_profile", "AFTER_HOURS_FIXED_PRICE"),
+    ("collector_bridge_root", "/wrong/root"),
+    ("publish_cutoff", "14:46:00"),
+    ("created_at", "2026-08-08T14:45:00+08:00"),
+])
+def test_snapshot_request_identity_mismatch_fails_closed(
+    bridge, monkeypatch, field, value,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    payload = _snapshot_request(bridge, **{field: value})
+    _write_snapshot_request(bridge, payload)
+
+    bridge._process_snapshot_requests()
+
+    responses = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "responses"
+    assert not list(responses.iterdir())
+    processing = Path(bridge.BRIDGE_ROOT) / "snapshot_requests" / "processing"
+    assert len(list(processing.iterdir())) == 2
 
 
 def test_qmt_cash_reservation_fees_match_live_config(bridge):
@@ -44,6 +1007,166 @@ def test_qmt_cash_reservation_fees_match_live_config(bridge):
     assert bridge.COMMISSION_RATE == pytest.approx(fees["commission_rate"])
     assert bridge.MIN_COMMISSION == pytest.approx(fees["min_commission"])
     assert bridge.TRANSFER_FEE_RATE == pytest.approx(fees["transfer_fee_rate"])
+
+
+def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
+    main_root, probe_root = _profile_roots(tmp_path, "CLOSE_AUCTION")
+
+    context = _activate_profile(
+        bridge, "CLOSE_AUCTION", main_root, probe_root,
+    )
+
+    assert bridge._profile_settings() == {
+        "signal_price_type": "CLOSE_AUCTION_LIMIT",
+        "qmt_price_type": 11,
+        "submit_after": "14:57:05",
+        "cancel_at": "15:00:05",
+        "finalize_at": "15:00:30",
+        "snapshot_after": "15:01:00",
+        "authorization_prefix": "LIVE_OK_",
+        "other_authorization_prefix": "PR49_LIVE_OK_",
+        "sell_wait_seconds": 0,
+        "timer_start": "14:56:55",
+    }
+    assert bridge._expected_signal_price_type() == "CLOSE_AUCTION_LIMIT"
+    assert bridge.LIMIT_PRICE_TYPE == 11
+    assert bridge.TRADE_START == "14:57:05"
+    assert bridge.CANCEL_AT == "15:00:05"
+    assert bridge.FINALIZE_AT == "15:00:30"
+    assert bridge.SNAPSHOT_REFRESH_AT == "15:01:00"
+    assert Path(bridge._authorization_path("2026-08-08")) == (
+        main_root / "state" / "LIVE_OK_2026-08-08"
+    )
+    assert bridge.g.trading_enabled is True
+    postclose = next(call for call in context.calls if call[4] == "qlib_postclose_poll")
+    assert postclose[1].endswith("145655")
+
+
+def test_after_hours_profile_activates_isolated_pr49_contract(bridge, tmp_path):
+    probe_root, main_root = _profile_roots(
+        tmp_path, "AFTER_HOURS_FIXED_PRICE",
+    )
+
+    context = _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", probe_root, main_root,
+    )
+
+    assert bridge._profile_settings() == {
+        "signal_price_type": "AFTER_HOURS_CLOSE",
+        "qmt_price_type": 49,
+        "submit_after": "15:05:00",
+        "cancel_at": "15:28:00",
+        "finalize_at": "15:30:00",
+        "snapshot_after": "15:31:00",
+        "authorization_prefix": "PR49_LIVE_OK_",
+        "other_authorization_prefix": "LIVE_OK_",
+        "sell_wait_seconds": 240,
+        "timer_start": "15:04:55",
+    }
+    assert bridge._expected_signal_price_type() == "AFTER_HOURS_CLOSE"
+    assert bridge.LIMIT_PRICE_TYPE == 49
+    assert bridge.TRADE_START == "15:05:00"
+    assert bridge.CANCEL_AT == "15:28:00"
+    assert bridge.FINALIZE_AT == "15:30:00"
+    assert bridge.SNAPSHOT_REFRESH_AT == "15:31:00"
+    assert Path(bridge._authorization_path("2026-08-08")) == (
+        probe_root / "state" / "PR49_LIVE_OK_2026-08-08"
+    )
+    assert bridge.g.trading_enabled is True
+    postclose = next(call for call in context.calls if call[4] == "qlib_postclose_poll")
+    assert postclose[1].endswith("150455")
+
+
+def test_invalid_execution_profile_disables_runtime_with_structured_error(
+    bridge, tmp_path,
+):
+    bridge.EXECUTION_PROFILE = "TYPO_PROFILE"
+    bridge.BRIDGE_ROOT = str(tmp_path / "current")
+    bridge.OTHER_BRIDGE_ROOT = str(tmp_path / "other")
+    context = _ScheduleContext()
+
+    bridge.init(context)
+
+    assert bridge.g.loaded is True
+    assert bridge.g.trading_enabled is False
+    assert context.calls == []
+    rows = (
+        Path(bridge.BRIDGE_ROOT) / "logs" /
+        ("qmt_events_%s.jsonl" % bridge._today())
+    ).read_text().splitlines()
+    event = json.loads(rows[-1])
+    assert event["event"] == "INVALID_EXECUTION_PROFILE"
+    assert event["execution_profile"] == "TYPO_PROFILE"
+
+
+@pytest.mark.parametrize("profile", [
+    "CLOSE_AUCTION", "AFTER_HOURS_FIXED_PRICE",
+])
+@pytest.mark.parametrize("invalid_layout", [
+    "equality", "reversal", "deeper", "other_child", "sibling",
+    "traversal", "dot_spelling",
+])
+def test_unsafe_profile_root_layout_disables_before_runtime_side_effects(
+    bridge, monkeypatch, tmp_path, profile, invalid_layout,
+):
+    main_root = tmp_path / "main"
+    probe_root = main_root / "pr49_probe"
+    if invalid_layout == "equality":
+        current_root, other_root = main_root, main_root
+    elif invalid_layout == "reversal":
+        current_root, other_root = _profile_roots(tmp_path, profile)
+        current_root, other_root = other_root, current_root
+    elif invalid_layout == "deeper":
+        if profile == "CLOSE_AUCTION":
+            current_root, other_root = main_root, probe_root / "deeper"
+        else:
+            current_root, other_root = probe_root / "deeper", main_root
+    elif invalid_layout == "other_child":
+        if profile == "CLOSE_AUCTION":
+            current_root, other_root = main_root, main_root / "other_probe"
+        else:
+            current_root, other_root = main_root / "other_probe", main_root
+    elif invalid_layout == "sibling":
+        sibling_probe = tmp_path / "sibling" / "pr49_probe"
+        if profile == "CLOSE_AUCTION":
+            current_root, other_root = main_root, sibling_probe
+        else:
+            current_root, other_root = sibling_probe, main_root
+    elif invalid_layout == "traversal":
+        unsafe_probe = str(
+            probe_root / "deeper" / os.pardir
+        )
+        if profile == "CLOSE_AUCTION":
+            current_root, other_root = str(main_root), unsafe_probe
+        else:
+            current_root, other_root = unsafe_probe, str(main_root)
+    else:
+        unsafe_main = str(main_root) + os.sep + "."
+        if profile == "CLOSE_AUCTION":
+            current_root, other_root = unsafe_main, str(probe_root)
+        else:
+            current_root, other_root = str(probe_root), unsafe_main
+
+    bridge.EXECUTION_PROFILE = profile
+    bridge.BRIDGE_ROOT = str(current_root)
+    bridge.OTHER_BRIDGE_ROOT = str(other_root)
+    bridge.ACCOUNT_ID = "must-not-bind"
+    context = _ScheduleContext()
+    monkeypatch.setattr(
+        bridge, "_recover_processing_batch",
+        lambda: pytest.fail("invalid roots reached batch recovery"),
+    )
+
+    bridge.init(context)
+
+    assert bridge.g.trading_enabled is False
+    assert context.calls == []
+    assert not hasattr(context, "account_id")
+    rows = (
+        Path(bridge.BRIDGE_ROOT) / "logs" /
+        ("qmt_events_%s.jsonl" % bridge._today())
+    ).read_text().splitlines()
+    assert json.loads(rows[-1])["event"] == "PROFILE_ISOLATION_ERROR"
 
 
 def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
@@ -64,13 +1187,37 @@ def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
 
     bridge.init(Context())
 
-    assert len(calls) == 1
-    callback, first_at, repeats, interval, name = calls[0]
+    assert len(calls) == 2
+    callback, first_at, repeats, interval, name = next(
+        call for call in calls if call[4] == "qlib_postclose_poll"
+    )
     assert callback is bridge.timer_callback
     assert first_at.endswith("145655")
     assert repeats == -1
     assert interval.total_seconds() == bridge.POLL_SECONDS
     assert name == "qlib_postclose_poll"
+    observer = next(
+        call for call in calls if call[4] == "qlib_snapshot_observer"
+    )
+    assert observer[0] is bridge.snapshot_timer_callback
+    assert observer[1].endswith("093500")
+
+
+def test_snapshot_observer_timer_never_calls_order_advance(bridge, monkeypatch):
+    observed = []
+    bridge.g.loaded = True
+    bridge.g.trading_enabled = True
+    monkeypatch.setattr(
+        bridge, "_process_snapshot_requests", lambda: observed.append(True),
+    )
+    monkeypatch.setattr(
+        bridge, "_advance",
+        lambda context: pytest.fail("snapshot timer called order advance"),
+    )
+
+    bridge.snapshot_timer_callback(object())
+
+    assert observed == [True]
 
 
 def test_timer_registration_is_safe_when_qmt_invokes_overdue_timer_immediately(
@@ -132,6 +1279,236 @@ def _read_fills(bridge, batch_id=BATCH_ID):
     if not p.exists():
         return []
     return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+
+
+def _read_events(bridge):
+    path = (
+        Path(bridge.BRIDGE_ROOT) / "logs" /
+        ("qmt_events_%s.jsonl" % bridge._today())
+    )
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text().splitlines()
+            if line.strip()]
+
+
+def _assert_event_subsequence(events, expected):
+    remaining = iter([row["event"] for row in events])
+    for event_name in expected:
+        assert any(actual == event_name for actual in remaining), (
+            "missing ordered event %s" % event_name
+        )
+
+
+@pytest.mark.parametrize(
+    "profile,price_type,current_prefix,other_prefix,now",
+    [
+        (
+            "CLOSE_AUCTION", "CLOSE_AUCTION_LIMIT",
+            "LIVE_OK_", "PR49_LIVE_OK_", "14:57:30",
+        ),
+        (
+            "AFTER_HOURS_FIXED_PRICE", "AFTER_HOURS_CLOSE",
+            "PR49_LIVE_OK_", "LIVE_OK_", "15:05:30",
+        ),
+    ],
+)
+def test_dual_authorization_closes_either_profile_before_passorder(
+    bridge, monkeypatch, tmp_path,
+    profile, price_type, current_prefix, other_prefix, now,
+):
+    current_root, other_root = _profile_roots(tmp_path, profile)
+    _activate_profile(bridge, profile, current_root, other_root)
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    order["price_type"] = price_type
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    current_marker = (
+        current_root / "state" / (current_prefix + bridge._today())
+    )
+    other_marker = other_root / "state" / (other_prefix + bridge._today())
+    current_marker.write_text("")
+    other_marker.parent.mkdir(parents=True)
+    other_marker.write_text("")
+    bridge._claim_new_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: now)
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("dual authorization reached passorder"),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        bridge, "_get_can_use_volume",
+        lambda *args: pytest.fail("dual authorization reached broker state"),
+    )
+
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch)
+
+    assert bridge.g.batch is None
+    fills = _read_fills(bridge)
+    assert [(row["status"], row["message"]) for row in fills] == [
+        ("SKIPPED", "dual authorization blocked"),
+    ]
+    event_rows = (
+        current_root / "logs" / ("qmt_events_%s.jsonl" % bridge._today())
+    ).read_text().splitlines()
+    blocked = [
+        json.loads(row) for row in event_rows
+        if json.loads(row)["event"] == "DUAL_AUTHORIZATION_BLOCKED"
+    ]
+    assert len(blocked) == 1
+    assert blocked[0]["authorization_path"] == str(current_marker)
+    assert blocked[0]["other_authorization_path"] == str(other_marker)
+
+
+def test_dual_authorization_decision_survives_restart_after_markers_removed(
+    bridge, monkeypatch, tmp_path,
+):
+    current_root, other_root = _profile_roots(tmp_path, "CLOSE_AUCTION")
+    _activate_profile(
+        bridge, "CLOSE_AUCTION", current_root, other_root,
+    )
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    current_marker = Path(bridge._authorization_path(bridge._today()))
+    other_marker = Path(bridge._other_authorization_path(bridge._today()))
+    current_marker.write_text("")
+    other_marker.parent.mkdir(parents=True)
+    other_marker.write_text("")
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.trading_started = True
+    batch.dual_authorization_blocked = True
+    bridge._save_active_state(batch)
+    current_marker.unlink()
+    other_marker.unlink()
+    bridge.g.batch = None
+
+    bridge._recover_processing_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("frozen dual block reached passorder"),
+        raising=False,
+    )
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert bridge.g.batch is None
+    assert _read_fills(bridge)[0]["message"] == "dual authorization blocked"
+
+
+@pytest.mark.parametrize(
+    "profile,cutoff",
+    [
+        ("CLOSE_AUCTION", "15:00:05"),
+        ("CLOSE_AUCTION", "15:00:30"),
+        ("AFTER_HOURS_FIXED_PRICE", "15:28:00"),
+        ("AFTER_HOURS_FIXED_PRICE", "15:30:00"),
+    ],
+)
+def test_recovered_dual_block_precedes_cancel_finalize_and_all_broker_apis(
+    bridge, monkeypatch, tmp_path, profile, cutoff,
+):
+    current_root, other_root = _profile_roots(tmp_path, profile)
+    _activate_profile(bridge, profile, current_root, other_root)
+    price_type = (
+        "CLOSE_AUCTION_LIMIT" if profile == "CLOSE_AUCTION"
+        else "AFTER_HOURS_CLOSE"
+    )
+    sell = _order(coid="20260714001001S", side="SELL", priority=10)
+    buy = _order(coid="20260714001002B", side="BUY", priority=20)
+    sell["price_type"] = price_type
+    buy.update(price_type=price_type, max_quantity=100)
+    _write_batch(bridge, bridge._today(), [sell, buy], mode="LIVE")
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.trading_started = True
+    batch.execution_authorized = True
+    batch.execution_live = True
+    batch.dual_authorization_blocked = True
+    batch.submitted[sell["client_order_id"]] = True
+    bridge._save_active_state(batch)
+    bridge.g.batch = None
+
+    monkeypatch.setattr(bridge, "_now_hms", lambda: cutoff)
+
+    def forbidden_api(*args, **kwargs):
+        pytest.fail("persisted dual block reached a broker/order API")
+
+    for name in (
+        "_get_orders_by_remark", "_get_can_use_volume", "_get_available_cash",
+        "_official_close", "_instrument_limit_price", "_real_account_preflight",
+        "passorder", "get_trade_detail_data", "can_cancel_order", "cancel",
+    ):
+        monkeypatch.setattr(bridge, name, forbidden_api, raising=False)
+
+    bridge._advance(_TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    assert bridge.g.batch is None
+    fills = _read_fills(bridge)
+    assert len(fills) == 2
+    assert {row["status"] for row in fills} == {"SKIPPED"}
+    assert {row["message"] for row in fills} == {
+        "dual authorization blocked",
+    }
+
+
+def test_loaded_dual_block_precedes_advance_poll_time_gate(
+    bridge, monkeypatch, tmp_path,
+):
+    current_root, other_root = _profile_roots(tmp_path, "CLOSE_AUCTION")
+    _activate_profile(
+        bridge, "CLOSE_AUCTION", current_root, other_root,
+    )
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.execution_authorized = True
+    batch.execution_live = True
+    batch.dual_authorization_blocked = True
+    bridge.g.batch = batch
+    bridge.g.last_poll = 100.0
+    monkeypatch.setattr(bridge.time, "time", lambda: 100.0)
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: pytest.fail("loaded dual block reached broker API"),
+        raising=False,
+    )
+
+    bridge._advance(object())
+
+    assert bridge.g.batch is None
+    assert _read_fills(bridge)[0]["message"] == "dual authorization blocked"
+
+
+@pytest.mark.parametrize(
+    "profile,wrong_price_type",
+    [
+        ("CLOSE_AUCTION", "AFTER_HOURS_CLOSE"),
+        ("AFTER_HOURS_FIXED_PRICE", "CLOSE_AUCTION_LIMIT"),
+    ],
+)
+def test_batch_price_type_must_match_selected_qmt_profile(
+    bridge, tmp_path, profile, wrong_price_type,
+):
+    current_root, other_root = _profile_roots(tmp_path, profile)
+    _activate_profile(
+        bridge, profile, current_root, other_root,
+    )
+    order = _order()
+    order["price_type"] = wrong_price_type
+    _write_batch(bridge, bridge._today(), [order])
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch is None
+    assert _read_fills(bridge)[0]["message"] == (
+        "price_type must match execution profile: " +
+        bridge._expected_signal_price_type()
+    )
 
 
 def test_expired_batch_skipped(bridge):
@@ -356,6 +1733,49 @@ def test_malformed_batch_is_quarantined_without_blocking_next_batch(bridge):
     assert (archive / "signal_000_bad.done").exists()
 
 
+@pytest.mark.parametrize("case", [
+    "oversize", "empty", "malformed_header", "non_object_header",
+    "malformed_order",
+])
+def test_unreadable_claimed_batch_emits_sanitized_validation_event(
+    bridge, case,
+):
+    processing = Path(bridge.BRIDGE_ROOT) / "processing"
+    jsonl = processing / ("signal_%s.jsonl" % case)
+    done = processing / ("signal_%s.done" % case)
+    done.write_text("sha256:bad\n")
+    if case == "oversize":
+        bridge.MAX_BATCH_BYTES = 8
+        jsonl.write_text("x" * 9)
+    elif case == "empty":
+        jsonl.write_text("")
+    elif case == "malformed_header":
+        jsonl.write_text("{not-json}\n")
+    elif case == "non_object_header":
+        jsonl.write_text("[]\n")
+    else:
+        jsonl.write_text(json.dumps({
+            "batch_id": "bad_batch", "strategy_id": "probe",
+            "trade_date": bridge._today(),
+            "account_id": "8890116049",
+        }) + "\n{bad-order}\n")
+
+    assert bridge._parse_and_check(str(jsonl), str(done)) is None
+
+    event = [row for row in _read_events(bridge)
+             if row["event"] == "BATCH_VALIDATED"][-1]
+    assert event["validation_passed"] is False
+    assert event["jsonl_file"] == jsonl.name
+    assert event["done_file"] == done.name
+    assert event["rejection_reason"]
+    serialized = json.dumps(event, sort_keys=True)
+    assert "8890116049" not in serialized
+    if case == "malformed_order":
+        assert event["batch_id"] == "bad_batch"
+        assert event["strategy_id"] == "probe"
+        assert event["account_id_masked"] == "88******49"
+
+
 def test_structurally_invalid_order_fails_closed_without_crashing(bridge):
     invalid = _order()
     invalid.pop("client_order_id")
@@ -405,6 +1825,21 @@ def test_restart_recovers_active_processing_batch(bridge):
     batch.phase_started = 1234.5
     batch.submitted[_order()["client_order_id"]] = True
     batch.remaining_cash = 1234.5
+    batch.execution_live = True
+    coid = _order()["client_order_id"]
+    batch.order_evidence[coid] = {
+        "query_count": 2,
+        "attempt_started": 1000.0,
+        "api_returned": True,
+        "api_return": {
+            "return_repr": "None", "return_type": "NoneType",
+            "elapsed_ms": 1.5,
+        },
+        "order_observed": True,
+        "qmt_order_ids": ["qmt-recovered-1"],
+        "callback_counts": {"order": 1, "deal": 1, "error": 0},
+        "last_broker_statuses": ["qmt-recovered-1:48"],
+    }
     bridge._save_active_state(batch)
 
     bridge.g.batch = None
@@ -416,6 +1851,29 @@ def test_restart_recovers_active_processing_batch(bridge):
     assert recovered.phase_started == pytest.approx(1234.5)
     assert recovered.remaining_cash == pytest.approx(1234.5)
     assert _order()["client_order_id"] in recovered.submitted
+    evidence = recovered.order_evidence[coid]
+    assert evidence["query_count"] == 2
+    assert evidence["api_returned"] is True
+    assert evidence["api_return"]["return_type"] == "NoneType"
+    assert evidence["order_observed"] is True
+    assert evidence["callback_counts"] == {
+        "order": 1, "deal": 1, "error": 0,
+    }
+
+    bridge._get_orders_by_remark = lambda account_id: {}
+    bridge._poll_status(recovered)
+    assert recovered.order_evidence[coid]["query_count"] == 3
+    bridge._write_fill(
+        recovered, recovered.orders[0], "ERROR", 0, 0.0,
+        "qmt-recovered-1",
+        "QMT order observed but final status unavailable at close",
+    )
+    final = [row for row in _read_events(bridge)
+             if row["event"] == "ORDER_FINALIZED"][-1]
+    assert final["api_returned"] is True
+    assert final["order_observed"] is True
+    assert final["query_count"] == 3
+    assert final["callback_counts"]["deal"] == 1
 
 
 def test_corrupt_active_state_recovers_without_duplicate_submission(bridge):
@@ -591,6 +2049,30 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
     assert all(row["price"] == 11.0 for row in submitted)
 
 
+def test_immutable_buy_maximum_caps_submission_when_rollout_cap_increases(
+    bridge, monkeypatch,
+):
+    bridge.MAX_ORDER_QUANTITY = 1_000
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(max_quantity=100, target_value=8_000.0)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    bridge.TRADE_START = "00:00:00"
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 10000.0)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0), bridge.g.batch)
+
+    assert [args[6] for args in submitted] == [100]
+
+
 def test_available_cash_distinguishes_empty_query_from_real_zero(
     bridge, monkeypatch,
 ):
@@ -732,6 +2214,7 @@ class _TickCtx:
     def __init__(
         self, last_price, ask_price=None, bid_price=None,
         up_stop=0.0, down_stop=0.0, detail_error=False,
+        after_hours=True,
     ):
         self._last = last_price
         self._ask = [] if ask_price is None else [ask_price]
@@ -739,6 +2222,7 @@ class _TickCtx:
         self._up_stop = up_stop
         self._down_stop = down_stop
         self._detail_error = detail_error
+        self._after_hours = after_hours
 
     def get_full_tick(self, codes):
         return {
@@ -753,10 +2237,13 @@ class _TickCtx:
     def get_instrumentdetail(self, stock_code):
         if self._detail_error:
             raise RuntimeError("instrument detail unavailable")
-        return {
+        detail = {
             "UpStopPrice": self._up_stop,
             "DownStopPrice": self._down_stop,
         }
+        if self._after_hours is not None:
+            detail["IsAfterHoursTrading"] = self._after_hours
+        return detail
 
 
 def test_close_auction_limit_price_uses_daily_side_limit(bridge):
@@ -781,6 +2268,415 @@ def test_persistent_log_appends_text_and_jsonl(bridge):
     text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
                 ("qmt_bridge_%s.log" % day)).read_text()
     assert "first" in text_log and "second" in text_log
+
+
+def test_successful_passorder_return_redacts_secrets_and_account(
+    bridge, monkeypatch,
+):
+    bridge.ACCOUNT_ID = "8890116049"
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order["quantity"] = 100
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8890116049", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: {
+            "token": "return-token-value",
+            "api_key": "return-api-key",
+            "secret_token": "return-secret-token",
+            "sendkey": "return-send-key",
+            "credential_value": "return-credential-value",
+            "session_id": "return-session-id",
+            "nested": [{
+                "cookie_value": "return-cookie-value",
+                "auth_credential": "return-auth-credential",
+                "password_hint": "return-password-hint",
+            }],
+            "returned_account_id": "8890116049",
+            "status": "queued",
+            "order_id": "qmt-order-101",
+            "timestamp": "2026-08-08T15:05:00",
+            "price": 10.50,
+        },
+        raising=False,
+    )
+
+    assert bridge._submit(object(), batch, order, True, limit_price=11.0)
+
+    event_text = json.dumps(_read_events(bridge), sort_keys=True)
+    text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
+                ("qmt_bridge_%s.log" % bridge._today())).read_text()
+    active = Path(bridge._active_state_path(BATCH_ID)).read_text()
+    combined = event_text + text_log + active
+    assert "return-token-value" not in combined
+    assert "return-api-key" not in combined
+    assert "return-secret-token" not in combined
+    assert "return-send-key" not in combined
+    assert "return-credential-value" not in combined
+    assert "return-session-id" not in combined
+    assert "return-cookie-value" not in combined
+    assert "return-auth-credential" not in combined
+    assert "return-password-hint" not in combined
+    assert "8890116049" not in combined
+    assert "88******49" in combined
+    assert "REDACTED" in combined
+    assert "queued" in combined
+    assert "qmt-order-101" in combined
+    assert "2026-08-08T15:05:00" in combined
+    assert "10.5" in combined
+
+
+def test_successful_error_persistence_redacts_external_message(
+    bridge,
+):
+    bridge.ACCOUNT_ID = "8890116049"
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8890116049", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    bridge.g.batch = batch
+
+    class Args:
+        userOrderId = order["client_order_id"]
+        orderCode = order["stock_code"]
+        opType = 23
+
+    bridge.orderError_callback(
+        object(), Args(),
+        "password=hunter2 token: bearer-value account_id=8890116049",
+    )
+
+    event_text = json.dumps(_read_events(bridge), sort_keys=True)
+    fills_text = (Path(bridge._fills_path(BATCH_ID))).read_text()
+    text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
+                ("qmt_bridge_%s.log" % bridge._today())).read_text()
+    combined = event_text + fills_text + text_log
+    assert "hunter2" not in combined
+    assert "bearer-value" not in combined
+    assert "8890116049" not in combined
+    assert "88******49" in combined
+    assert "REDACTED" in combined
+
+
+def test_external_message_redaction_uses_active_batch_account_context(
+    bridge,
+):
+    bridge.ACCOUNT_ID = ""
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8890116049", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    bridge.g.batch = batch
+
+    class Args:
+        userOrderId = order["client_order_id"]
+        orderCode = order["stock_code"]
+        opType = 23
+
+    bridge.orderError_callback(
+        object(), Args(),
+        "Authorization: Bearer fake-token-123; "
+        "session credential fake-session-456; "
+        "session fake-session-789; credential fake-credential-789; "
+        "broker rejected account 8890116049",
+    )
+
+    persisted = "\n".join([
+        json.dumps(_read_events(bridge), sort_keys=True),
+        Path(bridge._fills_path(BATCH_ID)).read_text(),
+        (Path(bridge.BRIDGE_ROOT) / "logs" /
+         ("qmt_bridge_%s.log" % bridge._today())).read_text(),
+        Path(bridge._active_state_path(BATCH_ID)).read_text(),
+    ])
+    assert "fake-token-123" not in persisted
+    assert "fake-session-456" not in persisted
+    assert "fake-session-789" not in persisted
+    assert "fake-credential-789" not in persisted
+    assert "8890116049" not in persisted
+    assert "88******49" in persisted
+    assert "REDACTED" in persisted
+
+
+def test_contextual_redaction_preserves_prices_times_and_order_ids(bridge):
+    bridge.ACCOUNT_ID = ""
+    batch = _live_batch(bridge)
+    bridge.g.batch = batch
+    message = "price 10.50 at 15:05:00 order 20260714001001B"
+
+    bridge._log_event("NUMERIC_EVIDENCE", message=message)
+
+    event = _read_events(bridge)[-1]
+    assert event["message"] == message
+    text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
+                ("qmt_bridge_%s.log" % bridge._today())).read_text()
+    assert message in text_log
+
+
+def test_successful_order_persists_complete_evidence_sequence(
+    bridge, monkeypatch,
+):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order["quantity"] = 100
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8890116049", "account_environment": "SIMULATION",
+        "schema_version": "2.0", "strategy_id": "probe",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.execution_live = True
+    bridge.g.batch = batch
+
+    class Account:
+        m_strAccountID = "8890116049"
+        m_dAvailable = 9990.0
+        m_dFrozenCash = 10.0
+
+    class Position:
+        m_strInstrumentID = "000001"
+        m_nVolume = 300
+        m_nCanUseVolume = 200
+        m_nFrozenVolume = 100
+
+    def broker_query(account_id, account_type, kind):
+        return [Account()] if kind == "ACCOUNT" else [Position()]
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", broker_query, raising=False,
+    )
+
+    def passorder_after_attempt(*args):
+        assert _read_events(bridge)[-1]["event"] == "PASSORDER_ATTEMPT"
+        return {"queued": True}
+
+    monkeypatch.setattr(
+        bridge, "passorder", passorder_after_attempt, raising=False,
+    )
+    assert bridge._submit(
+        _TickCtx(10.50, up_stop=11.0), batch, order, True,
+        limit_price=11.0,
+    )
+    assert batch.fills == {}
+
+    class Working:
+        m_strRemark = order["client_order_id"]
+        m_strOrderSysID = "qmt-101"
+        m_nOrderStatus = 48
+        m_strOrderStatus = "reported"
+        m_dOrderPrice = 11.0
+        m_nOrderVolume = 100
+        m_nVolumeTraded = 0
+        m_nVolumeCanceled = 0
+        m_strErrorMsg = ""
+        m_strInstrumentID = "000001"
+
+    class Filled(Working):
+        m_nOrderStatus = bridge.STATUS_SUCCEEDED
+        m_strOrderStatus = "filled"
+        m_nVolumeTraded = 100
+        m_dTradedPrice = 10.50
+
+    queries = iter([
+        {order["client_order_id"]: [Working()]},
+        {order["client_order_id"]: [Filled()]},
+    ])
+    monkeypatch.setattr(
+        bridge, "_get_orders_by_remark", lambda account_id: next(queries),
+    )
+    bridge._poll_status(batch)
+    assert batch.fills[order["client_order_id"]]["status"] == "ACCEPTED"
+    bridge.order_callback(object(), Working())
+
+    class Deal:
+        m_strRemark = order["client_order_id"]
+        m_strOrderSysID = "qmt-101"
+        m_strDealID = "deal-9"
+        m_nVolume = 100
+        m_dPrice = 10.50
+        m_nVolumeTraded = 100
+
+    bridge.deal_callback(object(), Deal())
+    bridge._poll_status(batch)
+
+    events = _read_events(bridge)
+    _assert_event_subsequence(events, [
+        "SECURITY_DETAIL", "PREORDER_SNAPSHOT", "PASSORDER_ATTEMPT",
+        "PASSORDER_RETURNED", "SUBMITTED_UNCONFIRMED", "ORDER_QUERY",
+        "ORDER_OBSERVED", "ORDER_STATUS_CHANGED", "ORDER_CALLBACK",
+        "DEAL_CALLBACK", "ORDER_FINALIZED",
+    ])
+    security = next(row for row in events
+                    if row["event"] == "SECURITY_DETAIL")
+    assert security["raw_fields"]["up_stop_price"] == 11.0
+    preorder = next(row for row in events
+                    if row["event"] == "PREORDER_SNAPSHOT")
+    assert preorder["market"]["official_close"] == 10.50
+    assert preorder["market"]["official_close_source"] == "lastPrice"
+    assert preorder["broker"]["available_cash"] == 9990.0
+    assert preorder["broker"]["can_use_shares"] == 200
+    assert preorder["broker"]["frozen_shares"] == 100
+    assert preorder["passorder_arguments"]["account_id_masked"] == (
+        "88******49"
+    )
+    assert "account_id" not in preorder["passorder_arguments"]
+    returned = next(row for row in events
+                    if row["event"] == "PASSORDER_RETURNED")
+    assert returned["return_repr"] == "{'queued': True}"
+    assert returned["return_type"] == "dict"
+    assert returned["elapsed_ms"] >= 0
+    query = next(row for row in events if row["event"] == "ORDER_QUERY")
+    assert query["result_count"] == 1
+    assert query["match_count"] == 1
+    assert query["query_number"] == 1
+    assert query["elapsed_ms_since_attempt"] >= 0
+    assert query["candidates"][0]["order_id"] == "qmt-101"
+    final = next(row for row in events
+                 if row["event"] == "ORDER_FINALIZED")
+    assert final["api_returned"] is True
+    assert final["order_observed"] is True
+    assert final["callback_counts"]["order"] == 1
+    assert final["callback_counts"]["deal"] == 1
+    assert final["fill_status"] == "FILLED"
+
+
+def test_normal_passorder_return_never_observed_finishes_error(
+    bridge, monkeypatch,
+):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order["quantity"] = 100
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    batch = bridge.Batch(header, [order])
+    batch.execution_live = True
+    monkeypatch.setattr(bridge, "passorder", lambda *args: None, raising=False)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+
+    assert bridge._submit(object(), batch, order, True, limit_price=11.0)
+    bridge._poll_status(batch)
+    bridge._poll_status(batch)
+    active_state = json.loads(
+        Path(bridge._active_state_path(BATCH_ID)).read_text()
+    )
+    assert active_state["order_evidence"][
+        order["client_order_id"]
+    ]["query_count"] == 2
+    monkeypatch.setattr(bridge, "_now_hms", lambda: bridge.FINALIZE_AT)
+    bridge._force_finalize_if_near_close(object(), batch)
+
+    events = _read_events(bridge)
+    missing = [row for row in events
+               if row["event"] == "ORDER_NOT_OBSERVED"]
+    assert [row["query_number"] for row in missing] == [1, 2, 3]
+    assert all(row["elapsed_ms_since_attempt"] >= 0 for row in missing)
+    statuses = [row.get("status") for row in events
+                if row["event"] == "ORDER_STATUS_CHANGED"]
+    assert "ACCEPTED" not in statuses
+    fills = _read_fills(bridge)
+    assert fills[-1]["status"] == "ERROR"
+    assert fills[-1]["message"] == "QMT order not observed after passorder"
+    final = [row for row in events if row["event"] == "ORDER_FINALIZED"][-1]
+    assert final["api_returned"] is True
+    assert final["order_observed"] is False
+    assert final["fill_status"] == "ERROR"
+    assert final["reason"] == "QMT order not observed after passorder"
+
+
+def test_runtime_batch_timer_and_account_snapshot_evidence_is_sanitized(
+    bridge, monkeypatch,
+):
+    bridge.ACCOUNT_ID = "8890116049"
+    context = _ScheduleContext()
+    context.qmt_version = "QMT-test-1"
+    bridge.init(context)
+    _write_batch(
+        bridge, bridge._today(), [_order()], mode="LIVE",
+        account_id="8890116049",
+    )
+    bridge._claim_new_batch()
+
+    class Account:
+        m_strAccountID = "8890116049"
+        m_dAvailable = 123.0
+        m_dFrozenCash = 4.0
+        m_dBalance = 1000.0
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: [Account()] if args[2] == "ACCOUNT" else [],
+        raising=False,
+    )
+    bridge.g.batch.execution_live = True
+    bridge._write_account_snapshot(bridge.g.batch)
+    bridge._write_snapshot_marker(bridge.g.batch)
+
+    events = _read_events(bridge)
+    runtime = next(row for row in events if row["event"] == "RUNTIME_CONFIG")
+    assert runtime["account_id_masked"] == "88******49"
+    assert runtime["qmt_version"] == "QMT-test-1"
+    assert runtime["source_version"]
+    assert runtime["source_sha256"].startswith("sha256:")
+    assert runtime["execution_profile"] == "CLOSE_AUCTION"
+    assert runtime["max_order_quantity"] == 100
+    assert "account_id" not in runtime
+    timer = next(row for row in events if row["event"] == "TIMER_REGISTERED")
+    assert timer["method"] == "schedule_run"
+    assert timer["registered"] is True
+    assert timer["first_wakeup"].endswith("145655")
+    batch_event = next(row for row in events
+                       if row["event"] == "BATCH_VALIDATED")
+    assert batch_event["checksum_match"] is True
+    assert batch_event["order_count"] == 1
+    assert batch_event["account_id_masked"] == "88******49"
+    snapshot = [row for row in events
+                if row["event"] == "ACCOUNT_SNAPSHOT"][-1]
+    assert snapshot["available_cash"] == 123.0
+    assert snapshot["frozen_cash"] == 4.0
+    assert snapshot["account_id_masked"] == "88******49"
+    serialized = json.dumps(events, sort_keys=True)
+    assert "8890116049" not in serialized
+    assert "token" not in serialized.lower()
+    exported_snapshot = (Path(bridge._account_snapshot_path(BATCH_ID))).read_text()
+    refresh_marker = Path(bridge._snapshot_marker_path(BATCH_ID)).read_text()
+    assert "8890116049" not in exported_snapshot
+    assert "8890116049" not in refresh_marker
+    assert "88******49" in exported_snapshot
+    assert "88******49" in refresh_marker
+
+
+def test_jsonl_log_write_failure_recovers_without_raising(
+    bridge, monkeypatch,
+):
+    real_append = bridge._append_log_line
+    failures = {"remaining": 1}
+
+    def fail_json_once(name, line):
+        if name.startswith("qmt_events_") and failures["remaining"]:
+            failures["remaining"] -= 1
+            raise OSError("disk temporarily unavailable")
+        return real_append(name, line)
+
+    monkeypatch.setattr(bridge, "_append_log_line", fail_json_once)
+    bridge._log_event("FIRST_DROPPED", secret_token="must-not-be-retained")
+    bridge._log_event("SECOND_PERSISTED", message="ok")
+
+    events = _read_events(bridge)
+    assert [row["event"] for row in events] == [
+        "SECOND_PERSISTED", "LOG_WRITE_RECOVERED",
+    ]
+    recovered = events[-1]
+    assert recovered["failed_event"] == "FIRST_DROPPED"
+    assert recovered["failure_count"] == 1
+    assert len(json.dumps(recovered)) < 1024
+    assert "must-not-be-retained" not in json.dumps(recovered)
 
 
 def test_passorder_return_is_not_broker_acceptance(bridge, monkeypatch):
@@ -817,8 +2713,106 @@ def test_order_error_callback_persists_rejection(bridge):
     bridge.orderError_callback(object(), Args(), "broker rejected")
 
     assert bridge.g.batch.fills[order["client_order_id"]]["status"] == "REJECTED"
-    assert "broker rejected" in (Path(bridge.BRIDGE_ROOT) / "logs" /
-                                  ("qmt_events_%s.jsonl" % bridge._today())).read_text()
+    callback = next(row for row in _read_events(bridge)
+                    if row["event"] == "ORDER_ERROR_CALLBACK")
+    assert callback["client_order_id"] == order["client_order_id"]
+    assert callback["error_message"] == "broker rejected"
+
+
+@pytest.mark.parametrize("callback_kind,event_name", [
+    ("order", "ORDER_CALLBACK"),
+    ("deal", "DEAL_CALLBACK"),
+    ("error", "ORDER_ERROR_CALLBACK"),
+])
+def test_wrong_remark_same_symbol_callback_never_associates(
+    bridge, callback_kind, event_name,
+):
+    order = _order(coid="canonical-client-order", side="BUY", priority=20)
+    order["quantity"] = 100
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    bridge.g.batch = batch
+
+    class Callback:
+        userOrderId = "foreign-client-order"
+        m_strRemark = "foreign-client-order"
+        orderCode = order["stock_code"]
+        m_strInstrumentID = "000001"
+        m_strOrderSysID = "foreign-qmt-id"
+        m_nOrderStatus = 48
+        m_nOrderVolume = 100
+        m_nVolumeTraded = 100
+        m_nVolume = 100
+        m_dOrderPrice = 10.0
+        m_dPrice = 10.0
+
+    if callback_kind == "order":
+        bridge.order_callback(object(), Callback())
+    elif callback_kind == "deal":
+        bridge.deal_callback(object(), Callback())
+    else:
+        bridge.orderError_callback(object(), Callback(), "foreign rejection")
+
+    assert batch.order_evidence == {}
+    assert batch.submitted == {}
+    assert batch.fills == {}
+    callback = [row for row in _read_events(bridge)
+                if row["event"] == event_name][-1]
+    assert callback["associated"] is False
+    assert callback["batch_id"] == ""
+    assert callback["client_order_id"] == ""
+    assert callback["raw_remark"] == "foreign-client-order"
+
+
+def test_callback_first_real_id_is_accepted_and_not_finalized_unobserved(
+    bridge, monkeypatch,
+):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order["quantity"] = 100
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    batch.execution_live = True
+    bridge.g.batch = batch
+    monkeypatch.setattr(bridge, "passorder", lambda *args: None, raising=False)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    assert bridge._submit(object(), batch, order, True, limit_price=11.0)
+
+    class Callback:
+        m_strRemark = order["client_order_id"]
+        m_strInstrumentID = "000001"
+        m_strOrderSysID = "callback-qmt-1"
+        m_nOrderStatus = 48
+        m_nOrderVolume = 100
+        m_nVolumeTraded = 0
+        m_dOrderPrice = 11.0
+
+    bridge.order_callback(object(), Callback())
+    assert batch.order_evidence[order["client_order_id"]][
+        "order_observed"
+    ] is True
+    assert batch.fills[order["client_order_id"]]["status"] == "ACCEPTED"
+
+    bridge._poll_status(batch)
+    monkeypatch.setattr(bridge, "_now_hms", lambda: bridge.FINALIZE_AT)
+    bridge._force_finalize_if_near_close(object(), batch)
+
+    fills = _read_fills(bridge)
+    assert fills[-1]["status"] == "ERROR"
+    assert fills[-1]["message"] == (
+        "QMT order observed but final status unavailable at close"
+    )
+    assert all(fill["message"] != "QMT order not observed after passorder"
+               for fill in fills)
+    final = [row for row in _read_events(bridge)
+             if row["event"] == "ORDER_FINALIZED"][-1]
+    assert final["order_observed"] is True
+    assert final["qmt_order_ids"] == ["callback-qmt-1"]
 
 
 def test_init_binds_configured_account_for_callbacks(bridge):
@@ -850,6 +2844,163 @@ def test_official_close_fails_closed_without_positive_last_price(
     bridge, last_price,
 ):
     assert bridge._official_close(_TickCtx(last_price), "000001.SZ") == 0.0
+
+
+@pytest.mark.parametrize("side", ["BUY", "SELL"])
+def test_fixed_price_requires_positive_official_close_before_api(
+    bridge, monkeypatch, tmp_path, side,
+):
+    probe_root, main_root = _profile_roots(
+        tmp_path, "AFTER_HOURS_FIXED_PRICE",
+    )
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE",
+        probe_root, main_root,
+    )
+    order = _order(coid="20260714001001" + side[0], side=side)
+    order["price_type"] = "AFTER_HOURS_CLOSE"
+    order["quantity"] = 100
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    batch = bridge.Batch(header, [order])
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("invalid close reference reached passorder"),
+        raising=False,
+    )
+
+    assert bridge._submit(_TickCtx(0.0), batch, order, True) is False
+    assert batch.submitted == {order["client_order_id"]: True}
+    assert batch.fills[order["client_order_id"]]["status"] == "ERROR"
+    assert batch.fills[order["client_order_id"]]["message"] == (
+        "official close unavailable"
+    )
+
+
+def test_fixed_price_passes_zero_and_logs_positive_close_reference_before_api(
+    bridge, monkeypatch, tmp_path,
+):
+    probe_root, main_root = _profile_roots(
+        tmp_path, "AFTER_HOURS_FIXED_PRICE",
+    )
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE",
+        probe_root, main_root,
+    )
+    order = _order(coid="20260714001001S", side="SELL")
+    order.update(price_type="AFTER_HOURS_CLOSE", quantity=100)
+    header = {
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }
+    batch = bridge.Batch(header, [order])
+    calls = []
+
+    def passorder_after_state(*args):
+        active = (
+            Path(bridge.BRIDGE_ROOT) / "state" /
+            ("active_" + BATCH_ID + ".json")
+        )
+        assert json.loads(active.read_text())["submitted"] == [
+            order["client_order_id"],
+        ]
+        calls.append(args)
+
+    monkeypatch.setattr(bridge, "passorder", passorder_after_state, raising=False)
+
+    assert bridge._submit(_TickCtx(10.50), batch, order, True)
+
+    assert len(calls) == 1
+    assert calls[0][4] == 49
+    assert calls[0][5] == 0.0
+    events = [
+        json.loads(row) for row in (
+            Path(bridge.BRIDGE_ROOT) / "logs" /
+            ("qmt_events_%s.jsonl" % bridge._today())
+        ).read_text().splitlines()
+    ]
+    submitted = [
+        row for row in events if row["event"] == "SUBMITTED_UNCONFIRMED"
+    ]
+    assert submitted[0]["official_close_reference"] == 10.50
+    assert submitted[0]["limit_price"] == 0.0
+
+
+@pytest.mark.parametrize("after_hours", [False, None])
+def test_fixed_price_requires_positive_security_eligibility_before_api(
+    bridge, monkeypatch, tmp_path, after_hours,
+):
+    probe_root, main_root = _profile_roots(
+        tmp_path, "AFTER_HOURS_FIXED_PRICE",
+    )
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", probe_root, main_root,
+    )
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(price_type="AFTER_HOURS_CLOSE", quantity=100)
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID,
+        "trade_date": bridge._today(),
+        "mode": "LIVE",
+        "account_id": "1",
+        "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("ineligible security reached passorder"),
+        raising=False,
+    )
+
+    assert bridge._submit(
+        _TickCtx(10.50, after_hours=after_hours), batch, order, True,
+    ) is False
+
+    fill = batch.fills[order["client_order_id"]]
+    assert fill["status"] == "ERROR"
+    assert fill["message"] == (
+        "after-hours fixed-price eligibility not confirmed"
+    )
+    events = _read_events(bridge)
+    _assert_event_subsequence(events, [
+        "SECURITY_DETAIL", "SECURITY_ELIGIBILITY_ERROR", "ORDER_FINALIZED",
+    ])
+    assert not any(event["event"] == "PASSORDER_ATTEMPT" for event in events)
+
+
+def test_fixed_price_buy_sizes_and_reserves_at_close_but_passes_zero(
+    bridge, monkeypatch, tmp_path,
+):
+    probe_root, main_root = _profile_roots(
+        tmp_path, "AFTER_HOURS_FIXED_PRICE",
+    )
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", probe_root, main_root,
+    )
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(price_type="AFTER_HOURS_CLOSE", max_quantity=100)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    Path(bridge._authorization_path(bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:05:30")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 10000.0)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+
+    assert len(submitted) == 1
+    assert submitted[0][4:7] == (49, 0.0, 100)
+    assert bridge.g.batch.remaining_cash == pytest.approx(
+        10000.0 - bridge._estimated_buy_cost(100, 10.0)
+    )
 
 
 def test_simulate_batch_processes_without_qmt_api(bridge, monkeypatch):
@@ -940,6 +3091,30 @@ def test_poll_status_sums_split_children(bridge, monkeypatch):
     assert fill["status"] == "FILLED"
     assert fill["filled_qty"] == 244500
     assert fill["qmt_order_id"] == "175,176,177"
+
+
+def test_order_query_preserves_more_than_fifty_candidates(bridge):
+    order = _order(coid="20260714001004B", side="BUY", priority=20)
+    order["quantity"] = 6000
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    batch.execution_live = True
+    batch.submitted[order["client_order_id"]] = True
+    details = [
+        _OrderDetail("qmt-%03d" % index, -1, 0, 0.0)
+        for index in range(60)
+    ]
+
+    bridge._poll_status(batch, {order["client_order_id"]: details})
+
+    query = next(row for row in _read_events(bridge)
+                 if row["event"] == "ORDER_QUERY")
+    assert query["match_count"] == 60
+    assert len(query["candidates"]) == 60
+    assert query["candidates"][-1]["order_id"] == "qmt-059"
 
 
 def test_force_finalize_cancels_all_split_children(bridge, monkeypatch):
@@ -1054,6 +3229,31 @@ def test_finalize_writes_broker_account_snapshot(bridge, monkeypatch):
             ("account_%s.done" % BATCH_ID)).exists()
 
 
+def test_account_snapshot_event_preserves_more_than_fifty_positions(
+    bridge, monkeypatch,
+):
+    batch = _live_batch(bridge)
+    positions = [
+        _PositionRow(str(600000 + index), "SH", 100 + index)
+        for index in range(60)
+    ]
+
+    def fake_query(account_id, account_type, kind):
+        return [_AccountRow()] if kind == "ACCOUNT" else positions
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", fake_query, raising=False,
+    )
+
+    bridge._write_account_snapshot(batch)
+
+    event = [row for row in _read_events(bridge)
+             if row["event"] == "ACCOUNT_SNAPSHOT"][-1]
+    assert event["position_count"] == 60
+    assert len(event["positions"]) == 60
+    assert event["positions"][-1]["stock_code"] == "600059.SH"
+
+
 def test_snapshot_failure_does_not_block_finalize(bridge, monkeypatch):
     batch = _live_batch(bridge)
 
@@ -1091,6 +3291,98 @@ def test_simulate_batch_writes_no_broker_snapshot(bridge, monkeypatch):
 def _marker_path(bridge, batch_id=BATCH_ID):
     return (Path(bridge.BRIDGE_ROOT) / "state" /
             ("snapshot_refresh_%s.json" % batch_id))
+
+
+def _snapshot_binding_marker(bridge, checksum):
+    return {
+        "batch_id": BATCH_ID,
+        "trade_date": bridge._today(),
+        "account_id_masked": "88******38",
+        "account_environment": "SIMULATION",
+        "account_type": "STOCK",
+        "schema_version": "2.0",
+        "signal_checksum": checksum,
+        "strategy_id": "s",
+        "order_count": 1,
+    }
+
+
+def _write_archived_signal(
+    bridge, suffix, account_id, order_line, header_checksum, done=True,
+):
+    header = {
+        "type": "batch_header", "schema_version": "2.0",
+        "batch_id": BATCH_ID, "strategy_id": "s",
+        "trade_date": bridge._today(), "signal_date": bridge._today(),
+        "account_id": account_id, "account_type": "STOCK",
+        "account_environment": "SIMULATION", "mode": "LIVE",
+        "created_at": "t", "order_count": 1,
+        "checksum": header_checksum,
+    }
+    archive = Path(bridge.BRIDGE_ROOT) / "archive"
+    stem = "signal_%s%s" % (BATCH_ID, suffix)
+    (archive / (stem + ".jsonl")).write_text(
+        json.dumps(header, sort_keys=True) + "\n" + order_line + "\n"
+    )
+    if done:
+        (archive / (stem + ".done")).write_text(header_checksum + "\n")
+
+
+def test_snapshot_binding_ignores_unpaired_and_body_mismatched_candidates(
+    bridge,
+):
+    current_account = "8881352838"
+    same_mask_account = "8899999938"
+    current_order_line = json.dumps(
+        _order(), sort_keys=True, separators=(",", ":"),
+    )
+    current_checksum = compute_checksum([current_order_line])
+    forged_order = _order(coid="20260714009999S")
+    forged_order_line = json.dumps(
+        forged_order, sort_keys=True, separators=(",", ":"),
+    )
+    marker = _snapshot_binding_marker(bridge, current_checksum)
+    _write_archived_signal(
+        bridge, "", same_mask_account, forged_order_line, current_checksum,
+    )
+    _write_archived_signal(
+        bridge, ".repeat_unpaired", same_mask_account,
+        current_order_line, current_checksum, done=False,
+    )
+    _write_archived_signal(
+        bridge, ".repeat_current", current_account,
+        current_order_line, current_checksum,
+    )
+    bridge.g = bridge.State()
+    bridge.ACCOUNT_ID = ""
+
+    resolved = bridge._snapshot_account_binding(marker)
+
+    assert resolved == current_account
+    assert current_account not in json.dumps(marker, sort_keys=True)
+    assert same_mask_account not in json.dumps(marker, sort_keys=True)
+
+
+def test_snapshot_binding_refuses_distinct_valid_accounts_with_same_mask(
+    bridge,
+):
+    current_account = "8881352838"
+    same_mask_account = "8899999938"
+    order_line = json.dumps(
+        _order(), sort_keys=True, separators=(",", ":"),
+    )
+    checksum = compute_checksum([order_line])
+    marker = _snapshot_binding_marker(bridge, checksum)
+    _write_archived_signal(
+        bridge, "", same_mask_account, order_line, checksum,
+    )
+    _write_archived_signal(
+        bridge, ".repeat_current", current_account, order_line, checksum,
+    )
+    bridge.g = bridge.State()
+    bridge.ACCOUNT_ID = ""
+
+    assert bridge._snapshot_account_binding(marker) == ""
 
 
 def test_post_close_refresh_rewrites_snapshot_with_close_values(
@@ -1135,12 +3427,59 @@ def test_post_close_refresh_rewrites_snapshot_with_close_values(
     assert positions and positions[0]["stock_code"] == "688223.SH"
     assert not marker.exists()
 
-    # 标记已消费：再跑不应再查询券商
+    # The consumed marker must not trigger another broker query.
     monkeypatch.setattr(
         bridge, "get_trade_detail_data",
         lambda *a: pytest.fail("consumed marker must not re-query"),
         raising=False)
     bridge._refresh_account_snapshots_after_close()
+
+
+def test_post_close_refresh_recovers_account_from_archived_batch_after_restart(
+    bridge, monkeypatch,
+):
+    bridge.ACCOUNT_ID = ""
+    _write_batch(
+        bridge, bridge._today(), [_order()], mode="LIVE",
+        account_id="8881352838",
+    )
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.execution_live = True
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda *args: [_AccountRow()] if args[2] == "ACCOUNT" else [],
+        raising=False,
+    )
+    bridge._finalize_batch(batch)
+
+    marker = _marker_path(bridge)
+    marker_text = marker.read_text()
+    assert "8881352838" not in marker_text
+    assert list((Path(bridge.BRIDGE_ROOT) / "archive").glob("signal_*.jsonl"))
+
+    bridge.g = bridge.State()
+    bridge.ACCOUNT_ID = ""
+    queried_accounts = []
+
+    def close_query(account_id, account_type, kind):
+        queried_accounts.append(account_id)
+        return [_AccountRow()] if kind == "ACCOUNT" else []
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", close_query, raising=False,
+    )
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:01:30")
+
+    bridge._refresh_account_snapshots_after_close()
+
+    assert queried_accounts == ["8881352838", "8881352838"]
+    assert not marker.exists()
+    snapshot_text = Path(bridge._account_snapshot_path(BATCH_ID)).read_text()
+    assert "8881352838" not in snapshot_text
+
+    bridge._refresh_account_snapshots_after_close()
+    assert queried_accounts == ["8881352838", "8881352838"]
 
 
 def test_stale_snapshot_marker_dropped_without_query(bridge, monkeypatch):

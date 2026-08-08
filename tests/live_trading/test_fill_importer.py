@@ -1,7 +1,9 @@
 """FillImporter：回执导入、SIMULATE 隔离、幂等、对账。"""
 import json
 import sqlite3
+import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import pytest
@@ -11,9 +13,42 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
-from live_trading.modules.signal_schema import FillEvent, SchemaError
+from live_trading.modules.operator_probe import (
+    account_identity_fingerprint,
+    snapshot_artifact_checksum,
+)
+from live_trading.modules.signal_schema import (
+    BatchHeader,
+    FillEvent,
+    SchemaError,
+    SignalOrder,
+)
 
 BATCH_ID = "20260714_csi300_topk10_001"
+SNAPSHOT_REQUEST_ID = "snapshot_20260714_0123456789abcdef0123456789abcdef"
+
+
+def test_fill_importer_module_does_not_require_posix_fcntl():
+    script = """
+import builtins
+original_import = builtins.__import__
+
+def import_without_fcntl(name, *args, **kwargs):
+    if name == "fcntl":
+        raise ModuleNotFoundError("simulated Windows: no fcntl")
+    return original_import(name, *args, **kwargs)
+
+builtins.__import__ = import_without_fcntl
+import live_trading.modules.fill_importer
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def _fill(client_order_id="20260714001S", mode="LIVE", status="FILLED",
@@ -320,6 +355,345 @@ def test_supersede_batch_is_idempotent_and_active_queries_exclude_old(env):
     assert history[batch_ids[0]]["superseded_at"]
     assert history[batch_ids[1]]["superseded_by"] == batch_ids[2]
     assert history[batch_ids[2]]["superseded_by"] is None
+
+
+def test_batch_queries_can_be_scoped_to_one_strategy(env):
+    _, recorder, _ = env
+    day = "2026-08-07"
+    main_strategy_id = "csi1000_b6m_b2s_postclose_real"
+    probe_strategy_id = "csi1000_pr49_one_lot_probe"
+    main_batch_id = "20260807_csi1000_b6m_b2s_postclose_real_001"
+    probe_batch_id = "20260807_csi1000_pr49_one_lot_probe_001"
+
+    for batch_id, strategy_id in (
+        (main_batch_id, main_strategy_id),
+        (probe_batch_id, probe_strategy_id),
+    ):
+        recorder.record_publish_plan(BatchHeader(
+            batch_id=batch_id,
+            strategy_id=strategy_id,
+            trade_date=day,
+            signal_date="2026-08-06",
+            account_id="test-account",
+            account_type="STOCK",
+            account_environment="SIMULATION",
+            mode="SIMULATE",
+            created_at="2026-08-06T21:00:00+08:00",
+            order_count=0,
+            checksum="",
+        ), [])
+
+    assert {b["strategy_id"] for b in recorder.get_batches_by_date(day)} == {
+        main_strategy_id,
+        probe_strategy_id,
+    }
+    assert [b["batch_id"] for b in recorder.get_batches_by_date(
+        day, strategy_id=probe_strategy_id,
+    )] == [probe_batch_id]
+    assert {
+        b["strategy_id"]
+        for b in recorder.get_active_batches_by_date(day)
+    } == {
+        "csi1000_b6m_b2s_postclose_real",
+        "csi1000_pr49_one_lot_probe",
+    }
+    assert [b["batch_id"] for b in recorder.get_active_batches_by_date(
+        day, strategy_id="csi1000_pr49_one_lot_probe",
+    )] == [probe_batch_id]
+
+
+def test_live_ledger_initializes_exact_operator_probe_lifecycle_schema(tmp_path):
+    db = tmp_path / "shared.db"
+    LiveRecorder(str(db))
+
+    with sqlite3.connect(db) as conn:
+        columns = [
+            row[1] for row in conn.execute(
+                "PRAGMA table_info(operator_probe_lifecycle)"
+            )
+        ]
+
+    assert columns == [
+        "strategy_id", "stock_code", "buy_batch_id", "buy_trade_date",
+        "sell_batch_id", "sell_trade_date", "state", "updated_at",
+    ]
+
+
+def test_legacy_read_only_ledger_without_probe_table_has_no_lifecycle(tmp_path):
+    db = tmp_path / "legacy-shared.db"
+    LiveRecorder(str(db))
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE operator_probe_lifecycle")
+
+    recorder = LiveRecorder(str(db), read_only=True)
+
+    assert recorder.get_operator_probe_lifecycle() is None
+
+
+def test_probe_terminal_fill_receipt_is_immutable(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"), opening_cash=100_000.0)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    recorder.record_publish_plan(BatchHeader(
+        batch_id=batch_id,
+        strategy_id="csi1000_pr49_one_lot_probe",
+        trade_date="2026-08-07",
+        signal_date="2026-08-07",
+        account_id="real-account",
+        account_type="STOCK",
+        account_environment="REAL",
+        mode="LIVE",
+        created_at="2026-08-07T00:00:00+08:00",
+        order_count=1,
+        checksum="",
+    ), [SignalOrder(
+        batch_id=batch_id,
+        client_order_id="20260807900001B",
+        stock_code="600000.SH",
+        side="BUY",
+        quantity=0,
+        target_value=1_000_000.0,
+        price_type="AFTER_HOURS_CLOSE",
+        limit_price=0.0,
+        priority=20,
+        instrument_qlib="SH600000",
+        reason="probe",
+        max_quantity=100,
+    )], probe_transition={"side": "BUY", "stock_code": "600000.SH"})
+    rejected = FillEvent.from_dict(_fill(
+        batch_id=batch_id,
+        client_order_id="20260807900001B",
+        stock_code="600000.SH",
+        side="BUY",
+        requested=100,
+        filled=0,
+        price=0.0,
+        status="REJECTED",
+    ))
+    recorder.apply_fill(rejected)
+    recorder.save_broker_snapshot(batch_id, {"account_id": "real-account"}, [])
+    assert recorder.get_operator_probe_lifecycle()["state"] == "FAILED"
+    fill_before = recorder.get_fills(batch_id)[0]
+    cash_before = recorder.get_cash()
+
+    recorder.apply_fill(rejected)
+
+    assert recorder.get_fills(batch_id)[0] == fill_before
+    assert recorder.get_cash() == cash_before
+
+    for field, value in (
+        ("message", "late audit rewrite"),
+        ("ts", "2026-08-07T23:59:59+08:00"),
+    ):
+        changed = FillEvent(**{
+            **rejected.__dict__,
+            field: value,
+        })
+        with pytest.raises(
+            SchemaError, match="terminal probe fill is immutable",
+        ):
+            recorder.apply_fill(changed)
+
+    with pytest.raises(SchemaError, match="terminal probe fill is immutable"):
+        recorder.apply_fill(FillEvent.from_dict({
+            **_fill(
+                batch_id=batch_id,
+                client_order_id="20260807900001B",
+                stock_code="600000.SH",
+                side="BUY",
+                requested=100,
+                filled=100,
+                price=10.0,
+                status="FILLED",
+            ),
+            "qmt_order_id": "late-order",
+        }))
+
+    assert "600000.SH" not in recorder.get_positions()
+
+
+def test_probe_terminal_fill_economics_are_excluded_from_fee_repricing(tmp_path):
+    db = tmp_path / "shared.db"
+    recorder = LiveRecorder(str(db), opening_cash=100_000.0)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    recorder.record_publish_plan(BatchHeader(
+        batch_id=batch_id,
+        strategy_id="csi1000_pr49_one_lot_probe",
+        trade_date="2026-08-07",
+        signal_date="2026-08-07",
+        account_id="real-account",
+        account_type="STOCK",
+        account_environment="REAL",
+        mode="LIVE",
+        created_at="2026-08-07T00:00:00+08:00",
+        order_count=1,
+        checksum="",
+    ), [SignalOrder(
+        batch_id=batch_id,
+        client_order_id="20260807900001B",
+        stock_code="600000.SH",
+        side="BUY",
+        quantity=0,
+        target_value=1_000_000.0,
+        price_type="AFTER_HOURS_CLOSE",
+        limit_price=0.0,
+        priority=20,
+        instrument_qlib="SH600000",
+        reason="probe",
+        max_quantity=100,
+    )], probe_transition={"side": "BUY", "stock_code": "600000.SH"})
+    terminal = FillEvent.from_dict(_fill(
+        batch_id=batch_id,
+        client_order_id="20260807900001B",
+        stock_code="600000.SH",
+        side="BUY",
+        requested=100,
+        filled=100,
+        price=10.0,
+        status="FILLED",
+    ))
+    recorder.apply_fill(terminal)
+    fill_before = recorder.get_fills(batch_id)[0]
+    cash_before = recorder.get_cash()
+    lower_fees = {
+        **DEFAULT_FEES,
+        "commission_rate": 0.0,
+        "min_commission": 0.0,
+        "transfer_fee_rate": 0.0,
+    }
+
+    reconfigured = LiveRecorder(str(db), fees=lower_fees)
+    reconfigured.apply_fill(terminal)
+    assert recorder.get_fills(batch_id)[0] == fill_before
+    assert recorder.get_cash() == cash_before
+
+    adjustment = reconfigured.reprice_fees_by_date("2026-08-07")
+
+    assert adjustment == 0.0
+    assert recorder.get_fills(batch_id)[0] == fill_before
+    assert recorder.get_cash() == cash_before
+
+
+def test_probe_import_archives_only_inside_probe_root(env):
+    probe_root, recorder, importer = env
+    main_root = probe_root / "main"
+    main_outbound = main_root / "outbound"
+    main_outbound.mkdir(parents=True)
+    main_fill = main_outbound / "fills_main.jsonl"
+    main_done = main_outbound / "fills_main.done"
+    main_fill.write_text("main\n", encoding="utf-8")
+    main_done.write_text("done\n", encoding="utf-8")
+    fill = _fill(mode="SIMULATE")
+    _record_plan(recorder, [fill])
+    _write_fills(probe_root, [fill])
+
+    assert importer.import_fills() == 1
+
+    assert (probe_root / "archive" / f"fills_{BATCH_ID}.jsonl").is_file()
+    assert (probe_root / "archive" / f"fills_{BATCH_ID}.done").is_file()
+    assert main_fill.is_file()
+    assert main_done.is_file()
+
+
+def test_import_cli_reconciles_only_configured_probe_strategy(
+    tmp_path, monkeypatch, capsys,
+):
+    from live_trading.scripts import run_import_fills
+
+    db = tmp_path / "shared.db"
+    recorder = LiveRecorder(str(db), opening_cash=100_000.0)
+    day = "2026-08-07"
+    for strategy_id in (
+        "csi1000_b6m_b2s_postclose_real",
+        "csi1000_pr49_one_lot_probe",
+    ):
+        recorder.record_publish_plan(BatchHeader(
+            batch_id=f"20260807_{strategy_id}_001",
+            strategy_id=strategy_id,
+            trade_date=day,
+            signal_date=day,
+            account_id="test-account",
+            account_type="STOCK",
+            account_environment="SIMULATION",
+            mode="SIMULATE",
+            created_at="2026-08-07T00:00:00+08:00",
+            order_count=0,
+            checksum="",
+        ), [])
+    config = {
+        "live": {
+            "kind": "OPERATOR_PROBE",
+            "strategy_id": "csi1000_pr49_one_lot_probe",
+            "bridge_root": str(tmp_path / "pr49_probe"),
+        },
+        "storage": {"db_path": str(db)},
+        "account": {"opening_cash": 100_000.0},
+        "fees": DEFAULT_FEES,
+    }
+    monkeypatch.setattr(
+        run_import_fills, "load_live_config", lambda *args: config,
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["run_import_fills.py", "--config", "probe"],
+    )
+
+    run_import_fills.main()
+
+    output = capsys.readouterr().out
+    assert "20260807_csi1000_pr49_one_lot_probe_001" in output
+    assert "20260807_csi1000_b6m_b2s_postclose_real_001" not in output
+    assert "probe lifecycle state=" in output
+
+
+def test_unreconciled_live_batches_exclude_other_strategy(env):
+    _, recorder, _ = env
+    day = "2026-08-07"
+    main_strategy_id = "csi1000_b6m_b2s_postclose_real"
+    probe_strategy_id = "csi1000_pr49_one_lot_probe"
+    main_batch_id = "20260807_csi1000_b6m_b2s_postclose_real_001"
+    probe_batch_id = "20260807_csi1000_pr49_one_lot_probe_001"
+
+    for batch_id, strategy_id in (
+        (main_batch_id, main_strategy_id),
+        (probe_batch_id, probe_strategy_id),
+    ):
+        recorder.record_publish_plan(BatchHeader(
+            batch_id=batch_id,
+            strategy_id=strategy_id,
+            trade_date=day,
+            signal_date="2026-08-06",
+            account_id="test-account",
+            account_type="STOCK",
+            account_environment="SIMULATION",
+            mode="LIVE",
+            created_at="2026-08-06T21:00:00+08:00",
+            order_count=1,
+            checksum="",
+        ), [SignalOrder(
+            batch_id=batch_id,
+            client_order_id=f"{batch_id}_buy",
+            stock_code="600000.SH",
+            side="BUY",
+            quantity=0,
+            target_value=1_000.0,
+            price_type="CLOSE_AUCTION_LIMIT",
+            limit_price=0.0,
+            priority=20,
+            instrument_qlib="SH600000",
+            reason="test",
+        )])
+
+    assert {
+        batch["batch_id"]
+        for batch in recorder.get_unreconciled_active_live_batches_before(
+            "2026-08-08",
+        )
+    } == {main_batch_id, probe_batch_id}
+    assert [
+        batch["batch_id"]
+        for batch in recorder.get_unreconciled_active_live_batches_before(
+            "2026-08-08", strategy_id=probe_strategy_id,
+        )
+    ] == [probe_batch_id]
 
 
 def test_supersede_batch_rejects_invalid_or_conflicting_relationships(env):
@@ -833,21 +1207,40 @@ def _write_broker_snapshot(bridge_root: Path, rows: list, batch_id=BATCH_ID,
         (outbound / f"account_{batch_id}.done").write_text("done\n", encoding="utf-8")
 
 
-def _snapshot_rows(cash=123456.78, positions=(("688223.SH", 244500),)):
+def _snapshot_rows(cash=123456.78, positions=(("688223.SH", 244500),),
+                   batch_id=BATCH_ID, account_id="8881352838"):
     rows = [{
-        "type": "account_snapshot", "batch_id": BATCH_ID,
-        "trade_date": "2026-07-14", "account_id": "8881352838",
+        "type": "account_snapshot", "batch_id": batch_id,
+        "trade_date": "2026-07-14", "account_id": account_id,
         "available_cash": cash, "total_asset": 9876543.21,
         "market_value": 9000000.0, "frozen_cash": 0.0,
         "ts": "2026-07-14T14:57:00",
     }]
     rows += [{
-        "type": "broker_position", "batch_id": BATCH_ID,
+        "type": "broker_position", "batch_id": batch_id,
         "trade_date": "2026-07-14", "stock_code": code, "shares": shares,
         "can_use_volume": 0, "avg_cost": 4.14, "market_value": shares * 4.14,
         "ts": "2026-07-14T14:57:00",
     } for code, shares in positions]
     return rows
+
+
+def _record_real_snapshot_batch(
+    recorder, batch_id=BATCH_ID, account_id="real-account",
+):
+    recorder.record_publish_plan(BatchHeader(
+        batch_id=batch_id,
+        strategy_id="snapshot-test",
+        trade_date="2026-07-14",
+        signal_date="2026-07-14",
+        account_id=account_id,
+        account_type="STOCK",
+        account_environment="REAL",
+        mode="LIVE",
+        created_at="2026-07-14T00:00:00+08:00",
+        order_count=0,
+        checksum="",
+    ), [])
 
 
 def test_import_broker_snapshot_stores_and_archives(env):
@@ -865,6 +1258,55 @@ def test_import_broker_snapshot_stores_and_archives(env):
     }
     assert not list((bridge_root / "outbound").glob("account_*"))
     assert len(list((bridge_root / "archive").glob("account_*"))) == 2
+
+
+@pytest.mark.parametrize("mixed_rows", [False, True])
+def test_snapshot_import_rejects_filename_or_mixed_payload_batch_ids(
+    env, mixed_rows,
+):
+    bridge_root, recorder, importer = env
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
+    other = "20260714_csi300_topk10_999"
+    recorder.record_batch(other, "2026-07-14", "LIVE", 1)
+    rows = _snapshot_rows(batch_id=other)
+    if mixed_rows:
+        rows[0]["batch_id"] = BATCH_ID
+    _write_broker_snapshot(bridge_root, rows, batch_id=BATCH_ID)
+
+    with pytest.raises(SchemaError, match="snapshot batch_id"):
+        importer.import_broker_snapshots()
+
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+    assert recorder.get_broker_positions("2026-07-14") == {}
+    assert (bridge_root / "outbound" / f"account_{BATCH_ID}.jsonl").exists()
+
+
+def test_real_snapshot_rejects_wrong_full_account_atomically(env):
+    bridge_root, recorder, importer = env
+    _record_real_snapshot_batch(recorder)
+    _write_broker_snapshot(
+        bridge_root, _snapshot_rows(account_id="wrong-account"),
+    )
+
+    with pytest.raises(SchemaError, match="account"):
+        importer.import_broker_snapshots()
+
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+    assert recorder.get_broker_positions("2026-07-14") == {}
+
+
+def test_real_snapshot_accepts_masked_account_via_durable_batch_binding(env):
+    bridge_root, recorder, importer = env
+    _record_real_snapshot_batch(recorder)
+    rows = _snapshot_rows()
+    rows[0].pop("account_id")
+    rows[0]["account_id_masked"] = "re********nt"
+    _write_broker_snapshot(bridge_root, rows)
+
+    assert importer.import_broker_snapshots() == 1
+
+    account = recorder.get_broker_account_snapshot("2026-07-14")
+    assert account["account_id"] == "real-account"
 
 
 def test_import_broker_snapshot_is_idempotent_and_overwrites(env):
@@ -888,8 +1330,14 @@ def test_import_broker_snapshot_is_idempotent_and_overwrites(env):
 def test_latest_empty_broker_snapshot_does_not_reuse_older_positions(env):
     _, recorder, _ = env
     later_batch = "20260714_csi300_topk10_002"
-    account = _snapshot_rows()[0]
-    position = _snapshot_rows()[1]
+    account = {
+        key: value for key, value in _snapshot_rows()[0].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    position = {
+        key: value for key, value in _snapshot_rows()[1].items()
+        if key not in {"batch_id", "trade_date"}
+    }
     recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
     recorder.save_broker_snapshot(BATCH_ID, account, [position])
     recorder.record_batch(later_batch, "2026-07-14", "LIVE", 0)
@@ -897,6 +1345,280 @@ def test_latest_empty_broker_snapshot_does_not_reuse_older_positions(env):
 
     assert recorder.get_broker_positions("2026-07-14") == {}
     assert recorder.get_broker_position_market_values("2026-07-14") == {}
+
+
+def test_latest_broker_snapshot_uses_import_sequence_not_batch_id(env):
+    _, recorder, _ = env
+    older = "20260714_zzz_snapshot"
+    newer = "20260714_aaa_snapshot"
+    account = {
+        key: value for key, value in _snapshot_rows()[0].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    position = {
+        key: value for key, value in _snapshot_rows()[1].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    recorder.record_batch(older, "2026-07-14", "LIVE", 0)
+    recorder.save_broker_snapshot(older, account, [position])
+    recorder.record_batch(newer, "2026-07-14", "LIVE", 0)
+    recorder.save_broker_snapshot(newer, account, [])
+
+    assert recorder.get_broker_positions("2026-07-14") == {}
+    assert recorder.get_broker_position_details("2026-07-14") == {}
+    with recorder._conn() as conn:
+        rows = conn.execute(
+            "SELECT batch_id, import_sequence, imported_at "
+            "FROM broker_snapshot_imports ORDER BY import_sequence"
+        ).fetchall()
+    assert [row["batch_id"] for row in rows] == [older, newer]
+    assert rows[0]["import_sequence"] < rows[1]["import_sequence"]
+    assert all(row["imported_at"] for row in rows)
+
+
+def _replace_snapshot_markers_with_round1_schema(db, markers):
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE broker_snapshot_imports")
+        conn.execute(
+            """CREATE TABLE broker_snapshot_imports (
+                   batch_id TEXT PRIMARY KEY,
+                   trade_date TEXT NOT NULL,
+                   import_sequence INTEGER NOT NULL UNIQUE,
+                   imported_at TEXT NOT NULL
+               )"""
+        )
+        conn.executemany(
+            """INSERT INTO broker_snapshot_imports
+               (batch_id, trade_date, import_sequence, imported_at)
+               VALUES (?,?,?,?)""",
+            markers,
+        )
+
+
+def test_legacy_snapshot_migration_orders_unique_observation_times(tmp_path):
+    db = tmp_path / "legacy-ordered-snapshots.db"
+    recorder = LiveRecorder(str(db))
+    older = "20260714_zzz_snapshot"
+    newer = "20260714_aaa_snapshot"
+    for batch_id, ts, positions in (
+        (older, "2026-07-14T10:00:00+08:00", (("688223.SH", 100),)),
+        (newer, "2026-07-14T11:00:00+08:00", ()),
+    ):
+        recorder.record_batch(batch_id, "2026-07-14", "LIVE", 0)
+        account = {
+            key: value for key, value in _snapshot_rows(
+                positions=positions, batch_id=batch_id,
+            )[0].items()
+            if key not in {"batch_id", "trade_date"}
+        }
+        account["ts"] = ts
+        position_rows = [
+            {
+                key: value for key, value in row.items()
+                if key not in {"batch_id", "trade_date"}
+            }
+            for row in _snapshot_rows(
+                positions=positions, batch_id=batch_id,
+            )[1:]
+        ]
+        recorder.save_broker_snapshot(batch_id, account, position_rows)
+    _replace_snapshot_markers_with_round1_schema(db, [
+        (newer, "2026-07-14", 1, "2026-08-01 12:00:00"),
+        (older, "2026-07-14", 2, "2026-08-01 12:00:00"),
+    ])
+
+    migrated = LiveRecorder(str(db))
+
+    assert migrated.get_broker_positions("2026-07-14") == {}
+    with migrated._conn() as conn:
+        first = [tuple(row) for row in conn.execute(
+            """SELECT batch_id, import_sequence, imported_at
+                 FROM broker_snapshot_imports ORDER BY import_sequence"""
+        ).fetchall()]
+    assert [row[0] for row in first] == [older, newer]
+
+    LiveRecorder(str(db))
+    with migrated._conn() as conn:
+        second = [tuple(row) for row in conn.execute(
+            """SELECT batch_id, import_sequence, imported_at
+                 FROM broker_snapshot_imports ORDER BY import_sequence"""
+        ).fetchall()]
+    assert second == first
+
+
+def test_legacy_snapshot_migration_fails_closed_on_tied_chronology(tmp_path):
+    db = tmp_path / "legacy-ambiguous-snapshots.db"
+    recorder = LiveRecorder(str(db))
+    tied_ts = "2026-07-14T11:00:00+08:00"
+    for batch_id, shares in (
+        ("20260714_aaa_snapshot", 100),
+        ("20260714_zzz_snapshot", 200),
+    ):
+        recorder.record_batch(batch_id, "2026-07-14", "LIVE", 0)
+        account = {
+            key: value for key, value in _snapshot_rows(
+                positions=(("688223.SH", shares),), batch_id=batch_id,
+            )[0].items()
+            if key not in {"batch_id", "trade_date"}
+        }
+        account["ts"] = tied_ts
+        position = {
+            key: value for key, value in _snapshot_rows(
+                positions=(("688223.SH", shares),), batch_id=batch_id,
+            )[1].items()
+            if key not in {"batch_id", "trade_date"}
+        }
+        recorder.save_broker_snapshot(batch_id, account, [position])
+    _replace_snapshot_markers_with_round1_schema(db, [
+        ("20260714_aaa_snapshot", "2026-07-14", 1, "2026-08-01 12:00:00"),
+        (
+            "20260714_zzz_snapshot",
+            "2026-07-14",
+            2,
+            "9999-99-99T99:99:99.999",
+        ),
+    ])
+
+    migrated = LiveRecorder(str(db))
+
+    with pytest.raises(SchemaError, match="snapshot missing"):
+        migrated.get_broker_position_details("2026-07-14")
+
+    fresh = "20260714_fresh_snapshot"
+    migrated.record_batch(fresh, "2026-07-14", "LIVE", 0)
+    account = {
+        key: value for key, value in _snapshot_rows(
+            positions=(), batch_id=fresh,
+        )[0].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    account["ts"] = "2026-07-14T12:00:00+08:00"
+    migrated.save_broker_snapshot(fresh, account, [])
+    assert migrated.get_broker_position_details("2026-07-14") == {}
+
+
+def test_legacy_snapshot_migration_marks_unrepresentable_time_ambiguous(
+    tmp_path,
+):
+    db = tmp_path / "legacy-invalid-time.db"
+    recorder = LiveRecorder(str(db))
+    batch_id = "legacy_invalid_time"
+    trade_date = "0001-01-01"
+    recorder.record_batch(batch_id, trade_date, "LIVE", 0)
+    recorder.save_broker_snapshot(
+        batch_id,
+        {"account_id": "legacy", "ts": "0001-01-01T00:00:00"},
+        [{
+            "stock_code": "688223.SH",
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+    _replace_snapshot_markers_with_round1_schema(db, [
+        (batch_id, trade_date, 1, "2026-08-01 12:00:00"),
+    ])
+
+    migrated = LiveRecorder(str(db))
+
+    with pytest.raises(SchemaError, match="snapshot missing"):
+        migrated.get_broker_position_details(trade_date)
+
+
+def test_read_only_round1_snapshot_schema_fails_closed_for_migration(tmp_path):
+    db = tmp_path / "legacy-read-only-snapshots.db"
+    recorder = LiveRecorder(str(db))
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 0)
+    account = {
+        key: value for key, value in _snapshot_rows()[0].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    recorder.save_broker_snapshot(BATCH_ID, account, [])
+    _replace_snapshot_markers_with_round1_schema(db, [
+        (BATCH_ID, "2026-07-14", 1, "2026-07-14T15:00:00.000"),
+    ])
+    read_only = LiveRecorder(str(db), read_only=True)
+
+    with pytest.raises(SchemaError, match="writable migration"):
+        read_only.get_broker_position_details("2026-07-14")
+
+
+def test_partial_snapshot_marker_migration_recovers_round1_fresh_row(tmp_path):
+    db = tmp_path / "partial-snapshot-migration.db"
+    recorder = LiveRecorder(str(db))
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 0)
+    recorder.save_broker_snapshot(
+        BATCH_ID,
+        None,
+        [{
+            "stock_code": "688223.SH",
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """UPDATE broker_snapshot_imports
+                  SET imported_at='2026-07-14T15:00:00.123',
+                      lifecycle_evidence=0,
+                      ordering_trusted=0,
+                      is_fresh=0
+                WHERE batch_id=?""",
+            (BATCH_ID,),
+        )
+
+    migrated = LiveRecorder(str(db))
+
+    assert migrated.get_broker_position_details("2026-07-14") == {
+        "688223.SH": {
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        },
+    }
+    with migrated._conn() as conn:
+        marker = conn.execute(
+            """SELECT is_fresh, ordering_trusted
+                 FROM broker_snapshot_imports WHERE batch_id=?""",
+            (BATCH_ID,),
+        ).fetchone()
+    assert tuple(marker) == (1, 1)
+
+
+def test_legacy_snapshot_rows_are_backfilled_with_import_order(tmp_path):
+    db = tmp_path / "legacy-snapshots.db"
+    recorder = LiveRecorder(str(db))
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 0)
+    account = {
+        key: value for key, value in _snapshot_rows()[0].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    position = {
+        key: value for key, value in _snapshot_rows()[1].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    recorder.save_broker_snapshot(BATCH_ID, account, [position])
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE broker_snapshot_imports")
+
+    migrated = LiveRecorder(str(db))
+
+    assert migrated.get_broker_positions("2026-07-14") == {
+        "688223.SH": 244500,
+    }
+    with migrated._conn() as conn:
+        marker = conn.execute(
+            "SELECT batch_id, trade_date, import_sequence, imported_at "
+            "FROM broker_snapshot_imports"
+        ).fetchone()
+    assert marker["batch_id"] == BATCH_ID
+    assert marker["trade_date"] == "2026-07-14"
+    assert marker["import_sequence"] == 1
+    assert marker["imported_at"]
 
 
 def test_broker_snapshot_without_done_is_not_imported(env):
@@ -927,6 +1649,531 @@ def test_broker_snapshot_survives_missing_account_row(env):
     assert importer.import_broker_snapshots() == 1
     assert recorder.get_broker_account_snapshot("2026-07-14") is None
     assert recorder.get_broker_positions("2026-07-14") == {"688223.SH": 244500}
+
+
+def _snapshot_only_request_payload():
+    payload = {
+        "type": "account_snapshot_request",
+        "schema_version": "1.0",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "trade_date": "2026-07-14",
+        "collector_execution_profile": "CLOSE_AUCTION",
+        "collector_bridge_root": r"D:\qmt_bridge",
+        "requested_for_strategy_id": "csi1000_b6m_b2s_postclose_real",
+        "evidence_purpose": "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT",
+        "publish_cutoff": "14:45:00",
+        "account_type": "STOCK",
+        "account_environment": "REAL",
+        "account_id_masked": "88******49",
+        "account_fingerprint": account_identity_fingerprint(
+            "8890116049", "STOCK", "REAL",
+        ),
+        "created_at": "2026-07-14T08:00:00+08:00",
+    }
+    payload["checksum"] = snapshot_artifact_checksum(payload)
+    return payload
+
+
+def _record_published_snapshot_only_request(recorder):
+    request = _snapshot_only_request_payload()
+    recorder.record_account_snapshot_request(request, "8890116049")
+    recorder.mark_account_snapshot_request_published(
+        request["request_id"], request["checksum"],
+    )
+    return request
+
+
+def _snapshot_only_response(status="COMPLETE"):
+    request = _snapshot_only_request_payload()
+    account = None if status != "COMPLETE" else {
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "account_id_masked": (
+            request["account_id_masked"] if status == "COMPLETE" else None
+        ),
+        "account_fingerprint": (
+            request["account_fingerprint"] if status == "COMPLETE" else None
+        ),
+        "available_cash": 900000.0,
+        "total_asset": 1000000.0,
+        "market_value": 100000.0,
+        "frozen_cash": 0.0,
+        "ts": "2026-07-14T15:00:00+08:00",
+    }
+    response = {
+        "type": "account_snapshot_response",
+        "schema_version": request["schema_version"],
+        "request_id": request["request_id"],
+        "trade_date": request["trade_date"],
+        "collector_execution_profile": request[
+            "collector_execution_profile"],
+        "collector_bridge_root": request["collector_bridge_root"],
+        "requested_for_strategy_id": request[
+            "requested_for_strategy_id"],
+        "evidence_purpose": request["evidence_purpose"],
+        "publish_cutoff": request["publish_cutoff"],
+        "account_type": request["account_type"],
+        "account_environment": request["account_environment"],
+        "account_id_masked": (
+            request["account_id_masked"] if status == "COMPLETE" else None
+        ),
+        "account_fingerprint": (
+            request["account_fingerprint"] if status == "COMPLETE" else None
+        ),
+        "request_checksum": request["checksum"],
+        "status": status,
+        "account": account,
+        "positions": [{
+            "request_id": SNAPSHOT_REQUEST_ID,
+            "trade_date": "2026-07-14",
+            "stock_code": "600000.SH",
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }] if status != "ERROR" else [],
+        "observed_at": "2026-07-14T15:00:00+08:00",
+        "error": "query failed" if status == "ERROR" else "",
+    }
+    response["checksum"] = snapshot_artifact_checksum(response)
+    return response
+
+
+def _write_snapshot_only_response(root, response):
+    request = _snapshot_only_request_payload()
+    archive = root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    request_json = archive / f"request_{request['request_id']}.json"
+    request_done = archive / f"request_{request['request_id']}.done"
+    request_json.write_text(
+        json.dumps(request, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    request_done.write_text(
+        request["checksum"] + "\n", encoding="utf-8",
+    )
+    gate = root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True, exist_ok=True)
+    if not gate.exists():
+        gate.write_text(json.dumps({
+            "owner": "MAC_SNAPSHOT_PUBLISHER",
+            "request_id": request["request_id"],
+            "execution_profile": request["collector_execution_profile"],
+            "created_at": "2026-07-14T08:01:00+08:00",
+        }) + "\n", encoding="utf-8")
+    response_dir = root / "snapshot_requests" / "responses"
+    response_dir.mkdir(parents=True, exist_ok=True)
+    request_id = response["request_id"]
+    (response_dir / f"response_{request_id}.json").write_text(
+        json.dumps(response, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (response_dir / f"response_{request_id}.done").write_text(
+        response["checksum"] + "\n", encoding="utf-8",
+    )
+
+
+def test_snapshot_only_complete_response_becomes_trusted_without_batch(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_batch(SNAPSHOT_REQUEST_ID) is None
+    assert recorder.get_broker_position_details(
+        "2026-07-14", require_lifecycle_evidence=True,
+    )["600000.SH"]["can_use_volume"] == 100
+    durable = recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)
+    assert durable["status"] == "IMPORTED_COMPLETE"
+
+
+def test_complete_import_releases_only_owned_gate_after_archive_quartet(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        json.dumps(request, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        request["checksum"] + "\n", encoding="utf-8",
+    )
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True)
+    gate.write_text(json.dumps({
+        "owner": "MAC_SNAPSHOT_PUBLISHER",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "execution_profile": "CLOSE_AUCTION",
+        "created_at": "2026-07-14T08:01:00+08:00",
+    }) + "\n", encoding="utf-8")
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+
+    assert importer.import_account_snapshot_responses() == 1
+
+    assert not gate.exists()
+    assert len(list(archive.glob(f"*_{SNAPSHOT_REQUEST_ID}.*"))) == 4
+
+
+def test_main_and_probe_importers_share_mac_snapshot_lifecycle_lock(
+    tmp_path,
+):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"))
+    main = FillImporter(tmp_path / "bridge", recorder)
+    probe = FillImporter(tmp_path / "bridge" / "pr49_probe", recorder)
+
+    expected = (
+        tmp_path / "bridge" / "state" / "SNAPSHOT_MAC_LIFECYCLE.lock"
+    )
+    assert main.snapshot_mac_lifecycle_lock == expected
+    assert probe.snapshot_mac_lifecycle_lock == expected
+
+
+def test_complete_import_requires_owned_lifecycle_gate_before_db_trust(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.unlink()
+
+    with pytest.raises(SchemaError, match="advance gate.*required"):
+        importer.import_account_snapshot_responses()
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+
+
+def test_complete_import_retains_gate_for_corrupt_request_archive(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    archive = bridge_root / "snapshot_requests" / "archive"
+    request_json = archive / f"request_{SNAPSHOT_REQUEST_ID}.json"
+    request_json.write_text("{}\n", encoding="utf-8")
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+
+    with pytest.raises(SchemaError, match="request archive"):
+        importer.import_account_snapshot_responses()
+
+    assert gate.is_file()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+
+
+def test_error_import_retains_snapshot_lifecycle_gate(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True)
+    gate.write_text(json.dumps({
+        "owner": "MAC_SNAPSHOT_PUBLISHER",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "execution_profile": "CLOSE_AUCTION",
+        "created_at": "2026-07-14T08:01:00+08:00",
+    }) + "\n", encoding="utf-8")
+    _write_snapshot_only_response(
+        bridge_root, _snapshot_only_response("ERROR"),
+    )
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert gate.is_file()
+
+
+def test_snapshot_only_response_cannot_import_before_prepared_request_publish(env):
+    bridge_root, recorder, importer = env
+    request = _snapshot_only_request_payload()
+    recorder.record_account_snapshot_request(request, "8890116049")
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+
+    with pytest.raises(SchemaError, match="no published request"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "PREPARED"
+
+
+def test_snapshot_only_positions_response_is_diagnostic_not_authorizing(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(
+        bridge_root, _snapshot_only_response("DIAGNOSTIC_POSITIONS_ONLY"),
+    )
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_broker_position_details("2026-07-14")[
+        "600000.SH"
+    ]["shares"] == 100
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        recorder.get_broker_position_details(
+            "2026-07-14", require_lifecycle_evidence=True,
+        )
+
+
+def test_snapshot_only_error_response_cannot_claim_identity_or_authorize(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response("ERROR")
+    assert response["account_id_masked"] is None
+    assert response["account_fingerprint"] is None
+    _write_snapshot_only_response(bridge_root, response)
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_ERROR"
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        recorder.get_broker_position_details(
+            "2026-07-14", require_lifecycle_evidence=True,
+        )
+
+
+def test_snapshot_only_complete_response_identity_is_rechecked_on_mac(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    response["account_id_masked"] = "99******99"
+    response["account"]["account_id_masked"] = "99******99"
+    response["checksum"] = snapshot_artifact_checksum(response)
+    _write_snapshot_only_response(bridge_root, response)
+
+    with pytest.raises(SchemaError, match="response ACCOUNT identity mismatch"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+
+
+def test_snapshot_only_terminal_changed_replay_fails_closed(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    first = _snapshot_only_response()
+    _write_snapshot_only_response(bridge_root, first)
+    assert importer.import_account_snapshot_responses() == 1
+    changed = _snapshot_only_response()
+    changed["account"]["available_cash"] = 1.0
+    changed["checksum"] = snapshot_artifact_checksum(changed)
+    _write_snapshot_only_response(bridge_root, changed)
+
+    with pytest.raises(
+        SchemaError, match="terminal.*changed|conflicting duplicate",
+    ):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_broker_account_snapshot("2026-07-14")[
+        "available_cash"
+    ] == pytest.approx(900000.0)
+
+
+def test_snapshot_only_response_profile_mismatch_is_atomic(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    response["collector_execution_profile"] = "AFTER_HOURS_FIXED_PRICE"
+    response["checksum"] = snapshot_artifact_checksum(response)
+    _write_snapshot_only_response(bridge_root, response)
+
+    with pytest.raises(SchemaError, match="profile mismatch"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+
+
+def test_snapshot_only_response_change_during_sqlite_import_rolls_back(
+    env, monkeypatch,
+):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    _write_snapshot_only_response(bridge_root, response)
+    response_path = (
+        bridge_root / "snapshot_requests" / "responses" /
+        f"response_{SNAPSHOT_REQUEST_ID}.json"
+    )
+    original_refresh = recorder._refresh_operator_probe_lifecycle_conn
+
+    def mutate_during_transaction(conn):
+        response_path.write_text("{}\n", encoding="utf-8")
+        return original_refresh(conn)
+
+    monkeypatch.setattr(
+        recorder, "_refresh_operator_probe_lifecycle_conn",
+        mutate_during_transaction,
+    )
+
+    with pytest.raises(SchemaError, match="changed during import"):
+        importer.import_account_snapshot_responses()
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
+
+
+def test_snapshot_only_two_importers_claim_response_once(env):
+    bridge_root, recorder, _ = env
+    request = _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    importers = [FillImporter(bridge_root, recorder) for _ in range(2)]
+    start = threading.Barrier(2)
+    results = []
+    errors = []
+
+    def run(importer):
+        try:
+            start.wait(timeout=5)
+            results.append(importer.import_account_snapshot_responses())
+        except Exception as exc:
+            errors.append(exc)
+
+    threads = [threading.Thread(target=run, args=(item,)) for item in importers]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+
+    assert not errors
+    assert sorted(results) == [0, 1]
+    archive = bridge_root / "snapshot_requests" / "archive"
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
+
+
+def test_snapshot_only_archive_without_db_terminal_recovers(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    _write_snapshot_only_response(bridge_root, response)
+    response_dir = bridge_root / "snapshot_requests" / "responses"
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    for suffix in ("json", "done"):
+        source = response_dir / f"response_{SNAPSHOT_REQUEST_ID}.{suffix}"
+        source.replace(archive / source.name)
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+
+
+def test_snapshot_only_split_response_pair_recovers_before_db_terminal(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    responses = bridge_root / "snapshot_requests" / "responses"
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    done = responses / f"response_{SNAPSHOT_REQUEST_ID}.done"
+    done.replace(archive / done.name)
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
+
+
+def test_snapshot_only_postrelease_archive_regression_fails_closed(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    assert importer.import_account_snapshot_responses() == 1
+    responses = bridge_root / "snapshot_requests" / "responses"
+    responses.mkdir(parents=True, exist_ok=True)
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archived_json = archive / f"response_{SNAPSHOT_REQUEST_ID}.json"
+    archived_json.replace(responses / archived_json.name)
+
+    with pytest.raises(SchemaError, match="advance gate.*required"):
+        importer.import_account_snapshot_responses()
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 1
+
+
+def test_snapshot_gate_survives_postcommit_archive_crash_then_releases(
+    env, monkeypatch,
+):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    original_archive = importer._archive_snapshot_response
+    crashed = {"value": False}
+
+    def crash_after_first_move(path):
+        original_archive(path)
+        if not crashed["value"]:
+            crashed["value"] = True
+            raise RuntimeError("simulated crash after DB commit during archive")
+
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", crash_after_first_move,
+    )
+    with pytest.raises(RuntimeError, match="after DB commit"):
+        importer.import_account_snapshot_responses()
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+    assert gate.is_file()
+
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", original_archive,
+    )
+    assert importer.import_account_snapshot_responses() == 0
+    assert not gate.exists()
+    archive = bridge_root / "snapshot_requests" / "archive"
+    assert len(list(archive.glob(f"*_{SNAPSHOT_REQUEST_ID}.*"))) == 4
+
+
+def test_snapshot_terminal_archive_recovery_requires_original_gate(
+    env, monkeypatch,
+):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    original_archive = importer._archive_snapshot_response
+    crashed = {"value": False}
+
+    def crash_after_first_move(path):
+        original_archive(path)
+        if not crashed["value"]:
+            crashed["value"] = True
+            raise RuntimeError("simulated partial terminal archive")
+
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", crash_after_first_move,
+    )
+    with pytest.raises(RuntimeError, match="partial terminal archive"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+    gate.unlink()
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", original_archive,
+    )
+
+    with pytest.raises(SchemaError, match="advance gate.*required"):
+        importer.import_account_snapshot_responses()
+
+    archive = bridge_root / "snapshot_requests" / "archive"
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+
+
+def test_snapshot_only_rejects_account_or_position_from_other_request(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    response["account"]["request_id"] = SNAPSHOT_REQUEST_ID
+    response["positions"][0]["request_id"] = (
+        "snapshot_20260714_ffffffffffffffffffffffffffffffff"
+    )
+    response["checksum"] = snapshot_artifact_checksum(response)
+    _write_snapshot_only_response(bridge_root, response)
+
+    with pytest.raises(SchemaError, match="position.*request_id"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
 
 
 def test_reconcile_counts(env):

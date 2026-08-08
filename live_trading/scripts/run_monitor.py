@@ -11,7 +11,9 @@
 """
 
 import argparse
+import json
 import logging
+import re
 import sys
 from datetime import date as _date
 from pathlib import Path
@@ -25,9 +27,16 @@ from live_trading.modules.corporate_actions import (
 )
 from live_trading.modules.fees import fees_from_config
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
+from live_trading.modules.execution_state import validate_identifier
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.monitor_store import MonitorStore
 from live_trading.modules.notifier import create_notifier
+from live_trading.modules.operator_probe import (
+    MAIN_STRATEGY_ID,
+    PROBE_STRATEGY_ID,
+    SNAPSHOT_ADVANCE_GATE_NAME,
+    snapshot_artifact_checksum,
+)
 from live_trading.modules.pipeline_monitor import (
     DEFAULT_THRESHOLDS,
     Finding,
@@ -35,7 +44,9 @@ from live_trading.modules.pipeline_monitor import (
     check_broker_reconcile,
     check_evening,
     check_postmarket,
+    check_probe_execution,
     check_report,
+    check_snapshot_protocol_status,
 )
 from live_trading.modules.snapshot import build_snapshot, sum_live_fills_amount
 from live_trading.scripts.next_trade_date import next_open_date
@@ -103,10 +114,19 @@ def fetch_benchmark_close(benchmark: str, date: str):
 def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
-    config_id = config["live"]["strategy_id"]
-    candidates = recorder.get_active_batches_by_date(next_day)
+    config_id = validate_identifier(config["live"]["strategy_id"], "strategy_id")
+    get_state = getattr(recorder, "get_execution_state", None)
+    execution_state = (
+        get_state(config_id) if get_state is not None else {"state": "ACTIVE"}
+    )
+    audit_preview = _load_audit_preview(config_id, next_day)
+    candidates = recorder.get_active_batches_by_date(
+        next_day, strategy_id=config_id,
+    )
     if not candidates:
-        return check_evening(next_day, None, [], config_id)
+        return check_evening(
+            next_day, None, [], config_id, execution_state, audit_preview,
+        )
     # 同一交易日取最新 seq（batch_id 结尾为三位 seq）。
     candidates.sort(key=lambda batch: batch["batch_id"])
     batch = candidates[-1]
@@ -115,14 +135,38 @@ def run_evening(date, recorder, config) -> list:
     inbox_files = None
     if inbox.exists():
         inbox_files = [p.name for p in inbox.iterdir()]
-    return check_evening(next_day, batch, inbox_files, config_id)
+    return check_evening(
+        next_day, batch, inbox_files, config_id, execution_state, audit_preview,
+    )
+
+
+def _load_audit_preview(strategy_id: str, trade_date: str) -> dict | None:
+    """Load one preview conservatively; malformed evidence is not a valid pause."""
+    strategy_id = validate_identifier(strategy_id, "strategy_id")
+    path = (
+        PROJECT_ROOT / "live_trading" / "logs" / strategy_id / "previews"
+        / f"signal_{trade_date}.json"
+    )
+    try:
+        with path.open(encoding="utf-8") as stream:
+            payload = json.load(stream)
+    except (OSError, ValueError):
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def run_postmarket(date, recorder, store, config) -> list:
-    batches = recorder.get_active_batches_by_date(date)
+    strategy_id = config["live"]["strategy_id"]
+    batches = recorder.get_active_batches_by_date(
+        date, strategy_id=strategy_id,
+    )
     importer = FillImporter(config["live"]["bridge_root"], recorder)
     reconciles = {b["batch_id"]: importer.reconcile(b["batch_id"]) for b in batches}
-    fills = recorder.get_fills_by_dates([date])
+    # Plans and fills are strategy scoped.  The brokerage snapshot below stays
+    # account-wide because main and probe deliberately share one account.
+    fills = [
+        fill for batch in batches for fill in recorder.get_fills(batch["batch_id"])
+    ]
 
     prev_positions = None
     snaps = [s for s in store.get_snapshots(end=date) if s["date"] < date]
@@ -134,8 +178,19 @@ def run_postmarket(date, recorder, store, config) -> list:
     findings = check_postmarket(date, batches, reconciles, fills,
                                prev_positions,
                                reject_rate=thresholds["reject_rate"])
-    # 只有 LIVE 批次才会产出券商快照，SIMULATE / 停发日不做二道对账。
-    if any(b.get("mode") == "LIVE" for b in batches):
+    snapshot_roots = [Path(config["live"]["bridge_root"])]
+    if config.get("live", {}).get("broker_environment") == "REAL":
+        snapshot_roots = list(_execution_roots(config))
+    for snapshot_root in dict.fromkeys(snapshot_roots):
+        status_path = snapshot_root / "snapshot_requests" / "status.json"
+        findings += check_snapshot_protocol_status(
+            _read_json_object(status_path), str(status_path),
+            _scan_snapshot_protocol_residue(snapshot_root, recorder),
+        )
+    # Any LIVE strategy on the shared account requires account-wide reconcile.
+    # In particular, a PAUSED main must not hide drift created by the probe.
+    account_batches = recorder.get_active_batches_by_date(date)
+    if any(b.get("mode") == "LIVE" for b in account_batches):
         reconcile_cfg = config.get("monitor", {}).get("broker_reconcile") or {}
         findings += check_broker_reconcile(
             date,
@@ -152,7 +207,220 @@ def run_postmarket(date, recorder, store, config) -> list:
             ),
             value_tolerance=thresholds["cash_tolerance"],
         )
+    if config.get("live", {}).get("broker_environment") == "REAL":
+        findings += _run_probe_checks(date, recorder, config)
     return findings
+
+
+def _run_probe_checks(date, recorder, config) -> list:
+    """Build probe evidence without changing the account-wide ledger."""
+    probe_batches = recorder.get_active_batches_by_date(
+        date, strategy_id=PROBE_STRATEGY_ID,
+    )
+    probe_batches.sort(key=lambda row: row["batch_id"])
+    probe_batch = probe_batches[-1] if probe_batches else None
+    probe_orders = (
+        recorder.get_orders(probe_batch["batch_id"]) if probe_batch else []
+    )
+    probe_fills = (
+        recorder.get_fills(probe_batch["batch_id"]) if probe_batch else []
+    )
+    main_root, probe_root = _execution_roots(config)
+    main_marker = main_root / "state" / f"LIVE_OK_{date}"
+    probe_marker = probe_root / "state" / f"PR49_LIVE_OK_{date}"
+    authorization_intents = []
+    for state_root in (main_root / "state", probe_root / "state"):
+        authorization_intents.extend(
+            str(path) for path in state_root.glob(
+                f"*LIVE_OK_{date}.intent.*.tmp"
+            ) if path.is_file()
+        )
+    event_log = probe_root / "logs" / f"qmt_events_{date}.jsonl"
+    return check_probe_execution(
+        date,
+        main_authorized=main_marker.is_file(),
+        probe_authorized=probe_marker.is_file(),
+        probe_batch=probe_batch,
+        probe_orders=probe_orders,
+        probe_fills=probe_fills,
+        broker_account=recorder.get_broker_account_snapshot(date),
+        broker_positions=recorder.get_broker_positions(date),
+        lifecycle=recorder.get_operator_probe_lifecycle(PROBE_STRATEGY_ID),
+        qmt_events=_read_qmt_events(event_log),
+        event_log_path=str(event_log),
+        main_marker_path=str(main_marker),
+        probe_marker_path=str(probe_marker),
+        main_execution_state=recorder.get_execution_state(
+            (
+                MAIN_STRATEGY_ID
+                if config["live"].get("kind") == "OPERATOR_PROBE"
+                else config["live"]["strategy_id"]
+            ),
+        )["state"],
+        authorization_intents=authorization_intents,
+    )
+
+
+def _execution_roots(config):
+    current_root = Path(config["live"]["bridge_root"]).expanduser().resolve()
+    if config["live"]["strategy_id"] == PROBE_STRATEGY_ID:
+        return current_root.parent, current_root
+    return current_root, current_root / "pr49_probe"
+
+
+def _read_qmt_events(path: Path) -> list:
+    """Read durable JSONL conservatively; malformed lines are not evidence."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    events = []
+    for line in lines:
+        try:
+            event = json.loads(line)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(event, dict):
+            events.append(event)
+    return events
+
+
+def _read_json_object(path: Path):
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except (OSError, TypeError, ValueError):
+        return "INVALID"
+    return payload
+
+
+def _scan_snapshot_protocol_residue(bridge_root: Path, recorder) -> list:
+    request_root = bridge_root / "snapshot_requests"
+    artifacts = []
+    scan_errors = []
+    try:
+        list(bridge_root.iterdir())
+    except FileNotFoundError:
+        return [
+            f"path={bridge_root};expected=directory;observed=missing"
+        ]
+    except NotADirectoryError:
+        return [
+            f"path={bridge_root};expected=directory;observed=not-directory"
+        ]
+    except OSError:
+        return [
+            f"path={bridge_root};expected=readable-directory;"
+            "observed=list-error"
+        ]
+    authorization_root = (
+        bridge_root.parent if bridge_root.name == "pr49_probe" else bridge_root
+    )
+    gate = authorization_root / "state" / SNAPSHOT_ADVANCE_GATE_NAME
+    try:
+        if gate.is_file():
+            scan_errors.append("state/" + SNAPSHOT_ADVANCE_GATE_NAME)
+    except OSError:
+        scan_errors.append("state/<advance-gate-scan-error>")
+    for directory in ("inbox", "processing", "archive", "responses"):
+        root = request_root / directory
+        try:
+            paths = list(root.iterdir())
+        except FileNotFoundError:
+            scan_errors.append(
+                f"path={root};expected=directory;observed=missing"
+            )
+            continue
+        except NotADirectoryError:
+            scan_errors.append(
+                f"path={root};expected=directory;observed=not-directory"
+            )
+            continue
+        except OSError:
+            scan_errors.append(
+                f"path={root};expected=readable-directory;"
+                "observed=list-error"
+            )
+            continue
+        for path in paths:
+            name = path.name
+            if not (
+                name.startswith("request_snapshot_")
+                or name.startswith("response_snapshot_")
+            ):
+                continue
+            if not (
+                name.endswith(".json") or name.endswith(".done")
+                or name.endswith(".json.tmp") or name.endswith(".done.tmp")
+                or ".intent" in name
+            ):
+                continue
+            artifacts.append(f"{directory}/{name}")
+    groups = {}
+    for artifact in artifacts:
+        match = re.search(
+            r"(snapshot_[0-9]{8}_[a-f0-9]{32})", artifact,
+        )
+        request_id = match.group(1) if match else artifact
+        groups.setdefault(request_id, []).append(artifact)
+    unresolved = list(scan_errors)
+    for request_id, group in groups.items():
+        if not _mac_imported_snapshot_archive_valid(
+            request_root, request_id, group, recorder,
+        ):
+            unresolved.extend(group)
+    return sorted(unresolved)
+
+
+def _mac_imported_snapshot_archive_valid(
+    request_root: Path, request_id: str, artifacts: list, recorder,
+) -> bool:
+    if not re.fullmatch(r"snapshot_[0-9]{8}_[a-f0-9]{32}", request_id):
+        return False
+    expected = {
+        f"archive/request_{request_id}.json",
+        f"archive/request_{request_id}.done",
+        f"archive/response_{request_id}.json",
+        f"archive/response_{request_id}.done",
+    }
+    if set(artifacts) != expected:
+        return False
+    durable = recorder.get_account_snapshot_request(request_id)
+    if durable is None or durable.get("status") != "IMPORTED_COMPLETE":
+        return False
+    archive = request_root / "archive"
+    try:
+        request = json.loads(
+            (archive / f"request_{request_id}.json").read_text(encoding="utf-8")
+        )
+        request_done = (
+            archive / f"request_{request_id}.done"
+        ).read_text(encoding="utf-8").strip()
+        response = json.loads(
+            (archive / f"response_{request_id}.json").read_text(encoding="utf-8")
+        )
+        response_done = (
+            archive / f"response_{request_id}.done"
+        ).read_text(encoding="utf-8").strip()
+    except (OSError, TypeError, ValueError):
+        return False
+    if not isinstance(request, dict) or not isinstance(response, dict):
+        return False
+    request_checksum = snapshot_artifact_checksum(request)
+    response_checksum = snapshot_artifact_checksum(response)
+    return bool(
+        request.get("request_id") == request_id
+        and request.get("checksum") == request_checksum
+        and request_done == request_checksum
+        and durable.get("request_checksum") == request_checksum
+        and response.get("request_id") == request_id
+        and response.get("request_checksum") == request_checksum
+        and response.get("status") == "COMPLETE"
+        and response.get("checksum") == response_checksum
+        and response_done == response_checksum
+        and durable.get("response_checksum") == response_checksum
+    )
 
 
 def run_corporate_actions(date, recorder, store, config) -> tuple:
@@ -378,7 +646,11 @@ def main():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
-    config = load_live_config(CONFIGS_DIR / f"{args.config}.yaml", PROJECT_ROOT)
+    config_id = validate_identifier(args.config, "config")
+    config = load_live_config(CONFIGS_DIR / f"{config_id}.yaml", PROJECT_ROOT)
+    config["live"]["strategy_id"] = validate_identifier(
+        config["live"]["strategy_id"], "strategy_id",
+    )
     date = args.date or _date.today().strftime("%Y-%m-%d")
 
     db_path = str(PROJECT_ROOT / config["storage"]["db_path"])
@@ -395,7 +667,9 @@ def main():
 
     init_qlib(config)
     calendar = get_calendar_dates()
-    active_batches = recorder.get_active_batches_by_date(date)
+    active_batches = recorder.get_active_batches_by_date(
+        date, strategy_id=config["live"]["strategy_id"],
+    )
     if date not in calendar:
         if _may_run_with_stale_calendar(args.stage, active_batches):
             logger.warning(

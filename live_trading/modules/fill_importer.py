@@ -16,7 +16,13 @@ from datetime import datetime
 from contextlib import contextmanager
 from pathlib import Path
 
+from filelock import FileLock
+
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee, validate_fees
+from live_trading.modules.execution_state import (
+    get_execution_state as _get_execution_state,
+    set_execution_state as _set_execution_state,
+)
 from live_trading.modules.signal_schema import (
     FillEvent,
     SchemaError,
@@ -34,6 +40,17 @@ _POSITION_STATUS = {"FILLED", "PARTIAL"}
 # 计入外部出入金（日收益计算时剔除）的流水类型
 EXTERNAL_FLOW_TYPES = {"DEPOSIT", "WITHDRAW"}
 
+OPERATOR_PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+
+
+def _mask_account_id(account_id: str | None) -> str:
+    value = str(account_id or "")
+    if not value:
+        return ""
+    if len(value) <= 4:
+        return "*" * len(value)
+    return value[:2] + "*" * (len(value) - 4) + value[-2:]
+
 
 class LiveRecorder:
     """实盘账簿 SQLite 存储（batches / fills / positions / cash_flows）。"""
@@ -44,17 +61,26 @@ class LiveRecorder:
         fees: dict = None,
         opening_cash: float | None = None,
         opening_value_adjustment: float | None = None,
+        read_only: bool = False,
     ):
         self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.read_only = read_only
+        if self.read_only:
+            if not self.db_path.is_file():
+                raise SchemaError(
+                    f"live ledger unavailable for read-only access: {self.db_path}"
+                )
+        else:
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.fees = dict(DEFAULT_FEES)
         if fees:
             self.fees.update(fees)
         self.fees = validate_fees(self.fees)
-        self._backup_legacy_db()
-        self._init_db()
-        self._seed_opening_cash(opening_cash)
-        self._seed_opening_value_adjustment(opening_value_adjustment)
+        if not self.read_only:
+            self._backup_legacy_db()
+            self._init_db()
+            self._seed_opening_cash(opening_cash)
+            self._seed_opening_value_adjustment(opening_value_adjustment)
 
     def _seed_opening_cash(self, opening_cash: float | None) -> None:
         if opening_cash is None:
@@ -144,9 +170,15 @@ class LiveRecorder:
 
     @contextmanager
     def _conn(self):
-        conn = sqlite3.connect(str(self.db_path))
+        if self.read_only:
+            conn = sqlite3.connect(
+                f"file:{self.db_path}?mode=ro", uri=True,
+            )
+        else:
+            conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
+        if not self.read_only:
+            conn.execute("PRAGMA journal_mode=WAL")
         try:
             yield conn
             conn.commit()
@@ -155,6 +187,33 @@ class LiveRecorder:
             raise
         finally:
             conn.close()
+
+    @contextmanager
+    def probe_snapshot_gate(self):
+        """Serialize probe authorization/publication with snapshot imports."""
+        lock_path = self.db_path.with_name(
+            f"{self.db_path.name}.probe_snapshot.lock"
+        )
+        with FileLock(str(lock_path)):
+            yield
+
+    @contextmanager
+    def operator_publish_gate(self):
+        """Serialize main operator preflight, durable record, and publication."""
+        lock_path = self.db_path.with_name(
+            f"{self.db_path.name}.operator_publish.lock"
+        )
+        with FileLock(str(lock_path)):
+            yield
+
+    @contextmanager
+    def execution_publication_gate(self):
+        """Linearize strategy state transitions with complete LIVE exposure."""
+        lock_path = self.db_path.with_name(
+            f"{self.db_path.name}.execution_publication.lock"
+        )
+        with FileLock(str(lock_path)):
+            yield
 
     def _init_db(self):
         with self._conn() as conn:
@@ -214,6 +273,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    max_quantity INTEGER NOT NULL DEFAULT 0,
                     target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
@@ -298,6 +358,70 @@ class LiveRecorder:
                     PRIMARY KEY (batch_id, stock_code)
                 );
 
+                CREATE TABLE IF NOT EXISTS broker_snapshot_imports (
+                    batch_id TEXT PRIMARY KEY,
+                    trade_date TEXT NOT NULL,
+                    import_sequence INTEGER NOT NULL UNIQUE,
+                    imported_at TEXT NOT NULL,
+                    lifecycle_evidence INTEGER NOT NULL DEFAULT 0,
+                    evidence_strategy_id TEXT,
+                    evidence_purpose TEXT,
+                    source_kind TEXT,
+                    ordering_trusted INTEGER NOT NULL DEFAULT 0,
+                    is_fresh INTEGER NOT NULL DEFAULT 0
+                );
+
+                CREATE TABLE IF NOT EXISTS account_snapshot_requests (
+                    request_id TEXT PRIMARY KEY,
+                    trade_date TEXT NOT NULL,
+                    collector_execution_profile TEXT NOT NULL,
+                    collector_bridge_root TEXT NOT NULL,
+                    requested_for_strategy_id TEXT NOT NULL,
+                    evidence_purpose TEXT NOT NULL,
+                    account_id TEXT NOT NULL,
+                    account_type TEXT NOT NULL,
+                    account_environment TEXT NOT NULL,
+                    account_id_masked TEXT NOT NULL,
+                    account_fingerprint TEXT NOT NULL,
+                    schema_version TEXT NOT NULL,
+                    request_checksum TEXT NOT NULL,
+                    request_json TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    response_checksum TEXT,
+                    response_json TEXT,
+                    created_at TEXT NOT NULL,
+                    imported_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS idx_account_snapshot_request_date
+                    ON account_snapshot_requests(trade_date, imported_at);
+                CREATE INDEX IF NOT EXISTS idx_broker_snapshot_import_order
+                    ON broker_snapshot_imports(
+                        trade_date, import_sequence DESC, batch_id DESC
+                    );
+
+                CREATE TABLE IF NOT EXISTS execution_state (
+                    strategy_id TEXT PRIMARY KEY,
+                    state TEXT NOT NULL,
+                    reason TEXT NOT NULL,
+                    changed_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS operator_probe_lifecycle (
+                    strategy_id TEXT PRIMARY KEY,
+                    stock_code TEXT NOT NULL,
+                    buy_batch_id TEXT NOT NULL,
+                    buy_trade_date TEXT NOT NULL,
+                    sell_batch_id TEXT,
+                    sell_trade_date TEXT,
+                    state TEXT NOT NULL CHECK (
+                        state IN (
+                            'BUY_PLANNED', 'BUY_FILLED', 'SELL_PLANNED',
+                            'CLOSED', 'FAILED'
+                        )
+                    ),
+                    updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id);
                 CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id);
                 CREATE INDEX IF NOT EXISTS idx_broker_acct_date
@@ -340,7 +464,202 @@ class LiveRecorder:
                     "ALTER TABLE signal_orders ADD COLUMN target_value "
                     "REAL NOT NULL DEFAULT 0"
                 )
+            if "max_quantity" not in order_cols:
+                conn.execute(
+                    "ALTER TABLE signal_orders ADD COLUMN max_quantity "
+                    "INTEGER NOT NULL DEFAULT 0"
+                )
+            snapshot_import_cols = {
+                r["name"] for r in conn.execute(
+                    "PRAGMA table_info(broker_snapshot_imports)"
+                )
+            }
+            if "lifecycle_evidence" not in snapshot_import_cols:
+                conn.execute(
+                    "ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                    "lifecycle_evidence INTEGER NOT NULL DEFAULT 0"
+                )
+            if "ordering_trusted" not in snapshot_import_cols:
+                conn.execute(
+                    "ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                    "ordering_trusted INTEGER NOT NULL DEFAULT 0"
+                )
+            if "is_fresh" not in snapshot_import_cols:
+                conn.execute(
+                    "ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                    "is_fresh INTEGER NOT NULL DEFAULT 0"
+                )
+            for column in (
+                "evidence_strategy_id", "evidence_purpose", "source_kind",
+            ):
+                if column not in snapshot_import_cols:
+                    conn.execute(
+                        f"ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                        f"{column} TEXT"
+                    )
+            # Repeat this classification on every startup so an interrupted
+            # three-column DDL upgrade can resume. Successful legacy rows are
+            # normalized with a ``legacy:`` prefix below and cannot be
+            # mistaken for Round-1 fresh-import timestamps on the next run.
+            candidates = conn.execute(
+                """SELECT batch_id, imported_at
+                     FROM broker_snapshot_imports
+                    WHERE is_fresh=0 AND ordering_trusted=0
+                      AND imported_at GLOB
+                          '????-??-??T??:??:??.???'"""
+            ).fetchall()
+            for candidate in candidates:
+                try:
+                    datetime.strptime(
+                        candidate["imported_at"],
+                        "%Y-%m-%dT%H:%M:%S.%f",
+                    )
+                except ValueError:
+                    continue
+                conn.execute(
+                    """UPDATE broker_snapshot_imports
+                          SET is_fresh=1, ordering_trusted=1
+                        WHERE batch_id=?""",
+                    (candidate["batch_id"],),
+                )
+            self._backfill_broker_snapshot_imports(conn)
             self._migrate_composite_keys(conn)
+
+    @staticmethod
+    def _backfill_broker_snapshot_imports(conn) -> None:
+        """Recover only chronology supported by legacy observation times."""
+        sequence = conn.execute(
+            "SELECT COALESCE(MAX(import_sequence), 0) AS value "
+            "FROM broker_snapshot_imports"
+        ).fetchone()["value"]
+        rows = conn.execute(
+            """SELECT batch_id, trade_date FROM (
+                   SELECT batch_id, trade_date FROM broker_account_snapshot
+                   UNION
+                   SELECT batch_id, trade_date FROM broker_position_snapshot
+               ) AS snapshots
+               WHERE NOT EXISTS (
+                   SELECT 1 FROM broker_snapshot_imports imports
+                   WHERE imports.batch_id=snapshots.batch_id
+               )"""
+        ).fetchall()
+        for row in rows:
+            sequence += 1
+            conn.execute(
+                """INSERT INTO broker_snapshot_imports
+                   (batch_id, trade_date, import_sequence, imported_at,
+                    lifecycle_evidence, ordering_trusted, is_fresh)
+                   VALUES (?,?,?,'',0,0,0)""",
+                (row["batch_id"], row["trade_date"], sequence),
+            )
+
+        markers = conn.execute(
+            """SELECT i.batch_id, i.trade_date, i.import_sequence,
+                      i.imported_at, i.is_fresh,
+                      a.account_id, a.ts, a.created_at,
+                      b.account_id AS durable_account_id,
+                      b.account_environment
+                 FROM broker_snapshot_imports i
+                 LEFT JOIN broker_account_snapshot a
+                        ON a.batch_id=i.batch_id
+                 LEFT JOIN batches b ON b.batch_id=i.batch_id"""
+        ).fetchall()
+
+        legacy = []
+        fresh = []
+        for ordinal, row in enumerate(markers):
+            item = {
+                "row": row,
+                "ordinal": ordinal,
+                "timestamp": None,
+                "timestamp_text": "",
+                "ordering_trusted": False,
+            }
+            if row["is_fresh"]:
+                fresh.append(item)
+                continue
+            for value in (row["ts"], row["created_at"]):
+                if not isinstance(value, str) or not value.strip():
+                    continue
+                try:
+                    parsed = datetime.fromisoformat(
+                        value.strip().replace("Z", "+00:00")
+                    )
+                    timestamp = parsed.timestamp()
+                except (ValueError, OverflowError, OSError):
+                    continue
+                if parsed.date().isoformat() != row["trade_date"]:
+                    continue
+                item["timestamp"] = timestamp
+                item["timestamp_text"] = parsed.isoformat()
+                break
+            legacy.append(item)
+
+        counts = {}
+        for item in legacy:
+            timestamp = item["timestamp"]
+            if timestamp is not None:
+                key = (item["row"]["trade_date"], timestamp)
+                counts[key] = counts.get(key, 0) + 1
+        for item in legacy:
+            timestamp = item["timestamp"]
+            if timestamp is not None:
+                item["ordering_trusted"] = counts[
+                    (item["row"]["trade_date"], timestamp)
+                ] == 1
+
+        ordered_legacy = sorted(
+            legacy,
+            key=lambda item: (
+                item["row"]["trade_date"],
+                item["timestamp"] is None,
+                item["timestamp"] if item["timestamp"] is not None else 0,
+                item["row"]["import_sequence"],
+                item["ordinal"],
+            ),
+        )
+        ordered_fresh = sorted(
+            fresh, key=lambda item: item["row"]["import_sequence"],
+        )
+        if markers:
+            offset = max(abs(int(row["import_sequence"])) for row in markers) + 1
+            conn.execute(
+                "UPDATE broker_snapshot_imports "
+                "SET import_sequence=-(import_sequence + ?)",
+                (offset,),
+            )
+        for new_sequence, item in enumerate(
+            ordered_legacy + ordered_fresh, start=1,
+        ):
+            row = item["row"]
+            durable_account = str(row["durable_account_id"] or "")
+            stored_account = str(row["account_id"] or "")
+            lifecycle_evidence = int(
+                row["account_environment"] == "REAL"
+                and bool(durable_account)
+                and stored_account in {
+                    durable_account,
+                    _mask_account_id(durable_account),
+                }
+            )
+            imported_at = (
+                row["imported_at"]
+                if row["is_fresh"]
+                else f"legacy:{item['timestamp_text'] or 'ambiguous'}"
+            )
+            conn.execute(
+                """UPDATE broker_snapshot_imports
+                      SET import_sequence=?, imported_at=?,
+                          lifecycle_evidence=?, ordering_trusted=?
+                    WHERE batch_id=?""",
+                (
+                    new_sequence,
+                    imported_at,
+                    lifecycle_evidence,
+                    int(row["is_fresh"] or item["ordering_trusted"]),
+                    row["batch_id"],
+                ),
+            )
 
     @staticmethod
     def _primary_key_columns(conn, table: str) -> list:
@@ -403,6 +722,7 @@ class LiveRecorder:
                     instrument_qlib TEXT,
                     side TEXT NOT NULL,
                     quantity INTEGER NOT NULL,
+                    max_quantity INTEGER NOT NULL DEFAULT 0,
                     target_value REAL NOT NULL DEFAULT 0,
                     price_type TEXT,
                     limit_price REAL NOT NULL,
@@ -412,11 +732,11 @@ class LiveRecorder:
                 );
                 INSERT INTO signal_orders (
                     batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, target_value, price_type, limit_price,
+                    side, quantity, max_quantity, target_value, price_type, limit_price,
                     priority, reason
                 )
                 SELECT batch_id, client_order_id, stock_code, instrument_qlib,
-                       side, quantity, 0, price_type, limit_price, priority, reason
+                       side, quantity, 0, 0, price_type, limit_price, priority, reason
                 FROM signal_orders_legacy;
                 DROP TABLE signal_orders_legacy;
             """)
@@ -625,6 +945,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                int(get("max_quantity", 0) or 0),
                 float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
@@ -644,21 +965,14 @@ class LiveRecorder:
             conn.executemany(
                 """INSERT INTO signal_orders
                    (client_order_id, batch_id, stock_code, instrument_qlib,
-                    side, quantity, target_value, price_type, limit_price,
+                    side, quantity, max_quantity, target_value, price_type, limit_price,
                     priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
-    def record_publish_plan(
-        self, header, orders: list,
-    ) -> None:
-        """Atomically persist an immutable plan before exposing it to QMT.
-
-        A retry may reuse the exact same plan (for example after a crash between
-        the database commit and shared-file publication), but it may never
-        replace a plan for an existing batch id.
-        """
+    @staticmethod
+    def _publish_plan_values(header, orders: list) -> tuple[str, list]:
         if header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
             raise SchemaError(
                 "account_environment must be SIMULATION or REAL"
@@ -682,6 +996,7 @@ class LiveRecorder:
                 get("instrument_qlib"),
                 get("side"),
                 int(get("quantity")),
+                int(get("max_quantity", 0) or 0),
                 float(get("target_value", 0.0)),
                 get("price_type"),
                 float(get("limit_price")),
@@ -689,35 +1004,100 @@ class LiveRecorder:
                 get("reason"),
             ))
         rows.sort(key=lambda row: row[1])
+        return order_checksum, rows
+
+    @staticmethod
+    def _require_exact_publish_plan_conn(
+        conn, header, order_checksum: str, rows: list,
+    ) -> bool:
+        existing_batch = conn.execute(
+            "SELECT * FROM batches WHERE batch_id=?", (header.batch_id,),
+        ).fetchone()
+        if existing_batch is None:
+            return False
+        batch_matches = (
+            existing_batch["trade_date"] == header.trade_date
+            and existing_batch["mode"] == header.mode
+            and existing_batch["planned_orders"] == len(rows)
+            and existing_batch["strategy_id"] == header.strategy_id
+            and existing_batch["signal_date"] == header.signal_date
+            and existing_batch["account_id"] == header.account_id
+            and existing_batch["account_type"] == header.account_type
+            and existing_batch["account_environment"]
+            == header.account_environment
+            and existing_batch["order_checksum"] == order_checksum
+        )
+        existing_rows = [tuple(row) for row in conn.execute(
+            """SELECT batch_id, client_order_id, stock_code,
+                      instrument_qlib, side, quantity, max_quantity,
+                      target_value, price_type, limit_price, priority, reason
+               FROM signal_orders WHERE batch_id=?
+               ORDER BY client_order_id""",
+            (header.batch_id,),
+        ).fetchall()]
+        if not batch_matches or existing_rows != rows:
+            raise SchemaError(
+                f"batch {header.batch_id!r} conflicts with durable plan"
+            )
+        return True
+
+    def record_publish_plan(
+        self,
+        header,
+        orders: list,
+        probe_transition: dict | None = None,
+        required_execution_state: str | None = None,
+        required_execution_state_strategy_id: str | None = None,
+        exclusive_same_day_live: bool = False,
+    ) -> None:
+        """Atomically persist an immutable plan before exposing it to QMT.
+
+        A retry may reuse the exact same plan (for example after a crash between
+        the database commit and shared-file publication), but it may never
+        replace a plan for an existing batch id.
+        """
+        order_checksum, rows = self._publish_plan_values(header, orders)
+        batch_id = header.batch_id
 
         with self._conn() as conn:
-            existing_batch = conn.execute(
-                "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
-            ).fetchone()
-            if existing_batch is not None:
-                batch_matches = (
-                    existing_batch["trade_date"] == header.trade_date
-                    and existing_batch["mode"] == header.mode
-                    and existing_batch["planned_orders"] == len(rows)
-                    and existing_batch["strategy_id"] == header.strategy_id
-                    and existing_batch["signal_date"] == header.signal_date
-                    and existing_batch["account_id"] == header.account_id
-                    and existing_batch["account_type"] == header.account_type
-                    and existing_batch["account_environment"]
-                    == header.account_environment
-                    and existing_batch["order_checksum"] == order_checksum
+            if required_execution_state is not None or exclusive_same_day_live:
+                # Serialize the final state/date gate with every competing
+                # writer. A publisher that passed an earlier read-only gate
+                # cannot record after an operator pauses the strategy.
+                conn.execute("BEGIN IMMEDIATE")
+            if required_execution_state is not None:
+                state_strategy_id = (
+                    required_execution_state_strategy_id
+                    or header.strategy_id
                 )
-                existing_rows = [tuple(row) for row in conn.execute(
-                    """SELECT batch_id, client_order_id, stock_code,
-                              instrument_qlib, side, quantity, target_value,
-                              price_type, limit_price, priority, reason
-                       FROM signal_orders WHERE batch_id=?
-                       ORDER BY client_order_id""",
-                    (batch_id,),
-                ).fetchall()]
-                if not batch_matches or existing_rows != rows:
+                current_state = _get_execution_state(
+                    conn, state_strategy_id,
+                )["state"]
+                if current_state != required_execution_state:
                     raise SchemaError(
-                        f"batch {batch_id!r} conflicts with durable plan"
+                        "publish execution state changed: required "
+                        f"{required_execution_state}, found {current_state}"
+                    )
+            if exclusive_same_day_live:
+                conflict = conn.execute(
+                    """SELECT batch_id FROM batches
+                         WHERE trade_date=? AND strategy_id=? AND mode='LIVE'
+                           AND superseded_by IS NULL AND batch_id<>?
+                         ORDER BY batch_id LIMIT 1""",
+                    (header.trade_date, header.strategy_id, header.batch_id),
+                ).fetchone()
+                if conflict is not None:
+                    raise SchemaError(
+                        "same-day LIVE batch blocks exclusive main SELL: "
+                        + conflict["batch_id"]
+                    )
+            if self._require_exact_publish_plan_conn(
+                conn, header, order_checksum, rows,
+            ):
+                if probe_transition is not None:
+                    self._record_operator_probe_plan_conn(
+                        conn, header, rows, probe_transition,
+                        durable_retry=True,
                     )
                 return
 
@@ -737,11 +1117,241 @@ class LiveRecorder:
             conn.executemany(
                 """INSERT INTO signal_orders
                    (batch_id, client_order_id, stock_code, instrument_qlib,
-                    side, quantity, target_value, price_type, limit_price,
+                    side, quantity, max_quantity, target_value, price_type, limit_price,
                     priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
+            if probe_transition is not None:
+                self._record_operator_probe_plan_conn(
+                    conn, header, rows, probe_transition,
+                    durable_retry=False,
+                )
+
+    def publish_recorded_operator_probe(
+        self,
+        header,
+        orders: list,
+        probe_transition: dict,
+        publish_callback,
+        *,
+        required_paused_strategy_id: str | None = None,
+        revalidate_eligibility: bool = False,
+    ):
+        """Publish while holding the writer gate shared with probe imports."""
+        order_checksum, rows = self._publish_plan_values(header, orders)
+        with self._conn() as conn:
+            # SQLite's RESERVED writer lock serializes receipt/snapshot commits
+            # with the last lifecycle check and the filesystem publication.
+            conn.execute("BEGIN IMMEDIATE")
+            if not self._require_exact_publish_plan_conn(
+                conn, header, order_checksum, rows,
+            ):
+                raise SchemaError(
+                    f"batch {header.batch_id!r} has no durable publish plan"
+                )
+            if required_paused_strategy_id is not None:
+                main_state = _get_execution_state(
+                    conn, required_paused_strategy_id,
+                )["state"]
+                if main_state != "PAUSED":
+                    raise SchemaError(
+                        "operator probe requires main strategy durable PAUSED "
+                        f"state, found {main_state}"
+                    )
+            self._require_latest_broker_snapshot_lifecycle_evidence_conn(
+                conn, header.trade_date, header.strategy_id,
+            )
+            self._record_operator_probe_plan_conn(
+                conn, header, rows, probe_transition, durable_retry=True,
+            )
+            if revalidate_eligibility:
+                self._require_probe_retry_eligibility_conn(
+                    conn, header, rows,
+                )
+            return publish_callback()
+
+    @classmethod
+    def _require_probe_retry_eligibility_conn(
+        cls, conn, header, rows: list,
+    ) -> None:
+        """Recheck mutable holdings immediately before a DB-only exposure."""
+        side = rows[0][4]
+        stock_code = rows[0][2]
+        snapshot_batch_id = (
+            cls._require_latest_broker_snapshot_lifecycle_evidence_conn(
+                conn, header.trade_date, header.strategy_id,
+            )
+        )
+        ledger = conn.execute(
+            "SELECT shares FROM positions WHERE stock_code=?",
+            (stock_code,),
+        ).fetchone()
+        held = int(ledger["shares"] or 0) if ledger is not None else 0
+        broker = conn.execute(
+            """SELECT shares, can_use_volume
+                 FROM broker_position_snapshot
+                WHERE batch_id=? AND stock_code=?""",
+            (snapshot_batch_id, stock_code),
+        ).fetchone()
+        broker_shares = (
+            int(broker["shares"] or 0) if broker is not None else 0
+        )
+        if side == "BUY":
+            if held > 0:
+                raise SchemaError(
+                    "BUY retry rejected: stock is already held in live ledger"
+                )
+            if broker_shares > 0:
+                raise SchemaError(
+                    "BUY retry rejected: stock is already held in latest "
+                    "broker snapshot"
+                )
+            return
+        if side != "SELL":
+            raise SchemaError(f"invalid probe retry side: {side!r}")
+        if held < 100:
+            raise SchemaError(
+                "SELL retry requires at least one lot in the live ledger"
+            )
+        available = (
+            broker["can_use_volume"] if broker is not None else None
+        )
+        if broker_shares < 100 or available is None or int(available) < 100:
+            raise SchemaError(
+                "SELL retry requires one lot available in latest broker snapshot"
+            )
+
+    @staticmethod
+    def _record_operator_probe_plan_conn(
+        conn, header, rows: list, transition: dict, *, durable_retry: bool,
+    ) -> None:
+        """Persist the probe plan state in the same transaction as its plan."""
+        if header.strategy_id != OPERATOR_PROBE_STRATEGY_ID:
+            raise SchemaError("probe lifecycle requires the probe strategy")
+        if len(rows) != 1:
+            raise SchemaError("probe lifecycle requires exactly one order")
+        side = rows[0][4]
+        stock_code = rows[0][2]
+        if transition != {"side": side, "stock_code": stock_code}:
+            raise SchemaError("probe lifecycle transition does not match plan")
+        lifecycle = conn.execute(
+            "SELECT * FROM operator_probe_lifecycle WHERE strategy_id=?",
+            (header.strategy_id,),
+        ).fetchone()
+
+        if durable_retry:
+            lifecycle_batch_id = None
+            expected_state = None
+            if side == "BUY":
+                lifecycle_batch_id = (
+                    lifecycle["buy_batch_id"] if lifecycle else None
+                )
+                expected_state = "BUY_PLANNED"
+            elif side == "SELL":
+                lifecycle_batch_id = (
+                    lifecycle["sell_batch_id"] if lifecycle else None
+                )
+                expected_state = "SELL_PLANNED"
+            if (
+                lifecycle_batch_id != header.batch_id
+                or lifecycle["state"] != expected_state
+            ):
+                raise SchemaError(
+                    "durable probe retry requires its exact planned lifecycle"
+                )
+            statuses = sorted(TERMINAL_FILL_STATUS)
+            marks = ",".join("?" for _ in statuses)
+            terminal = conn.execute(
+                f"""SELECT 1 FROM fills
+                      WHERE batch_id=? AND status IN ({marks}) LIMIT 1""",
+                (header.batch_id, *statuses),
+            ).fetchone()
+            snapshot = conn.execute(
+                "SELECT 1 FROM broker_snapshot_imports WHERE batch_id=?",
+                (header.batch_id,),
+            ).fetchone()
+            if terminal is not None or snapshot is not None:
+                raise SchemaError(
+                    "durable probe retry rejected after terminal evidence"
+                )
+            return
+
+        if side == "BUY":
+            if lifecycle is not None and lifecycle["state"] not in {"CLOSED", "FAILED"}:
+                raise SchemaError(
+                    "an operator probe lifecycle is already unresolved"
+                )
+            conn.execute(
+                """INSERT INTO operator_probe_lifecycle
+                   (strategy_id, stock_code, buy_batch_id, buy_trade_date,
+                    sell_batch_id, sell_trade_date, state, updated_at)
+                   VALUES (?,?,?,?,NULL,NULL,'BUY_PLANNED',datetime('now','localtime'))
+                   ON CONFLICT(strategy_id) DO UPDATE SET
+                       stock_code=excluded.stock_code,
+                       buy_batch_id=excluded.buy_batch_id,
+                       buy_trade_date=excluded.buy_trade_date,
+                       sell_batch_id=NULL,
+                       sell_trade_date=NULL,
+                       state='BUY_PLANNED',
+                       updated_at=datetime('now','localtime')""",
+                (
+                    header.strategy_id, stock_code, header.batch_id,
+                    header.trade_date,
+                ),
+            )
+            return
+
+        if side != "SELL":
+            raise SchemaError(f"invalid probe lifecycle side: {side!r}")
+        if lifecycle is None or lifecycle["state"] != "BUY_FILLED":
+            raise SchemaError("SELL requires a BUY_FILLED probe lifecycle")
+        if lifecycle["stock_code"] != stock_code:
+            raise SchemaError("SELL probe symbol does not match BUY lifecycle")
+        conn.execute(
+            """UPDATE operator_probe_lifecycle
+                  SET sell_batch_id=?, sell_trade_date=?, state='SELL_PLANNED',
+                      updated_at=datetime('now','localtime')
+                WHERE strategy_id=?""",
+            (header.batch_id, header.trade_date, header.strategy_id),
+        )
+
+    def get_operator_probe_lifecycle(
+        self, strategy_id: str = OPERATOR_PROBE_STRATEGY_ID,
+    ) -> dict | None:
+        with self._conn() as conn:
+            table = conn.execute(
+                "SELECT 1 FROM sqlite_master "
+                "WHERE type='table' AND name='operator_probe_lifecycle'"
+            ).fetchone()
+            if table is None:
+                return None
+            row = conn.execute(
+                "SELECT * FROM operator_probe_lifecycle WHERE strategy_id=?",
+                (strategy_id,),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def get_operator_probe_applied_quantity(
+        self, batch_id: str, side: str, stock_code: str,
+    ) -> int:
+        """Return actual applied shares, scoped to one durable probe plan."""
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT COALESCE(SUM(f.applied_qty), 0) AS quantity
+                     FROM fills f
+                     JOIN batches b ON b.batch_id=f.batch_id
+                     JOIN signal_orders o
+                       ON o.batch_id=f.batch_id
+                      AND o.client_order_id=f.client_order_id
+                    WHERE b.strategy_id=? AND f.batch_id=?
+                      AND f.side=? AND f.stock_code=?
+                      AND o.side=f.side AND o.stock_code=f.stock_code""",
+                (
+                    OPERATOR_PROBE_STRATEGY_ID, batch_id, side, stock_code,
+                ),
+            ).fetchone()
+            return int(row["quantity"])
 
     def get_orders(self, batch_id: str) -> list:
         with self._conn() as conn:
@@ -972,6 +1582,14 @@ class LiveRecorder:
             if fill.side == "BUY":
                 if order["quantity"] != 0 or order["target_value"] <= 0:
                     raise SchemaError("BUY plan must use a positive target_value")
+                if (
+                    order["max_quantity"] > 0
+                    and fill.requested_qty > order["max_quantity"]
+                ):
+                    raise SchemaError(
+                        f"BUY requested_qty {fill.requested_qty!r} exceeds "
+                        f"authorized max {order['max_quantity']!r}"
+                    )
                 fill_gross = float(fill.filled_qty) * float(fill.avg_price)
                 if fill_gross > float(order["target_value"]) + 1e-6:
                     raise SchemaError(
@@ -983,6 +1601,23 @@ class LiveRecorder:
                 "SELECT * FROM fills WHERE batch_id=? AND client_order_id=?",
                 (fill.batch_id, fill.client_order_id),
             ).fetchone()
+            if (
+                row is not None
+                and batch["strategy_id"] == OPERATOR_PROBE_STRATEGY_ID
+                and row["status"] in TERMINAL_FILL_STATUS
+            ):
+                receipt_fields = (
+                    "batch_id", "client_order_id", "mode", "stock_code",
+                    "side", "status", "requested_qty", "filled_qty",
+                    "avg_price", "qmt_order_id", "message", "ts",
+                )
+                exact_receipt = all(
+                    getattr(fill, field) == row[field]
+                    for field in receipt_fields
+                )
+                if exact_receipt:
+                    return
+                raise SchemaError("terminal probe fill is immutable")
             applied_qty = row["applied_qty"] if row else 0
             applied_amount = row["applied_amount"] if row else 0.0
             applied_fee = row["applied_fee"] if row else 0.0
@@ -1040,6 +1675,75 @@ class LiveRecorder:
                  applied_qty + delta_qty, applied_amount + delta_amount,
                  applied_fee + fee_delta),
             )
+            self._refresh_operator_probe_lifecycle_conn(conn)
+
+    @staticmethod
+    def _refresh_operator_probe_lifecycle_conn(conn) -> None:
+        """Advance only when terminal applied fills and its snapshot agree."""
+        lifecycle = conn.execute(
+            "SELECT * FROM operator_probe_lifecycle WHERE strategy_id=?",
+            (OPERATOR_PROBE_STRATEGY_ID,),
+        ).fetchone()
+        if lifecycle is None:
+            return
+
+        if lifecycle["state"] == "BUY_PLANNED":
+            batch_id = lifecycle["buy_batch_id"]
+            side = "BUY"
+            success_state = "BUY_FILLED"
+            expected_broker_shares = None
+        elif lifecycle["state"] == "SELL_PLANNED":
+            batch_id = lifecycle["sell_batch_id"]
+            side = "SELL"
+            success_state = "CLOSED"
+            expected_broker_shares = None
+        else:
+            return
+
+        marks = ",".join("?" for _ in TERMINAL_FILL_STATUS)
+        fill = conn.execute(
+            f"""SELECT f.applied_qty
+                   FROM fills f
+                   JOIN batches b ON b.batch_id=f.batch_id
+                  WHERE b.strategy_id=? AND f.batch_id=?
+                    AND f.side=? AND f.stock_code=?
+                    AND f.status IN ({marks})""",
+            (
+                OPERATOR_PROBE_STRATEGY_ID, batch_id, side,
+                lifecycle["stock_code"], *sorted(TERMINAL_FILL_STATUS),
+            ),
+        ).fetchone()
+        if fill is None:
+            return
+        snapshot = conn.execute(
+            """SELECT 1 FROM broker_snapshot_imports
+                WHERE batch_id=? AND lifecycle_evidence=1""",
+            (batch_id,),
+        ).fetchone()
+        if snapshot is None:
+            return
+        broker = conn.execute(
+            """SELECT shares FROM broker_position_snapshot
+                WHERE batch_id=? AND stock_code=?""",
+            (batch_id, lifecycle["stock_code"]),
+        ).fetchone()
+        broker_shares = int(broker["shares"]) if broker else 0
+        applied_qty = int(fill["applied_qty"])
+        if side == "BUY":
+            expected_broker_shares = applied_qty
+        else:
+            expected_broker_shares = 100 - applied_qty
+        state = (
+            success_state
+            if applied_qty == 100 and broker_shares == expected_broker_shares
+            else "FAILED"
+        )
+        conn.execute(
+            """UPDATE operator_probe_lifecycle
+                  SET state=?, updated_at=datetime('now','localtime')
+                WHERE strategy_id=?""",
+            (state, OPERATOR_PROBE_STRATEGY_ID),
+        )
 
     @staticmethod
     def _apply_position_delta(
@@ -1390,7 +2094,8 @@ class LiveRecorder:
         with self._conn() as conn:
             rows = conn.execute(
                 """SELECT f.batch_id, f.client_order_id, f.side,
-                          f.applied_amount, f.applied_fee
+                          f.status, f.applied_amount, f.applied_fee,
+                          b.strategy_id
                    FROM fills f JOIN batches b ON f.batch_id = b.batch_id
                    WHERE b.trade_date=? AND f.mode='LIVE'
                          AND f.applied_amount > 0""",
@@ -1398,6 +2103,11 @@ class LiveRecorder:
             ).fetchall()
             total_delta = 0.0
             for row in rows:
+                if (
+                    row["strategy_id"] == OPERATOR_PROBE_STRATEGY_ID
+                    and row["status"] in TERMINAL_FILL_STATUS
+                ):
+                    continue
                 target = order_total_fee(
                     row["side"], row["applied_amount"], self.fees,
                 )
@@ -1424,6 +2134,29 @@ class LiveRecorder:
 
     # ---------- account ----------
 
+    # ---------- execution state ----------
+
+    def get_execution_state(self, strategy_id: str) -> dict:
+        """Return a durable strategy state, defaulting to non-persisted ACTIVE."""
+        with self._conn() as conn:
+            return _get_execution_state(conn, strategy_id)
+
+    def set_execution_state(
+        self,
+        strategy_id: str,
+        state: str,
+        reason: str,
+        changed_at: str | None = None,
+    ) -> dict:
+        """Persist the explicit execution state used by publishers and monitors."""
+        if self.read_only:
+            raise SchemaError("cannot set execution state through a read-only ledger")
+        with self.execution_publication_gate():
+            with self._conn() as conn:
+                return _set_execution_state(
+                    conn, strategy_id, state, reason, changed_at,
+                )
+
     def set_cash(self, cash: float) -> None:
         """人工 seed / 校正现金入口。"""
         with self._conn() as conn:
@@ -1446,29 +2179,54 @@ class LiveRecorder:
             ).fetchone()
             return float(row["value"]) if row else 0.0
 
-    def list_batches(self, limit: int = 10) -> list:
+    def list_batches(
+        self, limit: int = 10, strategy_id: str | None = None,
+    ) -> list:
+        clauses = []
+        params = []
+        if strategy_id is not None:
+            clauses.append("strategy_id=?")
+            params.append(strategy_id)
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        params.append(limit)
         with self._conn() as conn:
             rows = conn.execute(
-                "SELECT * FROM batches "
-                "ORDER BY trade_date DESC, batch_id DESC LIMIT ?", (limit,)
+                "SELECT * FROM batches" + where
+                + " ORDER BY trade_date DESC, batch_id DESC LIMIT ?", params,
             ).fetchall()
             return [dict(r) for r in rows]
 
-    def get_batches_by_date(self, trade_date: str) -> list:
+    def get_batches_by_date(
+        self, trade_date: str, strategy_id: str | None = None,
+    ) -> list:
+        clauses = ["trade_date=?"]
+        params = [trade_date]
+        if strategy_id is not None:
+            clauses.append("strategy_id=?")
+            params.append(strategy_id)
         with self._conn() as conn:
             rows = conn.execute(
-                "SELECT * FROM batches WHERE trade_date=? ORDER BY batch_id",
-                (trade_date,),
+                "SELECT * FROM batches WHERE "
+                + " AND ".join(clauses)
+                + " ORDER BY batch_id",
+                params,
             ).fetchall()
             return [dict(r) for r in rows]
 
-    def get_active_batches_by_date(self, trade_date: str) -> list:
+    def get_active_batches_by_date(
+        self, trade_date: str, strategy_id: str | None = None,
+    ) -> list:
+        clauses = ["trade_date=?", "superseded_by IS NULL"]
+        params = [trade_date]
+        if strategy_id is not None:
+            clauses.append("strategy_id=?")
+            params.append(strategy_id)
         with self._conn() as conn:
             rows = conn.execute(
-                """SELECT * FROM batches
-                   WHERE trade_date=? AND superseded_by IS NULL
-                   ORDER BY batch_id""",
-                (trade_date,),
+                "SELECT * FROM batches WHERE "
+                + " AND ".join(clauses)
+                + " ORDER BY batch_id",
+                params,
             ).fetchall()
             return [dict(r) for r in rows]
 
@@ -1484,11 +2242,20 @@ class LiveRecorder:
             return dict(row) if row else None
 
     def get_unreconciled_active_live_batches_before(
-        self, trade_date: str,
+        self, trade_date: str, strategy_id: str | None = None,
     ) -> list:
         """Return earlier active LIVE batches lacking terminal fill events."""
         statuses = sorted(TERMINAL_FILL_STATUS)
         marks = ",".join("?" for _ in statuses)
+        clauses = [
+            "b.mode='LIVE'",
+            "b.trade_date < ?",
+            "b.superseded_by IS NULL",
+        ]
+        params = [*statuses, trade_date]
+        if strategy_id is not None:
+            clauses.append("b.strategy_id=?")
+            params.append(strategy_id)
         with self._conn() as conn:
             rows = conn.execute(
                 f"""SELECT b.*,
@@ -1496,12 +2263,11 @@ class LiveRecorder:
                      FROM batches b
                      LEFT JOIN fills f
                        ON f.batch_id=b.batch_id AND f.status IN ({marks})
-                     WHERE b.mode='LIVE' AND b.trade_date < ?
-                           AND b.superseded_by IS NULL
+                     WHERE {' AND '.join(clauses)}
                      GROUP BY b.batch_id
                      HAVING terminal_orders < b.planned_orders
                      ORDER BY b.trade_date, b.batch_id""",
-                [*statuses, trade_date],
+                params,
             ).fetchall()
             return [dict(row) for row in rows]
 
@@ -1625,6 +2391,282 @@ class LiveRecorder:
 
     # ---------- 券商快照（二道对账）----------
 
+    def record_account_snapshot_request(
+        self, payload: dict, account_id: str,
+    ) -> None:
+        """Persist one immutable observation request without a LIVE batch."""
+        from live_trading.modules.operator_probe import (
+            SNAPSHOT_EVIDENCE_PURPOSE,
+            SNAPSHOT_PUBLISH_CUTOFF,
+            SNAPSHOT_REQUEST_SCHEMA_VERSION,
+            account_identity_fingerprint,
+            snapshot_artifact_checksum,
+        )
+
+        if payload.get("type") != "account_snapshot_request":
+            raise SchemaError("invalid account snapshot request type")
+        if payload.get("schema_version") != SNAPSHOT_REQUEST_SCHEMA_VERSION:
+            raise SchemaError("invalid account snapshot request schema")
+        if payload.get("evidence_purpose") != SNAPSHOT_EVIDENCE_PURPOSE:
+            raise SchemaError("invalid account snapshot evidence purpose")
+        if payload.get("publish_cutoff") != SNAPSHOT_PUBLISH_CUTOFF:
+            raise SchemaError("invalid account snapshot publish cutoff")
+        checksum = snapshot_artifact_checksum(payload)
+        if payload.get("checksum") != checksum:
+            raise SchemaError("account snapshot request checksum mismatch")
+        expected_fingerprint = account_identity_fingerprint(
+            account_id,
+            payload.get("account_type", ""),
+            payload.get("account_environment", ""),
+        )
+        if payload.get("account_fingerprint") != expected_fingerprint:
+            raise SchemaError("account snapshot request identity mismatch")
+        if payload.get("account_id_masked") != _mask_account_id(account_id):
+            raise SchemaError("account snapshot request masked identity mismatch")
+        request_json = json.dumps(
+            payload, ensure_ascii=True, sort_keys=True, separators=(",", ":"),
+        )
+        values = (
+            payload["request_id"], payload["trade_date"],
+            payload["collector_execution_profile"],
+            payload["collector_bridge_root"],
+            payload["requested_for_strategy_id"], payload["evidence_purpose"],
+            account_id, payload["account_type"],
+            payload["account_environment"], payload["account_id_masked"],
+            payload["account_fingerprint"], payload["schema_version"],
+            checksum, request_json, "PREPARED", payload["created_at"],
+        )
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (payload["request_id"],),
+            ).fetchone()
+            if existing is not None:
+                if (
+                    existing["request_checksum"] == checksum
+                    and existing["request_json"] == request_json
+                    and existing["account_id"] == account_id
+                ):
+                    return
+                raise SchemaError("conflicting durable account snapshot request")
+            conn.execute(
+                """INSERT INTO account_snapshot_requests
+                   (request_id, trade_date, collector_execution_profile,
+                    collector_bridge_root, requested_for_strategy_id,
+                    evidence_purpose, account_id, account_type,
+                    account_environment, account_id_masked,
+                    account_fingerprint, schema_version, request_checksum,
+                    request_json, status, created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                values,
+            )
+
+    def get_account_snapshot_request(self, request_id: str):
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (request_id,),
+            ).fetchone()
+            return dict(row) if row is not None else None
+
+    def mark_account_snapshot_request_published(
+        self, request_id: str, request_checksum: str,
+    ) -> None:
+        """Commit the durable exposure intent before QMT-visible files."""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (request_id,),
+            ).fetchone()
+            if row is None:
+                raise SchemaError("unknown prepared account snapshot request")
+            if row["request_checksum"] != request_checksum:
+                raise SchemaError("prepared account snapshot checksum changed")
+            if row["status"] == "REQUESTED":
+                return
+            if row["status"] != "PREPARED":
+                raise SchemaError("account snapshot request is already terminal")
+            conn.execute(
+                "UPDATE account_snapshot_requests SET status='REQUESTED' "
+                "WHERE request_id=?",
+                (request_id,),
+            )
+
+    def save_account_snapshot_response(
+        self, response: dict, *, before_commit=None,
+    ) -> bool:
+        """Import a bound terminal response; exact replay is a no-op."""
+        from live_trading.modules.operator_probe import (
+            SNAPSHOT_EVIDENCE_PURPOSE,
+            SNAPSHOT_PUBLISH_CUTOFF,
+            SNAPSHOT_REQUEST_SCHEMA_VERSION,
+            account_identity_fingerprint,
+            snapshot_artifact_checksum,
+        )
+
+        if response.get("type") != "account_snapshot_response":
+            raise SchemaError("invalid account snapshot response type")
+        if response.get("schema_version") != SNAPSHOT_REQUEST_SCHEMA_VERSION:
+            raise SchemaError("invalid account snapshot response schema")
+        response_checksum = snapshot_artifact_checksum(response)
+        if response.get("checksum") != response_checksum:
+            raise SchemaError("account snapshot response checksum mismatch")
+        response_json = json.dumps(
+            response, ensure_ascii=True, sort_keys=True,
+            separators=(",", ":"),
+        )
+        request_id = response.get("request_id", "")
+        with (
+            self.probe_snapshot_gate(),
+            self.operator_publish_gate(),
+            self._conn() as conn,
+        ):
+            request = conn.execute(
+                "SELECT * FROM account_snapshot_requests WHERE request_id=?",
+                (request_id,),
+            ).fetchone()
+            if request is None:
+                raise SchemaError("unknown account snapshot request_id")
+            if request["response_checksum"] is not None:
+                if (
+                    request["response_checksum"] == response_checksum
+                    and request["response_json"] == response_json
+                ):
+                    return False
+                raise SchemaError("terminal account snapshot response changed")
+            if request["status"] != "REQUESTED":
+                raise SchemaError("account snapshot response has no published request")
+            bindings = {
+                "trade_date": request["trade_date"],
+                "collector_execution_profile": request[
+                    "collector_execution_profile"
+                ],
+                "collector_bridge_root": request["collector_bridge_root"],
+                "requested_for_strategy_id": request[
+                    "requested_for_strategy_id"
+                ],
+                "evidence_purpose": SNAPSHOT_EVIDENCE_PURPOSE,
+                "publish_cutoff": SNAPSHOT_PUBLISH_CUTOFF,
+                "account_type": request["account_type"],
+                "account_environment": request["account_environment"],
+                "request_checksum": request["request_checksum"],
+            }
+            for field, expected in bindings.items():
+                if response.get(field) != expected:
+                    raise SchemaError(
+                        f"account snapshot response {field} mismatch"
+                    )
+            if request["schema_version"] != SNAPSHOT_REQUEST_SCHEMA_VERSION:
+                raise SchemaError("durable account snapshot request schema mismatch")
+            status = response.get("status")
+            if status not in {"COMPLETE", "DIAGNOSTIC_POSITIONS_ONLY", "ERROR"}:
+                raise SchemaError("invalid account snapshot response status")
+            account = response.get("account")
+            positions = response.get("positions")
+            if not isinstance(positions, list) or any(
+                not isinstance(row, dict) for row in positions
+            ):
+                raise SchemaError("account snapshot response positions invalid")
+            if status == "COMPLETE":
+                if response.get("account_id_masked") != request[
+                    "account_id_masked"
+                ]:
+                    raise SchemaError("response ACCOUNT identity mismatch")
+                if response.get("account_fingerprint") != request[
+                    "account_fingerprint"
+                ]:
+                    raise SchemaError("response ACCOUNT fingerprint mismatch")
+                if not isinstance(account, dict):
+                    raise SchemaError("complete account snapshot requires ACCOUNT row")
+                if account.get("request_id") != request_id:
+                    raise SchemaError("ACCOUNT row request_id mismatch")
+                if account.get("account_id_masked") != request["account_id_masked"]:
+                    raise SchemaError("ACCOUNT row identity mismatch")
+                if account.get("account_fingerprint") != request[
+                    "account_fingerprint"
+                ]:
+                    raise SchemaError("ACCOUNT row fingerprint mismatch")
+            else:
+                if response.get("account_id_masked") is not None or response.get(
+                    "account_fingerprint"
+                ) is not None:
+                    raise SchemaError(
+                        "non-complete response cannot claim ACCOUNT identity"
+                    )
+                if account is not None:
+                    raise SchemaError("non-complete response cannot carry ACCOUNT row")
+            if status == "ERROR" and positions:
+                raise SchemaError("error response cannot carry positions")
+            for row in positions:
+                if row.get("request_id") != request_id:
+                    raise SchemaError("position row request_id mismatch")
+                if row.get("trade_date") != request["trade_date"]:
+                    raise SchemaError("position response trade_date mismatch")
+            source_id = request_id
+            conn.execute(
+                "DELETE FROM broker_account_snapshot WHERE batch_id=?",
+                (source_id,),
+            )
+            conn.execute(
+                "DELETE FROM broker_position_snapshot WHERE batch_id=?",
+                (source_id,),
+            )
+            if status == "COMPLETE":
+                conn.execute(
+                    """INSERT INTO broker_account_snapshot
+                       (batch_id, trade_date, account_id, available_cash,
+                        total_asset, market_value, frozen_cash, ts)
+                       VALUES (?,?,?,?,?,?,?,?)""",
+                    (
+                        source_id, request["trade_date"], request["account_id"],
+                        account.get("available_cash"), account.get("total_asset"),
+                        account.get("market_value"), account.get("frozen_cash"),
+                        account.get("ts"),
+                    ),
+                )
+            conn.executemany(
+                """INSERT INTO broker_position_snapshot
+                   (batch_id, trade_date, stock_code, shares, can_use_volume,
+                    avg_cost, market_value)
+                   VALUES (?,?,?,?,?,?,?)""",
+                [(
+                    source_id, request["trade_date"], row["stock_code"],
+                    int(row["shares"]), row.get("can_use_volume"),
+                    row.get("avg_cost"), row.get("market_value"),
+                ) for row in positions],
+            )
+            sequence = conn.execute(
+                "SELECT COALESCE(MAX(import_sequence), 0) + 1 AS value "
+                "FROM broker_snapshot_imports"
+            ).fetchone()["value"]
+            conn.execute(
+                """INSERT INTO broker_snapshot_imports
+                   (batch_id, trade_date, import_sequence, imported_at,
+                    lifecycle_evidence, evidence_strategy_id,
+                    evidence_purpose, source_kind,
+                    ordering_trusted, is_fresh)
+                   VALUES (?,?,?,strftime('%Y-%m-%dT%H:%M:%f','now','localtime'),
+                           ?,?,?,?,1,1)""",
+                (
+                    source_id, request["trade_date"], sequence,
+                    int(status == "COMPLETE"),
+                    request["requested_for_strategy_id"],
+                    request["evidence_purpose"],
+                    "SNAPSHOT_REQUEST",
+                ),
+            )
+            conn.execute(
+                """UPDATE account_snapshot_requests
+                      SET status=?, response_checksum=?, response_json=?,
+                          imported_at=strftime('%Y-%m-%dT%H:%M:%f','now','localtime')
+                    WHERE request_id=?""",
+                ("IMPORTED_" + status, response_checksum, response_json, request_id),
+            )
+            self._refresh_operator_probe_lifecycle_conn(conn)
+            if before_commit is not None:
+                before_commit()
+        return True
+
     def save_broker_snapshot(self, batch_id: str, account: dict,
                             positions: list) -> None:
         """存券商 ACCOUNT/POSITION 快照（覆盖式，重复导入幂等）。
@@ -1633,6 +2675,11 @@ class LiveRecorder:
             account: 账户行 dict，或 None（ACCOUNT 查询为空时）
             positions: 持仓行 dict 列表
         """
+        with self.probe_snapshot_gate(), self.operator_publish_gate():
+            self._save_broker_snapshot_locked(batch_id, account, positions)
+
+    def _save_broker_snapshot_locked(self, batch_id: str, account: dict,
+                                     positions: list) -> None:
         with self._conn() as conn:
             batch = conn.execute(
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
@@ -1640,8 +2687,46 @@ class LiveRecorder:
             if batch is None:
                 raise SchemaError(f"unknown snapshot batch_id: {batch_id!r}")
             trade_date = batch["trade_date"]
+            for row in ([account] if account is not None else []) + list(positions):
+                row_batch_id = row.get("batch_id")
+                if row_batch_id is not None and row_batch_id != batch_id:
+                    raise SchemaError("snapshot batch_id does not match durable batch")
+                row_trade_date = row.get("trade_date")
+                if row_trade_date is not None and row_trade_date != trade_date:
+                    raise SchemaError(
+                        "snapshot trade_date does not match durable batch"
+                    )
+            normalized_account = None if account is None else dict(account)
+            if account is not None and batch["account_environment"] == "REAL":
+                durable_account = str(batch["account_id"] or "")
+                if not durable_account:
+                    raise SchemaError(
+                        "REAL snapshot batch requires a durable account_id"
+                    )
+                full_account = account.get("account_id")
+                masked_account = account.get("account_id_masked")
+                if full_account is not None and full_account != durable_account:
+                    raise SchemaError(
+                        "snapshot account_id does not match durable REAL batch"
+                    )
+                if (
+                    masked_account is not None
+                    and masked_account != _mask_account_id(durable_account)
+                ):
+                    raise SchemaError(
+                        "masked snapshot account does not match durable REAL batch"
+                    )
+                if full_account is None and masked_account is None:
+                    raise SchemaError(
+                        "REAL account snapshot requires trusted account binding"
+                    )
+                normalized_account["account_id"] = durable_account
 
-            if account is not None:
+            conn.execute(
+                "DELETE FROM broker_account_snapshot WHERE batch_id=?",
+                (batch_id,),
+            )
+            if normalized_account is not None:
                 conn.execute(
                     """INSERT INTO broker_account_snapshot
                        (batch_id, trade_date, account_id, available_cash,
@@ -1654,10 +2739,12 @@ class LiveRecorder:
                            market_value=excluded.market_value,
                            frozen_cash=excluded.frozen_cash,
                            ts=excluded.ts""",
-                    (batch_id, trade_date, account.get("account_id"),
-                     account.get("available_cash"), account.get("total_asset"),
-                     account.get("market_value"), account.get("frozen_cash"),
-                     account.get("ts")),
+                    (batch_id, trade_date, normalized_account.get("account_id"),
+                     normalized_account.get("available_cash"),
+                     normalized_account.get("total_asset"),
+                     normalized_account.get("market_value"),
+                     normalized_account.get("frozen_cash"),
+                     normalized_account.get("ts")),
                 )
 
             conn.execute(
@@ -1675,27 +2762,117 @@ class LiveRecorder:
                     for p in positions
                 ],
             )
+            sequence = conn.execute(
+                "SELECT COALESCE(MAX(import_sequence), 0) + 1 AS value "
+                "FROM broker_snapshot_imports"
+            ).fetchone()["value"]
+            conn.execute(
+                """INSERT INTO broker_snapshot_imports
+                   (batch_id, trade_date, import_sequence, imported_at,
+                    lifecycle_evidence, evidence_strategy_id,
+                    evidence_purpose, source_kind,
+                    ordering_trusted, is_fresh)
+                   VALUES (?,?,?,strftime('%Y-%m-%dT%H:%M:%f','now','localtime'),
+                           ?,?,?,?,1,1)
+                   ON CONFLICT(batch_id) DO UPDATE SET
+                       trade_date=excluded.trade_date,
+                       import_sequence=excluded.import_sequence,
+                       imported_at=excluded.imported_at,
+                       lifecycle_evidence=excluded.lifecycle_evidence,
+                       evidence_strategy_id=excluded.evidence_strategy_id,
+                       evidence_purpose=excluded.evidence_purpose,
+                       source_kind=excluded.source_kind,
+                       ordering_trusted=1,
+                       is_fresh=1""",
+                (
+                    batch_id,
+                    trade_date,
+                    sequence,
+                    int(
+                        normalized_account is not None
+                        and batch["account_environment"] == "REAL"
+                    ),
+                    batch["strategy_id"],
+                    "BATCH_RECONCILIATION",
+                    "TRADING_BATCH",
+                ),
+            )
+            self._refresh_operator_probe_lifecycle_conn(conn)
 
     def get_broker_account_snapshot(self, trade_date: str):
         """当日最新批次的券商账户快照；无则 None。"""
         with self._conn() as conn:
+            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if batch_id is None:
+                return None
             row = conn.execute(
-                "SELECT * FROM broker_account_snapshot WHERE trade_date=? "
-                "ORDER BY batch_id DESC LIMIT 1",
-                (trade_date,),
+                "SELECT * FROM broker_account_snapshot WHERE batch_id=?",
+                (batch_id,),
             ).fetchone()
             return dict(row) if row else None
 
     @staticmethod
     def _latest_broker_snapshot_batch_id(conn, trade_date: str):
+        columns = {
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(broker_snapshot_imports)"
+            ).fetchall()
+        }
+        if not {"is_fresh", "ordering_trusted"}.issubset(columns):
+            raise SchemaError(
+                "broker snapshot metadata requires writable migration"
+            )
         row = conn.execute(
-            "SELECT batch_id FROM ("
-            "SELECT batch_id FROM broker_account_snapshot WHERE trade_date=? "
-            "UNION SELECT batch_id FROM broker_position_snapshot WHERE trade_date=?"
-            ") ORDER BY batch_id DESC LIMIT 1",
-            (trade_date, trade_date),
+            """SELECT batch_id FROM broker_snapshot_imports
+                WHERE trade_date=? AND is_fresh=1 AND ordering_trusted=1
+                ORDER BY import_sequence DESC LIMIT 1""",
+            (trade_date,),
         ).fetchone()
-        return row["batch_id"] if row else None
+        if row is not None:
+            return row["batch_id"]
+        ambiguous = conn.execute(
+            """SELECT 1 FROM broker_snapshot_imports
+                WHERE trade_date=? AND ordering_trusted=0 LIMIT 1""",
+            (trade_date,),
+        ).fetchone()
+        if ambiguous is not None:
+            return None
+        row = conn.execute(
+            """SELECT batch_id FROM broker_snapshot_imports
+                WHERE trade_date=? AND ordering_trusted=1
+                ORDER BY import_sequence DESC LIMIT 1""",
+            (trade_date,),
+        ).fetchone()
+        return row["batch_id"] if row is not None else None
+
+    @classmethod
+    def _require_latest_broker_snapshot_lifecycle_evidence_conn(
+        cls, conn, trade_date: str, evidence_strategy_id: str | None = None,
+    ) -> str:
+        batch_id = cls._latest_broker_snapshot_batch_id(conn, trade_date)
+        if batch_id is None:
+            raise SchemaError(
+                f"broker position snapshot missing for {trade_date}"
+            )
+        evidence = conn.execute(
+            """SELECT lifecycle_evidence, evidence_strategy_id
+                 FROM broker_snapshot_imports WHERE batch_id=?""",
+            (batch_id,),
+        ).fetchone()
+        if evidence is None or evidence["lifecycle_evidence"] != 1:
+            raise SchemaError(
+                "latest broker snapshot lacks matched REAL "
+                f"ACCOUNT evidence for {trade_date}"
+            )
+        if (
+            evidence_strategy_id is not None
+            and evidence["evidence_strategy_id"] != evidence_strategy_id
+        ):
+            raise SchemaError(
+                "latest broker snapshot ACCOUNT evidence belongs to another "
+                f"strategy for {trade_date}"
+            )
+        return batch_id
 
     def get_broker_positions(self, trade_date: str) -> dict:
         """当日最新批次的券商持仓 {stock_code: shares}；无快照则空 dict。"""
@@ -1709,6 +2886,54 @@ class LiveRecorder:
                 (batch_id,),
             ).fetchall()
             return {r["stock_code"]: r["shares"] for r in rows}
+
+    def get_broker_position_details(
+        self,
+        trade_date: str,
+        *,
+        require_lifecycle_evidence: bool = False,
+        evidence_strategy_id: str | None = None,
+    ) -> dict[str, dict]:
+        """Return the complete latest broker position snapshot for a date.
+
+        An absent snapshot is an operational data failure.  Returning an empty
+        mapping would make a stale or failed QMT account query look like an
+        account with no positions, which is unsafe for operator-created orders.
+        An empty *present* snapshot remains a valid empty mapping.
+
+        Probe authorization can additionally require the latest snapshot's
+        durable REAL ACCOUNT binding without changing diagnostic consumers.
+        """
+        with self._conn() as conn:
+            if require_lifecycle_evidence:
+                batch_id = (
+                    self._require_latest_broker_snapshot_lifecycle_evidence_conn(
+                        conn, trade_date, evidence_strategy_id,
+                    )
+                )
+            else:
+                batch_id = self._latest_broker_snapshot_batch_id(
+                    conn, trade_date,
+                )
+            if batch_id is None:
+                raise SchemaError(
+                    f"broker position snapshot missing for {trade_date}"
+                )
+            rows = conn.execute(
+                """SELECT stock_code, shares, can_use_volume, avg_cost,
+                          market_value
+                   FROM broker_position_snapshot WHERE batch_id=?""",
+                (batch_id,),
+            ).fetchall()
+            return {
+                row["stock_code"]: {
+                    "shares": row["shares"],
+                    "can_use_volume": row["can_use_volume"],
+                    "avg_cost": row["avg_cost"],
+                    "market_value": row["market_value"],
+                }
+                for row in rows
+            }
 
     def get_broker_position_market_values(self, trade_date: str) -> dict:
         """当日最新券商快照的逐仓市值；缺失值保留为 None。"""
@@ -1731,6 +2956,20 @@ class FillImporter:
         self.bridge_root = Path(bridge_root)
         self.outbound = self.bridge_root / "outbound"
         self.archive = self.bridge_root / "archive"
+        self.snapshot_request_root = self.bridge_root / "snapshot_requests"
+        self.snapshot_responses = self.snapshot_request_root / "responses"
+        self.snapshot_archive = self.snapshot_request_root / "archive"
+        authorization_root = (
+            self.bridge_root.parent
+            if self.bridge_root.name == "pr49_probe"
+            else self.bridge_root
+        )
+        self.snapshot_mac_lifecycle_lock = (
+            authorization_root / "state" / "SNAPSHOT_MAC_LIFECYCLE.lock"
+        )
+        self.snapshot_advance_gate = (
+            authorization_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+        )
         self.recorder = recorder
 
     def import_fills(self) -> int:
@@ -1766,23 +3005,291 @@ class FillImporter:
             self._archive(done_path)
         return count
 
+    def import_account_snapshot_responses(self) -> int:
+        """Serialize publish/import DB state, archive, and gate release."""
+        self.snapshot_request_root.mkdir(parents=True, exist_ok=True)
+        self.snapshot_mac_lifecycle_lock.parent.mkdir(
+            parents=True, exist_ok=True,
+        )
+        lifecycle_lock = FileLock(str(self.snapshot_mac_lifecycle_lock))
+        importer_lock = FileLock(
+            str(self.snapshot_request_root / "response_import.lock")
+        )
+        # Publisher takes the same outer lock before its first durable read.
+        # Both paths therefore order Mac lifecycle lock before SQLite work.
+        with lifecycle_lock, importer_lock:
+            return self._import_account_snapshot_responses_locked()
+
+    def _import_account_snapshot_responses_locked(self) -> int:
+        """Import terminal snapshot-only responses, never trading receipts."""
+        request_ids = set()
+        for root in (self.snapshot_responses, self.snapshot_archive):
+            if not root.exists():
+                continue
+            for path in root.glob("response_snapshot_*.*"):
+                name = path.name
+                if name.endswith(".json") or name.endswith(".done"):
+                    request_ids.add(name[len("response_"):].rsplit(".", 1)[0])
+        count = 0
+        for request_id in sorted(request_ids):
+            json_path = self._snapshot_response_file(request_id, ".json")
+            done_path = self._snapshot_response_file(request_id, ".done")
+            if json_path is None or done_path is None:
+                logger.warning(
+                    "partial snapshot response retained for recovery: %s",
+                    request_id,
+                )
+                continue
+            try:
+                response_bytes = json_path.read_bytes()
+                done_bytes = done_path.read_bytes()
+                payload = json.loads(response_bytes.decode("utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                raise SchemaError("invalid account snapshot response JSON") from exc
+            if not isinstance(payload, dict):
+                raise SchemaError("account snapshot response must be an object")
+            payload_request_id = payload.get("request_id", "")
+            expected_name = f"response_{request_id}.json"
+            if json_path.name != expected_name or payload_request_id != request_id:
+                raise SchemaError("account snapshot response filename mismatch")
+            done_checksum = done_bytes.decode("utf-8").strip()
+            if done_checksum != payload.get("checksum"):
+                raise SchemaError("account snapshot response done checksum mismatch")
+            def require_unchanged():
+                if (
+                    json_path.read_bytes() != response_bytes
+                    or done_path.read_bytes() != done_bytes
+                ):
+                    raise SchemaError(
+                        "account snapshot response changed during import"
+                    )
+
+            require_unchanged()
+            durable_before = self.recorder.get_account_snapshot_request(
+                request_id,
+            )
+            if durable_before is None or payload.get(
+                "collector_execution_profile"
+            ) != durable_before.get("collector_execution_profile"):
+                raise SchemaError("account snapshot response profile mismatch")
+            self._validate_snapshot_request_archive(payload)
+            quartet_was_verified = self._terminal_snapshot_quartet_verified(
+                payload, durable_before,
+            )
+            gate_bytes = self._validate_snapshot_advance_gate(
+                payload, required=not quartet_was_verified,
+            )
+            imported = self.recorder.save_account_snapshot_response(
+                payload, before_commit=require_unchanged,
+            )
+            if imported:
+                count += 1
+            if json_path.parent != self.snapshot_archive:
+                self._archive_snapshot_response(json_path)
+            if done_path.parent != self.snapshot_archive:
+                self._archive_snapshot_response(done_path)
+            if payload.get("status") == "COMPLETE":
+                self._release_snapshot_advance_gate(
+                    payload, gate_bytes=gate_bytes,
+                )
+        return count
+
+    def _terminal_snapshot_quartet_verified(
+        self, response: dict, durable: dict,
+    ) -> bool:
+        """Prove a prior COMPLETE import archived fully before gate release."""
+        if (
+            response.get("status") != "COMPLETE"
+            or durable.get("status") != "IMPORTED_COMPLETE"
+            or durable.get("response_checksum") != response.get("checksum")
+        ):
+            return False
+        try:
+            self._validate_snapshot_archive_quartet(response, durable)
+        except SchemaError:
+            return False
+        return True
+
+    def _validate_snapshot_advance_gate(
+        self, response: dict, *, required: bool,
+    ):
+        gate = self.snapshot_advance_gate
+        if not gate.exists():
+            if required:
+                raise SchemaError("snapshot advance gate is required")
+            return None
+        try:
+            gate_bytes = gate.read_bytes()
+            metadata = json.loads(gate_bytes.decode("utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SchemaError("snapshot advance gate metadata is invalid") from exc
+        expected = {
+            "owner": "MAC_SNAPSHOT_PUBLISHER",
+            "request_id": response["request_id"],
+            "execution_profile": response["collector_execution_profile"],
+        }
+        if not isinstance(metadata, dict) or any(
+            metadata.get(field) != value for field, value in expected.items()
+        ) or not metadata.get("created_at"):
+            raise SchemaError("snapshot advance gate ownership mismatch")
+        return gate_bytes
+
+    def _validate_snapshot_request_archive(self, response: dict) -> None:
+        from live_trading.modules.operator_probe import snapshot_artifact_checksum
+
+        request_id = response["request_id"]
+        json_path = self.snapshot_archive / f"request_{request_id}.json"
+        done_path = self.snapshot_archive / f"request_{request_id}.done"
+        try:
+            request_bytes = json_path.read_bytes()
+            done_bytes = done_path.read_bytes()
+            request = json.loads(request_bytes.decode("utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SchemaError("snapshot request archive is incomplete") from exc
+        if not isinstance(request, dict):
+            raise SchemaError("snapshot request archive is invalid")
+        checksum = snapshot_artifact_checksum(request)
+        durable = self.recorder.get_account_snapshot_request(request_id)
+        try:
+            durable_request = json.loads(durable["request_json"])
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise SchemaError("durable snapshot request is invalid") from exc
+        if (
+            durable is None
+            or request != durable_request
+            or request.get("checksum") != checksum
+            or done_bytes.decode("utf-8").strip() != checksum
+            or durable.get("request_checksum") != checksum
+            or response.get("request_checksum") != checksum
+        ):
+            raise SchemaError("snapshot request archive binding/checksum mismatch")
+
+    def _validate_snapshot_archive_quartet(
+        self, response: dict, durable: dict,
+    ) -> tuple:
+        """Return stable quartet bytes only when terminal binding is exact."""
+        from live_trading.modules.operator_probe import snapshot_artifact_checksum
+
+        request_id = response["request_id"]
+        expected_files = [
+            self.snapshot_archive / f"request_{request_id}.json",
+            self.snapshot_archive / f"request_{request_id}.done",
+            self.snapshot_archive / f"response_{request_id}.json",
+            self.snapshot_archive / f"response_{request_id}.done",
+        ]
+        if not all(path.is_file() for path in expected_files):
+            raise SchemaError(
+                "snapshot advance gate retained until complete archive quartet"
+            )
+        try:
+            file_bytes = [path.read_bytes() for path in expected_files]
+            request = json.loads(file_bytes[0].decode("utf-8"))
+            response_file = json.loads(file_bytes[2].decode("utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SchemaError("snapshot archive quartet is invalid") from exc
+        if not isinstance(request, dict) or not isinstance(response_file, dict):
+            raise SchemaError("snapshot archive quartet must contain objects")
+        request_checksum = snapshot_artifact_checksum(request)
+        response_checksum = snapshot_artifact_checksum(response_file)
+        if (
+            durable is None
+            or durable.get("status") != "IMPORTED_COMPLETE"
+            or request.get("checksum") != request_checksum
+            or file_bytes[1].decode("utf-8").strip() != request_checksum
+            or durable.get("request_checksum") != request_checksum
+            or response_file != response
+            or response_file.get("status") != "COMPLETE"
+            or response_file.get("request_checksum") != request_checksum
+            or response_file.get("checksum") != response_checksum
+            or file_bytes[3].decode("utf-8").strip() != response_checksum
+            or durable.get("response_checksum") != response_checksum
+        ):
+            raise SchemaError("snapshot archive quartet binding/checksum mismatch")
+        if any(path.read_bytes() != original for path, original in zip(
+            expected_files, file_bytes,
+        )):
+            raise SchemaError("snapshot archive quartet changed before release")
+        return tuple(file_bytes)
+
+    def _release_snapshot_advance_gate(
+        self, response: dict, *, gate_bytes,
+    ) -> None:
+        """Release the original matching gate as the final lifecycle step."""
+        durable = self.recorder.get_account_snapshot_request(
+            response["request_id"],
+        )
+        self._validate_snapshot_archive_quartet(response, durable)
+        if gate_bytes is None:
+            # This is an exact replay after a previously proven release.
+            return
+        gate = self.snapshot_advance_gate
+        try:
+            current_gate_bytes = gate.read_bytes()
+        except OSError as exc:
+            raise SchemaError(
+                "snapshot advance gate disappeared before release"
+            ) from exc
+        if current_gate_bytes != gate_bytes:
+            raise SchemaError("snapshot advance gate changed before release")
+        gate.unlink()
+
+    def _snapshot_response_file(self, request_id: str, suffix: str):
+        name = f"response_{request_id}{suffix}"
+        candidates = [
+            root / name for root in (
+                self.snapshot_responses, self.snapshot_archive,
+            ) if (root / name).is_file()
+        ]
+        if len(candidates) > 1:
+            if candidates[0].read_bytes() != candidates[1].read_bytes():
+                raise SchemaError("conflicting duplicate snapshot response file")
+            # Prefer the response copy so normal archival removes the duplicate.
+            return candidates[0]
+        return candidates[0] if candidates else None
+
     def _import_snapshot(self, jsonl_path: Path) -> bool:
         account = None
         positions = []
-        batch_id = None
+        name = jsonl_path.name
+        prefix = "account_"
+        suffix = ".jsonl"
+        if not name.startswith(prefix) or not name.endswith(suffix):
+            raise SchemaError(f"invalid snapshot filename: {name!r}")
+        batch_id = name[len(prefix):-len(suffix)]
+        if not batch_id:
+            raise SchemaError("snapshot filename requires a batch_id")
+        row_count = 0
         for line in jsonl_path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line:
                 continue
             d = json.loads(line)
-            batch_id = batch_id or d.get("batch_id")
+            if not isinstance(d, dict):
+                raise SchemaError("snapshot row must be an object")
+            row_count += 1
+            if d.get("batch_id") != batch_id:
+                raise SchemaError(
+                    "snapshot batch_id must match filename for every row"
+                )
             if d.get("type") == "account_snapshot":
+                if account is not None:
+                    raise SchemaError("snapshot contains multiple account rows")
                 account = d
             elif d.get("type") == "broker_position":
                 positions.append(d)
-        if batch_id is None:
+            else:
+                raise SchemaError(f"unknown snapshot row type: {d.get('type')!r}")
+        if row_count == 0:
             logger.warning("empty broker snapshot: %s", jsonl_path.name)
             return False
+        batch = self.recorder.get_batch(batch_id)
+        if batch is None:
+            raise SchemaError(f"unknown snapshot batch_id: {batch_id!r}")
+        if any(
+            row.get("trade_date") != batch["trade_date"]
+            for row in ([account] if account is not None else []) + positions
+        ):
+            raise SchemaError("snapshot trade_date does not match durable batch")
         self.recorder.save_broker_snapshot(batch_id, account, positions)
         logger.info(
             "imported broker snapshot %s: cash=%s positions=%d",
@@ -1811,6 +3318,16 @@ class FillImporter:
     def _archive(self, path: Path) -> None:
         self.archive.mkdir(parents=True, exist_ok=True)
         os.replace(path, self.archive / path.name)
+
+    def _archive_snapshot_response(self, path: Path) -> None:
+        self.snapshot_archive.mkdir(parents=True, exist_ok=True)
+        target = self.snapshot_archive / path.name
+        if target.exists():
+            if target.read_bytes() == path.read_bytes():
+                path.unlink()
+                return
+            raise SchemaError("account snapshot response archive conflict")
+        os.replace(path, target)
 
     def reconcile(self, batch_id: str) -> dict:
         """对账：计划订单数 vs 已到终态回执数。"""

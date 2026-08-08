@@ -22,6 +22,120 @@ WRAPPERS = [
 ]
 
 
+def _read_runbooks():
+    main = (REPO_ROOT / "live_trading/README.md").read_text(encoding="utf-8")
+    qmt = (REPO_ROOT / "live_trading/qmt_strategy/README_QMT.md").read_text(
+        encoding="utf-8"
+    )
+    checklist_path = (
+        REPO_ROOT / "live_trading/qmt_strategy/PR49_PROBE_CHECKLIST.md"
+    )
+    checklist = checklist_path.read_text(encoding="utf-8")
+    return main, qmt, checklist
+
+
+def test_main_sell_runbook_documents_audited_preview_to_pause_flow():
+    main, _, _ = _read_runbooks()
+    required = [
+        "--audit-preview",
+        "preview 只是证据",
+        "禁止手工编辑 JSONL",
+        "--side SELL",
+        "--reason operator_sell_probe",
+        "同日其他 main LIVE batch",
+        "--state PAUSED",
+        "LIVE_TRADING_CONFIRM=YES",
+        "bash live_trading/run_import_cron.sh csi1000_b6m_b2s_postclose_real",
+        "bash live_trading/run_monitor_cron.sh postmarket csi1000_b6m_b2s_postclose_real",
+        "--state PAUSED",
+    ]
+    assert all(token in main for token in required)
+
+
+def test_two_instance_runbook_documents_exact_profile_isolation():
+    _, qmt, checklist = _read_runbooks()
+    combined = qmt + checklist
+    for token in (
+        'EXECUTION_PROFILE = "CLOSE_AUCTION"',
+        'EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"',
+        r'BRIDGE_ROOT = r"D:\qmt_bridge"',
+        r'BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"',
+        r'OTHER_BRIDGE_ROOT = r"D:\qmt_bridge"',
+        r'OTHER_BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"',
+        'STRATEGY_NAME = "qlib_bridge_main"',
+        'STRATEGY_NAME = "qlib_pr49_probe"',
+        'ACCOUNT_ENVIRONMENT = "REAL"',
+        "ALLOW_REAL_MONEY = True",
+        "MAX_ORDER_QUANTITY = 100",
+        "RUNTIME_CONFIG",
+        "TIMER_REGISTERED",
+        "QMT UI",
+    ):
+        assert token in combined
+
+
+def test_pr49_checklist_stops_for_fresh_confirmation_and_preserves_evidence():
+    _, _, checklist = _read_runbooks()
+    required = [
+        "BUY 日确认停点",
+        "SELL 日确认停点",
+        "重新确认股票代码和交易日",
+        "PR49_LIVE_OK_YYYY-MM-DD",
+        "API 返回不等于委托受理",
+        "ORDER_OBSERVED",
+        "ACCEPTED",
+        "生命周期 `CLOSED`",
+        "after_hours_eligible=true",
+        "最终 marker 是不可逆授权事实",
+        "AUTHORIZATION_COMMITTED_WARNING",
+        "AUTHORIZATION_NOT_COMMITTED",
+        "AUTHORIZATION_STATE_UNKNOWN",
+        "STOP_BOTH_QMT_NO_RETRY",
+        "遗留 intent",
+        "停止 probe 策略",
+        "保留 processing/、outbound/ 和 logs/ 证据",
+    ]
+    assert all(token in checklist for token in required)
+    marker_script = (
+        REPO_ROOT /
+        "live_trading/qmt_strategy/New-OperatorAuthorizationMarker.ps1"
+    ).read_text(encoding="utf-8")
+    assert 'throw "trade date must equal today"' in marker_script
+    assert 'throw "authorization cutoff has passed"' in marker_script
+
+
+def test_snapshot_bootstrap_runbooks_and_cli_stop_before_authorization():
+    main, qmt, checklist = _read_runbooks()
+    combined = main + qmt + checklist
+    for token in (
+        "request_account_snapshot.py",
+        "SNAPSHOT_OBSERVATION_CONFIRM=YES",
+        "SNAPSHOT_REQUEST_RECEIVED",
+        "SNAPSHOT_REQUEST_TERMINAL",
+        "IMPORTED_COMPLETE",
+        "DIAGNOSTIC_POSITIONS_ONLY",
+        "不会创建或依赖任何 marker",
+    ):
+        assert token in combined
+    script = (
+        REPO_ROOT / "live_trading/scripts/request_account_snapshot.py"
+    ).read_text(encoding="utf-8")
+    assert "snapshot observation trade date must equal today" in script
+    assert "LIVE_TRADING_CONFIRM" not in script
+    assert "LIVE_OK_" not in script
+    assert "passorder" not in script
+
+
+def test_runbooks_use_only_the_locked_marker_creator():
+    main, _, checklist = _read_runbooks()
+    combined = main + checklist
+
+    assert "New-OperatorAuthorizationMarker.ps1" in main
+    assert combined.count("New-OperatorAuthorizationMarker.ps1") >= 3
+    assert "New-Item -ItemType File" not in combined
+    assert "Remove-Item -LiteralPath" not in combined
+
+
 def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):
     from live_trading.scripts.run_scheduler import run_pipeline
 
@@ -202,6 +316,83 @@ def test_web_service_wrapper_loads_env_and_forwards_config(
     assert loaded == "loaded"
     assert script_path.endswith("live_trading/scripts/run_web.py")
     assert config_id == "custom-paper"
+
+
+def test_probe_import_wrapper_is_fixed_to_isolated_probe_config(
+    tmp_path, monkeypatch,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    source = REPO_ROOT / "live_trading" / "run_probe_import.sh"
+    assert source.exists(), "run_probe_import.sh must exist"
+    wrapper = live_dir / source.name
+    shutil.copy2(source, wrapper)
+
+    trace = tmp_path / "probe-import-trace.json"
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\n"
+        "[[ \"$PROBE_ENV_LOADED\" == \"yes\" ]] || exit 9\n"
+        "python3 -c 'import json,os,sys; "
+        "open(os.environ[\"PROBE_IMPORT_TRACE\"],\"w\").write("
+        "json.dumps(sys.argv[1:]))' \"$@\"\n",
+    )
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".qlib_live_env").write_text(
+        "export PROBE_ENV_LOADED='yes'\n"
+        "CONFIG_ID='csi1000_b6m_b2s_postclose_real'\n"
+        "PROJECT_ROOT='/tmp/not-the-repository'\n"
+        "SCRIPT_DIR='/tmp/not-the-probe-wrapper'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("QLIB_LIVE_PYTHON", str(fake_python))
+    monkeypatch.setenv("PROBE_IMPORT_TRACE", str(trace))
+
+    result = subprocess.run(
+        ["bash", str(wrapper)], cwd=root, env=os.environ.copy(),
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    assert json.loads(trace.read_text(encoding="utf-8")) == [
+        str(live_dir / "scripts/run_import_fills.py"),
+        "--config", "csi1000_pr49_one_lot_probe",
+    ]
+    assert not (live_dir / "archive").exists()
+
+
+def test_probe_import_wrapper_rejects_config_override_without_activity(
+    tmp_path, monkeypatch,
+):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    source = REPO_ROOT / "live_trading" / "run_probe_import.sh"
+    assert source.exists(), "run_probe_import.sh must exist"
+    wrapper = live_dir / source.name
+    shutil.copy2(source, wrapper)
+    trace = tmp_path / "unexpected-python"
+    fake_python = tmp_path / "fake-python"
+    _write_executable(
+        fake_python,
+        "#!/usr/bin/env bash\ntouch \"$PROBE_UNEXPECTED_TRACE\"\n",
+    )
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("QLIB_LIVE_PYTHON", str(fake_python))
+    monkeypatch.setenv("PROBE_UNEXPECTED_TRACE", str(trace))
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=os.environ.copy(),
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode != 0
+    assert "does not accept a config override" in result.stderr
+    assert not trace.exists()
 
 
 def test_monitor_launch_agent_owns_loopback_service():
@@ -449,6 +640,176 @@ def test_publish_rechecks_postclose_after_taking_publish_lock(tmp_path):
 
     assert result.returncode == 75, (result.stdout, result.stderr)
     assert "postclose pipeline holds" in result.stderr
+
+
+def test_paused_publish_cron_only_requests_an_audit_preview(tmp_path):
+    """A PAUSED LIVE cron run must not need confirmation or create a batch/inbox."""
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    scripts_dir = live_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+    trace = tmp_path / "publish-args.json"
+    _write_executable(
+        scripts_dir / "set_execution_state.py",
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "print('strategy-main' if '--get-strategy-id' in sys.argv else 'PAUSED')\n",
+    )
+    _write_executable(
+        scripts_dir / "next_trade_date.py",
+        "#!/usr/bin/env python3\nprint('2026-08-11')\n",
+    )
+    _write_executable(
+        scripts_dir / "run_publish_signals.py",
+        "#!/usr/bin/env python3\n"
+        "import json, os, sys\n"
+        "open(os.environ['PAUSED_PUBLISH_TRACE'], 'w').write(json.dumps(sys.argv[1:]))\n",
+    )
+    fake_bin = tmp_path / "bin"
+    _write_executable(
+        fake_bin / "caffeinate",
+        "#!/usr/bin/env bash\nshift\nexec \"$@\"\n",
+    )
+    env = os.environ.copy()
+    env.update({
+        "HOME": str(tmp_path / "home"),
+        "LIVE_RUN_MODE": "LIVE",
+        "PAUSED_PUBLISH_TRACE": str(trace),
+        "PATH": f"{fake_bin}:{env['PATH']}",
+    })
+    env.pop("LIVE_TRADING_CONFIRM", None)
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=env,
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    args = json.loads(trace.read_text(encoding="utf-8"))
+    assert args[:6] == [
+        "--config", "main", "--trade-date", "2026-08-11", "--mode", "LIVE",
+    ]
+    assert "--dry-run" in args
+    preview_path = Path(args[args.index("--audit-preview") + 1])
+    assert preview_path == (
+        live_dir / "logs" / "strategy-main" / "previews" / "signal_2026-08-11.json"
+    )
+    assert not (live_dir / "inbox").exists()
+    assert not list(root.rglob("*.db"))
+    log = (live_dir / "logs" / "main_publish_cron.log").read_text(
+        encoding="utf-8",
+    )
+    assert "publish paused preview-only" in log
+
+
+def test_publish_cron_fails_closed_for_an_unknown_execution_state(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    scripts_dir = live_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+    trace = tmp_path / "unexpected-publish.txt"
+    _write_executable(
+        scripts_dir / "set_execution_state.py",
+        "#!/usr/bin/env python3\nprint('UNKNOWN')\n",
+    )
+    _write_executable(
+        scripts_dir / "next_trade_date.py",
+        "#!/usr/bin/env python3\nprint('2026-08-11')\n",
+    )
+    _write_executable(
+        scripts_dir / "run_publish_signals.py",
+        "#!/usr/bin/env python3\n"
+        "import os\nopen(os.environ['UNKNOWN_STATE_TRACE'], 'w').write('ran')\n",
+    )
+    fake_bin = tmp_path / "bin"
+    _write_executable(
+        fake_bin / "caffeinate",
+        "#!/usr/bin/env bash\nshift\nexec \"$@\"\n",
+    )
+    env = os.environ.copy()
+    env.update({
+        "HOME": str(tmp_path / "home"),
+        "LIVE_RUN_MODE": "LIVE",
+        "LIVE_TRADING_CONFIRM": "YES",
+        "UNKNOWN_STATE_TRACE": str(trace),
+        "PATH": f"{fake_bin}:{env['PATH']}",
+    })
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=env,
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 1
+    assert "execution state query failed" in result.stderr
+    assert not trace.exists()
+
+
+def test_publish_cron_rejects_unsafe_config_before_creating_lock_paths(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    live_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+
+    result = subprocess.run(
+        ["/bin/bash", str(wrapper), "../main"], cwd=root,
+        env=os.environ.copy(),
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode != 0
+    assert "invalid config identifier" in result.stderr
+    assert "bad substitution" not in result.stderr
+    assert not (live_dir / ".locks").exists()
+
+
+def test_paused_publish_cron_rejects_unsafe_strategy_id_from_helper(tmp_path):
+    root = tmp_path / "repo"
+    live_dir = root / "live_trading"
+    scripts_dir = live_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    wrapper = live_dir / "run_publish_cron.sh"
+    shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
+    trace = tmp_path / "unexpected-publish.txt"
+    _write_executable(
+        scripts_dir / "set_execution_state.py",
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "print('../escape' if '--get-strategy-id' in sys.argv else 'PAUSED')\n",
+    )
+    _write_executable(
+        scripts_dir / "next_trade_date.py",
+        "#!/usr/bin/env python3\nprint('2026-08-11')\n",
+    )
+    _write_executable(
+        scripts_dir / "run_publish_signals.py",
+        "#!/usr/bin/env python3\n"
+        "import os\nopen(os.environ['UNSAFE_STRATEGY_TRACE'], 'w').write('ran')\n",
+    )
+    fake_bin = tmp_path / "bin"
+    _write_executable(
+        fake_bin / "caffeinate",
+        "#!/usr/bin/env bash\nshift\nexec \"$@\"\n",
+    )
+    env = os.environ.copy()
+    env.update({
+        "LIVE_RUN_MODE": "LIVE", "UNSAFE_STRATEGY_TRACE": str(trace),
+        "PATH": f"{fake_bin}:{env['PATH']}",
+    })
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "main"], cwd=root, env=env,
+        text=True, capture_output=True, check=False,
+    )
+
+    assert result.returncode == 1
+    assert "strategy id query failed" in result.stderr
+    assert not trace.exists()
 
 
 def test_publish_wrappers_load_run_mode_from_cron_env_file(tmp_path):

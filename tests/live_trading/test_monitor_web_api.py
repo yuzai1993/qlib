@@ -18,6 +18,8 @@ from live_trading.web.app import create_app
 
 BATCH = "20260713_csi300_topk10_001"
 OLD_BATCH = "20260713_csi300_topk10_000"
+PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+PROBE_BATCH = "20260714_csi1000_pr49_one_lot_probe_001"
 
 
 def _fill_event(coid, status="FILLED", side="BUY", code="600000.SH",
@@ -117,10 +119,31 @@ def client(tmp_path):
 
     recorder.record_cash_flow("2026-07-13", "DIVIDEND", 380.0,
                               stock_code="600000.SH", note="派息")
+    recorder.set_execution_state(
+        "csi300_topk10", "PAUSED", "sell probe accepted; await user",
+        changed_at="2026-07-13T18:00:00+08:00",
+    )
+    recorder.record_batch(PROBE_BATCH, "2026-07-14", "LIVE", planned_orders=1)
+    with recorder._conn() as conn:
+        conn.execute(
+            "UPDATE batches SET strategy_id=? WHERE batch_id=?",
+            (PROBE_STRATEGY_ID, PROBE_BATCH),
+        )
+        conn.execute(
+            """INSERT INTO operator_probe_lifecycle
+               (strategy_id, stock_code, buy_batch_id, buy_trade_date,
+                sell_batch_id, sell_trade_date, state, updated_at)
+               VALUES (?,?,?,?,NULL,NULL,'BUY_FILLED',?)""",
+            (
+                PROBE_STRATEGY_ID, "600000.SH", PROBE_BATCH, "2026-07-14",
+                "2026-07-14T16:00:00+08:00",
+            ),
+        )
 
     config = {
         "live": {"bridge_root": str(tmp_path / "bridge"),
-                 "strategy_id": "csi300_topk10", "default_mode": "SIMULATE"},
+                 "strategy_id": "csi300_topk10", "default_mode": "SIMULATE",
+                 "execution_session": "CLOSE_AUCTION"},
         "monitor": {"benchmark_name": "中证1000"},
         "storage": {"db_path": str(db)},
     }
@@ -148,6 +171,33 @@ def test_overview_exposes_active_account_and_batch(client):
     assert data["active_batch_id"] == BATCH
     assert data["mode"] == "LIVE"
     assert data["benchmark_name"] == "中证1000"
+
+
+def test_overview_exposes_paused_main_and_running_probe_without_crossing_batches(
+    client,
+):
+    data = client.get("/api/overview").json()
+
+    assert data["strategy_id"] == "csi300_topk10"
+    assert data["active_batch_id"] == BATCH
+    assert data["execution_state"] == "PAUSED"
+    assert data["execution_profile"] == "CLOSE_AUCTION"
+    assert data["probe_lifecycle"] == {
+        "strategy_id": PROBE_STRATEGY_ID,
+        "stock_code": "600000.SH",
+        "stock_name": "浦发银行",
+        "buy_batch_id": PROBE_BATCH,
+        "buy_trade_date": "2026-07-14",
+        "sell_batch_id": None,
+        "sell_trade_date": None,
+        "state": "BUY_FILLED",
+        "updated_at": "2026-07-14T16:00:00+08:00",
+    }
+    statuses = {row["strategy_id"]: row for row in data["strategy_statuses"]}
+    assert statuses["csi300_topk10"]["execution_state"] == "PAUSED"
+    assert statuses[PROBE_STRATEGY_ID]["execution_state"] == "RUNNING"
+    assert statuses[PROBE_STRATEGY_ID]["execution_profile"] \
+        == "AFTER_HOURS_FIXED_PRICE"
 
 
 def test_nav(client):
@@ -248,6 +298,9 @@ def test_cashflows(client):
 
 
 def test_spa_renders_account_and_batch_lifecycle():
+    html = (REPO_ROOT / "live_trading/web/static/index.html").read_text(
+        encoding="utf-8",
+    )
     js = (REPO_ROOT / "live_trading/web/static/js/app.js").read_text(
         encoding="utf-8",
     )
@@ -256,3 +309,66 @@ def test_spa_renders_account_and_batch_lifecycle():
     assert "lifecycle_status" in js
     assert "已废弃" in js
     assert "账号" in js
+    assert "execution-status" in html
+    assert "strategy_statuses" in js
+    assert "execution_profile" in js
+    assert "probe_lifecycle" in js
+    assert "stock_name" in js
+
+
+def test_web_monitor_exposes_no_marker_or_publish_controls(client):
+    app = client.app
+    methods = {
+        method
+        for route in app.routes
+        for method in getattr(route, "methods", set())
+        if route.path.startswith("/api")
+    }
+    assets = "\n".join(
+        (REPO_ROOT / path).read_text(encoding="utf-8")
+        for path in (
+            "live_trading/web/static/index.html",
+            "live_trading/web/static/js/app.js",
+        )
+    )
+
+    assert methods <= {"GET", "HEAD"}
+    assert "PR49_LIVE_OK" not in assets
+    assert "LIVE_OK_" not in assets
+    assert "/publish" not in assets
+
+
+def test_probe_config_still_labels_shared_main_batches_close_auction(tmp_path):
+    db = tmp_path / "shared.db"
+    recorder = LiveRecorder(str(db))
+    main_batch = "20260713_csi1000_b6m_b2s_postclose_real_001"
+    recorder.record_batch(main_batch, "2026-07-13", "LIVE", 0)
+    recorder.record_batch(PROBE_BATCH, "2026-07-14", "LIVE", 0)
+    with recorder._conn() as conn:
+        conn.execute(
+            "UPDATE batches SET strategy_id=? WHERE batch_id=?",
+            ("csi1000_b6m_b2s_postclose_real", main_batch),
+        )
+        conn.execute(
+            "UPDATE batches SET strategy_id=? WHERE batch_id=?",
+            (PROBE_STRATEGY_ID, PROBE_BATCH),
+        )
+    app = create_app({
+        "live": {
+            "bridge_root": str(tmp_path / "bridge" / "pr49_probe"),
+            "strategy_id": PROBE_STRATEGY_ID,
+            "execution_session": "AFTER_HOURS_FIXED_PRICE",
+            "default_mode": "LIVE",
+        },
+        "storage": {"db_path": str(db)},
+    }, Path("/"))
+
+    rows = {
+        row["strategy_id"]: row
+        for row in TestClient(app).get("/api/batches").json()
+    }
+
+    assert rows["csi1000_b6m_b2s_postclose_real"]["execution_profile"] \
+        == "CLOSE_AUCTION"
+    assert rows[PROBE_STRATEGY_ID]["execution_profile"] \
+        == "AFTER_HOURS_FIXED_PRICE"

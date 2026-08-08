@@ -2,9 +2,11 @@
 import dataclasses
 import json
 import sys
+import threading
 from pathlib import Path
 
 import pytest
+from filelock import FileLock
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
@@ -76,6 +78,36 @@ def test_publish_writes_jsonl_and_done(tmp_path):
     assert done.read_text(encoding="utf-8").strip() == expected
 
 
+def test_main_and_nested_probe_share_one_authorization_lock(tmp_path):
+    main = SignalPublisher(tmp_path)
+    probe = SignalPublisher(tmp_path / "pr49_probe")
+
+    expected = tmp_path / "state" / "OPERATOR_AUTHORIZATION.lock"
+    assert main.authorization_lock_path == expected
+    assert probe.authorization_lock_path == expected
+
+
+def test_authorization_gate_timeout_fails_closed(tmp_path):
+    publisher = SignalPublisher(tmp_path)
+    publisher.authorization_lock_path.parent.mkdir(parents=True)
+
+    with FileLock(str(publisher.authorization_lock_path)):
+        with pytest.raises(PublishError, match="authorization lock timeout"):
+            with publisher.authorization_gate(timeout=0.01):
+                pytest.fail("contended authorization lock must not be entered")
+
+
+def test_authorization_gate_releases_lock_after_exception(tmp_path):
+    publisher = SignalPublisher(tmp_path)
+
+    with pytest.raises(RuntimeError, match="injected failure"):
+        with publisher.authorization_gate(timeout=0.1):
+            raise RuntimeError("injected failure")
+
+    with FileLock(str(publisher.authorization_lock_path), timeout=0.1):
+        pass
+
+
 def test_publish_exact_retry_is_idempotent(tmp_path):
     pub = SignalPublisher(tmp_path)
     first = pub.publish(_header(), _orders())
@@ -83,6 +115,26 @@ def test_publish_exact_retry_is_idempotent(tmp_path):
     second = pub.publish(_header(), _orders())
     assert second == first
     assert second.read_bytes() == first_bytes
+
+
+def test_legacy_default_order_checksum_retries_against_durable_plan(tmp_path):
+    legacy_line = (
+        '{"batch_id":"20260714_csi300_topk10_001",'
+        '"client_order_id":"20260714001S",'
+        '"instrument_qlib":"SZ000001","limit_price":0.0,'
+        '"price_type":"CLOSE_AUCTION_LIMIT","priority":10,'
+        '"quantity":800,"reason":"topk_drop","side":"SELL",'
+        '"stock_code":"000001.SZ","target_value":0.0,"type":"order"}'
+    )
+    # This was the exact schema v2.0 byte sequence before max_quantity existed.
+    order = SignalOrder.from_dict(json.loads(legacy_line))
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    expected_checksum = compute_checksum([legacy_line])
+
+    recorder.record_publish_plan(_header(), [order])
+    recorder.record_publish_plan(_header(), [order])
+
+    assert recorder.get_batch(BATCH_ID)["order_checksum"] == expected_checksum
 
 
 def test_publish_conflicting_retry_is_rejected(tmp_path):
@@ -147,6 +199,85 @@ def test_existing_exact_shared_batch_is_adopted_into_durable_db_plan(tmp_path):
     assert len(recorder.get_orders(BATCH_ID)) == 2
 
 
+def test_live_plan_rechecks_active_state_at_durable_record_boundary(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    header = dataclasses.replace(
+        _header(), strategy_id="main", mode="LIVE",
+        account_environment="REAL", account_id="real-account",
+    )
+    assert recorder.get_execution_state("main")["state"] == "ACTIVE"
+    recorder.set_execution_state(
+        "main", "PAUSED", "operator sell interleaved",
+        "2026-07-14T12:00:00+08:00",
+    )
+
+    with pytest.raises(SchemaError, match="required ACTIVE, found PAUSED"):
+        publish_recorded_plan(
+            recorder, SignalPublisher(tmp_path), header, _orders(),
+        )
+
+    assert recorder.get_batch(BATCH_ID) is None
+    assert not (tmp_path / "inbox").exists()
+
+
+@pytest.mark.parametrize("pause_point", ["after_commit", "after_jsonl_rename"])
+def test_live_publication_linearizes_pause_through_complete_file_exposure(
+    tmp_path, pause_point,
+):
+    """A PAUSE starting mid-publication must commit only after the done file."""
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    header = dataclasses.replace(
+        _header(), strategy_id="main", mode="LIVE",
+        account_environment="REAL", account_id="real-account",
+    )
+    pause_attempted = threading.Event()
+    pause_finished = threading.Event()
+    pause_errors = []
+
+    def pause_strategy():
+        pause_attempted.set()
+        try:
+            recorder.set_execution_state(
+                "main", "PAUSED", "deterministic publication race",
+                "2026-07-14T12:00:00+08:00",
+            )
+        except BaseException as exc:
+            pause_errors.append(exc)
+        finally:
+            pause_finished.set()
+
+    class InterleavingPublisher(SignalPublisher):
+        pause_thread = None
+        writes = 0
+
+        def _start_pause(self):
+            self.pause_thread = threading.Thread(target=pause_strategy)
+            self.pause_thread.start()
+            assert pause_attempted.wait(2)
+            assert not pause_finished.wait(0.2)
+
+        def publish(self, publish_header, orders, **kwargs):
+            if pause_point == "after_commit":
+                self._start_pause()
+            return super().publish(publish_header, orders, **kwargs)
+
+        def _atomic_write(self, path, content):
+            super()._atomic_write(path, content)
+            self.writes += 1
+            if pause_point == "after_jsonl_rename" and self.writes == 1:
+                assert path.suffix == ".jsonl"
+                self._start_pause()
+
+    publisher = InterleavingPublisher(tmp_path)
+    path = publish_recorded_plan(recorder, publisher, header, _orders())
+    publisher.pause_thread.join(timeout=5)
+
+    assert not publisher.pause_thread.is_alive()
+    assert pause_errors == []
+    assert path.is_file() and path.with_suffix(".done").is_file()
+    assert recorder.get_execution_state("main")["state"] == "PAUSED"
+
+
 def test_conflicting_publish_retry_preserves_original_plan(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     recorder.record_publish_plan(_header(), _orders())
@@ -207,15 +338,48 @@ def test_real_publish_plan_is_durable(tmp_path):
 
 
 def test_publish_guard_refuses_unreconciled_prior_live_batch(tmp_path):
-    recorder = LiveRecorder(str(tmp_path / "live.db"))
-    recorder.record_batch(
-        "20260716_csi300_topk10_001", "2026-07-16", "LIVE", 2,
-    )
+    class FakeRecorder:
+        @staticmethod
+        def get_unreconciled_active_live_batches_before(
+            trade_date, strategy_id=None,
+        ):
+            assert trade_date == "2026-07-17"
+            assert strategy_id == "csi1000_pr49_one_lot_probe"
+            return [{
+                "batch_id": "20260716_csi300_topk10_001",
+                "planned_orders": 2,
+                "terminal_orders": 0,
+            }]
 
-    with pytest.raises(SystemExit, match=r"20260716_csi300_topk10_001.*2 missing"):
+    with pytest.raises(
+        SystemExit, match=r"20260716_csi300_topk10_001.*2 missing",
+    ):
         run_publish_signals.ensure_prior_live_batches_terminal(
-            recorder, "2026-07-17",
+            FakeRecorder(), "2026-07-17", "csi1000_pr49_one_lot_probe",
         )
+
+
+def test_publish_guard_ignores_unreconciled_other_strategy(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    main_batch_id = "20260716_csi1000_b6m_b2s_postclose_real_001"
+    probe_batch_id = "20260716_csi1000_pr49_one_lot_probe_001"
+    recorder.record_batch(main_batch_id, "2026-07-16", "LIVE", 1)
+    recorder.record_batch(probe_batch_id, "2026-07-16", "LIVE", 0)
+    with recorder._conn() as conn:
+        conn.executemany(
+            "UPDATE batches SET strategy_id=? WHERE batch_id=?",
+            [
+                ("csi1000_b6m_b2s_postclose_real", main_batch_id),
+                ("csi1000_pr49_one_lot_probe", probe_batch_id),
+            ],
+        )
+
+    assert recorder.get_unreconciled_active_live_batches_before(
+        "2026-07-17", strategy_id="csi1000_pr49_one_lot_probe",
+    ) == []
+    run_publish_signals.ensure_prior_live_batches_terminal(
+        recorder, "2026-07-17", "csi1000_pr49_one_lot_probe",
+    )
 
 
 def test_publish_guard_refuses_prior_failed_sell(tmp_path):

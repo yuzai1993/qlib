@@ -13,6 +13,7 @@ from dataclasses import dataclass, asdict, fields
 SCHEMA_VERSION = "2.0"
 
 VALID_SIDES = {"BUY", "SELL"}
+VALID_PRICE_TYPES = {"CLOSE_AUCTION_LIMIT", "AFTER_HOURS_CLOSE"}
 VALID_MODES = {"SIMULATE", "LIVE"}
 VALID_ACCOUNT_ENVIRONMENTS = {"SIMULATION", "REAL"}
 VALID_FILL_STATUS = {
@@ -77,9 +78,20 @@ class SignalOrder:
     priority: int
     instrument_qlib: str
     reason: str
+    # BUYs normally use 0 (or omit the legacy field).  A positive whole-lot
+    # value is an immutable broker-side ceiling for explicitly authorized
+    # operator orders.
+    max_quantity: int = 0
 
     def to_json_line(self) -> str:
-        return _to_json_line(self, "order")
+        # Schema v2.0 predates max_quantity.  Keep bytes (and therefore
+        # checksums/durable retries) exactly stable for ordinary uncapped
+        # orders; capped operator BUYs explicitly carry their authorization.
+        d = {"type": "order"}
+        d.update(asdict(self))
+        if d.get("max_quantity") in (0, None):
+            d.pop("max_quantity")
+        return json.dumps(d, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     @classmethod
     def from_dict(cls, d: dict) -> "SignalOrder":
@@ -138,9 +150,9 @@ def compute_checksum(order_lines: list) -> str:
 def validate_order(order: SignalOrder) -> None:
     if order.side not in VALID_SIDES:
         raise SchemaError(f"invalid side: {order.side!r}")
-    if order.price_type != "CLOSE_AUCTION_LIMIT":
+    if order.price_type not in VALID_PRICE_TYPES:
         raise SchemaError(
-            "price_type must be CLOSE_AUCTION_LIMIT: "
+            "price_type must be CLOSE_AUCTION_LIMIT or AFTER_HOURS_CLOSE: "
             f"{order.price_type!r}"
         )
     if (
@@ -173,6 +185,21 @@ def validate_order(order: SignalOrder) -> None:
             )
         if float(order.target_value) != 0.0:
             raise SchemaError(f"SELL target_value must be 0: {order.target_value!r}")
+    if order.max_quantity is None:
+        max_quantity = 0
+    else:
+        max_quantity = order.max_quantity
+    if (
+        isinstance(max_quantity, bool)
+        or not isinstance(max_quantity, int)
+        or max_quantity < 0
+        or max_quantity % TRADE_UNIT != 0
+    ):
+        raise SchemaError(
+            f"max_quantity must be 0 or a positive whole lot: {max_quantity!r}"
+        )
+    if order.side == "SELL" and max_quantity != 0:
+        raise SchemaError("SELL max_quantity must be 0")
     if len(order.client_order_id) > CLIENT_ORDER_ID_MAX_LEN:
         raise SchemaError(f"client_order_id too long: {order.client_order_id!r}")
     # stock_code 必须为 QMT 格式（600000.SH）

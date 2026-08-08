@@ -41,6 +41,7 @@ async function renderDashboard() {
 
     document.getElementById('strategy-badge').innerHTML =
         `${esc(ov.strategy_id)} · ${esc(ov.mode)}<br>账号 ${esc(ov.account_id || '—')}`;
+    renderExecutionStatus(ov);
 
     let html = `<h2>概览 <span class="card-sub">快照日 ${s ? esc(s.date) : '—'} · `
         + `有效批次 ${esc(ov.active_batch_id || '—')}</span></h2>`;
@@ -92,6 +93,21 @@ async function renderDashboard() {
 
     content.innerHTML = html;
     drawNavChart(nav, ov.benchmark_name || '基准');
+}
+
+function renderExecutionStatus(ov) {
+    const target = document.getElementById('execution-status');
+    if (!target) return;
+    const rows = ov.strategy_statuses || [];
+    target.innerHTML = rows.map(row => {
+        const lifecycle = row.probe_lifecycle;
+        const stock = lifecycle
+            ? `<br>${esc(lifecycle.stock_code)} ${esc(lifecycle.stock_name || '')}`
+            : '';
+        const lifecycleState = lifecycle ? ` · ${esc(lifecycle.state)}` : '';
+        return `<div>${esc(row.strategy_id)}<br>${esc(row.execution_profile)} · `
+            + `${esc(row.execution_state)}${lifecycleState}${stock}</div>`;
+    }).join('<hr>');
 }
 
 function drawNavChart(nav, benchmarkName) {
@@ -201,7 +217,7 @@ async function renderBatches() {
         return;
     }
     html += `<table><thead><tr>
-        <th>批次</th><th>交易日</th><th>模式</th><th>账号</th><th>状态</th>
+        <th>批次</th><th>策略</th><th>执行通道</th><th>交易日</th><th>模式</th><th>账号</th><th>状态</th>
         <th>计划</th><th>终态</th><th>缺失</th><th>发布于</th></tr></thead><tbody>`;
     for (const b of batches) {
         const isSuperseded = b.lifecycle_status === 'SUPERSEDED';
@@ -211,14 +227,15 @@ async function renderBatches() {
         const missing = isSuperseded ? '—' : b.missing;
         const missCls = isSuperseded ? '' : (b.missing > 0 ? 'neg' : 'pos');
         html += `<tr class="clickable ${isSuperseded ? 'row-muted' : ''}" data-batch="${esc(b.batch_id)}">
-            <td>${esc(b.batch_id)}</td><td>${esc(b.trade_date)}</td>
+            <td>${esc(b.batch_id)}</td><td>${esc(b.strategy_id || '—')}</td>
+            <td>${esc(b.execution_profile || '—')}</td><td>${esc(b.trade_date)}</td>
             <td>${modeBadge(b.mode)}</td>
             <td>${esc(b.account_id || '—')}</td><td>${status}</td>
             <td>${b.planned}</td><td>${b.terminal}</td>
             <td class="${missCls}">${missing}</td>
             <td>${esc(b.created_at || '')}</td></tr>`;
         html += `<tr class="fills-row" id="fills-${esc(b.batch_id)}" style="display:none">
-            <td colspan="9"></td></tr>`;
+            <td colspan="11"></td></tr>`;
     }
     html += '</tbody></table>';
     content.innerHTML = html;

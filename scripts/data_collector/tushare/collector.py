@@ -110,6 +110,21 @@ class TushareCollectorCN(BaseCollector):
     """A 股日线采集（Tushare Pro）：日线 + 复权因子，close 为真实收盘价，支持增量与复权回溯。"""
 
     retry = 2
+    TUSHARE_BATCH_ROW_LIMIT = 6000
+    MIN_BATCH_UNIVERSE_SIZE = 100
+    MIN_BATCH_COVERAGE = 0.9
+    DAILY_BATCH_COLUMNS = {
+        "ts_code",
+        "trade_date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "vol",
+        "amount",
+        "pct_chg",
+    }
+    ADJ_BATCH_COLUMNS = {"ts_code", "trade_date", "adj_factor"}
 
     def __init__(
         self,
@@ -125,6 +140,7 @@ class TushareCollectorCN(BaseCollector):
     ):
         if interval != "1d":
             raise ValueError("TushareCollectorCN only supports interval='1d'")
+        self._limit_nums_requested = limit_nums is not None
         super().__init__(
             save_dir=save_dir,
             start=start,
@@ -159,6 +175,103 @@ class TushareCollectorCN(BaseCollector):
                 "TUSHARE_TOKEN is not set. Get token at https://tushare.pro/user/token"
             )
         return ts.pro_api(token)
+
+    @staticmethod
+    def _require_batch_columns(frame: pd.DataFrame, required: set, name: str) -> None:
+        missing = sorted(required - set(frame.columns))
+        if missing:
+            raise ValueError(f"{name} batch missing columns: {missing}")
+
+    def _prepare_trade_date_batch(
+        self,
+        daily: pd.DataFrame,
+        adj: pd.DataFrame,
+        trade_date: str,
+    ) -> pd.DataFrame:
+        """Validate and convert one full-market response before any source file is written."""
+        if daily is None or daily.empty:
+            raise ValueError("daily batch is empty")
+        if len(daily) >= self.TUSHARE_BATCH_ROW_LIMIT:
+            raise ValueError(
+                f"daily batch reached Tushare row limit ({self.TUSHARE_BATCH_ROW_LIMIT}); response may be truncated"
+            )
+        self._require_batch_columns(daily, self.DAILY_BATCH_COLUMNS, "daily")
+        if adj is None or adj.empty:
+            raise ValueError("adj_factor batch is empty")
+        if len(adj) >= self.TUSHARE_BATCH_ROW_LIMIT:
+            raise ValueError(
+                f"adj_factor batch reached Tushare row limit ({self.TUSHARE_BATCH_ROW_LIMIT}); response may be truncated"
+            )
+        self._require_batch_columns(adj, self.ADJ_BATCH_COLUMNS, "adj_factor")
+
+        daily = daily.copy()
+        adj = adj.copy()
+        expected_date = pd.Timestamp(trade_date).normalize()
+        daily_dates = pd.to_datetime(daily["trade_date"], format="%Y%m%d", errors="raise").dt.normalize()
+        adj_dates = pd.to_datetime(adj["trade_date"], format="%Y%m%d", errors="raise").dt.normalize()
+        if not daily_dates.eq(expected_date).all():
+            unexpected = sorted(daily.loc[~daily_dates.eq(expected_date), "trade_date"].astype(str).unique())
+            raise ValueError(f"daily batch has unexpected trade_date: {unexpected}")
+        if not adj_dates.eq(expected_date).all():
+            unexpected = sorted(adj.loc[~adj_dates.eq(expected_date), "trade_date"].astype(str).unique())
+            raise ValueError(f"adj_factor batch has unexpected trade_date: {unexpected}")
+        if daily.duplicated(["ts_code", "trade_date"]).any():
+            raise ValueError("daily batch contains duplicate stock/date rows")
+        if adj.duplicated(["ts_code", "trade_date"]).any():
+            raise ValueError("adj_factor batch contains duplicate stock/date rows")
+
+        daily["symbol"] = daily["ts_code"].map(_ts_code_to_symbol)
+        universe = set(self.instrument_list)
+        daily = daily[daily["symbol"].isin(universe)].copy()
+        if len(universe) >= self.MIN_BATCH_UNIVERSE_SIZE:
+            coverage = daily["symbol"].nunique() / len(universe)
+            if coverage < self.MIN_BATCH_COVERAGE:
+                raise ValueError(
+                    f"daily batch universe coverage {coverage:.2%} is below {self.MIN_BATCH_COVERAGE:.0%}"
+                )
+
+        adj = adj[["ts_code", "trade_date", "adj_factor"]]
+        daily = daily.merge(adj, on=["ts_code", "trade_date"], how="left")
+        missing_adj = int(daily["adj_factor"].isna().sum())
+        if missing_adj:
+            logger.warning(f"daily batch has {missing_adj} rows without adj_factor; using 1.0")
+        daily["adj_factor"] = daily["adj_factor"].fillna(1.0)
+        daily = daily.rename(columns={"trade_date": "date", "vol": "volume"})
+        daily["date"] = pd.to_datetime(daily["date"], format="%Y%m%d")
+        daily["pct_chg"] = daily["pct_chg"].astype(float)
+        columns = [
+            "date",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "amount",
+            "adj_factor",
+            "pct_chg",
+            "symbol",
+        ]
+        return daily[columns].sort_values(["symbol", "date"]).reset_index(drop=True)
+
+    def _should_use_trade_date_batch(self) -> bool:
+        return (
+            not self._limit_nums_requested
+            and self.start_datetime.normalize() == self.end_datetime.normalize()
+        )
+
+    def _collect_trade_date_batch(self) -> None:
+        trade_date = self.start_datetime.strftime("%Y%m%d")
+        pro = self._get_pro()
+        logger.info(f"get full-market daily batch for trade_date={trade_date}...")
+        daily = pro.daily(trade_date=trade_date)
+        adj = pro.adj_factor(trade_date=trade_date)
+        prepared = self._prepare_trade_date_batch(daily, adj, trade_date)
+        for symbol, frame in prepared.groupby("symbol", sort=True):
+            self.save_instrument(symbol, frame.copy())
+        logger.info(
+            f"full-market daily batch saved: trade_date={trade_date}, "
+            f"active_symbols={prepared['symbol'].nunique()}, rows={len(prepared)}"
+        )
 
     @deco_retry(retry=retry)
     def get_data(
@@ -251,8 +364,16 @@ class TushareCollectorCN(BaseCollector):
                 continue
 
     def collector_data(self):
-        """先采集个股数据，再采集指数数据。"""
-        super().collector_data()
+        """单日优先按交易日批量采集；异常或回补任务使用逐股票路径。"""
+        if self._should_use_trade_date_batch():
+            try:
+                self._collect_trade_date_batch()
+            except Exception as exc:
+                logger.warning(f"full-market daily batch failed, falling back to per-symbol collection: {exc}")
+                super().collector_data()
+        else:
+            logger.info("use per-symbol collection for multi-day or limited run")
+            super().collector_data()
         self.download_index_data()
 
 

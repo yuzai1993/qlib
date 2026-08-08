@@ -10,8 +10,15 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 PYTHON="/opt/anaconda3/envs/qlib/bin/python"
 CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-csi1000_b6m_b2s_postclose_real}}}"
 
+# LIVE_TRADING_CONFIRM 只接受本次调用显式传入；环境文件不能永久打开实盘门禁。
+CALLER_LIVE_TRADING_CONFIRM="${LIVE_TRADING_CONFIRM:-}"
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
+unset LIVE_TRADING_CONFIRM
+if [[ "$CALLER_LIVE_TRADING_CONFIRM" == "YES" ]]; then
+    export LIVE_TRADING_CONFIRM="YES"
+fi
+unset CALLER_LIVE_TRADING_CONFIRM
 RUN_MODE="${LIVE_RUN_MODE:-SIMULATE}"
 
 if [[ "$RUN_MODE" == "LIVE" && "${LIVE_TRADING_CONFIRM:-}" != "YES" ]]; then

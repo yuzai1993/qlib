@@ -15,6 +15,9 @@ from live_trading.modules.fill_importer import FillImporter, LiveRecorder
 from live_trading.modules.monitor_store import MonitorStore
 
 MONITOR_STAGES = ["postmarket", "report", "evening"]
+PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+MAIN_REAL_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
+PROBE_PROFILE = "AFTER_HOURS_FIXED_PRICE"
 
 
 def create_router(config: dict, project_root: Path) -> APIRouter:
@@ -32,12 +35,53 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
         out["name"] = names.get(row.get("stock_code"), "")
         return out
 
+    def _latest_active(strategy_id: str, mode: str = None):
+        for batch in recorder.list_batches(limit=1000, strategy_id=strategy_id):
+            if batch.get("superseded_by"):
+                continue
+            if mode is None or batch.get("mode") == mode:
+                return batch
+        return None
+
+    def _profile_name(strategy_id: str) -> str:
+        if strategy_id == PROBE_STRATEGY_ID:
+            return PROBE_PROFILE
+        return "CLOSE_AUCTION"
+
+    def _probe_lifecycle():
+        lifecycle = recorder.get_operator_probe_lifecycle(PROBE_STRATEGY_ID)
+        if lifecycle is None:
+            return None
+        result = dict(lifecycle)
+        result["stock_name"] = _names().get(result.get("stock_code"), "")
+        return result
+
+    def _probe_execution_state(lifecycle):
+        if lifecycle is None:
+            return "ARMED"
+        return {
+            "BUY_PLANNED": "RUNNING",
+            "BUY_FILLED": "RUNNING",
+            "SELL_PLANNED": "RUNNING",
+            "CLOSED": "DONE",
+            "FAILED": "FAILED",
+        }.get(lifecycle.get("state"), "FAILED")
+
     router = APIRouter()
 
     @router.get("/overview")
     def overview():
         latest = store.get_latest_snapshot()
-        active = recorder.get_latest_active_batch("LIVE")
+        current_strategy_id = config["live"].get("strategy_id", "")
+        active = _latest_active(current_strategy_id, "LIVE")
+        lifecycle = _probe_lifecycle()
+        main_strategy_id = (
+            MAIN_REAL_STRATEGY_ID
+            if current_strategy_id == PROBE_STRATEGY_ID
+            else current_strategy_id
+        )
+        main_state = recorder.get_execution_state(main_strategy_id)["state"]
+        probe_state = _probe_execution_state(lifecycle)
         today = _date.today().strftime("%Y-%m-%d")
         events = store.get_pipeline_events(trade_date=today)
         stage_status = {}
@@ -55,7 +99,7 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             "today": today,
             "stages": stage_status,
             "recent_alerts": alerts,
-            "strategy_id": config["live"].get("strategy_id", ""),
+            "strategy_id": current_strategy_id,
             "mode": (
                 active.get("mode", "") if active
                 else config["live"].get("default_mode", "")
@@ -65,6 +109,35 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             ),
             "account_id": active.get("account_id", "") if active else "",
             "active_batch_id": active.get("batch_id", "") if active else "",
+            "execution_state": (
+                probe_state
+                if current_strategy_id == PROBE_STRATEGY_ID else main_state
+            ),
+            "execution_profile": _profile_name(current_strategy_id),
+            "probe_lifecycle": lifecycle,
+            "strategy_statuses": [
+                {
+                    "strategy_id": main_strategy_id,
+                    "execution_profile": "CLOSE_AUCTION",
+                    "execution_state": main_state,
+                    "active_batch_id": (
+                        (_latest_active(main_strategy_id, "LIVE") or {}).get(
+                            "batch_id", "",
+                        )
+                    ),
+                },
+                {
+                    "strategy_id": PROBE_STRATEGY_ID,
+                    "execution_profile": PROBE_PROFILE,
+                    "execution_state": probe_state,
+                    "active_batch_id": (
+                        (_latest_active(PROBE_STRATEGY_ID, "LIVE") or {}).get(
+                            "batch_id", "",
+                        )
+                    ),
+                    "probe_lifecycle": lifecycle,
+                },
+            ],
         }
 
     @router.get("/nav")
@@ -161,6 +234,7 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             result.append({
                 **b,
                 **r,
+                "execution_profile": _profile_name(b.get("strategy_id", "")),
                 "raw_missing": raw_missing,
                 "missing": 0 if superseded else raw_missing,
                 "lifecycle_status": (

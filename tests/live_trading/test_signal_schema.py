@@ -102,6 +102,37 @@ def test_order_json_roundtrip():
     assert d["type"] == "order"
     assert SignalOrder.from_dict(d) == o
     assert d["target_value"] == 0.0
+    assert "max_quantity" not in d
+
+
+def test_default_maximum_preserves_exact_v2_order_bytes():
+    legacy_line = (
+        '{"batch_id":"20260714_csi300_topk10_001",'
+        '"client_order_id":"20260714001S",'
+        '"instrument_qlib":"SH600000","limit_price":0.0,'
+        '"price_type":"CLOSE_AUCTION_LIMIT","priority":10,'
+        '"quantity":800,"reason":"topk_drop","side":"SELL",'
+        '"stock_code":"600000.SH","target_value":0.0,"type":"order"}'
+    )
+
+    order = SignalOrder.from_dict(json.loads(legacy_line))
+
+    assert order.max_quantity == 0
+    assert order.to_json_line() == legacy_line
+
+
+def test_capped_order_serializes_its_maximum_into_checksum_bytes():
+    order = _order(
+        side="BUY", quantity=0, max_quantity=100, target_value=15_833.33,
+        client_order_id="20260714001002B", priority=20,
+    )
+
+    line = order.to_json_line()
+
+    assert json.loads(line)["max_quantity"] == 100
+    assert compute_checksum([line]) != compute_checksum([
+        dataclasses.replace(order, max_quantity=0).to_json_line(),
+    ])
 
 
 def test_header_json_roundtrip():
@@ -121,11 +152,18 @@ def test_validate_order_accepts_good():
         side="BUY", quantity=0, target_value=15_833.33,
         client_order_id="20260714001002B", priority=20,
     ))
+    validate_order(_order(
+        side="BUY", quantity=0, max_quantity=100, target_value=15_833.33,
+        client_order_id="20260714001003B", priority=20,
+    ))
+    validate_order(_order(
+        side="BUY", quantity=0, max_quantity=None, target_value=15_833.33,
+        client_order_id="20260714001004B", priority=20,
+    ))
 
 
-def test_validate_order_rejects_legacy_after_hours_price_type():
-    with pytest.raises(SchemaError, match="CLOSE_AUCTION_LIMIT"):
-        validate_order(_order(price_type="AFTER_HOURS_CLOSE"))
+def test_validate_order_accepts_after_hours_fixed_price_protocol():
+    validate_order(_order(price_type="AFTER_HOURS_CLOSE"))
 
 
 @pytest.mark.parametrize("bad_kwargs", [
@@ -158,6 +196,16 @@ def test_validate_buy_order_rejects_broker_sized_plan_fields(bad_kwargs):
     buy.update(bad_kwargs)
     with pytest.raises(SchemaError):
         validate_order(_order(**buy))
+
+
+@pytest.mark.parametrize("max_quantity", [-100, 50, True])
+def test_validate_order_rejects_invalid_immutable_buy_maximum(max_quantity):
+    with pytest.raises(SchemaError, match="max_quantity"):
+        validate_order(_order(
+            side="BUY", quantity=0, max_quantity=max_quantity,
+            target_value=15_833.33, client_order_id="20260714001002B",
+            priority=20,
+        ))
 
 
 def test_validate_batch_checks_order_count_and_ids():

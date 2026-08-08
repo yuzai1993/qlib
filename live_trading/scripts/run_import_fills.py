@@ -40,6 +40,7 @@ def main():
         ),
     )
     importer = FillImporter(config["live"]["bridge_root"], recorder)
+    strategy_id = config["live"]["strategy_id"]
 
     n = importer.import_fills()
     print(f"imported {n} fill events")
@@ -47,11 +48,19 @@ def main():
     snapshots = importer.import_broker_snapshots()
     print(f"imported {snapshots} broker account snapshots")
 
-    for batch in recorder.list_batches(limit=5):
+    observations = importer.import_account_snapshot_responses()
+    print(f"imported {observations} snapshot-only observations")
+
+    for batch in recorder.list_batches(limit=5, strategy_id=strategy_id):
         r = importer.reconcile(batch["batch_id"])
         flag = "OK " if r["missing"] == 0 else "WARN"
         print(f"[{flag}] {batch['batch_id']} mode={batch['mode']} "
               f"planned={r['planned']} terminal={r['terminal']} missing={r['missing']}")
+
+    if config["live"].get("kind") == "OPERATOR_PROBE":
+        lifecycle = recorder.get_operator_probe_lifecycle(strategy_id)
+        state = "NONE" if lifecycle is None else lifecycle["state"]
+        print(f"probe lifecycle state={state}")
 
     positions = recorder.get_positions()
     print(f"\nlive positions ({len(positions)}), cash={recorder.get_cash():.2f}:")

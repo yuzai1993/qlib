@@ -7,10 +7,13 @@ import re
 
 import yaml
 
+from live_trading.modules.execution_profile import get_execution_profile
+
 
 _BASELINE_KEYS = {
     "first_snapshot_date", "opening_total_value", "benchmark_close",
 }
+_OPERATOR_PROBE_MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 
 
 def _validate_performance_baseline(config: dict) -> None:
@@ -68,12 +71,60 @@ def _validate_trading_config(config: dict) -> None:
         )
     if environment == "REAL" and live.get("default_mode") != "LIVE":
         raise ValueError("REAL broker_environment requires default_mode=LIVE")
-    if live.get("execution_session") != "CLOSE_AUCTION":
-        raise ValueError("live.execution_session must be CLOSE_AUCTION")
-    if live.get("close_auction_price_type") != 11:
-        raise ValueError("live.close_auction_price_type must be 11")
-    if live.get("submit_after") != "14:57:05":
-        raise ValueError("live.submit_after must be 14:57:05")
+    kind = live.get("kind", "STRATEGY")
+    if kind not in {"STRATEGY", "OPERATOR_PROBE"}:
+        raise ValueError("live.kind must be STRATEGY or OPERATOR_PROBE")
+
+    profile = get_execution_profile(live.get("execution_session"))
+    if kind == "STRATEGY" and profile.name != "CLOSE_AUCTION":
+        raise ValueError("live.kind STRATEGY requires CLOSE_AUCTION")
+    if kind == "OPERATOR_PROBE" and profile.name != "AFTER_HOURS_FIXED_PRICE":
+        raise ValueError(
+            "live.kind OPERATOR_PROBE requires AFTER_HOURS_FIXED_PRICE"
+        )
+    if live.get("close_auction_price_type") != profile.qmt_price_type:
+        raise ValueError(
+            "live.close_auction_price_type must match execution profile "
+            f"price_type {profile.qmt_price_type}"
+        )
+    for field in ("submit_after", "cancel_at", "finalize_at", "snapshot_after"):
+        if field not in live:
+            raise ValueError(f"live.{field} is required")
+        configured = live[field]
+        expected = getattr(profile, field)
+        if configured != expected:
+            raise ValueError(
+                f"live.{field} must match execution profile: {expected}"
+            )
+
+    if kind == "OPERATOR_PROBE":
+        if (
+            environment != "REAL"
+            or allow_real_money is not True
+            or live.get("default_mode") != "LIVE"
+        ):
+            raise ValueError("OPERATOR_PROBE requires REAL/LIVE")
+        if live.get("strategy_id") != "csi1000_pr49_one_lot_probe":
+            raise ValueError(
+                "OPERATOR_PROBE requires strategy_id "
+                "csi1000_pr49_one_lot_probe"
+            )
+        main_strategy_id = live.get("main_strategy_id")
+        if main_strategy_id != _OPERATOR_PROBE_MAIN_STRATEGY_ID:
+            raise ValueError(
+                "OPERATOR_PROBE requires live.main_strategy_id "
+                f"{_OPERATOR_PROBE_MAIN_STRATEGY_ID}"
+            )
+        bridge_root = live.get("bridge_root")
+        if (
+            not isinstance(bridge_root, str)
+            or not bridge_root.rstrip("/").endswith("/pr49_probe")
+        ):
+            raise ValueError(
+                "OPERATOR_PROBE bridge_root must end with /pr49_probe"
+            )
+        if live.get("max_orders_per_day") != 100:
+            raise ValueError("OPERATOR_PROBE max_orders_per_day must be 100")
 
     opening_cash = config.get("account", {}).get("opening_cash")
     if (
@@ -100,19 +151,20 @@ def _validate_trading_config(config: dict) -> None:
             "account economic opening value must be positive"
         )
 
-    strategy = config.get("strategy", {})
-    topk = strategy.get("topk")
-    initial_buy_count = strategy.get("initial_buy_count")
-    if (
-        isinstance(initial_buy_count, bool)
-        or not isinstance(initial_buy_count, int)
-        or not isinstance(topk, int)
-        or initial_buy_count <= 0
-        or initial_buy_count > topk
-    ):
-        raise ValueError(
-            "strategy.initial_buy_count must be a positive integer no greater than topk"
-        )
+    if kind == "STRATEGY":
+        strategy = config.get("strategy", {})
+        topk = strategy.get("topk")
+        initial_buy_count = strategy.get("initial_buy_count")
+        if (
+            isinstance(initial_buy_count, bool)
+            or not isinstance(initial_buy_count, int)
+            or not isinstance(topk, int)
+            or initial_buy_count <= 0
+            or initial_buy_count > topk
+        ):
+            raise ValueError(
+                "strategy.initial_buy_count must be a positive integer no greater than topk"
+            )
 
 
 def load_live_config(config_path, project_root=None) -> dict:

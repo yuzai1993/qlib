@@ -86,13 +86,26 @@ def test_pr49_checklist_stops_for_fresh_confirmation_and_preserves_evidence():
         "ACCEPTED",
         "生命周期 `CLOSED`",
         "after_hours_eligible=true",
-        "throw \"trade date must equal today\"",
-        "throw \"authorization cutoff has passed\"",
         "只删除尚未使用的同日 marker",
         "停止 probe 策略",
         "保留 processing/、outbound/ 和 logs/ 证据",
     ]
     assert all(token in checklist for token in required)
+    marker_script = (
+        REPO_ROOT /
+        "live_trading/qmt_strategy/New-OperatorAuthorizationMarker.ps1"
+    ).read_text(encoding="utf-8")
+    assert 'throw "trade date must equal today"' in marker_script
+    assert 'throw "authorization cutoff has passed"' in marker_script
+
+
+def test_runbooks_use_only_the_locked_marker_creator():
+    main, _, checklist = _read_runbooks()
+    combined = main + checklist
+
+    assert "New-OperatorAuthorizationMarker.ps1" in main
+    assert combined.count("New-OperatorAuthorizationMarker.ps1") >= 3
+    assert "New-Item -ItemType File" not in combined
 
 
 def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):

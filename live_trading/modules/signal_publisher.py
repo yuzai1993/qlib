@@ -10,7 +10,10 @@
 import dataclasses
 import logging
 import os
+from contextlib import contextmanager
 from pathlib import Path
+
+from filelock import FileLock, Timeout as FileLockTimeout
 
 from live_trading.modules.signal_schema import (
     BatchHeader,
@@ -19,6 +22,8 @@ from live_trading.modules.signal_schema import (
 )
 
 logger = logging.getLogger("live_trading.signal_publisher")
+AUTHORIZATION_LOCK_NAME = "OPERATOR_AUTHORIZATION.lock"
+AUTHORIZATION_LOCK_TIMEOUT_SECONDS = 10
 
 
 class PublishError(RuntimeError):
@@ -29,6 +34,43 @@ class SignalPublisher:
     def __init__(self, bridge_root):
         self.bridge_root = Path(bridge_root)
         self.inbox = self.bridge_root / "inbox"
+
+    @property
+    def authorization_domain_root(self) -> Path:
+        """Return the shared root used by main and its nested probe profile."""
+        if self.bridge_root.name == "pr49_probe":
+            return self.bridge_root.parent
+        return self.bridge_root
+
+    @property
+    def authorization_lock_path(self) -> Path:
+        return (
+            self.authorization_domain_root / "state" /
+            AUTHORIZATION_LOCK_NAME
+        )
+
+    @contextmanager
+    def authorization_gate(
+        self, timeout: float = AUTHORIZATION_LOCK_TIMEOUT_SECONDS,
+    ):
+        """Serialize SMB publication with controlled Windows marker creation."""
+        try:
+            self.authorization_lock_path.parent.mkdir(
+                parents=True, exist_ok=True,
+            )
+            lock = FileLock(str(self.authorization_lock_path))
+            lock.acquire(timeout=timeout)
+        except FileLockTimeout as exc:
+            raise PublishError("authorization lock timeout") from exc
+        except OSError as exc:
+            raise PublishError("authorization lock acquisition failed") from exc
+        try:
+            yield
+        finally:
+            try:
+                lock.release()
+            except OSError as exc:
+                raise PublishError("authorization lock release failed") from exc
 
     def ensure_available(self, batch_id: str) -> None:
         """Legacy strict availability check."""

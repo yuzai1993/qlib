@@ -72,6 +72,43 @@ def test_pr49_operator_checklist_is_a_controlled_repository_artifact():
     assert all(token in text for token in required_contract)
 
 
+def test_windows_marker_creator_uses_shared_lock_and_rechecks_inside_it():
+    script = (
+        REPO_ROOT /
+        "live_trading/qmt_strategy/New-OperatorAuthorizationMarker.ps1"
+    )
+    assert script.is_file()
+    text = script.read_text(encoding="utf-8")
+
+    for token in (
+        "OPERATOR_AUTHORIZATION.lock",
+        "[System.IO.FileMode]::OpenOrCreate",
+        "[System.IO.FileShare]::None",
+        "$LockStream.Lock(0, 1)",
+        "authorization lock timeout",
+        "trade date must equal today",
+        "authorization cutoff has passed",
+        "other profile authorization exists",
+        "authorization marker already exists",
+        '"CLOSE_AUCTION"',
+        '"AFTER_HOURS_FIXED_PRICE"',
+        "finally",
+        "$LockStream.Dispose()",
+    ):
+        assert token in text
+
+    lock_acquired = text.index("$LockStream.Lock(0, 1)")
+    assert lock_acquired < text.index("$Today =")
+    assert lock_acquired < text.index("$OwnMarker =")
+    assert lock_acquired < text.index("$OtherMarker =")
+    assert lock_acquired < text.index("New-Item -ItemType File")
+
+    publisher = (
+        REPO_ROOT / "live_trading/modules/signal_publisher.py"
+    ).read_text(encoding="utf-8")
+    assert 'AUTHORIZATION_LOCK_NAME = "OPERATOR_AUTHORIZATION.lock"' in publisher
+
+
 def test_git_tracks_no_runtime_authorization_or_broker_evidence():
     forbidden = []
     for path in _tracked_files():

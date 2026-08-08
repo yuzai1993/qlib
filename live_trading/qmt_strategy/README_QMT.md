@@ -74,6 +74,26 @@ Get-Content D:\qmt_bridge\pr49_probe\logs\qmt_events_YYYY-MM-DD.jsonl -Tail 100
 版本、策略名称、脱敏账户、profile、两个 root、price type、100 股上限及所有时间。
 不一致时停止策略，不能创建授权 marker。
 
+### 2.1 共享授权锁与 SMB 互操作验收
+
+把仓库中的 `New-OperatorAuthorizationMarker.ps1` 复制到
+`D:\qmt_bridge\tools\`，记录并复核两端 SHA256。主策略和 probe 的唯一共同授权锁是：
+
+- Windows：`D:\qmt_bridge\state\OPERATOR_AUTHORIZATION.lock`
+- macOS：`/Volumes/qmt_bridge/state/OPERATOR_AUTHORIZATION.lock`
+
+Mac publisher 用 `filelock.FileLock` 持锁覆盖 marker 复核、byte preflight、jsonl 和 done
+全部 rename；PowerShell 脚本用 `FileStream(FileShare.None)` 加 byte lock，持锁覆盖日期、
+截止时间、另一 profile marker、自身 marker 的复核和创建。锁等待超时、打开/释放异常
+都失败关闭。主 root 与嵌套 `pr49_probe` 禁止各建一把锁。
+
+不同 SMB 服务端/macOS 挂载版本的锁映射可能不同。首次启用、共享盘重配或系统升级后，
+必须在**不创建任何 marker**的前提下做双向互操作验收：一端持有上述文件的独占锁时，
+另一端必须在超时内无法获取；交换方向再测一次。可分别用 Python `FileLock` 与脚本中
+相同的 `FileStream.Open` + `Lock(0, 1)` 片段测试。验收期间同时确认两个 QMT inbox 均无
+新增文件。若任一方向能同时进锁、lock 文件落在不同路径，或释放后不能重新获取，立即
+停止两个 QMT 策略，不得创建 marker，先修复 SMB 挂载/锁语义。
+
 ## 3. 定时与状态机
 
 策略在 `init` 中绑定账户回调并注册 `ContextInfo.schedule_run`，从 14:56:55 起每 3 秒唤醒。旧 QMT 没有新版接口时退回 `run_time`。

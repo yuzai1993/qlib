@@ -149,21 +149,16 @@ LIVE_TRADING_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
 `D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_YYYY-MM-DD`。禁止提前创建、脚本自动
 创建或创建未来日期 marker。
 
+先把仓库中的 `New-OperatorAuthorizationMarker.ps1` 复制到
+`D:\qmt_bridge\tools\New-OperatorAuthorizationMarker.ps1` 并复核哈希。只有该脚本获准
+创建 marker；它与两个 Mac publisher 共用主 root 的
+`state\OPERATOR_AUTHORIZATION.lock`。首次启用前必须完成 README_QMT 的双向 SMB 锁
+互操作验收。
+
 ```powershell
 $TradeDate = "YYYY-MM-DD"
-$Today = (Get-Date).ToString("yyyy-MM-dd")
-if ($TradeDate -ne $Today) { throw "trade date must equal today" }
-$Cutoff = [datetime]::ParseExact(
-  "$TradeDate 15:05:00", "yyyy-MM-dd HH:mm:ss",
-  [System.Globalization.CultureInfo]::InvariantCulture)
-if ((Get-Date) -ge $Cutoff) { throw "authorization cutoff has passed" }
-$OtherMarker = "D:\qmt_bridge\state\LIVE_OK_$TradeDate"
-if (Test-Path -LiteralPath $OtherMarker) { throw "other profile authorization exists" }
-New-Item -ItemType File `
-  -Path "D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_$TradeDate" `
-  -ErrorAction Stop
-Get-Item -LiteralPath `
-  "D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_$TradeDate"
+& "D:\qmt_bridge\tools\New-OperatorAuthorizationMarker.ps1" `
+  -Profile AFTER_HOURS_FIXED_PRICE -TradeDate $TradeDate
 ```
 
 15:05 后持续查看事件。API 返回不等于委托受理；只有 ORDER 查询或可信 callback 出现
@@ -210,19 +205,8 @@ LIVE_TRADING_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
 ```powershell
 # SELL 日必须重新赋值、重新确认，不能沿用 BUY 日会话
 $TradeDate = "YYYY-MM-DD"
-$Today = (Get-Date).ToString("yyyy-MM-dd")
-if ($TradeDate -ne $Today) { throw "trade date must equal today" }
-$Cutoff = [datetime]::ParseExact(
-  "$TradeDate 15:05:00", "yyyy-MM-dd HH:mm:ss",
-  [System.Globalization.CultureInfo]::InvariantCulture)
-if ((Get-Date) -ge $Cutoff) { throw "authorization cutoff has passed" }
-$OtherMarker = "D:\qmt_bridge\state\LIVE_OK_$TradeDate"
-if (Test-Path -LiteralPath $OtherMarker) { throw "other profile authorization exists" }
-New-Item -ItemType File `
-  -Path "D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_$TradeDate" `
-  -ErrorAction Stop
-Get-Item -LiteralPath `
-  "D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_$TradeDate"
+& "D:\qmt_bridge\tools\New-OperatorAuthorizationMarker.ps1" `
+  -Profile AFTER_HOURS_FIXED_PRICE -TradeDate $TradeDate
 ```
 
 15:31 后重复 import 与 postmarket 命令。完成标准是实际 SELL 恰好 100 股、生命周期

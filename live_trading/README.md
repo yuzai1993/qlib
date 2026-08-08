@@ -199,20 +199,21 @@ LIVE_TRADING_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
 发布后再次核对 Windows QMT 主实例绑定、`CLOSE_AUCTION/prType=11`、
 `MAX_ORDER_QUANTITY=100`、股票和日期。得到用户当日明确确认后才手工创建同日
 `LIVE_OK_YYYY-MM-DD`；不创建未来日期 marker，也不允许 probe 同日授权。
+Windows 必须先把仓库中的
+`live_trading/qmt_strategy/New-OperatorAuthorizationMarker.ps1` 复制到
+`D:\qmt_bridge\tools\` 并复核哈希；禁止再使用裸文件创建命令。受控脚本和 Mac
+publisher 使用同一个 `D:\qmt_bridge\state\OPERATOR_AUTHORIZATION.lock`，脚本在锁内
+重新检查日期、截止时间及两个 profile marker：
 
 ```powershell
 $TradeDate = "YYYY-MM-DD"
-$Today = (Get-Date).ToString("yyyy-MM-dd")
-if ($TradeDate -ne $Today) { throw "trade date must equal today" }
-$Cutoff = [datetime]::ParseExact(
-  "$TradeDate 14:57:05", "yyyy-MM-dd HH:mm:ss",
-  [System.Globalization.CultureInfo]::InvariantCulture)
-if ((Get-Date) -ge $Cutoff) { throw "authorization cutoff has passed" }
-$OtherMarker = "D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_$TradeDate"
-if (Test-Path -LiteralPath $OtherMarker) { throw "other profile authorization exists" }
-New-Item -ItemType File -Path "D:\qmt_bridge\state\LIVE_OK_$TradeDate" -ErrorAction Stop
-Get-Item -LiteralPath "D:\qmt_bridge\state\LIVE_OK_$TradeDate"
+& "D:\qmt_bridge\tools\New-OperatorAuthorizationMarker.ps1" `
+  -Profile CLOSE_AUCTION -TradeDate $TradeDate
 ```
+
+脚本若报告 lock timeout、日期/截止检查失败、已有任一 marker 或锁释放异常，都不得改用
+其他命令补建 marker。首次启用前还必须按 QMT README 的“双向 SMB 锁互操作验收”确认
+macOS `filelock` 与 Windows `FileStream` 在当前共享盘上确实互斥。
 
 ### 3. 导入、盘后验收并保持暂停
 

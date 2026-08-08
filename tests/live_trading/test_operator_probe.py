@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from filelock import FileLock
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
@@ -703,6 +704,64 @@ def test_main_sell_rechecks_marker_after_publish_internal_preflight(
     assert not list((tmp_path / "main_bridge" / "inbox").glob(f"*{batch_id}*"))
 
 
+def test_shared_authorization_lock_serializes_marker_after_final_guard(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, _ = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    lock_path = (
+        tmp_path / "main_bridge" / "state" /
+        "OPERATOR_AUTHORIZATION.lock"
+    )
+    marker_attempted = threading.Event()
+    marker_acquired = threading.Event()
+    pair_visible_at_marker_lock = []
+
+    class RenameRacePublisher(SignalPublisher):
+        marker_thread = None
+        acquired_before_first_write = None
+
+        def _atomic_write(self, path, content):
+            if self.marker_thread is None:
+                def create_marker_under_shared_lock():
+                    marker_attempted.set()
+                    with FileLock(str(lock_path), timeout=3):
+                        done = self.inbox / (
+                            "signal_20260810_"
+                            "csi1000_b6m_b2s_postclose_real_900.done"
+                        )
+                        pair_visible_at_marker_lock.append(done.is_file())
+                        _write_main_authorization_marker(
+                            tmp_path, "state/LIVE_OK_2026-08-10",
+                        )
+                        marker_acquired.set()
+
+                self.marker_thread = threading.Thread(
+                    target=create_marker_under_shared_lock,
+                )
+                self.marker_thread.start()
+                assert marker_attempted.wait(1)
+                self.acquired_before_first_write = marker_acquired.wait(0.2)
+            return super()._atomic_write(path, content)
+
+    publisher = RenameRacePublisher(config["live"]["bridge_root"])
+    path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    publisher.marker_thread.join(timeout=4)
+
+    assert not publisher.marker_thread.is_alive()
+    assert publisher.acquired_before_first_write is False
+    assert pair_visible_at_marker_lock == [True]
+    assert path.is_file() and path.with_suffix(".done").is_file()
+    assert (tmp_path / "main_bridge/state/LIVE_OK_2026-08-10").is_file()
+
+
 @pytest.mark.parametrize(
     ("directory", "name"),
     [
@@ -1267,9 +1326,7 @@ def test_publish_records_plan_before_exposing_batch(recorder, tmp_path, monkeypa
     request = _request()
     config = _config(tmp_path)
 
-    class InspectingPublisher:
-        bridge_root = tmp_path / "pr49_probe"
-
+    class InspectingPublisher(SignalPublisher):
         def ensure_publishable(self, header, orders):
             assert recorder.get_batch(header.batch_id) is None
             return False
@@ -1281,7 +1338,8 @@ def test_publish_records_plan_before_exposing_batch(recorder, tmp_path, monkeypa
             return tmp_path / "published.jsonl"
 
     assert publish_operator_probe(
-        request, config, recorder, InspectingPublisher(), "8890116049",
+        request, config, recorder,
+        InspectingPublisher(tmp_path / "pr49_probe"), "8890116049",
     ) == tmp_path / "published.jsonl"
 
 
@@ -1293,9 +1351,7 @@ def test_publish_uses_record_plan_as_the_atomic_pre_publish_gate(
     _prepare_probe_sell(recorder, tmp_path, monkeypatch)
     _save_snapshot(recorder)
 
-    class InterleavingPublisher:
-        bridge_root = tmp_path / "pr49_probe"
-
+    class InterleavingPublisher(SignalPublisher):
         def ensure_publishable(self, header, orders):
             recorder.record_publish_plan(
                 header, [dataclasses.replace(orders[0], reason="other")],
@@ -1308,7 +1364,7 @@ def test_publish_uses_record_plan_as_the_atomic_pre_publish_gate(
     with pytest.raises(SchemaError, match="conflicts with durable plan"):
         publish_operator_probe(
             _request(), _config(tmp_path), recorder,
-            InterleavingPublisher(), "8890116049",
+            InterleavingPublisher(tmp_path / "pr49_probe"), "8890116049",
         )
 
 

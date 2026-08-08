@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from filelock import FileLock
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
@@ -74,6 +75,36 @@ def test_publish_writes_jsonl_and_done(tmp_path):
     expected = compute_checksum(order_lines)
     assert header["checksum"] == expected
     assert done.read_text(encoding="utf-8").strip() == expected
+
+
+def test_main_and_nested_probe_share_one_authorization_lock(tmp_path):
+    main = SignalPublisher(tmp_path)
+    probe = SignalPublisher(tmp_path / "pr49_probe")
+
+    expected = tmp_path / "state" / "OPERATOR_AUTHORIZATION.lock"
+    assert main.authorization_lock_path == expected
+    assert probe.authorization_lock_path == expected
+
+
+def test_authorization_gate_timeout_fails_closed(tmp_path):
+    publisher = SignalPublisher(tmp_path)
+    publisher.authorization_lock_path.parent.mkdir(parents=True)
+
+    with FileLock(str(publisher.authorization_lock_path)):
+        with pytest.raises(PublishError, match="authorization lock timeout"):
+            with publisher.authorization_gate(timeout=0.01):
+                pytest.fail("contended authorization lock must not be entered")
+
+
+def test_authorization_gate_releases_lock_after_exception(tmp_path):
+    publisher = SignalPublisher(tmp_path)
+
+    with pytest.raises(RuntimeError, match="injected failure"):
+        with publisher.authorization_gate(timeout=0.1):
+            raise RuntimeError("injected failure")
+
+    with FileLock(str(publisher.authorization_lock_path), timeout=0.1):
+        pass
 
 
 def test_publish_exact_retry_is_idempotent(tmp_path):

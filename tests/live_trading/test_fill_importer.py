@@ -511,7 +511,7 @@ def test_probe_terminal_fill_economics_are_excluded_from_fee_repricing(tmp_path)
         reason="probe",
         max_quantity=100,
     )], probe_transition={"side": "BUY", "stock_code": "600000.SH"})
-    recorder.apply_fill(FillEvent.from_dict(_fill(
+    terminal = FillEvent.from_dict(_fill(
         batch_id=batch_id,
         client_order_id="20260807900001B",
         stock_code="600000.SH",
@@ -520,7 +520,8 @@ def test_probe_terminal_fill_economics_are_excluded_from_fee_repricing(tmp_path)
         filled=100,
         price=10.0,
         status="FILLED",
-    )))
+    ))
+    recorder.apply_fill(terminal)
     fill_before = recorder.get_fills(batch_id)[0]
     cash_before = recorder.get_cash()
     lower_fees = {
@@ -530,9 +531,12 @@ def test_probe_terminal_fill_economics_are_excluded_from_fee_repricing(tmp_path)
         "transfer_fee_rate": 0.0,
     }
 
-    adjustment = LiveRecorder(str(db), fees=lower_fees).reprice_fees_by_date(
-        "2026-08-07",
-    )
+    reconfigured = LiveRecorder(str(db), fees=lower_fees)
+    reconfigured.apply_fill(terminal)
+    assert recorder.get_fills(batch_id)[0] == fill_before
+    assert recorder.get_cash() == cash_before
+
+    adjustment = reconfigured.reprice_fees_by_date("2026-08-07")
 
     assert adjustment == 0.0
     assert recorder.get_fills(batch_id)[0] == fill_before
@@ -1340,6 +1344,219 @@ def test_latest_broker_snapshot_uses_import_sequence_not_batch_id(env):
     assert [row["batch_id"] for row in rows] == [older, newer]
     assert rows[0]["import_sequence"] < rows[1]["import_sequence"]
     assert all(row["imported_at"] for row in rows)
+
+
+def _replace_snapshot_markers_with_round1_schema(db, markers):
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE broker_snapshot_imports")
+        conn.execute(
+            """CREATE TABLE broker_snapshot_imports (
+                   batch_id TEXT PRIMARY KEY,
+                   trade_date TEXT NOT NULL,
+                   import_sequence INTEGER NOT NULL UNIQUE,
+                   imported_at TEXT NOT NULL
+               )"""
+        )
+        conn.executemany(
+            """INSERT INTO broker_snapshot_imports
+               (batch_id, trade_date, import_sequence, imported_at)
+               VALUES (?,?,?,?)""",
+            markers,
+        )
+
+
+def test_legacy_snapshot_migration_orders_unique_observation_times(tmp_path):
+    db = tmp_path / "legacy-ordered-snapshots.db"
+    recorder = LiveRecorder(str(db))
+    older = "20260714_zzz_snapshot"
+    newer = "20260714_aaa_snapshot"
+    for batch_id, ts, positions in (
+        (older, "2026-07-14T10:00:00+08:00", (("688223.SH", 100),)),
+        (newer, "2026-07-14T11:00:00+08:00", ()),
+    ):
+        recorder.record_batch(batch_id, "2026-07-14", "LIVE", 0)
+        account = {
+            key: value for key, value in _snapshot_rows(
+                positions=positions, batch_id=batch_id,
+            )[0].items()
+            if key not in {"batch_id", "trade_date"}
+        }
+        account["ts"] = ts
+        position_rows = [
+            {
+                key: value for key, value in row.items()
+                if key not in {"batch_id", "trade_date"}
+            }
+            for row in _snapshot_rows(
+                positions=positions, batch_id=batch_id,
+            )[1:]
+        ]
+        recorder.save_broker_snapshot(batch_id, account, position_rows)
+    _replace_snapshot_markers_with_round1_schema(db, [
+        (newer, "2026-07-14", 1, "2026-08-01 12:00:00"),
+        (older, "2026-07-14", 2, "2026-08-01 12:00:00"),
+    ])
+
+    migrated = LiveRecorder(str(db))
+
+    assert migrated.get_broker_positions("2026-07-14") == {}
+    with migrated._conn() as conn:
+        first = [tuple(row) for row in conn.execute(
+            """SELECT batch_id, import_sequence, imported_at
+                 FROM broker_snapshot_imports ORDER BY import_sequence"""
+        ).fetchall()]
+    assert [row[0] for row in first] == [older, newer]
+
+    LiveRecorder(str(db))
+    with migrated._conn() as conn:
+        second = [tuple(row) for row in conn.execute(
+            """SELECT batch_id, import_sequence, imported_at
+                 FROM broker_snapshot_imports ORDER BY import_sequence"""
+        ).fetchall()]
+    assert second == first
+
+
+def test_legacy_snapshot_migration_fails_closed_on_tied_chronology(tmp_path):
+    db = tmp_path / "legacy-ambiguous-snapshots.db"
+    recorder = LiveRecorder(str(db))
+    tied_ts = "2026-07-14T11:00:00+08:00"
+    for batch_id, shares in (
+        ("20260714_aaa_snapshot", 100),
+        ("20260714_zzz_snapshot", 200),
+    ):
+        recorder.record_batch(batch_id, "2026-07-14", "LIVE", 0)
+        account = {
+            key: value for key, value in _snapshot_rows(
+                positions=(("688223.SH", shares),), batch_id=batch_id,
+            )[0].items()
+            if key not in {"batch_id", "trade_date"}
+        }
+        account["ts"] = tied_ts
+        position = {
+            key: value for key, value in _snapshot_rows(
+                positions=(("688223.SH", shares),), batch_id=batch_id,
+            )[1].items()
+            if key not in {"batch_id", "trade_date"}
+        }
+        recorder.save_broker_snapshot(batch_id, account, [position])
+    _replace_snapshot_markers_with_round1_schema(db, [
+        ("20260714_aaa_snapshot", "2026-07-14", 1, "2026-08-01 12:00:00"),
+        (
+            "20260714_zzz_snapshot",
+            "2026-07-14",
+            2,
+            "9999-99-99T99:99:99.999",
+        ),
+    ])
+
+    migrated = LiveRecorder(str(db))
+
+    with pytest.raises(SchemaError, match="snapshot missing"):
+        migrated.get_broker_position_details("2026-07-14")
+
+    fresh = "20260714_fresh_snapshot"
+    migrated.record_batch(fresh, "2026-07-14", "LIVE", 0)
+    account = {
+        key: value for key, value in _snapshot_rows(
+            positions=(), batch_id=fresh,
+        )[0].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    account["ts"] = "2026-07-14T12:00:00+08:00"
+    migrated.save_broker_snapshot(fresh, account, [])
+    assert migrated.get_broker_position_details("2026-07-14") == {}
+
+
+def test_legacy_snapshot_migration_marks_unrepresentable_time_ambiguous(
+    tmp_path,
+):
+    db = tmp_path / "legacy-invalid-time.db"
+    recorder = LiveRecorder(str(db))
+    batch_id = "legacy_invalid_time"
+    trade_date = "0001-01-01"
+    recorder.record_batch(batch_id, trade_date, "LIVE", 0)
+    recorder.save_broker_snapshot(
+        batch_id,
+        {"account_id": "legacy", "ts": "0001-01-01T00:00:00"},
+        [{
+            "stock_code": "688223.SH",
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+    _replace_snapshot_markers_with_round1_schema(db, [
+        (batch_id, trade_date, 1, "2026-08-01 12:00:00"),
+    ])
+
+    migrated = LiveRecorder(str(db))
+
+    with pytest.raises(SchemaError, match="snapshot missing"):
+        migrated.get_broker_position_details(trade_date)
+
+
+def test_read_only_round1_snapshot_schema_fails_closed_for_migration(tmp_path):
+    db = tmp_path / "legacy-read-only-snapshots.db"
+    recorder = LiveRecorder(str(db))
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 0)
+    account = {
+        key: value for key, value in _snapshot_rows()[0].items()
+        if key not in {"batch_id", "trade_date"}
+    }
+    recorder.save_broker_snapshot(BATCH_ID, account, [])
+    _replace_snapshot_markers_with_round1_schema(db, [
+        (BATCH_ID, "2026-07-14", 1, "2026-07-14T15:00:00.000"),
+    ])
+    read_only = LiveRecorder(str(db), read_only=True)
+
+    with pytest.raises(SchemaError, match="writable migration"):
+        read_only.get_broker_position_details("2026-07-14")
+
+
+def test_partial_snapshot_marker_migration_recovers_round1_fresh_row(tmp_path):
+    db = tmp_path / "partial-snapshot-migration.db"
+    recorder = LiveRecorder(str(db))
+    recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 0)
+    recorder.save_broker_snapshot(
+        BATCH_ID,
+        None,
+        [{
+            "stock_code": "688223.SH",
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """UPDATE broker_snapshot_imports
+                  SET imported_at='2026-07-14T15:00:00.123',
+                      lifecycle_evidence=0,
+                      ordering_trusted=0,
+                      is_fresh=0
+                WHERE batch_id=?""",
+            (BATCH_ID,),
+        )
+
+    migrated = LiveRecorder(str(db))
+
+    assert migrated.get_broker_position_details("2026-07-14") == {
+        "688223.SH": {
+            "shares": 100,
+            "can_use_volume": 100,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        },
+    }
+    with migrated._conn() as conn:
+        marker = conn.execute(
+            """SELECT is_fresh, ordering_trusted
+                 FROM broker_snapshot_imports WHERE batch_id=?""",
+            (BATCH_ID,),
+        ).fetchone()
+    assert tuple(marker) == (1, 1)
 
 
 def test_legacy_snapshot_rows_are_backfilled_with_import_order(tmp_path):

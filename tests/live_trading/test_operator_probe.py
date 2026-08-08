@@ -830,6 +830,32 @@ def test_probe_buy_plan_and_actual_fill_advance_lifecycle(
     assert lifecycle["state"] == "BUY_FILLED"
 
 
+def test_probe_buy_positions_only_snapshot_is_not_lifecycle_evidence(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    _apply_probe_buy_fill(recorder, request, with_snapshot=False)
+
+    recorder.save_broker_snapshot(
+        batch_id,
+        None,
+        [{
+            "stock_code": STOCK_CODE,
+            "shares": 100,
+            "can_use_volume": 0,
+            "avg_cost": 10.0,
+            "market_value": 1000.0,
+        }],
+    )
+
+    assert recorder.get_broker_positions("2026-08-07") == {
+        STOCK_CODE: 100,
+    }
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "BUY_PLANNED"
+
+
 def test_terminal_probe_failure_marks_lifecycle_failed(
     recorder, tmp_path, monkeypatch,
 ):
@@ -1057,3 +1083,46 @@ def test_probe_sell_terminal_fill_closes_lifecycle(
 
     assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
         == "CLOSED"
+
+
+def test_probe_sell_positions_only_snapshot_without_symbol_is_not_evidence(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    _apply_probe_buy_fill(recorder, buy)
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100,
+    )
+    config = _config(tmp_path)
+    sell = _request(trade_date="2026-08-10")
+    publish_operator_probe(
+        sell, config, recorder,
+        SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+    )
+    batch_id = "20260810_csi1000_pr49_one_lot_probe_900"
+    recorder.apply_fill(FillEvent.from_dict({
+        "type": "fill_event",
+        "batch_id": batch_id,
+        "client_order_id": "20260810900001S",
+        "mode": "LIVE",
+        "stock_code": STOCK_CODE,
+        "side": "SELL",
+        "status": "FILLED",
+        "requested_qty": 100,
+        "filled_qty": 100,
+        "avg_price": 10.5,
+        "qmt_order_id": "probe-sell-positions-only",
+        "message": "",
+        "ts": "2026-08-10T15:06:00+08:00",
+    }))
+
+    recorder.save_broker_snapshot(batch_id, None, [])
+
+    assert recorder.get_broker_positions("2026-08-10") == {}
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "SELL_PLANNED"

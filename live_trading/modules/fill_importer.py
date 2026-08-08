@@ -333,7 +333,10 @@ class LiveRecorder:
                     batch_id TEXT PRIMARY KEY,
                     trade_date TEXT NOT NULL,
                     import_sequence INTEGER NOT NULL UNIQUE,
-                    imported_at TEXT NOT NULL
+                    imported_at TEXT NOT NULL,
+                    lifecycle_evidence INTEGER NOT NULL DEFAULT 0,
+                    ordering_trusted INTEGER NOT NULL DEFAULT 0,
+                    is_fresh INTEGER NOT NULL DEFAULT 0
                 );
                 CREATE INDEX IF NOT EXISTS idx_broker_snapshot_import_order
                     ON broker_snapshot_imports(
@@ -410,12 +413,57 @@ class LiveRecorder:
                     "ALTER TABLE signal_orders ADD COLUMN max_quantity "
                     "INTEGER NOT NULL DEFAULT 0"
                 )
+            snapshot_import_cols = {
+                r["name"] for r in conn.execute(
+                    "PRAGMA table_info(broker_snapshot_imports)"
+                )
+            }
+            if "lifecycle_evidence" not in snapshot_import_cols:
+                conn.execute(
+                    "ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                    "lifecycle_evidence INTEGER NOT NULL DEFAULT 0"
+                )
+            if "ordering_trusted" not in snapshot_import_cols:
+                conn.execute(
+                    "ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                    "ordering_trusted INTEGER NOT NULL DEFAULT 0"
+                )
+            if "is_fresh" not in snapshot_import_cols:
+                conn.execute(
+                    "ALTER TABLE broker_snapshot_imports ADD COLUMN "
+                    "is_fresh INTEGER NOT NULL DEFAULT 0"
+                )
+            # Repeat this classification on every startup so an interrupted
+            # three-column DDL upgrade can resume. Successful legacy rows are
+            # normalized with a ``legacy:`` prefix below and cannot be
+            # mistaken for Round-1 fresh-import timestamps on the next run.
+            candidates = conn.execute(
+                """SELECT batch_id, imported_at
+                     FROM broker_snapshot_imports
+                    WHERE is_fresh=0 AND ordering_trusted=0
+                      AND imported_at GLOB
+                          '????-??-??T??:??:??.???'"""
+            ).fetchall()
+            for candidate in candidates:
+                try:
+                    datetime.strptime(
+                        candidate["imported_at"],
+                        "%Y-%m-%dT%H:%M:%S.%f",
+                    )
+                except ValueError:
+                    continue
+                conn.execute(
+                    """UPDATE broker_snapshot_imports
+                          SET is_fresh=1, ordering_trusted=1
+                        WHERE batch_id=?""",
+                    (candidate["batch_id"],),
+                )
             self._backfill_broker_snapshot_imports(conn)
             self._migrate_composite_keys(conn)
 
     @staticmethod
     def _backfill_broker_snapshot_imports(conn) -> None:
-        """Give legacy snapshots a deterministic order before new imports."""
+        """Recover only chronology supported by legacy observation times."""
         sequence = conn.execute(
             "SELECT COALESCE(MAX(import_sequence), 0) AS value "
             "FROM broker_snapshot_imports"
@@ -429,16 +477,124 @@ class LiveRecorder:
                WHERE NOT EXISTS (
                    SELECT 1 FROM broker_snapshot_imports imports
                    WHERE imports.batch_id=snapshots.batch_id
-               )
-               ORDER BY trade_date, batch_id"""
+               )"""
         ).fetchall()
         for row in rows:
             sequence += 1
             conn.execute(
                 """INSERT INTO broker_snapshot_imports
-                   (batch_id, trade_date, import_sequence, imported_at)
-                   VALUES (?,?,?,datetime('now','localtime'))""",
+                   (batch_id, trade_date, import_sequence, imported_at,
+                    lifecycle_evidence, ordering_trusted, is_fresh)
+                   VALUES (?,?,?,'',0,0,0)""",
                 (row["batch_id"], row["trade_date"], sequence),
+            )
+
+        markers = conn.execute(
+            """SELECT i.batch_id, i.trade_date, i.import_sequence,
+                      i.imported_at, i.is_fresh,
+                      a.account_id, a.ts, a.created_at,
+                      b.account_id AS durable_account_id,
+                      b.account_environment
+                 FROM broker_snapshot_imports i
+                 LEFT JOIN broker_account_snapshot a
+                        ON a.batch_id=i.batch_id
+                 LEFT JOIN batches b ON b.batch_id=i.batch_id"""
+        ).fetchall()
+
+        legacy = []
+        fresh = []
+        for ordinal, row in enumerate(markers):
+            item = {
+                "row": row,
+                "ordinal": ordinal,
+                "timestamp": None,
+                "timestamp_text": "",
+                "ordering_trusted": False,
+            }
+            if row["is_fresh"]:
+                fresh.append(item)
+                continue
+            for value in (row["ts"], row["created_at"]):
+                if not isinstance(value, str) or not value.strip():
+                    continue
+                try:
+                    parsed = datetime.fromisoformat(
+                        value.strip().replace("Z", "+00:00")
+                    )
+                    timestamp = parsed.timestamp()
+                except (ValueError, OverflowError, OSError):
+                    continue
+                if parsed.date().isoformat() != row["trade_date"]:
+                    continue
+                item["timestamp"] = timestamp
+                item["timestamp_text"] = parsed.isoformat()
+                break
+            legacy.append(item)
+
+        counts = {}
+        for item in legacy:
+            timestamp = item["timestamp"]
+            if timestamp is not None:
+                key = (item["row"]["trade_date"], timestamp)
+                counts[key] = counts.get(key, 0) + 1
+        for item in legacy:
+            timestamp = item["timestamp"]
+            if timestamp is not None:
+                item["ordering_trusted"] = counts[
+                    (item["row"]["trade_date"], timestamp)
+                ] == 1
+
+        ordered_legacy = sorted(
+            legacy,
+            key=lambda item: (
+                item["row"]["trade_date"],
+                item["timestamp"] is None,
+                item["timestamp"] if item["timestamp"] is not None else 0,
+                item["row"]["import_sequence"],
+                item["ordinal"],
+            ),
+        )
+        ordered_fresh = sorted(
+            fresh, key=lambda item: item["row"]["import_sequence"],
+        )
+        if markers:
+            offset = max(abs(int(row["import_sequence"])) for row in markers) + 1
+            conn.execute(
+                "UPDATE broker_snapshot_imports "
+                "SET import_sequence=-(import_sequence + ?)",
+                (offset,),
+            )
+        for new_sequence, item in enumerate(
+            ordered_legacy + ordered_fresh, start=1,
+        ):
+            row = item["row"]
+            durable_account = str(row["durable_account_id"] or "")
+            stored_account = str(row["account_id"] or "")
+            lifecycle_evidence = int(
+                row["account_environment"] == "REAL"
+                and bool(durable_account)
+                and stored_account in {
+                    durable_account,
+                    _mask_account_id(durable_account),
+                }
+            )
+            imported_at = (
+                row["imported_at"]
+                if row["is_fresh"]
+                else f"legacy:{item['timestamp_text'] or 'ambiguous'}"
+            )
+            conn.execute(
+                """UPDATE broker_snapshot_imports
+                      SET import_sequence=?, imported_at=?,
+                          lifecycle_evidence=?, ordering_trusted=?
+                    WHERE batch_id=?""",
+                (
+                    new_sequence,
+                    imported_at,
+                    lifecycle_evidence,
+                    int(row["is_fresh"] or item["ordering_trusted"]),
+                    row["batch_id"],
+                ),
             )
 
     @staticmethod
@@ -1284,23 +1440,7 @@ class LiveRecorder:
                     getattr(fill, field) == row[field]
                     for field in receipt_fields
                 )
-                expected_qty = (
-                    int(fill.filled_qty)
-                    if fill.mode == "LIVE" and fill.status in _POSITION_STATUS
-                    else 0
-                )
-                expected_amount = expected_qty * float(fill.avg_price)
-                expected_fee = (
-                    order_total_fee(fill.side, expected_amount, self.fees)
-                    if expected_amount > 0 else 0.0
-                )
-                exact_economics = (
-                    int(row["applied_qty"]) == expected_qty
-                    and abs(float(row["applied_amount"]) - expected_amount)
-                    <= 1e-9
-                    and abs(float(row["applied_fee"]) - expected_fee) <= 1e-9
-                )
-                if exact_receipt and exact_economics:
+                if exact_receipt:
                     return
                 raise SchemaError("terminal probe fill is immutable")
             applied_qty = row["applied_qty"] if row else 0
@@ -1401,7 +1541,8 @@ class LiveRecorder:
         if fill is None:
             return
         snapshot = conn.execute(
-            "SELECT 1 FROM broker_snapshot_imports WHERE batch_id=?",
+            """SELECT 1 FROM broker_snapshot_imports
+                WHERE batch_id=? AND lifecycle_evidence=1""",
             (batch_id,),
         ).fetchone()
         if snapshot is None:
@@ -2170,13 +2311,26 @@ class LiveRecorder:
             ).fetchone()["value"]
             conn.execute(
                 """INSERT INTO broker_snapshot_imports
-                   (batch_id, trade_date, import_sequence, imported_at)
-                   VALUES (?,?,?,strftime('%Y-%m-%dT%H:%M:%f','now','localtime'))
+                   (batch_id, trade_date, import_sequence, imported_at,
+                    lifecycle_evidence, ordering_trusted, is_fresh)
+                   VALUES (?,?,?,strftime('%Y-%m-%dT%H:%M:%f','now','localtime'),
+                           ?,1,1)
                    ON CONFLICT(batch_id) DO UPDATE SET
                        trade_date=excluded.trade_date,
                        import_sequence=excluded.import_sequence,
-                       imported_at=excluded.imported_at""",
-                (batch_id, trade_date, sequence),
+                       imported_at=excluded.imported_at,
+                       lifecycle_evidence=excluded.lifecycle_evidence,
+                       ordering_trusted=1,
+                       is_fresh=1""",
+                (
+                    batch_id,
+                    trade_date,
+                    sequence,
+                    int(
+                        normalized_account is not None
+                        and batch["account_environment"] == "REAL"
+                    ),
+                ),
             )
             self._refresh_operator_probe_lifecycle_conn(conn)
 
@@ -2194,13 +2348,37 @@ class LiveRecorder:
 
     @staticmethod
     def _latest_broker_snapshot_batch_id(conn, trade_date: str):
+        columns = {
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(broker_snapshot_imports)"
+            ).fetchall()
+        }
+        if not {"is_fresh", "ordering_trusted"}.issubset(columns):
+            raise SchemaError(
+                "broker snapshot metadata requires writable migration"
+            )
         row = conn.execute(
             """SELECT batch_id FROM broker_snapshot_imports
-                WHERE trade_date=?
-                ORDER BY import_sequence DESC, batch_id DESC LIMIT 1""",
+                WHERE trade_date=? AND is_fresh=1 AND ordering_trusted=1
+                ORDER BY import_sequence DESC LIMIT 1""",
             (trade_date,),
         ).fetchone()
-        return row["batch_id"] if row else None
+        if row is not None:
+            return row["batch_id"]
+        ambiguous = conn.execute(
+            """SELECT 1 FROM broker_snapshot_imports
+                WHERE trade_date=? AND ordering_trusted=0 LIMIT 1""",
+            (trade_date,),
+        ).fetchone()
+        if ambiguous is not None:
+            return None
+        row = conn.execute(
+            """SELECT batch_id FROM broker_snapshot_imports
+                WHERE trade_date=? AND ordering_trusted=1
+                ORDER BY import_sequence DESC LIMIT 1""",
+            (trade_date,),
+        ).fetchone()
+        return row["batch_id"] if row is not None else None
 
     def get_broker_positions(self, trade_date: str) -> dict:
         """当日最新批次的券商持仓 {stock_code: shares}；无快照则空 dict。"""

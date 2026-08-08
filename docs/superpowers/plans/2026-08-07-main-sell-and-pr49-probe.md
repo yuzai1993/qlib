@@ -595,6 +595,46 @@ Expected: boundary/wrapper tests PASS.
 
 ---
 
+### Task 9A: Audited same-day snapshot bootstrap
+
+**Files:**
+- Modify: `live_trading/modules/fill_importer.py`
+- Modify: `live_trading/modules/operator_probe.py`
+- Modify: `live_trading/qmt_strategy/qmt_signal_bridge.py`
+- Create: `live_trading/scripts/request_account_snapshot.py`
+- Modify: `live_trading/run_probe_import.sh`
+- Modify: `live_trading/README.md`
+- Modify: `live_trading/qmt_strategy/README_QMT.md`
+- Modify: `live_trading/qmt_strategy/PR49_PROBE_CHECKLIST.md`
+- Test: relevant `tests/live_trading/` importer, operator, QMT, wrapper, and boundary suites
+
+**Interfaces:**
+- Produces an audited snapshot-only request and response with no orders and no authorization marker.
+- Uses a separate durable request record rather than fabricating a LIVE batch.
+- Lets the same-day matched REAL ACCOUNT snapshot satisfy operator pre-publication evidence.
+
+- [ ] **Step 1: Write failing request/import/QMT tests**
+
+Cover durable request creation, exact replay, malformed/tampered requests, profile/root/account binding, QMT restart idempotency, and proof that no `passorder` path is reachable.
+
+- [ ] **Step 2: Implement snapshot-only request lifecycle**
+
+Use isolated request/processing/archive/response locations and an explicit schema/checksum. QMT must log request receipt, bound runtime configuration, account query, response persistence, and terminal status. It must never create or consume `LIVE_OK`/`PR49_LIVE_OK` and must never call `passorder` for this artifact type.
+
+- [ ] **Step 3: Import trusted same-day ACCOUNT evidence**
+
+Validate durable request ID, trade date, execution profile, bridge root, and masked/full REAL account identity. Positions-only or mismatched responses remain diagnostic and cannot authorize operator publication. Exact replay is a no-op; changed terminal evidence fails closed.
+
+- [ ] **Step 4: Wire the operator preflight and runbooks**
+
+Provide exact Mac request/import commands and Windows/QMT evidence checks. The snapshot request is read-only broker observation, not a trading authorization. Stop before any operator batch publication or marker creation.
+
+- [ ] **Step 5: Verify and commit**
+
+Run focused tests, the complete `tests/live_trading` suite, syntax/shell/diff checks, and an independent Critical/Important review. Do not create a REAL runtime request during development.
+
+---
+
 ### Task 10: Full verification and deployment handoff
 
 **Files:**
@@ -628,37 +668,68 @@ Expected: main parity passes; probe is excluded because it cannot generate model
 
 ~~~bash
 /opt/anaconda3/envs/qlib/bin/python -m py_compile \
-  live_trading/modules/execution_profile.py live_trading/modules/operator_probe.py \
-  live_trading/modules/execution_state.py live_trading/scripts/run_operator_probe.py \
-  live_trading/scripts/set_execution_state.py
+  live_trading/modules/execution_profile.py live_trading/modules/execution_state.py \
+  live_trading/modules/fill_importer.py live_trading/modules/live_config.py \
+  live_trading/modules/operator_probe.py live_trading/modules/order_planner.py \
+  live_trading/modules/pipeline_monitor.py live_trading/modules/signal_publisher.py \
+  live_trading/modules/signal_schema.py \
+  live_trading/scripts/request_account_snapshot.py \
+  live_trading/scripts/run_import_fills.py live_trading/scripts/run_monitor.py \
+  live_trading/scripts/run_operator_probe.py \
+  live_trading/scripts/run_publish_signals.py \
+  live_trading/scripts/set_execution_state.py live_trading/web/api.py
+/opt/anaconda3/envs/qlib/bin/python -c \
+  "import ast,pathlib; p=pathlib.Path('live_trading/qmt_strategy/qmt_signal_bridge.py'); ast.parse(p.read_text(encoding='gbk'), filename=str(p), feature_version=(3,6))"
 bash -n live_trading/run_publish_cron.sh live_trading/run_probe_import.sh
-git diff --check 1aa10d56..HEAD
+git diff --check 67373cd7..HEAD
 ~~~
 
-Expected: every command exits 0.
+Expected: every command exits 0, including the QMT source under Python 3.6 grammar.
 
 - [ ] **Step 4: Audit safety invariants and working tree**
 
 ~~~bash
-rg -n "MAX_ORDER_QUANTITY = 100|prType=49|PR49_LIVE_OK_|QMT order not observed after passorder" \
+rg -n "MAX_ORDER_QUANTITY = 100|prType=49|PR49_LIVE_OK_|QMT order not observed after passorder|SNAPSHOT_ORDER_ADVANCE|SNAPSHOT_MAC_LIFECYCLE" \
   live_trading/qmt_strategy/qmt_signal_bridge.py \
   live_trading/qmt_strategy/PR49_PROBE_CHECKLIST.md
-find /Volumes/qmt_bridge/state /Volumes/qmt_bridge/pr49_probe/state \
-  -maxdepth 1 -type f \( -name 'LIVE_OK_*' -o -name 'PR49_LIVE_OK_*' \) -print 2>/dev/null
+git ls-files | rg '(^|/)(LIVE_OK_|PR49_LIVE_OK_|signal_.*\.jsonl|fills_.*\.(jsonl|done)|account_.*\.(jsonl|done)|(?:request|response)_.*\.(json|done)|SNAPSHOT_(?:ORDER_ADVANCE|MAC_LIFECYCLE)\.lock|OPERATOR_AUTHORIZATION\.lock|.*\.db(?:-.*)?)$' || true
+find . -path './.git' -prune -o -path './.superpowers' -prune -o -type f \
+  \( -name 'LIVE_OK_*' -o -name 'PR49_LIVE_OK_*' -o -name 'signal_*.jsonl' \
+     -o -name 'fills_*.jsonl' -o -name 'fills_*.done' \
+     -o -name 'account_*.jsonl' -o -name 'account_*.done' \
+     -o -name 'request_*.json' -o -name 'request_*.done' \
+     -o -name 'response_*.json' -o -name 'response_*.done' \
+     -o -name 'SNAPSHOT_ORDER_ADVANCE.lock' \
+     -o -name 'SNAPSHOT_MAC_LIFECYCLE.lock' \
+     -o -name 'OPERATOR_AUTHORIZATION.lock' -o -name '*.db' \
+     -o -name '*.db-wal' -o -name '*.db-shm' \) -print
+/opt/anaconda3/envs/qlib/bin/python -m pytest \
+  tests/live_trading/test_repository_boundaries.py -q
 git status --short
 ~~~
 
-Expected: invariants are present, implementation created no future marker, and only unrelated pre-existing files remain unstaged.
+Expected: invariants are present; tracked/runtime-artifact searches print nothing; the
+boundary audit passes; and the isolated worktree is clean. Do not inspect or mutate the mounted
+QMT share during repository verification.
 
 - [ ] **Step 5: Review commits without runtime changes**
 
 ~~~bash
-git log --oneline -10
-git diff --stat 1aa10d56..HEAD
+git log --oneline --reverse 67373cd7..HEAD
+git diff --stat 67373cd7..HEAD
+git diff --name-only 67373cd7..HEAD | rg -i 'tushare|data_collector' || true
+git -C /Users/yuxianqi/Project/qlib status --short
 ~~~
 
-Expected: focused commits and no unrelated Tushare optimization files.
+Expected: the isolated branch contains focused live-trading commits and no Tushare/data-collector
+files. The final read-only command may show the user's pre-existing Tushare and overlapping
+primary-checkout edits; those files must remain unmodified, unstaged, and outside this branch.
 
 - [ ] **Step 6: Hand off Windows deployment**
 
-Report tests and commits. Instruct the user to compile the updated bridge twice: keep main on close auction and configure the second instance for fixed-price probe/root. Verify startup logs, then stop before selecting stock/date, publishing REAL files, or creating either authorization marker.
+Report tests and commits. Instruct the user to complete the documented bidirectional Windows
+QMT <-> macOS SMB `O_CREAT|O_EXCL` lock acceptance and PowerShell parser/runtime check first.
+Then compile the updated bridge twice: keep main on close auction and configure the second
+instance for fixed-price probe/root. Verify account binding, roots, timers, safety cap, startup
+logs, and all snapshot-request directories. Stop before creating a REAL snapshot request,
+selecting a stock/date, publishing a REAL order batch, or creating either authorization marker.

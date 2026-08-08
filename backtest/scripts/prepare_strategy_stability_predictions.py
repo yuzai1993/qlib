@@ -75,12 +75,16 @@ def compose_prediction(
         test_entry.get("pool"),
         test_entry.get("segment"),
     )
+    valid_model = (valid_entry.get("model_path"), valid_entry.get("model_sha256"))
+    test_model = (test_entry.get("model_path"), test_entry.get("model_sha256"))
     if (
         valid_identity[0] != test_identity[0]
         or valid_identity[1] != test_identity[1]
         or valid_identity[1] != "csi1000"
         or valid_identity[2] != "valid"
         or test_identity[2] != "test"
+        or not all(valid_model)
+        or valid_model != test_model
     ):
         raise ValueError("prediction source identity mismatch")
     valid = _load_frame(Path(valid_path))
@@ -103,6 +107,8 @@ def compose_prediction(
         raise ValueError("composed prediction has missing or duplicated trading dates")
     audit = {
         "model_ref": valid_identity[0],
+        "model_path": valid_model[0],
+        "model_sha256": valid_model[1],
         "pool": "csi1000",
         "segment": "full",
         "sources": [

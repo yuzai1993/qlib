@@ -1,0 +1,4358 @@
+{
+  "schema_version": 2,
+  "exp_id": "strategy-neighborhood/b3-s-local-full-v1",
+  "direction": "strategy-neighborhood-b3-s-full",
+  "phase": "S",
+  "evaluation_mode": "full_history_in_sample",
+  "baseline_ref": "B3-S v1.0",
+  "frozen_model_ref": "B6 v1.0",
+  "model_ref": "b6-m",
+  "account": 10000000.0,
+  "fees": {
+    "freq": "day",
+    "deal_price": "close",
+    "limit_threshold": 0.095,
+    "open_cost": 0.00021,
+    "close_cost": 0.00071,
+    "min_cost": 5.0,
+    "trade_unit": 100
+  },
+  "benchmark": "SH000852",
+  "base_config": "backtest/configs/baseline-strategy/b3-s/topk-t20-d2-h10_csi1000_full.yaml",
+  "base_config_sha256": "3918d833097235ed5a5b550df2c9e0eae3b344ef86fd97389bfd9518964b7214",
+  "selection_pool": "csi1000",
+  "selection_segment": [
+    "2020-01-13",
+    "2026-07-31"
+  ],
+  "strategy_grid": [
+    {
+      "candidate_id": "topk-t16-d1-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d1-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d1-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d1-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d2-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d2-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d2-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d3-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d3-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d3-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t16-d4-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t16-d4-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t16-d4-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 16,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d1-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d1-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d1-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d2-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d2-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d2-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d3-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d3-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d3-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t18-d4-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t18-d4-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t18-d4-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 18,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d1-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d1-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d1-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d2-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d2-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d2-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d3-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d3-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d3-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t20-d4-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t20-d4-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t20-d4-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 20,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d1-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d1-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d1-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d2-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d2-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d2-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d3-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d3-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d3-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t22-d4-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t22-d4-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t22-d4-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 22,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d1-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d1-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d1-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 1,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d2-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d2-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d2-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 2,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d3-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d3-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d3-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 3,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h2-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h2-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h2-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 2,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h4-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h4-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h4-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 4,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h6-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h6-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h6-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 6,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h8-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h8-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h8-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 8,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h10-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h10-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h10-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 10,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h12-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h12-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h12-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 12,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h14-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h14-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h14-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 14,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h16-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h16-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h16-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 16,
+      "risk_degree": 1.0
+    },
+    {
+      "candidate_id": "topk-t24-d4-h18-r090",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.9
+    },
+    {
+      "candidate_id": "topk-t24-d4-h18-r095",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 0.95
+    },
+    {
+      "candidate_id": "topk-t24-d4-h18-r100",
+      "strategy_class": "TopkDropoutStrategy",
+      "topk": 24,
+      "n_drop": 4,
+      "hold_thresh": 18,
+      "risk_degree": 1.0
+    }
+  ],
+  "selection_rule": [
+    "axial_neighbor_ir_p25 desc",
+    "own_ir desc",
+    "annualized_return desc",
+    "max_drawdown desc",
+    "annualized_one_way_turnover asc",
+    "candidate_id asc"
+  ]
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import subprocess
@@ -20,9 +21,11 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from config_loader import RESULT_ROOT, load_config  # noqa: E402
 from eval_protocol import yearly_ir  # noqa: E402
+import phase_s_prediction_validation as full_prediction_validation  # noqa: E402
 from phase_s_protocol import (  # noqa: E402
     ACCOUNT,
     BASELINE_CANDIDATE_ID,
+    CURRENT_STRATEGY_BASELINE_ID,
     EXCHANGE_KWARGS,
     FULL_SEGMENT,
     MODEL_REFS,
@@ -30,6 +33,7 @@ from phase_s_protocol import (  # noqa: E402
     RISK_DEGREE,
     TEST_SEGMENT,
     VALID_SEGMENT,
+    select_strategy_winner,
     select_valid_winner,
     sha256_file,
     strategy_grid,
@@ -39,6 +43,28 @@ from report_utils import make_session_dir  # noqa: E402
 IR_KEY = "excess_with_cost_information_ratio"
 ANN_KEY = "excess_with_cost_annualized_return"
 MDD_KEY = "excess_with_cost_max_drawdown"
+FULL_EVALUATION_MODE = "full_history_in_sample"
+FULL_SELECTION_MODEL_REF = "b6-m"
+FULL_SELECTION_POOL = "csi1000"
+DEFAULT_FULL_PREDICTION_MANIFEST = (
+    full_prediction_validation.DEFAULT_FULL_PREDICTION_MANIFEST
+)
+FULL_PREDICTION_COVERAGE = copy.deepcopy(
+    full_prediction_validation.FULL_PREDICTION_COVERAGE
+)
+HISTORICAL_EVALUATION_MODE = "historical_audit"
+
+
+def _validate_full_selection_scope(model_ref: str, pool: str) -> None:
+    if (model_ref, pool) != (FULL_SELECTION_MODEL_REF, FULL_SELECTION_POOL):
+        raise ValueError("full Phase S selection requires B6-M / CSI1000")
+
+
+def _comparison_baseline_id(model_ref: str, segment: str) -> str:
+    """Keep B1 valid/test outputs reproducible while B6 research uses B2-S."""
+    if model_ref == "b1-m" and segment in {"valid", "test"}:
+        return BASELINE_CANDIDATE_ID
+    return CURRENT_STRATEGY_BASELINE_ID
 
 
 def classify_strategy_outcome(row: dict[str, Any]) -> None:
@@ -70,7 +96,23 @@ def verify_prediction_contract(
     pool: str,
     segment: str,
 ) -> dict[str, Any]:
+    if segment == "full":
+        _validate_full_selection_scope(model_ref, pool)
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    if segment == "full":
+        entry, _coverage = full_prediction_validation.validate_full_prediction_manifest(
+            manifest,
+            manifest_path,
+            repo_root=REPO_ROOT,
+            authoritative_manifest_path=DEFAULT_FULL_PREDICTION_MANIFEST,
+            expected_coverage=FULL_PREDICTION_COVERAGE,
+        )
+        if (
+            full_prediction_validation.prediction_path(entry, REPO_ROOT)
+            != pred_path.resolve()
+        ):
+            raise ValueError("prediction path differs from frozen manifest")
+        return entry
     matches = [
         entry
         for entry in manifest.get("predictions") or []
@@ -107,10 +149,13 @@ def build_sweep_config(
     *,
     pool: str,
     segment: str,
+    account: float = ACCOUNT,
 ) -> dict[str, Any]:
     """Build one exact pred-only config from the frozen protocol."""
     if pool not in POOL_BENCHMARKS:
         raise ValueError(f"unsupported Phase S pool: {pool}")
+    if not isinstance(account, (int, float)) or not math.isfinite(float(account)) or float(account) <= 0:
+        raise ValueError("account must be a positive finite number")
     start, end = _segment_bounds(segment)
     config = copy.deepcopy(base)
     config.pop("_config_path", None)
@@ -131,7 +176,7 @@ def build_sweep_config(
     config["segments"]["valid"] = list(VALID_SEGMENT)
     config["segments"]["test"] = [start, end]
     config["backtest"] = {
-        "account": ACCOUNT,
+        "account": float(account),
         "exchange_kwargs": copy.deepcopy(EXCHANGE_KWARGS),
     }
     if candidate["strategy_class"] == "TopkDropoutStrategy":
@@ -142,7 +187,7 @@ def build_sweep_config(
             "n_drop": candidate["n_drop"],
             "hold_thresh": candidate["hold_thresh"],
             "kwargs": {
-                "risk_degree": RISK_DEGREE,
+                "risk_degree": candidate.get("risk_degree", RISK_DEGREE),
                 "only_tradable": False,
                 "forbid_all_trade_at_limit": False,
             },
@@ -160,6 +205,112 @@ def build_sweep_config(
     else:
         raise ValueError(f"unsupported strategy class: {candidate['strategy_class']}")
     return config
+
+
+def effective_config_sha256(
+    base: dict[str, Any],
+    candidate: dict[str, Any],
+    *,
+    pool: str,
+    segment: str,
+    account: float = ACCOUNT,
+) -> str:
+    rendered = yaml.safe_dump(
+        build_sweep_config(
+            base, candidate, pool=pool, segment=segment, account=account
+        ),
+        allow_unicode=True,
+        sort_keys=False,
+    ).encode("utf-8")
+    return hashlib.sha256(rendered).hexdigest()
+
+
+def _evaluation_mode(segment: str) -> str:
+    return FULL_EVALUATION_MODE if segment == "full" else HISTORICAL_EVALUATION_MODE
+
+
+def build_run_identity(
+    base: dict[str, Any],
+    prediction_entry: dict[str, Any],
+    pred_path: Path,
+    *,
+    model_ref: str,
+    pool: str,
+    segment: str,
+    requested_candidate_ids: Sequence[str],
+) -> dict[str, Any]:
+    base_path = Path(str(base.get("_config_path") or "")).expanduser().resolve()
+    if not base_path.is_file():
+        raise ValueError("base config path is missing from the loaded config")
+    return {
+        "model_ref": model_ref,
+        "pool": pool,
+        "segment": segment,
+        "evaluation_mode": _evaluation_mode(segment),
+        "source_pred": str(Path(pred_path).expanduser().resolve()),
+        "source_pred_sha256": prediction_entry["prediction_sha256"],
+        "base_config": str(base_path),
+        "base_config_sha256": sha256_file(base_path),
+        "requested_candidate_ids": list(requested_candidate_ids),
+    }
+
+
+def validate_resume_summary(
+    payload: dict[str, Any],
+    run_identity: dict[str, Any],
+    candidates: Sequence[dict[str, Any]],
+    *,
+    base: dict[str, Any],
+    pool: str,
+    segment: str,
+) -> None:
+    """Allow reuse only when the run and every candidate config are identical."""
+    identity_labels = {
+        "model_ref": "model_ref",
+        "pool": "pool",
+        "segment": "segment",
+        "evaluation_mode": "evaluation_mode",
+        "source_pred": "prediction path",
+        "source_pred_sha256": "prediction SHA",
+        "base_config": "base config path",
+        "base_config_sha256": "base config SHA",
+        "requested_candidate_ids": "requested candidate set",
+    }
+    for key, label in identity_labels.items():
+        if payload.get(key) != run_identity.get(key):
+            raise ValueError(f"resume summary {label} does not match")
+
+    by_id = {str(candidate["candidate_id"]): candidate for candidate in candidates}
+    rows = payload.get("all_rows")
+    if not isinstance(rows, list):
+        raise ValueError("resume summary all_rows must be a list")
+    actual_candidate_ids = [str(row.get("candidate_id") or "") for row in rows]
+    if actual_candidate_ids != run_identity["requested_candidate_ids"]:
+        raise ValueError("resume summary requested candidate set does not match rows")
+    seen: set[str] = set()
+    for row in rows:
+        candidate_id = str(row.get("candidate_id") or "")
+        if not candidate_id or candidate_id in seen:
+            raise ValueError("resume summary candidate IDs must be unique")
+        seen.add(candidate_id)
+        candidate = by_id.get(candidate_id)
+        if candidate is None:
+            raise ValueError(f"resume summary candidate is not in current grid: {candidate_id}")
+        if any(row.get(key) != value for key, value in candidate.items()):
+            raise ValueError(
+                f"resume summary candidate identity does not match: {candidate_id}"
+            )
+        if row.get("source_pred_sha256") != run_identity["source_pred_sha256"]:
+            raise ValueError(
+                f"resume summary candidate prediction SHA does not match: {candidate_id}"
+            )
+        expected_config_sha = effective_config_sha256(
+            base, candidate, pool=pool, segment=segment
+        )
+        if row.get("effective_config_sha256") != expected_config_sha:
+            raise ValueError(
+                f"resume summary candidate effective config does not match: {candidate_id}"
+            )
 
 
 def build_backtest_command(
@@ -234,10 +385,18 @@ def write_comparison(
     model_ref: str,
     pool: str,
     segment: str,
+    run_identity: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
+    if segment == "full":
+        _validate_full_selection_scope(model_ref, pool)
+    baseline_id = _comparison_baseline_id(model_ref, segment)
     successful = [row for row in rows if row.get("status") == "success"]
     baseline = next(
-        (row for row in successful if row["candidate_id"] == BASELINE_CANDIDATE_ID),
+        (
+            row
+            for row in successful
+            if row["candidate_id"] == baseline_id
+        ),
         None,
     )
     if baseline is None:
@@ -257,7 +416,12 @@ def write_comparison(
         "ranked": ranked,
         "all_rows": rows,
     }
-    if segment == "valid":
+    if run_identity:
+        payload.update(copy.deepcopy(run_identity))
+    if segment == "full":
+        payload["evaluation_mode"] = FULL_EVALUATION_MODE
+        payload["winner"] = select_strategy_winner(rows)
+    elif segment == "valid":
         payload["winner"] = select_valid_winner(rows)
     (out_dir / "comparison.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -265,10 +429,17 @@ def write_comparison(
     lines = [
         f"# {model_ref} {pool} {segment} Phase S",
         "",
-        f"- 基线: `{BASELINE_CANDIDATE_ID}`",
+        f"- 基线: `{baseline_id}`",
     ]
+    if segment == "full":
+        lines.extend(
+            [
+                f"- evaluation_mode: `{FULL_EVALUATION_MODE}`",
+                "- 声明：本结果为全历史样本内比较，非样本外检验。",
+            ]
+        )
     if payload.get("winner"):
-        lines.append(f"- valid 胜者: `{payload['winner']['candidate_id']}`")
+        lines.append(f"- {segment} 胜者: `{payload['winner']['candidate_id']}`")
     lines.extend(
         [
             "",
@@ -302,7 +473,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--config", required=True)
     parser.add_argument("--model-ref", required=True, choices=MODEL_REFS)
     parser.add_argument("--pool", choices=tuple(POOL_BENCHMARKS), default="csi1000")
-    parser.add_argument("--segment", choices=("valid", "test"), default="valid")
+    parser.add_argument(
+        "--segment",
+        choices=("full", "valid", "test"),
+        default="full",
+        help="full is the active selection interval; valid/test are historical audit modes",
+    )
     parser.add_argument("--candidate-id", action="append")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--configs-dir", type=Path)
@@ -313,6 +489,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="retry failed rows from an existing comparison and preserve attempt history",
     )
     args = parser.parse_args(argv)
+    if args.segment == "full":
+        try:
+            _validate_full_selection_scope(args.model_ref, args.pool)
+        except ValueError as exc:
+            parser.error(str(exc))
     if args.segment == "test" and not args.candidate_id:
         parser.error("test requires frozen --candidate-id values")
     return args
@@ -333,22 +514,44 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     base = load_config(args.config)
     all_candidates = strategy_grid(args.model_ref)
     by_id = {row["candidate_id"]: row for row in all_candidates}
+    requested_candidate_ids = (
+        list(args.candidate_id)
+        if args.candidate_id is not None
+        else [row["candidate_id"] for row in all_candidates]
+    )
+    unknown = sorted(set(requested_candidate_ids) - set(by_id))
+    if unknown:
+        raise ValueError(f"unknown candidate IDs for {args.model_ref}: {unknown}")
+    if len(set(requested_candidate_ids)) != len(requested_candidate_ids):
+        raise ValueError("requested candidate IDs must be unique")
+    run_identity = build_run_identity(
+        base,
+        prediction_entry,
+        pred_path,
+        model_ref=args.model_ref,
+        pool=args.pool,
+        segment=args.segment,
+        requested_candidate_ids=requested_candidate_ids,
+    )
     existing_payload = None
     if args.resume_summary:
         existing_payload = json.loads(args.resume_summary.read_text(encoding="utf-8"))
-        if existing_payload.get("model_ref") != args.model_ref:
-            raise ValueError("resume summary model_ref does not match")
-    candidate_ids = args.candidate_id
-    if not candidate_ids and existing_payload is not None:
+        validate_resume_summary(
+            existing_payload,
+            run_identity,
+            all_candidates,
+            base=base,
+            pool=args.pool,
+            segment=args.segment,
+        )
+    if existing_payload is not None:
         candidate_ids = [
             row["candidate_id"]
             for row in existing_payload["all_rows"]
             if row.get("status") != "success"
         ]
-    candidate_ids = candidate_ids or [row["candidate_id"] for row in all_candidates]
-    unknown = sorted(set(candidate_ids) - set(by_id))
-    if unknown:
-        raise ValueError(f"unknown candidate IDs for {args.model_ref}: {unknown}")
+    else:
+        candidate_ids = requested_candidate_ids
     candidates = [by_id[candidate_id] for candidate_id in candidate_ids]
 
     out_dir = (
@@ -404,6 +607,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         row["source_pred_sha256"] = prediction_entry["prediction_sha256"]
         row["returncode"] = completed.returncode
         row["config"] = str(config_path)
+        row["effective_config_sha256"] = effective_config_sha256(
+            base, candidate, pool=args.pool, segment=args.segment
+        )
         try:
             result_dir = _parse_result_dir(completed.stdout)
             row["result_dir"] = str(result_dir)
@@ -430,6 +636,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         model_ref=args.model_ref,
         pool=args.pool,
         segment=args.segment,
+        run_identity=run_identity,
     )
     if args.summary_output:
         args.summary_output.parent.mkdir(parents=True, exist_ok=True)
@@ -439,7 +646,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         )
     print(f"结果目录: {out_dir}")
     if payload.get("winner"):
-        print(f"valid 胜者: {payload['winner']['candidate_id']}")
+        print(f"{args.segment} 胜者: {payload['winner']['candidate_id']}")
 
 
 if __name__ == "__main__":

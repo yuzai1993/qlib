@@ -102,3 +102,10 @@ def test_strategy_report_labels_non_finite_and_shows_retry_audit():
     assert "无效" in html
     assert "工程失败后重跑" in html
     assert ">nan<" not in html
+
+
+def test_legacy_strategy_report_cli_has_only_unified_output_target():
+    args = report.parse_args([])
+
+    assert not hasattr(args, "output")
+    assert report.UNIFIED_REPORT.name == "strategy_stability_report.html"

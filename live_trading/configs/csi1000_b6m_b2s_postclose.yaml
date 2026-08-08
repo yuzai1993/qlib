@@ -1,4 +1,4 @@
-# CSI1000 paper account: frozen B6-M + B2-S steady state + staged Top2 build.
+# CSI1000 paper account: frozen B6-M + B4-S steady state + staged Top2 build.
 # This config is simulation-only and intentionally starts with an empty portfolio.
 
 data:
@@ -15,8 +15,8 @@ account:
 
 provenance:
   repository: "/Users/yuxianqi/Project/qlib_exp"
-  strategy_baseline_config: "backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml"
-  strategy_baseline_sha256: "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+  strategy_baseline_config: "backtest/configs/baseline-strategy/b4-s/topk-t22-d2-h2_csi1000_full.yaml"
+  strategy_baseline_sha256: "73290d5981c955b6d2f860667e1c4ae9fa27f8c896cbf25783a2810b333df93a"
 
 model:
   experiment_name: "baseline/b6-m"
@@ -44,11 +44,11 @@ stock_names:
 
 strategy:
   class: "TopkDropoutStrategy"
-  topk: 30
+  topk: 22
   n_drop: 2
   initial_buy_count: 2
-  risk_degree: 0.95
-  hold_thresh: 20
+  risk_degree: 0.90
+  hold_thresh: 2
   only_tradable: false
   forbid_all_trade_at_limit: false
 

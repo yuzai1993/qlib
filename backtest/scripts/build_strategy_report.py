@@ -1,4 +1,4 @@
-"""Build the standalone Phase S strategy report from registry.jsonl."""
+"""Historical Phase S renderer with a CLI routed to the unified report."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from typing import Any, Optional, Sequence
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = ROOT / "backtest/experiments/registry.jsonl"
-DEFAULT_OUTPUT = ROOT / "backtest/experiments/strategy_report.html"
+UNIFIED_REPORT = ROOT / "backtest/experiments/strategy_stability_report.html"
 BASELINE_ID = "topk-t10-d2-h1"
 
 
@@ -181,18 +181,24 @@ th {{ background: #edf2f7; }} .valid-winner {{ background: #dcfce7; font-weight:
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build standalone Phase S strategy HTML")
+    parser = argparse.ArgumentParser(
+        description="Compatibility entry point for the unified Phase S report"
+    )
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
+    from build_strategy_stability_report import build_html as build_unified_html
+
+    UNIFIED_REPORT.parent.mkdir(parents=True, exist_ok=True)
     rows = load_registry(args.registry)
-    args.output.write_text(build_html(rows), encoding="utf-8")
-    print(f"{sum(row.get('phase') == 'S' for row in rows)} Phase S rows -> {args.output}")
+    UNIFIED_REPORT.write_text(build_unified_html(rows), encoding="utf-8")
+    print(
+        f"{sum(row.get('phase') == 'S' for row in rows)} Phase S rows -> "
+        f"{UNIFIED_REPORT}"
+    )
 
 
 if __name__ == "__main__":

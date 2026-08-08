@@ -7,6 +7,8 @@
   "predictions": [
     {
       "model_ref": "b6-m",
+      "model_path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
       "pool": "csi1000",
       "segment": "full",
       "sources": [

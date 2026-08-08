@@ -1,6 +1,6 @@
 run:
   mode: pred_backtest
-  note: strategy_stability_topk-t30-d2-h20
+  note: baseline_b4s_topk-t22-d2-h2
   n_runs: 1
   generate_figures: true
 data:
@@ -81,15 +81,15 @@ model:
 strategy:
   class: TopkDropoutStrategy
   module_path: qlib.contrib.strategy.signal_strategy
-  topk: 30
+  topk: 22
   n_drop: 2
-  hold_thresh: 20
+  hold_thresh: 2
   kwargs:
-    risk_degree: 0.95
+    risk_degree: 0.9
     only_tradable: false
     forbid_all_trade_at_limit: false
 backtest:
-  account: 500000
+  account: 10000000
   exchange_kwargs:
     freq: day
     deal_price: close
@@ -104,7 +104,7 @@ dataset:
   kwargs:
     label_horizon: 40
 phase_s:
-  candidate_id: topk-t30-d2-h20
+  candidate_id: topk-t22-d2-h2
   selection_segment: full
   pool: csi1000
-  diagnostic: full_period_stability
+  diagnostic: baseline_anchor

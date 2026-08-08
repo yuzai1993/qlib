@@ -47,12 +47,12 @@ model:
 strategy:
   class: "TopkDropoutStrategy"
   module_path: "qlib.contrib.strategy.signal_strategy"
-  topk: 30
+  topk: 22
   n_drop: 2
   kwargs:
     initial_buy_count: 2
-    risk_degree: 0.95
-    hold_thresh: 20
+    risk_degree: 0.90
+    hold_thresh: 2
     only_tradable: false
     forbid_all_trade_at_limit: false
 

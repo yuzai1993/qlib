@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-08T20:58:49",
+  "purpose": "diagnostic_extended_history",
+  "evaluation_mode": "extended_history_in_sample",
+  "model_ref": "b6-m",
+  "model_path": "/Users/yuxianqi/Project/qlib_exp/backtest/models/baselines/b6-m/seed4000/trained_model",
+  "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+  "pool": "csi1000",
+  "segment": [
+    "2015-11-30",
+    "2026-07-31"
+  ],
+  "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy-extended-history/20260808_b4s_preds/csi1000_from_20151130.pkl",
+  "prediction_sha256": "b318c38373443f11a0638091b866e57f09233769262f6614e6742ed62e4c5f5a",
+  "coverage": {
+    "start": "2015-11-30",
+    "end": "2026-07-31",
+    "n_dates": 2593,
+    "n_rows": 2589446,
+    "index_sha256": "70479f79af1fd69d9bb9545f53ce32c8850fb1a70d69cf2b885282373cf8c714"
+  }
+}

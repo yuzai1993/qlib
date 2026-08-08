@@ -143,6 +143,25 @@ def extract_metrics(analysis_df: pd.DataFrame, report_normal_df: pd.DataFrame) -
     except Exception:
         pass
 
+    # CAPM alpha / beta on after-cost portfolio returns vs benchmark (rf=0).
+    try:
+        frame = report_normal_df[["return", "cost", "bench"]].dropna()
+        if len(frame) > 1:
+            net = frame["return"].astype(float) - frame["cost"].astype(float)
+            bench_ret = frame["bench"].astype(float)
+            bench_var = float(bench_ret.var(ddof=1))
+            if bench_var > 0.0:
+                beta = float(net.cov(bench_ret) / bench_var)
+                alpha = float((net.mean() - beta * bench_ret.mean()) * 250.0)
+                metrics["beta"] = beta
+                metrics["alpha"] = alpha
+                metrics["benchmark_annualized_return"] = float(bench_ret.mean() * 250.0)
+                metrics["benchmark_cumulative_return"] = float(
+                    (1.0 + bench_ret).prod() - 1.0
+                )
+    except Exception:
+        pass
+
     return metrics
 
 

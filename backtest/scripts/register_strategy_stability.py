@@ -30,6 +30,9 @@ DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 METRICS = (
     "annualized_return",
     "sharpe_ratio",
+    "alpha",
+    "beta",
+    "benchmark_cumulative_return",
     "calmar_ratio",
     "annualized_volatility",
     "max_drawdown",
@@ -75,12 +78,21 @@ def _full_prediction(manifest: dict, model_ref: str) -> dict:
 
 
 def build_preregistered_row(
-    frozen: FrozenModel, prediction_manifest: dict, *, protocol_path: str
+    frozen: FrozenModel,
+    prediction_manifest: dict,
+    *,
+    protocol_path: str,
+    account: float = ACCOUNT,
+    exp_id_suffix: str = "",
 ) -> dict[str, Any]:
     model_ref = frozen.model_ref
     prediction = _full_prediction(prediction_manifest, model_ref)
+    if not isinstance(account, (int, float)) or not math.isfinite(float(account)) or float(account) <= 0:
+        raise ValueError("account must be a positive finite number")
+    suffix = str(exp_id_suffix or "")
+    exp_id = f"strategy-stability-full-period/{model_ref}{suffix}"
     return {
-        "exp_id": f"strategy-stability-full-period/{model_ref}",
+        "exp_id": exp_id,
         "direction": "strategy-stability-full-period",
         "phase": "S",
         "date": str(date.today()),
@@ -102,14 +114,16 @@ def build_preregistered_row(
         "strategy_grid": strategy_grid(model_ref),
         "metric_basis": "after_cost_absolute_return",
         "metrics": list(METRICS),
-        "account": ACCOUNT,
+        "account": float(account),
         "risk_degree": RISK_DEGREE,
         "fees": dict(EXCHANGE_KWARGS),
         "data_version": prediction_manifest.get("data_version"),
         "prediction_artifacts": [prediction],
         "result_dirs": [],
         "cleanup_retention_eligible": False,
-        "note": "全周期回看诊断；不产生胜者，不改变实盘配置。",
+        "note": (
+            f"全周期回看诊断（account={int(account)}）；不产生胜者，不改变实盘配置。"
+        ),
     }
 
 
@@ -136,6 +150,8 @@ def bind_results(
     identity = (payload.get("model_ref"), payload.get("pool"), payload.get("segment"))
     if identity != (row.get("model_ref"), "csi1000", "full") or payload.get("period") != list(FULL_SEGMENT):
         raise ValueError("diagnostic result identity mismatch")
+    if payload.get("account") is not None and float(payload["account"]) != float(row.get("account")):
+        raise ValueError("diagnostic result account differs from preregistration")
     results = payload.get("all_rows") or []
     expected = [item["candidate_id"] for item in row["strategy_grid"]]
     actual = [item.get("candidate_id") for item in results]
@@ -226,7 +242,9 @@ def upsert_diagnostic_row(
     temporary.replace(registry)
 
 
-def write_protocol(path: Path) -> None:
+def write_protocol(path: Path, *, account: float = ACCOUNT) -> None:
+    if not isinstance(account, (int, float)) or not math.isfinite(float(account)) or float(account) <= 0:
+        raise ValueError("account must be a positive finite number")
     payload = {
         "schema_version": 1,
         "date": str(date.today()),
@@ -244,7 +262,7 @@ def write_protocol(path: Path) -> None:
         "metric_basis": "after_cost_absolute_return",
         "metrics": list(METRICS),
         "sharpe_risk_free_rate": 0.0,
-        "account": ACCOUNT,
+        "account": float(account),
         "risk_degree": RISK_DEGREE,
         "fees": dict(EXCHANGE_KWARGS),
         "selection": None,
@@ -259,28 +277,38 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     sub = parser.add_subparsers(dest="command", required=True)
     protocol = sub.add_parser("protocol")
     protocol.add_argument("--output", type=Path, required=True)
+    protocol.add_argument("--account", type=float, default=ACCOUNT)
     pre = sub.add_parser("preregister")
     pre.add_argument("--model-ref", choices=MODEL_REFS, required=True)
     pre.add_argument("--prediction-manifest", type=Path, required=True)
     pre.add_argument("--protocol-path", required=True)
+    pre.add_argument("--account", type=float, default=ACCOUNT)
+    pre.add_argument("--exp-id-suffix", default="")
     final = sub.add_parser("finalize")
     final.add_argument("--model-ref", choices=MODEL_REFS, required=True)
     final.add_argument("--result", type=Path, required=True)
     final.add_argument("--repair-reason")
+    final.add_argument("--exp-id-suffix", default="")
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
     if args.command == "protocol":
-        write_protocol(args.output)
+        write_protocol(args.output, account=args.account)
         print(args.output)
         return
-    exp_id = f"strategy-stability-full-period/{args.model_ref}"
+    exp_id = f"strategy-stability-full-period/{args.model_ref}{args.exp_id_suffix}"
     if args.command == "preregister":
         frozen = load_frozen_model(REPO_ROOT, args.model_ref)
         manifest = json.loads(args.prediction_manifest.read_text(encoding="utf-8"))
-        row = build_preregistered_row(frozen, manifest, protocol_path=args.protocol_path)
+        row = build_preregistered_row(
+            frozen,
+            manifest,
+            protocol_path=args.protocol_path,
+            account=args.account,
+            exp_id_suffix=args.exp_id_suffix,
+        )
         previous = None
     else:
         row = next((item for item in load_registry(args.registry) if item.get("exp_id") == exp_id), None)

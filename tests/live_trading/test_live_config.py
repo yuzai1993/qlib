@@ -337,11 +337,11 @@ def test_load_new_csi1000_paper_config():
     assert cfg["handler"]["feature_groups"] == ["range"]
     assert cfg["strategy"] == {
         "class": "TopkDropoutStrategy",
-        "topk": 30,
+        "topk": 20,
         "n_drop": 2,
         "initial_buy_count": 2,
         "risk_degree": 0.95,
-        "hold_thresh": 20,
+        "hold_thresh": 10,
         "only_tradable": False,
         "forbid_all_trade_at_limit": False,
     }
@@ -357,10 +357,10 @@ def test_load_new_csi1000_paper_config():
         "csi1000_b6m_b2s_postclose.db"
     )
     assert cfg["provenance"]["strategy_baseline_config"].endswith(
-        "strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml"
+        "baseline-strategy/b3-s/topk-t20-d2-h10_csi1000_full.yaml"
     )
     assert cfg["provenance"]["strategy_baseline_sha256"] == (
-        "1f580ac881aa9682e8f5f353683b970031622765c6cd565602f3dcb76e01183f"
+        "3918d833097235ed5a5b550df2c9e0eae3b344ef86fd97389bfd9518964b7214"
     )
 
 
@@ -377,6 +377,8 @@ def test_load_csi1000_real_config_is_isolated_and_live_only():
     assert cfg["live"]["broker_environment"] == "REAL"
     assert cfg["live"]["allow_real_money"] is True
     assert cfg["live"]["default_mode"] == "LIVE"
+    assert cfg["strategy"]["topk"] == 20
+    assert cfg["strategy"]["hold_thresh"] == 10
     assert cfg["strategy"]["risk_degree"] == pytest.approx(0.93)
     assert cfg["live"]["execution_session"] == "CLOSE_AUCTION"
     assert cfg["live"]["close_auction_price_type"] == 11

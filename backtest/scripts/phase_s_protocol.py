@@ -12,17 +12,19 @@ from typing import Any, Sequence
 MODEL_REFS = ("b1-m", "b6-m")
 CURRENT_MODEL_REFS = ("b6-m",)
 BASELINE_CANDIDATE_ID = "topk-t10-d2-h1"
-CURRENT_STRATEGY_BASELINE_ID = "topk-t30-d2-h20"
+CURRENT_STRATEGY_BASELINE_ID = "topk-t22-d2-h2"
 VALID_SEGMENT = ("2020-01-13", "2021-07-15")
 TEST_SEGMENT = ("2021-07-16", "2026-07-31")
-FULL_SEGMENT = (VALID_SEGMENT[0], TEST_SEGMENT[1])
+# The only active Phase S selection interval.  The split segments remain for
+# reproducing and auditing historical valid/test sweeps.
+FULL_SEGMENT = ("2020-01-13", "2026-07-31")
 POOL_BENCHMARKS = {
     "csi1000": "SH000852",
     "csi300": "SH000300",
     "csi500": "SH000905",
 }
 ACCOUNT = 500_000
-RISK_DEGREE = 0.95
+RISK_DEGREE = 0.90
 EXCHANGE_KWARGS = {
     "freq": "day",
     "deal_price": "close",
@@ -191,7 +193,7 @@ def _finite_metric(row: dict[str, Any], key: str) -> float | None:
     return value if math.isfinite(value) else None
 
 
-def select_valid_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+def select_strategy_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
     """Select by preregistered IR, annualized return, MDD, turnover, then ID."""
     eligible: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
     for row in rows:
@@ -208,3 +210,8 @@ def select_valid_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
     if not eligible:
         raise ValueError("no successful candidate has all finite selection metrics")
     return dict(min(eligible, key=lambda item: item[0])[1])
+
+
+def select_valid_winner(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Historical valid-segment compatibility wrapper for strategy selection."""
+    return select_strategy_winner(rows)

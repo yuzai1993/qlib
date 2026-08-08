@@ -15,6 +15,10 @@ sys.path.insert(0, str(SCRIPTS))
 import phase_s_protocol as protocol  # noqa: E402
 
 
+def test_phase_s_full_segment_is_the_selection_contract():
+    assert protocol.FULL_SEGMENT == ("2020-01-13", "2026-07-31")
+
+
 def test_current_phase_s_model_set_excludes_cleaned_historical_b1():
     assert protocol.CURRENT_MODEL_REFS == ("b6-m",)
     assert "b1-m" in protocol.MODEL_REFS
@@ -198,6 +202,12 @@ def _metric_row(candidate_id: str, ir=1.0, ann=0.2, mdd=-0.1, turnover=12.0):
 )
 def test_select_valid_winner_uses_preregistered_tie_break_order(rows, expected):
     assert protocol.select_valid_winner(rows)["candidate_id"] == expected
+
+
+def test_select_strategy_winner_uses_same_preregistered_tie_break_order():
+    rows = [_metric_row("b", ir=0.1), _metric_row("a", ir=0.2)]
+
+    assert protocol.select_strategy_winner(rows)["candidate_id"] == "a"
 
 
 @pytest.mark.parametrize("bad_value", [None, math.nan, math.inf, -math.inf])

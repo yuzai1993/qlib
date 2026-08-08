@@ -27,6 +27,8 @@ def _write_pred(path: Path, tuples: list[tuple[str, str]], values: list[float]):
 def _entry(path: Path, frame: pd.DataFrame, *, segment: str):
     return {
         "model_ref": "b6-m",
+        "model_path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+        "model_sha256": "f" * 64,
         "pool": "csi1000",
         "segment": segment,
         "path": str(path),
@@ -46,12 +48,14 @@ def test_compose_prediction_is_sorted_unique_and_audits_both_sources(tmp_path):
     test_path = tmp_path / "test.pkl"
     valid = _write_pred(valid_path, [("2020-01-13", "A"), ("2021-07-15", "A")], [1.0, 2.0])
     test = _write_pred(test_path, [("2021-07-16", "A"), ("2026-07-31", "A")], [3.0, 4.0])
+    valid_entry = _entry(valid_path, valid, segment="valid")
+    test_entry = _entry(test_path, test, segment="test")
 
     full, audit = compose_prediction(
         valid_path,
         test_path,
-        _entry(valid_path, valid, segment="valid"),
-        _entry(test_path, test, segment="test"),
+        valid_entry,
+        test_entry,
     )
 
     assert full.index.is_monotonic_increasing
@@ -60,6 +64,8 @@ def test_compose_prediction_is_sorted_unique_and_audits_both_sources(tmp_path):
     assert str(full.index.get_level_values("datetime").max().date()) == "2026-07-31"
     assert audit["coverage"]["n_rows"] == 4
     assert [source["segment"] for source in audit["sources"]] == ["valid", "test"]
+    assert audit["model_path"] == valid_entry["model_path"]
+    assert audit["model_sha256"] == valid_entry["model_sha256"]
 
 
 def test_compose_prediction_rejects_source_sha_mismatch(tmp_path):

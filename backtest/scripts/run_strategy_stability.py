@@ -20,7 +20,12 @@ REPO_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from config_loader import RESULT_ROOT, load_config  # noqa: E402
-from phase_s_protocol import BASELINE_CANDIDATE_ID, MODEL_REFS, strategy_grid  # noqa: E402
+from phase_s_protocol import (  # noqa: E402
+    ACCOUNT,
+    BASELINE_CANDIDATE_ID,
+    MODEL_REFS,
+    strategy_grid,
+)
 from report_utils import make_session_dir  # noqa: E402
 from run_strategy_sweep import (  # noqa: E402
     _parse_result_dir,
@@ -37,6 +42,9 @@ from strategy_stability_metrics import (  # noqa: E402
 REQUESTED_METRICS = (
     "annualized_return",
     "sharpe_ratio",
+    "alpha",
+    "beta",
+    "benchmark_cumulative_return",
     "calmar_ratio",
     "annualized_volatility",
     "max_drawdown",
@@ -45,9 +53,14 @@ REQUESTED_METRICS = (
 
 
 def build_stability_config(
-    base: dict[str, Any], candidate: dict[str, Any]
+    base: dict[str, Any],
+    candidate: dict[str, Any],
+    *,
+    account: float = ACCOUNT,
 ) -> dict[str, Any]:
-    config = build_sweep_config(base, candidate, pool="csi1000", segment="full")
+    config = build_sweep_config(
+        base, candidate, pool="csi1000", segment="full", account=account
+    )
     config["run"]["note"] = f"strategy_stability_{candidate['candidate_id']}"
     config["phase_s"]["diagnostic"] = "full_period_stability"
     return config
@@ -91,7 +104,10 @@ def _finite_json(value: Any) -> Any:
 
 
 def build_diagnostic_payload(
-    model_ref: str, rows: list[dict[str, Any]]
+    model_ref: str,
+    rows: list[dict[str, Any]],
+    *,
+    account: float = ACCOUNT,
 ) -> dict[str, Any]:
     expected = [candidate["candidate_id"] for candidate in strategy_grid(model_ref)]
     by_id = {row.get("candidate_id"): row for row in rows}
@@ -107,6 +123,7 @@ def build_diagnostic_payload(
         "pool": "csi1000",
         "segment": "full",
         "period": ["2020-01-13", "2026-07-31"],
+        "account": float(account),
         "metric_basis": "after_cost_absolute_return",
         "all_rows": ordered,
     }
@@ -166,7 +183,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--summary-output", required=True, type=Path)
     parser.add_argument("--resume-summary", type=Path)
     parser.add_argument("--retry-invalid", action="store_true")
-    return parser.parse_args(argv)
+    parser.add_argument("--account", type=float, default=ACCOUNT)
+    args = parser.parse_args(argv)
+    if args.account <= 0 or not math.isfinite(args.account):
+        parser.error("--account must be a positive finite number")
+    return args
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
@@ -211,7 +232,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         config_path = configs_dir / f"{candidate_id}_csi1000_full.yaml"
         config_path.write_text(
             yaml.safe_dump(
-                build_stability_config(base, candidate),
+                build_stability_config(base, candidate, account=args.account),
                 allow_unicode=True,
                 sort_keys=False,
             ),
@@ -254,7 +275,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         rows.append(row)
     if existing_payload is not None:
         rows = merge_retry_rows(existing_payload["all_rows"], rows)
-    payload = build_diagnostic_payload(args.model_ref, rows)
+    payload = build_diagnostic_payload(args.model_ref, rows, account=args.account)
     args.summary_output.parent.mkdir(parents=True, exist_ok=True)
     args.summary_output.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n",

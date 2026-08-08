@@ -212,6 +212,13 @@ def _run_probe_checks(date, recorder, config) -> list:
     main_root, probe_root = _execution_roots(config)
     main_marker = main_root / "state" / f"LIVE_OK_{date}"
     probe_marker = probe_root / "state" / f"PR49_LIVE_OK_{date}"
+    authorization_intents = []
+    for state_root in (main_root / "state", probe_root / "state"):
+        authorization_intents.extend(
+            str(path) for path in state_root.glob(
+                f"*LIVE_OK_{date}.intent.*.tmp"
+            ) if path.is_file()
+        )
     event_log = probe_root / "logs" / f"qmt_events_{date}.jsonl"
     return check_probe_execution(
         date,
@@ -230,6 +237,7 @@ def _run_probe_checks(date, recorder, config) -> list:
         main_execution_state=recorder.get_execution_state(
             config["live"]["strategy_id"],
         )["state"],
+        authorization_intents=authorization_intents,
     )
 
 

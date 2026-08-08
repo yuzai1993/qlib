@@ -161,6 +161,10 @@ $TradeDate = "YYYY-MM-DD"
   -Profile AFTER_HOURS_FIXED_PRICE -TradeDate $TradeDate
 ```
 
+必须看到 `AUTHORIZATION_COMMITTED` 且 exit 0。任何
+`AUTHORIZATION_COMMITTED_WARNING` 仍表示 marker 已不可逆提交，禁止重试或删除；
+`AUTHORIZATION_NOT_COMMITTED` 则停止流程并检查遗留 intent/monitor CRIT，禁止绕过脚本。
+
 15:05 后持续查看事件。API 返回不等于委托受理；只有 ORDER 查询或可信 callback 出现
 真实 QMT 委托号的 `ORDER_OBSERVED`，随后才允许有 `ACCEPTED`。15:31 后执行：
 
@@ -209,29 +213,23 @@ $TradeDate = "YYYY-MM-DD"
   -Profile AFTER_HOURS_FIXED_PRICE -TradeDate $TradeDate
 ```
 
+必须按 BUY 日相同的 committed/not-committed 状态契约处理；最终 marker 存在时永远按
+已授权处理，不能因为 readback、Unlock 或 Dispose 警告而重试或删除。
+
 15:31 后重复 import 与 postmarket 命令。完成标准是实际 SELL 恰好 100 股、生命周期
 `CLOSED`、探针证券持仓归零、费用/现金/账户快照一致。只有生命周期 `CLOSED` 才表示
 完整闭环；委托号和终态还必须能在 QMT UI、
 JSONL 事件与导入账本中互相对应。
 
-## 4. 停止与回滚
+## 4. 停止与恢复
 
-- 在首次 eligible timer wakeup 前且日志中没有 `PASSORDER_ATTEMPT` 时，只删除尚未使用的同日 marker，然后停止 probe 策略。
-- 一旦出现 `PASSORDER_ATTEMPT`，不得以删除 marker 声称撤销；停止新增操作，继续查询、
-  导入和验收已在途委托。
+- 最终 marker 是不可逆授权事实，任何阶段都禁止用删除 marker 声称回滚；立即停止 probe 策略
+  和主策略，并继续核对是否已有 `PASSORDER_ATTEMPT`、委托或成交。
+- 遗留 intent 不等于最终 marker，但会阻断 publisher 并触发 monitor CRIT。只有两个 QMT
+  策略都已停止、final marker 明确不存在、没有任何 committed token，并核对 intent 内容
+  后，才允许把 intent 隔离到证据目录；禁止直接删除证据或把 intent 改名成 marker。
 - 回滚必须保留 processing/、outbound/ 和 logs/ 证据，也保留 archive/、state 中的
   active/corrupt/snapshot 证据与共享 SQLite 账本。
 - 不删除 fills、账户快照或已发布 signal，不重写 batch ID，不清零手续费/盈亏。
 - QMT 重启、版本/SHA 变化、日志写入恢复事件、双授权、数量超过 100、缺失真实委托号、
   快照缺失或任何漂移，均停止闭环并保持主策略 `PAUSED`。
-
-符合“尚未使用”条件时的删除命令如下；否则禁止执行：
-
-```powershell
-$TradeDate = "YYYY-MM-DD"
-$Today = (Get-Date).ToString("yyyy-MM-dd")
-if ($TradeDate -ne $Today) { throw "trade date must equal today" }
-Remove-Item -LiteralPath `
-  "D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_$TradeDate" `
-  -ErrorAction Stop
-```

@@ -183,6 +183,7 @@ def check_probe_execution(
     main_marker_path,
     probe_marker_path,
     main_execution_state="ACTIVE",
+    authorization_intents=(),
 ) -> list:
     """Fail closed on the prType=49 probe's execution evidence.
 
@@ -210,6 +211,13 @@ def check_probe_execution(
                 event_log_path,
             ),
         ))
+
+    if authorization_intents:
+        critical(
+            "AUTHORIZATION_INTENT_REMAINS",
+            "no unresolved authorization intent",
+            "intent files: " + ",".join(sorted(authorization_intents)),
+        )
 
     if main_authorized and probe_authorized:
         critical(

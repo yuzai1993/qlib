@@ -211,9 +211,13 @@ $TradeDate = "YYYY-MM-DD"
   -Profile CLOSE_AUCTION -TradeDate $TradeDate
 ```
 
-脚本若报告 lock timeout、日期/截止检查失败、已有任一 marker 或锁释放异常，都不得改用
-其他命令补建 marker。首次启用前还必须按 QMT README 的“双向 SMB 锁互操作验收”确认
-macOS `filelock` 与 Windows `FileStream` 在当前共享盘上确实互斥。
+只有机器状态行 `AUTHORIZATION_COMMITTED`（exit 0）才表示命令完成；即使同时出现
+`AUTHORIZATION_COMMITTED_WARNING`，也必须把 marker 当作已经不可逆授权，不能重试、
+删除或称为失败。`AUTHORIZATION_NOT_COMMITTED`（exit 1）表示最终 marker 未确认存在，
+但可能留下阻断后续 publisher/monitor 的 intent。若命令中断或输出不可读，最终 marker
+一旦存在仍按 committed 处理。任何失败都不得改用其他命令补建 marker。首次启用前还
+必须按 QMT README 的“双向 SMB 锁互操作验收”确认 macOS `filelock` 与 Windows
+`FileStream` 在当前共享盘上确实互斥。
 
 ### 3. 导入、盘后验收并保持暂停
 

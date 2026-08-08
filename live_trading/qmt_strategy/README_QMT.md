@@ -84,8 +84,21 @@ Get-Content D:\qmt_bridge\pr49_probe\logs\qmt_events_YYYY-MM-DD.jsonl -Tail 100
 
 Mac publisher 用 `filelock.FileLock` 持锁覆盖 marker 复核、byte preflight、jsonl 和 done
 全部 rename；PowerShell 脚本用 `FileStream(FileShare.None)` 加 byte lock，持锁覆盖日期、
-截止时间、另一 profile marker、自身 marker 的复核和创建。锁等待超时、打开/释放异常
-都失败关闭。主 root 与嵌套 `pr49_probe` 禁止各建一把锁。
+截止时间、另一 profile marker、自身 marker 的复核和创建。主 root 与嵌套
+`pr49_probe` 禁止各建一把锁。
+
+PowerShell 先在最终 marker 同目录创建唯一 `.intent.<guid>.tmp`，完成强制 flush 和内容
+读回后，才用同目录原子 rename 提交最终 marker。该 rename 是唯一不可逆 commit point；
+最终 marker 一旦存在就必须按已授权处理，禁止删除回滚。rename 返回异常时脚本检查
+final/intent 状态消歧；final 存在或状态无法可靠判定时保守输出
+`AUTHORIZATION_COMMITTED` 并 exit 0。commit 后的 readback、Unlock、Dispose 故障只能
+输出 `AUTHORIZATION_COMMITTED_WARNING`，不能降级为普通失败。
+
+`AUTHORIZATION_NOT_COMMITTED`/exit 1 只表示未确认最终 marker，但遗留 intent 会让 Mac
+publisher 拒绝继续，并令 monitor 报 `AUTHORIZATION_INTENT_REMAINS` CRIT。只有停止两个
+QMT 策略、确认 final marker 不存在、确认输出从未出现 committed token，并核对 intent
+内容与对应批次后，才允许人工隔离该 intent；不得把它直接改名为 marker。锁超时或任何
+失败都禁止绕过受控脚本。
 
 不同 SMB 服务端/macOS 挂载版本的锁映射可能不同。首次启用、共享盘重配或系统升级后，
 必须在**不创建任何 marker**的前提下做双向互操作验收：一端持有上述文件的独占锁时，

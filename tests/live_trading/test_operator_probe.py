@@ -564,6 +564,34 @@ def test_main_sell_publish_rejects_any_same_day_authorization_marker(
     assert not list((tmp_path / "main_bridge" / "inbox").glob("*"))
 
 
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "state/LIVE_OK_2026-08-10.intent.abcd.tmp",
+        "pr49_probe/state/PR49_LIVE_OK_2026-08-10.intent.ef01.tmp",
+    ],
+)
+def test_main_sell_publish_rejects_same_day_authorization_intent(
+    recorder, tmp_path, monkeypatch, relative_path,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    intent = _write_main_authorization_marker(tmp_path, relative_path)
+
+    with pytest.raises(SchemaError, match="authorization intent"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert intent.is_file()
+    assert not list((tmp_path / "main_bridge" / "inbox").glob("*"))
+
+
 def test_main_sell_db_only_recovery_rejects_same_day_authorization_marker(
     recorder, tmp_path, monkeypatch,
 ):

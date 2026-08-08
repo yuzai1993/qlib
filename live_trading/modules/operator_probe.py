@@ -470,6 +470,7 @@ def _require_no_operator_authorization_marker(
         authorization_root / "pr49_probe" / "state",
     )
     artifacts = []
+    intents = []
     for state_root in state_roots:
         for marker_name in marker_names:
             marker = state_root / marker_name
@@ -477,6 +478,18 @@ def _require_no_operator_authorization_marker(
                 artifacts.append(
                     marker.relative_to(authorization_root).as_posix()
                 )
+            for intent in state_root.glob(
+                f"{marker_name}.intent.*.tmp"
+            ):
+                if intent.is_file():
+                    intents.append(
+                        intent.relative_to(authorization_root).as_posix()
+                    )
+    if intents:
+        raise SchemaError(
+            "same-day authorization intent blocks operator publication: "
+            + ",".join(sorted(intents))
+        )
     if artifacts:
         raise SchemaError(
             "same-day authorization marker blocks operator publication: "

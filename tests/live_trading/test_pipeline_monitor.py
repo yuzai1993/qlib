@@ -400,6 +400,36 @@ def test_run_probe_checks_reads_authorizations_from_authoritative_state_dirs(
     assert str(probe_marker) in finding.message
 
 
+def test_run_probe_checks_rejects_unresolved_authorization_intent(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"))
+    main_root = tmp_path / "bridge"
+    probe_root = main_root / "pr49_probe"
+    (main_root / "state").mkdir(parents=True)
+    (probe_root / "state").mkdir(parents=True)
+    intent = (
+        probe_root / "state" /
+        "PR49_LIVE_OK_2026-08-10.intent.deadbeef.tmp"
+    )
+    intent.write_text("uncommitted", encoding="utf-8")
+
+    findings = run_monitor._run_probe_checks(
+        "2026-08-10",
+        recorder,
+        {"live": {
+            "bridge_root": str(main_root),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "REAL",
+        }},
+    )
+
+    finding = next(
+        row for row in findings
+        if row.rule == "AUTHORIZATION_INTENT_REMAINS"
+    )
+    assert finding.level == "CRIT"
+    assert str(intent) in finding.message
+
+
 def _set_batch_strategy(recorder, batch_id, strategy_id=CONFIG_ID):
     """Make direct batch fixtures match the durable publish-plan metadata."""
     with recorder._conn() as conn:

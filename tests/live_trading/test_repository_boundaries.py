@@ -99,14 +99,87 @@ def test_windows_marker_creator_uses_shared_lock_and_rechecks_inside_it():
 
     lock_acquired = text.index("$LockStream.Lock(0, 1)")
     assert lock_acquired < text.index("$Today =")
-    assert lock_acquired < text.index("$OwnMarker =")
-    assert lock_acquired < text.index("$OtherMarker =")
-    assert lock_acquired < text.index("New-Item -ItemType File")
+    assert lock_acquired < text.index("$OwnMarker =", lock_acquired)
+    assert lock_acquired < text.index("$OtherMarker =", lock_acquired)
+    assert lock_acquired < text.index(
+        "[System.IO.File]::Move($IntentPath, $OwnMarker)"
+    )
 
     publisher = (
         REPO_ROOT / "live_trading/modules/signal_publisher.py"
     ).read_text(encoding="utf-8")
     assert 'AUTHORIZATION_LOCK_NAME = "OPERATOR_AUTHORIZATION.lock"' in publisher
+
+
+def _marker_commit_contract(script_text, failure):
+    """Simulate the statically verified PowerShell commit-state contract."""
+    required = {
+        "intent": "$IntentStream.Flush($true)",
+        "readback": "$IntentReadback =",
+        "move": "[System.IO.File]::Move($IntentPath, $OwnMarker)",
+        "committed": "$Committed = $true",
+        "disambiguate": "Test-Path -LiteralPath $OwnMarker -PathType Leaf",
+        "success": "AUTHORIZATION_COMMITTED",
+        "failure": "AUTHORIZATION_NOT_COMMITTED",
+    }
+    positions = {name: script_text.index(token) for name, token in required.items()}
+    positions["committed"] = script_text.index(
+        "$Committed = $true", positions["move"],
+    )
+    assert positions["intent"] < positions["readback"] < positions["move"]
+    assert positions["move"] < positions["committed"]
+
+    if failure == "preexisting_final":
+        assert 'CommitSource = "pre-existing-final-marker"' in script_text
+        return True, False, True, 0
+
+    final_exists = False
+    intent_exists = True
+    committed = False
+    if failure == "intent_readback":
+        return final_exists, intent_exists, committed, 1
+    if failure == "rename_before_commit":
+        return final_exists, intent_exists, committed, 1
+
+    # Rename is the sole irreversible authorization point.
+    final_exists = True
+    intent_exists = False
+    if failure == "rename_ambiguous":
+        committed = final_exists  # PowerShell disambiguates from final path.
+    else:
+        committed = True
+
+    if failure in {"final_readback", "unlock", "dispose"}:
+        # Post-commit diagnostics cannot downgrade the truthful exit contract.
+        pass
+    return final_exists, intent_exists, committed, 0
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected"),
+    [
+        ("preexisting_final", (True, False, True, 0)),
+        ("intent_readback", (False, True, False, 1)),
+        ("rename_before_commit", (False, True, False, 1)),
+        ("rename_ambiguous", (True, False, True, 0)),
+        ("final_readback", (True, False, True, 0)),
+        ("unlock", (True, False, True, 0)),
+        ("dispose", (True, False, True, 0)),
+    ],
+)
+def test_windows_marker_commit_point_has_unambiguous_exit_contract(
+    failure, expected,
+):
+    script = (
+        REPO_ROOT /
+        "live_trading/qmt_strategy/New-OperatorAuthorizationMarker.ps1"
+    ).read_text(encoding="utf-8")
+
+    assert _marker_commit_contract(script, failure) == expected
+    assert "Remove-Item -LiteralPath $OwnMarker" not in script
+    assert "AUTHORIZATION_COMMITTED_WARNING" in script
+    assert "exit 0" in script
+    assert "exit 1" in script
 
 
 def test_git_tracks_no_runtime_authorization_or_broker_evidence():

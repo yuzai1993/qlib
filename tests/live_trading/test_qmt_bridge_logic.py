@@ -775,6 +775,49 @@ def test_malformed_batch_is_quarantined_without_blocking_next_batch(bridge):
     assert (archive / "signal_000_bad.done").exists()
 
 
+@pytest.mark.parametrize("case", [
+    "oversize", "empty", "malformed_header", "non_object_header",
+    "malformed_order",
+])
+def test_unreadable_claimed_batch_emits_sanitized_validation_event(
+    bridge, case,
+):
+    processing = Path(bridge.BRIDGE_ROOT) / "processing"
+    jsonl = processing / ("signal_%s.jsonl" % case)
+    done = processing / ("signal_%s.done" % case)
+    done.write_text("sha256:bad\n")
+    if case == "oversize":
+        bridge.MAX_BATCH_BYTES = 8
+        jsonl.write_text("x" * 9)
+    elif case == "empty":
+        jsonl.write_text("")
+    elif case == "malformed_header":
+        jsonl.write_text("{not-json}\n")
+    elif case == "non_object_header":
+        jsonl.write_text("[]\n")
+    else:
+        jsonl.write_text(json.dumps({
+            "batch_id": "bad_batch", "strategy_id": "probe",
+            "trade_date": bridge._today(),
+            "account_id": "8890116049",
+        }) + "\n{bad-order}\n")
+
+    assert bridge._parse_and_check(str(jsonl), str(done)) is None
+
+    event = [row for row in _read_events(bridge)
+             if row["event"] == "BATCH_VALIDATED"][-1]
+    assert event["validation_passed"] is False
+    assert event["jsonl_file"] == jsonl.name
+    assert event["done_file"] == done.name
+    assert event["rejection_reason"]
+    serialized = json.dumps(event, sort_keys=True)
+    assert "8890116049" not in serialized
+    if case == "malformed_order":
+        assert event["batch_id"] == "bad_batch"
+        assert event["strategy_id"] == "probe"
+        assert event["account_id_masked"] == "88******49"
+
+
 def test_structurally_invalid_order_fails_closed_without_crashing(bridge):
     invalid = _order()
     invalid.pop("client_order_id")
@@ -824,6 +867,21 @@ def test_restart_recovers_active_processing_batch(bridge):
     batch.phase_started = 1234.5
     batch.submitted[_order()["client_order_id"]] = True
     batch.remaining_cash = 1234.5
+    batch.execution_live = True
+    coid = _order()["client_order_id"]
+    batch.order_evidence[coid] = {
+        "query_count": 2,
+        "attempt_started": 1000.0,
+        "api_returned": True,
+        "api_return": {
+            "return_repr": "None", "return_type": "NoneType",
+            "elapsed_ms": 1.5,
+        },
+        "order_observed": True,
+        "qmt_order_ids": ["qmt-recovered-1"],
+        "callback_counts": {"order": 1, "deal": 1, "error": 0},
+        "last_broker_statuses": ["qmt-recovered-1:48"],
+    }
     bridge._save_active_state(batch)
 
     bridge.g.batch = None
@@ -835,6 +893,29 @@ def test_restart_recovers_active_processing_batch(bridge):
     assert recovered.phase_started == pytest.approx(1234.5)
     assert recovered.remaining_cash == pytest.approx(1234.5)
     assert _order()["client_order_id"] in recovered.submitted
+    evidence = recovered.order_evidence[coid]
+    assert evidence["query_count"] == 2
+    assert evidence["api_returned"] is True
+    assert evidence["api_return"]["return_type"] == "NoneType"
+    assert evidence["order_observed"] is True
+    assert evidence["callback_counts"] == {
+        "order": 1, "deal": 1, "error": 0,
+    }
+
+    bridge._get_orders_by_remark = lambda account_id: {}
+    bridge._poll_status(recovered)
+    assert recovered.order_evidence[coid]["query_count"] == 3
+    bridge._write_fill(
+        recovered, recovered.orders[0], "ERROR", 0, 0.0,
+        "qmt-recovered-1",
+        "QMT order observed but final status unavailable at close",
+    )
+    final = [row for row in _read_events(bridge)
+             if row["event"] == "ORDER_FINALIZED"][-1]
+    assert final["api_returned"] is True
+    assert final["order_observed"] is True
+    assert final["query_count"] == 3
+    assert final["callback_counts"]["deal"] == 1
 
 
 def test_corrupt_active_state_recovers_without_duplicate_submission(bridge):
@@ -1226,6 +1307,80 @@ def test_persistent_log_appends_text_and_jsonl(bridge):
     assert "first" in text_log and "second" in text_log
 
 
+def test_successful_passorder_return_redacts_secrets_and_account(
+    bridge, monkeypatch,
+):
+    bridge.ACCOUNT_ID = "8890116049"
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order["quantity"] = 100
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8890116049", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: {
+            "token": "return-token-value",
+            "api_key": "return-api-key",
+            "secret_token": "return-secret-token",
+            "sendkey": "return-send-key",
+            "returned_account_id": "8890116049",
+            "status": "queued",
+        },
+        raising=False,
+    )
+
+    assert bridge._submit(object(), batch, order, True, limit_price=11.0)
+
+    event_text = json.dumps(_read_events(bridge), sort_keys=True)
+    text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
+                ("qmt_bridge_%s.log" % bridge._today())).read_text()
+    active = Path(bridge._active_state_path(BATCH_ID)).read_text()
+    combined = event_text + text_log + active
+    assert "return-token-value" not in combined
+    assert "return-api-key" not in combined
+    assert "return-secret-token" not in combined
+    assert "return-send-key" not in combined
+    assert "8890116049" not in combined
+    assert "88******49" in combined
+    assert "REDACTED" in combined
+
+
+def test_successful_error_persistence_redacts_external_message(
+    bridge,
+):
+    bridge.ACCOUNT_ID = "8890116049"
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "8890116049", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    bridge.g.batch = batch
+
+    class Args:
+        userOrderId = order["client_order_id"]
+        orderCode = order["stock_code"]
+        opType = 23
+
+    bridge.orderError_callback(
+        object(), Args(),
+        "password=hunter2 token: bearer-value account_id=8890116049",
+    )
+
+    event_text = json.dumps(_read_events(bridge), sort_keys=True)
+    fills_text = (Path(bridge._fills_path(BATCH_ID))).read_text()
+    text_log = (Path(bridge.BRIDGE_ROOT) / "logs" /
+                ("qmt_bridge_%s.log" % bridge._today())).read_text()
+    combined = event_text + fills_text + text_log
+    assert "hunter2" not in combined
+    assert "bearer-value" not in combined
+    assert "8890116049" not in combined
+    assert "88******49" in combined
+    assert "REDACTED" in combined
+
+
 def test_successful_order_persists_complete_evidence_sequence(
     bridge, monkeypatch,
 ):
@@ -1423,6 +1578,7 @@ def test_runtime_batch_timer_and_account_snapshot_evidence_is_sanitized(
     )
     bridge.g.batch.execution_live = True
     bridge._write_account_snapshot(bridge.g.batch)
+    bridge._write_snapshot_marker(bridge.g.batch)
 
     events = _read_events(bridge)
     runtime = next(row for row in events if row["event"] == "RUNTIME_CONFIG")
@@ -1450,6 +1606,12 @@ def test_runtime_batch_timer_and_account_snapshot_evidence_is_sanitized(
     serialized = json.dumps(events, sort_keys=True)
     assert "8890116049" not in serialized
     assert "token" not in serialized.lower()
+    exported_snapshot = (Path(bridge._account_snapshot_path(BATCH_ID))).read_text()
+    refresh_marker = Path(bridge._snapshot_marker_path(BATCH_ID)).read_text()
+    assert "8890116049" not in exported_snapshot
+    assert "8890116049" not in refresh_marker
+    assert "88******49" in exported_snapshot
+    assert "88******49" in refresh_marker
 
 
 def test_jsonl_log_write_failure_recovers_without_raising(
@@ -1517,6 +1679,102 @@ def test_order_error_callback_persists_rejection(bridge):
                     if row["event"] == "ORDER_ERROR_CALLBACK")
     assert callback["client_order_id"] == order["client_order_id"]
     assert callback["error_message"] == "broker rejected"
+
+
+@pytest.mark.parametrize("callback_kind,event_name", [
+    ("order", "ORDER_CALLBACK"),
+    ("deal", "DEAL_CALLBACK"),
+    ("error", "ORDER_ERROR_CALLBACK"),
+])
+def test_wrong_remark_same_symbol_callback_never_associates(
+    bridge, callback_kind, event_name,
+):
+    order = _order(coid="canonical-client-order", side="BUY", priority=20)
+    order["quantity"] = 100
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    bridge.g.batch = batch
+
+    class Callback:
+        userOrderId = "foreign-client-order"
+        m_strRemark = "foreign-client-order"
+        orderCode = order["stock_code"]
+        m_strInstrumentID = "000001"
+        m_strOrderSysID = "foreign-qmt-id"
+        m_nOrderStatus = 48
+        m_nOrderVolume = 100
+        m_nVolumeTraded = 100
+        m_nVolume = 100
+        m_dOrderPrice = 10.0
+        m_dPrice = 10.0
+
+    if callback_kind == "order":
+        bridge.order_callback(object(), Callback())
+    elif callback_kind == "deal":
+        bridge.deal_callback(object(), Callback())
+    else:
+        bridge.orderError_callback(object(), Callback(), "foreign rejection")
+
+    assert batch.order_evidence == {}
+    assert batch.submitted == {}
+    assert batch.fills == {}
+    callback = [row for row in _read_events(bridge)
+                if row["event"] == event_name][-1]
+    assert callback["associated"] is False
+    assert callback["batch_id"] == ""
+    assert callback["client_order_id"] == ""
+    assert callback["raw_remark"] == "foreign-client-order"
+
+
+def test_callback_first_real_id_is_accepted_and_not_finalized_unobserved(
+    bridge, monkeypatch,
+):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order["quantity"] = 100
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID, "trade_date": bridge._today(), "mode": "LIVE",
+        "account_id": "1", "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    batch.execution_live = True
+    bridge.g.batch = batch
+    monkeypatch.setattr(bridge, "passorder", lambda *args: None, raising=False)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    assert bridge._submit(object(), batch, order, True, limit_price=11.0)
+
+    class Callback:
+        m_strRemark = order["client_order_id"]
+        m_strInstrumentID = "000001"
+        m_strOrderSysID = "callback-qmt-1"
+        m_nOrderStatus = 48
+        m_nOrderVolume = 100
+        m_nVolumeTraded = 0
+        m_dOrderPrice = 11.0
+
+    bridge.order_callback(object(), Callback())
+    assert batch.order_evidence[order["client_order_id"]][
+        "order_observed"
+    ] is True
+    assert batch.fills[order["client_order_id"]]["status"] == "ACCEPTED"
+
+    bridge._poll_status(batch)
+    monkeypatch.setattr(bridge, "_now_hms", lambda: bridge.FINALIZE_AT)
+    bridge._force_finalize_if_near_close(object(), batch)
+
+    fills = _read_fills(bridge)
+    assert fills[-1]["status"] == "ERROR"
+    assert fills[-1]["message"] == (
+        "QMT order observed but final status unavailable at close"
+    )
+    assert all(fill["message"] != "QMT order not observed after passorder"
+               for fill in fills)
+    final = [row for row in _read_events(bridge)
+             if row["event"] == "ORDER_FINALIZED"][-1]
+    assert final["order_observed"] is True
+    assert final["qmt_order_ids"] == ["callback-qmt-1"]
 
 
 def test_init_binds_configured_account_for_callbacks(bridge):

@@ -19,6 +19,7 @@
 import json
 import math
 import os
+import re
 import time
 import datetime
 import traceback
@@ -135,6 +136,7 @@ class State(object):
         self.trading_enabled = False
         self.timer_registered = False
         self.log_write_failure = None
+        self.snapshot_accounts = {}
 
 
 g = State()
@@ -143,7 +145,7 @@ g = State()
 
 
 def _log(msg):
-    message = str(msg)
+    message = _redact_text(msg)
     print("[qlib_bridge] " + message)
     try:
         _append_log_line(
@@ -164,9 +166,78 @@ def _append_log_line(name, line):
         f.flush()
 
 
-def _bounded_text(value, limit=240):
+_SECRET_KEY_PATTERN = (
+    r"(?:access[_-]?token|refresh[_-]?token|token|password|passwd|secret|"
+    r"sendkey|api[_-]?key|apikey|client[_-]?secret)"
+)
+_ACCOUNT_KEY_PATTERN = r"(?:account[_-]?id|accountid|account)"
+_REDACTED = "***REDACTED***"
+
+
+def _redact_keyed_text(text, key_pattern, replacement):
+    quoted = re.compile(
+        r"(?i)([\"']?" + key_pattern + r"[\"']?\s*[:=]\s*)"
+        r"([\"'])(.*?)\2"
+    )
+    bare = re.compile(
+        r"(?i)([\"']?" + key_pattern + r"[\"']?\s*[:=]\s*)"
+        r"([^,\s}\]]+)"
+    )
+
+    def replace_quoted(match):
+        raw = match.group(3)
+        value = replacement(raw) if callable(replacement) else replacement
+        return match.group(1) + match.group(2) + value + match.group(2)
+
+    def replace_bare(match):
+        raw = match.group(2).strip("\"'")
+        value = replacement(raw) if callable(replacement) else replacement
+        return match.group(1) + value
+
+    return bare.sub(replace_bare, quoted.sub(replace_quoted, text))
+
+
+def _redact_text(value, limit=None):
     text = str(value).replace("\r", " ").replace("\n", " ")
-    return text[:int(limit)]
+    configured = str(globals().get("ACCOUNT_ID", "") or "")
+    if configured:
+        text = text.replace(configured, _mask_account(configured))
+    text = _redact_keyed_text(text, _SECRET_KEY_PATTERN, _REDACTED)
+    text = _redact_keyed_text(text, _ACCOUNT_KEY_PATTERN, _mask_account)
+    if limit is not None:
+        return text[:int(limit)]
+    return text
+
+
+def _bounded_text(value, limit=240):
+    return _redact_text(value, limit)
+
+
+def _normalized_field_name(name):
+    return re.sub(r"[^a-z0-9]", "", str(name).lower())
+
+
+def _sanitize_value(value, field_name=""):
+    normalized = _normalized_field_name(field_name)
+    secret_fragments = (
+        "token", "password", "passwd", "secret", "sendkey", "apikey",
+    )
+    if any(fragment in normalized for fragment in secret_fragments):
+        return _REDACTED
+    if "accountid" in normalized or normalized == "account":
+        return _mask_account(value)
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    if isinstance(value, str):
+        return _redact_text(value)
+    if isinstance(value, (list, tuple)):
+        return [_sanitize_value(item) for item in value[:50]]
+    if isinstance(value, dict):
+        return dict(
+            (str(key), _sanitize_value(item, key))
+            for key, item in list(value.items())[:50]
+        )
+    return _redact_text(repr(value), 512)
 
 
 def _remember_log_write_failure(event_type, exc):
@@ -202,6 +273,7 @@ def _log_event(event_type, **fields):
         "event": str(event_type),
     }
     event.update(fields)
+    event = _sanitize_value(event)
     try:
         _append_event_json(event)
     except Exception as exc:
@@ -225,7 +297,7 @@ def _log_event(event_type, **fields):
             g.log_write_failure = None
 
     try:
-        message = fields.get("message", "")
+        message = event.get("message", "")
         _append_log_line(
             "qmt_bridge_%s.log" % _today(),
             "%s [%s] %s" % (event["ts"], event["event"], message),
@@ -242,16 +314,7 @@ def _log_event(event_type, **fields):
 
 
 def _json_safe_value(value):
-    if value is None or isinstance(value, (bool, int, float, str)):
-        return value
-    if isinstance(value, (list, tuple)):
-        return [_json_safe_value(item) for item in value[:50]]
-    if isinstance(value, dict):
-        return dict(
-            (str(key), _json_safe_value(item))
-            for key, item in list(value.items())[:50]
-        )
-    return _bounded_text(repr(value), 512)
+    return _sanitize_value(value)
 
 
 def _safe_detail(obj, field_names):
@@ -572,6 +635,7 @@ def _log_order_finalized(batch, order, fill):
 
 
 def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, message):
+    message = _redact_text(message, 512)
     mode = batch.header.get("mode", "SIMULATE")
     requested_qty = int(order.get("quantity", 0) or 0)
     if requested_qty <= 0 and order.get("side") == "BUY":
@@ -674,7 +738,9 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
                 "type": "account_snapshot",
                 "batch_id": batch_id,
                 "trade_date": trade_date,
-                "account_id": str(getattr(a, "m_strAccountID", "") or account_id),
+                "account_id_masked": _mask_account(
+                    getattr(a, "m_strAccountID", "") or account_id,
+                ),
                 "available_cash": _opt_float(a, "m_dAvailable"),
                 "total_asset": _opt_float(a, "m_dBalance", "m_dAssureAsset"),
                 "market_value": _opt_float(
@@ -769,8 +835,9 @@ def _write_snapshot_marker(batch):
     payload = {
         "batch_id": batch.batch_id(),
         "trade_date": batch.header.get("trade_date", ""),
-        "account_id": _account_id(batch),
+        "account_id_masked": _mask_account(_account_id(batch)),
     }
+    g.snapshot_accounts[batch.batch_id()] = _account_id(batch)
     try:
         with open(_snapshot_marker_path(batch.batch_id()), "w") as f:
             f.write(json.dumps(payload, sort_keys=True))
@@ -802,10 +869,15 @@ def _refresh_account_snapshots_after_close():
             _log("stale snapshot marker %s; dropping" % name)
             os.remove(path)
             continue
+        batch_id = info.get("batch_id", "")
+        account_id = ACCOUNT_ID or g.snapshot_accounts.get(batch_id, "")
+        if not account_id:
+            _log("snapshot refresh account binding unavailable for %s" % batch_id)
+            continue
         _dump_broker_snapshot(
-            info["batch_id"], info["trade_date"], info["account_id"],
-            "post-close",
+            batch_id, info["trade_date"], account_id, "post-close",
         )
+        g.snapshot_accounts.pop(batch_id, None)
         os.remove(path)
 
 
@@ -902,6 +974,9 @@ def _archive_processing(jsonl_path, done_path):
 
 def _parse_and_check(jsonl_path, done_path):
     """Return Batch or None (rejected batches get a fills file + done)."""
+    header = {}
+    orders = []
+    order_lines = []
     try:
         if os.path.getsize(jsonl_path) > MAX_BATCH_BYTES:
             raise ValueError("batch file exceeds byte limit")
@@ -909,9 +984,10 @@ def _parse_and_check(jsonl_path, done_path):
             lines = [l.strip() for l in f.read().splitlines() if l.strip()]
         if not lines:
             raise ValueError("batch file is empty")
-        header = json.loads(lines[0])
-        if not isinstance(header, dict):
+        parsed_header = json.loads(lines[0])
+        if not isinstance(parsed_header, dict):
             raise ValueError("batch header must be an object")
+        header = parsed_header
         if not isinstance(header.get("batch_id"), str) \
                 or not header.get("batch_id"):
             raise ValueError("batch_id must be a nonempty string")
@@ -920,8 +996,23 @@ def _parse_and_check(jsonl_path, done_path):
         if any(not isinstance(order, dict) for order in orders):
             raise ValueError("each order must be an object")
     except Exception as exc:
+        reason = _bounded_text(exc, 512)
+        _log_event(
+            "BATCH_VALIDATED",
+            batch_id=_bounded_text(header.get("batch_id", ""), 128),
+            strategy_id=_bounded_text(header.get("strategy_id", ""), 128),
+            trade_date=_bounded_text(header.get("trade_date", ""), 32),
+            account_id_masked=_mask_account(header.get("account_id", "")),
+            order_count=len(order_lines),
+            jsonl_file=os.path.basename(jsonl_path),
+            done_file=os.path.basename(done_path),
+            validation_passed=False,
+            rejection_reason=reason,
+            execution_profile=EXECUTION_PROFILE,
+            message="batch validation rejected before structure load: " + reason,
+        )
         _log("quarantine unreadable batch %s: %s"
-             % (os.path.basename(jsonl_path), str(exc)))
+             % (os.path.basename(jsonl_path), reason))
         _archive_processing(jsonl_path, done_path)
         return None
     batch = Batch(header, orders)
@@ -2150,6 +2241,8 @@ def _force_finalize_if_near_close(ContextInfo, batch):
             coid = order["client_order_id"]
             if not _order_is_terminal(batch, coid):
                 fill = batch.fills.get(coid)
+                evidence = _evidence_for(batch, coid)
+                observed = bool(evidence.get("order_observed", False))
                 traded = fill["filled_qty"] if fill else 0
                 price = fill["avg_price"] if fill else 0.0
                 if (cash_unavailable and order["side"] == "BUY"
@@ -2159,10 +2252,16 @@ def _force_finalize_if_near_close(ContextInfo, batch):
                 elif traded > 0:
                     _write_fill(batch, order, "PARTIAL", traded, price, "",
                                 "expired at close")
-                elif coid in batch.submitted and fill is None:
+                elif coid in batch.submitted and not observed:
                     _write_fill(
                         batch, order, "ERROR", 0, 0.0, "",
                         "QMT order not observed after passorder",
+                    )
+                elif coid in batch.submitted and observed:
+                    _write_fill(
+                        batch, order, "ERROR", 0, 0.0,
+                        ",".join(evidence.get("qmt_order_ids", [])),
+                        "QMT order observed but final status unavailable at close",
                     )
                 else:
                     _write_fill(batch, order, "EXPIRED", 0, 0.0, "",
@@ -2412,14 +2511,28 @@ def _callback_remark(obj):
 
 
 def _find_callback_order(batch, remark, code):
+    if remark:
+        for order in batch.orders:
+            if order["client_order_id"] == remark:
+                return order
+        return None
     candidates = []
     digits = "".join(ch for ch in str(code or "") if ch.isdigit())
     for order in batch.orders:
-        if remark and order["client_order_id"] == remark:
-            return order
         if digits and order["stock_code"].split(".")[0] == digits:
             candidates.append(order)
     return candidates[0] if len(candidates) == 1 else None
+
+
+def _callback_association_fields(batch, order, raw_remark):
+    return {
+        "associated": order is not None,
+        "batch_id": batch.batch_id() if batch is not None and order is not None
+        else "",
+        "client_order_id": order["client_order_id"] if order is not None
+        else "",
+        "raw_remark": _bounded_text(raw_remark, 128),
+    }
 
 
 def _observe_callback_order(batch, order, order_id, source):
@@ -2443,6 +2556,11 @@ def _observe_callback_order(batch, order, order_id, source):
             source=source,
             message="real QMT order id observed by callback",
         )
+        if not _order_is_terminal(batch, coid):
+            _write_fill(
+                batch, order, "ACCEPTED", 0, 0.0, order_id,
+                "broker order observed by callback",
+            )
 
 
 def order_callback(ContextInfo, orderInfo):
@@ -2452,18 +2570,19 @@ def order_callback(ContextInfo, orderInfo):
     )
     remark = str(fields.get("remark", "") or "")
     order_id = str(fields.get("order_id", "") or "")
+    batch = g.batch
+    order = None
+    if batch is not None:
+        order = _find_callback_order(
+            batch, remark, fields.get("stock_code", ""),
+        )
+    association = _callback_association_fields(batch, order, remark)
     _log_event(
         "ORDER_CALLBACK",
-        client_order_id=remark,
         order_id=order_id,
         callback=fields,
         message="QMT order callback received",
-    )
-    batch = g.batch
-    if batch is None:
-        return
-    order = _find_callback_order(
-        batch, remark, fields.get("stock_code", ""),
+        **association
     )
     if order is None:
         return
@@ -2490,19 +2609,20 @@ def deal_callback(ContextInfo, dealInfo):
     ])
     remark = str(fields.get("remark", "") or _callback_remark(dealInfo))
     order_id = str(fields.get("order_id", "") or "")
+    batch = g.batch
+    order = None
+    if batch is not None:
+        order = _find_callback_order(
+            batch, remark, fields.get("stock_code", ""),
+        )
+    association = _callback_association_fields(batch, order, remark)
     _log_event(
         "DEAL_CALLBACK",
-        client_order_id=remark,
         order_id=order_id,
         deal_id=str(fields.get("deal_id", "") or ""),
         callback=fields,
         message="QMT deal callback received",
-    )
-    batch = g.batch
-    if batch is None:
-        return
-    order = _find_callback_order(
-        batch, remark, fields.get("stock_code", ""),
+        **association
     )
     if order is None:
         return
@@ -2520,12 +2640,18 @@ def orderError_callback(ContextInfo, orderArgs, errMsg):
     code = str(_callback_value(
         orderArgs, "orderCode", "m_strInstrumentID"))
     op_type = _callback_value(orderArgs, "opType", "m_nOpType")
-    message = str(errMsg)
+    message = _bounded_text(errMsg, 512)
+    order_id = str(_callback_value(
+        orderArgs, "m_strOrderSysID", "orderID", "orderId",
+    ))
+    batch = g.batch
+    order = None
+    if batch is not None:
+        order = _find_callback_order(batch, remark, code)
+    association = _callback_association_fields(batch, order, remark)
     _log_event(
-        "ORDER_ERROR_CALLBACK", client_order_id=remark, stock_code=code,
-        order_id=str(_callback_value(
-            orderArgs, "m_strOrderSysID", "orderID", "orderId",
-        )),
+        "ORDER_ERROR_CALLBACK", stock_code=code,
+        order_id=order_id,
         op_type=op_type,
         quantity=_callback_int(
             orderArgs, "m_nOrderVolume", "orderVolume", "volume",
@@ -2533,13 +2659,10 @@ def orderError_callback(ContextInfo, orderArgs, errMsg):
         price=_callback_float(orderArgs, "m_dOrderPrice", "orderPrice"),
         status=_callback_value(orderArgs, "m_nOrderStatus", "orderStatus"),
         error_type=type(errMsg).__name__,
-        error_message=_bounded_text(errMsg, 512),
-        message=_bounded_text(message, 512),
+        error_message=message,
+        message=message,
+        **association
     )
-    batch = g.batch
-    if batch is None:
-        return
-    order = _find_callback_order(batch, remark, code)
     if order is not None:
         evidence = _evidence_for(batch, order["client_order_id"])
         evidence["callback_counts"]["error"] = min(
@@ -2548,6 +2671,9 @@ def orderError_callback(ContextInfo, orderArgs, errMsg):
         )
         batch.submitted[order["client_order_id"]] = True
         _save_active_state(batch)
+        _observe_callback_order(
+            batch, order, order_id, "ORDER_ERROR_CALLBACK",
+        )
         _write_fill(batch, order, "REJECTED", 0, 0.0, "", message)
 
 

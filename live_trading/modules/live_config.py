@@ -13,6 +13,7 @@ from live_trading.modules.execution_profile import get_execution_profile
 _BASELINE_KEYS = {
     "first_snapshot_date", "opening_total_value", "benchmark_close",
 }
+_OPERATOR_PROBE_MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 
 
 def _validate_performance_baseline(config: dict) -> None:
@@ -109,13 +110,10 @@ def _validate_trading_config(config: dict) -> None:
                 "csi1000_pr49_one_lot_probe"
             )
         main_strategy_id = live.get("main_strategy_id")
-        if (
-            not isinstance(main_strategy_id, str)
-            or not re.fullmatch(r"[A-Za-z0-9_-]+", main_strategy_id)
-            or main_strategy_id == live.get("strategy_id")
-        ):
+        if main_strategy_id != _OPERATOR_PROBE_MAIN_STRATEGY_ID:
             raise ValueError(
-                "OPERATOR_PROBE requires a distinct safe live.main_strategy_id"
+                "OPERATOR_PROBE requires live.main_strategy_id "
+                f"{_OPERATOR_PROBE_MAIN_STRATEGY_ID}"
             )
         bridge_root = live.get("bridge_root")
         if (

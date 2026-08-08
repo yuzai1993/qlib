@@ -425,13 +425,9 @@ def _operator_live_config(config: dict) -> dict:
         if profile.name != "AFTER_HOURS_FIXED_PRICE":
             raise SchemaError("operator probe requires AFTER_HOURS_FIXED_PRICE")
         main_strategy_id = live.get("main_strategy_id")
-        if (
-            not isinstance(main_strategy_id, str)
-            or not re.fullmatch(r"[A-Za-z0-9_-]+", main_strategy_id)
-            or main_strategy_id == PROBE_STRATEGY_ID
-        ):
+        if main_strategy_id != MAIN_STRATEGY_ID:
             raise SchemaError(
-                "operator probe requires a distinct safe main_strategy_id"
+                f"operator probe requires main_strategy_id {MAIN_STRATEGY_ID}"
             )
         bridge_root = live.get("bridge_root")
         if (
@@ -821,6 +817,85 @@ def _require_exclusive_main_sell(
     return observed_expected_inbox == expected_inbox
 
 
+def _require_no_probe_qmt_trace(bridge_root: Path, batch_id: str) -> None:
+    """Prove QMT never claimed a durable probe plan before re-exposure."""
+    artifacts = []
+    expected_signal_names = {
+        f"signal_{batch_id}.jsonl", f"signal_{batch_id}.done",
+    }
+    repeat_signal_prefix = f"signal_{batch_id}.repeat_"
+    for directory in ("processing", "archive"):
+        root = bridge_root / directory
+        try:
+            entries = list(root.iterdir())
+        except FileNotFoundError:
+            continue
+        except (NotADirectoryError, OSError) as exc:
+            raise SchemaError(
+                f"cannot prove absence of QMT trace in {root}"
+            ) from exc
+        artifacts.extend(
+            f"{directory}/{path.name}"
+            for path in entries
+            if (
+                path.name in expected_signal_names
+                or (
+                    path.name.startswith(repeat_signal_prefix)
+                    and path.suffix in {".jsonl", ".done"}
+                )
+            )
+        )
+
+    state_root = bridge_root / "state"
+    try:
+        state_entries = {path.name: path for path in state_root.iterdir()}
+    except FileNotFoundError:
+        state_entries = {}
+    except (NotADirectoryError, OSError) as exc:
+        raise SchemaError(
+            f"cannot prove absence of QMT trace in {state_root}"
+        ) from exc
+    active_name = f"active_{batch_id}.json"
+    if active_name in state_entries:
+        artifacts.append(f"state/{active_name}")
+    processed_state = state_entries.get("processed_batches.txt")
+    if processed_state is not None:
+        try:
+            processed = processed_state.read_text(
+                encoding="utf-8",
+            ).splitlines()
+            if batch_id in {line.strip() for line in processed}:
+                artifacts.append("state/processed_batches.txt")
+        except OSError as exc:
+            raise SchemaError(
+                f"cannot prove absence of QMT trace in {state_root}"
+            ) from exc
+
+    outbound_root = bridge_root / "outbound"
+    expected_outbound_names = {
+        f"fills_{batch_id}.jsonl", f"fills_{batch_id}.done",
+        f"account_{batch_id}.jsonl", f"account_{batch_id}.done",
+    }
+    try:
+        outbound_entries = list(outbound_root.iterdir())
+    except FileNotFoundError:
+        outbound_entries = []
+    except (NotADirectoryError, OSError) as exc:
+        raise SchemaError(
+            f"cannot prove absence of QMT trace in {outbound_root}"
+        ) from exc
+    artifacts.extend(
+        f"outbound/{path.name}"
+        for path in outbound_entries
+        if path.name in expected_outbound_names
+    )
+    if artifacts:
+        raise SchemaError(
+            "QMT trace blocks durable probe retry: "
+            + ",".join(sorted(artifacts))
+        )
+
+
 def _require_no_operator_authorization_marker(
     request: OperatorProbeRequest, authorization_root: Path,
 ) -> None:
@@ -984,11 +1059,25 @@ def publish_operator_probe(
             header, [order], probe_transition=probe_transition, **record_gate,
         )
         if probe_transition is not None:
+            if durable_retry and not already_visible:
+                _require_no_probe_qmt_trace(bridge_root, header.batch_id)
+
+            def publish_probe_batch():
+                if not durable_retry:
+                    return publisher.publish(header, [order])
+                return publisher.publish(
+                    header,
+                    [order],
+                    before_exposure=lambda: _require_no_probe_qmt_trace(
+                        bridge_root, header.batch_id,
+                    ),
+                )
+
             return recorder.publish_recorded_operator_probe(
                 header,
                 [order],
                 probe_transition,
-                lambda: publisher.publish(header, [order]),
+                publish_probe_batch,
                 required_paused_strategy_id=main_strategy_id,
                 revalidate_eligibility=(durable_retry and not already_visible),
             )

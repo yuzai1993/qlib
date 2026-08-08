@@ -68,6 +68,18 @@ def test_operator_probe_requires_explicit_main_strategy_binding(tmp_path):
         load_live_config(path, project_root=tmp_path)
 
 
+def test_operator_probe_rejects_decoy_main_strategy_binding(tmp_path):
+    import yaml
+
+    config = yaml.safe_load(PROBE_LIVE_PATH.read_text(encoding="utf-8"))
+    config["live"]["main_strategy_id"] = "paused_decoy"
+    path = tmp_path / "probe.yaml"
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="csi1000_b6m_b2s_postclose_real"):
+        load_live_config(path, project_root=tmp_path)
+
+
 @pytest.mark.parametrize(
     "change,message",
     [

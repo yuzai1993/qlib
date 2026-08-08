@@ -701,6 +701,35 @@ def test_probe_publish_rejects_active_main_before_durable_plan(
     ) is None
 
 
+def test_probe_publish_rejects_runtime_decoy_main_binding(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    _save_snapshot(recorder, shares=0, can_use_volume=0)
+    recorder.set_execution_state(
+        "paused_decoy", "PAUSED", "misbound strategy",
+        "2026-08-10T14:50:00+08:00",
+    )
+    recorder.set_execution_state(
+        MAIN_STRATEGY_ID, "ACTIVE", "actual main still active",
+        "2026-08-10T14:51:00+08:00",
+    )
+    config = _config(tmp_path)
+    config["live"]["main_strategy_id"] = "paused_decoy"
+
+    with pytest.raises(SchemaError, match=MAIN_STRATEGY_ID):
+        publish_operator_probe(
+            _request(side="BUY", eligibility_confirmed=True),
+            config, recorder,
+            SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert recorder.get_batch(
+        "20260810_csi1000_pr49_one_lot_probe_900"
+    ) is None
+
+
 def test_probe_publish_serializes_main_resume_until_pair_is_visible(
     recorder, tmp_path, monkeypatch,
 ):
@@ -1933,7 +1962,7 @@ def test_durable_retry_publish_is_serialized_before_terminal_import(
             self.import_errors = []
             self.import_thread = None
 
-        def publish(self, header, orders):
+        def publish(self, header, orders, **kwargs):
             def import_terminal():
                 try:
                     _apply_probe_buy_fill(
@@ -1948,7 +1977,7 @@ def test_durable_retry_publish_is_serialized_before_terminal_import(
             self.import_thread.start()
             assert write_attempted.wait(2)
             assert not self.import_finished.wait(0.2)
-            return super().publish(header, orders)
+            return super().publish(header, orders, **kwargs)
 
     publisher = InterleavingPublisher(config["live"]["bridge_root"])
     path = publish_operator_probe(
@@ -2229,6 +2258,58 @@ def test_db_only_durable_buy_retry_rejects_newly_held_stock(
     assert not list(
         (tmp_path / "pr49_probe" / "inbox").glob(f"*{batch_id}*")
     )
+
+
+@pytest.mark.parametrize(
+    "qmt_trace",
+    ["processing", "archive", "active-state", "processed-state", "outbound"],
+)
+def test_probe_retry_never_republishes_after_any_qmt_claim_trace(
+    recorder, tmp_path, monkeypatch, qmt_trace,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    bridge_root = tmp_path / "pr49_probe"
+    inbox = bridge_root / "inbox"
+    original_pair = {
+        suffix: (inbox / f"signal_{batch_id}.{suffix}").read_bytes()
+        for suffix in ("jsonl", "done")
+    }
+    if qmt_trace in {"processing", "archive"}:
+        claimed = bridge_root / qmt_trace
+        claimed.mkdir(parents=True, exist_ok=True)
+        for suffix in ("jsonl", "done"):
+            source = inbox / f"signal_{batch_id}.{suffix}"
+            source.rename(claimed / source.name)
+    else:
+        _remove_probe_inbox_pair(tmp_path, batch_id)
+        if qmt_trace == "active-state":
+            state = bridge_root / "state"
+            state.mkdir(parents=True, exist_ok=True)
+            (state / f"active_{batch_id}.json").write_text(
+                '{"batch_id":"' + batch_id + '"}\n', encoding="utf-8",
+            )
+        elif qmt_trace == "processed-state":
+            state = bridge_root / "state"
+            state.mkdir(parents=True, exist_ok=True)
+            (state / "processed_batches.txt").write_text(
+                batch_id + "\n", encoding="utf-8",
+            )
+        else:
+            outbound = bridge_root / "outbound"
+            outbound.mkdir(parents=True, exist_ok=True)
+            (outbound / f"fills_{batch_id}.done").write_text(
+                "evidence\n", encoding="utf-8",
+            )
+
+    with pytest.raises(SchemaError, match="QMT trace"):
+        publish_operator_probe(
+            request, _config(tmp_path), recorder,
+            SignalPublisher(bridge_root), "8890116049",
+        )
+
+    assert not list(inbox.glob(f"*{batch_id}*"))
+    assert original_pair["jsonl"] and original_pair["done"]
 
 
 def test_publish_requires_explicit_real_confirmation(recorder, tmp_path, monkeypatch):

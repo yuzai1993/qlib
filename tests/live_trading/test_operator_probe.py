@@ -34,6 +34,7 @@ from live_trading.modules.signal_schema import SchemaError
 TRADE_DATE = "2026-08-10"
 STOCK_CODE = "600000.SH"
 STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 SNAPSHOT_TRADE_DATE = date.today().isoformat()
 SNAPSHOT_REQUEST_ID = (
     "snapshot_%s_0123456789abcdef0123456789abcdef"
@@ -60,6 +61,7 @@ def _config(tmp_path):
         "live": {
             "kind": "OPERATOR_PROBE",
             "strategy_id": STRATEGY_ID,
+            "main_strategy_id": MAIN_STRATEGY_ID,
             "account_type": "STOCK",
             "broker_environment": "REAL",
             "allow_real_money": True,
@@ -652,6 +654,10 @@ def _save_snapshot(recorder, *, trade_date=TRADE_DATE, shares=100,
                    can_use_volume=100, stock_code=STOCK_CODE,
                    batch_sequence=0, with_account=True,
                    strategy_id=STRATEGY_ID):
+    recorder.set_execution_state(
+        MAIN_STRATEGY_ID, "PAUSED", "operator probe test fixture",
+        trade_date + "T08:00:00+08:00",
+    )
     batch_id = (
         f"{trade_date.replace('-', '')}_{batch_sequence:03d}_snapshot"
     )
@@ -669,6 +675,125 @@ def _save_snapshot(recorder, *, trade_date=TRADE_DATE, shares=100,
             "market_value": shares * 10.0,
         }],
     )
+
+
+def test_probe_publish_rejects_active_main_before_durable_plan(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    _save_snapshot(recorder, shares=0, can_use_volume=0)
+    recorder.set_execution_state(
+        MAIN_STRATEGY_ID, "ACTIVE", "resume before probe",
+        "2026-08-10T14:50:00+08:00",
+    )
+    config = _config(tmp_path)
+    request = _request(side="BUY", eligibility_confirmed=True)
+
+    with pytest.raises(SchemaError, match="main strategy.*PAUSED"):
+        publish_operator_probe(
+            request, config, recorder,
+            SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert recorder.get_batch(
+        "20260810_csi1000_pr49_one_lot_probe_900"
+    ) is None
+
+
+def test_probe_publish_serializes_main_resume_until_pair_is_visible(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    _save_snapshot(recorder, shares=0, can_use_volume=0)
+    config = _config(tmp_path)
+    request = _request(side="BUY", eligibility_confirmed=True)
+    resume_attempted = threading.Event()
+    resume_finished = threading.Event()
+    resume_errors = []
+
+    class ResumeRacePublisher(SignalPublisher):
+        resume_thread = None
+
+        def publish(self, header, orders, **kwargs):
+            def resume_main():
+                resume_attempted.set()
+                try:
+                    recorder.set_execution_state(
+                        MAIN_STRATEGY_ID, "ACTIVE", "resume race",
+                        "2026-08-10T15:04:00+08:00",
+                    )
+                except BaseException as exc:
+                    resume_errors.append(exc)
+                finally:
+                    resume_finished.set()
+
+            self.resume_thread = threading.Thread(target=resume_main)
+            self.resume_thread.start()
+            assert resume_attempted.wait(2)
+            assert not resume_finished.wait(0.2)
+            return super().publish(header, orders, **kwargs)
+
+    publisher = ResumeRacePublisher(config["live"]["bridge_root"])
+    path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    publisher.resume_thread.join(timeout=5)
+
+    assert not publisher.resume_thread.is_alive()
+    assert resume_errors == []
+    assert path.is_file() and path.with_suffix(".done").is_file()
+    assert recorder.get_execution_state(MAIN_STRATEGY_ID)["state"] == "ACTIVE"
+
+
+def test_probe_publish_blocks_main_resume_after_plan_before_final_transaction(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    _save_snapshot(recorder, shares=0, can_use_volume=0)
+    config = _config(tmp_path)
+    request = _request(side="BUY", eligibility_confirmed=True)
+    original_record = recorder.record_publish_plan
+    resume_attempted = threading.Event()
+    resume_finished = threading.Event()
+    resume_errors = []
+    resume_thread = []
+
+    def resume_main():
+        resume_attempted.set()
+        try:
+            recorder.set_execution_state(
+                MAIN_STRATEGY_ID, "ACTIVE", "resume after durable plan",
+                "2026-08-10T15:04:30+08:00",
+            )
+        except BaseException as exc:
+            resume_errors.append(exc)
+        finally:
+            resume_finished.set()
+
+    def record_then_resume(*args, **kwargs):
+        result = original_record(*args, **kwargs)
+        if kwargs.get("probe_transition") is not None and not resume_thread:
+            thread = threading.Thread(target=resume_main)
+            resume_thread.append(thread)
+            thread.start()
+            assert resume_attempted.wait(2)
+            assert not resume_finished.wait(0.2)
+        return result
+
+    monkeypatch.setattr(recorder, "record_publish_plan", record_then_resume)
+    path = publish_operator_probe(
+        request, config, recorder,
+        SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+    )
+    resume_thread[0].join(timeout=5)
+
+    assert not resume_thread[0].is_alive()
+    assert resume_errors == []
+    assert path.is_file() and path.with_suffix(".done").is_file()
+    assert recorder.get_execution_state(MAIN_STRATEGY_ID)["state"] == "ACTIVE"
 
 
 def test_probe_buy_requires_latest_matched_account_snapshot_before_publish(
@@ -1754,7 +1879,7 @@ def test_durable_sell_retry_requires_latest_matched_account_snapshot(
         recorder,
         trade_date="2026-08-10",
         shares=100,
-        can_use_volume=0,
+        can_use_volume=100,
         batch_sequence=2,
     )
     path = publish_operator_probe(
@@ -2053,7 +2178,7 @@ def test_identical_publish_retry_is_idempotent_but_conflict_is_rejected(
         )
 
 
-def test_durable_retry_does_not_recheck_mutable_sell_eligibility(
+def test_db_only_durable_sell_retry_rechecks_mutable_availability(
     recorder, tmp_path, monkeypatch,
 ):
     monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
@@ -2067,11 +2192,43 @@ def test_durable_retry_does_not_recheck_mutable_sell_eligibility(
     path = publish_operator_probe(
         request, config, recorder, publisher, "8890116049",
     )
+    original_bytes = (path.read_bytes(), path.with_suffix(".done").read_bytes())
+    _remove_probe_inbox_pair(
+        tmp_path, "20260810_csi1000_pr49_one_lot_probe_900",
+    )
     _save_snapshot(recorder, can_use_volume=0)
 
-    assert publish_operator_probe(
-        request, config, recorder, publisher, "8890116049",
-    ) == path
+    with pytest.raises(SchemaError, match="available.*latest broker snapshot"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert not path.exists() and not path.with_suffix(".done").exists()
+    assert original_bytes[0] and original_bytes[1]
+
+
+def test_db_only_durable_buy_retry_rejects_newly_held_stock(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    _remove_probe_inbox_pair(tmp_path, batch_id)
+    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+    _save_snapshot(
+        recorder, trade_date="2026-08-07", shares=100,
+        can_use_volume=100, batch_sequence=1,
+    )
+    config = _config(tmp_path)
+
+    with pytest.raises(SchemaError, match="already held"):
+        publish_operator_probe(
+            request, config, recorder,
+            SignalPublisher(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert not list(
+        (tmp_path / "pr49_probe" / "inbox").glob(f"*{batch_id}*")
+    )
 
 
 def test_publish_requires_explicit_real_confirmation(recorder, tmp_path, monkeypatch):

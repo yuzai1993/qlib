@@ -9,6 +9,7 @@ live:
   kind: "OPERATOR_PROBE"
   bridge_root: "/Volumes/qmt_bridge/pr49_probe"
   strategy_id: "csi1000_pr49_one_lot_probe"
+  main_strategy_id: "csi1000_b6m_b2s_postclose_real"
   account_id: ""
   account_type: "STOCK"
   broker_environment: "REAL"

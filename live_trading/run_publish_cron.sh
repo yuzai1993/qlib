@@ -12,11 +12,11 @@ CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-csi1000_b6m_b2s_postclo
 STATE_HELPER="$PROJECT_ROOT/live_trading/scripts/set_execution_state.py"
 
 if [[ ! "$CONFIG_ID" =~ ^[A-Za-z0-9_-]+$ ]]; then
-    echo "invalid config identifier: ${CONFIG_ID@Q}" >&2
+    printf 'invalid config identifier: %q\n' "$CONFIG_ID" >&2
     exit 1
 fi
 if [[ -f "$STATE_HELPER" ]] && ! "$PYTHON" "$STATE_HELPER" --validate-config-id "$CONFIG_ID" >/dev/null; then
-    echo "invalid config identifier: ${CONFIG_ID@Q}" >&2
+    printf 'invalid config identifier: %q\n' "$CONFIG_ID" >&2
     exit 1
 fi
 

@@ -71,7 +71,7 @@ def _probe_findings(**overrides):
         "probe_marker_path": (
             "/Volumes/qmt_bridge/pr49_probe/state/PR49_LIVE_OK_2026-08-10"
         ),
-        "main_execution_state": "ACTIVE",
+        "main_execution_state": "PAUSED",
     }
     values.update(overrides)
     return check_probe_execution("2026-08-10", **values)
@@ -98,6 +98,38 @@ def test_probe_monitor_blocks_dual_authorization_with_complete_evidence():
     _assert_complete_probe_evidence(finding)
     assert "LIVE_OK_2026-08-10" in finding.message
     assert "PR49_LIVE_OK_2026-08-10" in finding.message
+
+
+@pytest.mark.parametrize(
+    "probe_state",
+    [
+        {
+            "probe_authorized": True, "probe_batch": None,
+            "probe_orders": [], "lifecycle": None,
+        },
+        {"probe_authorized": False},
+    ],
+)
+def test_probe_monitor_flags_active_main_for_authorized_or_planned_probe(
+    probe_state,
+):
+    findings = _probe_findings(
+        main_execution_state="ACTIVE", **probe_state,
+    )
+
+    finding = next(f for f in findings if f.rule == "PROBE_MAIN_NOT_PAUSED")
+    _assert_complete_probe_evidence(
+        finding,
+        batch_id=(
+            "NONE" if probe_state.get("probe_batch", PROBE_BATCH) is None
+            else PROBE_BATCH["batch_id"]
+        ),
+        stock=(
+            "NONE" if probe_state.get("probe_batch", PROBE_BATCH) is None
+            else PROBE_ORDER["stock_code"]
+        ),
+    )
+    assert "main execution state=ACTIVE" in finding.message
 
 
 def test_probe_monitor_flags_passorder_without_observed_qmt_order():
@@ -833,9 +865,69 @@ def _make_snapshot_protocol_directories(bridge_root):
         )
 
 
+def _main_real_monitor_config(bridge_root):
+    return {"live": {
+        "bridge_root": str(bridge_root),
+        "strategy_id": "csi1000_b6m_b2s_postclose_real",
+        "broker_environment": "REAL",
+    }}
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["missing-root", "not-directory", "list-error", "residue"],
+)
+def test_main_real_postmarket_scans_nested_probe_snapshot_root(
+    tmp_path, monkeypatch, failure,
+):
+    main_root = tmp_path / "bridge"
+    probe_root = main_root / "pr49_probe"
+    _make_snapshot_protocol_directories(main_root)
+    target = probe_root
+    if failure == "missing-root":
+        pass
+    elif failure == "not-directory":
+        target.write_text("not a directory\n", encoding="utf-8")
+    else:
+        _make_snapshot_protocol_directories(probe_root)
+        if failure == "residue":
+            target = probe_root / "snapshot_requests" / "processing"
+            (target / (
+                "request_snapshot_20260808_"
+                "0123456789abcdef0123456789abcdef.json"
+            )).write_text("{}\n", encoding="utf-8")
+        else:
+            original_iterdir = Path.iterdir
+
+            def fail_probe_root(path):
+                if path == probe_root:
+                    raise OSError("simulated nested SMB list failure")
+                return original_iterdir(path)
+
+            monkeypatch.setattr(Path, "iterdir", fail_probe_root)
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    store = MonitorStore(str(tmp_path / "live.db"))
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        _main_real_monitor_config(main_root),
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+        and str(probe_root) in row.message
+    )
+    assert finding.level == "CRIT"
+    if failure == "residue":
+        assert "processing/request_snapshot_" in finding.message
+    else:
+        assert str(target) in finding.message
+
+
 def test_run_postmarket_snapshot_protocol_empty_directories_are_clear(tmp_path):
     bridge_root = tmp_path / "bridge"
     _make_snapshot_protocol_directories(bridge_root)
+    _make_snapshot_protocol_directories(bridge_root / "pr49_probe")
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     store = MonitorStore(str(tmp_path / "live.db"))
 

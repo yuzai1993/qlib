@@ -757,12 +757,14 @@ def test_publish_cron_rejects_unsafe_config_before_creating_lock_paths(tmp_path)
     shutil.copy2(REPO_ROOT / "live_trading" / wrapper.name, wrapper)
 
     result = subprocess.run(
-        ["bash", str(wrapper), "../main"], cwd=root, env=os.environ.copy(),
+        ["/bin/bash", str(wrapper), "../main"], cwd=root,
+        env=os.environ.copy(),
         text=True, capture_output=True, check=False,
     )
 
     assert result.returncode != 0
     assert "invalid config identifier" in result.stderr
+    assert "bad substitution" not in result.stderr
     assert not (live_dir / ".locks").exists()
 
 

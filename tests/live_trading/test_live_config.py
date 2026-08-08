@@ -39,6 +39,8 @@ def test_load_operator_probe_config_is_isolated_from_strategy_publishing():
 
     assert cfg["live"]["kind"] == "OPERATOR_PROBE"
     assert cfg["live"]["strategy_id"] == "csi1000_pr49_one_lot_probe"
+    assert cfg["live"]["main_strategy_id"] == \
+        "csi1000_b6m_b2s_postclose_real"
     assert cfg["live"]["execution_session"] == "AFTER_HOURS_FIXED_PRICE"
     assert cfg["live"]["close_auction_price_type"] == 49
     assert cfg["live"]["bridge_root"] == "/Volumes/qmt_bridge/pr49_probe"
@@ -52,6 +54,18 @@ def test_load_operator_probe_config_is_isolated_from_strategy_publishing():
     )
     assert "model" not in cfg
     assert "parity" not in cfg
+
+
+def test_operator_probe_requires_explicit_main_strategy_binding(tmp_path):
+    import yaml
+
+    config = yaml.safe_load(PROBE_LIVE_PATH.read_text(encoding="utf-8"))
+    config["live"].pop("main_strategy_id", None)
+    path = tmp_path / "probe.yaml"
+    path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="main_strategy_id"):
+        load_live_config(path, project_root=tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -150,6 +164,7 @@ def test_operator_probe_timing_fields_are_required_and_profile_bound(
         "live": {
             "kind": "OPERATOR_PROBE",
             "strategy_id": "csi1000_pr49_one_lot_probe",
+            "main_strategy_id": "csi1000_b6m_b2s_postclose_real",
             "bridge_root": "/Volumes/qmt_bridge/pr49_probe",
             "broker_environment": "REAL",
             "allow_real_money": True,
@@ -194,6 +209,7 @@ def test_operator_probe_rejects_cross_profile_or_shared_bridge(
         "live": {
             "kind": "OPERATOR_PROBE",
             "strategy_id": "csi1000_pr49_one_lot_probe",
+            "main_strategy_id": "csi1000_b6m_b2s_postclose_real",
             "bridge_root": "/Volumes/qmt_bridge/pr49_probe",
             "broker_environment": "REAL",
             "allow_real_money": True,
@@ -240,6 +256,7 @@ def test_operator_probe_requires_real_live_and_one_lot_limit(
         "live": {
             "kind": "OPERATOR_PROBE",
             "strategy_id": "csi1000_pr49_one_lot_probe",
+            "main_strategy_id": "csi1000_b6m_b2s_postclose_real",
             "bridge_root": "/Volumes/qmt_bridge/pr49_probe",
             "broker_environment": "REAL",
             "allow_real_money": True,

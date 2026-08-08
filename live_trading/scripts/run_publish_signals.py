@@ -80,15 +80,18 @@ def publish_recorded_plan(recorder, publisher, header, orders):
         checksum=compute_checksum(order_lines),
     )
     validate_batch(validated_header, orders)
-    publisher.ensure_publishable(validated_header, orders)
-    recorder.record_publish_plan(
-        validated_header,
-        orders,
-        required_execution_state=(
-            "ACTIVE" if validated_header.mode == "LIVE" else None
-        ),
-    )
-    return publisher.publish(validated_header, orders)
+    if validated_header.mode != "LIVE":
+        publisher.ensure_publishable(validated_header, orders)
+        recorder.record_publish_plan(validated_header, orders)
+        return publisher.publish(validated_header, orders)
+    with recorder.execution_publication_gate():
+        publisher.ensure_publishable(validated_header, orders)
+        recorder.record_publish_plan(
+            validated_header,
+            orders,
+            required_execution_state="ACTIVE",
+        )
+        return publisher.publish(validated_header, orders)
 
 
 def ensure_prior_live_batches_terminal(

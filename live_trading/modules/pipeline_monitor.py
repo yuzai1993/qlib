@@ -229,7 +229,6 @@ def check_probe_execution(
     and position inputs deliberately remain account-wide because both
     strategies trade the same brokerage account.
     """
-    del main_execution_state  # A deliberate PAUSE never suppresses evidence.
     findings = []
     batch_id = (
         probe_batch.get("batch_id") if probe_batch else "NONE"
@@ -262,6 +261,20 @@ def check_probe_execution(
             "DUAL_AUTHORIZATION",
             "exactly one LIVE execution authorization",
             f"both markers present: {main_marker_path}; {probe_marker_path}",
+        )
+
+    lifecycle_running = bool(
+        lifecycle
+        and lifecycle.get("state") not in {"CLOSED", "FAILED"}
+    )
+    if (
+        main_execution_state != "PAUSED"
+        and (probe_authorized or probe_batch is not None or lifecycle_running)
+    ):
+        critical(
+            "PROBE_MAIN_NOT_PAUSED",
+            "main strategy durable execution state=PAUSED while probe is active",
+            f"main execution state={main_execution_state}",
         )
 
     if probe_batch is None:

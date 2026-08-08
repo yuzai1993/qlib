@@ -424,6 +424,15 @@ def _operator_live_config(config: dict) -> dict:
             )
         if profile.name != "AFTER_HOURS_FIXED_PRICE":
             raise SchemaError("operator probe requires AFTER_HOURS_FIXED_PRICE")
+        main_strategy_id = live.get("main_strategy_id")
+        if (
+            not isinstance(main_strategy_id, str)
+            or not re.fullmatch(r"[A-Za-z0-9_-]+", main_strategy_id)
+            or main_strategy_id == PROBE_STRATEGY_ID
+        ):
+            raise SchemaError(
+                "operator probe requires a distinct safe main_strategy_id"
+            )
         bridge_root = live.get("bridge_root")
         if (
             not isinstance(bridge_root, str)
@@ -861,6 +870,15 @@ def _shared_authorization_gate(publisher):
         raise SchemaError(str(exc)) from exc
 
 
+def _require_main_strategy_paused(recorder, main_strategy_id: str) -> None:
+    state = recorder.get_execution_state(main_strategy_id)
+    if state["state"] != "PAUSED":
+        raise SchemaError(
+            "operator probe requires main strategy durable PAUSED state, "
+            f"found {state['state']}"
+        )
+
+
 def publish_operator_probe(
     request: OperatorProbeRequest, config: dict, recorder, publisher, account_id: str,
 ) -> Path:
@@ -877,17 +895,28 @@ def publish_operator_probe(
     _validate_real_account(live, account_id)
     bridge_root = _validate_publish_root(live, publisher)
     is_probe = live.get("kind") == "OPERATOR_PROBE"
+    main_strategy_id = live.get("main_strategy_id") if is_probe else None
     gate = (
         recorder.probe_snapshot_gate()
         if is_probe
         else recorder.operator_publish_gate()
     )
-    record_gate = {} if is_probe else {
+    record_gate = {
         "required_execution_state": "PAUSED",
-        "exclusive_same_day_live": True,
+        "required_execution_state_strategy_id": (
+            main_strategy_id if is_probe else live["strategy_id"]
+        ),
     }
+    if not is_probe:
+        record_gate["exclusive_same_day_live"] = True
     authorization_root = publisher.authorization_domain_root
-    with gate, _shared_authorization_gate(publisher):
+    with (
+        recorder.execution_publication_gate(),
+        gate,
+        _shared_authorization_gate(publisher),
+    ):
+        if is_probe:
+            _require_main_strategy_paused(recorder, main_strategy_id)
         _require_no_operator_authorization_marker(
             request, authorization_root,
         )
@@ -960,6 +989,8 @@ def publish_operator_probe(
                 [order],
                 probe_transition,
                 lambda: publisher.publish(header, [order]),
+                required_paused_strategy_id=main_strategy_id,
+                revalidate_eligibility=(durable_retry and not already_visible),
             )
         _require_no_operator_authorization_marker(
             request, authorization_root,

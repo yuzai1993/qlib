@@ -108,6 +108,15 @@ def _validate_trading_config(config: dict) -> None:
                 "OPERATOR_PROBE requires strategy_id "
                 "csi1000_pr49_one_lot_probe"
             )
+        main_strategy_id = live.get("main_strategy_id")
+        if (
+            not isinstance(main_strategy_id, str)
+            or not re.fullmatch(r"[A-Za-z0-9_-]+", main_strategy_id)
+            or main_strategy_id == live.get("strategy_id")
+        ):
+            raise ValueError(
+                "OPERATOR_PROBE requires a distinct safe live.main_strategy_id"
+            )
         bridge_root = live.get("bridge_root")
         if (
             not isinstance(bridge_root, str)

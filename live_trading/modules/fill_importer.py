@@ -206,6 +206,15 @@ class LiveRecorder:
         with FileLock(str(lock_path)):
             yield
 
+    @contextmanager
+    def execution_publication_gate(self):
+        """Linearize strategy state transitions with complete LIVE exposure."""
+        lock_path = self.db_path.with_name(
+            f"{self.db_path.name}.execution_publication.lock"
+        )
+        with FileLock(str(lock_path)):
+            yield
+
     def _init_db(self):
         with self._conn() as conn:
             conn.executescript("""
@@ -1038,6 +1047,7 @@ class LiveRecorder:
         orders: list,
         probe_transition: dict | None = None,
         required_execution_state: str | None = None,
+        required_execution_state_strategy_id: str | None = None,
         exclusive_same_day_live: bool = False,
     ) -> None:
         """Atomically persist an immutable plan before exposing it to QMT.
@@ -1056,8 +1066,12 @@ class LiveRecorder:
                 # cannot record after an operator pauses the strategy.
                 conn.execute("BEGIN IMMEDIATE")
             if required_execution_state is not None:
+                state_strategy_id = (
+                    required_execution_state_strategy_id
+                    or header.strategy_id
+                )
                 current_state = _get_execution_state(
-                    conn, header.strategy_id,
+                    conn, state_strategy_id,
                 )["state"]
                 if current_state != required_execution_state:
                     raise SchemaError(
@@ -1115,7 +1129,14 @@ class LiveRecorder:
                 )
 
     def publish_recorded_operator_probe(
-        self, header, orders: list, probe_transition: dict, publish_callback,
+        self,
+        header,
+        orders: list,
+        probe_transition: dict,
+        publish_callback,
+        *,
+        required_paused_strategy_id: str | None = None,
+        revalidate_eligibility: bool = False,
     ):
         """Publish while holding the writer gate shared with probe imports."""
         order_checksum, rows = self._publish_plan_values(header, orders)
@@ -1129,13 +1150,77 @@ class LiveRecorder:
                 raise SchemaError(
                     f"batch {header.batch_id!r} has no durable publish plan"
                 )
+            if required_paused_strategy_id is not None:
+                main_state = _get_execution_state(
+                    conn, required_paused_strategy_id,
+                )["state"]
+                if main_state != "PAUSED":
+                    raise SchemaError(
+                        "operator probe requires main strategy durable PAUSED "
+                        f"state, found {main_state}"
+                    )
             self._require_latest_broker_snapshot_lifecycle_evidence_conn(
-                conn, header.trade_date,
+                conn, header.trade_date, header.strategy_id,
             )
             self._record_operator_probe_plan_conn(
                 conn, header, rows, probe_transition, durable_retry=True,
             )
+            if revalidate_eligibility:
+                self._require_probe_retry_eligibility_conn(
+                    conn, header, rows,
+                )
             return publish_callback()
+
+    @classmethod
+    def _require_probe_retry_eligibility_conn(
+        cls, conn, header, rows: list,
+    ) -> None:
+        """Recheck mutable holdings immediately before a DB-only exposure."""
+        side = rows[0][4]
+        stock_code = rows[0][2]
+        snapshot_batch_id = (
+            cls._require_latest_broker_snapshot_lifecycle_evidence_conn(
+                conn, header.trade_date, header.strategy_id,
+            )
+        )
+        ledger = conn.execute(
+            "SELECT shares FROM positions WHERE stock_code=?",
+            (stock_code,),
+        ).fetchone()
+        held = int(ledger["shares"] or 0) if ledger is not None else 0
+        broker = conn.execute(
+            """SELECT shares, can_use_volume
+                 FROM broker_position_snapshot
+                WHERE batch_id=? AND stock_code=?""",
+            (snapshot_batch_id, stock_code),
+        ).fetchone()
+        broker_shares = (
+            int(broker["shares"] or 0) if broker is not None else 0
+        )
+        if side == "BUY":
+            if held > 0:
+                raise SchemaError(
+                    "BUY retry rejected: stock is already held in live ledger"
+                )
+            if broker_shares > 0:
+                raise SchemaError(
+                    "BUY retry rejected: stock is already held in latest "
+                    "broker snapshot"
+                )
+            return
+        if side != "SELL":
+            raise SchemaError(f"invalid probe retry side: {side!r}")
+        if held < 100:
+            raise SchemaError(
+                "SELL retry requires at least one lot in the live ledger"
+            )
+        available = (
+            broker["can_use_volume"] if broker is not None else None
+        )
+        if broker_shares < 100 or available is None or int(available) < 100:
+            raise SchemaError(
+                "SELL retry requires one lot available in latest broker snapshot"
+            )
 
     @staticmethod
     def _record_operator_probe_plan_conn(
@@ -2066,10 +2151,11 @@ class LiveRecorder:
         """Persist the explicit execution state used by publishers and monitors."""
         if self.read_only:
             raise SchemaError("cannot set execution state through a read-only ledger")
-        with self._conn() as conn:
-            return _set_execution_state(
-                conn, strategy_id, state, reason, changed_at,
-            )
+        with self.execution_publication_gate():
+            with self._conn() as conn:
+                return _set_execution_state(
+                    conn, strategy_id, state, reason, changed_at,
+                )
 
     def set_cash(self, cash: float) -> None:
         """人工 seed / 校正现金入口。"""

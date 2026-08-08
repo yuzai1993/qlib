@@ -177,16 +177,15 @@ def run_postmarket(date, recorder, store, config) -> list:
     findings = check_postmarket(date, batches, reconciles, fills,
                                prev_positions,
                                reject_rate=thresholds["reject_rate"])
-    status_path = (
-        Path(config["live"]["bridge_root"]) /
-        "snapshot_requests" / "status.json"
-    )
-    findings += check_snapshot_protocol_status(
-        _read_json_object(status_path), str(status_path),
-        _scan_snapshot_protocol_residue(
-            Path(config["live"]["bridge_root"]), recorder,
-        ),
-    )
+    snapshot_roots = [Path(config["live"]["bridge_root"])]
+    if config.get("live", {}).get("broker_environment") == "REAL":
+        snapshot_roots = list(_execution_roots(config))
+    for snapshot_root in dict.fromkeys(snapshot_roots):
+        status_path = snapshot_root / "snapshot_requests" / "status.json"
+        findings += check_snapshot_protocol_status(
+            _read_json_object(status_path), str(status_path),
+            _scan_snapshot_protocol_residue(snapshot_root, recorder),
+        )
     # Any LIVE strategy on the shared account requires account-wide reconcile.
     # In particular, a PAUSED main must not hide drift created by the probe.
     account_batches = recorder.get_active_batches_by_date(date)
@@ -251,7 +250,11 @@ def _run_probe_checks(date, recorder, config) -> list:
         main_marker_path=str(main_marker),
         probe_marker_path=str(probe_marker),
         main_execution_state=recorder.get_execution_state(
-            config["live"]["strategy_id"],
+            (
+                config["live"].get("main_strategy_id")
+                if config["live"].get("kind") == "OPERATOR_PROBE"
+                else config["live"]["strategy_id"]
+            ),
         )["state"],
         authorization_intents=authorization_intents,
     )

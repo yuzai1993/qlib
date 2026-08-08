@@ -3,7 +3,7 @@
 import dataclasses
 import json
 import threading
-from datetime import date
+from datetime import date, datetime
 from types import SimpleNamespace
 import sys
 from pathlib import Path
@@ -39,6 +39,17 @@ SNAPSHOT_REQUEST_ID = (
     "snapshot_%s_0123456789abcdef0123456789abcdef"
     % SNAPSHOT_TRADE_DATE.replace("-", "")
 )
+
+
+@pytest.fixture(autouse=True)
+def _stable_snapshot_publish_clock(monkeypatch):
+    monkeypatch.setattr(
+        operator_probe, "_snapshot_publish_now",
+        lambda: datetime.fromisoformat(
+            SNAPSHOT_TRADE_DATE + "T08:00:00+08:00"
+        ),
+        raising=False,
+    )
 
 
 def _config(tmp_path):
@@ -105,6 +116,7 @@ def _save_snapshot_request_evidence(
                 "schema_version", "request_id", "trade_date",
                 "collector_execution_profile", "collector_bridge_root",
                 "requested_for_strategy_id", "evidence_purpose",
+                "publish_cutoff",
                 "account_type", "account_environment",
                 "account_id_masked", "account_fingerprint",
             )
@@ -181,6 +193,11 @@ def test_snapshot_request_is_durable_non_batch_and_exact_retry(
     assert first.read_text(encoding="utf-8") == json.dumps(
         prepared, ensure_ascii=True, sort_keys=True, separators=(",", ":"),
     ) + "\n"
+    gate = tmp_path / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    assert gate.is_file()
+    gate_metadata = json.loads(gate.read_text(encoding="utf-8"))
+    assert gate_metadata["request_id"] == SNAPSHOT_REQUEST_ID
+    assert gate_metadata["execution_profile"] == "AFTER_HOURS_FIXED_PRICE"
     state = Path(config["live"]["bridge_root"]) / "state"
     if state.exists():
         assert not list(state.glob("*LIVE_OK*"))
@@ -212,6 +229,152 @@ def test_snapshot_publish_repairs_missing_done_from_same_prepared_bytes(
         Path(config["live"]["bridge_root"]), "8890116049",
     ) == path
     assert done.is_file()
+
+
+@pytest.mark.parametrize("publish_time", ["14:45:00", "14:45:01"])
+def test_snapshot_publish_rejects_at_or_after_hard_cutoff(
+    tmp_path, monkeypatch, publish_time,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-cutoff.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    monkeypatch.setattr(
+        operator_probe, "_snapshot_publish_now",
+        lambda: datetime.fromisoformat(
+            SNAPSHOT_TRADE_DATE + "T" + publish_time + "+08:00"
+        ),
+    )
+
+    with pytest.raises(SchemaError, match="cutoff"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, config, recorder,
+            Path(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "PREPARED"
+    assert not (
+        Path(config["live"]["bridge_root"]) / "snapshot_requests" / "inbox"
+        / f"request_{SNAPSHOT_REQUEST_ID}.json"
+    ).exists()
+
+
+def test_snapshot_publish_rejects_clock_date_mismatch(
+    tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-clock.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    monkeypatch.setattr(
+        operator_probe, "_snapshot_publish_now",
+        lambda: datetime.fromisoformat("2099-01-01T08:00:00+08:00"),
+    )
+
+    with pytest.raises(SchemaError, match="clock date"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, config, recorder,
+            Path(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "PREPARED"
+
+
+def test_snapshot_publish_rejects_busy_cross_host_advance_gate(
+    tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-gate.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    gate = tmp_path / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True)
+    gate.write_text("QMT owns full advance", encoding="utf-8")
+
+    with pytest.raises(SchemaError, match="advance gate"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, config, recorder,
+            Path(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert gate.is_file()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "PREPARED"
+
+
+def test_snapshot_gate_domain_is_shared_by_main_and_probe_profiles(tmp_path):
+    main_root = tmp_path / "main"
+    probe_root = main_root / "pr49_probe"
+
+    assert operator_probe._snapshot_authorization_root(
+        main_root, "CLOSE_AUCTION",
+    ) == main_root
+    assert operator_probe._snapshot_authorization_root(
+        probe_root, "AFTER_HOURS_FIXED_PRICE",
+    ) == main_root
+
+
+@pytest.mark.parametrize("terminal_status", [
+    "IMPORTED_COMPLETE", "IMPORTED_ERROR",
+])
+def test_snapshot_terminal_request_retry_never_creates_lifecycle_gate(
+    tmp_path, monkeypatch, terminal_status,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-terminal.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    with recorder._conn() as conn:
+        conn.execute(
+            "UPDATE account_snapshot_requests SET status=? WHERE request_id=?",
+            (terminal_status, SNAPSHOT_REQUEST_ID),
+        )
+
+    with pytest.raises(SchemaError, match="already terminal"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, config, recorder,
+            Path(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert not (
+        tmp_path / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    ).exists()
+    assert not (
+        Path(config["live"]["bridge_root"]) / "snapshot_requests" / "inbox"
+    ).exists()
 
 
 def test_snapshot_publish_rejects_tampered_prepared_row_and_wrong_profile(
@@ -710,6 +873,7 @@ def test_probe_collector_snapshot_can_authorize_main_shared_account_preflight(
                 "schema_version", "request_id", "trade_date",
                 "collector_execution_profile", "collector_bridge_root",
                 "requested_for_strategy_id", "evidence_purpose",
+                "publish_cutoff",
                 "account_type", "account_environment",
                 "account_id_masked", "account_fingerprint",
             )

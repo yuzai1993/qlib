@@ -13,6 +13,7 @@
 import argparse
 import json
 import logging
+import re
 import sys
 from datetime import date as _date
 from pathlib import Path
@@ -30,6 +31,10 @@ from live_trading.modules.execution_state import validate_identifier
 from live_trading.modules.live_config import load_live_config
 from live_trading.modules.monitor_store import MonitorStore
 from live_trading.modules.notifier import create_notifier
+from live_trading.modules.operator_probe import (
+    SNAPSHOT_ADVANCE_GATE_NAME,
+    snapshot_artifact_checksum,
+)
 from live_trading.modules.pipeline_monitor import (
     DEFAULT_THRESHOLDS,
     Finding,
@@ -39,6 +44,7 @@ from live_trading.modules.pipeline_monitor import (
     check_postmarket,
     check_probe_execution,
     check_report,
+    check_snapshot_protocol_status,
 )
 from live_trading.modules.snapshot import build_snapshot, sum_live_fills_amount
 from live_trading.scripts.next_trade_date import next_open_date
@@ -171,6 +177,16 @@ def run_postmarket(date, recorder, store, config) -> list:
     findings = check_postmarket(date, batches, reconciles, fills,
                                prev_positions,
                                reject_rate=thresholds["reject_rate"])
+    status_path = (
+        Path(config["live"]["bridge_root"]) /
+        "snapshot_requests" / "status.json"
+    )
+    findings += check_snapshot_protocol_status(
+        _read_json_object(status_path), str(status_path),
+        _scan_snapshot_protocol_residue(
+            Path(config["live"]["bridge_root"]), recorder,
+        ),
+    )
     # Any LIVE strategy on the shared account requires account-wide reconcile.
     # In particular, a PAUSED main must not hide drift created by the probe.
     account_batches = recorder.get_active_batches_by_date(date)
@@ -263,6 +279,118 @@ def _read_qmt_events(path: Path) -> list:
         if isinstance(event, dict):
             events.append(event)
     return events
+
+
+def _read_json_object(path: Path):
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except (OSError, TypeError, ValueError):
+        return "INVALID"
+    return payload
+
+
+def _scan_snapshot_protocol_residue(bridge_root: Path, recorder) -> list:
+    request_root = bridge_root / "snapshot_requests"
+    artifacts = []
+    scan_errors = []
+    authorization_root = (
+        bridge_root.parent if bridge_root.name == "pr49_probe" else bridge_root
+    )
+    gate = authorization_root / "state" / SNAPSHOT_ADVANCE_GATE_NAME
+    try:
+        if gate.is_file():
+            scan_errors.append("state/" + SNAPSHOT_ADVANCE_GATE_NAME)
+    except OSError:
+        scan_errors.append("state/<advance-gate-scan-error>")
+    for directory in ("inbox", "processing", "archive", "responses"):
+        root = request_root / directory
+        try:
+            paths = list(root.iterdir())
+        except FileNotFoundError:
+            continue
+        except OSError:
+            scan_errors.append(f"{directory}/<scan-error>")
+            continue
+        for path in paths:
+            name = path.name
+            if not (
+                name.startswith("request_snapshot_")
+                or name.startswith("response_snapshot_")
+            ):
+                continue
+            if not (
+                name.endswith(".json") or name.endswith(".done")
+                or name.endswith(".json.tmp") or name.endswith(".done.tmp")
+                or ".intent" in name
+            ):
+                continue
+            artifacts.append(f"{directory}/{name}")
+    groups = {}
+    for artifact in artifacts:
+        match = re.search(
+            r"(snapshot_[0-9]{8}_[a-f0-9]{32})", artifact,
+        )
+        request_id = match.group(1) if match else artifact
+        groups.setdefault(request_id, []).append(artifact)
+    unresolved = list(scan_errors)
+    for request_id, group in groups.items():
+        if not _mac_imported_snapshot_archive_valid(
+            request_root, request_id, group, recorder,
+        ):
+            unresolved.extend(group)
+    return sorted(unresolved)
+
+
+def _mac_imported_snapshot_archive_valid(
+    request_root: Path, request_id: str, artifacts: list, recorder,
+) -> bool:
+    if not re.fullmatch(r"snapshot_[0-9]{8}_[a-f0-9]{32}", request_id):
+        return False
+    expected = {
+        f"archive/request_{request_id}.json",
+        f"archive/request_{request_id}.done",
+        f"archive/response_{request_id}.json",
+        f"archive/response_{request_id}.done",
+    }
+    if set(artifacts) != expected:
+        return False
+    durable = recorder.get_account_snapshot_request(request_id)
+    if durable is None or durable.get("status") != "IMPORTED_COMPLETE":
+        return False
+    archive = request_root / "archive"
+    try:
+        request = json.loads(
+            (archive / f"request_{request_id}.json").read_text(encoding="utf-8")
+        )
+        request_done = (
+            archive / f"request_{request_id}.done"
+        ).read_text(encoding="utf-8").strip()
+        response = json.loads(
+            (archive / f"response_{request_id}.json").read_text(encoding="utf-8")
+        )
+        response_done = (
+            archive / f"response_{request_id}.done"
+        ).read_text(encoding="utf-8").strip()
+    except (OSError, TypeError, ValueError):
+        return False
+    if not isinstance(request, dict) or not isinstance(response, dict):
+        return False
+    request_checksum = snapshot_artifact_checksum(request)
+    response_checksum = snapshot_artifact_checksum(response)
+    return bool(
+        request.get("request_id") == request_id
+        and request.get("checksum") == request_checksum
+        and request_done == request_checksum
+        and durable.get("request_checksum") == request_checksum
+        and response.get("request_id") == request_id
+        and response.get("request_checksum") == request_checksum
+        and response.get("status") == "COMPLETE"
+        and response.get("checksum") == response_checksum
+        and response_done == response_checksum
+        and durable.get("response_checksum") == response_checksum
+    )
 
 
 def run_corporate_actions(date, recorder, store, config) -> tuple:

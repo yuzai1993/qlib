@@ -198,14 +198,33 @@ Mac CLI 先用 `--prepare` 把 canonical request/checksum 持久化为 `PREPARED
 人工逐字段复核 exact bytes 后，只能用 `--publish-request-id` 引用该 durable 行。publish
 不接受日期、用途或账号等业务字段重建，复核 profile/root/account/当天日期后原字节暴露，
 状态变为 `REQUESTED`。崩溃重试仍引用同一 request ID，不生成替代请求。
+新请求只能在交易日 `14:45:00` 之前发布；到点及之后 Mac 硬拒绝。QMT 还会校验
+request 的 `trade_date`、`publish_cutoff=14:45:00` 与同日且早于 cutoff 的 `created_at`，
+但 cutoff 前已发布的请求可在 cutoff 后继续由 observer 完成，未完成 residue 继续阻断。
 
 两个实例可任选一个作为 collector，但 request 中的 profile、canonical Windows root、
 requested-for strategy、REAL account fingerprint 和 purpose 必须逐项匹配，不能把 main
 root 的请求放入 probe root 或反向复用。QMT 重启会恢复
 `snapshot_requests/processing`；相同 terminal request 只记录 replay，改变任何字段或
-checksum 都保留证据并失败关闭。`COMPLETE` 必须包含匹配 ACCOUNT；positions-only 只写
-`DIAGNOSTIC_POSITIONS_ONLY`，Mac 导入后不可用于发布门禁。观察完成后必须再次停止，确认
+checksum 都保留证据并失败关闭。只读 timer 的冷启动只初始化 snapshot 目录、profile/root
+校验与账号回调绑定，不会恢复交易批次、注册交易 timer 或进入 `_advance`。
+
+`COMPLETE` 要求 ACCOUNT 恰好一行，且返回行自身的账号与 `ACCOUNT_ID` full/masked 精确
+匹配；缺失、OTHER、多行均为 ERROR。POSITION 若暴露账号字段也逐行匹配。request 内的
+fingerprint 不能替代券商返回身份，只有校验后才重新计算 response fingerprint。
+`snapshot_requests/status.json` 会把任一半对、tmp/intent、processing、待导入 response 或
+不完整 archive 标记为 ERROR/blocking；原文件不会自动删除。Mac 成功导入 response 后，
+完整 request + COMPLETE response 四件套全部归档，下一 observer 周期才转 `CLEAR`。
+监控出现 `SNAPSHOT_RESIDUE_BLOCKED` 时必须处置，禁止绕过。观察完成后必须再次停止，确认
 没有授权 marker，再进入 operator batch 发布和用户确认流程。
+
+两个 profile 共享 main root 的 `state/SNAPSHOT_ORDER_ADVANCE.lock`；probe 不能在自身
+nested root 建另一把锁。Mac 用 `O_CREAT|O_EXCL` 写入 owner/request/profile/timestamp，
+并持续持有到 `IMPORTED_COMPLETE` + 完整四件套归档后由 importer 校验 owner/request 和
+所有 checksum 再释放。QMT 的订单 `_advance` 从 snapshot scan 到 claim/process 完成全程
+持有同一 gate；observer 不持有。gate 无 stale 自动恢复。残留时停止两个实例、保存元数据
+和目录证据，获得人工审批后受控移入 quarantine；禁止直接删除。首次部署必须在实际 SMB
+上双向证明 Windows 与 Mac 的 `O_EXCL` 互斥，单元测试不能替代该验收。
 
 ## 7. 恢复与排障
 
@@ -221,6 +240,8 @@ checksum 都保留证据并失败关闭。`COMPLETE` 必须包含匹配 ACCOUNT�
 | 探针日志缺失 | 检查 `D:\qmt_bridge\pr49_probe\logs\qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl` |
 | API 返回但 UI 无委托 | 查 `ORDER_QUERY`/`ORDER_NOT_OBSERVED`；API return 本身不是 acceptance，必须有真实委托号、`ORDER_OBSERVED` 后才允许 `ACCEPTED` |
 | 重启后未恢复 | processing 的信号对是否完整；active state JSON 是否可读 |
+| `SNAPSHOT_RESIDUE_BLOCKED` | 查看 `snapshot_requests/status.json` 与四个子目录；完成 Mac 导入或人工核对半对/冲突，禁止删除证据强行放行 |
+| `SNAPSHOT_ORDER_ADVANCE.lock` 残留 | 同时停止 main/probe，保存 owner/request/profile/timestamp 与四目录清单；人工审批后受控 quarantine，禁止按年龄自动删锁 |
 | Mac 报持仓漂移 | 对照 QMT 委托/成交、`account_*.jsonl` 和本地 fills，先停下一日 LIVE |
 
 共享目录每天持久化 `qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl`，客户端重启不会清除。FormulaOutput 仅作为辅助日志。

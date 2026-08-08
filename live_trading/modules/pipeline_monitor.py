@@ -22,6 +22,41 @@ DEFAULT_THRESHOLDS = {
 }
 
 
+def check_snapshot_protocol_status(
+    status, status_path, observed_artifacts=(),
+) -> list:
+    """Surface QMT's durable fail-closed snapshot protocol state."""
+    observed = [str(item) for item in observed_artifacts]
+    if status is None and not observed:
+        return []
+    if status is None:
+        status = {}
+    if not isinstance(status, dict):
+        return [Finding(
+            "SNAPSHOT_RESIDUE_BLOCKED", CRIT,
+            f"快照协议状态文件无法解析：{status_path}；停止委托并人工检查共享目录",
+        )]
+    if (
+        status.get("state") != "ERROR"
+        and not status.get("blocking")
+        and not observed
+    ):
+        return []
+    classification = str(status.get("classification") or "UNKNOWN")
+    if observed and classification in {"CLEAR", "UNKNOWN"}:
+        classification = "OBSERVED_RESIDUE"
+    raw_artifacts = status.get("artifacts")
+    artifacts = raw_artifacts if isinstance(raw_artifacts, list) else []
+    artifacts = sorted(set(str(item) for item in artifacts) | set(observed))
+    artifact_text = ",".join(str(item) for item in artifacts[:20]) or "UNKNOWN"
+    return [Finding(
+        "SNAPSHOT_RESIDUE_BLOCKED", CRIT,
+        f"QMT 快照协议处于阻断状态：classification={classification}；"
+        f"artifacts={artifact_text}；status={status_path}；"
+        "不会进入委托状态机，请先完成导入或人工处置残留文件",
+    )]
+
+
 def _publish_recovery_hint(config_id, trade_date, has_batch):
     log_path = f"live_trading/logs/{config_id}_publish_cron.log"
     if has_batch:

@@ -725,6 +725,104 @@ def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_pa
     assert findings == []
 
 
+def test_run_postmarket_surfaces_persistent_snapshot_residue_error(
+    monkeypatch, tmp_path,
+):
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db))
+    store = MonitorStore(str(db))
+    status_path = tmp_path / "snapshot_requests" / "status.json"
+    status_path.parent.mkdir(parents=True)
+    status_path.write_text(
+        '{"state":"ERROR","blocking":true,'
+        '"classification":"INVALID_RESIDUE",'
+        '"artifacts":["processing/request_snapshot_x.json"]}\n',
+        encoding="utf-8",
+    )
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": CONFIG_ID,
+        }},
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    )
+    assert finding.level == "CRIT"
+    assert "INVALID_RESIDUE" in finding.message
+    assert "processing/request_snapshot_x.json" in finding.message
+
+
+@pytest.mark.parametrize("status_payload", [
+    None,
+    '{"state":"CLEAR","blocking":false,"classification":"CLEAR",'
+    '"artifacts":[]}\n',
+])
+def test_run_postmarket_detects_live_snapshot_residue_without_error_status(
+    monkeypatch, tmp_path, status_payload,
+):
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db))
+    store = MonitorStore(str(db))
+    request_root = tmp_path / "snapshot_requests"
+    processing = request_root / "processing"
+    processing.mkdir(parents=True)
+    residue = (
+        processing /
+        "request_snapshot_20260808_0123456789abcdef0123456789abcdef.json"
+    )
+    residue.write_text("{}\n", encoding="utf-8")
+    if status_payload is not None:
+        (request_root / "status.json").write_text(
+            status_payload, encoding="utf-8",
+        )
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": CONFIG_ID,
+        }},
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    )
+    assert finding.level == "CRIT"
+    assert "processing/request_snapshot_" in finding.message
+
+
+def test_run_postmarket_detects_shared_snapshot_advance_gate_without_status(
+    tmp_path,
+):
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db))
+    store = MonitorStore(str(db))
+    gate = tmp_path / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True)
+    gate.write_text(
+        '{"owner":"QMT_ORDER_ADVANCE","created_at":"stale"}\n',
+        encoding="utf-8",
+    )
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(tmp_path),
+            "strategy_id": CONFIG_ID,
+        }},
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    )
+    assert finding.level == "CRIT"
+    assert "state/SNAPSHOT_ORDER_ADVANCE.lock" in finding.message
+
+
 def test_run_postmarket_passes_only_current_strategy_fills_to_rules(
     monkeypatch, tmp_path,
 ):

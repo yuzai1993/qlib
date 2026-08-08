@@ -35,7 +35,7 @@ ACCOUNT_ID = ""            # QMT-local account id; must match header if set
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-08-08-task9a-snapshot-bootstrap"
+SOURCE_VERSION = "2026-08-08-task9a-snapshot-identity-fix2"
 ACCOUNT_ENVIRONMENT = "SIMULATION"
 # REAL deployments must set all four values deliberately in the QMT-local
 # copy. Keeping the repository default False prevents an accidental cutover.
@@ -52,6 +52,8 @@ MAX_BATCH_BYTES = 256 * 1024
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
 SNAPSHOT_OBSERVER_START = "09:35:00"
+SNAPSHOT_PUBLISH_CUTOFF = "14:45:00"
+SNAPSHOT_ADVANCE_GATE_NAME = "SNAPSHOT_ORDER_ADVANCE.lock"
 SELL_WAIT_TIMEOUT_SEC = 0
 TRADE_START = "14:57:05"
 CANCEL_AT = "15:00:05"
@@ -137,6 +139,9 @@ class State(object):
         self.trading_enabled = False
         self.timer_registered = False
         self.snapshot_timer_registered = False
+        self.snapshot_observer_loaded = False
+        self.snapshot_observer_enabled = False
+        self.snapshot_residue_signature = None
         self.log_write_failure = None
         self.snapshot_accounts = {}
 
@@ -558,6 +563,13 @@ def _ensure_dirs():
         p = _path(d)
         if not os.path.isdir(p):
             os.makedirs(p)
+    _ensure_snapshot_dirs()
+
+
+def _ensure_snapshot_dirs():
+    log_dir = _path("logs")
+    if not os.path.isdir(log_dir):
+        os.makedirs(log_dir)
     request_root = _path("snapshot_requests")
     for d in ("inbox", "processing", "archive", "responses"):
         p = os.path.join(request_root, d)
@@ -1538,6 +1550,19 @@ def _validate_snapshot_request(payload, done_checksum):
         raise ValueError("snapshot request strategy is not approved")
     if payload.get("evidence_purpose") != _SNAPSHOT_EVIDENCE_PURPOSE:
         raise ValueError("snapshot request evidence purpose mismatch")
+    if payload.get("publish_cutoff") != SNAPSHOT_PUBLISH_CUTOFF:
+        raise ValueError("snapshot request publish cutoff mismatch")
+    created_at = str(payload.get("created_at") or "")
+    created_match = re.match(
+        r"^([0-9]{4}-[0-9]{2}-[0-9]{2})T"
+        r"([0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]+)?"
+        r"(?:Z|[+-][0-9]{2}:[0-9]{2})$",
+        created_at,
+    )
+    if not created_match or created_match.group(1) != payload.get("trade_date"):
+        raise ValueError("snapshot request created_at date mismatch")
+    if created_match.group(2) >= SNAPSHOT_PUBLISH_CUTOFF:
+        raise ValueError("snapshot request created_at missed publish cutoff")
     if payload.get("account_type") != ACCOUNT_TYPE:
         raise ValueError("snapshot request account type mismatch")
     if payload.get("account_environment") != "REAL":
@@ -1559,32 +1584,74 @@ def _validate_snapshot_request(payload, done_checksum):
     return checksum
 
 
+def _snapshot_row_account_id(row):
+    for field in (
+            "m_strAccountID", "m_strAccountId", "account_id", "accountId"):
+        value = getattr(row, field, None)
+        if value not in (None, ""):
+            return str(value).strip()
+    return ""
+
+
+def _snapshot_account_id_matches_runtime(observed):
+    return bool(observed) and observed in (
+        str(ACCOUNT_ID), _mask_account(ACCOUNT_ID),
+    )
+
+
+def _validate_snapshot_account_rows(accounts):
+    rows = list(accounts or [])
+    if len(rows) != 1:
+        raise ValueError("broker ACCOUNT query must return exactly one row")
+    observed = _snapshot_row_account_id(rows[0])
+    if not observed:
+        raise ValueError("broker ACCOUNT row has no account identity")
+    if not _snapshot_account_id_matches_runtime(observed):
+        raise ValueError("broker ACCOUNT row does not match runtime account")
+    return rows[0]
+
+
+def _validate_snapshot_position_identity(row):
+    observed = _snapshot_row_account_id(row)
+    if observed and not _snapshot_account_id_matches_runtime(observed):
+        raise ValueError("broker POSITION row does not match runtime account")
+
+
 def _snapshot_query_response(payload):
     """Query only ACCOUNT/POSITION. No trading API is reachable here."""
     observed_at = datetime.datetime.now().isoformat()
     account = None
     positions = []
     error = ""
+    observed_account_masked = None
+    observed_account_fingerprint = None
+    account_rows = []
     try:
-        accounts = get_trade_detail_data(ACCOUNT_ID, ACCOUNT_TYPE, "ACCOUNT")
-        if accounts:
-            row = accounts[0]
-            account = {
-                "request_id": payload["request_id"],
-                "account_id_masked": _mask_account(ACCOUNT_ID),
-                "account_fingerprint": payload["account_fingerprint"],
-                "available_cash": _opt_float(row, "m_dAvailable"),
-                "total_asset": _opt_float(
-                    row, "m_dBalance", "m_dAssureAsset"),
-                "market_value": _opt_float(
-                    row, "m_dInstrumentValue", "m_dStockValue"),
-                "frozen_cash": _opt_float(row, "m_dFrozenCash"),
-                "ts": observed_at,
-            }
+        account_rows = list(
+            get_trade_detail_data(ACCOUNT_ID, ACCOUNT_TYPE, "ACCOUNT") or []
+        )
+        row = _validate_snapshot_account_rows(account_rows)
+        observed_account_masked = _mask_account(ACCOUNT_ID)
+        observed_account_fingerprint = _snapshot_account_fingerprint(
+            ACCOUNT_ID, ACCOUNT_TYPE, ACCOUNT_ENVIRONMENT,
+        )
+        account = {
+            "request_id": payload["request_id"],
+            "account_id_masked": observed_account_masked,
+            "account_fingerprint": observed_account_fingerprint,
+            "available_cash": _opt_float(row, "m_dAvailable"),
+            "total_asset": _opt_float(
+                row, "m_dBalance", "m_dAssureAsset"),
+            "market_value": _opt_float(
+                row, "m_dInstrumentValue", "m_dStockValue"),
+            "frozen_cash": _opt_float(row, "m_dFrozenCash"),
+            "ts": observed_at,
+        }
         raw_positions = get_trade_detail_data(
             ACCOUNT_ID, ACCOUNT_TYPE, "POSITION",
         )
         for row in raw_positions or []:
+            _validate_snapshot_position_identity(row)
             shares = int(getattr(row, "m_nVolume", 0) or 0)
             if shares <= 0:
                 continue
@@ -1609,10 +1676,17 @@ def _snapshot_query_response(payload):
         error = _bounded_text(exc, 512, (ACCOUNT_ID,))
         account = None
         positions = []
-    status = "ERROR" if error else (
-        "COMPLETE" if account is not None
-        else "DIAGNOSTIC_POSITIONS_ONLY"
-    )
+        observed_account_masked = None
+        observed_account_fingerprint = None
+        _log_event(
+            "SNAPSHOT_ACCOUNT_IDENTITY_ERROR",
+            severity="ERROR",
+            account_row_count=len(account_rows),
+            account_id_masked=_mask_account(ACCOUNT_ID),
+            reason=error,
+            message="broker snapshot account identity validation failed",
+        )
+    status = "ERROR" if error else "COMPLETE"
     response = {
         "type": "account_snapshot_response",
         "schema_version": payload["schema_version"],
@@ -1624,10 +1698,11 @@ def _snapshot_query_response(payload):
         "requested_for_strategy_id": payload[
             "requested_for_strategy_id"],
         "evidence_purpose": payload["evidence_purpose"],
+        "publish_cutoff": payload["publish_cutoff"],
         "account_type": payload["account_type"],
         "account_environment": payload["account_environment"],
-        "account_id_masked": payload["account_id_masked"],
-        "account_fingerprint": payload["account_fingerprint"],
+        "account_id_masked": observed_account_masked,
+        "account_fingerprint": observed_account_fingerprint,
         "request_checksum": payload["checksum"],
         "status": status,
         "account": account,
@@ -1771,20 +1846,277 @@ def _recover_partial_snapshot_response(payload):
     bindings = (
         "request_id", "trade_date", "collector_execution_profile",
         "collector_bridge_root", "requested_for_strategy_id",
-        "evidence_purpose", "account_type", "account_environment",
-        "account_id_masked", "account_fingerprint",
+        "evidence_purpose", "publish_cutoff", "account_type",
+        "account_environment",
     )
     for field in bindings:
         if response.get(field) != payload.get(field):
             raise ValueError("partial snapshot response binding mismatch: " + field)
     if response.get("request_checksum") != payload.get("checksum"):
         raise ValueError("partial snapshot response request checksum mismatch")
+    if response.get("status") == "COMPLETE":
+        if response.get("account_id_masked") != payload.get(
+                "account_id_masked"):
+            raise ValueError("partial snapshot response account mismatch")
+        if response.get("account_fingerprint") != payload.get(
+                "account_fingerprint"):
+            raise ValueError("partial snapshot response fingerprint mismatch")
+    elif response.get("account_id_masked") is not None \
+            or response.get("account_fingerprint") is not None:
+        raise ValueError("non-complete snapshot response claims account identity")
     _persist_snapshot_response(response)
     return response
 
 
 def _snapshot_processor_lock_path():
     return _path("snapshot_requests", "processor.lock")
+
+
+def _snapshot_advance_gate_path():
+    domain_root = (
+        BRIDGE_ROOT if EXECUTION_PROFILE == "CLOSE_AUCTION"
+        else OTHER_BRIDGE_ROOT
+    )
+    return os.path.join(domain_root, "state", SNAPSHOT_ADVANCE_GATE_NAME)
+
+
+def _acquire_snapshot_advance_gate():
+    path = _snapshot_advance_gate_path()
+    parent = os.path.dirname(path)
+    if not os.path.isdir(parent):
+        os.makedirs(parent)
+    try:
+        descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except OSError:
+        return False
+    try:
+        metadata = {
+            "owner": "QMT_ORDER_ADVANCE",
+            "strategy_name": STRATEGY_NAME,
+            "execution_profile": EXECUTION_PROFILE,
+            "created_at": datetime.datetime.now().isoformat(),
+        }
+        os.write(descriptor, (
+            json.dumps(metadata, ensure_ascii=True, sort_keys=True) + "\n"
+        ).encode("ascii"))
+    finally:
+        os.close(descriptor)
+    return True
+
+
+def _release_snapshot_advance_gate():
+    os.remove(_snapshot_advance_gate_path())
+
+
+def _snapshot_protocol_artifacts():
+    artifacts = []
+    scan_errors = []
+    for directory in ("inbox", "processing", "archive", "responses"):
+        root = _snapshot_request_dir(directory)
+        try:
+            names = os.listdir(root)
+        except OSError:
+            scan_errors.append(directory + "/<scan-error>")
+            continue
+        for name in names:
+            if not (name.startswith("request_snapshot_")
+                    or name.startswith("response_snapshot_")):
+                continue
+            if not (
+                name.endswith(".json") or name.endswith(".done")
+                or name.endswith(".json.tmp") or name.endswith(".done.tmp")
+                or ".intent" in name
+            ):
+                continue
+            artifacts.append(directory + "/" + name)
+    return sorted(artifacts), sorted(scan_errors)
+
+
+def _snapshot_artifact_request_id(relative_path):
+    match = re.search(
+        r"(snapshot_[0-9]{8}_[a-f0-9]{32})", relative_path,
+    )
+    return match.group(1) if match else relative_path
+
+
+def _snapshot_archive_group_resolved(request_id, artifacts):
+    expected = set((
+        "archive/request_" + request_id + ".json",
+        "archive/request_" + request_id + ".done",
+        "archive/response_" + request_id + ".json",
+        "archive/response_" + request_id + ".done",
+    ))
+    if set(artifacts) != expected:
+        return False
+    request_json = os.path.join(
+        _snapshot_request_dir("archive"),
+        "request_" + request_id + ".json",
+    )
+    request_done = request_json[:-5] + ".done"
+    response_json = os.path.join(
+        _snapshot_request_dir("archive"),
+        "response_" + request_id + ".json",
+    )
+    response_done = response_json[:-5] + ".done"
+    try:
+        with open(request_json, "r") as handle:
+            request = json.load(handle)
+        with open(request_done, "r") as handle:
+            request_marker = handle.read().strip()
+        with open(response_json, "r") as handle:
+            response = json.load(handle)
+        with open(response_done, "r") as handle:
+            response_marker = handle.read().strip()
+        if not isinstance(request, dict) or not isinstance(response, dict):
+            return False
+        request_checksum = _snapshot_artifact_checksum(request)
+        response_checksum = _snapshot_artifact_checksum(response)
+    except Exception:
+        return False
+    if request.get("type") != "account_snapshot_request" \
+            or request.get("schema_version") != _SNAPSHOT_REQUEST_SCHEMA \
+            or request.get("request_id") != request_id \
+            or request.get("checksum") != request_checksum \
+            or request_marker != request_checksum:
+        return False
+    if response.get("type") != "account_snapshot_response" \
+            or response.get("schema_version") != _SNAPSHOT_REQUEST_SCHEMA \
+            or response.get("request_id") != request_id \
+            or response.get("request_checksum") != request_checksum \
+            or response.get("checksum") != response_checksum \
+            or response_marker != response_checksum \
+            or response.get("status") != "COMPLETE":
+        return False
+    bindings = (
+        "trade_date", "collector_execution_profile", "collector_bridge_root",
+        "requested_for_strategy_id", "evidence_purpose", "publish_cutoff",
+        "account_type", "account_environment", "account_id_masked",
+        "account_fingerprint",
+    )
+    if any(response.get(field) != request.get(field) for field in bindings):
+        return False
+    account = response.get("account")
+    if not isinstance(account, dict) \
+            or account.get("request_id") != request_id \
+            or account.get("account_id_masked") != request.get(
+                "account_id_masked") \
+            or account.get("account_fingerprint") != request.get(
+                "account_fingerprint"):
+        return False
+    if request.get("collector_execution_profile") != EXECUTION_PROFILE \
+            or not _snapshot_root_matches(
+                request.get("collector_bridge_root", "")):
+        return False
+    if not ACCOUNT_ID:
+        return False
+    expected_fingerprint = _snapshot_account_fingerprint(
+        ACCOUNT_ID, ACCOUNT_TYPE, ACCOUNT_ENVIRONMENT,
+    )
+    if request.get("account_id_masked") != _mask_account(ACCOUNT_ID) \
+            or request.get("account_fingerprint") != expected_fingerprint:
+        return False
+    return True
+
+
+def _snapshot_protocol_state():
+    artifacts, scan_errors = _snapshot_protocol_artifacts()
+    if scan_errors:
+        return {
+            "state": "ERROR",
+            "severity": "ERROR",
+            "blocking": True,
+            "classification": "PROTOCOL_SCAN_ERROR",
+            "artifacts": sorted(artifacts + scan_errors),
+        }
+    groups = {}
+    for artifact in artifacts:
+        request_id = _snapshot_artifact_request_id(artifact)
+        groups.setdefault(request_id, []).append(artifact)
+    unresolved = []
+    for request_id, group in groups.items():
+        if not _snapshot_request_id_valid(request_id) \
+                or not _snapshot_archive_group_resolved(request_id, group):
+            unresolved.extend(group)
+    unresolved.sort()
+    if not unresolved:
+        return {
+            "state": "CLEAR",
+            "severity": "INFO",
+            "blocking": False,
+            "classification": "CLEAR",
+            "artifacts": [],
+        }
+    if any(path.startswith("responses/") for path in unresolved):
+        classification = "PENDING_IMPORT"
+    elif any(path.startswith("inbox/") or path.startswith("processing/")
+             for path in unresolved):
+        classification = "PENDING_REQUEST"
+    else:
+        classification = "INVALID_RESIDUE"
+    return {
+        "state": "ERROR",
+        "severity": "ERROR",
+        "blocking": True,
+        "classification": classification,
+        "artifacts": unresolved,
+    }
+
+
+def _persist_snapshot_protocol_state(status):
+    payload = dict(status)
+    payload["observed_at"] = datetime.datetime.now().isoformat()
+    path = _path("snapshot_requests", "status.json")
+    signature = (
+        payload["state"], payload["classification"],
+        tuple(payload["artifacts"]),
+    )
+    if signature == g.snapshot_residue_signature and os.path.isfile(path):
+        return
+    previous = g.snapshot_residue_signature
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w") as handle:
+        handle.write(json.dumps(
+            payload, ensure_ascii=True, sort_keys=True,
+        ) + "\n")
+        handle.flush()
+    os.replace(tmp_path, path)
+    g.snapshot_residue_signature = signature
+    if payload["blocking"]:
+        _log_event(
+            "SNAPSHOT_RESIDUE_BLOCKED",
+            severity="ERROR",
+            classification=payload["classification"],
+            artifacts=payload["artifacts"],
+            artifact_count=len(payload["artifacts"]),
+            message="snapshot protocol residue blocks order processing",
+        )
+    elif previous is not None and previous[0] == "ERROR":
+        _log_event(
+            "SNAPSHOT_RESIDUE_CLEARED",
+            severity="INFO",
+            message="snapshot protocol is clear for order processing",
+        )
+
+
+def _snapshot_residue_blocks_orders():
+    status = _snapshot_protocol_state()
+    return _persist_snapshot_state_or_block(status)
+
+
+def _persist_snapshot_state_or_block(status):
+    try:
+        _persist_snapshot_protocol_state(status)
+    except Exception as exc:
+        g.snapshot_residue_signature = (
+            "ERROR", "STATUS_WRITE_ERROR",
+            ("snapshot_requests/status.json",),
+        )
+        _log(
+            "snapshot protocol status write failed; orders remain blocked: %s"
+            % _bounded_text(exc),
+        )
+        return True
+    return bool(status["blocking"])
 
 
 def _acquire_snapshot_processor_lock():
@@ -1815,6 +2147,13 @@ def _process_snapshot_requests():
     if not _acquire_snapshot_processor_lock():
         # Another QMT worker (or a restart-stale lock) may be inside the
         # observation critical section. Fail closed for order processing.
+        _persist_snapshot_state_or_block({
+            "state": "ERROR",
+            "severity": "ERROR",
+            "blocking": True,
+            "classification": "PROCESSOR_LOCKED",
+            "artifacts": ["processor.lock"],
+        })
         return True
     try:
         return _process_snapshot_requests_locked()
@@ -1867,7 +2206,6 @@ def _process_snapshot_requests_locked():
         name for name in os.listdir(processing)
         if name.startswith("request_snapshot_") and name.endswith(".done")
     )
-    handled = bool(done_names)
     for done_name in done_names:
         json_name = done_name[:-5] + ".json"
         json_path = os.path.join(processing, json_name)
@@ -1955,7 +2293,7 @@ def _process_snapshot_requests_locked():
             # Retain processing evidence for inspection and restart; an exact
             # terminal replay will be harmless once the conflict is resolved.
             continue
-    return handled
+    return _snapshot_residue_blocks_orders()
 
 # ======================= QMT API wrappers =======================
 # All QMT built-in API usage is isolated below so the pure logic above
@@ -3030,6 +3368,22 @@ def _force_finalize_if_near_close(ContextInfo, batch):
 def _advance(ContextInfo):
     if not g.trading_enabled:
         return
+    if not _acquire_snapshot_advance_gate():
+        _persist_snapshot_state_or_block({
+            "state": "ERROR",
+            "severity": "ERROR",
+            "blocking": True,
+            "classification": "ADVANCE_GATE_BUSY",
+            "artifacts": ["state/" + SNAPSHOT_ADVANCE_GATE_NAME],
+        })
+        return
+    try:
+        _advance_with_snapshot_gate(ContextInfo)
+    finally:
+        _release_snapshot_advance_gate()
+
+
+def _advance_with_snapshot_gate(ContextInfo):
     if _process_snapshot_requests():
         # A snapshot-only wakeup is observation-exclusive: do not claim or
         # execute any order batch in the same dynamic entry invocation.
@@ -3064,12 +3418,61 @@ def timer_callback(ContextInfo):
         _log("timer_callback error:\n" + traceback.format_exc())
 
 
+def _bind_context_account(ContextInfo, event_name):
+    if not ACCOUNT_ID:
+        return
+    ContextInfo.set_account(ACCOUNT_ID)
+    _log_event(
+        event_name,
+        account_id_masked=_mask_account(ACCOUNT_ID),
+        message="QMT account callback binding enabled",
+    )
+
+
+def _init_snapshot_observer(ContextInfo):
+    """Initialize only observation resources; never initialize order state."""
+    if g.snapshot_observer_loaded:
+        return g.snapshot_observer_enabled
+    _ensure_snapshot_dirs()
+    try:
+        profile = _profile_settings()
+        _validate_profile_roots()
+    except ValueError as exc:
+        g.snapshot_observer_loaded = True
+        g.snapshot_observer_enabled = False
+        _log_event(
+            "SNAPSHOT_OBSERVER_CONFIG_ERROR",
+            severity="ERROR",
+            execution_profile=EXECUTION_PROFILE,
+            bridge_root=BRIDGE_ROOT,
+            other_bridge_root=OTHER_BRIDGE_ROOT,
+            message=str(exc),
+        )
+        return False
+    _bind_context_account(ContextInfo, "SNAPSHOT_ACCOUNT_BOUND")
+    g.snapshot_observer_loaded = True
+    g.snapshot_observer_enabled = True
+    _log_event(
+        "SNAPSHOT_OBSERVER_CONFIG",
+        account_id_masked=_mask_account(ACCOUNT_ID),
+        account_binding_configured=bool(ACCOUNT_ID),
+        account_type=ACCOUNT_TYPE,
+        account_environment=ACCOUNT_ENVIRONMENT,
+        allow_real_money=bool(ALLOW_REAL_MONEY),
+        execution_profile=EXECUTION_PROFILE,
+        bridge_root=BRIDGE_ROOT,
+        signal_price_type=profile["signal_price_type"],
+        message="snapshot-only observer runtime configuration",
+    )
+    return True
+
+
 def snapshot_timer_callback(ContextInfo):
     """Read-only observer timer; it never calls the order state machine."""
     try:
-        if not g.loaded:
-            init(ContextInfo)
-        if g.trading_enabled:
+        if not g.snapshot_observer_loaded:
+            _init_snapshot_observer(ContextInfo)
+        if g.snapshot_observer_enabled:
             _process_snapshot_requests()
     except Exception:
         _log("snapshot_timer_callback error:\n" + traceback.format_exc())
@@ -3282,16 +3685,11 @@ def init(ContextInfo):
         other_authorization_present=_other_profile_authorized(_today()),
         message="QMT bridge runtime configuration",
     )
-    if ACCOUNT_ID:
-        ContextInfo.set_account(ACCOUNT_ID)
-        _log_event(
-            "ACCOUNT_BOUND", account_id_masked=_mask_account(ACCOUNT_ID),
-            message="QMT account callback binding enabled",
-        )
     _load_processed()
     _recover_processing_batch()
     g.loaded = True
     try:
+        _init_snapshot_observer(ContextInfo)
         _register_snapshot_timer(ContextInfo)
         _register_postclose_timer(ContextInfo)
     except Exception:

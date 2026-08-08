@@ -198,6 +198,7 @@ account JSONL。观察请求不是 LIVE batch，不创建/读取授权 marker，
 REQUEST_ID=snapshot_YYYYMMDD_32位小写十六进制ID
 
 # 只按 durable request_id 暴露已复核的原字节；该确认变量不是交易授权。
+# 必须在交易日 14:45:00 之前完成；到点及之后 CLI 硬拒绝新请求。
 SNAPSHOT_OBSERVATION_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
   live_trading/scripts/request_account_snapshot.py \
   --collector-config csi1000_b6m_b2s_postclose_real \
@@ -207,9 +208,31 @@ bash live_trading/run_import_cron.sh csi1000_b6m_b2s_postclose_real
 ```
 
 QMT 的 `SNAPSHOT_REQUEST_RECEIVED`、`SNAPSHOT_REQUEST_TERMINAL` 和 Mac 状态
-`IMPORTED_COMPLETE` 必须匹配 request ID、当日日期、profile、root 和脱敏账号。
-`DIAGNOSTIC_POSITIONS_ONLY` 只能排障，不能通过 SELL preflight。导入后再次确认两个
+`IMPORTED_COMPLETE` 必须匹配 request ID、当日日期、profile、root 和脱敏账号。QMT
+ACCOUNT 查询必须恰好返回一行，返回行自身的账号须与运行时账号 full/masked 精确匹配；
+缺失、OTHER 或多行都产生 ERROR，不能用 request 中的 fingerprint 代替券商返回身份。
+POSITION 行若带账号也会逐行复核。Mac 导入仍会再次核对 response 与 durable request。
+旧版或诊断工具产生的 `DIAGNOSTIC_POSITIONS_ONLY` 仍只能排障，不能通过发布门禁。
+
+请求处理期间 `snapshot_requests/status.json` 为持久 ERROR/blocking：半对、`.tmp`/intent、
+processing、未导入 response 或不完整 archive 都会阻止交易 `_advance`，且不会自动删除。
+成功导入会把 response 两件套移入 archive；只有 request + COMPLETE response 四件套均
+校验成功并完整归档后，下一次 observer 才写 `CLEAR`。监控出现
+`SNAPSHOT_RESIDUE_BLOCKED` 时不得绕过，应完成导入或人工核查残留。导入后再次确认两个
 marker 仍不存在并停止；批次发布和 marker 创建属于后续独立停点。
+
+main 与 probe 共用主根 `state/SNAPSHOT_ORDER_ADVANCE.lock`。Mac 在 14:45 前发布时用
+`O_CREAT|O_EXCL` 创建包含 owner/request/profile/timestamp 的 gate；它不是短锁，而是从
+request 暴露一直保留到 Mac 已提交 `IMPORTED_COMPLETE`、response 完整归档且四件套再次
+校验通过。两个 QMT profile 的完整 `_advance` 都必须先取得同一个 gate，observer 不取
+gate，因而能继续完成只读查询。ERROR、半对、DB/归档崩溃、owner 不匹配都会保留 gate。
+不得按文件年龄自动删除。若 monitor 报 gate 残留，先停止 main/probe 两个 QMT 实例，
+保存 gate 元数据和四目录清单；只有确认对应 request 已安全终止并获得新的人工审批后，
+才可把 gate 受控移动到独立 quarantine 留证，禁止直接删除后继续交易。
+
+首次部署必须在真实 Windows↔Mac SMB 上做双向互操作验收：Mac 持有 gate 时 main/probe
+QMT 的 `O_EXCL` 均须失败；任一 QMT 持有 gate 时 Mac 发布也须失败。仓库单测只证明双方
+使用相同主根、文件名和原子创建协议，不能替代 SMB 服务端原子性的实机复核。
 
 ```bash
 # 只读预览；stdout 应为一笔 100 股 CLOSE_AUCTION_LIMIT SELL

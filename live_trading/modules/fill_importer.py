@@ -2311,6 +2311,7 @@ class LiveRecorder:
         """Persist one immutable observation request without a LIVE batch."""
         from live_trading.modules.operator_probe import (
             SNAPSHOT_EVIDENCE_PURPOSE,
+            SNAPSHOT_PUBLISH_CUTOFF,
             SNAPSHOT_REQUEST_SCHEMA_VERSION,
             account_identity_fingerprint,
             snapshot_artifact_checksum,
@@ -2322,6 +2323,8 @@ class LiveRecorder:
             raise SchemaError("invalid account snapshot request schema")
         if payload.get("evidence_purpose") != SNAPSHOT_EVIDENCE_PURPOSE:
             raise SchemaError("invalid account snapshot evidence purpose")
+        if payload.get("publish_cutoff") != SNAPSHOT_PUBLISH_CUTOFF:
+            raise SchemaError("invalid account snapshot publish cutoff")
         checksum = snapshot_artifact_checksum(payload)
         if payload.get("checksum") != checksum:
             raise SchemaError("account snapshot request checksum mismatch")
@@ -2409,6 +2412,7 @@ class LiveRecorder:
         """Import a bound terminal response; exact replay is a no-op."""
         from live_trading.modules.operator_probe import (
             SNAPSHOT_EVIDENCE_PURPOSE,
+            SNAPSHOT_PUBLISH_CUTOFF,
             SNAPSHOT_REQUEST_SCHEMA_VERSION,
             account_identity_fingerprint,
             snapshot_artifact_checksum,
@@ -2456,10 +2460,9 @@ class LiveRecorder:
                     "requested_for_strategy_id"
                 ],
                 "evidence_purpose": SNAPSHOT_EVIDENCE_PURPOSE,
+                "publish_cutoff": SNAPSHOT_PUBLISH_CUTOFF,
                 "account_type": request["account_type"],
                 "account_environment": request["account_environment"],
-                "account_id_masked": request["account_id_masked"],
-                "account_fingerprint": request["account_fingerprint"],
                 "request_checksum": request["request_checksum"],
             }
             for field, expected in bindings.items():
@@ -2479,6 +2482,14 @@ class LiveRecorder:
             ):
                 raise SchemaError("account snapshot response positions invalid")
             if status == "COMPLETE":
+                if response.get("account_id_masked") != request[
+                    "account_id_masked"
+                ]:
+                    raise SchemaError("response ACCOUNT identity mismatch")
+                if response.get("account_fingerprint") != request[
+                    "account_fingerprint"
+                ]:
+                    raise SchemaError("response ACCOUNT fingerprint mismatch")
                 if not isinstance(account, dict):
                     raise SchemaError("complete account snapshot requires ACCOUNT row")
                 if account.get("request_id") != request_id:
@@ -2489,8 +2500,15 @@ class LiveRecorder:
                     "account_fingerprint"
                 ]:
                     raise SchemaError("ACCOUNT row fingerprint mismatch")
-            elif account is not None:
-                raise SchemaError("non-complete response cannot carry ACCOUNT row")
+            else:
+                if response.get("account_id_masked") is not None or response.get(
+                    "account_fingerprint"
+                ) is not None:
+                    raise SchemaError(
+                        "non-complete response cannot claim ACCOUNT identity"
+                    )
+                if account is not None:
+                    raise SchemaError("non-complete response cannot carry ACCOUNT row")
             if status == "ERROR" and positions:
                 raise SchemaError("error response cannot carry positions")
             for row in positions:
@@ -2855,6 +2873,14 @@ class FillImporter:
         self.snapshot_request_root = self.bridge_root / "snapshot_requests"
         self.snapshot_responses = self.snapshot_request_root / "responses"
         self.snapshot_archive = self.snapshot_request_root / "archive"
+        authorization_root = (
+            self.bridge_root.parent
+            if self.bridge_root.name == "pr49_probe"
+            else self.bridge_root
+        )
+        self.snapshot_advance_gate = (
+            authorization_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+        )
         self.recorder = recorder
 
     def import_fills(self) -> int:
@@ -2942,15 +2968,145 @@ class FillImporter:
                     )
 
             require_unchanged()
-            if self.recorder.save_account_snapshot_response(
+            durable_before = self.recorder.get_account_snapshot_request(
+                request_id,
+            )
+            new_complete = bool(
+                payload.get("status") == "COMPLETE"
+                and durable_before is not None
+                and durable_before.get("response_checksum") is None
+            )
+            if payload.get("status") == "COMPLETE":
+                if durable_before is None or payload.get(
+                    "collector_execution_profile"
+                ) != durable_before.get("collector_execution_profile"):
+                    raise SchemaError(
+                        "account snapshot response profile mismatch"
+                    )
+                self._validate_snapshot_request_archive(payload)
+                self._validate_snapshot_advance_gate(
+                    payload, required=new_complete,
+                )
+            imported = self.recorder.save_account_snapshot_response(
                 payload, before_commit=require_unchanged,
-            ):
+            )
+            if imported:
                 count += 1
             if json_path.parent != self.snapshot_archive:
                 self._archive_snapshot_response(json_path)
             if done_path.parent != self.snapshot_archive:
                 self._archive_snapshot_response(done_path)
+            if payload.get("status") == "COMPLETE":
+                self._release_snapshot_advance_gate(payload)
         return count
+
+    def _validate_snapshot_advance_gate(
+        self, response: dict, *, required: bool,
+    ):
+        gate = self.snapshot_advance_gate
+        if not gate.exists():
+            if required:
+                raise SchemaError("snapshot advance gate is required")
+            return None
+        try:
+            gate_bytes = gate.read_bytes()
+            metadata = json.loads(gate_bytes.decode("utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SchemaError("snapshot advance gate metadata is invalid") from exc
+        expected = {
+            "owner": "MAC_SNAPSHOT_PUBLISHER",
+            "request_id": response["request_id"],
+            "execution_profile": response["collector_execution_profile"],
+        }
+        if not isinstance(metadata, dict) or any(
+            metadata.get(field) != value for field, value in expected.items()
+        ) or not metadata.get("created_at"):
+            raise SchemaError("snapshot advance gate ownership mismatch")
+        return gate_bytes
+
+    def _validate_snapshot_request_archive(self, response: dict) -> None:
+        from live_trading.modules.operator_probe import snapshot_artifact_checksum
+
+        request_id = response["request_id"]
+        json_path = self.snapshot_archive / f"request_{request_id}.json"
+        done_path = self.snapshot_archive / f"request_{request_id}.done"
+        try:
+            request_bytes = json_path.read_bytes()
+            done_bytes = done_path.read_bytes()
+            request = json.loads(request_bytes.decode("utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SchemaError("snapshot request archive is incomplete") from exc
+        if not isinstance(request, dict):
+            raise SchemaError("snapshot request archive is invalid")
+        checksum = snapshot_artifact_checksum(request)
+        durable = self.recorder.get_account_snapshot_request(request_id)
+        try:
+            durable_request = json.loads(durable["request_json"])
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise SchemaError("durable snapshot request is invalid") from exc
+        if (
+            durable is None
+            or request != durable_request
+            or request.get("checksum") != checksum
+            or done_bytes.decode("utf-8").strip() != checksum
+            or durable.get("request_checksum") != checksum
+            or response.get("request_checksum") != checksum
+        ):
+            raise SchemaError("snapshot request archive binding/checksum mismatch")
+
+    def _release_snapshot_advance_gate(self, response: dict) -> None:
+        """Release only this imported COMPLETE request's durable gate."""
+        from live_trading.modules.operator_probe import snapshot_artifact_checksum
+
+        gate_bytes = self._validate_snapshot_advance_gate(
+            response, required=False,
+        )
+        if gate_bytes is None:
+            return
+        request_id = response["request_id"]
+        expected_files = [
+            self.snapshot_archive / f"request_{request_id}.json",
+            self.snapshot_archive / f"request_{request_id}.done",
+            self.snapshot_archive / f"response_{request_id}.json",
+            self.snapshot_archive / f"response_{request_id}.done",
+        ]
+        if not all(path.is_file() for path in expected_files):
+            raise SchemaError(
+                "snapshot advance gate retained until complete archive quartet"
+            )
+        try:
+            file_bytes = [path.read_bytes() for path in expected_files]
+            request = json.loads(file_bytes[0].decode("utf-8"))
+            response_file = json.loads(file_bytes[2].decode("utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SchemaError("snapshot archive quartet is invalid") from exc
+        durable = self.recorder.get_account_snapshot_request(request_id)
+        if not isinstance(request, dict) or not isinstance(response_file, dict):
+            raise SchemaError("snapshot archive quartet must contain objects")
+        request_checksum = snapshot_artifact_checksum(request)
+        response_checksum = snapshot_artifact_checksum(response_file)
+        if (
+            durable is None
+            or durable.get("status") != "IMPORTED_COMPLETE"
+            or request.get("checksum") != request_checksum
+            or file_bytes[1].decode("utf-8").strip() != request_checksum
+            or durable.get("request_checksum") != request_checksum
+            or response_file != response
+            or response_file.get("status") != "COMPLETE"
+            or response_file.get("request_checksum") != request_checksum
+            or response_file.get("checksum") != response_checksum
+            or file_bytes[3].decode("utf-8").strip() != response_checksum
+            or durable.get("response_checksum") != response_checksum
+        ):
+            raise SchemaError("snapshot archive quartet binding/checksum mismatch")
+        if any(path.read_bytes() != original for path, original in zip(
+            expected_files, file_bytes,
+        )):
+            raise SchemaError("snapshot archive quartet changed before release")
+        gate = self.snapshot_advance_gate
+        if gate.read_bytes() != gate_bytes:
+            raise SchemaError("snapshot advance gate changed before release")
+        gate.unlink()
 
     def _snapshot_response_file(self, request_id: str, suffix: str):
         name = f"response_{request_id}{suffix}"

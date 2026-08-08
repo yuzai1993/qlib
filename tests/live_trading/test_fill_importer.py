@@ -1661,6 +1661,7 @@ def _snapshot_only_request_payload():
         "collector_bridge_root": r"D:\qmt_bridge",
         "requested_for_strategy_id": "csi1000_b6m_b2s_postclose_real",
         "evidence_purpose": "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT",
+        "publish_cutoff": "14:45:00",
         "account_type": "STOCK",
         "account_environment": "REAL",
         "account_id_masked": "88******49",
@@ -1686,8 +1687,12 @@ def _snapshot_only_response(status="COMPLETE"):
     request = _snapshot_only_request_payload()
     account = None if status != "COMPLETE" else {
         "request_id": SNAPSHOT_REQUEST_ID,
-        "account_id_masked": request["account_id_masked"],
-        "account_fingerprint": request["account_fingerprint"],
+        "account_id_masked": (
+            request["account_id_masked"] if status == "COMPLETE" else None
+        ),
+        "account_fingerprint": (
+            request["account_fingerprint"] if status == "COMPLETE" else None
+        ),
         "available_cash": 900000.0,
         "total_asset": 1000000.0,
         "market_value": 100000.0,
@@ -1705,10 +1710,15 @@ def _snapshot_only_response(status="COMPLETE"):
         "requested_for_strategy_id": request[
             "requested_for_strategy_id"],
         "evidence_purpose": request["evidence_purpose"],
+        "publish_cutoff": request["publish_cutoff"],
         "account_type": request["account_type"],
         "account_environment": request["account_environment"],
-        "account_id_masked": request["account_id_masked"],
-        "account_fingerprint": request["account_fingerprint"],
+        "account_id_masked": (
+            request["account_id_masked"] if status == "COMPLETE" else None
+        ),
+        "account_fingerprint": (
+            request["account_fingerprint"] if status == "COMPLETE" else None
+        ),
         "request_checksum": request["checksum"],
         "status": status,
         "account": account,
@@ -1729,6 +1739,26 @@ def _snapshot_only_response(status="COMPLETE"):
 
 
 def _write_snapshot_only_response(root, response):
+    request = _snapshot_only_request_payload()
+    archive = root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    request_json = archive / f"request_{request['request_id']}.json"
+    request_done = archive / f"request_{request['request_id']}.done"
+    request_json.write_text(
+        json.dumps(request, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    request_done.write_text(
+        request["checksum"] + "\n", encoding="utf-8",
+    )
+    gate = root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True, exist_ok=True)
+    if not gate.exists():
+        gate.write_text(json.dumps({
+            "owner": "MAC_SNAPSHOT_PUBLISHER",
+            "request_id": request["request_id"],
+            "execution_profile": request["collector_execution_profile"],
+            "created_at": "2026-07-14T08:01:00+08:00",
+        }) + "\n", encoding="utf-8")
     response_dir = root / "snapshot_requests" / "responses"
     response_dir.mkdir(parents=True, exist_ok=True)
     request_id = response["request_id"]
@@ -1752,6 +1782,85 @@ def test_snapshot_only_complete_response_becomes_trusted_without_batch(env):
     )["600000.SH"]["can_use_volume"] == 100
     durable = recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)
     assert durable["status"] == "IMPORTED_COMPLETE"
+
+
+def test_complete_import_releases_only_owned_gate_after_archive_quartet(env):
+    bridge_root, recorder, importer = env
+    request = _record_published_snapshot_only_request(recorder)
+    archive = bridge_root / "snapshot_requests" / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.json").write_text(
+        json.dumps(request, sort_keys=True) + "\n", encoding="utf-8",
+    )
+    (archive / f"request_{SNAPSHOT_REQUEST_ID}.done").write_text(
+        request["checksum"] + "\n", encoding="utf-8",
+    )
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True)
+    gate.write_text(json.dumps({
+        "owner": "MAC_SNAPSHOT_PUBLISHER",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "execution_profile": "CLOSE_AUCTION",
+        "created_at": "2026-07-14T08:01:00+08:00",
+    }) + "\n", encoding="utf-8")
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+
+    assert importer.import_account_snapshot_responses() == 1
+
+    assert not gate.exists()
+    assert len(list(archive.glob(f"*_{SNAPSHOT_REQUEST_ID}.*"))) == 4
+
+
+def test_complete_import_requires_owned_lifecycle_gate_before_db_trust(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.unlink()
+
+    with pytest.raises(SchemaError, match="advance gate.*required"):
+        importer.import_account_snapshot_responses()
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+
+
+def test_complete_import_retains_gate_for_corrupt_request_archive(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    archive = bridge_root / "snapshot_requests" / "archive"
+    request_json = archive / f"request_{SNAPSHOT_REQUEST_ID}.json"
+    request_json.write_text("{}\n", encoding="utf-8")
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+
+    with pytest.raises(SchemaError, match="request archive"):
+        importer.import_account_snapshot_responses()
+
+    assert gate.is_file()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+
+
+def test_error_import_retains_snapshot_lifecycle_gate(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.parent.mkdir(parents=True)
+    gate.write_text(json.dumps({
+        "owner": "MAC_SNAPSHOT_PUBLISHER",
+        "request_id": SNAPSHOT_REQUEST_ID,
+        "execution_profile": "CLOSE_AUCTION",
+        "created_at": "2026-07-14T08:01:00+08:00",
+    }) + "\n", encoding="utf-8")
+    _write_snapshot_only_response(
+        bridge_root, _snapshot_only_response("ERROR"),
+    )
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert gate.is_file()
 
 
 def test_snapshot_only_response_cannot_import_before_prepared_request_publish(env):
@@ -1782,6 +1891,41 @@ def test_snapshot_only_positions_response_is_diagnostic_not_authorizing(env):
         recorder.get_broker_position_details(
             "2026-07-14", require_lifecycle_evidence=True,
         )
+
+
+def test_snapshot_only_error_response_cannot_claim_identity_or_authorize(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response("ERROR")
+    assert response["account_id_masked"] is None
+    assert response["account_fingerprint"] is None
+    _write_snapshot_only_response(bridge_root, response)
+
+    assert importer.import_account_snapshot_responses() == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_ERROR"
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        recorder.get_broker_position_details(
+            "2026-07-14", require_lifecycle_evidence=True,
+        )
+
+
+def test_snapshot_only_complete_response_identity_is_rechecked_on_mac(env):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    response = _snapshot_only_response()
+    response["account_id_masked"] = "99******99"
+    response["account"]["account_id_masked"] = "99******99"
+    response["checksum"] = snapshot_artifact_checksum(response)
+    _write_snapshot_only_response(bridge_root, response)
+
+    with pytest.raises(SchemaError, match="response ACCOUNT identity mismatch"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+    assert recorder.get_broker_account_snapshot("2026-07-14") is None
 
 
 def test_snapshot_only_terminal_changed_replay_fails_closed(env):
@@ -1924,6 +2068,42 @@ def test_snapshot_only_split_archive_after_db_commit_converges(env):
 
     assert importer.import_account_snapshot_responses() == 0
     assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
+
+
+def test_snapshot_gate_survives_postcommit_archive_crash_then_releases(
+    env, monkeypatch,
+):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    original_archive = importer._archive_snapshot_response
+    crashed = {"value": False}
+
+    def crash_after_first_move(path):
+        original_archive(path)
+        if not crashed["value"]:
+            crashed["value"] = True
+            raise RuntimeError("simulated crash after DB commit during archive")
+
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", crash_after_first_move,
+    )
+    with pytest.raises(RuntimeError, match="after DB commit"):
+        importer.import_account_snapshot_responses()
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+    assert gate.is_file()
+
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", original_archive,
+    )
+    assert importer.import_account_snapshot_responses() == 0
+    assert not gate.exists()
+    archive = bridge_root / "snapshot_requests" / "archive"
+    assert len(list(archive.glob(f"*_{SNAPSHOT_REQUEST_ID}.*"))) == 4
 
 
 def test_snapshot_only_rejects_account_or_position_from_other_request(env):

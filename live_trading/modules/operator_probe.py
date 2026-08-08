@@ -8,7 +8,7 @@ import re
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time as datetime_time
 from pathlib import Path
 from filelock import FileLock
 
@@ -37,6 +37,8 @@ AUTHORIZATION_PROFILE_NAMES = (
 )
 SNAPSHOT_REQUEST_SCHEMA_VERSION = "1.0"
 SNAPSHOT_EVIDENCE_PURPOSE = "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT"
+SNAPSHOT_PUBLISH_CUTOFF = "14:45:00"
+SNAPSHOT_ADVANCE_GATE_NAME = "SNAPSHOT_ORDER_ADVANCE.lock"
 MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 SNAPSHOT_REQUEST_STRATEGIES = {MAIN_STRATEGY_ID, PROBE_STRATEGY_ID}
 QMT_PROFILE_BRIDGE_ROOTS = {
@@ -77,6 +79,7 @@ class AccountSnapshotRequest:
     account_id_masked: str
     account_fingerprint: str
     created_at: str
+    publish_cutoff: str = SNAPSHOT_PUBLISH_CUTOFF
     schema_version: str = SNAPSHOT_REQUEST_SCHEMA_VERSION
     evidence_purpose: str = SNAPSHOT_EVIDENCE_PURPOSE
 
@@ -119,13 +122,19 @@ def build_account_snapshot_request(
         raise SchemaError("invalid durable snapshot request_id")
     if request_id.split("_")[1] != trade_date.replace("-", ""):
         raise SchemaError("snapshot request_id trade date mismatch")
-    timestamp = created_at or datetime.now(timezone.utc).isoformat()
+    timestamp = created_at or _snapshot_publish_now().isoformat()
     try:
         parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
     except (TypeError, ValueError) as exc:
         raise SchemaError("snapshot request created_at is invalid") from exc
     if parsed.tzinfo is None:
         raise SchemaError("snapshot request created_at must include timezone")
+    if parsed.date().isoformat() != trade_date:
+        raise SchemaError("snapshot request created_at date mismatch")
+    if parsed.timetz().replace(tzinfo=None) >= datetime_time.fromisoformat(
+        SNAPSHOT_PUBLISH_CUTOFF
+    ):
+        raise SchemaError("snapshot request created_at must precede cutoff")
     account_type = live.get("account_type", "")
     return AccountSnapshotRequest(
         request_id=request_id,
@@ -172,6 +181,8 @@ def publish_account_snapshot_request(
     durable = recorder.get_account_snapshot_request(request_id)
     if durable is None:
         raise SchemaError("unknown prepared account snapshot request")
+    if durable.get("status") not in {"PREPARED", "REQUESTED"}:
+        raise SchemaError("account snapshot request is already terminal")
     try:
         payload = json.loads(durable["request_json"])
     except (TypeError, json.JSONDecodeError) as exc:
@@ -193,6 +204,9 @@ def publish_account_snapshot_request(
         raise SchemaError("prepared snapshot canonical bridge root mismatch")
     if payload.get("trade_date") != date.today().isoformat():
         raise SchemaError("prepared snapshot request trade_date must equal today")
+    if payload.get("publish_cutoff") != SNAPSHOT_PUBLISH_CUTOFF:
+        raise SchemaError("prepared snapshot publish cutoff mismatch")
+    _require_snapshot_publish_window(payload["trade_date"])
     if durable["account_id"] != account_id:
         raise SchemaError("prepared snapshot durable account mismatch")
     if account_identity_fingerprint(
@@ -218,7 +232,13 @@ def publish_account_snapshot_request(
     done = inbox / ("request_%s.done" % request_id)
     encoded = durable["request_json"] + "\n"
     lock = FileLock(str(request_root / "publish.lock"))
-    with lock:
+    authorization_root = _snapshot_authorization_root(
+        root, live["execution_session"],
+    )
+    with lock, _snapshot_order_advance_gate(
+        authorization_root, request_id, live["execution_session"],
+    ):
+        _require_snapshot_publish_window(payload["trade_date"])
         recorder.mark_account_snapshot_request_published(
             request_id, durable["request_checksum"],
         )
@@ -242,6 +262,78 @@ def publish_account_snapshot_request(
         os.replace(tmp_json, target)
         os.replace(tmp_done, done)
         return target
+
+
+def _snapshot_publish_now() -> datetime:
+    return datetime.now().astimezone()
+
+
+def _snapshot_authorization_root(
+    bridge_root: Path, execution_profile: str,
+) -> Path:
+    return (
+        bridge_root.parent
+        if execution_profile == "AFTER_HOURS_FIXED_PRICE"
+        else bridge_root
+    )
+
+
+def _require_snapshot_publish_window(trade_date: str) -> None:
+    now = _snapshot_publish_now()
+    if now.date().isoformat() != trade_date:
+        raise SchemaError("snapshot publish clock date does not match trade_date")
+    if now.timetz().replace(tzinfo=None) >= datetime_time.fromisoformat(
+        SNAPSHOT_PUBLISH_CUTOFF
+    ):
+        raise SchemaError(
+            "snapshot publish cutoff %s has passed" % SNAPSHOT_PUBLISH_CUTOFF
+        )
+
+
+@contextmanager
+def _snapshot_order_advance_gate(
+    authorization_root: Path, request_id: str, execution_profile: str,
+):
+    gate = authorization_root / "state" / SNAPSHOT_ADVANCE_GATE_NAME
+    gate.parent.mkdir(parents=True, exist_ok=True)
+    metadata = {
+        "owner": "MAC_SNAPSHOT_PUBLISHER",
+        "request_id": request_id,
+        "execution_profile": execution_profile,
+        "created_at": _snapshot_publish_now().isoformat(),
+    }
+    try:
+        descriptor = os.open(
+            str(gate), os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+        )
+    except OSError as exc:
+        try:
+            existing = json.loads(gate.read_text(encoding="utf-8"))
+        except (OSError, TypeError, ValueError):
+            raise SchemaError(
+                "snapshot order advance gate busy/timeout"
+            ) from exc
+        if not isinstance(existing, dict) or any(
+            existing.get(field) != expected for field, expected in (
+                ("owner", "MAC_SNAPSHOT_PUBLISHER"),
+                ("request_id", request_id),
+                ("execution_profile", execution_profile),
+            )
+        ):
+            raise SchemaError(
+                "snapshot order advance gate busy/timeout"
+            ) from exc
+    else:
+        try:
+            os.write(
+                descriptor,
+                (json.dumps(
+                    metadata, ensure_ascii=True, sort_keys=True,
+                ) + "\n").encode("ascii"),
+            )
+        finally:
+            os.close(descriptor)
+    yield
 
 
 @dataclass(frozen=True)

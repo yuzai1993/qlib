@@ -120,6 +120,7 @@ collector 改为 main 配置，但 profile/root 会随 collector 一起绑定，
 
 # 从 prepare 输出逐字复核并复制 request_id；publish 不再接受业务字段重建。
 REQUEST_ID=snapshot_YYYYMMDD_32位小写十六进制ID
+# 必须严格早于 14:45:00；到点及之后不得新发 snapshot request。
 SNAPSHOT_OBSERVATION_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
   live_trading/scripts/request_account_snapshot.py \
   --collector-config csi1000_pr49_one_lot_probe \
@@ -130,10 +131,20 @@ bash live_trading/run_probe_import.sh
 
 Windows 持久日志必须按顺序出现 `SNAPSHOT_REQUEST_RECEIVED` 和
 `SNAPSHOT_REQUEST_TERMINAL`，且没有 `PASSORDER_ATTEMPT`；Mac durable request 必须成为
-`IMPORTED_COMPLETE`。`DIAGNOSTIC_POSITIONS_ONLY`、ERROR、identity/profile/root/checksum
-mismatch 都不能授权 BUY/SELL。此请求不会创建或依赖任何 marker。导入后再次执行上面的
-marker `find`，仍应无输出，然后停在 operator batch 发布之前重新复核。不得复用旧日
-快照，也不得手工制作 account JSONL。
+`IMPORTED_COMPLETE`。ACCOUNT 必须恰好一行，且返回行账号与运行时 full/masked 精确匹配；
+缺失、OTHER、多行、ERROR、identity/profile/root/checksum mismatch 都不能授权 BUY/SELL。
+此请求不会创建或依赖任何 marker。处理或导入未完成时
+`snapshot_requests/status.json` 必须保持 ERROR/blocking；Mac 导入把 COMPLETE response
+归档后，等待 observer 写成 CLEAR。任何半对、tmp/intent、processing 或不完整 archive
+都保留证据并阻断交易，禁止删除绕过。导入后再次执行上面的 marker `find`，仍应无输出，
+然后停在 operator batch 发布之前重新复核。不得复用旧日快照，也不得手工制作 account
+JSONL。
+
+main/probe 必须指向同一主根 `state/SNAPSHOT_ORDER_ADVANCE.lock`。publish 后该 gate 应继续
+存在，直到 Mac durable 状态为 `IMPORTED_COMPLETE` 且 request/response 四件套完整归档；
+ERROR 或 crash 后必须仍存在。首次启用前在实际 SMB 上分别让 Mac 和 Windows/QMT 创建
+gate，确认对端 `O_EXCL` 必然失败，并保存两次元数据/日志。若 gate 残留，停止两个 QMT
+实例并保存证据，只有新的人工审批允许受控移入 quarantine，禁止自动或直接删除。
 
 当天启动 QMT 后先确认 `SNAPSHOT_TIMER_REGISTERED` 的 `first_wakeup` 为 09:35:00 且
 `registered=true`；不得等到 15:04:55 的交易 timer 才发观察请求。若只读 timer 缺失或

@@ -3,7 +3,6 @@
 import dataclasses
 import os
 import re
-from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -392,6 +391,67 @@ def _validate_publish_root(live: dict, publisher) -> Path:
     return canonical
 
 
+def _require_exclusive_main_sell(
+    request: OperatorProbeRequest,
+    live: dict,
+    recorder,
+    bridge_root: Path,
+) -> bool:
+    """Keep a date/profile-wide LIVE marker exclusive to one operator SELL."""
+    if request.side != "SELL":
+        raise SchemaError("main operator publication only supports SELL")
+    strategy_id = live["strategy_id"]
+    state = recorder.get_execution_state(strategy_id)
+    if state["state"] != "PAUSED":
+        raise SchemaError(
+            "main operator SELL requires durable PAUSED execution state"
+        )
+
+    operator_batch_id = _batch_id(request, live)
+    conflicting_batches = [
+        batch for batch in recorder.get_active_batches_by_date(
+            request.trade_date, strategy_id=strategy_id,
+        )
+        if batch["mode"] == "LIVE" and batch["batch_id"] != operator_batch_id
+    ]
+    if conflicting_batches:
+        ids = ",".join(batch["batch_id"] for batch in conflicting_batches)
+        raise SchemaError(
+            f"same-day LIVE batch blocks exclusive main SELL: {ids}"
+        )
+
+    prefix = f"{request.trade_date.replace('-', '')}_{strategy_id}_"
+    expected_inbox = {
+        f"signal_{operator_batch_id}.jsonl",
+        f"signal_{operator_batch_id}.done",
+    }
+    observed_expected_inbox = set()
+    artifacts = []
+    for directory in ("inbox", "processing", "archive"):
+        root = bridge_root / directory
+        if not root.is_dir():
+            continue
+        for path in root.glob(f"signal_{prefix}*"):
+            if directory == "inbox" and path.name in expected_inbox:
+                observed_expected_inbox.add(path.name)
+                continue
+            if path.is_file():
+                artifacts.append(path.relative_to(bridge_root).as_posix())
+    state_root = bridge_root / "state"
+    if state_root.is_dir():
+        for path in state_root.glob(f"*{prefix}*"):
+            if path.is_file():
+                artifacts.append(path.relative_to(bridge_root).as_posix())
+    if observed_expected_inbox and observed_expected_inbox != expected_inbox:
+        artifacts.append("inbox/incomplete exact operator batch pair")
+    if artifacts:
+        raise SchemaError(
+            "same-day QMT artifact blocks exclusive main SELL: "
+            + ",".join(sorted(artifacts))
+        )
+    return observed_expected_inbox == expected_inbox
+
+
 def publish_operator_probe(
     request: OperatorProbeRequest, config: dict, recorder, publisher, account_id: str,
 ) -> Path:
@@ -406,13 +466,26 @@ def publish_operator_probe(
     ):
         raise SchemaError("BUY requires explicit --eligibility-confirmed")
     _validate_real_account(live, account_id)
-    _validate_publish_root(live, publisher)
+    bridge_root = _validate_publish_root(live, publisher)
     is_probe = live.get("kind") == "OPERATOR_PROBE"
-    gate = recorder.probe_snapshot_gate() if is_probe else nullcontext()
+    gate = (
+        recorder.probe_snapshot_gate()
+        if is_probe
+        else recorder.operator_publish_gate()
+    )
+    record_gate = {} if is_probe else {
+        "required_execution_state": "PAUSED",
+        "exclusive_same_day_live": True,
+    }
     with gate:
+        if not is_probe:
+            _require_exclusive_main_sell(
+                request, live, recorder, bridge_root,
+            )
         header = _header(request, live, account_id)
 
-        if recorder.get_batch(header.batch_id) is not None:
+        durable_retry = recorder.get_batch(header.batch_id) is not None
+        if durable_retry:
             # A durable plan remains authoritative for immutable bytes and
             # mutable holdings/availability. ACCOUNT evidence is rechecked
             # because a query-failure snapshot cannot authorize real money.
@@ -425,23 +498,44 @@ def publish_operator_probe(
             recorder.record_publish_plan(
                 header, [order], probe_transition={
                     "side": order.side, "stock_code": order.stock_code,
-                } if is_probe else None,
+                } if is_probe else None, **record_gate,
             )
         else:
             header, order = preview_operator_probe(
                 request, config, recorder, account_id,
             )
         try:
-            publisher.ensure_publishable(header, [order])
+            already_visible = publisher.ensure_publishable(header, [order])
         except PublishError as exc:
             raise SchemaError(str(exc)) from exc
+        except OSError as exc:
+            if not is_probe and durable_retry:
+                raise SchemaError(
+                    "main SELL inbox changed during durable retry; "
+                    "refusing to republish"
+                ) from exc
+            raise
+        if not is_probe and durable_retry:
+            if already_visible:
+                return bridge_root / "inbox" / f"signal_{header.batch_id}.jsonl"
+            # A DB-only crash is recoverable only while no trace of a QMT
+            # claim exists. Recheck after the byte comparison so a concurrent
+            # inbox -> processing/archive transition cannot trigger rewrite.
+            exact_pair_visible = _require_exclusive_main_sell(
+                request, live, recorder, bridge_root,
+            )
+            if exact_pair_visible:
+                raise SchemaError(
+                    "main SELL inbox changed during durable retry; "
+                    "refusing to republish"
+                )
         # The durable record is the atomic serialization point even when another
         # invocation interleaves after the read-only SMB preflight.
         probe_transition = {
             "side": order.side, "stock_code": order.stock_code,
         } if is_probe else None
         recorder.record_publish_plan(
-            header, [order], probe_transition=probe_transition,
+            header, [order], probe_transition=probe_transition, **record_gate,
         )
         if probe_transition is not None:
             return recorder.publish_recorded_operator_probe(

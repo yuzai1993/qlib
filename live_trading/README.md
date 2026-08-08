@@ -2,7 +2,9 @@
 
 当前活动系统是 `csi1000_b6m_b2s_postclose_real`。它使用冻结的 B6-M seed 4000、CSI1000、Top30/Drop2/Hold20，以及每天 Top2 的渐进建仓；QMT 在 14:57 收盘集合竞价使用 `prType=11` 显式限价。
 
-Windows QMT、SMB 桥接和 Server酱通知已完成基础连接验收。2026-08-06 从资金账号 `8890116049` 的一手实盘开始；`LIVE_OK` 和后续晋级仍是显式步骤。旧模拟盘配置仅作历史材料，不应再调度。
+Windows QMT、SMB 桥接和 Server酱通知已完成基础连接验收。真实资金账号只通过本地
+`QMT_REAL_ACCOUNT_ID` 与 QMT UI 绑定，不写入 Git；`LIVE_OK` 和后续晋级仍是显式步骤。
+旧模拟盘配置仅作历史材料，不应再调度。
 
 ## 固定契约
 
@@ -11,7 +13,7 @@ Windows QMT、SMB 桥接和 Server酱通知已完成基础连接验收。2026-08
 | 活动配置 | `live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml` |
 | 对照配置 | `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml` |
 | 股票池 / benchmark | CSI1000 / `SH000852` |
-| 账户口径 | 资金账号 `8890116049`；可用资金/总资产 1,000,000 元；价值调整 0；普通股票空仓 |
+| 账户口径 | 真实账号由 `QMT_REAL_ACCOUNT_ID` 提供；账本初始经济基准 1,000,000 元、价值调整 0；当前现金/持仓只信任已导入券商快照 |
 | 策略 | Top30 / Drop2 / initial Top2 / Hold20 / risk 0.93（保留 7% 现金） |
 | 研究策略基线 | `qlib_exp/backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml` |
 | 模型 | B6-M seed 4000，SHA-256 `368a503c...e6325` |
@@ -57,7 +59,7 @@ openssl dgst -sha256 \
 
 ```bash
 export TUSHARE_TOKEN='...'
-export QMT_REAL_ACCOUNT_ID='实盘资金账号'
+export QMT_REAL_ACCOUNT_ID='<仅在本机填写真实资金账号>'
 export LIVE_CONFIG_ID='csi1000_b6m_b2s_postclose_real'
 export LIVE_RUN_MODE='LIVE'
 ```
@@ -84,11 +86,11 @@ test -w /Volumes/qmt_bridge/inbox
 
 必须同时满足：
 
-- 确认 QMT 策略绑定资金账号 `8890116049`；
+- 确认 QMT UI 绑定的账号与本地 `QMT_REAL_ACCOUNT_ID` 完全一致；
 - 保持 `qmt_signal_bridge.py` 的 `MAX_ORDER_QUANTITY = 100`；
 - 设置 `LIVE_RUN_MODE=LIVE` 和 `LIVE_TRADING_CONFIRM=YES`；
 - 每个交易日人工创建当日 `LIVE_OK_YYYY-MM-DD`；
-- 逐单核对 QMT 委托类型 49、官方收盘价、成交回报、账本现金与持仓。
+- 逐单核对 QMT 委托类型 11、涨跌停限价、成交回报、账本现金与持仓。
 
 删除 `LIVE_OK` 只会阻止尚未提交的新单；已提交订单仍会查询、撤单和终结，避免在途订单失管。
 当天是否执行会冻结在 14:57:05 的首次交易唤醒：若当时缺少 `LIVE_OK`，补建也不会让该批订单突然转为执行，必须等下一交易日重新授权。
@@ -96,6 +98,147 @@ test -w /Volumes/qmt_bridge/inbox
 ### 3. 实盘晋级
 
 一手阶段通过后才可单独评审解除初始空仓/现金预检和数量上限。账户匹配、REAL 门禁、双开关和每日 `LIVE_OK` 始终保留；系统不会自动晋级。
+
+## 主策略 SELL 验收与 PAUSED 交接
+
+本流程只卖出用户明确选择的一手持仓，不开始正式建仓。所有命令在仓库根目录运行，
+先把占位符改为用户确认的实际交易日和 QMT 股票代码：
+
+```bash
+TRADE_DATE=YYYY-MM-DD
+STOCK_CODE=600000.SH
+PREVIEW="live_trading/logs/csi1000_b6m_b2s_postclose_real/previews/signal_${TRADE_DATE}.json"
+```
+
+### 1. 正常策略计划只做审计预览
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/run_publish_signals.py \
+  --config csi1000_b6m_b2s_postclose_real \
+  --trade-date "$TRADE_DATE" --mode LIVE --audit-preview "$PREVIEW"
+
+/opt/anaconda3/envs/qlib/bin/python -m json.tool "$PREVIEW"
+```
+
+preview 只是证据：它不会登记 batch，也不会写 QMT inbox，更不是执行授权。复核
+`trade_date`、`signal_date`、当前持仓、最多两笔 BUY、`sell_count=0`，并确认 Top30
+渐进建仓期间没有 Drop/SELL。若不满足，停止，不进入人工 SELL。
+
+禁止手工编辑 JSONL，包括 preview、signal、fills 和 account 文件。人工测试意图只能由
+下面的工具生成新 batch/checksum/client order ID；已经发布的文件不可覆盖或改写。
+
+### 2. 预览并发布一笔受审计 SELL
+
+先进入 durable `PAUSED`，从这一刻阻止普通策略发布与 operator SELL 并发；operator
+工具还会持有账本旁的跨进程发布锁，覆盖 QMT root 预检、durable record 和 inbox
+发布/接管，保证两个恢复进程不能重建同一批次。后续验收完成后仍保持暂停：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/set_execution_state.py \
+  --config csi1000_b6m_b2s_postclose_real \
+  --state PAUSED --reason 'exclusive one-lot main sell verification'
+
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/set_execution_state.py \
+  --config csi1000_b6m_b2s_postclose_real --get
+```
+
+输出必须为 `PAUSED`。再确认账本和 QMT root 没有同日其他 main LIVE batch。下面的
+`batch_status.py` 预期以状态码 1 返回且 stdout 为空；0 表示已有 active batch，其他状态
+表示检查失败，二者都必须停住：
+
+```bash
+set +e
+ACTIVE_BATCH=$(/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/batch_status.py \
+  --config csi1000_b6m_b2s_postclose_real --trade-date "$TRADE_DATE")
+BATCH_STATUS=$?
+set -e
+test "$BATCH_STATUS" -eq 1
+test -z "$ACTIVE_BATCH"
+
+DATE_COMPACT=${TRADE_DATE//-/}
+find /Volumes/qmt_bridge/inbox /Volumes/qmt_bridge/processing \
+  -maxdepth 1 -type f \
+  -name "signal_${DATE_COMPACT}_csi1000_b6m_b2s_postclose_real_*" -print
+find /Volumes/qmt_bridge/state -maxdepth 1 -type f \
+  -name "*${DATE_COMPACT}_csi1000_b6m_b2s_postclose_real_*" -print
+```
+
+两个 `find` 都必须无输出。发布 CLI 会在写账本/SMB 前再次执行同样的 durable state、
+同日 LIVE ledger 和 inbox/processing/state 排他检查；任一同日其他 main LIVE batch 或
+QMT artifact 都拒绝 seq900 发布。不得删除旧批次来强行通过，应先查明并验收其状态。
+
+首先确保账本和同一交易日的可信券商账户快照都显示 `$STOCK_CODE` 可用至少 100 股。
+若当日 snapshot 缺失，必须停止并等待受控 snapshot-only 前置入口，不能复用旧快照或
+伪造 account JSONL。
+
+```bash
+# 只读预览；stdout 应为一笔 100 股 CLOSE_AUCTION_LIMIT SELL
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/run_operator_probe.py \
+  --config csi1000_b6m_b2s_postclose_real \
+  --trade-date "$TRADE_DATE" --stock-code "$STOCK_CODE" \
+  --side SELL --quantity 100 --reason operator_sell_probe
+
+# 逐字段人工复核后才发布不可变批次；确认变量只作用于本进程
+LIVE_TRADING_CONFIRM=YES /opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/run_operator_probe.py \
+  --config csi1000_b6m_b2s_postclose_real \
+  --trade-date "$TRADE_DATE" --stock-code "$STOCK_CODE" \
+  --side SELL --quantity 100 --reason operator_sell_probe --publish
+```
+
+发布后再次核对 Windows QMT 主实例绑定、`CLOSE_AUCTION/prType=11`、
+`MAX_ORDER_QUANTITY=100`、股票和日期。得到用户当日明确确认后才手工创建同日
+`LIVE_OK_YYYY-MM-DD`；不创建未来日期 marker，也不允许 probe 同日授权。
+
+```powershell
+$TradeDate = "YYYY-MM-DD"
+$Today = (Get-Date).ToString("yyyy-MM-dd")
+if ($TradeDate -ne $Today) { throw "trade date must equal today" }
+$Cutoff = [datetime]::ParseExact(
+  "$TradeDate 14:57:05", "yyyy-MM-dd HH:mm:ss",
+  [System.Globalization.CultureInfo]::InvariantCulture)
+if ((Get-Date) -ge $Cutoff) { throw "authorization cutoff has passed" }
+$OtherMarker = "D:\qmt_bridge\pr49_probe\state\PR49_LIVE_OK_$TradeDate"
+if (Test-Path -LiteralPath $OtherMarker) { throw "other profile authorization exists" }
+New-Item -ItemType File -Path "D:\qmt_bridge\state\LIVE_OK_$TradeDate" -ErrorAction Stop
+Get-Item -LiteralPath "D:\qmt_bridge\state\LIVE_OK_$TradeDate"
+```
+
+### 3. 导入、盘后验收并保持暂停
+
+15:01 后先导入，再运行盘后检查：
+
+```bash
+bash live_trading/run_import_cron.sh csi1000_b6m_b2s_postclose_real
+bash live_trading/run_monitor_cron.sh postmarket csi1000_b6m_b2s_postclose_real
+
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/run_monitor.py \
+  --config csi1000_b6m_b2s_postclose_real \
+  --stage postmarket --date "$TRADE_DATE"
+```
+
+只有真实 QMT 委托号、100 股可信终态、费用、卖后持仓、券商账户快照及现金/持仓对账
+全部一致才算通过。仅有 API return、`SUBMITTED_UNCONFIRMED` 或 `passorder` 日志不算
+受理；必须观察到 `ORDER_OBSERVED`，之后才可出现 `ACCEPTED`。
+
+验收通过后复核主策略仍为经审计暂停：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  live_trading/scripts/set_execution_state.py \
+  --config csi1000_b6m_b2s_postclose_real --get
+```
+
+`PAUSED` 后，16:00 数据、预测、日报和监控照常运行；发布 wrapper 只写审计 preview，
+不登记或发布 LIVE 批次。只有新的用户明确指令才能改回 `ACTIVE`。prType=49 的双实例
+部署与逐日操作见 [QMT 部署说明](qmt_strategy/README_QMT.md) 和
+[PR49 探针清单](qmt_strategy/PR49_PROBE_CHECKLIST.md)。
 
 ## 调度
 

@@ -81,7 +81,13 @@ def publish_recorded_plan(recorder, publisher, header, orders):
     )
     validate_batch(validated_header, orders)
     publisher.ensure_publishable(validated_header, orders)
-    recorder.record_publish_plan(validated_header, orders)
+    recorder.record_publish_plan(
+        validated_header,
+        orders,
+        required_execution_state=(
+            "ACTIVE" if validated_header.mode == "LIVE" else None
+        ),
+    )
     return publisher.publish(validated_header, orders)
 
 

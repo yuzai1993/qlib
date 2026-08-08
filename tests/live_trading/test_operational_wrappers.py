@@ -22,6 +22,79 @@ WRAPPERS = [
 ]
 
 
+def _read_runbooks():
+    main = (REPO_ROOT / "live_trading/README.md").read_text(encoding="utf-8")
+    qmt = (REPO_ROOT / "live_trading/qmt_strategy/README_QMT.md").read_text(
+        encoding="utf-8"
+    )
+    checklist_path = (
+        REPO_ROOT / "live_trading/qmt_strategy/PR49_PROBE_CHECKLIST.md"
+    )
+    checklist = checklist_path.read_text(encoding="utf-8")
+    return main, qmt, checklist
+
+
+def test_main_sell_runbook_documents_audited_preview_to_pause_flow():
+    main, _, _ = _read_runbooks()
+    required = [
+        "--audit-preview",
+        "preview 只是证据",
+        "禁止手工编辑 JSONL",
+        "--side SELL",
+        "--reason operator_sell_probe",
+        "同日其他 main LIVE batch",
+        "--state PAUSED",
+        "LIVE_TRADING_CONFIRM=YES",
+        "bash live_trading/run_import_cron.sh csi1000_b6m_b2s_postclose_real",
+        "bash live_trading/run_monitor_cron.sh postmarket csi1000_b6m_b2s_postclose_real",
+        "--state PAUSED",
+    ]
+    assert all(token in main for token in required)
+
+
+def test_two_instance_runbook_documents_exact_profile_isolation():
+    _, qmt, checklist = _read_runbooks()
+    combined = qmt + checklist
+    for token in (
+        'EXECUTION_PROFILE = "CLOSE_AUCTION"',
+        'EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"',
+        r'BRIDGE_ROOT = r"D:\qmt_bridge"',
+        r'BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"',
+        r'OTHER_BRIDGE_ROOT = r"D:\qmt_bridge"',
+        r'OTHER_BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"',
+        'STRATEGY_NAME = "qlib_bridge_main"',
+        'STRATEGY_NAME = "qlib_pr49_probe"',
+        'ACCOUNT_ENVIRONMENT = "REAL"',
+        "ALLOW_REAL_MONEY = True",
+        "MAX_ORDER_QUANTITY = 100",
+        "RUNTIME_CONFIG",
+        "TIMER_REGISTERED",
+        "QMT UI",
+    ):
+        assert token in combined
+
+
+def test_pr49_checklist_stops_for_fresh_confirmation_and_preserves_evidence():
+    _, _, checklist = _read_runbooks()
+    required = [
+        "BUY 日确认停点",
+        "SELL 日确认停点",
+        "重新确认股票代码和交易日",
+        "PR49_LIVE_OK_YYYY-MM-DD",
+        "API 返回不等于委托受理",
+        "ORDER_OBSERVED",
+        "ACCEPTED",
+        "生命周期 `CLOSED`",
+        "after_hours_eligible=true",
+        "throw \"trade date must equal today\"",
+        "throw \"authorization cutoff has passed\"",
+        "只删除尚未使用的同日 marker",
+        "停止 probe 策略",
+        "保留 processing/、outbound/ 和 logs/ 证据",
+    ]
+    assert all(token in checklist for token in required)
+
+
 def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):
     from live_trading.scripts.run_scheduler import run_pipeline
 

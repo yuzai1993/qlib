@@ -1927,6 +1927,22 @@ def _submit(
         error=security["error"],
         message="security detail captured",
     )
+    if fixed_price and security["after_hours_eligible"] is not True:
+        message = "after-hours fixed-price eligibility not confirmed"
+        batch.submitted[coid] = True
+        _save_active_state(batch)
+        _log_event(
+            "SECURITY_ELIGIBILITY_ERROR",
+            batch_id=batch.batch_id(),
+            client_order_id=coid,
+            stock_code=order["stock_code"],
+            after_hours_eligible=security["after_hours_eligible"],
+            detail_available=security["detail_available"],
+            error=security["error"],
+            message=message,
+        )
+        _write_fill(batch, order, "ERROR", 0, 0.0, "", message)
+        return False
     market = _market_price_evidence(
         ContextInfo, order["stock_code"], official_close,
     )

@@ -167,6 +167,27 @@ def test_existing_exact_shared_batch_is_adopted_into_durable_db_plan(tmp_path):
     assert len(recorder.get_orders(BATCH_ID)) == 2
 
 
+def test_live_plan_rechecks_active_state_at_durable_record_boundary(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    header = dataclasses.replace(
+        _header(), strategy_id="main", mode="LIVE",
+        account_environment="REAL", account_id="real-account",
+    )
+    assert recorder.get_execution_state("main")["state"] == "ACTIVE"
+    recorder.set_execution_state(
+        "main", "PAUSED", "operator sell interleaved",
+        "2026-07-14T12:00:00+08:00",
+    )
+
+    with pytest.raises(SchemaError, match="required ACTIVE, found PAUSED"):
+        publish_recorded_plan(
+            recorder, SignalPublisher(tmp_path), header, _orders(),
+        )
+
+    assert recorder.get_batch(BATCH_ID) is None
+    assert not (tmp_path / "inbox").exists()
+
+
 def test_conflicting_publish_retry_preserves_original_plan(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     recorder.record_publish_plan(_header(), _orders())

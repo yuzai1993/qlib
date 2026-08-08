@@ -197,6 +197,15 @@ class LiveRecorder:
         with FileLock(str(lock_path)):
             yield
 
+    @contextmanager
+    def operator_publish_gate(self):
+        """Serialize main operator preflight, durable record, and publication."""
+        lock_path = self.db_path.with_name(
+            f"{self.db_path.name}.operator_publish.lock"
+        )
+        with FileLock(str(lock_path)):
+            yield
+
     def _init_db(self):
         with self._conn() as conn:
             conn.executescript("""
@@ -989,7 +998,12 @@ class LiveRecorder:
         return True
 
     def record_publish_plan(
-        self, header, orders: list, probe_transition: dict | None = None,
+        self,
+        header,
+        orders: list,
+        probe_transition: dict | None = None,
+        required_execution_state: str | None = None,
+        exclusive_same_day_live: bool = False,
     ) -> None:
         """Atomically persist an immutable plan before exposing it to QMT.
 
@@ -1001,6 +1015,33 @@ class LiveRecorder:
         batch_id = header.batch_id
 
         with self._conn() as conn:
+            if required_execution_state is not None or exclusive_same_day_live:
+                # Serialize the final state/date gate with every competing
+                # writer. A publisher that passed an earlier read-only gate
+                # cannot record after an operator pauses the strategy.
+                conn.execute("BEGIN IMMEDIATE")
+            if required_execution_state is not None:
+                current_state = _get_execution_state(
+                    conn, header.strategy_id,
+                )["state"]
+                if current_state != required_execution_state:
+                    raise SchemaError(
+                        "publish execution state changed: required "
+                        f"{required_execution_state}, found {current_state}"
+                    )
+            if exclusive_same_day_live:
+                conflict = conn.execute(
+                    """SELECT batch_id FROM batches
+                         WHERE trade_date=? AND strategy_id=? AND mode='LIVE'
+                           AND superseded_by IS NULL AND batch_id<>?
+                         ORDER BY batch_id LIMIT 1""",
+                    (header.trade_date, header.strategy_id, header.batch_id),
+                ).fetchone()
+                if conflict is not None:
+                    raise SchemaError(
+                        "same-day LIVE batch blocks exclusive main SELL: "
+                        + conflict["batch_id"]
+                    )
             if self._require_exact_publish_plan_conn(
                 conn, header, order_checksum, rows,
             ):

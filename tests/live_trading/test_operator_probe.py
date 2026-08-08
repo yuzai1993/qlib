@@ -459,6 +459,315 @@ def test_operator_tool_accepts_main_close_auction_config(recorder, tmp_path):
     assert order.price_type == "CLOSE_AUCTION_LIMIT"
 
 
+def _prepare_main_sell_publish(recorder, tmp_path, monkeypatch):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    recorder.upsert_position(STOCK_CODE, 100, 10.0)
+    _save_snapshot(recorder)
+    config = _main_config(tmp_path)
+    request = _request(
+        config_id="csi1000_b6m_b2s_postclose_real",
+        side="SELL",
+    )
+    return config, request, SignalPublisher(config["live"]["bridge_root"])
+
+
+def test_main_sell_publish_requires_durable_paused_state(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+
+    with pytest.raises(SchemaError, match="PAUSED"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert recorder.get_batch(
+        "20260810_csi1000_b6m_b2s_postclose_real_900"
+    ) is None
+    assert not list((tmp_path / "main_bridge" / "inbox").glob("*"))
+
+
+def test_main_sell_publish_rejects_another_active_same_day_live_batch(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    recorder.record_publish_plan(BatchHeader(
+        batch_id="20260810_csi1000_b6m_b2s_postclose_real_001",
+        strategy_id=config["live"]["strategy_id"],
+        trade_date=TRADE_DATE,
+        signal_date="2026-08-07",
+        account_id="8890116049",
+        account_type="STOCK",
+        account_environment="REAL",
+        mode="LIVE",
+        created_at="2026-08-09T21:30:00+08:00",
+        order_count=0,
+        checksum="",
+    ), [])
+
+    with pytest.raises(SchemaError, match="same-day LIVE batch"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert recorder.get_batch(
+        "20260810_csi1000_b6m_b2s_postclose_real_900"
+    ) is None
+
+
+@pytest.mark.parametrize(
+    ("directory", "name"),
+    [
+        (
+            "inbox",
+            "signal_20260810_csi1000_b6m_b2s_postclose_real_001.jsonl",
+        ),
+        (
+            "processing",
+            "signal_20260810_csi1000_b6m_b2s_postclose_real_001.done",
+        ),
+        (
+            "state",
+            "active_20260810_csi1000_b6m_b2s_postclose_real_001.json",
+        ),
+        (
+            "archive",
+            "signal_20260810_csi1000_b6m_b2s_postclose_real_900.jsonl",
+        ),
+    ],
+)
+def test_main_sell_publish_rejects_other_same_day_qmt_artifacts(
+    recorder, tmp_path, monkeypatch, directory, name,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    path = tmp_path / "main_bridge" / directory / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("evidence", encoding="utf-8")
+
+    with pytest.raises(SchemaError, match="same-day QMT artifact"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert recorder.get_batch(
+        "20260810_csi1000_b6m_b2s_postclose_real_900"
+    ) is None
+
+
+def test_main_sell_publish_succeeds_when_paused_and_exclusive(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+
+    path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    retry_path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+
+    assert path.name == (
+        "signal_20260810_csi1000_b6m_b2s_postclose_real_900.jsonl"
+    )
+    assert retry_path == path
+    assert recorder.get_execution_state(config["live"]["strategy_id"])[
+        "state"
+    ] == "PAUSED"
+
+
+def test_main_sell_rechecks_same_day_ledger_inside_record_transaction(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, _ = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    strategy_id = config["live"]["strategy_id"]
+    recorder.set_execution_state(
+        strategy_id, "PAUSED", "exclusive operator sell",
+        "2026-08-10T12:00:00+08:00",
+    )
+
+    class InterleavingPublisher(SignalPublisher):
+        def ensure_publishable(self, header, orders):
+            recorder.record_publish_plan(BatchHeader(
+                batch_id="20260810_csi1000_b6m_b2s_postclose_real_001",
+                strategy_id=strategy_id,
+                trade_date=TRADE_DATE,
+                signal_date="2026-08-07",
+                account_id="8890116049",
+                account_type="STOCK",
+                account_environment="REAL",
+                mode="LIVE",
+                created_at="2026-08-09T21:30:00+08:00",
+                order_count=0,
+                checksum="",
+            ), [])
+            return super().ensure_publishable(header, orders)
+
+    with pytest.raises(SchemaError, match="same-day LIVE batch"):
+        publish_operator_probe(
+            request, config, recorder,
+            InterleavingPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    assert recorder.get_batch(
+        "20260810_csi1000_b6m_b2s_postclose_real_900"
+    ) is None
+
+
+def test_main_sell_retry_never_recreates_a_qmt_claimed_inbox_pair(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    strategy_id = config["live"]["strategy_id"]
+    recorder.set_execution_state(
+        strategy_id, "PAUSED", "exclusive operator sell",
+        "2026-08-10T12:00:00+08:00",
+    )
+    publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+
+    class ClaimingPublisher(SignalPublisher):
+        claimed = False
+
+        def ensure_publishable(self, header, orders):
+            if not self.claimed:
+                processing = self.bridge_root / "processing"
+                processing.mkdir(parents=True, exist_ok=True)
+                for suffix in ("jsonl", "done"):
+                    source = self.inbox / f"signal_{header.batch_id}.{suffix}"
+                    source.rename(processing / source.name)
+                self.claimed = True
+            return super().ensure_publishable(header, orders)
+
+    with pytest.raises(SchemaError, match="same-day QMT artifact"):
+        publish_operator_probe(
+            request, config, recorder,
+            ClaimingPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    batch_id = "20260810_csi1000_b6m_b2s_postclose_real_900"
+    assert not list((tmp_path / "main_bridge" / "inbox").glob(f"*{batch_id}*"))
+    assert len(list(
+        (tmp_path / "main_bridge" / "processing").glob(f"*{batch_id}*")
+    )) == 2
+
+
+def test_concurrent_main_db_only_recoveries_serialize_through_qmt_claim(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, _ = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    strategy_id = config["live"]["strategy_id"]
+    recorder.set_execution_state(
+        strategy_id, "PAUSED", "exclusive operator sell",
+        "2026-08-10T12:00:00+08:00",
+    )
+    header, order = operator_probe.preview_operator_probe(
+        request, config, recorder, "8890116049",
+    )
+    recorder.record_publish_plan(
+        header, [order], required_execution_state="PAUSED",
+        exclusive_same_day_live=True,
+    )
+
+    delayed_ready = threading.Event()
+    allow_delayed_publish = threading.Event()
+    concurrent_claimed = threading.Event()
+    results = []
+    errors = []
+
+    def _claim_pair(publisher, publish_header):
+        processing = publisher.bridge_root / "processing"
+        processing.mkdir(parents=True, exist_ok=True)
+        for suffix in ("jsonl", "done"):
+            source = publisher.inbox / (
+                f"signal_{publish_header.batch_id}.{suffix}"
+            )
+            source.rename(processing / source.name)
+
+    class DelayedRecovery(SignalPublisher):
+        def publish(self, publish_header, orders):
+            delayed_ready.set()
+            assert allow_delayed_publish.wait(3)
+            path = super().publish(publish_header, orders)
+            processing = self.bridge_root / "processing"
+            if not list(processing.glob(f"*{publish_header.batch_id}*")):
+                _claim_pair(self, publish_header)
+            return path
+
+    class ImmediateClaim(SignalPublisher):
+        def publish(self, publish_header, orders):
+            path = super().publish(publish_header, orders)
+            _claim_pair(self, publish_header)
+            concurrent_claimed.set()
+            return path
+
+    def recover(publisher):
+        try:
+            results.append(publish_operator_probe(
+                request, config, recorder, publisher, "8890116049",
+            ))
+        except BaseException as exc:
+            errors.append(exc)
+
+    delayed = threading.Thread(target=recover, args=(
+        DelayedRecovery(config["live"]["bridge_root"]),
+    ))
+    immediate = threading.Thread(target=recover, args=(
+        ImmediateClaim(config["live"]["bridge_root"]),
+    ))
+    delayed.start()
+    assert delayed_ready.wait(2)
+    immediate.start()
+    # Without the cross-process operator gate, the immediate recovery can
+    # publish and QMT-claim while the first recovery is paused. With the gate,
+    # it remains blocked until the delayed recovery finishes.
+    concurrent_claimed.wait(0.5)
+    allow_delayed_publish.set()
+    delayed.join(timeout=5)
+    immediate.join(timeout=5)
+
+    assert not delayed.is_alive()
+    assert not immediate.is_alive()
+    assert len(results) == 1
+    assert len(errors) == 1
+    assert isinstance(errors[0], SchemaError)
+    assert "same-day QMT artifact" in str(errors[0])
+    batch_id = "20260810_csi1000_b6m_b2s_postclose_real_900"
+    assert not list((tmp_path / "main_bridge" / "inbox").glob(f"*{batch_id}*"))
+    assert len(list(
+        (tmp_path / "main_bridge" / "processing").glob(f"*{batch_id}*")
+    )) == 2
+
+
 def test_builds_a_one_lot_sell_for_the_fixed_price_profile(
     recorder, tmp_path, monkeypatch,
 ):

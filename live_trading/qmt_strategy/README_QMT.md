@@ -20,18 +20,59 @@ D:\qmt_bridge\
 
 首次运行会创建子目录。通过 SMB 把根目录共享给 Mac；Mac 上的配置应指向 `/Volumes/qmt_bridge`。共享账户只需该目录的读写权限，不要给管理员权限。Windows 应使用固定局域网 IP，并在交易时段禁用睡眠和自动重启。
 
-## 2. 导入策略
+## 2. 导入两个独立策略实例
 
-1. 在大 QMT 的模型交易/策略编辑器中新建内置 Python 策略；
-2. 导入 `qmt_signal_bridge.py`；
-3. 设置 `BRIDGE_ROOT`；
-4. 把 `ACCOUNT_ID` 填为当前选定账户 ID。非空时，header 中的账户必须完全一致；
-5. 保持 `ACCOUNT_TYPE = "STOCK"`；
-6. 保持 `MAX_ORDER_QUANTITY = 100`，这是首次一手验收的硬上限；
-7. 实盘本地副本设置 `ACCOUNT_ENVIRONMENT = "REAL"` 和 `ALLOW_REAL_MONEY = True`，并保持 `REAL_EXPECTED_INITIAL_CASH = 1000000.0`、`REAL_INITIAL_CASH_TOLERANCE = 100.0`、`REAL_REQUIRE_EMPTY_POSITIONS = True`；
-8. 编译后，在模型交易界面明确绑定同一个账户。
+在大 QMT 的模型交易/策略编辑器中新建两个内置 Python 策略，分别复制同一版
+`qmt_signal_bridge.py`，再只修改每个 QMT 本地副本的设置区。不得让两个实例共享
+inbox/processing/active state。
 
-真实账户 ID 只能写在 QMT 本地运行副本中，不提交到 Git。账户环境无法从普通环境变量动态切换。
+主策略本地副本：
+
+```python
+EXECUTION_PROFILE = "CLOSE_AUCTION"
+BRIDGE_ROOT = r"D:\qmt_bridge"
+OTHER_BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"
+ACCOUNT_ID = "<只在 QMT 本地填写真实资金账号>"
+ACCOUNT_TYPE = "STOCK"
+STRATEGY_NAME = "qlib_bridge_main"
+ACCOUNT_ENVIRONMENT = "REAL"
+ALLOW_REAL_MONEY = True
+MAX_ORDER_QUANTITY = 100
+```
+
+盘后固定价格探针本地副本：
+
+```python
+EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"
+BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"
+OTHER_BRIDGE_ROOT = r"D:\qmt_bridge"
+ACCOUNT_ID = "<只在 QMT 本地填写真实资金账号>"
+ACCOUNT_TYPE = "STOCK"
+STRATEGY_NAME = "qlib_pr49_probe"
+ACCOUNT_ENVIRONMENT = "REAL"
+ALLOW_REAL_MONEY = True
+MAX_ORDER_QUANTITY = 100
+```
+
+两个实例的 `ACCOUNT_ID` 必须相同，并在两个 QMT UI 策略页面明确绑定同一真实账户；
+脱敏日志或源码设置不能代替 UI 复核。真实账号只写入 Windows 本地副本，不提交到 Git。
+
+共享账户已经持仓后，默认的空仓/初始资金预检会正确地失败关闭。每个实际测试日都从
+QMT UI 读取当时的可用资金，把两个本地副本的 `REAL_EXPECTED_INITIAL_CASH` 更新为该值，
+保留 `REAL_INITIAL_CASH_TOLERANCE = 100.0`，并设置
+`REAL_REQUIRE_EMPTY_POSITIONS = False`。逐个重新编译；不得用很大的 tolerance 绕过复核。
+
+编译后先只启动一个需要验收的执行实例。两个实例都可保持编译就绪，但主策略 SELL 与
+prType=49 探针不得同日授权。每次启动都在对应根目录的持久日志检查：
+
+```powershell
+Get-Content D:\qmt_bridge\logs\qmt_events_YYYY-MM-DD.jsonl -Tail 100
+Get-Content D:\qmt_bridge\pr49_probe\logs\qmt_events_YYYY-MM-DD.jsonl -Tail 100
+```
+
+必须出现 `RUNTIME_CONFIG` 和 `TIMER_REGISTERED`。逐项核对 source SHA/version、QMT
+版本、策略名称、脱敏账户、profile、两个 root、price type、100 股上限及所有时间。
+不一致时停止策略，不能创建授权 marker。
 
 ## 3. 定时与状态机
 
@@ -40,13 +81,20 @@ D:\qmt_bridge\
 执行顺序：
 
 1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、日期、账户和配置的账户环境；
-2. 14:57:05 同一轮提交 SELL 和 BUY；
+2. 主策略在 14:57:05 提交 SELL/BUY；固定价格探针在 15:05:00 提交一笔受控订单；
 3. 用 `get_instrument_detail`（旧版为 `get_instrumentdetail`）读取 `UpStopPrice`/`DownStopPrice`；
-4. `passorder(..., orderType=1101, prType=11, price=涨跌停价, quantity, ..., quickTrade=2, client_order_id, ContextInfo)`；
+4. 主策略调用 `prType=11` 并显式传涨跌停价；探针调用 `prType=49`、`price=0`，同时把
+   官方收盘参考及来源写入日志；
 5. 查询到真实 QMT 委托编号后才写 `ACCEPTED`；
 6. 15:00:05 后处理仍未终态委托，15:00:30 终结，15:01 重写账户与持仓快照。
 
 如果 `lastPrice` 缺失或非正数，BUY 失败关闭，不使用盘口价、滑点、昨收或信号价格回退。
+探针 profile 的时间为 15:05:00 提交、15:28:00 撤单、15:30:00 终结、15:31:00
+账户快照；其独立授权是 `PR49_LIVE_OK_YYYY-MM-DD`。主策略仍使用
+`LIVE_OK_YYYY-MM-DD`。同一天两个 marker 同时存在时，两个实例都在 `passorder` 前失败关闭。
+固定价格 profile 还要求 QMT 证券详情明确给出盘后固定价格资格；只有结构化
+`after_hours_eligible=true` 才会继续。false/缺失/无法解析时写
+`SECURITY_ELIGIBILITY_ERROR` 与 ERROR 回执，不调用 `passorder`。
 
 ## 4. Shadow 验收
 
@@ -89,7 +137,14 @@ Shadow 通过后，必须同时满足：
 
 ## 6. 实盘一手验收
 
-当前实盘账户为 `8890116049`，首日只在空仓、可用资金 `1,000,000±100` 元时允许提交。Mac 批次必须是 `account_environment=REAL` 与 `mode=LIVE`，QMT 仍要求当日 `LIVE_OK`。一手结果验收前不得改动数量上限或初始账户预检。
+Mac 批次必须是 `account_environment=REAL` 与 `mode=LIVE`。主策略 SELL 使用当日
+`LIVE_OK`；探针使用不同的 `PR49_LIVE_OK`。一手结果验收前不得改动 100 股上限。
+
+主策略 SELL 的 preview→人工发布→导入→postmarket→`PAUSED` 命令见上级
+[实盘 README](../README.md)。prType=49 BUY→下一交易日 SELL 的逐项门禁见
+[PR49_PROBE_CHECKLIST.md](PR49_PROBE_CHECKLIST.md)。两条流程都要求发布前存在同交易日、
+与真实账户可靠绑定的 broker snapshot；若 snapshot-only 受控入口尚未提供，必须停止，
+禁止手工编辑 account JSONL。
 
 ## 7. 恢复与排障
 
@@ -102,6 +157,8 @@ Shadow 通过后，必须同时满足：
 | 涨跌停价无效 | `get_instrument_detail` 是否返回正的 `UpStopPrice`/`DownStopPrice` |
 | 账户查询失败 | QMT UI 绑定账号、`ACCOUNT_ID`、header account ID 是否一致 |
 | 回执缺失 | 检查 `processing/`、active state 与 `D:\qmt_bridge\logs\qmt_events_YYYY-MM-DD.jsonl` |
+| 探针日志缺失 | 检查 `D:\qmt_bridge\pr49_probe\logs\qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl` |
+| API 返回但 UI 无委托 | 查 `ORDER_QUERY`/`ORDER_NOT_OBSERVED`；API return 本身不是 acceptance，必须有真实委托号、`ORDER_OBSERVED` 后才允许 `ACCEPTED` |
 | 重启后未恢复 | processing 的信号对是否完整；active state JSON 是否可读 |
 | Mac 报持仓漂移 | 对照 QMT 委托/成交、`account_*.jsonl` 和本地 fills，先停下一日 LIVE |
 

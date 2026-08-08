@@ -1256,6 +1256,7 @@ class _TickCtx:
     def __init__(
         self, last_price, ask_price=None, bid_price=None,
         up_stop=0.0, down_stop=0.0, detail_error=False,
+        after_hours=True,
     ):
         self._last = last_price
         self._ask = [] if ask_price is None else [ask_price]
@@ -1263,6 +1264,7 @@ class _TickCtx:
         self._up_stop = up_stop
         self._down_stop = down_stop
         self._detail_error = detail_error
+        self._after_hours = after_hours
 
     def get_full_tick(self, codes):
         return {
@@ -1277,10 +1279,13 @@ class _TickCtx:
     def get_instrumentdetail(self, stock_code):
         if self._detail_error:
             raise RuntimeError("instrument detail unavailable")
-        return {
+        detail = {
             "UpStopPrice": self._up_stop,
             "DownStopPrice": self._down_stop,
         }
+        if self._after_hours is not None:
+            detail["IsAfterHoursTrading"] = self._after_hours
+        return detail
 
 
 def test_close_auction_limit_price_uses_daily_side_limit(bridge):
@@ -1965,6 +1970,48 @@ def test_fixed_price_passes_zero_and_logs_positive_close_reference_before_api(
     ]
     assert submitted[0]["official_close_reference"] == 10.50
     assert submitted[0]["limit_price"] == 0.0
+
+
+@pytest.mark.parametrize("after_hours", [False, None])
+def test_fixed_price_requires_positive_security_eligibility_before_api(
+    bridge, monkeypatch, tmp_path, after_hours,
+):
+    probe_root, main_root = _profile_roots(
+        tmp_path, "AFTER_HOURS_FIXED_PRICE",
+    )
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", probe_root, main_root,
+    )
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(price_type="AFTER_HOURS_CLOSE", quantity=100)
+    batch = bridge.Batch({
+        "batch_id": BATCH_ID,
+        "trade_date": bridge._today(),
+        "mode": "LIVE",
+        "account_id": "1",
+        "account_environment": "SIMULATION",
+        "schema_version": "2.0",
+    }, [order])
+    monkeypatch.setattr(
+        bridge, "passorder",
+        lambda *args: pytest.fail("ineligible security reached passorder"),
+        raising=False,
+    )
+
+    assert bridge._submit(
+        _TickCtx(10.50, after_hours=after_hours), batch, order, True,
+    ) is False
+
+    fill = batch.fills[order["client_order_id"]]
+    assert fill["status"] == "ERROR"
+    assert fill["message"] == (
+        "after-hours fixed-price eligibility not confirmed"
+    )
+    events = _read_events(bridge)
+    _assert_event_subsequence(events, [
+        "SECURITY_DETAIL", "SECURITY_ELIGIBILITY_ERROR", "ORDER_FINALIZED",
+    ])
+    assert not any(event["event"] == "PASSORDER_ATTEMPT" for event in events)
 
 
 def test_fixed_price_buy_sizes_and_reserves_at_close_but_passes_zero(

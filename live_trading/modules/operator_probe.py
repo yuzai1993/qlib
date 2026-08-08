@@ -3,6 +3,7 @@
 import dataclasses
 import os
 import re
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -224,7 +225,9 @@ def validate_probe_transition(
     if not isinstance(request, OperatorProbeRequest):
         raise TypeError("request must be an OperatorProbeRequest")
     _require_trade_date(request.trade_date)
-    details = recorder.get_broker_position_details(request.trade_date)
+    details = recorder.get_broker_position_details(
+        request.trade_date, require_lifecycle_evidence=True,
+    )
     positions = recorder.get_positions()
     held = positions.get(request.stock_code, {}).get("shares", 0)
     broker = details.get(request.stock_code)
@@ -307,7 +310,6 @@ def build_operator_order(
         raise SchemaError(
             "broker position snapshot must be from the operator trade_date"
         )
-    details = recorder.get_broker_position_details(broker_trade_date)
     approved = recorder.get_stock_names()
     if request.stock_code not in approved:
         raise SchemaError(
@@ -317,6 +319,7 @@ def build_operator_order(
     if live.get("kind") == "OPERATOR_PROBE":
         validate_probe_transition(request, recorder)
     else:
+        details = recorder.get_broker_position_details(broker_trade_date)
         positions = recorder.get_positions()
         held = positions.get(request.stock_code, {}).get("shares", 0)
         if request.side == "SELL":
@@ -404,40 +407,47 @@ def publish_operator_probe(
         raise SchemaError("BUY requires explicit --eligibility-confirmed")
     _validate_real_account(live, account_id)
     _validate_publish_root(live, publisher)
-    header = _header(request, live, account_id)
+    is_probe = live.get("kind") == "OPERATOR_PROBE"
+    gate = recorder.probe_snapshot_gate() if is_probe else nullcontext()
+    with gate:
+        header = _header(request, live, account_id)
 
-    if recorder.get_batch(header.batch_id) is not None:
-        # A durable plan is authoritative after a crash between its DB commit
-        # and SMB publication.  Rebuild only immutable request/config fields;
-        # do not re-check mutable holdings or broker availability on recovery.
-        order = _make_operator_order(request, live)
-        header = _normalized_header(header, order)
+        if recorder.get_batch(header.batch_id) is not None:
+            # A durable plan remains authoritative for immutable bytes and
+            # mutable holdings/availability. ACCOUNT evidence is rechecked
+            # because a query-failure snapshot cannot authorize real money.
+            if is_probe:
+                recorder.get_broker_position_details(
+                    request.trade_date, require_lifecycle_evidence=True,
+                )
+            order = _make_operator_order(request, live)
+            header = _normalized_header(header, order)
+            recorder.record_publish_plan(
+                header, [order], probe_transition={
+                    "side": order.side, "stock_code": order.stock_code,
+                } if is_probe else None,
+            )
+        else:
+            header, order = preview_operator_probe(
+                request, config, recorder, account_id,
+            )
+        try:
+            publisher.ensure_publishable(header, [order])
+        except PublishError as exc:
+            raise SchemaError(str(exc)) from exc
+        # The durable record is the atomic serialization point even when another
+        # invocation interleaves after the read-only SMB preflight.
+        probe_transition = {
+            "side": order.side, "stock_code": order.stock_code,
+        } if is_probe else None
         recorder.record_publish_plan(
-            header, [order], probe_transition={
-                "side": order.side, "stock_code": order.stock_code,
-            } if live.get("kind") == "OPERATOR_PROBE" else None,
+            header, [order], probe_transition=probe_transition,
         )
-    else:
-        header, order = preview_operator_probe(
-            request, config, recorder, account_id,
-        )
-    try:
-        publisher.ensure_publishable(header, [order])
-    except PublishError as exc:
-        raise SchemaError(str(exc)) from exc
-    # The durable record is the atomic serialization point even when another
-    # invocation interleaves after the read-only SMB preflight.
-    probe_transition = {
-        "side": order.side, "stock_code": order.stock_code,
-    } if live.get("kind") == "OPERATOR_PROBE" else None
-    recorder.record_publish_plan(
-        header, [order], probe_transition=probe_transition,
-    )
-    if probe_transition is not None:
-        return recorder.publish_recorded_operator_probe(
-            header,
-            [order],
-            probe_transition,
-            lambda: publisher.publish(header, [order]),
-        )
-    return publisher.publish(header, [order])
+        if probe_transition is not None:
+            return recorder.publish_recorded_operator_probe(
+                header,
+                [order],
+                probe_transition,
+                lambda: publisher.publish(header, [order]),
+            )
+        return publisher.publish(header, [order])

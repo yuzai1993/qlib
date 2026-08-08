@@ -16,6 +16,8 @@ from datetime import datetime
 from contextlib import contextmanager
 from pathlib import Path
 
+from filelock import FileLock
+
 from live_trading.modules.fees import DEFAULT_FEES, order_total_fee, validate_fees
 from live_trading.modules.execution_state import (
     get_execution_state as _get_execution_state,
@@ -185,6 +187,15 @@ class LiveRecorder:
             raise
         finally:
             conn.close()
+
+    @contextmanager
+    def probe_snapshot_gate(self):
+        """Serialize probe authorization/publication with snapshot imports."""
+        lock_path = self.db_path.with_name(
+            f"{self.db_path.name}.probe_snapshot.lock"
+        )
+        with FileLock(str(lock_path)):
+            yield
 
     def _init_db(self):
         with self._conn() as conn:
@@ -1042,6 +1053,9 @@ class LiveRecorder:
                 raise SchemaError(
                     f"batch {header.batch_id!r} has no durable publish plan"
                 )
+            self._require_latest_broker_snapshot_lifecycle_evidence_conn(
+                conn, header.trade_date,
+            )
             self._record_operator_probe_plan_conn(
                 conn, header, rows, probe_transition, durable_retry=True,
             )
@@ -2223,6 +2237,11 @@ class LiveRecorder:
             account: 账户行 dict，或 None（ACCOUNT 查询为空时）
             positions: 持仓行 dict 列表
         """
+        with self.probe_snapshot_gate():
+            self._save_broker_snapshot_locked(batch_id, account, positions)
+
+    def _save_broker_snapshot_locked(self, batch_id: str, account: dict,
+                                     positions: list) -> None:
         with self._conn() as conn:
             batch = conn.execute(
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
@@ -2380,6 +2399,27 @@ class LiveRecorder:
         ).fetchone()
         return row["batch_id"] if row is not None else None
 
+    @classmethod
+    def _require_latest_broker_snapshot_lifecycle_evidence_conn(
+        cls, conn, trade_date: str,
+    ) -> str:
+        batch_id = cls._latest_broker_snapshot_batch_id(conn, trade_date)
+        if batch_id is None:
+            raise SchemaError(
+                f"broker position snapshot missing for {trade_date}"
+            )
+        evidence = conn.execute(
+            """SELECT lifecycle_evidence
+                 FROM broker_snapshot_imports WHERE batch_id=?""",
+            (batch_id,),
+        ).fetchone()
+        if evidence is None or evidence["lifecycle_evidence"] != 1:
+            raise SchemaError(
+                "latest broker snapshot lacks matched REAL "
+                f"ACCOUNT evidence for {trade_date}"
+            )
+        return batch_id
+
     def get_broker_positions(self, trade_date: str) -> dict:
         """当日最新批次的券商持仓 {stock_code: shares}；无快照则空 dict。"""
         with self._conn() as conn:
@@ -2393,16 +2433,33 @@ class LiveRecorder:
             ).fetchall()
             return {r["stock_code"]: r["shares"] for r in rows}
 
-    def get_broker_position_details(self, trade_date: str) -> dict[str, dict]:
+    def get_broker_position_details(
+        self,
+        trade_date: str,
+        *,
+        require_lifecycle_evidence: bool = False,
+    ) -> dict[str, dict]:
         """Return the complete latest broker position snapshot for a date.
 
         An absent snapshot is an operational data failure.  Returning an empty
         mapping would make a stale or failed QMT account query look like an
         account with no positions, which is unsafe for operator-created orders.
         An empty *present* snapshot remains a valid empty mapping.
+
+        Probe authorization can additionally require the latest snapshot's
+        durable REAL ACCOUNT binding without changing diagnostic consumers.
         """
         with self._conn() as conn:
-            batch_id = self._latest_broker_snapshot_batch_id(conn, trade_date)
+            if require_lifecycle_evidence:
+                batch_id = (
+                    self._require_latest_broker_snapshot_lifecycle_evidence_conn(
+                        conn, trade_date,
+                    )
+                )
+            else:
+                batch_id = self._latest_broker_snapshot_batch_id(
+                    conn, trade_date,
+                )
             if batch_id is None:
                 raise SchemaError(
                     f"broker position snapshot missing for {trade_date}"

@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.fill_importer import LiveRecorder
-from live_trading.modules.signal_schema import FillEvent
+from live_trading.modules.signal_schema import BatchHeader, FillEvent
 from live_trading.modules import operator_probe
 from live_trading.modules.operator_probe import (
     OperatorProbeRequest,
@@ -149,14 +149,33 @@ def _remove_probe_inbox_pair(tmp_path, batch_id):
     (inbox / f"signal_{batch_id}.done").unlink()
 
 
+def _record_real_snapshot_batch(recorder, batch_id, trade_date):
+    recorder.record_publish_plan(BatchHeader(
+        batch_id=batch_id,
+        strategy_id="operator-probe-snapshot-test",
+        trade_date=trade_date,
+        signal_date=trade_date,
+        account_id="8890116049",
+        account_type="STOCK",
+        account_environment="REAL",
+        mode="LIVE",
+        created_at=f"{trade_date}T00:00:00+08:00",
+        order_count=0,
+        checksum="",
+    ), [])
+
+
 def _save_snapshot(recorder, *, trade_date=TRADE_DATE, shares=100,
-                   can_use_volume=100, stock_code=STOCK_CODE):
-    batch_id = f"{trade_date.replace('-', '')}_000_snapshot"
-    recorder.record_batch(batch_id, trade_date, "LIVE", 0)
+                   can_use_volume=100, stock_code=STOCK_CODE,
+                   batch_sequence=0, with_account=True):
+    batch_id = (
+        f"{trade_date.replace('-', '')}_{batch_sequence:03d}_snapshot"
+    )
+    _record_real_snapshot_batch(recorder, batch_id, trade_date)
     recorder.save_broker_snapshot(
         batch_id,
-        {"account_id": "8890116049"},
-        [{
+        {"account_id": "8890116049"} if with_account else None,
+        [] if shares == 0 else [{
             "stock_code": stock_code,
             "shares": shares,
             "can_use_volume": can_use_volume,
@@ -164,6 +183,163 @@ def _save_snapshot(recorder, *, trade_date=TRADE_DATE, shares=100,
             "market_value": shares * 10.0,
         }],
     )
+
+
+def test_probe_buy_requires_latest_matched_account_snapshot_before_publish(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    _save_snapshot(
+        recorder, shares=0, can_use_volume=0, batch_sequence=0,
+    )
+    _save_snapshot(
+        recorder, shares=0, can_use_volume=0, batch_sequence=1,
+        with_account=False,
+    )
+    config = _config(tmp_path)
+    request = _request(side="BUY", eligibility_confirmed=True)
+    probe_batch = "20260810_csi1000_pr49_one_lot_probe_900"
+
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        publish_operator_probe(
+            request,
+            config,
+            recorder,
+            SignalPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    assert recorder.get_batch(probe_batch) is None
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID) is None
+    assert not list(
+        (tmp_path / "pr49_probe" / "inbox").glob(f"*{probe_batch}*")
+    )
+
+    _save_snapshot(
+        recorder, shares=0, can_use_volume=0, batch_sequence=2,
+    )
+    path = publish_operator_probe(
+        request,
+        config,
+        recorder,
+        SignalPublisher(config["live"]["bridge_root"]),
+        "8890116049",
+    )
+    assert path.is_file()
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "BUY_PLANNED"
+
+
+def test_probe_sell_requires_latest_matched_account_snapshot_before_publish(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100, batch_sequence=0,
+    )
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100, batch_sequence=1, with_account=False,
+    )
+    config = _config(tmp_path)
+    request = _request(trade_date="2026-08-10")
+    probe_batch = "20260810_csi1000_pr49_one_lot_probe_900"
+
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        publish_operator_probe(
+            request,
+            config,
+            recorder,
+            SignalPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    assert recorder.get_batch(probe_batch) is None
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "BUY_FILLED"
+    assert not list(
+        (tmp_path / "pr49_probe" / "inbox").glob(f"*{probe_batch}*")
+    )
+
+    _save_snapshot(
+        recorder, trade_date="2026-08-10", shares=100,
+        can_use_volume=100, batch_sequence=2,
+    )
+    path = publish_operator_probe(
+        request,
+        config,
+        recorder,
+        SignalPublisher(config["live"]["bridge_root"]),
+        "8890116049",
+    )
+    assert path.is_file()
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "SELL_PLANNED"
+
+
+def test_probe_publish_serializes_snapshot_import_across_authorization(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setenv("LIVE_TRADING_CONFIRM", "YES")
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    _save_snapshot(
+        recorder, shares=0, can_use_volume=0, batch_sequence=0,
+    )
+    config = _config(tmp_path)
+    request = _request(side="BUY", eligibility_confirmed=True)
+
+    class InterleavingPublisher(SignalPublisher):
+        def __init__(self, bridge_root):
+            super().__init__(bridge_root)
+            self.import_started = threading.Event()
+            self.import_finished = threading.Event()
+            self.import_errors = []
+            self.import_thread = None
+
+        def ensure_publishable(self, header, orders):
+            if self.import_thread is not None:
+                return super().ensure_publishable(header, orders)
+
+            def import_positions_only():
+                self.import_started.set()
+                try:
+                    _save_snapshot(
+                        recorder,
+                        shares=0,
+                        can_use_volume=0,
+                        batch_sequence=1,
+                        with_account=False,
+                    )
+                except BaseException as exc:  # surfaced in the test thread
+                    self.import_errors.append(exc)
+                finally:
+                    self.import_finished.set()
+
+            self.import_thread = threading.Thread(
+                target=import_positions_only,
+            )
+            self.import_thread.start()
+            assert self.import_started.wait(2)
+            assert not self.import_finished.wait(0.2)
+            return super().ensure_publishable(header, orders)
+
+    publisher = InterleavingPublisher(config["live"]["bridge_root"])
+    path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    publisher.import_thread.join(timeout=5)
+
+    assert not publisher.import_thread.is_alive()
+    assert publisher.import_errors == []
+    assert path.is_file()
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "BUY_PLANNED"
 
 
 @pytest.fixture
@@ -345,6 +521,110 @@ def test_durable_buy_retry_still_requires_eligibility_confirmation(
             SignalPublisher(config["live"]["bridge_root"]),
             "8890116049",
         )
+
+
+def test_durable_buy_retry_requires_latest_matched_account_snapshot(
+    recorder, tmp_path, monkeypatch,
+):
+    request = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
+    batch_id = "20260807_csi1000_pr49_one_lot_probe_900"
+    _remove_probe_inbox_pair(tmp_path, batch_id)
+    _save_snapshot(
+        recorder,
+        trade_date="2026-08-07",
+        shares=0,
+        can_use_volume=0,
+        batch_sequence=1,
+        with_account=False,
+    )
+    config = _config(tmp_path)
+
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        publish_operator_probe(
+            request,
+            config,
+            recorder,
+            SignalPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "BUY_PLANNED"
+    assert not list(
+        (tmp_path / "pr49_probe" / "inbox").glob(f"*{batch_id}*")
+    )
+
+    _save_snapshot(
+        recorder,
+        trade_date="2026-08-07",
+        shares=0,
+        can_use_volume=0,
+        batch_sequence=2,
+    )
+    path = publish_operator_probe(
+        request,
+        config,
+        recorder,
+        SignalPublisher(config["live"]["bridge_root"]),
+        "8890116049",
+    )
+    assert path.is_file()
+
+
+def test_durable_sell_retry_requires_latest_matched_account_snapshot(
+    recorder, tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(
+        operator_probe, "_qlib_trade_dates",
+        lambda start, end: ["2026-08-07", "2026-08-10"],
+    )
+    _prepare_probe_sell(recorder, tmp_path, monkeypatch)
+    _save_snapshot(
+        recorder,
+        trade_date="2026-08-10",
+        shares=100,
+        can_use_volume=100,
+        batch_sequence=0,
+    )
+    config = _config(tmp_path)
+    request = _request(trade_date="2026-08-10")
+    publisher = SignalPublisher(config["live"]["bridge_root"])
+    publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    batch_id = "20260810_csi1000_pr49_one_lot_probe_900"
+    _remove_probe_inbox_pair(tmp_path, batch_id)
+    _save_snapshot(
+        recorder,
+        trade_date="2026-08-10",
+        shares=100,
+        can_use_volume=100,
+        batch_sequence=1,
+        with_account=False,
+    )
+
+    with pytest.raises(SchemaError, match="ACCOUNT evidence"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
+        == "SELL_PLANNED"
+    assert not list(
+        (tmp_path / "pr49_probe" / "inbox").glob(f"*{batch_id}*")
+    )
+
+    _save_snapshot(
+        recorder,
+        trade_date="2026-08-10",
+        shares=100,
+        can_use_volume=0,
+        batch_sequence=2,
+    )
+    path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    assert path.is_file()
 
 
 def test_post_fill_buy_retry_cannot_recreate_inbox_pair(
@@ -943,7 +1223,7 @@ def test_probe_sell_uses_latest_imported_snapshot_not_largest_batch_id(
     buy = _record_probe_buy_plan(recorder, tmp_path, monkeypatch)
     _apply_probe_buy_fill(recorder, buy)
     old_batch = "20260810_zzz_snapshot"
-    recorder.record_batch(old_batch, "2026-08-10", "LIVE", 0)
+    _record_real_snapshot_batch(recorder, old_batch, "2026-08-10")
     recorder.save_broker_snapshot(
         old_batch, {"account_id": "8890116049"}, [{
             "stock_code": STOCK_CODE,
@@ -954,7 +1234,7 @@ def test_probe_sell_uses_latest_imported_snapshot_not_largest_batch_id(
         }],
     )
     new_batch = "20260810_aaa_snapshot"
-    recorder.record_batch(new_batch, "2026-08-10", "LIVE", 0)
+    _record_real_snapshot_batch(recorder, new_batch, "2026-08-10")
     recorder.save_broker_snapshot(
         new_batch, {"account_id": "8890116049"}, [{
             "stock_code": STOCK_CODE,

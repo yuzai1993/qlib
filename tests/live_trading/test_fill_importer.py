@@ -1,6 +1,7 @@
 """FillImporter：回执导入、SIMULATE 隔离、幂等、对账。"""
 import json
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
@@ -19,6 +20,29 @@ from live_trading.modules.signal_schema import (
 )
 
 BATCH_ID = "20260714_csi300_topk10_001"
+
+
+def test_fill_importer_module_does_not_require_posix_fcntl():
+    script = """
+import builtins
+original_import = builtins.__import__
+
+def import_without_fcntl(name, *args, **kwargs):
+    if name == "fcntl":
+        raise ModuleNotFoundError("simulated Windows: no fcntl")
+    return original_import(name, *args, **kwargs)
+
+builtins.__import__ = import_without_fcntl
+import live_trading.modules.fill_importer
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def _fill(client_order_id="20260714001S", mode="LIVE", status="FILLED",

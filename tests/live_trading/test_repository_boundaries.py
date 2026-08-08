@@ -98,9 +98,16 @@ def test_windows_marker_creator_uses_shared_lock_and_rechecks_inside_it():
         assert token in text
 
     lock_acquired = text.index("$LockStream.Lock(0, 1)")
+    marker_path_derived = text.index("# FINAL_MARKER_PATH_DERIVED")
+    own_marker_derived = text.index(
+        "$OwnMarker = [System.IO.Path]::Combine", marker_path_derived,
+    )
+    other_marker_derived = text.index(
+        "$OtherMarker = [System.IO.Path]::Combine", marker_path_derived,
+    )
+    assert marker_path_derived <= own_marker_derived < lock_acquired
+    assert marker_path_derived <= other_marker_derived < lock_acquired
     assert lock_acquired < text.index("$Today =")
-    assert lock_acquired < text.index("$OwnMarker =", lock_acquired)
-    assert lock_acquired < text.index("$OtherMarker =", lock_acquired)
     assert lock_acquired < text.index(
         "[System.IO.File]::Move($IntentPath, $OwnMarker)"
     )
@@ -180,6 +187,115 @@ def test_windows_marker_commit_point_has_unambiguous_exit_contract(
     assert "AUTHORIZATION_COMMITTED_WARNING" in script
     assert "exit 0" in script
     assert "exit 1" in script
+
+
+def _outer_failure_status_contract(
+    script_text, failure, locked_probe_state, final_probe_state,
+):
+    """Model lock-qualified absence and the mandatory final re-probe."""
+    lock_held = failure == "validation_under_lock"
+    assert failure in {
+        "state_root_read", "lock_open", "lock_timeout",
+        "validation_under_lock",
+    }
+    for token in (
+        "Get-FinalMarkerState",
+        "$NotCommittedEmittedUnderLock",
+        "AUTHORIZATION_STATE_UNKNOWN",
+        "STOP_BOTH_QMT_NO_RETRY",
+        "exit 2",
+    ):
+        assert token in script_text
+
+    if locked_probe_state == "PRESENT" or final_probe_state == "PRESENT":
+        return "AUTHORIZATION_COMMITTED", 0
+    if lock_held and locked_probe_state == "ABSENT":
+        return "AUTHORIZATION_NOT_COMMITTED", 1
+    return "AUTHORIZATION_STATE_UNKNOWN", 2
+
+
+@pytest.mark.parametrize(
+    (
+        "failure", "locked_probe_state", "final_probe_state", "expected",
+    ),
+    [
+        (
+            "state_root_read", None, "PRESENT",
+            ("AUTHORIZATION_COMMITTED", 0),
+        ),
+        ("lock_open", None, "PRESENT", ("AUTHORIZATION_COMMITTED", 0)),
+        ("lock_timeout", None, "PRESENT", ("AUTHORIZATION_COMMITTED", 0)),
+        (
+            "state_root_read", None, "ABSENT",
+            ("AUTHORIZATION_STATE_UNKNOWN", 2),
+        ),
+        (
+            "lock_open", None, "ABSENT",
+            ("AUTHORIZATION_STATE_UNKNOWN", 2),
+        ),
+        (
+            "lock_timeout", None, "ABSENT",
+            ("AUTHORIZATION_STATE_UNKNOWN", 2),
+        ),
+        (
+            "lock_timeout", None, "UNKNOWN",
+            ("AUTHORIZATION_STATE_UNKNOWN", 2),
+        ),
+        (
+            "validation_under_lock", "ABSENT", None,
+            ("AUTHORIZATION_NOT_COMMITTED", 1),
+        ),
+        (
+            "validation_under_lock", "PRESENT", "ABSENT",
+            ("AUTHORIZATION_COMMITTED", 0),
+        ),
+        (
+            "validation_under_lock", "UNKNOWN", "PRESENT",
+            ("AUTHORIZATION_COMMITTED", 0),
+        ),
+        (
+            "validation_under_lock", "UNKNOWN", "ABSENT",
+            ("AUTHORIZATION_STATE_UNKNOWN", 2),
+        ),
+    ],
+)
+def test_windows_marker_outer_failures_reconcile_final_truth(
+    failure, locked_probe_state, final_probe_state, expected,
+):
+    script = (
+        REPO_ROOT /
+        "live_trading/qmt_strategy/New-OperatorAuthorizationMarker.ps1"
+    ).read_text(encoding="utf-8")
+
+    assert _outer_failure_status_contract(
+        script, failure, locked_probe_state, final_probe_state,
+    ) == expected
+    derived = script.index("# FINAL_MARKER_PATH_DERIVED")
+    assert derived < script.index("shared authorization state root is missing")
+    assert derived < script.index("[System.IO.File]::Open(")
+    locked_probe = script.index("# FINAL_MARKER_PROBE_UNDER_LOCK")
+    not_committed = script.index(
+        '"AUTHORIZATION_NOT_COMMITTED profile=$Profile "', locked_probe,
+    )
+    unlock = script.index("$LockStream.Unlock(0, 1)")
+    final_probe = script.index("# FINAL_MARKER_POST_CLEANUP_REPROBE")
+    assert locked_probe < not_committed < unlock < final_probe
+
+
+def test_final_marker_probe_failure_is_never_not_committed():
+    script = (
+        REPO_ROOT /
+        "live_trading/qmt_strategy/New-OperatorAuthorizationMarker.ps1"
+    ).read_text(encoding="utf-8")
+
+    probe = script.index(
+        "$PostCleanupFinalProbe = Get-FinalMarkerState",
+    )
+    unknown = script.index(
+        'if ($PostCleanupFinalProbe.State -eq "UNKNOWN")', probe,
+    )
+    unknown_output = script.index("AUTHORIZATION_STATE_UNKNOWN", unknown)
+    assert probe < unknown < unknown_output
 
 
 def test_git_tracks_no_runtime_authorization_or_broker_evidence():

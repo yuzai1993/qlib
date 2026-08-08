@@ -94,11 +94,15 @@ final/intent 状态消歧；final 存在或状态无法可靠判定时保守输�
 `AUTHORIZATION_COMMITTED` 并 exit 0。commit 后的 readback、Unlock、Dispose 故障只能
 输出 `AUTHORIZATION_COMMITTED_WARNING`，不能降级为普通失败。
 
-`AUTHORIZATION_NOT_COMMITTED`/exit 1 只表示未确认最终 marker，但遗留 intent 会让 Mac
-publisher 拒绝继续，并令 monitor 报 `AUTHORIZATION_INTENT_REMAINS` CRIT。只有停止两个
-QMT 策略、确认 final marker 不存在、确认输出从未出现 committed token，并核对 intent
-内容与对应批次后，才允许人工隔离该 intent；不得把它直接改名为 marker。锁超时或任何
-失败都禁止绕过受控脚本。
+`AUTHORIZATION_NOT_COMMITTED`/exit 1 只会在脚本仍持有共享授权锁时确认最终 marker
+不存在并写出状态，随后才释放锁；未持锁时读到不存在可能与另一个 creator 的提交竞态，
+必须按 unknown 处理。遗留 intent 仍会让 Mac publisher 拒绝继续，并令 monitor 报
+`AUTHORIZATION_INTENT_REMAINS` CRIT。`AUTHORIZATION_STATE_UNKNOWN`/exit 2（机器动作
+`STOP_BOTH_QMT_NO_RETRY`）表示最终 marker 不可读，QMT 可能已经获得授权；立即停止主策略
+和 probe 策略，禁止重试、删除 marker 或清理 intent，直至人工明确最终状态。只有停止
+两个 QMT 策略、确认 final marker 不存在、确认输出从未出现 committed token，并核对
+intent 内容与对应批次后，才允许人工隔离该 intent；不得把它直接改名为 marker。锁超时
+或任何失败都禁止绕过受控脚本。
 
 不同 SMB 服务端/macOS 挂载版本的锁映射可能不同。首次启用、共享盘重配或系统升级后，
 必须在**不创建任何 marker**的前提下做双向互操作验收：一端持有上述文件的独占锁时，

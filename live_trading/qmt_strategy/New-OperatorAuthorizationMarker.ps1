@@ -15,9 +15,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$StateRoot = Join-Path $BridgeRoot "state"
-$LockPath = Join-Path $StateRoot "OPERATOR_AUTHORIZATION.lock"
-$Deadline = (Get-Date).AddSeconds($LockTimeoutSeconds)
+$StateRoot = $null
+$LockPath = $null
+$Deadline = $null
 $LockStream = $null
 $ByteLocked = $false
 $IntentStream = $null
@@ -25,6 +25,9 @@ $IntentPath = $null
 $OwnMarker = $null
 $OtherMarker = $null
 $Committed = $false
+$StateUnknown = $false
+$StateUnknownMessage = $null
+$NotCommittedEmittedUnderLock = $false
 $CommitAttempted = $false
 $CommitSource = "none"
 $FailureMessage = $null
@@ -60,7 +63,68 @@ function Write-BestEffortStatus {
   }
 }
 
+function Get-FinalMarkerState {
+  param([string]$Path)
+  if ([string]::IsNullOrWhiteSpace($Path)) {
+    return [pscustomobject]@{
+      State = "UNKNOWN"
+      Detail = "final marker path could not be derived"
+    }
+  }
+  try {
+    $FinalItem = Get-Item -LiteralPath $Path -ErrorAction Stop
+    if ($FinalItem.PSIsContainer) {
+      return [pscustomobject]@{
+        State = "ABSENT"
+        Detail = "final marker path is occupied by a directory"
+      }
+    }
+    return [pscustomobject]@{
+      State = "PRESENT"
+      Detail = "final marker file exists"
+    }
+  }
+  catch [System.Management.Automation.ItemNotFoundException] {
+    return [pscustomobject]@{
+      State = "ABSENT"
+      Detail = "final marker file is positively absent"
+    }
+  }
+  catch {
+    return [pscustomobject]@{
+      State = "UNKNOWN"
+      Detail = "final marker state read failed: " + $_.Exception.Message
+    }
+  }
+}
+
 try {
+  # FINAL_MARKER_PATH_DERIVED: pure path construction precedes every SMB
+  # read, lock open, timeout, and state-root validation.
+  $StateRoot = [System.IO.Path]::Combine($BridgeRoot, "state")
+  $LockPath = [System.IO.Path]::Combine(
+    $StateRoot, "OPERATOR_AUTHORIZATION.lock"
+  )
+  if ($Profile -eq "CLOSE_AUCTION") {
+    $CutoffText = "$TradeDate 14:57:05"
+    $OwnMarker = [System.IO.Path]::Combine(
+      $StateRoot, "LIVE_OK_$TradeDate"
+    )
+    $OtherMarker = [System.IO.Path]::Combine(
+      $BridgeRoot, "pr49_probe", "state", "PR49_LIVE_OK_$TradeDate"
+    )
+  }
+  else {
+    $CutoffText = "$TradeDate 15:05:00"
+    $OwnMarker = [System.IO.Path]::Combine(
+      $BridgeRoot, "pr49_probe", "state", "PR49_LIVE_OK_$TradeDate"
+    )
+    $OtherMarker = [System.IO.Path]::Combine(
+      $StateRoot, "LIVE_OK_$TradeDate"
+    )
+  }
+  $Deadline = (Get-Date).AddSeconds($LockTimeoutSeconds)
+
   if (-not (Test-Path -LiteralPath $StateRoot -PathType Container)) {
     throw "shared authorization state root is missing"
   }
@@ -92,21 +156,6 @@ try {
       }
       Start-Sleep -Milliseconds 100
     }
-  }
-
-  if ($Profile -eq "CLOSE_AUCTION") {
-    $CutoffText = "$TradeDate 14:57:05"
-    $OwnMarker = Join-Path $StateRoot "LIVE_OK_$TradeDate"
-    $OtherMarker = Join-Path $BridgeRoot (
-      "pr49_probe\state\PR49_LIVE_OK_$TradeDate"
-    )
-  }
-  else {
-    $CutoffText = "$TradeDate 15:05:00"
-    $OwnMarker = Join-Path $BridgeRoot (
-      "pr49_probe\state\PR49_LIVE_OK_$TradeDate"
-    )
-    $OtherMarker = Join-Path $StateRoot "LIVE_OK_$TradeDate"
   }
 
   # A final marker is already an irreversible authorization fact. Never
@@ -296,6 +345,44 @@ finally {
       }
     }
   }
+  if ($ByteLocked) {
+    # FINAL_MARKER_PROBE_UNDER_LOCK: only this probe can establish stable
+    # absence against another conforming marker creator.
+    try {
+      $LockedFinalProbe = Get-FinalMarkerState -Path $OwnMarker
+    }
+    catch {
+      $LockedFinalProbe = [pscustomobject]@{
+        State = "UNKNOWN"
+        Detail = "locked final marker probe threw: " + $_.Exception.Message
+      }
+    }
+    if ($LockedFinalProbe.State -eq "PRESENT") {
+      if (-not $Committed) {
+        $Committed = $true
+        $CommitSource = "locked-final-reconcile-present"
+        [void]$PostCommitWarnings.Add(
+          "earlier operation failed but final marker exists: $FailureMessage"
+        )
+      }
+    }
+    elseif (
+      $LockedFinalProbe.State -eq "ABSENT" -and -not $Committed
+    ) {
+      # Complete the NOT_COMMITTED classification and status write before
+      # releasing the lock. An unlocked ABSENT read is never stable evidence.
+      if ($null -eq $FailureMessage) {
+        $FailureMessage = "authorization did not reach the marker commit point"
+      }
+      Write-BestEffortStatus `
+        -Message (
+          "AUTHORIZATION_NOT_COMMITTED profile=$Profile " +
+          "trade_date=$TradeDate intent=$IntentPath error=$FailureMessage"
+        ) `
+        -PreferError $true
+      $NotCommittedEmittedUnderLock = $true
+    }
+  }
   if ($null -ne $LockStream) {
     if ($ByteLocked) {
       try {
@@ -328,6 +415,62 @@ finally {
   }
 }
 
+if ($NotCommittedEmittedUnderLock) {
+  exit 1
+}
+
+# FINAL_MARKER_POST_CLEANUP_REPROBE: every exit path rechecks the exact final
+# marker before output unless NOT_COMMITTED was already conclusively emitted
+# while holding the lock. PRESENT safely upgrades any outcome because final
+# markers are irreversible; unlocked ABSENT is always UNKNOWN.
+try {
+  $PostCleanupFinalProbe = Get-FinalMarkerState -Path $OwnMarker
+}
+catch {
+  $PostCleanupFinalProbe = [pscustomobject]@{
+    State = "UNKNOWN"
+    Detail = "final marker probe threw: " + $_.Exception.Message
+  }
+}
+
+if ($PostCleanupFinalProbe.State -eq "PRESENT") {
+  if (-not $Committed) {
+    $Committed = $true
+    $CommitSource = "final-reconcile-present"
+    [void]$PostCommitWarnings.Add(
+      "earlier operation failed but final marker exists: $FailureMessage"
+    )
+  }
+}
+elseif ($PostCleanupFinalProbe.State -eq "UNKNOWN") {
+  if ($Committed) {
+    [void]$PostCommitWarnings.Add(
+      "final marker state is unreadable after known commit: " +
+      $PostCleanupFinalProbe.Detail
+    )
+  }
+  else {
+    $StateUnknown = $true
+    $StateUnknownMessage = $PostCleanupFinalProbe.Detail
+  }
+}
+elseif ($Committed) {
+  # A successful/possible commit may have been visible to QMT before a later
+  # disappearance. Never downgrade that historical authorization fact.
+  [void]$PostCommitWarnings.Add(
+    "final marker now reads absent after a committed outcome"
+  )
+}
+else {
+  # A point-in-time ABSENT probe without the shared lock races a creator that
+  # may already hold the lock and commit immediately after this read.
+  $StateUnknown = $true
+  $StateUnknownMessage = (
+    "final marker is currently absent but absence was not proven " +
+    "while holding the shared authorization lock"
+  )
+}
+
 if ($Committed) {
   foreach ($WarningText in $PostCommitWarnings) {
     Write-BestEffortStatus `
@@ -343,13 +486,23 @@ if ($Committed) {
   exit 0
 }
 
-if ($null -eq $FailureMessage) {
-  $FailureMessage = "authorization did not reach the marker commit point"
+if ($StateUnknown) {
+  Write-BestEffortStatus `
+    -Message (
+      "AUTHORIZATION_STATE_UNKNOWN profile=$Profile trade_date=$TradeDate " +
+      "marker=$OwnMarker error=$FailureMessage probe=$StateUnknownMessage " +
+      "action=STOP_BOTH_QMT_NO_RETRY"
+    ) `
+    -PreferError $true
+  exit 2
 }
+
 Write-BestEffortStatus `
   -Message (
-    "AUTHORIZATION_NOT_COMMITTED profile=$Profile trade_date=$TradeDate " +
-    "intent=$IntentPath error=$FailureMessage"
+    "AUTHORIZATION_STATE_UNKNOWN profile=$Profile trade_date=$TradeDate " +
+    "marker=$OwnMarker error=$FailureMessage " +
+    "probe=no-safe-final-classification " +
+    "action=STOP_BOTH_QMT_NO_RETRY"
   ) `
   -PreferError $true
-exit 1
+exit 2

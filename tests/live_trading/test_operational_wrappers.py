@@ -89,6 +89,8 @@ def test_pr49_checklist_stops_for_fresh_confirmation_and_preserves_evidence():
         "最终 marker 是不可逆授权事实",
         "AUTHORIZATION_COMMITTED_WARNING",
         "AUTHORIZATION_NOT_COMMITTED",
+        "AUTHORIZATION_STATE_UNKNOWN",
+        "STOP_BOTH_QMT_NO_RETRY",
         "遗留 intent",
         "停止 probe 策略",
         "保留 processing/、outbound/ 和 logs/ 证据",

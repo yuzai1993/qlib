@@ -163,7 +163,11 @@ $TradeDate = "YYYY-MM-DD"
 
 必须看到 `AUTHORIZATION_COMMITTED` 且 exit 0。任何
 `AUTHORIZATION_COMMITTED_WARNING` 仍表示 marker 已不可逆提交，禁止重试或删除；
-`AUTHORIZATION_NOT_COMMITTED` 则停止流程并检查遗留 intent/monitor CRIT，禁止绕过脚本。
+`AUTHORIZATION_NOT_COMMITTED`/exit 1 只表示脚本仍持有共享授权锁时确认最终 marker
+不存在并写出状态，随后才释放锁；应停止流程并检查遗留 intent/monitor CRIT，禁止绕过
+脚本。未持锁时读到不存在必须按 unknown 处理。若出现 `AUTHORIZATION_STATE_UNKNOWN`/
+exit 2 和 `STOP_BOTH_QMT_NO_RETRY`，最终 marker 不可读、QMT 可能已获得授权：立即停止
+probe 和主策略，不重试、不删除 marker、不清理 intent，直至人工明确最终状态。
 
 15:05 后持续查看事件。API 返回不等于委托受理；只有 ORDER 查询或可信 callback 出现
 真实 QMT 委托号的 `ORDER_OBSERVED`，随后才允许有 `ACCEPTED`。15:31 后执行：
@@ -213,8 +217,9 @@ $TradeDate = "YYYY-MM-DD"
   -Profile AFTER_HOURS_FIXED_PRICE -TradeDate $TradeDate
 ```
 
-必须按 BUY 日相同的 committed/not-committed 状态契约处理；最终 marker 存在时永远按
-已授权处理，不能因为 readback、Unlock 或 Dispose 警告而重试或删除。
+必须按 BUY 日相同的 committed/not-committed/unknown 状态契约处理；最终 marker 存在时
+永远按已授权处理，不能因为 readback、Unlock 或 Dispose 警告而重试或删除；unknown 必须
+停止两个策略且不得重试。
 
 15:31 后重复 import 与 postmarket 命令。完成标准是实际 SELL 恰好 100 股、生命周期
 `CLOSED`、探针证券持仓归零、费用/现金/账户快照一致。只有生命周期 `CLOSED` 才表示
@@ -228,6 +233,8 @@ JSONL 事件与导入账本中互相对应。
 - 遗留 intent 不等于最终 marker，但会阻断 publisher 并触发 monitor CRIT。只有两个 QMT
   策略都已停止、final marker 明确不存在、没有任何 committed token，并核对 intent 内容
   后，才允许把 intent 隔离到证据目录；禁止直接删除证据或把 intent 改名成 marker。
+- `AUTHORIZATION_STATE_UNKNOWN` 表示无法证明 final marker 不存在、QMT 可能已授权；按
+  `STOP_BOTH_QMT_NO_RETRY` 停止两个策略，在明确 final 状态前禁止重试或清理任何授权证据。
 - 回滚必须保留 processing/、outbound/ 和 logs/ 证据，也保留 archive/、state 中的
   active/corrupt/snapshot 证据与共享 SQLite 账本。
 - 不删除 fills、账户快照或已发布 signal，不重写 batch ID，不清零手续费/盈亏。

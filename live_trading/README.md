@@ -213,9 +213,13 @@ $TradeDate = "YYYY-MM-DD"
 
 只有机器状态行 `AUTHORIZATION_COMMITTED`（exit 0）才表示命令完成；即使同时出现
 `AUTHORIZATION_COMMITTED_WARNING`，也必须把 marker 当作已经不可逆授权，不能重试、
-删除或称为失败。`AUTHORIZATION_NOT_COMMITTED`（exit 1）表示最终 marker 未确认存在，
-但可能留下阻断后续 publisher/monitor 的 intent。若命令中断或输出不可读，最终 marker
-一旦存在仍按 committed 处理。任何失败都不得改用其他命令补建 marker。首次启用前还
+删除或称为失败。`AUTHORIZATION_NOT_COMMITTED`（exit 1）只在脚本仍持有共享授权锁时
+确认最终 marker 不存在并写出状态，随后才释放锁；但仍可能留下阻断后续
+publisher/monitor 的 intent。未持锁时读到不存在并不是稳定证明，必须按 unknown 处理。
+`AUTHORIZATION_STATE_UNKNOWN`（exit 2，`action=STOP_BOTH_QMT_NO_RETRY`）表示最终 marker
+不可读、QMT 可能已经获得授权：立即停止主策略和 probe 策略，不重试、不删除 marker、
+不清理 intent，直至人工明确最终状态。若命令中断或输出不可读，最终 marker 一旦存在仍按
+committed 处理。任何失败都不得改用其他命令补建 marker。首次启用前还
 必须按 QMT README 的“双向 SMB 锁互操作验收”确认 macOS `filelock` 与 Windows
 `FileStream` 在当前共享盘上确实互斥。
 

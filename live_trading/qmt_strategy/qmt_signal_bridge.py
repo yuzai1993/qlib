@@ -216,6 +216,35 @@ def _activate_profile_settings():
     SNAPSHOT_REFRESH_AT = settings["snapshot_after"]
 
 
+def _canonical_bridge_root(path):
+    raw = str(path)
+    if not raw or not os.path.isabs(raw):
+        raise ValueError("bridge roots must be absolute canonical paths")
+    canonical = os.path.normcase(os.path.realpath(os.path.abspath(raw)))
+    if os.path.normcase(raw) != canonical:
+        raise ValueError("bridge roots must use canonical path spelling")
+    return canonical
+
+
+def _validate_profile_roots():
+    current_root = _canonical_bridge_root(BRIDGE_ROOT)
+    other_root = _canonical_bridge_root(OTHER_BRIDGE_ROOT)
+    if EXECUTION_PROFILE == "CLOSE_AUCTION":
+        expected_other = os.path.normcase(os.path.join(
+            current_root, "pr49_probe",
+        ))
+        valid = other_root == expected_other
+    else:
+        expected_current = os.path.normcase(os.path.join(
+            other_root, "pr49_probe",
+        ))
+        valid = current_root == expected_current
+    if not valid:
+        raise ValueError(
+            "profile roots must be an exact main/pr49_probe direct pair"
+        )
+
+
 def _path(*parts):
     return os.path.join(BRIDGE_ROOT, *parts)
 
@@ -1239,6 +1268,9 @@ def _poll_status(batch):
 
 
 def _finalize_dual_authorization_block(batch):
+    batch.execution_authorized = False
+    batch.execution_live = False
+    _save_active_state(batch)
     trade_date = batch.header.get("trade_date", "")
     authorization_path = _authorization_path(trade_date)
     other_authorization_path = _other_authorization_path(trade_date)
@@ -1264,15 +1296,15 @@ def _finalize_dual_authorization_block(batch):
 
 
 def _process_batch(ContextInfo, batch):
+    if batch.dual_authorization_blocked:
+        _finalize_dual_authorization_block(batch)
+        return
     now = _now_hms()
     if now < TRADE_START:
         return
     if now >= CANCEL_AT:
         # _force_finalize_if_near_close owns polling/cancel from this point.
         # Never place a fresh order after the cancellation cutoff.
-        return
-    if batch.dual_authorization_blocked:
-        _finalize_dual_authorization_block(batch)
         return
     if not batch.trading_started:
         # batch may have been claimed hours before the trade window opens;
@@ -1460,6 +1492,9 @@ def _process_batch(ContextInfo, batch):
 
 
 def _force_finalize_if_near_close(ContextInfo, batch):
+    if batch.dual_authorization_blocked:
+        _finalize_dual_authorization_block(batch)
+        return
     now = _now_hms()
     if now < CANCEL_AT:
         return
@@ -1509,6 +1544,9 @@ def _force_finalize_if_near_close(ContextInfo, batch):
 def _advance(ContextInfo):
     if not g.trading_enabled:
         return
+    if g.batch is not None and g.batch.dual_authorization_blocked:
+        _finalize_dual_authorization_block(g.batch)
+        return
     now = time.time()
     if now - g.last_poll < POLL_SECONDS:
         return
@@ -1516,6 +1554,9 @@ def _advance(ContextInfo):
 
     _recover_processing_batch()
     _claim_new_batch()
+    if g.batch is not None and g.batch.dual_authorization_blocked:
+        _finalize_dual_authorization_block(g.batch)
+        return
     if g.batch is not None:
         _force_finalize_if_near_close(ContextInfo, g.batch)
     if g.batch is not None:
@@ -1574,9 +1615,9 @@ def init(ContextInfo):
             message=str(exc),
         )
         return
-    current_root = os.path.normcase(os.path.abspath(BRIDGE_ROOT))
-    other_root = os.path.normcase(os.path.abspath(OTHER_BRIDGE_ROOT))
-    if current_root == other_root:
+    try:
+        _validate_profile_roots()
+    except ValueError as exc:
         g.loaded = True
         g.trading_enabled = False
         _log_event(
@@ -1584,7 +1625,7 @@ def init(ContextInfo):
             execution_profile=EXECUTION_PROFILE,
             bridge_root=BRIDGE_ROOT,
             other_bridge_root=OTHER_BRIDGE_ROOT,
-            message="BRIDGE_ROOT and OTHER_BRIDGE_ROOT must be distinct",
+            message=str(exc),
         )
         return
     g.trading_enabled = True

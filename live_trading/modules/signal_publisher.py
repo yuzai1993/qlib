@@ -70,10 +70,14 @@ class SignalPublisher:
             f"batch {header.batch_id} conflicts with already published bytes"
         )
 
-    def publish(self, header: BatchHeader, orders: list) -> Path:
+    def publish(
+        self, header: BatchHeader, orders: list, *, before_exposure=None,
+    ) -> Path:
         """校验并原子写出批次文件，返回 jsonl 路径。
 
         header 的 order_count / checksum 由本方法填充，调用方无需预填。
+        ``before_exposure`` 在内部 byte preflight 之后、任何 inbox rename
+        之前执行，供调用方复核外部授权门禁。
         """
         header, jsonl_content, done_content = self._render(header, orders)
 
@@ -83,6 +87,9 @@ class SignalPublisher:
         if self.ensure_publishable(header, orders):
             logger.info("batch %s already published with exact bytes", header.batch_id)
             return jsonl_path
+
+        if before_exposure is not None:
+            before_exposure()
 
         self._atomic_write(jsonl_path, jsonl_content)
         self._atomic_write(done_path, done_content)

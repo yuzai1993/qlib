@@ -139,6 +139,9 @@ Shadow 通过后，必须同时满足：
 
 Mac 批次必须是 `account_environment=REAL` 与 `mode=LIVE`。主策略 SELL 使用当日
 `LIVE_OK`；探针使用不同的 `PR49_LIVE_OK`。一手结果验收前不得改动 100 股上限。
+两个 profile 的当日 marker 在 operator 批次发布前都必须不存在；marker 只能在批次
+发布后获得用户当日明确确认，再按各自 runbook 手工创建。旧 marker 会令初次发布、
+DB-only recovery 和 visible inbox 接管全部失败关闭，禁止通过删除执行证据绕过。
 
 主策略 SELL 的 preview→人工发布→导入→postmarket→`PAUSED` 命令见上级
 [实盘 README](../README.md)。prType=49 BUY→下一交易日 SELL 的逐项门禁见

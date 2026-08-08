@@ -26,6 +26,10 @@ ONE_LOT = 100
 BUY_TARGET_VALUE = 1_000_000.0
 PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
 PROBE_ACTIVE_STATES = {"BUY_PLANNED", "BUY_FILLED", "SELL_PLANNED"}
+AUTHORIZATION_PROFILE_NAMES = (
+    "CLOSE_AUCTION",
+    "AFTER_HOURS_FIXED_PRICE",
+)
 
 
 @dataclass(frozen=True)
@@ -406,6 +410,7 @@ def _require_exclusive_main_sell(
         raise SchemaError(
             "main operator SELL requires durable PAUSED execution state"
         )
+    _require_no_main_authorization_marker(request, bridge_root)
 
     operator_batch_id = _batch_id(request, live)
     conflicting_batches = [
@@ -450,6 +455,31 @@ def _require_exclusive_main_sell(
             + ",".join(sorted(artifacts))
         )
     return observed_expected_inbox == expected_inbox
+
+
+def _require_no_main_authorization_marker(
+    request: OperatorProbeRequest, bridge_root: Path,
+) -> None:
+    """Require a fresh post-publication authorization boundary for main SELL."""
+    marker_names = {
+        f"{get_execution_profile(name).authorization_prefix}{request.trade_date}"
+        for name in AUTHORIZATION_PROFILE_NAMES
+    }
+    state_roots = (
+        bridge_root / "state",
+        bridge_root / "pr49_probe" / "state",
+    )
+    artifacts = []
+    for state_root in state_roots:
+        for marker_name in marker_names:
+            marker = state_root / marker_name
+            if marker.is_file():
+                artifacts.append(marker.relative_to(bridge_root).as_posix())
+    if artifacts:
+        raise SchemaError(
+            "same-day authorization marker blocks main operator SELL: "
+            + ",".join(sorted(artifacts))
+        )
 
 
 def publish_operator_probe(
@@ -515,6 +545,11 @@ def publish_operator_probe(
                     "refusing to republish"
                 ) from exc
             raise
+        if not is_probe:
+            # The marker is created manually outside this Mac-side lock. Check
+            # again after byte preflight so a concurrent authorization cannot
+            # turn an unconfirmed visible pair into a safe-looking adoption.
+            _require_no_main_authorization_marker(request, bridge_root)
         if not is_probe and durable_retry:
             if already_visible:
                 return bridge_root / "inbox" / f"signal_{header.batch_id}.jsonl"
@@ -544,4 +579,11 @@ def publish_operator_probe(
                 probe_transition,
                 lambda: publisher.publish(header, [order]),
             )
-        return publisher.publish(header, [order])
+        _require_no_main_authorization_marker(request, bridge_root)
+        return publisher.publish(
+            header,
+            [order],
+            before_exposure=lambda: _require_no_main_authorization_marker(
+                request, bridge_root,
+            ),
+        )

@@ -165,11 +165,16 @@ find /Volumes/qmt_bridge/inbox /Volumes/qmt_bridge/processing \
   -name "signal_${DATE_COMPACT}_csi1000_b6m_b2s_postclose_real_*" -print
 find /Volumes/qmt_bridge/state -maxdepth 1 -type f \
   -name "*${DATE_COMPACT}_csi1000_b6m_b2s_postclose_real_*" -print
+find /Volumes/qmt_bridge/state /Volumes/qmt_bridge/pr49_probe/state \
+  -maxdepth 1 -type f \( -name "LIVE_OK_${TRADE_DATE}" \
+  -o -name "PR49_LIVE_OK_${TRADE_DATE}" \) -print
 ```
 
-两个 `find` 都必须无输出。发布 CLI 会在写账本/SMB 前再次执行同样的 durable state、
-同日 LIVE ledger 和 inbox/processing/state 排他检查；任一同日其他 main LIVE batch 或
-QMT artifact 都拒绝 seq900 发布。不得删除旧批次来强行通过，应先查明并验收其状态。
+三个 `find` 都必须无输出。发布 CLI 会在跨进程锁内、写账本/SMB 前再次执行同样的
+durable state、同日 LIVE ledger、inbox/processing/state 和两个 profile 授权 marker
+排他检查，并在实际暴露 inbox 前再次检查 marker。任一同日 marker、其他 main LIVE
+batch 或 QMT artifact 都拒绝 seq900 发布或 DB-only recovery；即使 exact inbox pair 已
+存在，只要 marker 已存在也会停止接管。不得删除旧证据来强行通过，应先查明并验收。
 
 首先确保账本和同一交易日的可信券商账户快照都显示 `$STOCK_CODE` 可用至少 100 股。
 若当日 snapshot 缺失，必须停止并等待受控 snapshot-only 前置入口，不能复用旧快照或

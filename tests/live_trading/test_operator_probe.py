@@ -472,6 +472,13 @@ def _prepare_main_sell_publish(recorder, tmp_path, monkeypatch):
     return config, request, SignalPublisher(config["live"]["bridge_root"])
 
 
+def _write_main_authorization_marker(tmp_path, relative_path):
+    marker = tmp_path / "main_bridge" / relative_path
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text("", encoding="utf-8")
+    return marker
+
+
 def test_main_sell_publish_requires_durable_paused_state(
     recorder, tmp_path, monkeypatch,
 ):
@@ -522,6 +529,178 @@ def test_main_sell_publish_rejects_another_active_same_day_live_batch(
     assert recorder.get_batch(
         "20260810_csi1000_b6m_b2s_postclose_real_900"
     ) is None
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "state/LIVE_OK_2026-08-10",
+        "state/PR49_LIVE_OK_2026-08-10",
+        "pr49_probe/state/PR49_LIVE_OK_2026-08-10",
+    ],
+)
+def test_main_sell_publish_rejects_any_same_day_authorization_marker(
+    recorder, tmp_path, monkeypatch, relative_path,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    marker = _write_main_authorization_marker(tmp_path, relative_path)
+
+    with pytest.raises(SchemaError, match="authorization marker"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert marker.is_file()
+    assert recorder.get_batch(
+        "20260810_csi1000_b6m_b2s_postclose_real_900"
+    ) is None
+    assert not list((tmp_path / "main_bridge" / "inbox").glob("*"))
+
+
+def test_main_sell_db_only_recovery_rejects_same_day_authorization_marker(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    header, order = operator_probe.preview_operator_probe(
+        request, config, recorder, "8890116049",
+    )
+    recorder.record_publish_plan(
+        header, [order], required_execution_state="PAUSED",
+        exclusive_same_day_live=True,
+    )
+    marker = _write_main_authorization_marker(
+        tmp_path, "state/LIVE_OK_2026-08-10",
+    )
+
+    with pytest.raises(SchemaError, match="authorization marker"):
+        publish_operator_probe(
+            request, config, recorder, publisher, "8890116049",
+        )
+
+    assert marker.is_file()
+    assert not list((tmp_path / "main_bridge" / "inbox").glob("*"))
+
+
+def test_main_sell_visible_retry_with_marker_fails_without_rewriting_pair(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, publisher = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    path = publish_operator_probe(
+        request, config, recorder, publisher, "8890116049",
+    )
+    done_path = path.with_suffix(".done")
+    original_pair = (path.read_bytes(), done_path.read_bytes())
+    _write_main_authorization_marker(
+        tmp_path, "state/LIVE_OK_2026-08-10",
+    )
+
+    class NoRewritePublisher(SignalPublisher):
+        def publish(self, header, orders):
+            pytest.fail("an exact visible pair must never be rewritten")
+
+    with pytest.raises(SchemaError, match="authorization marker"):
+        publish_operator_probe(
+            request, config, recorder,
+            NoRewritePublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    assert (path.read_bytes(), done_path.read_bytes()) == original_pair
+
+
+def test_main_sell_rechecks_marker_after_preflight_before_smb_exposure(
+    recorder, tmp_path, monkeypatch,
+):
+    config, request, _ = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+    marker_written = threading.Event()
+
+    class ConcurrentMarkerPublisher(SignalPublisher):
+        def ensure_publishable(self, header, orders):
+            def authorize():
+                _write_main_authorization_marker(
+                    tmp_path, "state/LIVE_OK_2026-08-10",
+                )
+                marker_written.set()
+
+            writer = threading.Thread(target=authorize)
+            writer.start()
+            writer.join(timeout=2)
+            assert not writer.is_alive()
+            assert marker_written.is_set()
+            return super().ensure_publishable(header, orders)
+
+    with pytest.raises(SchemaError, match="authorization marker"):
+        publish_operator_probe(
+            request, config, recorder,
+            ConcurrentMarkerPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    assert marker_written.is_set()
+    assert not list((tmp_path / "main_bridge" / "inbox").glob("*"))
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "state/LIVE_OK_2026-08-10",
+        "pr49_probe/state/PR49_LIVE_OK_2026-08-10",
+    ],
+)
+def test_main_sell_rechecks_marker_after_publish_internal_preflight(
+    recorder, tmp_path, monkeypatch, relative_path,
+):
+    config, request, _ = _prepare_main_sell_publish(
+        recorder, tmp_path, monkeypatch,
+    )
+    recorder.set_execution_state(
+        config["live"]["strategy_id"], "PAUSED",
+        "exclusive operator sell", "2026-08-10T12:00:00+08:00",
+    )
+
+    class InternalPreflightMarkerPublisher(SignalPublisher):
+        ensure_calls = 0
+
+        def ensure_publishable(self, header, orders):
+            result = super().ensure_publishable(header, orders)
+            self.ensure_calls += 1
+            if self.ensure_calls == 2:
+                _write_main_authorization_marker(tmp_path, relative_path)
+            return result
+
+    with pytest.raises(SchemaError, match="authorization marker"):
+        publish_operator_probe(
+            request, config, recorder,
+            InternalPreflightMarkerPublisher(config["live"]["bridge_root"]),
+            "8890116049",
+        )
+
+    batch_id = "20260810_csi1000_b6m_b2s_postclose_real_900"
+    assert not list((tmp_path / "main_bridge" / "inbox").glob(f"*{batch_id}*"))
 
 
 @pytest.mark.parametrize(
@@ -714,18 +893,18 @@ def test_concurrent_main_db_only_recoveries_serialize_through_qmt_claim(
             source.rename(processing / source.name)
 
     class DelayedRecovery(SignalPublisher):
-        def publish(self, publish_header, orders):
+        def publish(self, publish_header, orders, **kwargs):
             delayed_ready.set()
             assert allow_delayed_publish.wait(3)
-            path = super().publish(publish_header, orders)
+            path = super().publish(publish_header, orders, **kwargs)
             processing = self.bridge_root / "processing"
             if not list(processing.glob(f"*{publish_header.batch_id}*")):
                 _claim_pair(self, publish_header)
             return path
 
     class ImmediateClaim(SignalPublisher):
-        def publish(self, publish_header, orders):
-            path = super().publish(publish_header, orders)
+        def publish(self, publish_header, orders, **kwargs):
+            path = super().publish(publish_header, orders, **kwargs)
             _claim_pair(self, publish_header)
             concurrent_claimed.set()
             return path

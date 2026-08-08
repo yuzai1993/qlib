@@ -12,6 +12,7 @@ from live_trading.modules.pipeline_monitor import (
     check_broker_reconcile,
     check_evening,
     check_postmarket,
+    check_probe_execution,
     check_report,
 )
 from live_trading.modules.fill_importer import LiveRecorder
@@ -28,6 +29,290 @@ PUBLISH_LOG = f"live_trading/logs/{CONFIG_ID}_publish_cron.log"
 
 def _rules(findings):
     return [f.rule for f in findings]
+
+
+PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+PROBE_BATCH = {
+    "batch_id": "20260810_csi1000_pr49_one_lot_probe_001",
+    "trade_date": "2026-08-10",
+    "strategy_id": PROBE_STRATEGY_ID,
+    "mode": "LIVE",
+    "planned_orders": 1,
+}
+PROBE_ORDER = {
+    "client_order_id": "20260810001001B",
+    "stock_code": "688001.SH",
+    "side": "BUY",
+}
+PROBE_LOG = "/Volumes/qmt_bridge/pr49_probe/logs/qmt_events_2026-08-10.jsonl"
+
+
+def _probe_findings(**overrides):
+    values = {
+        "main_authorized": False,
+        "probe_authorized": False,
+        "probe_batch": PROBE_BATCH,
+        "probe_orders": [PROBE_ORDER],
+        "probe_fills": [],
+        "broker_account": {"batch_id": PROBE_BATCH["batch_id"]},
+        "broker_positions": {},
+        "lifecycle": {
+            "strategy_id": PROBE_STRATEGY_ID,
+            "stock_code": "688001.SH",
+            "buy_batch_id": PROBE_BATCH["batch_id"],
+            "buy_trade_date": "2026-08-10",
+            "sell_batch_id": None,
+            "sell_trade_date": None,
+            "state": "BUY_PLANNED",
+        },
+        "qmt_events": [],
+        "event_log_path": PROBE_LOG,
+        "main_marker_path": "/Volumes/qmt_bridge/state/LIVE_OK_2026-08-10",
+        "probe_marker_path": (
+            "/Volumes/qmt_bridge/pr49_probe/state/PR49_LIVE_OK_2026-08-10"
+        ),
+        "main_execution_state": "ACTIVE",
+    }
+    values.update(overrides)
+    return check_probe_execution("2026-08-10", **values)
+
+
+def _assert_complete_probe_evidence(finding, *, batch_id=None, stock=None):
+    assert finding.level == "CRIT"
+    for token in (
+        "date=2026-08-10",
+        f"strategy_id={PROBE_STRATEGY_ID}",
+        f"batch_id={batch_id or PROBE_BATCH['batch_id']}",
+        f"stock={stock or PROBE_ORDER['stock_code']}",
+        "expected=",
+        "observed=",
+        f"log={PROBE_LOG}",
+    ):
+        assert token in finding.message
+
+
+def test_probe_monitor_blocks_dual_authorization_with_complete_evidence():
+    findings = _probe_findings(main_authorized=True, probe_authorized=True)
+
+    finding = next(f for f in findings if f.rule == "DUAL_AUTHORIZATION")
+    _assert_complete_probe_evidence(finding)
+    assert "LIVE_OK_2026-08-10" in finding.message
+    assert "PR49_LIVE_OK_2026-08-10" in finding.message
+
+
+def test_probe_monitor_flags_passorder_without_observed_qmt_order():
+    findings = _probe_findings(qmt_events=[
+        {
+            "event": "PASSORDER_ATTEMPT",
+            "batch_id": PROBE_BATCH["batch_id"],
+            "client_order_id": PROBE_ORDER["client_order_id"],
+        },
+        {
+            "event": "ORDER_FINALIZED",
+            "batch_id": PROBE_BATCH["batch_id"],
+            "client_order_id": PROBE_ORDER["client_order_id"],
+            "fill_status": "ERROR",
+            "reason": "QMT order not observed after passorder",
+        },
+    ])
+
+    finding = next(
+        f for f in findings if f.rule == "PROBE_ORDER_NOT_OBSERVED"
+    )
+    _assert_complete_probe_evidence(finding)
+    assert "ORDER_OBSERVED absent" in finding.message
+    assert "final=ERROR" in finding.message
+
+
+@pytest.mark.parametrize(
+    "qmt_order_ids",
+    [None, [], [""], ["  "], [{}], [True], [1], {"id": "qmt-1"}, "qmt-1"],
+)
+def test_probe_monitor_does_not_trust_observed_event_without_real_order_id(
+    qmt_order_ids,
+):
+    observed = {
+        "event": "ORDER_OBSERVED",
+        "batch_id": PROBE_BATCH["batch_id"],
+        "client_order_id": PROBE_ORDER["client_order_id"],
+    }
+    if qmt_order_ids is not None:
+        observed["qmt_order_ids"] = qmt_order_ids
+    findings = _probe_findings(qmt_events=[
+        {
+            "event": "PASSORDER_ATTEMPT",
+            "batch_id": PROBE_BATCH["batch_id"],
+            "client_order_id": PROBE_ORDER["client_order_id"],
+        },
+        observed,
+    ])
+
+    finding = next(
+        row for row in findings if row.rule == "PROBE_ORDER_NOT_OBSERVED"
+    )
+    _assert_complete_probe_evidence(finding)
+
+
+def test_probe_monitor_accepts_observed_event_with_real_order_id():
+    findings = _probe_findings(qmt_events=[
+        {
+            "event": "PASSORDER_ATTEMPT",
+            "batch_id": PROBE_BATCH["batch_id"],
+            "client_order_id": PROBE_ORDER["client_order_id"],
+        },
+        {
+            "event": "ORDER_OBSERVED",
+            "batch_id": PROBE_BATCH["batch_id"],
+            "client_order_id": PROBE_ORDER["client_order_id"],
+            "qmt_order_ids": ["qmt-real-101"],
+        },
+    ])
+
+    assert "PROBE_ORDER_NOT_OBSERVED" not in _rules(findings)
+
+
+def test_probe_monitor_requires_account_wide_broker_snapshot():
+    findings = _probe_findings(broker_account=None)
+
+    finding = next(f for f in findings if f.rule == "PROBE_SNAPSHOT_MISSING")
+    _assert_complete_probe_evidence(finding)
+    assert "ACCOUNT snapshot" in finding.message
+
+
+@pytest.mark.parametrize(
+    ("side", "filled_qty", "broker_shares", "lifecycle", "expected"),
+    [
+        ("BUY", 100, 0, "BUY_PLANNED", "broker_shares=100"),
+        ("SELL", 100, 100, "SELL_PLANNED", "broker_shares=0"),
+    ],
+)
+def test_probe_monitor_flags_position_drift_even_when_main_paused(
+    side, filled_qty, broker_shares, lifecycle, expected,
+):
+    batch = dict(PROBE_BATCH)
+    order = {**PROBE_ORDER, "side": side}
+    state = {
+        "strategy_id": PROBE_STRATEGY_ID,
+        "stock_code": order["stock_code"],
+        "buy_batch_id": batch["batch_id"],
+        "buy_trade_date": "2026-08-09" if side == "SELL" else "2026-08-10",
+        "sell_batch_id": batch["batch_id"] if side == "SELL" else None,
+        "sell_trade_date": "2026-08-10" if side == "SELL" else None,
+        "state": lifecycle,
+    }
+    fill = {
+        **order,
+        "batch_id": batch["batch_id"],
+        "status": "FILLED",
+        "filled_qty": filled_qty,
+        "mode": "LIVE",
+    }
+
+    findings = _probe_findings(
+        probe_batch=batch,
+        probe_orders=[order],
+        probe_fills=[fill],
+        broker_positions={order["stock_code"]: broker_shares},
+        lifecycle=state,
+        main_execution_state="PAUSED",
+    )
+
+    finding = next(f for f in findings if f.rule == "PROBE_POSITION_DRIFT")
+    _assert_complete_probe_evidence(finding)
+    assert expected in finding.message
+
+
+def test_probe_monitor_rejects_lifecycle_bound_to_another_batch():
+    state = {
+        "strategy_id": PROBE_STRATEGY_ID,
+        "stock_code": "688001.SH",
+        "buy_batch_id": "20260809_csi1000_pr49_one_lot_probe_999",
+        "buy_trade_date": "2026-08-09",
+        "sell_batch_id": None,
+        "sell_trade_date": None,
+        "state": "BUY_PLANNED",
+    }
+
+    findings = _probe_findings(lifecycle=state)
+
+    finding = next(f for f in findings if f.rule == "PROBE_LIFECYCLE_INVALID")
+    _assert_complete_probe_evidence(finding)
+    assert "lifecycle batch binding" in finding.message
+
+
+def test_probe_monitor_rejects_buy_lifecycle_trade_date_mismatch():
+    state = {
+        "strategy_id": PROBE_STRATEGY_ID,
+        "stock_code": "688001.SH",
+        "buy_batch_id": PROBE_BATCH["batch_id"],
+        "buy_trade_date": "2026-08-09",
+        "sell_batch_id": None,
+        "sell_trade_date": None,
+        "state": "BUY_PLANNED",
+    }
+
+    findings = _probe_findings(lifecycle=state)
+
+    finding = next(f for f in findings if f.rule == "PROBE_LIFECYCLE_INVALID")
+    _assert_complete_probe_evidence(finding)
+    assert "buy_trade_date=2026-08-10" in finding.message
+
+
+@pytest.mark.parametrize(
+    ("buy_trade_date", "sell_trade_date"),
+    [
+        ("2026-08-09", "2026-08-09"),
+        ("2026-08-11", "2026-08-10"),
+        ("2026-08-09", "2026-08-11"),
+    ],
+)
+def test_probe_monitor_rejects_sell_lifecycle_date_or_chronology_error(
+    buy_trade_date, sell_trade_date,
+):
+    sell_order = {**PROBE_ORDER, "side": "SELL"}
+    state = {
+        "strategy_id": PROBE_STRATEGY_ID,
+        "stock_code": "688001.SH",
+        "buy_batch_id": "20260809_csi1000_pr49_one_lot_probe_001",
+        "buy_trade_date": buy_trade_date,
+        "sell_batch_id": PROBE_BATCH["batch_id"],
+        "sell_trade_date": sell_trade_date,
+        "state": "SELL_PLANNED",
+    }
+
+    findings = _probe_findings(probe_orders=[sell_order], lifecycle=state)
+
+    finding = next(f for f in findings if f.rule == "PROBE_LIFECYCLE_INVALID")
+    _assert_complete_probe_evidence(finding)
+    assert "sell lifecycle dates" in finding.message
+
+
+def test_run_probe_checks_reads_authorizations_from_authoritative_state_dirs(
+    tmp_path,
+):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"))
+    main_root = tmp_path / "bridge"
+    probe_root = main_root / "pr49_probe"
+    (main_root / "state").mkdir(parents=True)
+    (probe_root / "state").mkdir(parents=True)
+    main_marker = main_root / "state" / "LIVE_OK_2026-08-10"
+    probe_marker = probe_root / "state" / "PR49_LIVE_OK_2026-08-10"
+    main_marker.write_text("", encoding="utf-8")
+    probe_marker.write_text("", encoding="utf-8")
+
+    findings = run_monitor._run_probe_checks(
+        "2026-08-10",
+        recorder,
+        {"live": {
+            "bridge_root": str(main_root),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "REAL",
+        }},
+    )
+
+    finding = next(row for row in findings if row.rule == "DUAL_AUTHORIZATION")
+    assert str(main_marker) in finding.message
+    assert str(probe_marker) in finding.message
 
 
 def _set_batch_strategy(recorder, batch_id, strategy_id=CONFIG_ID):
@@ -323,6 +608,80 @@ def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_pa
     )
 
     assert findings == []
+
+
+def test_run_postmarket_passes_only_current_strategy_fills_to_rules(
+    monkeypatch, tmp_path,
+):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"))
+    store = MonitorStore(str(tmp_path / "shared.db"))
+    main_batch = "20260810_csi1000_b6m_b2s_postclose_real_001"
+    probe_batch = PROBE_BATCH["batch_id"]
+    recorder.record_batch(main_batch, "2026-08-10", "SIMULATE", 1)
+    recorder.record_batch(probe_batch, "2026-08-10", "SIMULATE", 1)
+    _set_batch_strategy(recorder, main_batch)
+    _set_batch_strategy(recorder, probe_batch, PROBE_STRATEGY_ID)
+    monkeypatch.setattr(
+        run_monitor.FillImporter,
+        "reconcile",
+        lambda _self, _batch_id: {"planned": 1, "terminal": 1, "missing": 0},
+    )
+    monkeypatch.setattr(
+        recorder,
+        "get_fills",
+        lambda batch_id: [{"batch_id": batch_id, "status": "FILLED"}],
+    )
+    captured = {}
+
+    def capture(_date, batches, _reconciles, fills, _positions, **_kwargs):
+        captured["batches"] = [row["batch_id"] for row in batches]
+        captured["fills"] = [row["batch_id"] for row in fills]
+        return []
+
+    monkeypatch.setattr(run_monitor, "check_postmarket", capture)
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-10",
+        recorder,
+        store,
+        {"live": {
+            "bridge_root": str(tmp_path / "bridge"),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "SIMULATION",
+        }},
+    )
+
+    assert findings == []
+    assert captured == {"batches": [main_batch], "fills": [main_batch]}
+
+
+def test_dispatch_sends_serverchan_the_exact_probe_evidence(tmp_path):
+    finding = next(
+        row for row in _probe_findings(
+            main_authorized=True,
+            probe_authorized=True,
+        )
+        if row.rule == "DUAL_AUTHORIZATION"
+    )
+    sent = []
+
+    class CapturingNotifier:
+        channel = "serverchan"
+
+        def send(self, title, content):
+            sent.append((title, content))
+            return True
+
+    store = MonitorStore(str(tmp_path / "monitor.db"))
+
+    run_monitor.dispatch_findings(
+        [finding], "postmarket", "2026-08-10", store, CapturingNotifier(),
+    )
+
+    assert sent == [(
+        "[实盘CRIT] DUAL_AUTHORIZATION 2026-08-10",
+        finding.message,
+    )]
 
 
 # ---------- 二道对账 ----------

@@ -167,6 +167,276 @@ def check_postmarket(trade_date, batches, reconciles, fills,
     return findings
 
 
+def check_probe_execution(
+    trade_date,
+    *,
+    main_authorized,
+    probe_authorized,
+    probe_batch,
+    probe_orders,
+    probe_fills,
+    broker_account,
+    broker_positions,
+    lifecycle,
+    qmt_events,
+    event_log_path,
+    main_marker_path,
+    probe_marker_path,
+    main_execution_state="ACTIVE",
+) -> list:
+    """Fail closed on the prType=49 probe's execution evidence.
+
+    Batch, order and fill inputs are probe-strategy scoped.  Broker account
+    and position inputs deliberately remain account-wide because both
+    strategies trade the same brokerage account.
+    """
+    del main_execution_state  # A deliberate PAUSE never suppresses evidence.
+    findings = []
+    batch_id = (
+        probe_batch.get("batch_id") if probe_batch else "NONE"
+    ) or "NONE"
+    stock = _probe_stock(probe_orders, lifecycle)
+
+    def critical(rule, expected, observed):
+        findings.append(Finding(
+            rule,
+            CRIT,
+            _probe_evidence_message(
+                trade_date,
+                batch_id,
+                stock,
+                expected,
+                observed,
+                event_log_path,
+            ),
+        ))
+
+    if main_authorized and probe_authorized:
+        critical(
+            "DUAL_AUTHORIZATION",
+            "exactly one LIVE execution authorization",
+            f"both markers present: {main_marker_path}; {probe_marker_path}",
+        )
+
+    if probe_batch is None:
+        return findings
+
+    events = [
+        event for event in qmt_events
+        if event.get("batch_id") == batch_id
+    ]
+    order_by_id = {
+        order.get("client_order_id"): order
+        for order in probe_orders if order.get("client_order_id")
+    }
+    attempted = {
+        event.get("client_order_id")
+        for event in events if event.get("event") == "PASSORDER_ATTEMPT"
+    }
+    observed = {
+        event.get("client_order_id")
+        for event in events
+        if event.get("event") == "ORDER_OBSERVED"
+        and _has_real_qmt_order_id(event)
+    }
+    for client_order_id in sorted(attempted - observed):
+        final = next(
+            (
+                event for event in reversed(events)
+                if event.get("event") == "ORDER_FINALIZED"
+                and event.get("client_order_id") == client_order_id
+            ),
+            None,
+        )
+        order = order_by_id.get(client_order_id)
+        order_stock = order.get("stock_code") if order else stock
+        final_state = (
+            f"final={final.get('fill_status') or 'UNKNOWN'} "
+            f"reason={final.get('reason') or 'UNKNOWN'}"
+            if final else "final=ABSENT"
+        )
+        findings.append(Finding(
+            "PROBE_ORDER_NOT_OBSERVED",
+            CRIT,
+            _probe_evidence_message(
+                trade_date,
+                batch_id,
+                order_stock,
+                "ORDER_OBSERVED with a real QMT order id or explicit API failure",
+                f"PASSORDER_ATTEMPT; ORDER_OBSERVED absent; {final_state}",
+                event_log_path,
+            ),
+        ))
+
+    snapshot_batch_id = (
+        broker_account.get("batch_id") if broker_account else None
+    )
+    snapshot_matches = snapshot_batch_id == batch_id
+    if not snapshot_matches:
+        critical(
+            "PROBE_SNAPSHOT_MISSING",
+            f"ACCOUNT snapshot bound to batch {batch_id}",
+            "ACCOUNT snapshot absent" if broker_account is None else (
+                f"latest ACCOUNT snapshot batch={snapshot_batch_id}"
+            ),
+        )
+
+    side = _probe_side(probe_orders)
+    successful_qty = sum(
+        int(fill.get("filled_qty") or 0)
+        for fill in probe_fills
+        if fill.get("batch_id") == batch_id
+        and fill.get("mode") == "LIVE"
+        and fill.get("side") == side
+        and fill.get("status") in _TRADED_STATUS
+    )
+    broker_shares = int(broker_positions.get(stock, 0))
+    if snapshot_matches and successful_qty:
+        expected_shares = 100 if side == "BUY" else 0
+        if successful_qty != 100 or broker_shares != expected_shares:
+            critical(
+                "PROBE_POSITION_DRIFT",
+                f"filled_qty=100 broker_shares={expected_shares}",
+                f"filled_qty={successful_qty} broker_shares={broker_shares}",
+            )
+
+    lifecycle_error = _probe_lifecycle_error(
+        probe_batch,
+        probe_orders,
+        probe_fills,
+        broker_positions,
+        broker_account,
+        lifecycle,
+    )
+    if lifecycle_error:
+        expected, observed_state = lifecycle_error
+        critical("PROBE_LIFECYCLE_INVALID", expected, observed_state)
+    return findings
+
+
+def _probe_stock(probe_orders, lifecycle):
+    if probe_orders and probe_orders[0].get("stock_code"):
+        return probe_orders[0]["stock_code"]
+    if lifecycle and lifecycle.get("stock_code"):
+        return lifecycle["stock_code"]
+    return "NONE"
+
+
+def _has_real_qmt_order_id(event):
+    order_ids = event.get("qmt_order_ids")
+    return isinstance(order_ids, list) and any(
+        isinstance(order_id, str) and bool(order_id.strip())
+        for order_id in order_ids
+    )
+
+
+def _probe_side(probe_orders):
+    if probe_orders:
+        return probe_orders[0].get("side") or "UNKNOWN"
+    return "UNKNOWN"
+
+
+def _probe_evidence_message(
+    trade_date, batch_id, stock, expected, observed, event_log_path,
+):
+    return (
+        f"date={trade_date} strategy_id=csi1000_pr49_one_lot_probe "
+        f"batch_id={batch_id} stock={stock} expected={expected} "
+        f"observed={observed} log={event_log_path}"
+    )
+
+
+def _probe_lifecycle_error(
+    probe_batch,
+    probe_orders,
+    probe_fills,
+    broker_positions,
+    broker_account,
+    lifecycle,
+):
+    batch_id = probe_batch.get("batch_id")
+    stock = _probe_stock(probe_orders, lifecycle)
+    side = _probe_side(probe_orders)
+    if lifecycle is None:
+        return "lifecycle row bound to the probe plan", "lifecycle absent"
+    if lifecycle.get("strategy_id") != "csi1000_pr49_one_lot_probe":
+        return (
+            "probe strategy lifecycle",
+            f"strategy_id={lifecycle.get('strategy_id')}",
+        )
+    if lifecycle.get("stock_code") != stock:
+        return (
+            f"lifecycle stock={stock}",
+            f"lifecycle stock={lifecycle.get('stock_code')}",
+        )
+    binding_field = "buy_batch_id" if side == "BUY" else "sell_batch_id"
+    if lifecycle.get(binding_field) != batch_id:
+        return (
+            f"lifecycle batch binding {binding_field}={batch_id}",
+            f"lifecycle batch binding {binding_field}={lifecycle.get(binding_field)}",
+        )
+
+    trade_date = probe_batch.get("trade_date")
+    if side == "BUY" and lifecycle.get("buy_trade_date") != trade_date:
+        return (
+            f"buy_trade_date={trade_date}",
+            f"buy_trade_date={lifecycle.get('buy_trade_date')}",
+        )
+    if side == "SELL":
+        buy_batch_id = lifecycle.get("buy_batch_id")
+        buy_trade_date = lifecycle.get("buy_trade_date")
+        sell_trade_date = lifecycle.get("sell_trade_date")
+        dates_valid = (
+            isinstance(buy_batch_id, str) and bool(buy_batch_id.strip())
+            and isinstance(buy_trade_date, str) and bool(buy_trade_date.strip())
+            and sell_trade_date == trade_date
+            and buy_trade_date < sell_trade_date
+        )
+        if not dates_valid:
+            return (
+                f"sell lifecycle dates buy_trade_date<sell_trade_date={trade_date}",
+                "sell lifecycle dates "
+                f"buy_batch_id={buy_batch_id} buy_trade_date={buy_trade_date} "
+                f"sell_trade_date={sell_trade_date}",
+            )
+
+    valid_states = {
+        "BUY_PLANNED", "BUY_FILLED", "SELL_PLANNED", "CLOSED", "FAILED",
+    }
+    state = lifecycle.get("state")
+    if state not in valid_states:
+        return "valid probe lifecycle state", f"state={state}"
+
+    terminal = [
+        fill for fill in probe_fills
+        if fill.get("batch_id") == batch_id and fill.get("side") == side
+        and fill.get("status") in {
+            "FILLED", "PARTIAL", "REJECTED", "SKIPPED", "EXPIRED", "ERROR",
+        }
+    ]
+    if not terminal:
+        expected_state = "BUY_PLANNED" if side == "BUY" else "SELL_PLANNED"
+    elif any(fill.get("status") in _TRADED_STATUS for fill in terminal):
+        snapshot_matches = (
+            broker_account is not None
+            and broker_account.get("batch_id") == batch_id
+        )
+        filled_qty = sum(
+            int(fill.get("filled_qty") or 0)
+            for fill in terminal if fill.get("status") in _TRADED_STATUS
+        )
+        expected_shares = 100 if side == "BUY" else 0
+        if not snapshot_matches or filled_qty != 100 \
+                or int(broker_positions.get(stock, 0)) != expected_shares:
+            return None
+        expected_state = "BUY_FILLED" if side == "BUY" else "CLOSED"
+    else:
+        expected_state = "FAILED"
+    if state != expected_state:
+        return f"state={expected_state}", f"state={state}"
+    return None
+
+
 def _oversold_codes(fills, prev_positions) -> list:
     if prev_positions is None:
         return []

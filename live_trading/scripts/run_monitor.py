@@ -37,6 +37,7 @@ from live_trading.modules.pipeline_monitor import (
     check_broker_reconcile,
     check_evening,
     check_postmarket,
+    check_probe_execution,
     check_report,
 )
 from live_trading.modules.snapshot import build_snapshot, sum_live_fills_amount
@@ -47,6 +48,7 @@ logger = logging.getLogger("live_trading.monitor")
 CONFIGS_DIR = PROJECT_ROOT / "live_trading" / "configs"
 
 STAGES = ("postmarket", "report", "evening")
+PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
 
 
 def parse_args():
@@ -153,7 +155,11 @@ def run_postmarket(date, recorder, store, config) -> list:
     )
     importer = FillImporter(config["live"]["bridge_root"], recorder)
     reconciles = {b["batch_id"]: importer.reconcile(b["batch_id"]) for b in batches}
-    fills = recorder.get_fills_by_dates([date])
+    # Plans and fills are strategy scoped.  The brokerage snapshot below stays
+    # account-wide because main and probe deliberately share one account.
+    fills = [
+        fill for batch in batches for fill in recorder.get_fills(batch["batch_id"])
+    ]
 
     prev_positions = None
     snaps = [s for s in store.get_snapshots(end=date) if s["date"] < date]
@@ -165,8 +171,10 @@ def run_postmarket(date, recorder, store, config) -> list:
     findings = check_postmarket(date, batches, reconciles, fills,
                                prev_positions,
                                reject_rate=thresholds["reject_rate"])
-    # 只有 LIVE 批次才会产出券商快照，SIMULATE / 停发日不做二道对账。
-    if any(b.get("mode") == "LIVE" for b in batches):
+    # Any LIVE strategy on the shared account requires account-wide reconcile.
+    # In particular, a PAUSED main must not hide drift created by the probe.
+    account_batches = recorder.get_active_batches_by_date(date)
+    if any(b.get("mode") == "LIVE" for b in account_batches):
         reconcile_cfg = config.get("monitor", {}).get("broker_reconcile") or {}
         findings += check_broker_reconcile(
             date,
@@ -183,7 +191,70 @@ def run_postmarket(date, recorder, store, config) -> list:
             ),
             value_tolerance=thresholds["cash_tolerance"],
         )
+    if config.get("live", {}).get("broker_environment") == "REAL":
+        findings += _run_probe_checks(date, recorder, config)
     return findings
+
+
+def _run_probe_checks(date, recorder, config) -> list:
+    """Build probe evidence without changing the account-wide ledger."""
+    probe_batches = recorder.get_active_batches_by_date(
+        date, strategy_id=PROBE_STRATEGY_ID,
+    )
+    probe_batches.sort(key=lambda row: row["batch_id"])
+    probe_batch = probe_batches[-1] if probe_batches else None
+    probe_orders = (
+        recorder.get_orders(probe_batch["batch_id"]) if probe_batch else []
+    )
+    probe_fills = (
+        recorder.get_fills(probe_batch["batch_id"]) if probe_batch else []
+    )
+    main_root, probe_root = _execution_roots(config)
+    main_marker = main_root / "state" / f"LIVE_OK_{date}"
+    probe_marker = probe_root / "state" / f"PR49_LIVE_OK_{date}"
+    event_log = probe_root / "logs" / f"qmt_events_{date}.jsonl"
+    return check_probe_execution(
+        date,
+        main_authorized=main_marker.is_file(),
+        probe_authorized=probe_marker.is_file(),
+        probe_batch=probe_batch,
+        probe_orders=probe_orders,
+        probe_fills=probe_fills,
+        broker_account=recorder.get_broker_account_snapshot(date),
+        broker_positions=recorder.get_broker_positions(date),
+        lifecycle=recorder.get_operator_probe_lifecycle(PROBE_STRATEGY_ID),
+        qmt_events=_read_qmt_events(event_log),
+        event_log_path=str(event_log),
+        main_marker_path=str(main_marker),
+        probe_marker_path=str(probe_marker),
+        main_execution_state=recorder.get_execution_state(
+            config["live"]["strategy_id"],
+        )["state"],
+    )
+
+
+def _execution_roots(config):
+    current_root = Path(config["live"]["bridge_root"]).expanduser().resolve()
+    if config["live"]["strategy_id"] == PROBE_STRATEGY_ID:
+        return current_root.parent, current_root
+    return current_root, current_root / "pr49_probe"
+
+
+def _read_qmt_events(path: Path) -> list:
+    """Read durable JSONL conservatively; malformed lines are not evidence."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    events = []
+    for line in lines:
+        try:
+            event = json.loads(line)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(event, dict):
+            events.append(event)
+    return events
 
 
 def run_corporate_actions(date, recorder, store, config) -> tuple:

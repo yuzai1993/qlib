@@ -209,9 +209,10 @@ bash live_trading/run_import_cron.sh csi1000_b6m_b2s_postclose_real
 
 QMT 的 `SNAPSHOT_REQUEST_RECEIVED`、`SNAPSHOT_REQUEST_TERMINAL` 和 Mac 状态
 `IMPORTED_COMPLETE` 必须匹配 request ID、当日日期、profile、root 和脱敏账号。QMT
-ACCOUNT 查询必须恰好返回一行，返回行自身的账号须与运行时账号 full/masked 精确匹配；
-缺失、OTHER 或多行都产生 ERROR，不能用 request 中的 fingerprint 代替券商返回身份。
-POSITION 行若带账号也会逐行复核。Mac 导入仍会再次核对 response 与 durable request。
+ACCOUNT 查询必须恰好返回一行，返回行自身的**完整账号**须与运行时完整账号精确匹配；
+只有 masked 值、缺失、OTHER 或多行都产生 ERROR，不能用 request 中的 fingerprint 或
+脱敏账号代替券商返回身份。POSITION 行若带账号也必须是完整账号精确匹配。Mac 导入仍会
+再次核对 response 与 durable request；磁盘 response/日志只保存 mask 和 fingerprint。
 旧版或诊断工具产生的 `DIAGNOSTIC_POSITIONS_ONLY` 仍只能排障，不能通过发布门禁。
 
 请求处理期间 `snapshot_requests/status.json` 为持久 ERROR/blocking：半对、`.tmp`/intent、
@@ -226,6 +227,11 @@ main 与 probe 共用主根 `state/SNAPSHOT_ORDER_ADVANCE.lock`。Mac 在 14:45 
 request 暴露一直保留到 Mac 已提交 `IMPORTED_COMPLETE`、response 完整归档且四件套再次
 校验通过。两个 QMT profile 的完整 `_advance` 都必须先取得同一个 gate，observer 不取
 gate，因而能继续完成只读查询。ERROR、半对、DB/归档崩溃、owner 不匹配都会保留 gate。
+Mac publisher 与 importer 还共用主根 `state/SNAPSHOT_MAC_LIFECYCLE.lock`：双方先取该锁，
+再读取/提交 SQLite 状态；importer 在锁内完成归档校验，并把 gate 删除严格放在最后一步。
+若 DB 已 terminal 但四件套不完整，原 matching gate 缺失或损坏即失败关闭，禁止补造 gate、
+补归档或当作已释放；publisher 的 `REQUESTED` retry 也只能复核原 matching gate，缺失或
+损坏时不得补造 gate/请求文件；terminal retry 同样绝不重建 gate。
 不得按文件年龄自动删除。若 monitor 报 gate 残留，先停止 main/probe 两个 QMT 实例，
 保存 gate 元数据和四目录清单；只有确认对应 request 已安全终止并获得新的人工审批后，
 才可把 gate 受控移动到独立 quarantine 留证，禁止直接删除后继续交易。
@@ -233,6 +239,11 @@ gate，因而能继续完成只读查询。ERROR、半对、DB/归档崩溃、ow
 首次部署必须在真实 Windows↔Mac SMB 上做双向互操作验收：Mac 持有 gate 时 main/probe
 QMT 的 `O_EXCL` 均须失败；任一 QMT 持有 gate 时 Mac 发布也须失败。仓库单测只证明双方
 使用相同主根、文件名和原子创建协议，不能替代 SMB 服务端原子性的实机复核。
+
+Mac postmarket monitor 把 bridge root 以及 `snapshot_requests/inbox`、`processing`、
+`archive`、`responses` 四个目录都视为部署必需项；任一路径缺失、不是目录或无法列目录均
+产生带 `path/expected/observed` 的 `SNAPSHOT_RESIDUE_BLOCKED` CRIT，不能因 status 缺失
+或显示 CLEAR 而忽略。四个可读空目录是唯一的无残留 control。
 
 ```bash
 # 只读预览；stdout 应为一笔 100 股 CLOSE_AUCTION_LIMIT SELL

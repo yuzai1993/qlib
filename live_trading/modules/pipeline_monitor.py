@@ -32,9 +32,12 @@ def check_snapshot_protocol_status(
     if status is None:
         status = {}
     if not isinstance(status, dict):
+        observed_text = ",".join(observed[:20]) or "UNKNOWN"
         return [Finding(
             "SNAPSHOT_RESIDUE_BLOCKED", CRIT,
-            f"快照协议状态文件无法解析：{status_path}；停止委托并人工检查共享目录",
+            f"快照协议状态文件无法解析：{status_path}；"
+            f"independent_scan={observed_text}；"
+            "停止委托并人工检查共享目录",
         )]
     if (
         status.get("state") != "ERROR"

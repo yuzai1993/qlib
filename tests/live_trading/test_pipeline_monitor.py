@@ -667,6 +667,7 @@ def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):
     recorder.save_broker_snapshot(
         active, {"account_id": "1", "available_cash": 0.0}, [],
     )
+    _make_snapshot_protocol_directories(tmp_path)
     findings = run_monitor.run_postmarket(
         "2026-07-15", recorder, store,
         {"live": {
@@ -690,6 +691,7 @@ def test_run_postmarket_flags_missing_broker_snapshot(monkeypatch, tmp_path):
         run_monitor.FillImporter, "reconcile",
         lambda _self, _bid: {"planned": 1, "terminal": 1, "missing": 0},
     )
+    _make_snapshot_protocol_directories(tmp_path)
 
     findings = run_monitor.run_postmarket(
         "2026-07-15", recorder, store,
@@ -713,6 +715,7 @@ def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_pa
         run_monitor.FillImporter, "reconcile",
         lambda _self, _bid: {"planned": 1, "terminal": 1, "missing": 0},
     )
+    _make_snapshot_protocol_directories(tmp_path)
 
     findings = run_monitor.run_postmarket(
         "2026-07-15", recorder, store,
@@ -823,6 +826,161 @@ def test_run_postmarket_detects_shared_snapshot_advance_gate_without_status(
     assert "state/SNAPSHOT_ORDER_ADVANCE.lock" in finding.message
 
 
+def _make_snapshot_protocol_directories(bridge_root):
+    for name in ("inbox", "processing", "archive", "responses"):
+        (bridge_root / "snapshot_requests" / name).mkdir(
+            parents=True, exist_ok=True,
+        )
+
+
+def test_run_postmarket_snapshot_protocol_empty_directories_are_clear(tmp_path):
+    bridge_root = tmp_path / "bridge"
+    _make_snapshot_protocol_directories(bridge_root)
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    store = MonitorStore(str(tmp_path / "live.db"))
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(bridge_root),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "REAL",
+        }},
+    )
+
+    assert not [
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    ]
+
+
+def test_run_postmarket_missing_snapshot_bridge_root_is_critical(tmp_path):
+    bridge_root = tmp_path / "missing-bridge"
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    store = MonitorStore(str(tmp_path / "live.db"))
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(bridge_root),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "REAL",
+        }},
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    )
+    assert finding.level == "CRIT"
+    assert str(bridge_root) in finding.message
+    assert "expected=directory" in finding.message
+    assert "observed=missing" in finding.message
+
+
+@pytest.mark.parametrize("missing", [
+    "inbox", "processing", "archive", "responses",
+])
+def test_run_postmarket_missing_snapshot_directory_is_critical(
+    tmp_path, missing,
+):
+    bridge_root = tmp_path / "bridge"
+    _make_snapshot_protocol_directories(bridge_root)
+    (bridge_root / "snapshot_requests" / missing).rmdir()
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    store = MonitorStore(str(tmp_path / "live.db"))
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(bridge_root),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "REAL",
+        }},
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    )
+    assert finding.level == "CRIT"
+    assert f"snapshot_requests/{missing}" in finding.message
+    assert "expected=directory" in finding.message
+    assert "observed=missing" in finding.message
+
+
+@pytest.mark.parametrize("failure_point", [
+    "bridge", "inbox", "processing", "archive", "responses",
+])
+def test_run_postmarket_snapshot_path_must_be_directory(
+    tmp_path, failure_point,
+):
+    bridge_root = tmp_path / "bridge"
+    if failure_point == "bridge":
+        bridge_root.write_text("not a directory\n", encoding="utf-8")
+        target = bridge_root
+    else:
+        _make_snapshot_protocol_directories(bridge_root)
+        target = bridge_root / "snapshot_requests" / failure_point
+        target.rmdir()
+        target.write_text("not a directory\n", encoding="utf-8")
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    store = MonitorStore(str(tmp_path / "live.db"))
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(bridge_root),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "REAL",
+        }},
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    )
+    assert finding.level == "CRIT"
+    assert str(target) in finding.message
+    assert "expected=directory" in finding.message
+    assert "observed=not-directory" in finding.message
+
+
+@pytest.mark.parametrize("failure_point", ["bridge", "responses"])
+def test_run_postmarket_unreadable_snapshot_path_is_critical(
+    monkeypatch, tmp_path, failure_point,
+):
+    bridge_root = tmp_path / "bridge"
+    _make_snapshot_protocol_directories(bridge_root)
+    target = (
+        bridge_root if failure_point == "bridge" else
+        bridge_root / "snapshot_requests" / "responses"
+    )
+    original_iterdir = Path.iterdir
+
+    def fail_selected_path(path):
+        if path == target:
+            raise OSError("simulated SMB list failure")
+        return original_iterdir(path)
+
+    monkeypatch.setattr(Path, "iterdir", fail_selected_path)
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    store = MonitorStore(str(tmp_path / "live.db"))
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        {"live": {
+            "bridge_root": str(bridge_root),
+            "strategy_id": CONFIG_ID,
+            "broker_environment": "REAL",
+        }},
+    )
+
+    finding = next(
+        row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    )
+    assert finding.level == "CRIT"
+    assert str(target) in finding.message
+    assert "expected=readable-directory" in finding.message
+    assert "observed=list-error" in finding.message
+
+
 def test_run_postmarket_passes_only_current_strategy_fills_to_rules(
     monkeypatch, tmp_path,
 ):
@@ -852,6 +1010,7 @@ def test_run_postmarket_passes_only_current_strategy_fills_to_rules(
         return []
 
     monkeypatch.setattr(run_monitor, "check_postmarket", capture)
+    _make_snapshot_protocol_directories(tmp_path / "bridge")
 
     findings = run_monitor.run_postmarket(
         "2026-08-10",

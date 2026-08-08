@@ -1811,6 +1811,20 @@ def test_complete_import_releases_only_owned_gate_after_archive_quartet(env):
     assert len(list(archive.glob(f"*_{SNAPSHOT_REQUEST_ID}.*"))) == 4
 
 
+def test_main_and_probe_importers_share_mac_snapshot_lifecycle_lock(
+    tmp_path,
+):
+    recorder = LiveRecorder(str(tmp_path / "shared.db"))
+    main = FillImporter(tmp_path / "bridge", recorder)
+    probe = FillImporter(tmp_path / "bridge" / "pr49_probe", recorder)
+
+    expected = (
+        tmp_path / "bridge" / "state" / "SNAPSHOT_MAC_LIFECYCLE.lock"
+    )
+    assert main.snapshot_mac_lifecycle_lock == expected
+    assert probe.snapshot_mac_lifecycle_lock == expected
+
+
 def test_complete_import_requires_owned_lifecycle_gate_before_db_trust(env):
     bridge_root, recorder, importer = env
     _record_published_snapshot_only_request(recorder)
@@ -2055,7 +2069,7 @@ def test_snapshot_only_split_response_pair_recovers_before_db_terminal(env):
     assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
 
 
-def test_snapshot_only_split_archive_after_db_commit_converges(env):
+def test_snapshot_only_postrelease_archive_regression_fails_closed(env):
     bridge_root, recorder, importer = env
     _record_published_snapshot_only_request(recorder)
     _write_snapshot_only_response(bridge_root, _snapshot_only_response())
@@ -2066,8 +2080,9 @@ def test_snapshot_only_split_archive_after_db_commit_converges(env):
     archived_json = archive / f"response_{SNAPSHOT_REQUEST_ID}.json"
     archived_json.replace(responses / archived_json.name)
 
-    assert importer.import_account_snapshot_responses() == 0
-    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 2
+    with pytest.raises(SchemaError, match="advance gate.*required"):
+        importer.import_account_snapshot_responses()
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 1
 
 
 def test_snapshot_gate_survives_postcommit_archive_crash_then_releases(
@@ -2104,6 +2119,45 @@ def test_snapshot_gate_survives_postcommit_archive_crash_then_releases(
     assert not gate.exists()
     archive = bridge_root / "snapshot_requests" / "archive"
     assert len(list(archive.glob(f"*_{SNAPSHOT_REQUEST_ID}.*"))) == 4
+
+
+def test_snapshot_terminal_archive_recovery_requires_original_gate(
+    env, monkeypatch,
+):
+    bridge_root, recorder, importer = env
+    _record_published_snapshot_only_request(recorder)
+    _write_snapshot_only_response(bridge_root, _snapshot_only_response())
+    gate = bridge_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    original_archive = importer._archive_snapshot_response
+    crashed = {"value": False}
+
+    def crash_after_first_move(path):
+        original_archive(path)
+        if not crashed["value"]:
+            crashed["value"] = True
+            raise RuntimeError("simulated partial terminal archive")
+
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", crash_after_first_move,
+    )
+    with pytest.raises(RuntimeError, match="partial terminal archive"):
+        importer.import_account_snapshot_responses()
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
+    gate.unlink()
+    monkeypatch.setattr(
+        importer, "_archive_snapshot_response", original_archive,
+    )
+
+    with pytest.raises(SchemaError, match="advance gate.*required"):
+        importer.import_account_snapshot_responses()
+
+    archive = bridge_root / "snapshot_requests" / "archive"
+    assert len(list(archive.glob(f"response_{SNAPSHOT_REQUEST_ID}.*"))) == 1
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "IMPORTED_COMPLETE"
 
 
 def test_snapshot_only_rejects_account_or_position_from_other_request(env):

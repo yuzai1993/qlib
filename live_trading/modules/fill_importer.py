@@ -2878,6 +2878,9 @@ class FillImporter:
             if self.bridge_root.name == "pr49_probe"
             else self.bridge_root
         )
+        self.snapshot_mac_lifecycle_lock = (
+            authorization_root / "state" / "SNAPSHOT_MAC_LIFECYCLE.lock"
+        )
         self.snapshot_advance_gate = (
             authorization_root / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
         )
@@ -2917,10 +2920,18 @@ class FillImporter:
         return count
 
     def import_account_snapshot_responses(self) -> int:
-        """Serialize response import/archive across importer processes."""
+        """Serialize publish/import DB state, archive, and gate release."""
         self.snapshot_request_root.mkdir(parents=True, exist_ok=True)
-        lock = FileLock(str(self.snapshot_request_root / "response_import.lock"))
-        with lock:
+        self.snapshot_mac_lifecycle_lock.parent.mkdir(
+            parents=True, exist_ok=True,
+        )
+        lifecycle_lock = FileLock(str(self.snapshot_mac_lifecycle_lock))
+        importer_lock = FileLock(
+            str(self.snapshot_request_root / "response_import.lock")
+        )
+        # Publisher takes the same outer lock before its first durable read.
+        # Both paths therefore order Mac lifecycle lock before SQLite work.
+        with lifecycle_lock, importer_lock:
             return self._import_account_snapshot_responses_locked()
 
     def _import_account_snapshot_responses_locked(self) -> int:
@@ -2971,22 +2982,17 @@ class FillImporter:
             durable_before = self.recorder.get_account_snapshot_request(
                 request_id,
             )
-            new_complete = bool(
-                payload.get("status") == "COMPLETE"
-                and durable_before is not None
-                and durable_before.get("response_checksum") is None
+            if durable_before is None or payload.get(
+                "collector_execution_profile"
+            ) != durable_before.get("collector_execution_profile"):
+                raise SchemaError("account snapshot response profile mismatch")
+            self._validate_snapshot_request_archive(payload)
+            quartet_was_verified = self._terminal_snapshot_quartet_verified(
+                payload, durable_before,
             )
-            if payload.get("status") == "COMPLETE":
-                if durable_before is None or payload.get(
-                    "collector_execution_profile"
-                ) != durable_before.get("collector_execution_profile"):
-                    raise SchemaError(
-                        "account snapshot response profile mismatch"
-                    )
-                self._validate_snapshot_request_archive(payload)
-                self._validate_snapshot_advance_gate(
-                    payload, required=new_complete,
-                )
+            gate_bytes = self._validate_snapshot_advance_gate(
+                payload, required=not quartet_was_verified,
+            )
             imported = self.recorder.save_account_snapshot_response(
                 payload, before_commit=require_unchanged,
             )
@@ -2997,8 +3003,26 @@ class FillImporter:
             if done_path.parent != self.snapshot_archive:
                 self._archive_snapshot_response(done_path)
             if payload.get("status") == "COMPLETE":
-                self._release_snapshot_advance_gate(payload)
+                self._release_snapshot_advance_gate(
+                    payload, gate_bytes=gate_bytes,
+                )
         return count
+
+    def _terminal_snapshot_quartet_verified(
+        self, response: dict, durable: dict,
+    ) -> bool:
+        """Prove a prior COMPLETE import archived fully before gate release."""
+        if (
+            response.get("status") != "COMPLETE"
+            or durable.get("status") != "IMPORTED_COMPLETE"
+            or durable.get("response_checksum") != response.get("checksum")
+        ):
+            return False
+        try:
+            self._validate_snapshot_archive_quartet(response, durable)
+        except SchemaError:
+            return False
+        return True
 
     def _validate_snapshot_advance_gate(
         self, response: dict, *, required: bool,
@@ -3054,15 +3078,12 @@ class FillImporter:
         ):
             raise SchemaError("snapshot request archive binding/checksum mismatch")
 
-    def _release_snapshot_advance_gate(self, response: dict) -> None:
-        """Release only this imported COMPLETE request's durable gate."""
+    def _validate_snapshot_archive_quartet(
+        self, response: dict, durable: dict,
+    ) -> tuple:
+        """Return stable quartet bytes only when terminal binding is exact."""
         from live_trading.modules.operator_probe import snapshot_artifact_checksum
 
-        gate_bytes = self._validate_snapshot_advance_gate(
-            response, required=False,
-        )
-        if gate_bytes is None:
-            return
         request_id = response["request_id"]
         expected_files = [
             self.snapshot_archive / f"request_{request_id}.json",
@@ -3080,7 +3101,6 @@ class FillImporter:
             response_file = json.loads(file_bytes[2].decode("utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             raise SchemaError("snapshot archive quartet is invalid") from exc
-        durable = self.recorder.get_account_snapshot_request(request_id)
         if not isinstance(request, dict) or not isinstance(response_file, dict):
             raise SchemaError("snapshot archive quartet must contain objects")
         request_checksum = snapshot_artifact_checksum(request)
@@ -3103,8 +3123,27 @@ class FillImporter:
             expected_files, file_bytes,
         )):
             raise SchemaError("snapshot archive quartet changed before release")
+        return tuple(file_bytes)
+
+    def _release_snapshot_advance_gate(
+        self, response: dict, *, gate_bytes,
+    ) -> None:
+        """Release the original matching gate as the final lifecycle step."""
+        durable = self.recorder.get_account_snapshot_request(
+            response["request_id"],
+        )
+        self._validate_snapshot_archive_quartet(response, durable)
+        if gate_bytes is None:
+            # This is an exact replay after a previously proven release.
+            return
         gate = self.snapshot_advance_gate
-        if gate.read_bytes() != gate_bytes:
+        try:
+            current_gate_bytes = gate.read_bytes()
+        except OSError as exc:
+            raise SchemaError(
+                "snapshot advance gate disappeared before release"
+            ) from exc
+        if current_gate_bytes != gate_bytes:
             raise SchemaError("snapshot advance gate changed before release")
         gate.unlink()
 

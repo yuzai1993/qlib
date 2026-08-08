@@ -231,6 +231,50 @@ def test_snapshot_publish_repairs_missing_done_from_same_prepared_bytes(
     assert done.is_file()
 
 
+@pytest.mark.parametrize("gate_state", ["missing", "corrupt"])
+def test_snapshot_requested_retry_never_recreates_invalid_original_gate(
+    tmp_path, monkeypatch, gate_state,
+):
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-requested-gap.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    target = publish_account_snapshot_request(
+        SNAPSHOT_REQUEST_ID, config, recorder,
+        Path(config["live"]["bridge_root"]), "8890116049",
+    )
+    done = target.with_suffix(".done")
+    gate = tmp_path / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    gate.unlink()
+    if gate_state == "corrupt":
+        gate.write_text("corrupt original gate\n", encoding="utf-8")
+    target.unlink()
+    done.unlink()
+
+    with pytest.raises(SchemaError, match="original.*gate.*required"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, config, recorder,
+            Path(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert recorder.get_account_snapshot_request(SNAPSHOT_REQUEST_ID)[
+        "status"
+    ] == "REQUESTED"
+    if gate_state == "missing":
+        assert not gate.exists()
+    else:
+        assert gate.read_text(encoding="utf-8") == "corrupt original gate\n"
+    assert not target.exists()
+    assert not done.exists()
+
+
 @pytest.mark.parametrize("publish_time", ["14:45:00", "14:45:01"])
 def test_snapshot_publish_rejects_at_or_after_hard_cutoff(
     tmp_path, monkeypatch, publish_time,
@@ -338,6 +382,12 @@ def test_snapshot_gate_domain_is_shared_by_main_and_probe_profiles(tmp_path):
     assert operator_probe._snapshot_authorization_root(
         probe_root, "AFTER_HOURS_FIXED_PRICE",
     ) == main_root
+    lock_name = operator_probe.SNAPSHOT_MAC_LIFECYCLE_LOCK_NAME
+    assert main_root / "state" / lock_name == (
+        operator_probe._snapshot_authorization_root(
+            probe_root, "AFTER_HOURS_FIXED_PRICE",
+        ) / "state" / lock_name
+    )
 
 
 @pytest.mark.parametrize("terminal_status", [
@@ -375,6 +425,56 @@ def test_snapshot_terminal_request_retry_never_creates_lifecycle_gate(
     assert not (
         Path(config["live"]["bridge_root"]) / "snapshot_requests" / "inbox"
     ).exists()
+
+
+def test_snapshot_retry_rechecks_terminal_state_inside_mac_lifecycle_lock(
+    tmp_path, monkeypatch,
+):
+    """Importer terminal/release between retry entry and lock is fail-closed."""
+    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
+    config = _config(tmp_path)
+    recorder = LiveRecorder(str(tmp_path / "snapshot-race.db"))
+    request = build_account_snapshot_request(
+        config, trade_date=SNAPSHOT_TRADE_DATE,
+        collector_execution_profile="AFTER_HOURS_FIXED_PRICE",
+        requested_for_strategy_id=STRATEGY_ID,
+        account_id="8890116049", request_id=SNAPSHOT_REQUEST_ID,
+        created_at=SNAPSHOT_TRADE_DATE + "T08:00:00+08:00",
+    )
+    prepare_account_snapshot_request(request, recorder, "8890116049")
+    publish_account_snapshot_request(
+        SNAPSHOT_REQUEST_ID, config, recorder,
+        Path(config["live"]["bridge_root"]), "8890116049",
+    )
+    gate = tmp_path / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
+    assert gate.is_file()
+
+    class ImporterWinsLifecycleLock:
+        def __init__(self, _path):
+            pass
+
+        def __enter__(self):
+            with recorder._conn() as conn:
+                conn.execute(
+                    "UPDATE account_snapshot_requests "
+                    "SET status='IMPORTED_COMPLETE' WHERE request_id=?",
+                    (SNAPSHOT_REQUEST_ID,),
+                )
+            gate.unlink()
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+    monkeypatch.setattr(operator_probe, "FileLock", ImporterWinsLifecycleLock)
+
+    with pytest.raises(SchemaError, match="already terminal"):
+        publish_account_snapshot_request(
+            SNAPSHOT_REQUEST_ID, config, recorder,
+            Path(config["live"]["bridge_root"]), "8890116049",
+        )
+
+    assert not gate.exists()
 
 
 def test_snapshot_publish_rejects_tampered_prepared_row_and_wrong_profile(

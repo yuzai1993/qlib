@@ -35,7 +35,7 @@ ACCOUNT_ID = ""            # QMT-local account id; must match header if set
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-08-08-task9a-snapshot-identity-fix2"
+SOURCE_VERSION = "2026-08-08-task9a-snapshot-gate-replay-fix3"
 ACCOUNT_ENVIRONMENT = "SIMULATION"
 # REAL deployments must set all four values deliberately in the QMT-local
 # copy. Keeping the repository default False prevents an accidental cutover.
@@ -1594,9 +1594,9 @@ def _snapshot_row_account_id(row):
 
 
 def _snapshot_account_id_matches_runtime(observed):
-    return bool(observed) and observed in (
-        str(ACCOUNT_ID), _mask_account(ACCOUNT_ID),
-    )
+    # A mask is display-only and is not a unique broker identity.  Trusted
+    # preflight evidence requires the broker row's full ID to match exactly.
+    return bool(observed) and observed == str(ACCOUNT_ID)
 
 
 def _validate_snapshot_account_rows(accounts):

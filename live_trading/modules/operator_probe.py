@@ -39,6 +39,7 @@ SNAPSHOT_REQUEST_SCHEMA_VERSION = "1.0"
 SNAPSHOT_EVIDENCE_PURPOSE = "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT"
 SNAPSHOT_PUBLISH_CUTOFF = "14:45:00"
 SNAPSHOT_ADVANCE_GATE_NAME = "SNAPSHOT_ORDER_ADVANCE.lock"
+SNAPSHOT_MAC_LIFECYCLE_LOCK_NAME = "SNAPSHOT_MAC_LIFECYCLE.lock"
 MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 SNAPSHOT_REQUEST_STRATEGIES = {MAIN_STRATEGY_ID, PROBE_STRATEGY_ID}
 QMT_PROFILE_BRIDGE_ROOTS = {
@@ -178,47 +179,7 @@ def publish_account_snapshot_request(
     account_id: str,
 ) -> Path:
     """Expose only the exact canonical bytes of a durable prepared request."""
-    durable = recorder.get_account_snapshot_request(request_id)
-    if durable is None:
-        raise SchemaError("unknown prepared account snapshot request")
-    if durable.get("status") not in {"PREPARED", "REQUESTED"}:
-        raise SchemaError("account snapshot request is already terminal")
-    try:
-        payload = json.loads(durable["request_json"])
-    except (TypeError, json.JSONDecodeError) as exc:
-        raise SchemaError("prepared account snapshot artifact is corrupt") from exc
-    if not isinstance(payload, dict) or payload.get("request_id") != request_id:
-        raise SchemaError("prepared account snapshot request_id mismatch")
-    if snapshot_artifact_checksum(payload) != durable["request_checksum"]:
-        raise SchemaError("prepared account snapshot checksum mismatch")
-    if payload.get("checksum") != durable["request_checksum"]:
-        raise SchemaError("prepared account snapshot artifact checksum mismatch")
     live = _operator_live_config(config)
-    if payload.get("collector_execution_profile") != live.get(
-        "execution_session"
-    ):
-        raise SchemaError("prepared snapshot collector profile mismatch")
-    if payload.get("collector_bridge_root") != QMT_PROFILE_BRIDGE_ROOTS[
-        live["execution_session"]
-    ]:
-        raise SchemaError("prepared snapshot canonical bridge root mismatch")
-    if payload.get("trade_date") != date.today().isoformat():
-        raise SchemaError("prepared snapshot request trade_date must equal today")
-    if payload.get("publish_cutoff") != SNAPSHOT_PUBLISH_CUTOFF:
-        raise SchemaError("prepared snapshot publish cutoff mismatch")
-    _require_snapshot_publish_window(payload["trade_date"])
-    if durable["account_id"] != account_id:
-        raise SchemaError("prepared snapshot durable account mismatch")
-    if account_identity_fingerprint(
-        account_id, payload.get("account_type", ""),
-        payload.get("account_environment", ""),
-    ) != payload.get("account_fingerprint"):
-        raise SchemaError("prepared snapshot runtime account mismatch")
-    if payload.get("account_id_masked") != (
-        account_id[:2] + "*" * max(0, len(account_id) - 4) + account_id[-2:]
-        if len(account_id) > 4 else "*" * len(account_id)
-    ):
-        raise SchemaError("prepared snapshot masked account mismatch")
     root = Path(bridge_root).expanduser()
     if not root.is_absolute() or root.resolve(strict=True) != root:
         raise SchemaError("snapshot request bridge root must be canonical")
@@ -226,42 +187,120 @@ def publish_account_snapshot_request(
     if configured_root != root:
         raise SchemaError("snapshot request bridge root does not match config")
     request_root = root / "snapshot_requests"
-    inbox = request_root / "inbox"
-    inbox.mkdir(parents=True, exist_ok=True)
-    target = inbox / ("request_%s.json" % request_id)
-    done = inbox / ("request_%s.done" % request_id)
-    encoded = durable["request_json"] + "\n"
-    lock = FileLock(str(request_root / "publish.lock"))
     authorization_root = _snapshot_authorization_root(
         root, live["execution_session"],
     )
-    with lock, _snapshot_order_advance_gate(
-        authorization_root, request_id, live["execution_session"],
-    ):
+    lifecycle_lock_path = (
+        authorization_root / "state" / SNAPSHOT_MAC_LIFECYCLE_LOCK_NAME
+    )
+    lifecycle_lock_path.parent.mkdir(parents=True, exist_ok=True)
+    lock = FileLock(str(lifecycle_lock_path))
+    with lock:
+        # The importer takes this same Mac lock through DB commit, archive
+        # verification, and gate release.  The first durable read must happen
+        # here so a terminal importer can never be followed by gate recreation.
+        durable = recorder.get_account_snapshot_request(request_id)
+        if durable is None:
+            raise SchemaError("unknown prepared account snapshot request")
+        if durable.get("status") not in {"PREPARED", "REQUESTED"}:
+            raise SchemaError("account snapshot request is already terminal")
+        try:
+            payload = json.loads(durable["request_json"])
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise SchemaError(
+                "prepared account snapshot artifact is corrupt"
+            ) from exc
+        if not isinstance(payload, dict) or payload.get(
+            "request_id"
+        ) != request_id:
+            raise SchemaError("prepared account snapshot request_id mismatch")
+        if snapshot_artifact_checksum(payload) != durable["request_checksum"]:
+            raise SchemaError("prepared account snapshot checksum mismatch")
+        if payload.get("checksum") != durable["request_checksum"]:
+            raise SchemaError(
+                "prepared account snapshot artifact checksum mismatch"
+            )
+        if payload.get("collector_execution_profile") != live.get(
+            "execution_session"
+        ):
+            raise SchemaError("prepared snapshot collector profile mismatch")
+        if payload.get("collector_bridge_root") != QMT_PROFILE_BRIDGE_ROOTS[
+            live["execution_session"]
+        ]:
+            raise SchemaError("prepared snapshot canonical bridge root mismatch")
+        if payload.get("trade_date") != date.today().isoformat():
+            raise SchemaError(
+                "prepared snapshot request trade_date must equal today"
+            )
+        if payload.get("publish_cutoff") != SNAPSHOT_PUBLISH_CUTOFF:
+            raise SchemaError("prepared snapshot publish cutoff mismatch")
         _require_snapshot_publish_window(payload["trade_date"])
-        recorder.mark_account_snapshot_request_published(
-            request_id, durable["request_checksum"],
-        )
-        if target.exists() or done.exists():
-            if target.is_file() and target.read_text(encoding="utf-8") == encoded:
-                if done.is_file():
-                    if done.read_text(encoding="utf-8").strip() != payload["checksum"]:
-                        raise SchemaError("snapshot request done checksum conflicts")
+        if durable["account_id"] != account_id:
+            raise SchemaError("prepared snapshot durable account mismatch")
+        if account_identity_fingerprint(
+            account_id, payload.get("account_type", ""),
+            payload.get("account_environment", ""),
+        ) != payload.get("account_fingerprint"):
+            raise SchemaError("prepared snapshot runtime account mismatch")
+        if payload.get("account_id_masked") != (
+            account_id[:2] + "*" * max(0, len(account_id) - 4)
+            + account_id[-2:] if len(account_id) > 4
+            else "*" * len(account_id)
+        ):
+            raise SchemaError("prepared snapshot masked account mismatch")
+        encoded = durable["request_json"] + "\n"
+        with _snapshot_order_advance_gate(
+            authorization_root, request_id, live["execution_session"],
+            allow_create=durable["status"] == "PREPARED",
+        ):
+            # REQUESTED recovery reaches this point only while the original
+            # matching gate still exists.  Do not recreate protocol paths
+            # before that proof.
+            inbox = request_root / "inbox"
+            inbox.mkdir(parents=True, exist_ok=True)
+            target = inbox / ("request_%s.json" % request_id)
+            done = inbox / ("request_%s.done" % request_id)
+            recorder.mark_account_snapshot_request_published(
+                request_id, durable["request_checksum"],
+            )
+            if target.exists() or done.exists():
+                if (
+                    target.is_file()
+                    and target.read_text(encoding="utf-8") == encoded
+                ):
+                    if done.is_file():
+                        if done.read_text(
+                            encoding="utf-8"
+                        ).strip() != payload["checksum"]:
+                            raise SchemaError(
+                                "snapshot request done checksum conflicts"
+                            )
+                        return target
+                    tmp_done = inbox / (done.name + ".tmp")
+                    tmp_done.write_text(
+                        payload["checksum"] + "\n", encoding="utf-8",
+                    )
+                    os.replace(tmp_done, done)
                     return target
-                tmp_done = inbox / (done.name + ".tmp")
-                tmp_done.write_text(payload["checksum"] + "\n", encoding="utf-8")
-                os.replace(tmp_done, done)
-                return target
-            raise SchemaError("snapshot request artifact conflicts with durable request")
-        tmp_json = inbox / (target.name + ".tmp")
-        tmp_done = inbox / (done.name + ".tmp")
-        if tmp_json.exists() and tmp_json.read_text(encoding="utf-8") != encoded:
-            raise SchemaError("snapshot request temporary artifact conflicts")
-        tmp_json.write_text(encoded, encoding="utf-8")
-        tmp_done.write_text(payload["checksum"] + "\n", encoding="utf-8")
-        os.replace(tmp_json, target)
-        os.replace(tmp_done, done)
-        return target
+                raise SchemaError(
+                    "snapshot request artifact conflicts with durable request"
+                )
+            tmp_json = inbox / (target.name + ".tmp")
+            tmp_done = inbox / (done.name + ".tmp")
+            if (
+                tmp_json.exists()
+                and tmp_json.read_text(encoding="utf-8") != encoded
+            ):
+                raise SchemaError(
+                    "snapshot request temporary artifact conflicts"
+                )
+            tmp_json.write_text(encoded, encoding="utf-8")
+            tmp_done.write_text(
+                payload["checksum"] + "\n", encoding="utf-8",
+            )
+            os.replace(tmp_json, target)
+            os.replace(tmp_done, done)
+            return target
 
 
 def _snapshot_publish_now() -> datetime:
@@ -293,6 +332,7 @@ def _require_snapshot_publish_window(trade_date: str) -> None:
 @contextmanager
 def _snapshot_order_advance_gate(
     authorization_root: Path, request_id: str, execution_profile: str,
+    *, allow_create: bool,
 ):
     gate = authorization_root / "state" / SNAPSHOT_ADVANCE_GATE_NAME
     gate.parent.mkdir(parents=True, exist_ok=True)
@@ -302,17 +342,11 @@ def _snapshot_order_advance_gate(
         "execution_profile": execution_profile,
         "created_at": _snapshot_publish_now().isoformat(),
     }
-    try:
-        descriptor = os.open(
-            str(gate), os.O_CREAT | os.O_EXCL | os.O_WRONLY,
-        )
-    except OSError as exc:
+    def require_matching_existing(missing_message, cause=None):
         try:
             existing = json.loads(gate.read_text(encoding="utf-8"))
         except (OSError, TypeError, ValueError):
-            raise SchemaError(
-                "snapshot order advance gate busy/timeout"
-            ) from exc
+            raise SchemaError(missing_message) from cause
         if not isinstance(existing, dict) or any(
             existing.get(field) != expected for field, expected in (
                 ("owner", "MAC_SNAPSHOT_PUBLISHER"),
@@ -320,19 +354,31 @@ def _snapshot_order_advance_gate(
                 ("execution_profile", execution_profile),
             )
         ):
-            raise SchemaError(
-                "snapshot order advance gate busy/timeout"
-            ) from exc
+            raise SchemaError(missing_message) from cause
+
+    if not allow_create:
+        require_matching_existing(
+            "snapshot original lifecycle gate is required for REQUESTED retry"
+        )
     else:
         try:
-            os.write(
-                descriptor,
-                (json.dumps(
-                    metadata, ensure_ascii=True, sort_keys=True,
-                ) + "\n").encode("ascii"),
+            descriptor = os.open(
+                str(gate), os.O_CREAT | os.O_EXCL | os.O_WRONLY,
             )
-        finally:
-            os.close(descriptor)
+        except OSError as exc:
+            require_matching_existing(
+                "snapshot order advance gate busy/timeout", exc,
+            )
+        else:
+            try:
+                os.write(
+                    descriptor,
+                    (json.dumps(
+                        metadata, ensure_ascii=True, sort_keys=True,
+                    ) + "\n").encode("ascii"),
+                )
+            finally:
+                os.close(descriptor)
     yield
 
 

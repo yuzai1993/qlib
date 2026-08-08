@@ -131,8 +131,9 @@ bash live_trading/run_probe_import.sh
 
 Windows 持久日志必须按顺序出现 `SNAPSHOT_REQUEST_RECEIVED` 和
 `SNAPSHOT_REQUEST_TERMINAL`，且没有 `PASSORDER_ATTEMPT`；Mac durable request 必须成为
-`IMPORTED_COMPLETE`。ACCOUNT 必须恰好一行，且返回行账号与运行时 full/masked 精确匹配；
-缺失、OTHER、多行、ERROR、identity/profile/root/checksum mismatch 都不能授权 BUY/SELL。
+`IMPORTED_COMPLETE`。ACCOUNT 必须恰好一行，且返回行完整账号与运行时完整账号精确匹配；
+masked-only、缺失、OTHER、多行、ERROR、identity/profile/root/checksum mismatch 都不能
+授权 BUY/SELL。POSITION 暴露账号时同样只接受完整账号精确匹配。
 此请求不会创建或依赖任何 marker。处理或导入未完成时
 `snapshot_requests/status.json` 必须保持 ERROR/blocking；Mac 导入把 COMPLETE response
 归档后，等待 observer 写成 CLEAR。任何半对、tmp/intent、processing 或不完整 archive
@@ -145,6 +146,11 @@ main/probe 必须指向同一主根 `state/SNAPSHOT_ORDER_ADVANCE.lock`。publis
 ERROR 或 crash 后必须仍存在。首次启用前在实际 SMB 上分别让 Mac 和 Windows/QMT 创建
 gate，确认对端 `O_EXCL` 必然失败，并保存两次元数据/日志。若 gate 残留，停止两个 QMT
 实例并保存证据，只有新的人工审批允许受控移入 quarantine，禁止自动或直接删除。
+Mac publisher/importer 必须共用主根 `state/SNAPSHOT_MAC_LIFECYCLE.lock`；`REQUESTED` retry
+只能复核原 matching gate，缺失/损坏时不得重建 gate/请求文件；terminal retry 也不得重建。
+DB terminal + 不完整四件套 + gate 缺失/损坏必须失败关闭。monitor 还应确认 bridge
+root 与 inbox/processing/archive/responses 四目录均存在可列，任何 missing/list-error 都是
+CRIT，并包含 `path/expected/observed`。
 
 当天启动 QMT 后先确认 `SNAPSHOT_TIMER_REGISTERED` 的 `first_wakeup` 为 09:35:00 且
 `registered=true`；不得等到 15:04:55 的交易 timer 才发观察请求。若只读 timer 缺失或

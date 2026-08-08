@@ -295,6 +295,21 @@ def _scan_snapshot_protocol_residue(bridge_root: Path, recorder) -> list:
     request_root = bridge_root / "snapshot_requests"
     artifacts = []
     scan_errors = []
+    try:
+        list(bridge_root.iterdir())
+    except FileNotFoundError:
+        return [
+            f"path={bridge_root};expected=directory;observed=missing"
+        ]
+    except NotADirectoryError:
+        return [
+            f"path={bridge_root};expected=directory;observed=not-directory"
+        ]
+    except OSError:
+        return [
+            f"path={bridge_root};expected=readable-directory;"
+            "observed=list-error"
+        ]
     authorization_root = (
         bridge_root.parent if bridge_root.name == "pr49_probe" else bridge_root
     )
@@ -309,9 +324,20 @@ def _scan_snapshot_protocol_residue(bridge_root: Path, recorder) -> list:
         try:
             paths = list(root.iterdir())
         except FileNotFoundError:
+            scan_errors.append(
+                f"path={root};expected=directory;observed=missing"
+            )
+            continue
+        except NotADirectoryError:
+            scan_errors.append(
+                f"path={root};expected=directory;observed=not-directory"
+            )
             continue
         except OSError:
-            scan_errors.append(f"{directory}/<scan-error>")
+            scan_errors.append(
+                f"path={root};expected=readable-directory;"
+                "observed=list-error"
+            )
             continue
         for path in paths:
             name = path.name

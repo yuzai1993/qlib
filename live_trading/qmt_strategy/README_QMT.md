@@ -209,9 +209,10 @@ root 的请求放入 probe root 或反向复用。QMT 重启会恢复
 checksum 都保留证据并失败关闭。只读 timer 的冷启动只初始化 snapshot 目录、profile/root
 校验与账号回调绑定，不会恢复交易批次、注册交易 timer 或进入 `_advance`。
 
-`COMPLETE` 要求 ACCOUNT 恰好一行，且返回行自身的账号与 `ACCOUNT_ID` full/masked 精确
-匹配；缺失、OTHER、多行均为 ERROR。POSITION 若暴露账号字段也逐行匹配。request 内的
-fingerprint 不能替代券商返回身份，只有校验后才重新计算 response fingerprint。
+`COMPLETE` 要求 ACCOUNT 恰好一行，且返回行自身的完整账号与 `ACCOUNT_ID` 精确匹配；
+masked-only、缺失、OTHER、多行均为 ERROR。POSITION 若暴露账号字段，也必须返回完整
+账号并精确匹配；masked 值只能展示，不能授权。request 内的 fingerprint 不能替代券商
+返回身份，只有完整账号校验后才重新计算 response fingerprint；落盘仅存 mask/fingerprint。
 `snapshot_requests/status.json` 会把任一半对、tmp/intent、processing、待导入 response 或
 不完整 archive 标记为 ERROR/blocking；原文件不会自动删除。Mac 成功导入 response 后，
 完整 request + COMPLETE response 四件套全部归档，下一 observer 周期才转 `CLEAR`。
@@ -225,6 +226,13 @@ nested root 建另一把锁。Mac 用 `O_CREAT|O_EXCL` 写入 owner/request/prof
 持有同一 gate；observer 不持有。gate 无 stale 自动恢复。残留时停止两个实例、保存元数据
 和目录证据，获得人工审批后受控移入 quarantine；禁止直接删除。首次部署必须在实际 SMB
 上双向证明 Windows 与 Mac 的 `O_EXCL` 互斥，单元测试不能替代该验收。
+
+Mac publisher/importer 共用主根 `state/SNAPSHOT_MAC_LIFECYCLE.lock`，并统一按“Mac 锁 → SQLite
+状态 → 四件套归档校验 → 最后删除 gate”的顺序执行。`REQUESTED` publisher retry 只能
+复核原 matching gate，缺失/损坏时不能重建 gate 或请求文件；terminal retry 也不能重建。
+DB 已 terminal 但 archive 未完整时同样失败关闭，不能补造或继续归档。postmarket monitor
+还要求 bridge root 和 inbox/processing/archive/responses
+四目录均存在且可列；缺失或 SMB list error 都是 CRIT，正常空目录才是 CLEAR control。
 
 ## 7. 恢复与排障
 

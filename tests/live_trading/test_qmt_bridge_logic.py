@@ -675,13 +675,12 @@ def test_snapshot_account_rows_must_bind_unique_runtime_account(
     assert bridge.ACCOUNT_ID not in response["error"]
 
 
-@pytest.mark.parametrize("returned_id", ["8890116049", "88******49"])
-def test_snapshot_account_identity_accepts_exact_full_or_masked_match(
-    bridge, monkeypatch, returned_id,
+def test_snapshot_account_identity_accepts_only_exact_full_match(
+    bridge, monkeypatch,
 ):
     _enable_snapshot_observation(bridge, monkeypatch)
     account = type("Account", (), {
-        "m_strAccountID": returned_id,
+        "m_strAccountID": "8890116049",
         "m_dAvailable": 900000.0,
         "m_dBalance": 1000000.0,
         "m_dInstrumentValue": 100000.0,
@@ -702,6 +701,34 @@ def test_snapshot_account_identity_accepts_exact_full_or_masked_match(
     assert response["account_fingerprint"] == bridge._snapshot_account_fingerprint(
         bridge.ACCOUNT_ID, bridge.ACCOUNT_TYPE, bridge.ACCOUNT_ENVIRONMENT,
     )
+    assert bridge.ACCOUNT_ID not in json.dumps(response, sort_keys=True)
+
+
+@pytest.mark.parametrize("returned_id", [
+    "88******49",
+    "8899999949",
+])
+def test_snapshot_account_identity_rejects_mask_and_same_mask_other_full(
+    bridge, monkeypatch, returned_id,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    account = type("Account", (), {
+        "m_strAccountID": returned_id,
+        "m_dAvailable": 900000.0,
+    })()
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda account_id, account_type, detail_type: (
+            [account] if detail_type == "ACCOUNT" else []
+        ),
+    )
+
+    response = bridge._snapshot_query_response(_snapshot_request(bridge))
+
+    assert response["status"] == "ERROR"
+    assert response["account"] is None
+    assert response["account_fingerprint"] is None
+    assert bridge.ACCOUNT_ID not in response["error"]
 
 
 def test_snapshot_position_exposed_wrong_account_identity_fails_closed(
@@ -713,6 +740,29 @@ def test_snapshot_position_exposed_wrong_account_identity_fails_closed(
     })()
     position = type("Position", (), {
         "m_strAccountID": "OTHER_ACCOUNT",
+        "m_nVolume": 100,
+    })()
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data",
+        lambda account_id, account_type, detail_type: (
+            [account] if detail_type == "ACCOUNT" else [position]
+        ),
+    )
+
+    response = bridge._snapshot_query_response(_snapshot_request(bridge))
+
+    assert response["status"] == "ERROR"
+    assert response["account"] is None
+    assert response["positions"] == []
+
+
+def test_snapshot_position_masked_identity_cannot_authorize(
+    bridge, monkeypatch,
+):
+    _enable_snapshot_observation(bridge, monkeypatch)
+    account = type("Account", (), {"m_strAccountID": "8890116049"})()
+    position = type("Position", (), {
+        "m_strAccountID": "88******49",
         "m_nVolume": 100,
     })()
     monkeypatch.setattr(

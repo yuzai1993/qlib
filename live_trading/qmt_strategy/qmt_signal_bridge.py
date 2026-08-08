@@ -34,6 +34,7 @@ ACCOUNT_ID = ""            # QMT-local account id; must match header if set
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
+SOURCE_VERSION = "2026-08-08-task6"
 ACCOUNT_ENVIRONMENT = "SIMULATION"
 # REAL deployments must set all four values deliberately in the QMT-local
 # copy. Keeping the repository default False prevents an accidental cutover.
@@ -112,6 +113,7 @@ class Batch(object):
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
         self.remaining_cash = None    # one broker cash snapshot for BUY phase
+        self.order_evidence = {}      # persisted query/API/callback audit state
         self.processing_jsonl = None
         self.processing_done = None
         self.finalized = False
@@ -132,6 +134,7 @@ class State(object):
         self.loaded = False
         self.trading_enabled = False
         self.timer_registered = False
+        self.log_write_failure = None
 
 
 g = State()
@@ -161,6 +164,38 @@ def _append_log_line(name, line):
         f.flush()
 
 
+def _bounded_text(value, limit=240):
+    text = str(value).replace("\r", " ").replace("\n", " ")
+    return text[:int(limit)]
+
+
+def _remember_log_write_failure(event_type, exc):
+    marker = g.log_write_failure
+    if marker is None:
+        marker = {
+            "failed_event": _bounded_text(event_type, 80),
+            "error_type": type(exc).__name__,
+            "error_message": _bounded_text(exc),
+            "failure_count": 0,
+            "first_failure_ts": datetime.datetime.now().isoformat(),
+        }
+    marker["failure_count"] = min(
+        int(marker.get("failure_count", 0)) + 1, 999999,
+    )
+    g.log_write_failure = marker
+    print(
+        "[qlib_bridge] LOG_WRITE_PENDING event=%s error=%s"
+        % (marker["failed_event"], marker["error_type"])
+    )
+
+
+def _append_event_json(event):
+    _append_log_line(
+        "qmt_events_%s.jsonl" % _today(),
+        json.dumps(event, ensure_ascii=True, sort_keys=True),
+    )
+
+
 def _log_event(event_type, **fields):
     event = {
         "ts": datetime.datetime.now().isoformat(),
@@ -168,17 +203,121 @@ def _log_event(event_type, **fields):
     }
     event.update(fields)
     try:
-        _append_log_line(
-            "qmt_events_%s.jsonl" % _today(),
-            json.dumps(event, ensure_ascii=True, sort_keys=True),
-        )
+        _append_event_json(event)
+    except Exception as exc:
+        _remember_log_write_failure(event_type, exc)
+        return
+
+    recovery = None
+    if g.log_write_failure is not None and event_type != "LOG_WRITE_RECOVERED":
+        recovery = {
+            "ts": datetime.datetime.now().isoformat(),
+            "event": "LOG_WRITE_RECOVERED",
+        }
+        recovery.update(g.log_write_failure)
+        recovery["recovered_after_event"] = str(event_type)
+        try:
+            _append_event_json(recovery)
+        except Exception as exc:
+            _remember_log_write_failure("LOG_WRITE_RECOVERED", exc)
+            recovery = None
+        else:
+            g.log_write_failure = None
+
+    try:
         message = fields.get("message", "")
         _append_log_line(
             "qmt_bridge_%s.log" % _today(),
             "%s [%s] %s" % (event["ts"], event["event"], message),
         )
+        if recovery is not None:
+            _append_log_line(
+                "qmt_bridge_%s.log" % _today(),
+                "%s [LOG_WRITE_RECOVERED] %s" % (
+                    recovery["ts"], recovery["failed_event"],
+                ),
+            )
     except Exception:
-        print("[qlib_bridge] log persistence failed:\n" + traceback.format_exc())
+        print("[qlib_bridge] text log persistence failed")
+
+
+def _json_safe_value(value):
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, (list, tuple)):
+        return [_json_safe_value(item) for item in value[:50]]
+    if isinstance(value, dict):
+        return dict(
+            (str(key), _json_safe_value(item))
+            for key, item in list(value.items())[:50]
+        )
+    return _bounded_text(repr(value), 512)
+
+
+def _safe_detail(obj, field_names):
+    """Return an allow-listed, JSON-safe detail without credentials."""
+    result = {}
+    for field in field_names:
+        if isinstance(field, (tuple, list)):
+            output_name = field[0]
+            candidates = field[1:]
+        else:
+            output_name = field
+            candidates = (field,)
+        value = None
+        found = False
+        for name in candidates:
+            try:
+                if isinstance(obj, dict) and name in obj:
+                    value = obj.get(name)
+                    found = True
+                    break
+                if not isinstance(obj, dict):
+                    value = getattr(obj, name)
+                    found = True
+                    break
+            except Exception:
+                continue
+        if found:
+            result[str(output_name)] = _json_safe_value(value)
+    return result
+
+
+def _mask_account(account_id):
+    value = str(account_id or "")
+    if not value:
+        return ""
+    if len(value) <= 4:
+        return "*" * len(value)
+    return value[:2] + ("*" * (len(value) - 4)) + value[-2:]
+
+
+def _evidence_for(batch, coid):
+    evidence = batch.order_evidence.get(coid)
+    if evidence is None:
+        evidence = {
+            "query_count": 0,
+            "attempt_started": None,
+            "api_returned": False,
+            "api_return": {},
+            "order_observed": False,
+            "qmt_order_ids": [],
+            "callback_counts": {"order": 0, "deal": 0, "error": 0},
+            "last_broker_statuses": [],
+        }
+        batch.order_evidence[coid] = evidence
+    evidence.setdefault("query_count", 0)
+    evidence.setdefault("attempt_started", None)
+    evidence.setdefault("api_returned", False)
+    evidence.setdefault("api_return", {})
+    evidence.setdefault("order_observed", False)
+    evidence.setdefault("qmt_order_ids", [])
+    callback_counts = evidence.setdefault("callback_counts", {})
+    callback_counts.setdefault("order", 0)
+    callback_counts.setdefault("deal", 0)
+    callback_counts.setdefault("error", 0)
+    evidence.setdefault("last_broker_statuses", [])
+    return evidence
 
 
 def _now_hms():
@@ -319,6 +458,7 @@ def _save_active_state(batch):
         "submitted": sorted(batch.submitted.keys()),
         "fills": batch.fills,
         "remaining_cash": batch.remaining_cash,
+        "order_evidence": batch.order_evidence,
         "orders": batch.orders,
     }
     path = _active_state_path(batch.batch_id())
@@ -353,6 +493,10 @@ def _load_active_state(batch):
     batch.submitted = dict((coid, True) for coid in payload.get("submitted", []))
     batch.fills = payload.get("fills", {})
     batch.remaining_cash = payload.get("remaining_cash")
+    loaded_evidence = payload.get("order_evidence", {})
+    batch.order_evidence = (
+        loaded_evidence if isinstance(loaded_evidence, dict) else {}
+    )
     if payload.get("orders"):
         batch.orders = payload["orders"]
     try:
@@ -393,6 +537,7 @@ def _fail_safe_corrupt_active_state(batch):
     )
     batch.fills = {}
     batch.remaining_cash = None
+    batch.order_evidence = {}
     _save_active_state(batch)
 
 # ======================= fills output =======================
@@ -400,6 +545,30 @@ def _fail_safe_corrupt_active_state(batch):
 
 def _fills_path(batch_id):
     return _path("outbound", "fills_" + batch_id + ".jsonl")
+
+
+def _log_order_finalized(batch, order, fill):
+    coid = order["client_order_id"]
+    evidence = _evidence_for(batch, coid)
+    _log_event(
+        "ORDER_FINALIZED",
+        batch_id=batch.batch_id(),
+        client_order_id=coid,
+        stock_code=order.get("stock_code", ""),
+        side=order.get("side", ""),
+        requested_quantity=int(order.get("quantity", 0) or 0),
+        api_returned=bool(evidence.get("api_returned", False)),
+        api_return=evidence.get("api_return", {}),
+        order_observed=bool(evidence.get("order_observed", False)),
+        qmt_order_ids=evidence.get("qmt_order_ids", []),
+        callback_counts=evidence.get("callback_counts", {}),
+        query_count=int(evidence.get("query_count", 0)),
+        fill_status=fill.get("status", ""),
+        filled_quantity=int(fill.get("filled_qty", 0) or 0),
+        average_price=float(fill.get("avg_price", 0.0) or 0.0),
+        reason=str(fill.get("message", "") or ""),
+        message=str(fill.get("message", "") or fill.get("status", "")),
+    )
 
 
 def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, message):
@@ -430,6 +599,24 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
     with open(_fills_path(batch.batch_id()), "a") as f:
         f.write(json.dumps(event, sort_keys=True) + "\n")
     _save_active_state(batch)
+    previous_status = prev.get("status", "") if prev is not None else ""
+    if previous_status != status:
+        _log_event(
+            "ORDER_STATUS_CHANGED",
+            batch_id=batch.batch_id(),
+            client_order_id=order["client_order_id"],
+            stock_code=order["stock_code"],
+            previous_status=previous_status,
+            status=status,
+            filled_quantity=int(filled_qty),
+            average_price=float(avg_price),
+            qmt_order_id=str(qmt_order_id),
+            reason=str(message or ""),
+            message="%s -> %s" % (previous_status or "NONE", status),
+        )
+    if status in (
+            "FILLED", "PARTIAL", "REJECTED", "SKIPPED", "EXPIRED", "ERROR"):
+        _log_order_finalized(batch, order, event)
 
 
 def _account_snapshot_path(batch_id):
@@ -513,6 +700,9 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
                 ),
                 "shares": shares,
                 "can_use_volume": int(getattr(p, "m_nCanUseVolume", 0) or 0),
+                "frozen_shares": int(
+                    getattr(p, "m_nFrozenVolume", 0) or 0,
+                ),
                 "avg_cost": _opt_float(p, "m_dOpenPrice", "m_dPositionCost"),
                 "market_value": _opt_float(p, "m_dMarketValue"),
                 "ts": datetime.datetime.now().isoformat(),
@@ -524,6 +714,28 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
                 f.write(json.dumps(row, sort_keys=True) + "\n")
         with open(path.replace(".jsonl", ".done"), "w") as f:
             f.write("done\n")
+        account_row = next(
+            (row for row in rows if row.get("type") == "account_snapshot"),
+            {},
+        )
+        position_rows = [
+            row for row in rows if row.get("type") == "broker_position"
+        ]
+        _log_event(
+            "ACCOUNT_SNAPSHOT",
+            batch_id=batch_id,
+            trade_date=trade_date,
+            label=label,
+            account_id_masked=_mask_account(account_id),
+            account_type=ACCOUNT_TYPE,
+            available_cash=account_row.get("available_cash"),
+            frozen_cash=account_row.get("frozen_cash"),
+            total_asset=account_row.get("total_asset"),
+            market_value=account_row.get("market_value"),
+            positions=position_rows,
+            position_count=len(position_rows),
+            message="broker account snapshot persisted",
+        )
         _log("account snapshot written (%s): %d rows" % (label, len(rows)))
     except Exception:
         _log("account snapshot failed:\n" + traceback.format_exc())
@@ -716,10 +928,36 @@ def _parse_and_check(jsonl_path, done_path):
     batch.processing_jsonl = jsonl_path
     batch.processing_done = done_path
     batch_id = header.get("batch_id", "unknown")
+    expected = ""
+    actual = ""
 
     def reject(reason):
         batch.broker_authorized = False
         _log("reject batch %s: %s" % (batch_id, reason))
+        _log_event(
+            "BATCH_VALIDATED",
+            batch_id=batch_id,
+            strategy_id=header.get("strategy_id", ""),
+            trade_date=header.get("trade_date", ""),
+            mode=header.get("mode", ""),
+            account_id_masked=_mask_account(header.get("account_id", "")),
+            account_type=header.get("account_type", ""),
+            account_environment=header.get("account_environment", ""),
+            order_count=len(orders),
+            jsonl_file=os.path.basename(jsonl_path),
+            done_file=os.path.basename(done_path),
+            expected_checksum=expected,
+            header_checksum=header.get("checksum", ""),
+            calculated_checksum=actual,
+            checksum_match=bool(
+                actual and expected in ("", actual)
+                and header.get("checksum") == actual
+            ),
+            validation_passed=False,
+            rejection_reason=str(reason),
+            execution_profile=EXECUTION_PROFILE,
+            message="batch validation rejected: " + str(reason),
+        )
         for o in orders:
             if not all(o.get(key) for key in (
                     "client_order_id", "stock_code", "side")):
@@ -815,6 +1053,28 @@ def _parse_and_check(jsonl_path, done_path):
     orders.sort(key=lambda o: (o.get("priority", 99), o.get("client_order_id", "")))
     batch.orders = orders
     batch.broker_authorized = True
+    _log_event(
+        "BATCH_VALIDATED",
+        batch_id=batch_id,
+        strategy_id=header.get("strategy_id", ""),
+        trade_date=header.get("trade_date", ""),
+        mode=header.get("mode", ""),
+        account_id_masked=_mask_account(header.get("account_id", "")),
+        account_type=header.get("account_type", ""),
+        account_environment=header.get("account_environment", ""),
+        order_count=len(orders),
+        jsonl_file=os.path.basename(jsonl_path),
+        done_file=os.path.basename(done_path),
+        expected_checksum=expected,
+        header_checksum=header.get("checksum", ""),
+        calculated_checksum=actual,
+        checksum_match=(expected in ("", actual)
+                        and header.get("checksum") == actual),
+        validation_passed=True,
+        execution_profile=EXECUTION_PROFILE,
+        signal_price_type=_expected_signal_price_type(),
+        message="batch validation passed",
+    )
     return batch
 
 
@@ -881,6 +1141,13 @@ def _account_id(batch):
     return ACCOUNT_ID or batch.header.get("account_id", "")
 
 
+class _OrderQueryResult(dict):
+    def __init__(self):
+        dict.__init__(self)
+        self.result_count = 0
+        self.query_error = ""
+
+
 def _get_orders_by_remark(account_id):
     """remark -> list of order detail objects.
 
@@ -888,12 +1155,14 @@ def _get_orders_by_remark(account_id):
     passorder into multiple contract IDs that share the same remark
     (client_order_id). Callers must aggregate via _summarize_remark_orders.
     """
-    result = {}
+    result = _OrderQueryResult()
     try:
         details = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ORDER")
-    except Exception:
+    except Exception as exc:
+        result.query_error = _bounded_text(exc)
         _log("get_trade_detail_data ORDER failed:\n" + traceback.format_exc())
         return result
+    result.result_count = len(details or [])
     for d in details:
         remark = getattr(d, "m_strRemark", "")
         if remark:
@@ -1002,24 +1271,24 @@ def _get_available_cash(account_id):
         return None
     if not accounts:
         _log("ACCOUNT query returned no rows for account %s type %s"
-             % (account_id, ACCOUNT_TYPE))
+             % (_mask_account(account_id), ACCOUNT_TYPE))
         return None
     account = accounts[0]
     returned_id = str(getattr(account, "m_strAccountID", "") or "")
     if returned_id and returned_id != str(account_id):
         _log("ACCOUNT query id mismatch: requested %s returned %s"
-             % (account_id, returned_id))
+             % (_mask_account(account_id), _mask_account(returned_id)))
         return None
     raw = getattr(account, "m_dAvailable", None)
     try:
         available = float(raw)
     except (TypeError, ValueError):
         _log("ACCOUNT query missing available cash for account %s"
-             % account_id)
+             % _mask_account(account_id))
         return None
     if not math.isfinite(available) or available < 0.0:
         _log("ACCOUNT query invalid available cash for account %s: %s"
-             % (account_id, raw))
+             % (_mask_account(account_id), raw))
         return None
     return available
 
@@ -1147,6 +1416,135 @@ def _target_buy_quantity(cash, price, target_value):
     return _max_affordable_quantity(cash, price, requested)
 
 
+def _security_detail_evidence(ContextInfo, stock_code):
+    getter = getattr(ContextInfo, "get_instrument_detail", None)
+    if getter is None:
+        getter = getattr(ContextInfo, "get_instrumentdetail", None)
+    raw = {}
+    error = ""
+    if getter is None:
+        error = "instrument detail API unavailable"
+    else:
+        try:
+            detail = getter(stock_code)
+            raw = _safe_detail(detail, [
+                ("instrument_id", "InstrumentID", "m_strInstrumentID"),
+                ("instrument_name", "InstrumentName", "m_strInstrumentName"),
+                ("exchange_id", "ExchangeID", "m_strExchangeID"),
+                ("product_id", "ProductID", "m_strProductID"),
+                ("instrument_status", "InstrumentStatus", "Status"),
+                ("is_suspended", "IsSuspended", "SuspendFlag"),
+                ("after_hours_flag", "IsAfterHoursTrading",
+                 "AfterHoursTrading", "FixedPriceTrading"),
+                ("up_stop_price", "UpStopPrice"),
+                ("down_stop_price", "DownStopPrice"),
+                ("pre_close_price", "PreClose", "PreClosePrice",
+                 "LastClose"),
+            ])
+        except Exception as exc:
+            error = _bounded_text(exc)
+    after_hours = raw.get("after_hours_flag")
+    if isinstance(after_hours, bool):
+        eligible = after_hours
+    elif isinstance(after_hours, (int, float)):
+        eligible = after_hours != 0
+    elif isinstance(after_hours, str):
+        normalized = after_hours.strip().lower()
+        if normalized in ("1", "true", "yes", "y", "enabled"):
+            eligible = True
+        elif normalized in ("0", "false", "no", "n", "disabled"):
+            eligible = False
+        else:
+            eligible = None
+    else:
+        eligible = None
+    return {
+        "raw_fields": raw,
+        "after_hours_eligible": eligible,
+        "detail_available": bool(raw),
+        "error": error,
+    }
+
+
+def _market_price_evidence(ContextInfo, stock_code, official_close):
+    collected_at = datetime.datetime.now().isoformat()
+    tick = _get_tick(ContextInfo, stock_code)
+    tick_fields = _safe_detail(tick or {}, [
+        ("latest_price", "lastPrice"),
+        ("pre_close_price", "lastClose", "preClose", "preClosePrice"),
+        ("open_price", "open", "openPrice"),
+        ("high_price", "high", "highPrice"),
+        ("low_price", "low", "lowPrice"),
+    ])
+    close_value = _positive_price(official_close)
+    if close_value <= 0.0:
+        close_value = _positive_price(tick_fields.get("latest_price"))
+    return {
+        "collected_at": collected_at,
+        "tick_fields": tick_fields,
+        "official_close": close_value,
+        "official_close_source": "lastPrice",
+        "official_close_valid": close_value > 0.0,
+    }
+
+
+def _preorder_broker_evidence(account_id, stock_code):
+    result = {
+        "account_id_masked": _mask_account(account_id),
+        "available_cash": None,
+        "frozen_cash": None,
+        "total_asset": None,
+        "position_shares": None,
+        "can_use_shares": None,
+        "frozen_shares": None,
+        "query_error": "",
+    }
+    try:
+        accounts = get_trade_detail_data(account_id, ACCOUNT_TYPE, "ACCOUNT")
+        if accounts:
+            account = accounts[0]
+            result["available_cash"] = _opt_float(account, "m_dAvailable")
+            result["frozen_cash"] = _opt_float(account, "m_dFrozenCash")
+            result["total_asset"] = _opt_float(
+                account, "m_dBalance", "m_dAssureAsset",
+            )
+        symbol = stock_code.split(".")[0]
+        positions = get_trade_detail_data(
+            account_id, ACCOUNT_TYPE, "POSITION",
+        )
+        for position in positions or []:
+            if str(getattr(position, "m_strInstrumentID", "")) != symbol:
+                continue
+            result["position_shares"] = int(
+                getattr(position, "m_nVolume", 0) or 0,
+            )
+            result["can_use_shares"] = int(
+                getattr(position, "m_nCanUseVolume", 0) or 0,
+            )
+            result["frozen_shares"] = int(
+                getattr(position, "m_nFrozenVolume", 0) or 0,
+            )
+            break
+    except Exception as exc:
+        result["query_error"] = _bounded_text(exc)
+    return result
+
+
+def _sanitized_passorder_arguments(batch, order, op_type, api_price):
+    return {
+        "op_type": int(op_type),
+        "order_type": 1101,
+        "account_id_masked": _mask_account(_account_id(batch)),
+        "stock_code": order["stock_code"],
+        "price_type": int(LIMIT_PRICE_TYPE),
+        "price": float(api_price),
+        "quantity": int(order["quantity"]),
+        "strategy_name": STRATEGY_NAME,
+        "quick_trade": 2,
+        "remark": order["client_order_id"],
+    }
+
+
 def _submit(
         ContextInfo, batch, order, live,
         limit_price=None, official_close=None):
@@ -1187,16 +1585,91 @@ def _submit(
         return False
 
     op_type = 23 if order["side"] == "BUY" else 24
+    account_id = _account_id(batch)
+    security = _security_detail_evidence(ContextInfo, order["stock_code"])
+    _log_event(
+        "SECURITY_DETAIL",
+        batch_id=batch.batch_id(),
+        client_order_id=coid,
+        stock_code=order["stock_code"],
+        execution_profile=EXECUTION_PROFILE,
+        raw_fields=security["raw_fields"],
+        after_hours_eligible=security["after_hours_eligible"],
+        detail_available=security["detail_available"],
+        error=security["error"],
+        message="security detail captured",
+    )
+    market = _market_price_evidence(
+        ContextInfo, order["stock_code"], official_close,
+    )
+    broker = _preorder_broker_evidence(account_id, order["stock_code"])
+    estimated_cost = None
+    if order["side"] == "BUY":
+        reference_price = market["official_close"] or api_price
+        if reference_price > 0.0:
+            estimated_cost = _estimated_buy_cost(
+                int(order["quantity"]), reference_price,
+            )
+    passorder_args = _sanitized_passorder_arguments(
+        batch, order, op_type, api_price,
+    )
+    _log_event(
+        "PREORDER_SNAPSHOT",
+        batch_id=batch.batch_id(),
+        client_order_id=coid,
+        stock_code=order["stock_code"],
+        side=order["side"],
+        quantity=int(order["quantity"]),
+        market=market,
+        broker=broker,
+        estimated_buy_cost=estimated_cost,
+        passorder_arguments=passorder_args,
+        message="pre-order evidence captured",
+    )
     # Persist before passorder. On a crash, an uncertain order is never
     # submitted twice; the safer failure direction is a missed order.
     batch.submitted[coid] = True
+    evidence = _evidence_for(batch, coid)
+    evidence["attempt_started"] = time.time()
+    evidence["passorder_arguments"] = passorder_args
     _save_active_state(batch)
+    _log_event(
+        "PASSORDER_ATTEMPT",
+        batch_id=batch.batch_id(),
+        client_order_id=coid,
+        passorder_arguments=passorder_args,
+        persisted_before_api=True,
+        message="calling passorder",
+    )
+    api_started = time.time()
     try:
         # orderType=1101 single stock by shares; profile selects prType/price;
         # quickTrade=2 submit immediately; userOrderId -> m_strRemark
-        passorder(op_type, 1101, _account_id(batch), order["stock_code"],
-                  LIMIT_PRICE_TYPE, api_price, int(order["quantity"]),
-                  STRATEGY_NAME, 2, coid, ContextInfo)
+        api_return = passorder(
+            op_type, 1101, account_id, order["stock_code"],
+            LIMIT_PRICE_TYPE, api_price, int(order["quantity"]),
+            STRATEGY_NAME, 2, coid, ContextInfo,
+        )
+        elapsed_ms = max(0.0, (time.time() - api_started) * 1000.0)
+        return_repr = _bounded_text(repr(api_return), 512)
+        return_type = type(api_return).__name__
+        evidence["api_returned"] = True
+        evidence["api_return"] = {
+            "return_repr": return_repr,
+            "return_type": return_type,
+            "elapsed_ms": elapsed_ms,
+        }
+        _save_active_state(batch)
+        _log_event(
+            "PASSORDER_RETURNED",
+            batch_id=batch.batch_id(),
+            client_order_id=coid,
+            returned_normally=True,
+            return_repr=return_repr,
+            return_type=return_type,
+            elapsed_ms=elapsed_ms,
+            message="passorder returned normally",
+        )
         event_fields = {
             "batch_id": batch.batch_id(),
             "client_order_id": coid,
@@ -1205,6 +1678,7 @@ def _submit(
             "quantity": int(order["quantity"]),
             "price_type": LIMIT_PRICE_TYPE,
             "limit_price": api_price,
+            "passorder_return": evidence["api_return"],
             "message": "passorder returned; awaiting QMT order",
         }
         if fixed_price:
@@ -1219,9 +1693,30 @@ def _submit(
                  % (order["side"], order["stock_code"], order["quantity"],
                     limit_price, coid))
         return True
-    except Exception:
+    except Exception as exc:
+        elapsed_ms = max(0.0, (time.time() - api_started) * 1000.0)
+        evidence["api_returned"] = False
+        evidence["api_return"] = {
+            "exception_type": type(exc).__name__,
+            "exception_message": _bounded_text(exc),
+            "elapsed_ms": elapsed_ms,
+        }
+        _save_active_state(batch)
+        _log_event(
+            "PASSORDER_RETURNED",
+            batch_id=batch.batch_id(),
+            client_order_id=coid,
+            returned_normally=False,
+            return_repr="",
+            return_type="",
+            elapsed_ms=elapsed_ms,
+            exception_type=type(exc).__name__,
+            exception_message=_bounded_text(exc),
+            traceback=_bounded_text(traceback.format_exc(), 512),
+            message="passorder raised an exception",
+        )
         _write_fill(batch, order, "ERROR", 0, 0.0, "",
-                    "passorder exception: " + traceback.format_exc()[-200:])
+                    "passorder exception: " + _bounded_text(exc, 200))
         return False
 
 
@@ -1242,18 +1737,154 @@ def _order_is_terminal(batch, coid):
         "FILLED", "PARTIAL", "REJECTED", "SKIPPED", "EXPIRED", "ERROR")
 
 
-def _poll_status(batch):
+def _order_detail_evidence(detail, mapped_remark, match_kind):
+    fields = _safe_detail(detail, [
+        ("remark", "m_strRemark", "userOrderId", "orderRemark"),
+        ("order_id", "m_strOrderSysID", "orderID", "orderId"),
+        ("contract_id", "m_strOrderID", "contractID"),
+        ("status_code", "m_nOrderStatus", "orderStatus"),
+        ("status_text", "m_strOrderStatus", "orderStatusText"),
+        ("order_price", "m_dOrderPrice", "orderPrice"),
+        ("order_quantity", "m_nOrderVolume", "orderVolume"),
+        ("traded_quantity", "m_nVolumeTraded", "tradedVolume"),
+        ("canceled_quantity", "m_nVolumeCanceled", "canceledVolume"),
+        ("traded_price", "m_dTradedPrice", "tradedPrice"),
+        ("error", "m_strErrorMsg", "errorMsg", "errorMessage"),
+        ("stock_code", "m_strInstrumentID", "orderCode"),
+        ("exchange_id", "m_strExchangeID", "exchangeID"),
+        ("op_type", "m_nOpType", "opType"),
+    ])
+    fields.setdefault("remark", str(mapped_remark or ""))
+    fields["match_kind"] = match_kind
+    return fields
+
+
+def _candidate_order_details(details_by_remark, coid):
+    candidates = []
+    exact_details = details_by_remark.get(coid) or []
+    for detail in exact_details:
+        candidates.append(_order_detail_evidence(detail, coid, "exact"))
+    for remark, details in details_by_remark.items():
+        remark_text = str(remark or "")
+        if remark_text == coid:
+            continue
+        suspected = bool(
+            remark_text and (coid in remark_text or remark_text in coid)
+        )
+        if not suspected:
+            continue
+        for detail in details or []:
+            candidates.append(
+                _order_detail_evidence(detail, remark_text, "suspected")
+            )
+    return exact_details, candidates
+
+
+def _real_order_ids(details):
+    result = []
+    for detail in details or []:
+        order_id = _callback_value(
+            detail, "m_strOrderSysID", "orderID", "orderId",
+        )
+        if order_id not in (None, "") and str(order_id) not in result:
+            result.append(str(order_id))
+    return result
+
+
+def _poll_status(batch, details=None):
     """Update fills from broker order details (LIVE only)."""
     live = batch.execution_live and batch.broker_authorized
     if not live:
         return
-    details = _get_orders_by_remark(_account_id(batch))
+    if details is None:
+        details = _get_orders_by_remark(_account_id(batch))
+    mapped_count = sum(len(rows or []) for rows in details.values())
+    result_count = int(getattr(details, "result_count", mapped_count))
+    query_error = str(getattr(details, "query_error", "") or "")
     for order in batch.orders:
         coid = order["client_order_id"]
         if coid not in batch.submitted or _order_is_terminal(batch, coid):
             continue
+        evidence = _evidence_for(batch, coid)
+        evidence["query_count"] = int(evidence.get("query_count", 0)) + 1
+        attempt_started = evidence.get("attempt_started")
+        try:
+            elapsed_ms = max(
+                0.0, (time.time() - float(attempt_started)) * 1000.0,
+            )
+        except (TypeError, ValueError):
+            elapsed_ms = 0.0
+        exact_details, candidates = _candidate_order_details(details, coid)
+        _save_active_state(batch)
+        _log_event(
+            "ORDER_QUERY",
+            batch_id=batch.batch_id(),
+            client_order_id=coid,
+            query_number=evidence["query_count"],
+            elapsed_ms_since_attempt=elapsed_ms,
+            result_count=result_count,
+            match_count=len(exact_details),
+            suspected_match_count=len([
+                row for row in candidates
+                if row.get("match_kind") == "suspected"
+            ]),
+            candidates=candidates,
+            query_error=query_error,
+            message="broker ORDER query completed",
+        )
+        order_ids = _real_order_ids(exact_details)
+        if not order_ids:
+            _log_event(
+                "ORDER_NOT_OBSERVED",
+                batch_id=batch.batch_id(),
+                client_order_id=coid,
+                query_number=evidence["query_count"],
+                elapsed_ms_since_attempt=elapsed_ms,
+                result_count=result_count,
+                match_count=len(exact_details),
+                message="client order remark has no real QMT order id",
+            )
+            continue
+        if not evidence.get("order_observed", False):
+            evidence["order_observed"] = True
+            evidence["qmt_order_ids"] = order_ids
+            _save_active_state(batch)
+            _log_event(
+                "ORDER_OBSERVED",
+                batch_id=batch.batch_id(),
+                client_order_id=coid,
+                qmt_order_ids=order_ids,
+                query_number=evidence["query_count"],
+                elapsed_ms_since_attempt=elapsed_ms,
+                source="ORDER_QUERY",
+                message="real QMT order id observed",
+            )
+            _write_fill(
+                batch, order, "ACCEPTED", 0, 0.0,
+                ",".join(order_ids), "broker order observed",
+            )
+
+        status_signature = [
+            "%s:%s" % (
+                row.get("order_id", ""), row.get("status_code", ""),
+            )
+            for row in candidates if row.get("match_kind") == "exact"
+        ]
+        if status_signature != evidence.get("last_broker_statuses", []):
+            previous = evidence.get("last_broker_statuses", [])
+            evidence["last_broker_statuses"] = status_signature
+            _save_active_state(batch)
+            _log_event(
+                "ORDER_STATUS_CHANGED",
+                batch_id=batch.batch_id(),
+                client_order_id=coid,
+                previous_status=previous,
+                status=status_signature,
+                candidates=candidates,
+                message="broker order status changed",
+            )
         summary = _summarize_remark_orders(
-            details.get(coid) or [], order["quantity"],
+            exact_details, order["quantity"],
         )
         if summary is None:
             continue
@@ -1509,7 +2140,7 @@ def _force_finalize_if_near_close(ContextInfo, batch):
                     status = int(getattr(d, "m_nOrderStatus", -1))
                     if status not in TERMINAL_ORDER_STATUS:
                         _cancel_by_detail(d, _account_id(batch), ContextInfo)
-        _poll_status(batch)
+        _poll_status(batch, details)
 
     if now >= FINALIZE_AT:
         cash_unavailable = (
@@ -1583,9 +2214,12 @@ def _register_postclose_timer(ContextInfo):
     # Some QMT builds invoke an overdue callback synchronously while the
     # timer is registered. Mark it first so callback -> init cannot recurse.
     g.timer_registered = True
+    method = "schedule_run" if hasattr(ContextInfo, "schedule_run") else "run_time"
+    first_wakeup = first_compact
+    timer_result = None
     try:
         if hasattr(ContextInfo, "schedule_run"):
-            ContextInfo.schedule_run(
+            timer_result = ContextInfo.schedule_run(
                 timer_callback,
                 first_compact,
                 -1,
@@ -1594,12 +2228,70 @@ def _register_postclose_timer(ContextInfo):
             )
         else:
             first_legacy = day.strftime("%Y-%m-%d") + " " + timer_start
-            ContextInfo.run_time(
+            first_wakeup = first_legacy
+            timer_result = ContextInfo.run_time(
                 "timer_callback", "%dnSecond" % int(POLL_SECONDS), first_legacy,
             )
-    except Exception:
+        _log_event(
+            "TIMER_REGISTERED",
+            method=method,
+            registered=True,
+            first_wakeup=first_wakeup,
+            interval_seconds=int(POLL_SECONDS),
+            callback="timer_callback",
+            timer_name="qlib_postclose_poll",
+            return_repr=_bounded_text(repr(timer_result), 256),
+            message="post-close timer registered",
+        )
+    except Exception as exc:
         g.timer_registered = False
+        _log_event(
+            "TIMER_REGISTERED",
+            method=method,
+            registered=False,
+            first_wakeup=first_wakeup,
+            interval_seconds=int(POLL_SECONDS),
+            callback="timer_callback",
+            error_type=type(exc).__name__,
+            error_message=_bounded_text(exc),
+            message="post-close timer registration failed",
+        )
         raise
+
+
+def _source_evidence():
+    source_path = globals().get("__file__", "")
+    source_sha = ""
+    try:
+        import hashlib
+        digest = hashlib.sha256()
+        with open(source_path, "rb") as source_file:
+            while True:
+                chunk = source_file.read(65536)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        source_sha = "sha256:" + digest.hexdigest()
+    except Exception:
+        source_sha = ""
+    return SOURCE_VERSION, source_sha
+
+
+def _context_version(ContextInfo):
+    for name in (
+            "qmt_version", "client_version", "version", "get_qmt_version",
+            "get_client_version"):
+        value = getattr(ContextInfo, name, None)
+        if value in (None, ""):
+            continue
+        try:
+            if callable(value):
+                value = value()
+        except Exception:
+            continue
+        if value not in (None, ""):
+            return _bounded_text(value, 128)
+    return "unavailable"
 
 
 def init(ContextInfo):
@@ -1629,10 +2321,43 @@ def init(ContextInfo):
         )
         return
     g.trading_enabled = True
+    source_version, source_sha = _source_evidence()
+    profile = _profile_settings()
+    _log_event(
+        "RUNTIME_CONFIG",
+        source_version=source_version,
+        source_file=os.path.basename(globals().get("__file__", "")),
+        source_sha256=source_sha,
+        strategy_name=STRATEGY_NAME,
+        qmt_version=_context_version(ContextInfo),
+        account_id_masked=_mask_account(ACCOUNT_ID),
+        account_binding_configured=bool(ACCOUNT_ID),
+        account_type=ACCOUNT_TYPE,
+        account_environment=ACCOUNT_ENVIRONMENT,
+        execution_profile=EXECUTION_PROFILE,
+        bridge_root=BRIDGE_ROOT,
+        other_bridge_root=OTHER_BRIDGE_ROOT,
+        signal_price_type=profile["signal_price_type"],
+        qmt_price_type=int(profile["qmt_price_type"]),
+        max_order_quantity=int(MAX_ORDER_QUANTITY),
+        max_orders_per_batch=int(MAX_ORDERS_PER_BATCH),
+        poll_seconds=int(POLL_SECONDS),
+        sell_wait_seconds=int(SELL_WAIT_TIMEOUT_SEC),
+        submit_after=TRADE_START,
+        cancel_at=CANCEL_AT,
+        finalize_at=FINALIZE_AT,
+        snapshot_after=SNAPSHOT_REFRESH_AT,
+        timer_start=profile["timer_start"],
+        authorization_path=_authorization_path(_today()),
+        authorization_present=os.path.isfile(_authorization_path(_today())),
+        other_authorization_path=_other_authorization_path(_today()),
+        other_authorization_present=_other_profile_authorized(_today()),
+        message="QMT bridge runtime configuration",
+    )
     if ACCOUNT_ID:
         ContextInfo.set_account(ACCOUNT_ID)
         _log_event(
-            "ACCOUNT_BOUND", account_id=ACCOUNT_ID,
+            "ACCOUNT_BOUND", account_id_masked=_mask_account(ACCOUNT_ID),
             message="QMT account callback binding enabled",
         )
     _load_processed()
@@ -1660,35 +2385,167 @@ def _callback_value(obj, *names):
     return ""
 
 
-def orderError_callback(ContextInfo, orderArgs, errMsg):
-    """Persist asynchronous broker rejection details across QMT restarts."""
+def _callback_int(obj, *names):
+    try:
+        return int(_callback_value(obj, *names) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _callback_float(obj, *names):
+    try:
+        return float(_callback_value(obj, *names) or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _callback_remark(obj):
     remark = str(_callback_value(
-        orderArgs, "userOrderId", "m_strRemark", "orderRemark"))
+        obj, "userOrderId", "m_strRemark", "orderRemark",
+    ))
     strategy = str(_callback_value(
-        orderArgs, "strategyName", "m_strStrategyName"))
+        obj, "strategyName", "m_strStrategyName",
+    ))
     if not remark and "&&&_" in strategy:
         remark = strategy.rsplit("&&&_", 1)[-1]
+    return remark
+
+
+def _find_callback_order(batch, remark, code):
+    candidates = []
+    digits = "".join(ch for ch in str(code or "") if ch.isdigit())
+    for order in batch.orders:
+        if remark and order["client_order_id"] == remark:
+            return order
+        if digits and order["stock_code"].split(".")[0] == digits:
+            candidates.append(order)
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def _observe_callback_order(batch, order, order_id, source):
+    if not order_id:
+        return
+    coid = order["client_order_id"]
+    evidence = _evidence_for(batch, coid)
+    if order_id not in evidence.get("qmt_order_ids", []):
+        evidence.setdefault("qmt_order_ids", []).append(order_id)
+    first_observation = not evidence.get("order_observed", False)
+    evidence["order_observed"] = True
+    _save_active_state(batch)
+    if first_observation:
+        _log_event(
+            "ORDER_OBSERVED",
+            batch_id=batch.batch_id(),
+            client_order_id=coid,
+            qmt_order_ids=evidence["qmt_order_ids"],
+            query_number=int(evidence.get("query_count", 0)),
+            elapsed_ms_since_attempt=0.0,
+            source=source,
+            message="real QMT order id observed by callback",
+        )
+
+
+def order_callback(ContextInfo, orderInfo):
+    """Persist QMT order callback evidence and state transitions."""
+    fields = _order_detail_evidence(
+        orderInfo, _callback_remark(orderInfo), "callback",
+    )
+    remark = str(fields.get("remark", "") or "")
+    order_id = str(fields.get("order_id", "") or "")
+    _log_event(
+        "ORDER_CALLBACK",
+        client_order_id=remark,
+        order_id=order_id,
+        callback=fields,
+        message="QMT order callback received",
+    )
+    batch = g.batch
+    if batch is None:
+        return
+    order = _find_callback_order(
+        batch, remark, fields.get("stock_code", ""),
+    )
+    if order is None:
+        return
+    evidence = _evidence_for(batch, order["client_order_id"])
+    evidence["callback_counts"]["order"] = min(
+        int(evidence["callback_counts"].get("order", 0)) + 1, 999999,
+    )
+    _save_active_state(batch)
+    _observe_callback_order(batch, order, order_id, "ORDER_CALLBACK")
+
+
+def deal_callback(ContextInfo, dealInfo):
+    """Persist QMT deal callback evidence and cumulative fill."""
+    fields = _safe_detail(dealInfo, [
+        ("remark", "m_strRemark", "userOrderId", "orderRemark"),
+        ("order_id", "m_strOrderSysID", "orderID", "orderId"),
+        ("deal_id", "m_strDealID", "dealID", "dealId"),
+        ("deal_quantity", "m_nVolume", "dealVolume", "volume"),
+        ("deal_price", "m_dPrice", "dealPrice", "price"),
+        ("cumulative_traded_quantity", "m_nVolumeTraded",
+         "tradedVolume"),
+        ("stock_code", "m_strInstrumentID", "orderCode"),
+        ("error", "m_strErrorMsg", "errorMsg", "errorMessage"),
+    ])
+    remark = str(fields.get("remark", "") or _callback_remark(dealInfo))
+    order_id = str(fields.get("order_id", "") or "")
+    _log_event(
+        "DEAL_CALLBACK",
+        client_order_id=remark,
+        order_id=order_id,
+        deal_id=str(fields.get("deal_id", "") or ""),
+        callback=fields,
+        message="QMT deal callback received",
+    )
+    batch = g.batch
+    if batch is None:
+        return
+    order = _find_callback_order(
+        batch, remark, fields.get("stock_code", ""),
+    )
+    if order is None:
+        return
+    evidence = _evidence_for(batch, order["client_order_id"])
+    evidence["callback_counts"]["deal"] = min(
+        int(evidence["callback_counts"].get("deal", 0)) + 1, 999999,
+    )
+    _save_active_state(batch)
+    _observe_callback_order(batch, order, order_id, "DEAL_CALLBACK")
+
+
+def orderError_callback(ContextInfo, orderArgs, errMsg):
+    """Persist asynchronous broker rejection details across QMT restarts."""
+    remark = _callback_remark(orderArgs)
     code = str(_callback_value(
         orderArgs, "orderCode", "m_strInstrumentID"))
     op_type = _callback_value(orderArgs, "opType", "m_nOpType")
     message = str(errMsg)
     _log_event(
-        "ORDER_REJECTED", client_order_id=remark, stock_code=code,
-        op_type=op_type, message=message,
+        "ORDER_ERROR_CALLBACK", client_order_id=remark, stock_code=code,
+        order_id=str(_callback_value(
+            orderArgs, "m_strOrderSysID", "orderID", "orderId",
+        )),
+        op_type=op_type,
+        quantity=_callback_int(
+            orderArgs, "m_nOrderVolume", "orderVolume", "volume",
+        ),
+        price=_callback_float(orderArgs, "m_dOrderPrice", "orderPrice"),
+        status=_callback_value(orderArgs, "m_nOrderStatus", "orderStatus"),
+        error_type=type(errMsg).__name__,
+        error_message=_bounded_text(errMsg, 512),
+        message=_bounded_text(message, 512),
     )
     batch = g.batch
     if batch is None:
         return
-    candidates = []
-    for order in batch.orders:
-        if remark and order["client_order_id"] == remark:
-            candidates = [order]
-            break
-        digits = "".join(ch for ch in code if ch.isdigit())
-        if digits and order["stock_code"].split(".")[0] == digits:
-            candidates.append(order)
-    if len(candidates) == 1:
-        order = candidates[0]
+    order = _find_callback_order(batch, remark, code)
+    if order is not None:
+        evidence = _evidence_for(batch, order["client_order_id"])
+        evidence["callback_counts"]["error"] = min(
+            int(evidence["callback_counts"].get("error", 0)) + 1,
+            999999,
+        )
         batch.submitted[order["client_order_id"]] = True
         _save_active_state(batch)
         _write_fill(batch, order, "REJECTED", 0, 0.0, "", message)

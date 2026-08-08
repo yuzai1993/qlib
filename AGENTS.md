@@ -8,8 +8,8 @@
 
 不可协商的要点：
 
-1. 当前研究模型基线为 B5-M（见 `backtest/EXPERIMENT_STANDARD.md`：CSI1000 · Alpha158+range · DoubleEnsemble · H40 · CSRankNorm）；实盘仍为 B1（`live_trading/configs/csi300_topk10_live.yaml`），研究基线提升不自动切换实盘。每个实验方向须写明 `baseline_ref`，HTML 该方向表第一行为对应 baseline 指标。
-2. 模型与策略分开迭代：Phase M 只改模型（看 IC/RankIC），Phase S 只改策略（看扣费超额 IR/年化/最大回撤）。
+1. 当前研究模型基线为 B6-M；研究策略基线为 B4-S（`topk=22,n_drop=2,hold_thresh=2,risk_degree=0.90`，见 `backtest/EXPERIMENT_STANDARD.md`）。CSI1000 实盘研究配置为 `live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml`（参数已切到 B4-S）。每个实验方向须写明 `baseline_ref`，HTML 该方向表第一行为对应 baseline 指标；baseline 表须附邻域行（与上行同列，取轴向邻域各绝对指标 P25；不单独挂邻域 IR P25 列），晋升前必看。
+2. 模型与策略分开迭代：Phase M 只改模型（看 IC/RankIC），Phase S 只改策略（看扣费绝对收益夏普/年化/回撤，以及 Alpha/Beta/基准涨幅；晋升看邻域行绝对指标 P25，不是自身点复制）。
 3. 固定 5 种子 [42, 1000, 2000, 3000, 4000]；默认只在基线训练池（CSI1000）训练，在 3 个测试集（csi1000/csi300/csi500）上评估（全A 默认不测）；仅训练样本类实验才更换训练池。
 4. 时间划分固定：valid 2020-01-13~2021-07-15，test 2021-07-16~2026-07-16；禁止用 test 调参。
 5. 每个实验（含失败的）登记 `backtest/experiments/registry.jsonl` 并更新 HTML 报告（每个方向独立表格）。

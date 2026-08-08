@@ -112,9 +112,9 @@ def test_full_period_comparison_selects_and_reports_winner(tmp_path):
         {
             "candidate_id": protocol.CURRENT_STRATEGY_BASELINE_ID,
             "strategy_class": "TopkDropoutStrategy",
-            "topk": 30,
+            "topk": 20,
             "n_drop": 2,
-            "hold_thresh": 20,
+            "hold_thresh": 10,
             "status": "success",
             sweep.IR_KEY: 0.10,
             sweep.ANN_KEY: 0.08,
@@ -123,10 +123,10 @@ def test_full_period_comparison_selects_and_reports_winner(tmp_path):
             "result_dir": "baseline-result",
         },
         {
-            "candidate_id": "topk-t20-d2-h10",
+            "candidate_id": "topk-t10-d1-h10",
             "strategy_class": "TopkDropoutStrategy",
-            "topk": 20,
-            "n_drop": 2,
+            "topk": 10,
+            "n_drop": 1,
             "hold_thresh": 10,
             "status": "success",
             sweep.IR_KEY: 0.20,
@@ -142,10 +142,10 @@ def test_full_period_comparison_selects_and_reports_winner(tmp_path):
     )
 
     assert comparison["baseline"]["candidate_id"] == protocol.CURRENT_STRATEGY_BASELINE_ID
-    assert comparison["winner"]["candidate_id"] == "topk-t20-d2-h10"
+    assert comparison["winner"]["candidate_id"] == "topk-t10-d1-h10"
     assert comparison["evaluation_mode"] == "full_history_in_sample"
     report = (tmp_path / "COMPARISON.md").read_text(encoding="utf-8")
-    assert "full 胜者: `topk-t20-d2-h10`" in report
+    assert "full 胜者: `topk-t10-d1-h10`" in report
     assert "evaluation_mode: `full_history_in_sample`" in report
     assert "非样本外检验" in report
 
@@ -179,9 +179,9 @@ def test_full_comparison_rejects_non_b6_csi1000_scope(tmp_path):
         {
             "candidate_id": protocol.CURRENT_STRATEGY_BASELINE_ID,
             "strategy_class": "TopkDropoutStrategy",
-            "topk": 30,
+            "topk": 20,
             "n_drop": 2,
-            "hold_thresh": 20,
+            "hold_thresh": 10,
             "status": "success",
             sweep.IR_KEY: 0.10,
             sweep.ANN_KEY: 0.08,

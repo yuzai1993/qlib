@@ -1,4 +1,4 @@
-"""Run the B2-S neighborhood once on the frozen B6-M CSI1000 full history."""
+"""Run the B3-S neighborhood once on the frozen B6-M CSI1000 full history."""
 
 from __future__ import annotations
 
@@ -27,7 +27,6 @@ from eval_protocol import yearly_ir  # noqa: E402
 from generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
 import phase_s_prediction_validation as full_prediction_validation  # noqa: E402
 from phase_s_protocol import (  # noqa: E402
-    ACCOUNT,
     EXCHANGE_KWARGS,
     FULL_SEGMENT,
     POOL_BENCHMARKS,
@@ -54,24 +53,25 @@ from strategy_stability_metrics import (  # noqa: E402
     summarize_period,
 )
 
-EXP_ID = "strategy-neighborhood/b2-s-local-full-v2"
+EXP_ID = "strategy-neighborhood/b3-s-local-full-v1"
 EVALUATION_MODE = "full_history_in_sample"
 MODEL_REF = "b6-m"
 POOL = "csi1000"
 SEGMENT = "full"
+DEFAULT_ACCOUNT = 10_000_000
 DATA_VERSION = full_prediction_validation.FULL_DATA_VERSION
 FULL_PREDICTION_COVERAGE = copy.deepcopy(
     full_prediction_validation.FULL_PREDICTION_COVERAGE
 )
 DEFAULT_OUTPUT_ROOT = (
-    REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260802_b2s_local_full"
+    REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260807_b3s_local_full"
 )
 DEFAULT_CONFIGS_DIR = (
-    REPO_ROOT / "backtest/configs/strategy-neighborhood/b2-s-local-full"
+    REPO_ROOT / "backtest/configs/strategy-neighborhood/b3-s-local-full"
 )
 DEFAULT_BASE_CONFIG = (
     REPO_ROOT
-    / "backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml"
+    / "backtest/configs/baseline-strategy/b3-s/topk-t20-d2-h10_csi1000_full.yaml"
 )
 DEFAULT_PREDICTION_MANIFEST = (
     REPO_ROOT
@@ -101,7 +101,11 @@ def _prediction_path(entry: dict[str, Any]) -> Path:
 
 
 def protocol_payload(
-    grid: Sequence[dict[str, Any]], base_config_path: Path
+    grid: Sequence[dict[str, Any]],
+    base_config_path: Path,
+    *,
+    account: float = DEFAULT_ACCOUNT,
+    exp_id: str = EXP_ID,
 ) -> dict[str, Any]:
     """Build the immutable v2 full-history selection protocol."""
     candidates = [copy.deepcopy(candidate) for candidate in grid]
@@ -109,17 +113,21 @@ def protocol_payload(
         raise ValueError(
             "full neighborhood protocol requires the immutable 540-candidate grid"
         )
+    if not isinstance(account, (int, float)) or not math.isfinite(float(account)) or float(account) <= 0:
+        raise ValueError("account must be a positive finite number")
+    if not str(exp_id).strip():
+        raise ValueError("exp_id must be non-empty")
     base_path = Path(base_config_path).expanduser().resolve()
     return {
         "schema_version": 2,
-        "exp_id": EXP_ID,
-        "direction": "strategy-neighborhood-b2-s-full",
+        "exp_id": str(exp_id),
+        "direction": "strategy-neighborhood-b3-s-full",
         "phase": "S",
         "evaluation_mode": EVALUATION_MODE,
-        "baseline_ref": "B2-S v1.0",
+        "baseline_ref": "B3-S v1.0",
         "frozen_model_ref": "B6 v1.0",
         "model_ref": MODEL_REF,
-        "account": ACCOUNT,
+        "account": float(account),
         "fees": copy.deepcopy(EXCHANGE_KWARGS),
         "benchmark": POOL_BENCHMARKS[POOL],
         "base_config": _repo_path(base_path),
@@ -189,9 +197,16 @@ def validate_full_prediction_manifest(
     )
 
 
-def effective_config_sha256(base: dict[str, Any], candidate: dict[str, Any]) -> str:
+def effective_config_sha256(
+    base: dict[str, Any],
+    candidate: dict[str, Any],
+    *,
+    account: float = DEFAULT_ACCOUNT,
+) -> str:
     rendered = yaml.safe_dump(
-        build_sweep_config(base, candidate, pool=POOL, segment=SEGMENT),
+        build_sweep_config(
+            base, candidate, pool=POOL, segment=SEGMENT, account=account
+        ),
         allow_unicode=True,
         sort_keys=False,
     ).encode("utf-8")
@@ -204,6 +219,7 @@ def pending_candidates(
     *,
     base: dict[str, Any],
     prediction_sha256: str,
+    account: float = DEFAULT_ACCOUNT,
 ) -> list[dict[str, Any]]:
     """Resume only rows whose prediction and rendered full config still match."""
     completed = set()
@@ -216,7 +232,7 @@ def pending_candidates(
         if row.get("source_pred_sha256") != prediction_sha256:
             continue
         if row.get("effective_config_sha256") != effective_config_sha256(
-            base, candidate
+            base, candidate, account=account
         ):
             continue
         completed.add(candidate_id)
@@ -232,10 +248,13 @@ def render_full_config(
     candidate: dict[str, Any],
     *,
     configs_dir: Path,
+    account: float = DEFAULT_ACCOUNT,
 ) -> tuple[Path, str]:
     config_path = Path(configs_dir) / f"{candidate['candidate_id']}_csi1000_full.yaml"
     rendered = yaml.safe_dump(
-        build_sweep_config(base, candidate, pool=POOL, segment=SEGMENT),
+        build_sweep_config(
+            base, candidate, pool=POOL, segment=SEGMENT, account=account
+        ),
         allow_unicode=True,
         sort_keys=False,
     )
@@ -278,8 +297,11 @@ def _run_candidate(
     pred_path: Path,
     prediction_entry: dict[str, Any],
     configs_dir: Path,
+    account: float = DEFAULT_ACCOUNT,
 ) -> dict[str, Any]:
-    config_path, rendered = render_full_config(base, candidate, configs_dir=configs_dir)
+    config_path, rendered = render_full_config(
+        base, candidate, configs_dir=configs_dir, account=account
+    )
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(rendered, encoding="utf-8")
     note = f"strategy_neighborhood_full_{candidate['candidate_id']}_csi1000_full"
@@ -374,6 +396,7 @@ def completed_results_payload(
     *,
     protocol_sha256: str,
     run_contract: dict[str, str],
+    exp_id: str = EXP_ID,
 ) -> dict[str, Any]:
     expected_ids = {str(candidate["candidate_id"]) for candidate in grid}
     actual_ids = {str(row.get("candidate_id") or "") for row in rows}
@@ -393,7 +416,7 @@ def completed_results_payload(
         "schema_version": 2,
         "state": "full_complete",
         "updated_at": datetime.now().isoformat(timespec="seconds"),
-        "exp_id": EXP_ID,
+        "exp_id": exp_id,
         "evaluation_mode": EVALUATION_MODE,
         "protocol_sha256": protocol_sha256,
         "run_contract": copy.deepcopy(run_contract),
@@ -417,6 +440,7 @@ def validate_completed_checkpoint(
     base_config_path: Path,
     prediction_entry: dict[str, Any],
     prediction_path: Path,
+    exp_id: str = EXP_ID,
 ) -> None:
     """Fail closed unless an immutable completed checkpoint matches all inputs."""
     recomputed = completed_results_payload(
@@ -424,6 +448,7 @@ def validate_completed_checkpoint(
         grid,
         protocol_sha256=protocol_sha256,
         run_contract=run_contract,
+        exp_id=exp_id,
     )
     immutable_keys = (
         "schema_version",
@@ -461,10 +486,16 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--configs-dir", type=Path, default=DEFAULT_CONFIGS_DIR)
     parser.add_argument("--max-runtime-hours", type=float, default=5.0)
     parser.add_argument("--workers", type=int, default=3)
+    parser.add_argument("--account", type=float, default=DEFAULT_ACCOUNT)
+    parser.add_argument("--exp-id", default=EXP_ID)
     parser.add_argument("--prepare-only", action="store_true")
     args = parser.parse_args(argv)
     if args.workers < 1 or args.workers > 3:
         parser.error("--workers must be between 1 and 3")
+    if args.account <= 0 or not math.isfinite(args.account):
+        parser.error("--account must be a positive finite number")
+    if not str(args.exp_id).strip():
+        parser.error("--exp-id must be non-empty")
     return args
 
 
@@ -477,12 +508,13 @@ def _running_payload(
     base_config_path: Path,
     prediction_entry: dict[str, Any],
     prediction_path: Path,
+    exp_id: str = EXP_ID,
 ) -> dict[str, Any]:
     return {
         "schema_version": 2,
         "state": "running",
         "updated_at": datetime.now().isoformat(timespec="seconds"),
-        "exp_id": EXP_ID,
+        "exp_id": exp_id,
         "evaluation_mode": EVALUATION_MODE,
         "protocol_sha256": protocol_sha256,
         "run_contract": copy.deepcopy(run_contract),
@@ -510,7 +542,12 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     )
     pred_path = _prediction_path(verified_entry)
     grid = strategy_neighborhood_grid()
-    protocol = protocol_payload(grid, base_config_path)
+    protocol = protocol_payload(
+        grid,
+        base_config_path,
+        account=args.account,
+        exp_id=args.exp_id,
+    )
     protocol_path = output_root / "protocol.json"
     results_path = output_root / "full_results.json"
     checkpoint_payload = (
@@ -553,6 +590,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         checkpoint_payload,
         base=base,
         prediction_sha256=str(verified_entry["prediction_sha256"]),
+        account=args.account,
     )
     if checkpoint_payload.get("state") == "full_complete":
         if pending:
@@ -569,6 +607,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             base_config_path=base_config_path,
             prediction_entry=verified_entry,
             prediction_path=pred_path,
+            exp_id=args.exp_id,
         )
         print(
             f"status: already full_complete; no files rewritten: {results_path}",
@@ -584,6 +623,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             pred_path=pred_path,
             prediction_entry=verified_entry,
             configs_dir=configs_dir,
+            account=args.account,
         )
 
     completed_count = 0
@@ -602,6 +642,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                 base_config_path=base_config_path,
                 prediction_entry=verified_entry,
                 prediction_path=pred_path,
+                exp_id=args.exp_id,
             ),
         )
         print(
@@ -623,6 +664,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         grid,
         protocol_sha256=protocol_sha,
         run_contract=run_contract,
+        exp_id=args.exp_id,
     )
     complete.update(
         {

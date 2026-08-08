@@ -51,6 +51,29 @@ def test_period_metrics_use_after_cost_absolute_returns():
     assert metrics["calmar_ratio"] == pytest.approx(expected_return / abs(expected_mdd))
     assert metrics["annualized_one_way_turnover"] == pytest.approx(25.0)
     assert metrics["benchmark_cumulative_return"] == pytest.approx((1.001**3) - 1.0)
+    assert metrics["benchmark_annualized_return"] == pytest.approx(0.001 * 250)
+    # constant benchmark => zero variance => beta/alpha unavailable
+    assert metrics["beta"] is None
+    assert metrics["alpha"] is None
+
+
+def test_alpha_beta_use_after_cost_returns_versus_benchmark():
+    report = _report(
+        ["2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07"],
+        [0.02, -0.01, 0.015, 0.0],
+        [0.001, 0.001, 0.001, 0.001],
+        bench=[0.01, -0.005, 0.008, 0.002],
+    )
+    net = pd.Series([0.019, -0.011, 0.014, -0.001])
+    bench = pd.Series([0.01, -0.005, 0.008, 0.002])
+    metrics = summarize_period(report)
+    expected_beta = float(net.cov(bench) / bench.var(ddof=1))
+    expected_alpha = float((net.mean() - expected_beta * bench.mean()) * 250)
+    assert metrics["beta"] == pytest.approx(expected_beta)
+    assert metrics["alpha"] == pytest.approx(expected_alpha)
+    assert metrics["benchmark_cumulative_return"] == pytest.approx(
+        float((1.0 + bench).prod() - 1.0)
+    )
 
 
 def test_zero_volatility_and_zero_drawdown_return_null_ratios():

@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "evaluation_mode": "im_window_in_sample",
+  "im_window": [
+    "2022-07-22",
+    "2026-07-31"
+  ],
+  "evaluated_window": [
+    "2022-07-25",
+    "2026-07-31"
+  ],
+  "account": 2800000.0,
+  "target_beta": 1.0,
+  "roll_window": 60,
+  "futures_multiplier": 200,
+  "account_value_basis": "daily_value_plus_cash",
+  "baseline": {
+    "n_days": 975,
+    "annualized_return": 0.1356948604161949,
+    "sharpe_ratio": 0.7117933527906554,
+    "alpha": 0.1178287866522973,
+    "beta": 0.5447406407000106,
+    "calmar_ratio": 0.5576641126224278,
+    "annualized_volatility": 0.19063799891385605,
+    "max_drawdown": -0.24332722394146333,
+    "annualized_one_way_turnover": 21.046324048144584,
+    "cumulative_return": 0.5813611951700279,
+    "benchmark_annualized_return": 0.032797394629743605,
+    "benchmark_cumulative_return": 0.005815975359938719
+  },
+  "overlay_continuous": {
+    "n_days": 975,
+    "annualized_return": 0.1877708569442157,
+    "sharpe_ratio": 0.658177760168425,
+    "alpha": 0.15503489450953833,
+    "beta": 0.998126918440938,
+    "calmar_ratio": 0.5404837370835035,
+    "annualized_volatility": 0.28528897253557445,
+    "max_drawdown": -0.347412593684027,
+    "annualized_one_way_turnover": 21.046324048144584,
+    "cumulative_return": 0.7723130586201563,
+    "benchmark_annualized_return": 0.032797394629743605,
+    "benchmark_cumulative_return": 0.005815975359938719
+  },
+  "overlay_discrete": {
+    "n_days": 975,
+    "annualized_return": 0.18714606713539061,
+    "sharpe_ratio": 0.6530559608035746,
+    "alpha": 0.15420158694375177,
+    "beta": 1.0044846721380074,
+    "calmar_ratio": 0.539058763694409,
+    "annualized_volatility": 0.28656972505864653,
+    "max_drawdown": -0.3471719221347883,
+    "annualized_one_way_turnover": 21.046324048144584,
+    "cumulative_return": 0.7652341669142255,
+    "benchmark_annualized_return": 0.032797394629743605,
+    "benchmark_cumulative_return": 0.005815975359938719
+  },
+  "promote": {
+    "eligible": false,
+    "reason": "sharpe_ratio 0.658177760168425 <= 0.7117933527906554"
+  },
+  "basis_note": null,
+  "disclosure": "IM-window in-sample comparison; not an out-of-sample test or the standard full-history Phase S selection basis. No automatic promotion.",
+  "report_path": "backtest/result/20260808_205609_b4s_beta_stock_leg_280m/run_01/report_normal.csv",
+  "report_sha256": "2934ba4fe3be191d4c379c28d7132b282c7fe9322c4abf97723f9b048cf826bf",
+  "im_path": "backtest/data/im/im_continuous_daily.csv",
+  "im_sha256": "e5ce7d3c401681fb7c2ba654e6c80e86bff3754e96892b212cb40419e9e0701c",
+  "result_dir": "backtest/result/20260808_205609_b4s_beta_stock_leg_280m"
+}

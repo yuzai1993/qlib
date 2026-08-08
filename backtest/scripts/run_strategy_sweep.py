@@ -149,10 +149,13 @@ def build_sweep_config(
     *,
     pool: str,
     segment: str,
+    account: float = ACCOUNT,
 ) -> dict[str, Any]:
     """Build one exact pred-only config from the frozen protocol."""
     if pool not in POOL_BENCHMARKS:
         raise ValueError(f"unsupported Phase S pool: {pool}")
+    if not isinstance(account, (int, float)) or not math.isfinite(float(account)) or float(account) <= 0:
+        raise ValueError("account must be a positive finite number")
     start, end = _segment_bounds(segment)
     config = copy.deepcopy(base)
     config.pop("_config_path", None)
@@ -173,7 +176,7 @@ def build_sweep_config(
     config["segments"]["valid"] = list(VALID_SEGMENT)
     config["segments"]["test"] = [start, end]
     config["backtest"] = {
-        "account": ACCOUNT,
+        "account": float(account),
         "exchange_kwargs": copy.deepcopy(EXCHANGE_KWARGS),
     }
     if candidate["strategy_class"] == "TopkDropoutStrategy":
@@ -210,9 +213,12 @@ def effective_config_sha256(
     *,
     pool: str,
     segment: str,
+    account: float = ACCOUNT,
 ) -> str:
     rendered = yaml.safe_dump(
-        build_sweep_config(base, candidate, pool=pool, segment=segment),
+        build_sweep_config(
+            base, candidate, pool=pool, segment=segment, account=account
+        ),
         allow_unicode=True,
         sort_keys=False,
     ).encode("utf-8")

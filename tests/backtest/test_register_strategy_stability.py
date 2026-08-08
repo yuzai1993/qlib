@@ -48,6 +48,9 @@ def _result(model_ref: str, pred_sha: str):
                 "full_period": {
                     "annualized_return": 0.1,
                     "sharpe_ratio": 1.0,
+                    "alpha": 0.05,
+                    "beta": 0.8,
+                    "benchmark_cumulative_return": 0.2,
                     "calmar_ratio": 0.5,
                     "annualized_volatility": 0.2,
                     "max_drawdown": -0.2,

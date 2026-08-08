@@ -46,7 +46,9 @@ def summarize_period(report: pd.DataFrame) -> dict[str, float | int | None]:
         )
     clean = report
     net = clean["return"].astype(float) - clean["cost"].astype(float)
+    bench = clean["bench"].astype(float)
     annualized_return = float(net.mean() * TRADING_DAYS)
+    benchmark_annualized_return = float(bench.mean() * TRADING_DAYS)
     daily_std = float(net.std(ddof=1)) if len(net) > 1 else float("nan")
     annualized_volatility = _finite(daily_std * math.sqrt(TRADING_DAYS))
     sharpe = (
@@ -62,16 +64,29 @@ def summarize_period(report: pd.DataFrame) -> dict[str, float | int | None]:
         if max_drawdown != 0.0
         else None
     )
-    benchmark_cumulative_return = float((1.0 + clean["bench"].astype(float)).prod() - 1.0)
+    benchmark_cumulative_return = float((1.0 + bench).prod() - 1.0)
+    beta = None
+    alpha = None
+    if len(net) > 1:
+        bench_var = float(bench.var(ddof=1))
+        if math.isfinite(bench_var) and bench_var > 0.0:
+            beta = _finite(float(net.cov(bench)))
+            if beta is not None:
+                beta = _finite(beta / bench_var)
+            if beta is not None:
+                alpha = _finite((float(net.mean()) - float(beta) * float(bench.mean())) * TRADING_DAYS)
     return {
         "n_days": int(len(clean)),
         "annualized_return": _finite(annualized_return),
         "sharpe_ratio": sharpe,
+        "alpha": alpha,
+        "beta": beta,
         "calmar_ratio": calmar,
         "annualized_volatility": annualized_volatility,
         "max_drawdown": _finite(max_drawdown),
         "annualized_one_way_turnover": _finite(float(clean["turnover"].mean() * TRADING_DAYS / 2.0)),
         "cumulative_return": _finite(float(wealth.iloc[-1] - 1.0)),
+        "benchmark_annualized_return": _finite(benchmark_annualized_return),
         "benchmark_cumulative_return": _finite(benchmark_cumulative_return),
     }
 

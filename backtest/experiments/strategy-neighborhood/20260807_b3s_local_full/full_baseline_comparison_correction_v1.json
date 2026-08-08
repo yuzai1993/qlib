@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "exp_id": "strategy-neighborhood/b3-s-local-full-v1-correction-v1",
+  "phase": "S",
+  "state": "correction",
+  "correction_of": "strategy-neighborhood/b3-s-local-full-v1",
+  "date": "2026-08-08",
+  "evaluation_mode": "full_history_in_sample",
+  "selection_segment": [
+    "2020-01-13",
+    "2026-07-31"
+  ],
+  "baseline_ref": "B3-S v1.0",
+  "frozen_model_ref": "B6 v1.0",
+  "account": 10000000.0,
+  "full_result_path": "backtest/experiments/strategy-neighborhood/20260807_b3s_local_full/full_results.json",
+  "full_result_sha256": "5ead413290d198d8b115b06b4fc4d7b1ad8405e5a725dafe53c3e9fe50939fe9",
+  "same_run_baseline": {
+    "candidate_id": "topk-t20-d2-h10-r095",
+    "excess_with_cost_information_ratio": 0.9253115059653908,
+    "excess_with_cost_annualized_return": 0.17218810762100034,
+    "excess_with_cost_max_drawdown": -0.34603452205878293,
+    "annualized_one_way_turnover": 12.030155549202886,
+    "yearly_ir": {
+      "2020": 0.7614945994971875,
+      "2021": 0.898054674632934,
+      "2022": 2.877352523888696,
+      "2023": 1.6019418762770188,
+      "2024": 0.9225686284853325,
+      "2025": -0.8778995835453112,
+      "2026": 0.9111909005268602
+    }
+  },
+  "robust_winner": {
+    "candidate_id": "topk-t22-d2-h2-r095",
+    "excess_with_cost_information_ratio": 0.9843327313634687,
+    "excess_with_cost_annualized_return": 0.17354354192608135,
+    "excess_with_cost_max_drawdown": -0.3755015283594524,
+    "annualized_one_way_turnover": 21.319310591795368,
+    "yearly_ir": {
+      "2020": 2.353426071553797,
+      "2021": 1.1436946539607749,
+      "2022": 2.798024022480714,
+      "2023": 1.6427937689007823,
+      "2024": 0.7263884093283605,
+      "2025": -0.458209593883979,
+      "2026": -0.20902009384836945
+    }
+  },
+  "selection_rationale": "neighbor_ir_p25_not_own_metric",
+  "note": "更正记录：同一冻结预测、同一全历史区间的 B3-S 基线与稳健胜者对照；胜者仅因预登记的轴向邻域 IR P25 规则入选，不自动提升 B3-S。"
+}

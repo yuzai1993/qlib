@@ -1,6 +1,6 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v2.3（2026-08-02）
+版本：v2.4（2026-08-08）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
@@ -10,8 +10,8 @@
 ## 0. 硬性约束（先读这里）
 
 1. 当前研究模型基线为 **B6-M**，见第 1 节；模型迭代已收尾。历史实验的 `baseline_ref` 不改写，HTML 每个方向表格**第一行**仍为该方向对应的 baseline 指标行。
-2. 模型与策略**分开迭代**：当前进入 Phase S，只使用 `backtest/models/baselines/<model-ref>/manifest.json` 指向的单一冻结模型，只改策略；当前研究策略基线为 B2-S。Phase M 的五种子训练与评估要求不变。
-3. Phase M 看 **IC / RankIC**；Phase S 看**扣费超额 IR / 扣费超额年化 / 扣费最大回撤**。
+2. 模型与策略**分开迭代**：当前进入 Phase S，只使用 `backtest/models/baselines/<model-ref>/manifest.json` 指向的单一冻结模型，只改策略；当前研究策略基线为 B4-S。Phase M 的五种子训练与评估要求不变。
+3. Phase M 看 **IC / RankIC**；Phase S 报告主展示为**扣费绝对收益**口径（年化/夏普/Alpha/Beta/基准涨幅/卡玛/波动/回撤/换手）；邻域选型另看**邻域 IR P25**。
 4. 每个模型变体：**5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi1000/csi300/csi500）上评估 IC/RankIC，**研究主目标池为 CSI1000**。全A 暂不作为默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。
 5. 默认时间划分固定（第 3 节）：Phase M 的评估集为 2020-01-13 ~ 2021-07-15、正式 test 截止 2026-07-16，**禁止用测试集调参**。Phase S：CSI1000 2020-01-13 ~ 2026-07-31 全历史连续区间允许用于策略比较与选型；该结果属于 `full_history_in_sample`，不得表述为样本外检验。仅第 3.4 节由用户明确批准的 post-2020 forward 成对实验使用其专用时间切分。
 6. 每个实验必须登记到 `backtest/experiments/registry.jsonl`（配置路径 + 结果路径），并更新 HTML 报告（每个实验方向一张独立表格）。
@@ -19,9 +19,9 @@
 
 ---
 
-## 1. 基线定义（B6-M / B2-S）
+## 1. 基线定义（B6-M / B4-S）
 
-研究基线与实盘配置分离维护。当前实盘仍是 `live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略；实盘对照回测的唯一合法配置是 `backtest/configs/csi300_live_parity.yaml`。
+研究基线与实盘配置分离维护。当前正式实盘仍是 `live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略；CSI1000 研究实盘配置随 B4-S 同步。实盘对照回测的唯一合法配置是 `backtest/configs/csi300_live_parity.yaml`（CSI300）与 `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml`（CSI1000 研究）。
 
 ### 1.1 模型基线 B6-M
 
@@ -42,23 +42,35 @@
 
 五种子 test 固定一日正式指标以 registry `baseline/b6-m` 为准；H40 self-eval 仅为诊断。B5-M 及更早基线是历史对照，旧实验的 `baseline_ref` 不改写。Phase S 使用 `backtest/models/baselines/b6-m/manifest.json` 冻结的 seed 4000 单模型，但不自动切换实盘 B1 artifact。
 
-### 1.2 策略基线 B2-S
+### 1.2 策略基线 B4-S
 
 | 项 | 值 |
 |---|---|
-| 基线版本 | `B2-S v1.0`（2026-08-01，由用户明确要求将 B6-M valid 冻结胜者提升） |
+| 基线版本 | `B4-S v1.0`（2026-08-08，由用户在审查邻域 IR P25 后明确要求提升 `topk-t22-d2-h2-r090`） |
 | 冻结模型 | `B6 v1.0`；artifact 与 SHA-256 见 `backtest/models/baselines/b6-m/manifest.json` |
-| 策略 | `TopkDropoutStrategy(topk=30, n_drop=2, risk_degree=0.95, hold_thresh=20, only_tradable=false, forbid_all_trade_at_limit=false)` |
-| 历史选型记录 | CSI1000 valid 2020-01-13 ~ 2021-07-15；按扣费超额 IR、年化、最大回撤、换手、candidate_id 依次并列裁决 |
-| 历史正式测试记录 | csi1000 / csi300 / csi500，2021-07-16 ~ 2026-07-31；registry `baseline/b2-s-on-b6-m` |
-| 后续策略选型 | CSI1000 full 2020-01-13 ~ 2026-07-31；属于 `full_history_in_sample`，不得表述为样本外检验 |
+| 策略 | `TopkDropoutStrategy(topk=22, n_drop=2, risk_degree=0.90, hold_thresh=2, only_tradable=false, forbid_all_trade_at_limit=false)` |
+| 研究账户 | 10,000,000（全历史稳定性主表与 baseline 锚点） |
+| 选型依据 | B3-S 邻域 540 网格的邻域 IR P25 审查 + 用户确认；窗口 CSI1000 full 2020-01-13 ~ 2026-07-31；`full_history_in_sample`，不得表述为样本外检验 |
+| registry | `baseline/b4-s-on-b6-m`；配置 `backtest/configs/baseline-strategy/b4-s/topk-t22-d2-h2_csi1000_full.yaml` |
+| 历史基线 | B3-S（`topk=20, n_drop=2, hold_thresh=10, risk_degree=0.95`）与 B2-S 保留为历史对照 |
 | 成交价 | close |
 | 涨跌停限制 | limit_threshold=0.095 |
 | 费率 | open_cost=0.00021, close_cost=0.00071, min_cost=5, trade_unit=100（按 QMT 2026-07-16 实际费用校准） |
 
 注意：历史回测配置存在多套费率口径（如 0.0005/0.0015、0.0000954/0.0005954）。**本规范下所有策略回测统一采用上表实盘费率**，与历史结果对比时需注明费率口径。
 
-B1-S（`topk=10, n_drop=2, hold_thresh=1`）及其模型专属锚点继续作为历史审计记录，不再进入当前 Phase S artifact 清理白名单。研究策略基线提升不自动修改实盘策略。
+回测指标除扣费绝对收益/超额收益外，必须计算相对基准的 CAPM **Alpha / Beta**（rf=0，日收益协方差）及**基准涨幅**（区间累计）。
+
+**邻域行（晋升硬门）**：
+
+- **轴向邻域**：策略参数网格上曼哈顿距离 ≤ 1 的点（自身 + 只改一个维度的相邻格）。
+- **`strategy_stability_report.html` baseline 表**：每个 baseline 占两行，**列完全相同**（扣费年化/夏普/Alpha/Beta/基准涨幅/卡玛/波动/回撤/换手），不再单独挂「邻域 IR P25」列或行：
+  - **上行（自身点）**：该候选自己的扣费绝对收益指标；
+  - **邻域行**：同名各列均为轴向邻域内该绝对收益指标的 **25% 分位**（稳健下界），不是上行数字的复制。
+- 邻域实验内部选型仍可用扣费超额 IR 的邻域 P25（`neighbor_ir_p25`）作排序键；baseline 报告展示以邻域行绝对指标 P25 为准。
+- **晋升前必须先审查邻域行**（年化/夏普/回撤等是否相对自身点明显塌陷）；建议写入 registry（`neighbor_metrics_p25`，可选保留 `neighbor_ir_p25` 供邻域实验审计）。不得只凭单点夏普/年化晋升。
+
+B1-S（`topk=10, n_drop=2, hold_thresh=1`）及其模型专属锚点继续作为历史审计记录，不再进入当前 Phase S artifact 清理白名单。
 
 ### 1.3 历史基线 B0 v1.0
 
@@ -68,7 +80,7 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 
 只有当某实验按本规范完成完整评估（第 4/5 节）、结果对比数据经用户确认后，才可将其提升为新基线；提升时在本文件更新当前基线定义并记录版本号与日期。agent 不得自行提升基线。
 
-本次 B6-M 提升、Phase M 收尾及 B2-S 提升均已获用户明确确认；实盘配置、实盘模型与实盘策略仍保持 B1/B1-S，除非另行完成部署流程。B5-M、B1-S 与更早基线保留为历史对照。
+本次 B6-M 提升、Phase M 收尾、B2-S / B3-S / B4-S 提升均已获用户明确确认。CSI1000 研究实盘配置随 B4-S 同步；CSI300 B1 正式实盘配置仍保留。B5-M、B1-S、B2-S、B3-S 与更早基线保留为历史对照。
 
 ---
 
@@ -77,12 +89,12 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 ```
 Phase M（模型迭代）            Phase S（策略迭代）
 改：特征/标签/模型/超参    →    改：策略类型/参数/调仓规则
-冻结：B2-S 策略                冻结：Phase M 选出的最优模型
-指标：IC / RankIC              指标：扣费超额 IR / 年化 / 最大回撤
+冻结：B4-S 策略                冻结：Phase M 选出的最优模型
+指标：IC / RankIC              指标：扣费绝对夏普 / 年化 / 回撤 + Alpha/Beta；晋升前必看邻域 IR P25
                     ↑ 当前已切换，冻结 B6-M ↑
 ```
 
-- Phase M 配置必须使用 `run.mode=train_only`，只训练并保存模型；**不得随模型训练自动运行策略回测**。如确需参考策略回测，必须在模型评估完成后使用冻结模型另行运行，且 B2-S 参数原样不变，结果不参与 Phase M 选型。
+- Phase M 配置必须使用 `run.mode=train_only`，只训练并保存模型；**不得随模型训练自动运行策略回测**。如确需参考策略回测，必须在模型评估完成后使用冻结模型另行运行，且 B4-S 参数原样不变，结果不参与 Phase M 选型。
 - Phase S 期间**不重训模型**：模型只允许从 `backtest/models/baselines/<model-ref>/manifest.json` 解析，逐项校验 baseline ID、目录边界、文件大小与 SHA-256；不得从 `mlruns/`、历史 `backtest/result/` 或实盘目录隐式寻找替代模型。每个 model-ref 使用 manifest 指向的单一冻结 artifact 生成预测，并在同一份冻结分数上比较策略，不做多种子集成。
 - 同时改模型和策略的实验结果**不予采信、不进 registry**。
 
@@ -179,19 +191,26 @@ Phase M 固定 5 个种子：`[42, 1000, 2000, 3000, 4000]`。不得增删或挑
 
 ### 5.2 Phase S（策略迭代）
 
-指标口径：qlib PortAnaRecord 的 `excess_return_with_cost`（1day）。
+**报告主展示口径**（与 `strategy_stability_report.html` baseline 表一致）：扣费绝对收益年化、夏普、Alpha、Beta、基准涨幅、卡玛、年化波动、最大回撤、年化单边换手。
+
+**邻域选型 / 报告口径**：
 
 | 角色 | 指标 |
 |---|---|
-| 主指标 | 扣费超额 IR（information_ratio） |
-| 副指标 | 扣费超额年化（annualized_return）、扣费最大回撤（max_drawdown） |
+| 报告主指标（自身点行） | 扣费绝对收益夏普 / 年化（及 Alpha/Beta/基准涨幅等） |
+| 邻域行 | 与自身点行**同名同列**的绝对收益指标，取值均为轴向邻域内该指标的 P25 |
+| 邻域实验排序键（不单独占 baseline 表列） | 邻域扣费超额 IR P25（`neighbor_ir_p25`） |
+| 副指标 | 扣费超额 IR / 年化 / 最大回撤、换手（登记审计） |
+
+说明：邻域行展示的是**邻域分位指标**，不是把自身点再抄一行；读表时上行看尖峰、邻域行看局部平坦度。baseline 表**不再**单独展示「邻域 IR P25」列/行。
 
 **选型与报告要求**：
 
 1. 首先校验所评估 model-ref 的 baseline manifest、模型路径与 SHA-256；记录 raw prediction 路径、SHA-256、精确索引覆盖、handler/config SHA 与数据版本。Phase S 不做多种子集成。
-2. 策略网格、主指标与并列规则须在运行前预登记；在 CSI1000 `full` 段（2020-01-13 ~ 2026-07-31）对 B2-S 与全部预登记候选作统一比较和选型。该比较必须显式标注 `full_history_in_sample`，不得表述为样本外检验。
-3. 将 full-period 比较、胜者、B2-S 对照、扣费超额 IR/年化/最大回撤及扣费分年度 IR 一并登记到 registry，并从 registry 重建唯一活动的 Phase S 报告 `strategy_stability_report.html`；不得再把 `valid` 冻结胜者和一次性 `test` 打开作为新 Phase S 的选型流程。
-4. 新 Phase S 方向使用 `baseline_ref: B2-S v1.0`，并准确填写 `frozen_model_ref: B6 v1.0`。若未来更换冻结模型，须在该模型上重新建立策略对照锚点，不得跨模型复用数值。
+2. 策略网格、主指标与并列规则须在运行前预登记；在 CSI1000 `full` 段（2020-01-13 ~ 2026-07-31）对当前策略 baseline 与全部预登记候选作统一比较和选型。该比较必须显式标注 `full_history_in_sample`，不得表述为样本外检验。
+3. 将 full-period 比较、胜者、baseline 对照、扣费绝对收益指标（含 Alpha/Beta/基准涨幅）一并登记到 registry，并从 registry 重建唯一活动的 Phase S 报告 `strategy_stability_report.html`；baseline 表必须含自身点行 + 邻域行（同列、邻域行取绝对指标 P25，无单独邻域 IR P25 列）；邻域段展示列与 baseline 绝对收益列一致；不得再把 `valid` 冻结胜者和一次性 `test` 打开作为新 Phase S 的选型流程。
+4. **晋升门**：任何策略晋升为研究 baseline 前，必须先计算并展示其邻域行（`neighbor_metrics_p25`），写入 registry，且经用户确认；禁止仅凭单点绝对夏普/年化晋升。
+5. 新 Phase S 方向使用 `baseline_ref: B4-S v1.0`，并准确填写 `frozen_model_ref: B6 v1.0`。若未来更换冻结模型，须在该模型上重新建立策略对照锚点，不得跨模型复用数值。
 
 ### 5.3 历史教训
 

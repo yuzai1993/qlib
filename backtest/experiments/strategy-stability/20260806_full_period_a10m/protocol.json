@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "date": "2026-08-07",
+  "phase": "S",
+  "purpose": "retrospective_stability_diagnostic_no_selection",
+  "models": {
+    "b6-m": {
+      "strategy_grid": [
+        {
+          "candidate_id": "topk-t10-d2-h1",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 10,
+          "n_drop": 2,
+          "hold_thresh": 1
+        },
+        {
+          "candidate_id": "topk-t10-d1-h5",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 10,
+          "n_drop": 1,
+          "hold_thresh": 5
+        },
+        {
+          "candidate_id": "topk-t10-d1-h10",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 10,
+          "n_drop": 1,
+          "hold_thresh": 10
+        },
+        {
+          "candidate_id": "topk-t10-d1-h20",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 10,
+          "n_drop": 1,
+          "hold_thresh": 20
+        },
+        {
+          "candidate_id": "topk-t20-d1-h5",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 20,
+          "n_drop": 1,
+          "hold_thresh": 5
+        },
+        {
+          "candidate_id": "topk-t20-d1-h10",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 20,
+          "n_drop": 1,
+          "hold_thresh": 10
+        },
+        {
+          "candidate_id": "topk-t20-d1-h20",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 20,
+          "n_drop": 1,
+          "hold_thresh": 20
+        },
+        {
+          "candidate_id": "topk-t20-d2-h5",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 20,
+          "n_drop": 2,
+          "hold_thresh": 5
+        },
+        {
+          "candidate_id": "topk-t20-d2-h10",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 20,
+          "n_drop": 2,
+          "hold_thresh": 10
+        },
+        {
+          "candidate_id": "topk-t20-d2-h20",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 20,
+          "n_drop": 2,
+          "hold_thresh": 20
+        },
+        {
+          "candidate_id": "topk-t30-d2-h5",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 30,
+          "n_drop": 2,
+          "hold_thresh": 5
+        },
+        {
+          "candidate_id": "topk-t30-d2-h10",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 30,
+          "n_drop": 2,
+          "hold_thresh": 10
+        },
+        {
+          "candidate_id": "topk-t30-d2-h20",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 30,
+          "n_drop": 2,
+          "hold_thresh": 20
+        },
+        {
+          "candidate_id": "topk-t30-d3-h5",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 30,
+          "n_drop": 3,
+          "hold_thresh": 5
+        },
+        {
+          "candidate_id": "topk-t30-d3-h10",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 30,
+          "n_drop": 3,
+          "hold_thresh": 10
+        },
+        {
+          "candidate_id": "topk-t30-d3-h20",
+          "strategy_class": "TopkDropoutStrategy",
+          "topk": 30,
+          "n_drop": 3,
+          "hold_thresh": 20
+        },
+        {
+          "candidate_id": "soft-t10-i025",
+          "strategy_class": "SoftTopkStrategy",
+          "topk": 10,
+          "impact_ratio": 0.25,
+          "trade_impact_limit": 0.02375,
+          "risk_degree": 0.95
+        },
+        {
+          "candidate_id": "soft-t10-i050",
+          "strategy_class": "SoftTopkStrategy",
+          "topk": 10,
+          "impact_ratio": 0.5,
+          "trade_impact_limit": 0.0475,
+          "risk_degree": 0.95
+        },
+        {
+          "candidate_id": "soft-t20-i025",
+          "strategy_class": "SoftTopkStrategy",
+          "topk": 20,
+          "impact_ratio": 0.25,
+          "trade_impact_limit": 0.011875,
+          "risk_degree": 0.95
+        },
+        {
+          "candidate_id": "soft-t20-i050",
+          "strategy_class": "SoftTopkStrategy",
+          "topk": 20,
+          "impact_ratio": 0.5,
+          "trade_impact_limit": 0.02375,
+          "risk_degree": 0.95
+        },
+        {
+          "candidate_id": "soft-t30-i025",
+          "strategy_class": "SoftTopkStrategy",
+          "topk": 30,
+          "impact_ratio": 0.25,
+          "trade_impact_limit": 0.007916666666666666,
+          "risk_degree": 0.95
+        },
+        {
+          "candidate_id": "soft-t30-i050",
+          "strategy_class": "SoftTopkStrategy",
+          "topk": 30,
+          "impact_ratio": 0.5,
+          "trade_impact_limit": 0.01583333333333333,
+          "risk_degree": 0.95
+        }
+      ]
+    }
+  },
+  "pool": "csi1000",
+  "benchmark": "SH000852",
+  "period": [
+    "2020-01-13",
+    "2026-07-31"
+  ],
+  "continuous_portfolio": true,
+  "natural_year_breakdown": {
+    "partial_years": [
+      2020,
+      2026
+    ]
+  },
+  "metric_basis": "after_cost_absolute_return",
+  "metrics": [
+    "annualized_return",
+    "sharpe_ratio",
+    "calmar_ratio",
+    "annualized_volatility",
+    "max_drawdown",
+    "annualized_one_way_turnover"
+  ],
+  "sharpe_risk_free_rate": 0.0,
+  "account": 10000000.0,
+  "risk_degree": 0.95,
+  "fees": {
+    "freq": "day",
+    "deal_price": "close",
+    "limit_threshold": 0.095,
+    "open_cost": 0.00021,
+    "close_cost": 0.00071,
+    "min_cost": 5.0,
+    "trade_unit": 100
+  },
+  "selection": null
+}

@@ -1,4 +1,4 @@
-"""Register and finalize the B2-S full-history neighborhood experiment."""
+"""Register and finalize the B3-S full-history neighborhood experiment."""
 
 from __future__ import annotations
 
@@ -17,7 +17,6 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from config_loader import load_config  # noqa: E402
 from phase_s_protocol import (  # noqa: E402
-    ACCOUNT,
     EXCHANGE_KWARGS,
     FULL_SEGMENT,
     POOL_BENCHMARKS,
@@ -25,6 +24,7 @@ from phase_s_protocol import (  # noqa: E402
     sha256_file,
 )
 from run_strategy_neighborhood_full import (  # noqa: E402
+    DEFAULT_ACCOUNT,
     DEFAULT_OUTPUT_ROOT,
     DEFAULT_PREDICTION_MANIFEST,
     EVALUATION_MODE,
@@ -49,7 +49,19 @@ DEFAULT_PROTOCOL = DEFAULT_OUTPUT_ROOT / "protocol.json"
 DEFAULT_RESULTS = DEFAULT_OUTPUT_ROOT / "full_results.json"
 CORRECTION_EXP_ID = f"{EXP_ID}-correction-v1"
 DEFAULT_CORRECTION = DEFAULT_OUTPUT_ROOT / "full_baseline_comparison_correction_v1.json"
-B2_S_FULL_CANDIDATE_ID = "topk-t30-d2-h20-r095"
+B3_S_FULL_CANDIDATE_ID = "topk-t20-d2-h10-r095"
+NEIGHBORHOOD_EXP_PREFIX = "strategy-neighborhood/b3-s-local-full"
+
+
+def _correction_exp_id(exp_id: str) -> str:
+    return f"{exp_id}-correction-v1"
+
+
+def _protocol_account(protocol: dict[str, Any]) -> float:
+    account = protocol.get("account")
+    if not isinstance(account, (int, float)) or not math.isfinite(float(account)) or float(account) <= 0:
+        raise ValueError("full-period protocol account must be a positive finite number")
+    return float(account)
 
 
 def _resolve_path(path: Path | str) -> Path:
@@ -72,16 +84,18 @@ def _read_json(path: Path | str) -> dict[str, Any]:
 
 
 def _validate_protocol(protocol: dict[str, Any]) -> list[dict[str, Any]]:
+    exp_id = str(protocol.get("exp_id") or "")
+    if not exp_id.startswith(NEIGHBORHOOD_EXP_PREFIX):
+        raise ValueError("full-period protocol exp_id is unsupported")
+    _protocol_account(protocol)
     expected = {
         "schema_version": 2,
-        "exp_id": EXP_ID,
-        "direction": "strategy-neighborhood-b2-s-full",
+        "direction": "strategy-neighborhood-b3-s-full",
         "phase": "S",
         "evaluation_mode": EVALUATION_MODE,
-        "baseline_ref": "B2-S v1.0",
+        "baseline_ref": "B3-S v1.0",
         "frozen_model_ref": "B6 v1.0",
         "model_ref": MODEL_REF,
-        "account": ACCOUNT,
         "fees": EXCHANGE_KWARGS,
         "benchmark": POOL_BENCHMARKS[POOL],
         "selection_pool": POOL,
@@ -91,6 +105,8 @@ def _validate_protocol(protocol: dict[str, Any]) -> list[dict[str, Any]]:
     for key, value in expected.items():
         if protocol.get(key) != value:
             raise ValueError(f"full-period protocol {key} differs from contract")
+    if exp_id == EXP_ID and float(protocol["account"]) != float(DEFAULT_ACCOUNT):
+        raise ValueError("default full-period protocol must keep account=10000000")
     grid = protocol.get("strategy_grid") or []
     if grid != strategy_neighborhood_grid():
         raise ValueError("full-period protocol requires the exact 540-candidate grid")
@@ -145,18 +161,19 @@ def build_preregistered_row(
     )
     prediction = _portable_prediction_artifact(prediction)
     frozen = load_frozen_model(REPO_ROOT, MODEL_REF)
+    account = _protocol_account(protocol)
     return {
-        "exp_id": EXP_ID,
-        "direction": "strategy-neighborhood-b2-s-full",
+        "exp_id": protocol["exp_id"],
+        "direction": "strategy-neighborhood-b3-s-full",
         "phase": "S",
         "date": str(date.today()),
         "state": "preregistered",
         "conclusion": "preregistered",
         "hypothesis": (
-            "B2-S 邻域在 CSI1000 全历史连续区间存在稳定平台；轴向邻域扣费超额 "
+            "B3-S 邻域在 CSI1000 全历史连续区间存在稳定平台；轴向邻域扣费超额 "
             "IR 下分位可降低单点尖峰驱动的选型风险。"
         ),
-        "baseline_ref": "B2-S v1.0",
+        "baseline_ref": "B3-S v1.0",
         "frozen_model_ref": "B6 v1.0",
         "model_ref": MODEL_REF,
         "model_manifest": _path_text(frozen.manifest_path),
@@ -178,14 +195,16 @@ def build_preregistered_row(
         "selection_segment": list(FULL_SEGMENT),
         "selection_metric": "axial_neighbor_excess_with_cost_ir_p25",
         "selection_rule": copy.deepcopy(protocol.get("selection_rule") or []),
-        "account": ACCOUNT,
+        "account": account,
         "fees": copy.deepcopy(EXCHANGE_KWARGS),
         "benchmark": POOL_BENCHMARKS[POOL],
         "data_version": prediction_manifest.get("data_version"),
         "metrics_summary": {},
         "result_dirs": [],
         "cleanup_retention_eligible": False,
-        "note": "540 组全历史样本内比较与稳健排序规则已冻结。",
+        "note": (
+            f"540 组全历史样本内比较与稳健排序规则已冻结（account={int(account)}）。"
+        ),
     }
 
 
@@ -194,8 +213,8 @@ def _verify_preregistered_artifacts(
     protocol: dict[str, Any],
     prediction_manifest_path: Path,
 ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, str], dict[str, Any]]:
-    if preregistered.get("exp_id") != EXP_ID:
-        raise ValueError("finalization requires the full-period v2 experiment")
+    if preregistered.get("exp_id") != protocol.get("exp_id"):
+        raise ValueError("finalization requires matching protocol exp_id")
     if preregistered.get("state") != "preregistered":
         raise ValueError("finalization requires a preregistered row")
     grid = _validate_protocol(protocol)
@@ -315,9 +334,11 @@ def build_complete_row(
     grid, prediction, run_contract, base = _verify_preregistered_artifacts(
         preregistered, protocol, prediction_manifest_path
     )
+    exp_id = str(preregistered["exp_id"])
+    account = _protocol_account(protocol)
     expected_result_contract = {
         "state": "full_complete",
-        "exp_id": EXP_ID,
+        "exp_id": exp_id,
         "evaluation_mode": EVALUATION_MODE,
         "model_ref": MODEL_REF,
         "pool": POOL,
@@ -351,7 +372,9 @@ def build_complete_row(
             raise ValueError(
                 f"{candidate_id} prediction SHA differs from preregistration"
             )
-        expected_config_sha = effective_config_sha256(base, by_id[candidate_id])
+        expected_config_sha = effective_config_sha256(
+            base, by_id[candidate_id], account=account
+        )
         if row.get("effective_config_sha256") != expected_config_sha:
             raise ValueError(f"{candidate_id} effective config SHA differs")
 
@@ -393,7 +416,7 @@ def build_complete_row(
         cleanup_retention_eligible=False,
         note=(
             "CSI1000 2020-01-13 至 2026-07-31 全历史样本内研究胜者；"
-            "未使用独立 holdout，不自动提升 B2-S 或切换实盘。"
+            "未使用独立 holdout，不自动提升 B3-S 或切换实盘。"
         ),
     )
     return complete
@@ -415,7 +438,11 @@ def build_full_baseline_comparison_correction(
     completed: dict[str, Any], results: dict[str, Any], *, results_path: Path
 ) -> dict[str, Any]:
     """Build an append-only audit correction; never rewrite a completed result row."""
-    if completed.get("exp_id") != EXP_ID or completed.get("state") != "complete":
+    exp_id = str(completed.get("exp_id") or "")
+    if (
+        not exp_id.startswith(NEIGHBORHOOD_EXP_PREFIX)
+        or completed.get("state") != "complete"
+    ):
         raise ValueError("correction requires the completed full-period experiment")
     result_file = _resolve_path(results_path)
     if not result_file.is_file() or _read_json(result_file) != results:
@@ -424,7 +451,7 @@ def build_full_baseline_comparison_correction(
         raise ValueError("correction full-result SHA differs from completed row")
     rows = results.get("all_rows") or []
     baseline_matches = [
-        row for row in rows if row.get("candidate_id") == B2_S_FULL_CANDIDATE_ID
+        row for row in rows if row.get("candidate_id") == B3_S_FULL_CANDIDATE_ID
     ]
     winner_matches = [
         row
@@ -437,40 +464,43 @@ def build_full_baseline_comparison_correction(
     winner = winner_matches[0]
     if baseline.get("status") != "success" or winner.get("status") != "success":
         raise ValueError("correction requires successful same-run rows")
+    correction_id = _correction_exp_id(exp_id)
     return {
         "schema_version": 1,
-        "exp_id": CORRECTION_EXP_ID,
+        "exp_id": correction_id,
         "phase": "S",
         "state": "correction",
-        "correction_of": EXP_ID,
+        "correction_of": exp_id,
         "date": str(date.today()),
         "evaluation_mode": EVALUATION_MODE,
         "selection_segment": list(FULL_SEGMENT),
-        "baseline_ref": "B2-S v1.0",
+        "baseline_ref": "B3-S v1.0",
         "frozen_model_ref": "B6 v1.0",
+        "account": completed.get("account"),
         "full_result_path": _path_text(result_file),
         "full_result_sha256": sha256_file(result_file),
         "same_run_baseline": _same_run_metrics(baseline),
         "robust_winner": _same_run_metrics(winner),
         "selection_rationale": "neighbor_ir_p25_not_own_metric",
         "note": (
-            "更正记录：同一冻结预测、同一全历史区间的 B2-S 基线在自身扣费超额"
-            "指标上优于稳健胜者；胜者仍仅因预登记的轴向邻域 IR P25 规则入选，"
-            "不自动提升 B2-S。"
+            "更正记录：同一冻结预测、同一全历史区间的 B3-S 基线与稳健胜者对照；"
+            "胜者仅因预登记的轴向邻域 IR P25 规则入选，不自动提升 B3-S。"
         ),
     }
 
 
 def append_registry_correction(registry: Path, correction: dict[str, Any]) -> None:
-    if correction.get("exp_id") != CORRECTION_EXP_ID:
+    correction_id = str(correction.get("exp_id") or "")
+    parent_id = str(correction.get("correction_of") or "")
+    if correction_id != _correction_exp_id(parent_id):
         raise ValueError("unsupported correction exp_id")
     rows = load_registry(registry)
-    matches = [row for row in rows if row.get("exp_id") == CORRECTION_EXP_ID]
+    matches = [row for row in rows if row.get("exp_id") == correction_id]
     if matches:
         if len(matches) != 1 or matches[0] != correction:
             raise ValueError("correction history is immutable")
         return
-    if len([row for row in rows if row.get("exp_id") == EXP_ID]) != 1:
+    if len([row for row in rows if row.get("exp_id") == parent_id]) != 1:
         raise ValueError("correction requires exactly one original experiment row")
     with registry.open("a", encoding="utf-8") as handle:
         handle.write(
@@ -492,8 +522,9 @@ def upsert_registry_transition(
     registry: Path,
     row: dict[str, Any],
 ) -> None:
-    if row.get("exp_id") != EXP_ID:
-        raise ValueError(f"registry transition only supports {EXP_ID}")
+    exp_id = str(row.get("exp_id") or "")
+    if not exp_id.startswith(NEIGHBORHOOD_EXP_PREFIX):
+        raise ValueError(f"registry transition only supports full neighborhood: {exp_id}")
     lines = (
         registry.read_text(encoding="utf-8").splitlines(keepends=True)
         if registry.is_file()
@@ -503,15 +534,15 @@ def upsert_registry_transition(
         (index, json.loads(line)) for index, line in enumerate(lines) if line.strip()
     ]
     matches = [
-        (index, current) for index, current in parsed if current.get("exp_id") == EXP_ID
+        (index, current) for index, current in parsed if current.get("exp_id") == exp_id
     ]
     if len(matches) > 1:
-        raise ValueError(f"duplicate registry exp_id: {EXP_ID}")
+        raise ValueError(f"duplicate registry exp_id: {exp_id}")
     serialized = json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
     if matches:
         index, previous = matches[0]
         if previous.get("state") == "complete":
-            raise ValueError(f"completed registry row is immutable: {EXP_ID}")
+            raise ValueError(f"completed registry row is immutable: {exp_id}")
         if previous.get("state") != "preregistered" or row.get("state") != "complete":
             raise ValueError(
                 "registry transition must be preregistered -> complete; "
@@ -533,10 +564,10 @@ def upsert_registry_transition(
     temporary.replace(registry)
 
 
-def _unique_row(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    matches = [row for row in rows if row.get("exp_id") == EXP_ID]
+def _unique_row(rows: Sequence[dict[str, Any]], *, exp_id: str) -> dict[str, Any]:
+    matches = [row for row in rows if row.get("exp_id") == exp_id]
     if len(matches) != 1:
-        raise ValueError(f"registry requires exactly one {EXP_ID} row")
+        raise ValueError(f"registry requires exactly one {exp_id} row")
     return matches[0]
 
 
@@ -558,8 +589,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
     if args.mode == "append-correction":
-        completed = _unique_row(load_registry(args.registry))
         results = _read_json(args.results)
+        exp_id = str(results.get("exp_id") or EXP_ID)
+        completed = _unique_row(load_registry(args.registry), exp_id=exp_id)
         correction = build_full_baseline_comparison_correction(
             completed, results, results_path=args.results
         )
@@ -573,10 +605,11 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                 encoding="utf-8",
             )
         append_registry_correction(args.registry, correction)
-        print(f"{args.mode}: {CORRECTION_EXP_ID} -> {args.registry}")
+        print(f"{args.mode}: {correction['exp_id']} -> {args.registry}")
         return
     protocol = _read_json(args.protocol)
     manifest = _read_json(args.prediction_manifest)
+    exp_id = str(protocol.get("exp_id") or EXP_ID)
     if args.mode == "preregister":
         row = build_preregistered_row(
             protocol,
@@ -586,7 +619,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         )
         upsert_registry_transition(args.registry, row)
     else:
-        preregistered = _unique_row(load_registry(args.registry))
+        preregistered = _unique_row(load_registry(args.registry), exp_id=exp_id)
         results = _read_json(args.results)
         row = build_complete_row(
             preregistered,
@@ -596,7 +629,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             prediction_manifest_path=args.prediction_manifest,
         )
         upsert_registry_transition(args.registry, row)
-    print(f"{args.mode}: {EXP_ID} -> {args.registry}")
+    print(f"{args.mode}: {row['exp_id']} -> {args.registry}")
 
 
 if __name__ == "__main__":

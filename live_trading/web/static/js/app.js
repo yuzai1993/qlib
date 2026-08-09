@@ -328,6 +328,9 @@ let predPage = 0;
 let predSortBy = 'rank';
 let predSortOrder = 'asc';
 let predToken = null;
+let predSummaryGeneration = 0;
+let predChartGeneration = 0;
+let predSearchGeneration = 0;
 const PRED_PAGE_SIZE = 50;
 
 function predDisplayCode(s) {
@@ -457,9 +460,11 @@ function predQueryParams() {
 
 async function loadPredSummary(token) {
     if (!navigationTracker.isCurrent(token)) return;
+    const generation = ++predSummaryGeneration;
     const date = document.getElementById('pred-date').value;
     const s = await api(`/predictions/summary?date=${encodeURIComponent(date)}&n=3`);
-    if (!navigationTracker.isCurrent(token)) return;
+    if (!navigationTracker.isCurrent(token)
+            || generation !== predSummaryGeneration) return;
     const box = document.getElementById('pred-summary');
     const item = (p, cls) => `<tr>
         <td>#${p.rank}</td>
@@ -491,27 +496,38 @@ function resolvePredInstrument(q) {
         || null;
 }
 
+function isCompletePredInstrument(q) {
+    return /^(?:[A-Za-z]{2}\d{6}|\d{6}\.[A-Za-z]{2})$/.test(q);
+}
+
 async function loadPredMeanChart(token) {
     if (!navigationTracker.isCurrent(token)) return;
-    chartManager.clear();
+    const generation = ++predChartGeneration;
     const q = (document.getElementById('pred-query')?.value || '').trim();
     const hit = resolvePredInstrument(q);
+    const stockInstrument = hit
+        ? (hit.instrument || hit.stock_code)
+        : (isCompletePredInstrument(q) ? q : null);
 
     const meanReq = api('/predictions/daily-mean');
-    const stockReq = hit
-        ? api(`/predictions/daily-mean?instruments=${encodeURIComponent(hit.instrument)}`)
+    const stockReq = stockInstrument
+        ? api(`/predictions/daily-mean?instruments=${encodeURIComponent(stockInstrument)}`)
         : Promise.resolve(null);
     const [meanData, stockData] = await Promise.all([meanReq, stockReq]);
-    if (!navigationTracker.isCurrent(token)) return;
+    if (!navigationTracker.isCurrent(token)
+            || generation !== predChartGeneration) return;
 
     const stockLabel = hit
-        ? `${predDisplayCode(hit)}${hit.name ? ' ' + hit.name : ''}` : '';
+        ? `${predDisplayCode(hit)}${hit.name ? ' ' + hit.name : ''}`
+        : (stockInstrument || '');
     const subEl = document.getElementById('pred-mean-sub');
-    if (subEl) subEl.textContent = hit ? `全市场均值 vs ${stockLabel}` : '全市场';
+    if (subEl) subEl.textContent = stockInstrument
+        ? `全市场均值 vs ${stockLabel}` : '全市场';
 
     const el = document.getElementById('pred-mean-chart');
     if (!el) return;
     if (!meanData.length) {
+        chartManager.clear();
         el.innerHTML = '<div class="loading">暂无数据</div>';
         return;
     }
@@ -524,7 +540,7 @@ async function loadPredMeanChart(token) {
         data: meanData.map(d => d.mean_score),
         lineStyle: { width: 2 },
     }];
-    if (hit && stockData) {
+    if (stockInstrument && stockData) {
         const byDate = Object.fromEntries(
             stockData.map(d => [d.date, d.mean_score]));
         series.push({
@@ -535,6 +551,7 @@ async function loadPredMeanChart(token) {
         });
     }
 
+    chartManager.clear();
     const chart = echarts.init(el, 'dark');
     chart.setOption({
         backgroundColor: 'transparent',
@@ -555,13 +572,17 @@ async function loadPredMeanChart(token) {
 
 window.predSearch = async function (page, token = predToken) {
     if (!navigationTracker.isCurrent(token)) return;
-    predPage = page || 0;
+    const generation = ++predSearchGeneration;
+    const requestPage = page || 0;
+    const sortBy = predSortBy;
+    const sortOrder = predSortOrder;
+    predPage = requestPage;
     const date = document.getElementById('pred-date').value;
     const params = new URLSearchParams({
         limit: PRED_PAGE_SIZE,
-        offset: predPage * PRED_PAGE_SIZE,
-        sort_by: predSortBy,
-        sort_order: predSortOrder,
+        offset: requestPage * PRED_PAGE_SIZE,
+        sort_by: sortBy,
+        sort_order: sortOrder,
     });
     if (date) params.set('date', date);
     const extra = predQueryParams();
@@ -569,17 +590,18 @@ window.predSearch = async function (page, token = predToken) {
     if (extra.name) params.set('name', extra.name);
 
     const result = await api('/predictions?' + params.toString());
-    if (!navigationTracker.isCurrent(token)) return;
+    if (!navigationTracker.isCurrent(token)
+            || generation !== predSearchGeneration) return;
     const rows = result.data || [];
     const total = result.total || 0;
-    const offset = predPage * PRED_PAGE_SIZE;
+    const offset = requestPage * PRED_PAGE_SIZE;
 
     document.getElementById('pred-info').textContent = total
         ? `共 ${total} 条，显示 ${offset + 1} - ${Math.min(offset + PRED_PAGE_SIZE, total)}`
         : '';
 
-    const sortIcon = col => predSortBy !== col ? ''
-        : (predSortOrder === 'asc' ? ' ▲' : ' ▼');
+    const sortIcon = col => sortBy !== col ? ''
+        : (sortOrder === 'asc' ? ' ▲' : ' ▼');
 
     let html;
     if (!rows.length) {
@@ -618,9 +640,9 @@ window.predSearch = async function (page, token = predToken) {
     const totalPages = Math.ceil(total / PRED_PAGE_SIZE);
     let pag = '';
     if (totalPages > 1) {
-        if (predPage > 0) pag += `<button onclick="predSearch(${predPage - 1})">上一页</button> `;
-        pag += `<span class="card-sub">第 ${predPage + 1} / ${totalPages} 页</span>`;
-        if (predPage < totalPages - 1) pag += ` <button onclick="predSearch(${predPage + 1})">下一页</button>`;
+        if (requestPage > 0) pag += `<button onclick="predSearch(${requestPage - 1})">上一页</button> `;
+        pag += `<span class="card-sub">第 ${requestPage + 1} / ${totalPages} 页</span>`;
+        if (requestPage < totalPages - 1) pag += ` <button onclick="predSearch(${requestPage + 1})">下一页</button>`;
     }
     document.getElementById('pred-pagination').innerHTML = pag;
 };

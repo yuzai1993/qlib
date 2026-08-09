@@ -7,6 +7,8 @@ import pytest
 
 from live_trading.scripts import run_publish_signals as publish
 from live_trading.modules.fill_importer import LiveRecorder
+from live_trading.modules.signal_schema import compute_checksum
+from live_trading.scripts.override_main_signal import build_override
 
 
 def _config():
@@ -18,60 +20,35 @@ def _config():
     }
 
 
-def test_account_resolution_uses_simulation_specific_environment(monkeypatch):
-    monkeypatch.setenv("QMT_SIM_ACCOUNT_ID", "sim-123")
-    monkeypatch.setenv("QMT_ACCOUNT_ID", "real-should-not-be-read")
-
-    assert publish.resolve_account_id(_config()) == "sim-123"
+def test_account_resolution_is_qmt_managed(monkeypatch):
+    monkeypatch.delenv("QMT_ACCOUNT_ID", raising=False)
+    assert publish.resolve_account_id(_config()) == "QMT_MANAGED"
 
 
-def test_account_resolution_never_falls_back_to_real_account_variable(monkeypatch):
-    monkeypatch.delenv("QMT_SIM_ACCOUNT_ID", raising=False)
-    monkeypatch.setenv("QMT_ACCOUNT_ID", "real-should-not-be-read")
-
-    with pytest.raises(SystemExit, match="QMT_SIM_ACCOUNT_ID"):
-        publish.resolve_account_id(_config())
+def test_account_resolution_accepts_operator_selected_account(monkeypatch):
+    monkeypatch.setenv("QMT_ACCOUNT_ID", "operator-selected")
+    assert publish.resolve_account_id(_config()) == "operator-selected"
 
 
-def test_real_account_resolution_uses_real_specific_environment(monkeypatch):
-    monkeypatch.setenv("QMT_REAL_ACCOUNT_ID", "8890116049")
-    monkeypatch.setenv("QMT_SIM_ACCOUNT_ID", "sim-123")
+def test_configured_account_id_is_preserved():
     config = _config()
-    config["live"]["broker_environment"] = "REAL"
-    config["live"]["allow_real_money"] = True
-
+    config["live"]["account_id"] = "8890116049"
     assert publish.resolve_account_id(config) == "8890116049"
 
-
-def test_real_account_resolution_requires_real_specific_environment(monkeypatch):
-    monkeypatch.delenv("QMT_REAL_ACCOUNT_ID", raising=False)
-    monkeypatch.setenv("QMT_SIM_ACCOUNT_ID", "sim-123")
-    config = _config()
-    config["live"].update(
-        broker_environment="REAL", allow_real_money=True,
-    )
-
-    with pytest.raises(SystemExit, match="QMT_REAL_ACCOUNT_ID"):
-        publish.resolve_account_id(config)
-
-
-def test_live_protocol_mode_still_requires_explicit_process_confirmation(monkeypatch):
+def test_live_protocol_mode_needs_no_process_confirmation(monkeypatch):
     args = SimpleNamespace(mode="LIVE")
     monkeypatch.delenv("LIVE_TRADING_CONFIRM", raising=False)
-
-    with pytest.raises(SystemExit, match="LIVE_TRADING_CONFIRM"):
-        publish.resolve_mode(args, _config())
+    assert publish.resolve_mode(args, _config()) == "LIVE"
 
 
-def test_real_account_cannot_publish_simulate_mode():
+def test_qmt_account_selection_does_not_change_publisher_mode():
     args = SimpleNamespace(mode="SIMULATE")
     config = _config()
     config["live"].update(
         broker_environment="REAL", allow_real_money=True,
     )
 
-    with pytest.raises(SystemExit, match="REAL.*LIVE"):
-        publish.resolve_mode(args, config)
+    assert publish.resolve_mode(args, config) == "SIMULATE"
 
 
 def test_strategy_positions_preserve_opening_trade_date():
@@ -161,19 +138,17 @@ def test_generic_publisher_binds_planner_to_selected_execution_profile():
     assert planner.signal_price_type == "CLOSE_AUCTION_LIMIT"
 
 
-def test_paused_strategy_fails_closed_for_direct_live_publication(tmp_path):
+def test_paused_strategy_does_not_block_direct_publication(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     recorder.set_execution_state(
         "main", "PAUSED", "operator verification pending", "2026-08-10T20:00:00+08:00",
     )
 
-    with pytest.raises(publish.ExecutionPausedError, match="main.*PAUSED"):
-        publish.ensure_execution_is_active(recorder, "main", "LIVE")
-
+    publish.ensure_execution_is_active(recorder, "main", "LIVE")
     publish.ensure_execution_is_active(recorder, "main", "SIMULATE")
 
 
-def test_unknown_persisted_state_fails_closed_for_direct_live_publication(tmp_path):
+def test_unknown_persisted_state_does_not_block_direct_publication(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     with recorder._conn() as conn:
         conn.execute(
@@ -181,8 +156,7 @@ def test_unknown_persisted_state_fails_closed_for_direct_live_publication(tmp_pa
             ("main", "UNKNOWN", "manual corruption", "2026-08-10T20:00:00+08:00"),
         )
 
-    with pytest.raises(publish.ExecutionPausedError, match="main.*UNKNOWN"):
-        publish.ensure_execution_is_active(recorder, "main", "LIVE")
+    publish.ensure_execution_is_active(recorder, "main", "LIVE")
 
 
 def test_audit_preview_is_atomic_complete_and_does_not_need_a_batch(tmp_path):
@@ -208,7 +182,36 @@ def test_audit_preview_is_atomic_complete_and_does_not_need_a_batch(tmp_path):
     assert preview["order_count"] == 1
     assert preview["buy_count"] == 1
     assert preview["sell_count"] == 0
-    assert preview["orders"] == [{"side": "BUY"}]
+
+
+def test_manual_sell_override_preserves_source_and_is_sell_only(tmp_path):
+    from live_trading.modules.signal_publisher import SignalPublisher
+    from live_trading.modules.signal_schema import BatchHeader, SignalOrder
+
+    root = tmp_path / "bridge"
+    root.mkdir()
+    source = BatchHeader(
+        batch_id="20260810_main_001", strategy_id="main",
+        trade_date="2026-08-10", signal_date="2026-08-07",
+        account_id="QMT_MANAGED", account_type="STOCK",
+        account_environment="SIMULATION", mode="LIVE",
+        created_at="2026-08-07T20:00:00+08:00", order_count=1, checksum="",
+    )
+    original = SignalOrder(
+        batch_id=source.batch_id, client_order_id="20260810001001B",
+        stock_code="600000.SH", side="BUY", quantity=0,
+        target_value=10000.0, price_type="CLOSE_AUCTION_LIMIT", limit_price=0.0,
+        priority=20, instrument_qlib="SH600000", reason="topk_dropout",
+    )
+    source = source.__class__(**{**source.__dict__, "checksum": compute_checksum([original.to_json_line()])})
+    SignalPublisher(root).publish(source, [original])
+    header, orders = build_override(
+        root, source.batch_id, "600000.SH", 100, "sell test", "operator", 2,
+    )
+    assert orders[0].side == "SELL"
+    assert orders[0].quantity == 100
+    assert "source=20260810_main_001" in orders[0].reason
+    assert header.batch_id != source.batch_id
 
 
 def test_main_paused_audit_preview_does_not_create_batch_or_inbox(

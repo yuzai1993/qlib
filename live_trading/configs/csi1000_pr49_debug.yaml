@@ -1,0 +1,7 @@
+# Standalone QMT-only prType=49 debug profile.  Not consumed by the main
+# publisher, scheduler, ledger, or monitor.
+strategy_id: csi1000_pr49_debug
+bridge_root: /Volumes/qmt_bridge/pr49_debug
+qmt_pr_type: 49
+trade_unit: 100
+sequence: BUY_then_next_day_SELL

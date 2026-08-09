@@ -337,11 +337,11 @@ def test_load_new_csi1000_paper_config():
     assert cfg["handler"]["feature_groups"] == ["range"]
     assert cfg["strategy"] == {
         "class": "TopkDropoutStrategy",
-        "topk": 22,
+            "topk": 22,
         "n_drop": 2,
         "initial_buy_count": 2,
-        "risk_degree": 0.90,
-        "hold_thresh": 2,
+            "risk_degree": 0.90,
+            "hold_thresh": 2,
         "only_tradable": False,
         "forbid_all_trade_at_limit": False,
     }

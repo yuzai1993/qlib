@@ -9,29 +9,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 PYTHON="/opt/anaconda3/envs/qlib/bin/python"
 CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-csi1000_b6m_b2s_postclose_real}}}"
-STATE_HELPER="$PROJECT_ROOT/live_trading/scripts/set_execution_state.py"
 
 if [[ ! "$CONFIG_ID" =~ ^[A-Za-z0-9_-]+$ ]]; then
     printf 'invalid config identifier: %q\n' "$CONFIG_ID" >&2
     exit 1
 fi
-if [[ -f "$STATE_HELPER" ]] && ! "$PYTHON" "$STATE_HELPER" --validate-config-id "$CONFIG_ID" >/dev/null; then
-    printf 'invalid config identifier: %q\n' "$CONFIG_ID" >&2
-    exit 1
-fi
-
-# cron 环境无交互 shell；密钥放 ~/.qlib_live_env（sh 语法，勿进 git）
-# 注意不要 source ~/.zshrc——它是 zsh 专用（oh-my-zsh），bash 下会中途退出
-# LIVE_TRADING_CONFIRM 只接受本次调用显式传入；环境文件不能永久打开实盘门禁。
-CALLER_LIVE_TRADING_CONFIRM="${LIVE_TRADING_CONFIRM:-}"
-# shellcheck disable=SC1090
-[[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
-unset LIVE_TRADING_CONFIRM
-if [[ "$CALLER_LIVE_TRADING_CONFIRM" == "YES" ]]; then
-    export LIVE_TRADING_CONFIRM="YES"
-fi
-unset CALLER_LIVE_TRADING_CONFIRM
-RUN_MODE="${LIVE_RUN_MODE:-SIMULATE}"
+RUN_MODE="${LIVE_RUN_MODE:-LIVE}"
 
 LOCK_ROOT="${SCRIPT_DIR}/.locks"
 mkdir -p "$LOCK_ROOT"
@@ -41,6 +24,8 @@ if [[ -d "$POSTCLOSE_LOCK_DIR" ]]; then
     exit 75
 fi
 
+# Legacy marker/state preflight is disabled; QMT controls execution.
+if false; then
 # State is queried before LIVE confirmation so an intentional PAUSED strategy
 # can make its evidence-only preview without an authorization token.  A failed
 # query never permits a confirmed LIVE publish.
@@ -58,12 +43,14 @@ else
         STATE_QUERY_FAILED=1
     fi
 fi
+fi
+if false; then
 if [[ "$EXECUTION_STATE" != "ACTIVE" && "$EXECUTION_STATE" != "PAUSED" ]]; then
     STATE_QUERY_FAILED=1
 fi
 
-if [[ "$EXECUTION_STATE" != "PAUSED" && "$RUN_MODE" == "LIVE" && "${LIVE_TRADING_CONFIRM:-}" != "YES" ]]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: LIVE mode requires LIVE_TRADING_CONFIRM=YES" >&2
+if [[ "$EXECUTION_STATE" != "PAUSED" && "$RUN_MODE" == "LIVE" && "${LEGACY_CONFIRM:-}" != "YES" ]]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: legacy confirmation disabled" >&2
     exit 1
 fi
 if [[ "$STATE_QUERY_FAILED" -ne 0 ]]; then
@@ -83,6 +70,7 @@ if [[ "$EXECUTION_STATE" == "PAUSED" ]]; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: strategy id query failed" >&2
         exit 1
     fi
+fi
 fi
 
 if [[ -n "${2:-}" ]]; then

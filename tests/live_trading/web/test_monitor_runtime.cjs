@@ -38,6 +38,16 @@ test('chart manager disposes the old chart and resizes only the current chart', 
     assert.equal(manager.current(), null);
 });
 
+test('navigation tracker invalidates every older page token', () => {
+    const { createNavigationTracker } = require(runtimePath);
+    const tracker = createNavigationTracker();
+    const dashboard = tracker.begin('dashboard');
+    const alerts = tracker.begin('alerts');
+    assert.equal(tracker.isCurrent(dashboard), false);
+    assert.equal(tracker.isCurrent(alerts), true);
+    assert.equal(tracker.currentPage(), 'alerts');
+});
+
 function createDeferred() {
     let resolve;
     let reject;
@@ -116,4 +126,34 @@ test('dashboard redraw disposes its previous ECharts instance', () => {
     assert.equal(harness.charts[0].disposed, 1);
     assert.equal(harness.charts[0].resized, 0);
     assert.equal(harness.charts[1].resized, 1);
+});
+
+test('an older dashboard response cannot overwrite a newer alerts page', async () => {
+    const overview = createDeferred();
+    const nav = createDeferred();
+    const responses = {
+        '/api/overview': overview.promise,
+        '/api/nav': nav.promise,
+        '/api/alerts?limit=100': Promise.resolve([]),
+    };
+    const harness = createAppHarness(async pathname => ({
+        ok: true, json: async () => responses[pathname],
+    }));
+    await harness.context.navigate('alerts');
+    const alertsHtml = harness.content.innerHTML;
+    overview.resolve({
+        snapshot: null,
+        strategy_id: 'main',
+        mode: 'LIVE',
+        account_id: '',
+        active_batch_id: '',
+        strategy_statuses: [],
+        stages: {},
+        recent_alerts: [],
+    });
+    nav.resolve([]);
+    await Promise.all([overview.promise, nav.promise]);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.match(alertsHtml, /告警历史/);
+    assert.equal(harness.content.innerHTML, alertsHtml);
 });

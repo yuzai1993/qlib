@@ -1,8 +1,8 @@
 /* 实盘监控仪表盘 SPA */
 
 const content = document.getElementById('content');
-let currentPage = 'dashboard';
 const chartManager = MonitorRuntime.createChartManager(window);
+const navigationTracker = MonitorRuntime.createNavigationTracker();
 
 async function api(path) {
     const resp = await fetch('/api' + path);
@@ -35,8 +35,9 @@ function levelBadge(level) {
 
 const STAGE_NAMES = { postmarket: '盘后对账', report: '快照日报', evening: '信号发布' };
 
-async function renderDashboard() {
+async function renderDashboard(token) {
     const [ov, nav] = await Promise.all([api('/overview'), api('/nav')]);
+    if (!navigationTracker.isCurrent(token)) return;
     const s = ov.snapshot;
 
     document.getElementById('strategy-badge').innerHTML =
@@ -138,8 +139,9 @@ function drawNavChart(nav, benchmarkName) {
 
 /* ---------- 持仓 ---------- */
 
-async function renderPositions() {
+async function renderPositions(token) {
     const data = await api('/positions');
+    if (!navigationTracker.isCurrent(token)) return;
     let html = '<h2>持仓</h2>';
     html += `<div>回看日期：<select id="pos-date"><option value="">当前（最新快照）</option></select></div>`;
     html += '<div id="pos-table">' + positionsTable(data) + '</div>';
@@ -147,6 +149,7 @@ async function renderPositions() {
 
     const hist = await api('/positions/history?date=' +
         (data.positions[0]?.snapshot_date || ''));
+    if (!navigationTracker.isCurrent(token)) return;
     const sel = document.getElementById('pos-date');
     for (const d of hist.dates) {
         const opt = document.createElement('option');
@@ -157,10 +160,12 @@ async function renderPositions() {
         const box = document.getElementById('pos-table');
         if (!sel.value) {
             const cur = await api('/positions');
+            if (!navigationTracker.isCurrent(token)) return;
             box.innerHTML = positionsTable(cur);
             return;
         }
         const h = await api('/positions/history?date=' + sel.value);
+        if (!navigationTracker.isCurrent(token)) return;
         box.innerHTML = positionsTable(h);
     };
 }
@@ -210,8 +215,9 @@ function positionsTable(data) {
 
 /* ---------- 批次与成交 ---------- */
 
-async function renderBatches() {
+async function renderBatches(token) {
     const batches = await api('/batches');
+    if (!navigationTracker.isCurrent(token)) return;
     let html = '<h2>批次与成交</h2>';
     if (!batches.length) {
         content.innerHTML = html + '<div class="empty">暂无批次</div>';
@@ -242,14 +248,16 @@ async function renderBatches() {
     content.innerHTML = html;
 
     content.querySelectorAll('tr.clickable').forEach(tr => {
-        tr.onclick = () => toggleBatchDetail(tr.dataset.batch);
+        tr.onclick = () => toggleBatchDetail(tr.dataset.batch, token);
     });
 }
 
-async function toggleBatchDetail(batchId) {
+async function toggleBatchDetail(batchId, token) {
+    if (!navigationTracker.isCurrent(token)) return;
     const row = document.getElementById('fills-' + batchId);
     if (row.style.display !== 'none') { row.style.display = 'none'; return; }
     const detail = await api(`/batches/${batchId}`);
+    if (!navigationTracker.isCurrent(token)) return;
     const orders = detail.orders || [];
     const fills = detail.fills || [];
     const fillById = Object.fromEntries(fills.map(f => [f.client_order_id, f]));
@@ -317,21 +325,24 @@ let predInstruments = [];
 let predPage = 0;
 let predSortBy = 'rank';
 let predSortOrder = 'asc';
+let predToken = null;
 const PRED_PAGE_SIZE = 50;
 
 function predDisplayCode(s) {
     return s.stock_code || s.instrument || '';
 }
 
-async function renderPredictions() {
+async function renderPredictions(token) {
     const [dates, instruments] = await Promise.all([
         api('/predictions/dates'),
         api('/predictions/instruments'),
     ]);
+    if (!navigationTracker.isCurrent(token)) return;
     predInstruments = instruments || [];
     predPage = 0;
     predSortBy = 'rank';
     predSortOrder = 'asc';
+    predToken = token;
 
     let html = '<h2>预测信号</h2>';
     if (!dates.length) {
@@ -364,31 +375,33 @@ async function renderPredictions() {
     html += '<div id="pred-pagination" style="margin-top:10px"></div>';
     content.innerHTML = html;
 
-    setupPredAutocomplete();
+    setupPredAutocomplete(token);
     document.getElementById('pred-search-btn').onclick = () => {
-        predSearch(0);
-        loadPredMeanChart();
+        predSearch(0, token);
+        loadPredMeanChart(token);
     };
     document.getElementById('pred-reset-btn').onclick = () => {
         document.getElementById('pred-query').value = '';
-        predSearch(0);
-        loadPredMeanChart();
+        predSearch(0, token);
+        loadPredMeanChart(token);
     };
     document.getElementById('pred-date').onchange = () => {
-        loadPredSummary();
-        predSearch(0);
+        loadPredSummary(token);
+        predSearch(0, token);
     };
     document.getElementById('pred-query').addEventListener('keydown', ev => {
         if (ev.key === 'Enter') {
-            predSearch(0);
-            loadPredMeanChart();
+            predSearch(0, token);
+            loadPredMeanChart(token);
         }
     });
 
-    await Promise.all([loadPredSummary(), loadPredMeanChart(), predSearch(0)]);
+    await Promise.all([
+        loadPredSummary(token), loadPredMeanChart(token), predSearch(0, token),
+    ]);
 }
 
-function setupPredAutocomplete() {
+function setupPredAutocomplete(token) {
     const input = document.getElementById('pred-query');
     const list = document.getElementById('pred-query-ac');
     let timer;
@@ -414,8 +427,8 @@ function setupPredAutocomplete() {
                     input.value = item.dataset.code;
                     list.innerHTML = '';
                     list.style.display = 'none';
-                    predSearch(0);
-                    loadPredMeanChart();
+                    predSearch(0, token);
+                    loadPredMeanChart(token);
                 });
             });
         }, 150);
@@ -432,10 +445,12 @@ function predQueryParams() {
     return /[\u4e00-\u9fff]/.test(q) ? { name: q } : { instrument: q };
 }
 
-async function loadPredSummary() {
+async function loadPredSummary(token) {
+    if (!navigationTracker.isCurrent(token)) return;
     const date = document.getElementById('pred-date').value;
-    const box = document.getElementById('pred-summary');
     const s = await api(`/predictions/summary?date=${encodeURIComponent(date)}&n=3`);
+    if (!navigationTracker.isCurrent(token)) return;
+    const box = document.getElementById('pred-summary');
     const item = (p, cls) => `<tr>
         <td>#${p.rank}</td>
         <td style="text-align:left">${codeCell(predDisplayCode(p), p.name)}</td>
@@ -466,7 +481,8 @@ function resolvePredInstrument(q) {
         || null;
 }
 
-async function loadPredMeanChart() {
+async function loadPredMeanChart(token) {
+    if (!navigationTracker.isCurrent(token)) return;
     chartManager.clear();
     const q = (document.getElementById('pred-query')?.value || '').trim();
     const hit = resolvePredInstrument(q);
@@ -476,6 +492,7 @@ async function loadPredMeanChart() {
         ? api(`/predictions/daily-mean?instruments=${encodeURIComponent(hit.instrument)}`)
         : Promise.resolve(null);
     const [meanData, stockData] = await Promise.all([meanReq, stockReq]);
+    if (!navigationTracker.isCurrent(token)) return;
 
     const stockLabel = hit
         ? `${predDisplayCode(hit)}${hit.name ? ' ' + hit.name : ''}` : '';
@@ -526,7 +543,8 @@ async function loadPredMeanChart() {
     chartManager.replace(chart);
 }
 
-window.predSearch = async function (page) {
+window.predSearch = async function (page, token = predToken) {
+    if (!navigationTracker.isCurrent(token)) return;
     predPage = page || 0;
     const date = document.getElementById('pred-date').value;
     const params = new URLSearchParams({
@@ -541,6 +559,7 @@ window.predSearch = async function (page) {
     if (extra.name) params.set('name', extra.name);
 
     const result = await api('/predictions?' + params.toString());
+    if (!navigationTracker.isCurrent(token)) return;
     const rows = result.data || [];
     const total = result.total || 0;
     const offset = predPage * PRED_PAGE_SIZE;
@@ -582,7 +601,7 @@ window.predSearch = async function (page) {
                 predSortBy = col;
                 predSortOrder = col === 'score' ? 'desc' : 'asc';
             }
-            predSearch(0);
+            predSearch(0, token);
         };
     });
 
@@ -603,8 +622,9 @@ const FLOW_NAMES = {
     DIVIDEND: '分红派息', DIVIDEND_TAX: '红利税', BONUS_SHARES: '送转股',
 };
 
-async function renderCashflows() {
+async function renderCashflows(token) {
     const data = await api('/cashflows?limit=200');
+    if (!navigationTracker.isCurrent(token)) return;
     let html = `<h2>资金流水 <span class="card-sub">当前现金 ${fmtMoney(data.cash)}</span></h2>`;
     if (!data.flows.length) {
         content.innerHTML = html + `<div class="empty">暂无资金流水。
@@ -628,8 +648,9 @@ async function renderCashflows() {
 
 /* ---------- 流程健康 ---------- */
 
-async function renderPipeline() {
+async function renderPipeline(token) {
     const data = await api('/pipeline?days=14');
+    if (!navigationTracker.isCurrent(token)) return;
     const dates = Object.keys(data.days).sort().reverse();
     let html = '<h2>流程健康 <span class="card-sub">绿=OK 黄=WARN 红=FAIL</span></h2>';
     if (!dates.length) {
@@ -656,8 +677,9 @@ async function renderPipeline() {
 
 /* ---------- 告警 ---------- */
 
-async function renderAlerts() {
+async function renderAlerts(token) {
     const alerts = await api('/alerts?limit=100');
+    if (!navigationTracker.isCurrent(token)) return;
     let html = '<h2>告警历史</h2>';
     if (!alerts.length) {
         content.innerHTML = html + '<div class="empty">暂无告警，一切正常</div>';
@@ -689,15 +711,17 @@ const PAGES = {
 };
 
 async function navigate(page) {
+    const token = navigationTracker.begin(page);
     chartManager.clear();
-    currentPage = page;
     document.querySelectorAll('.sidebar nav a').forEach(a =>
         a.classList.toggle('active', a.dataset.page === page));
     content.innerHTML = '<div class="loading">加载中...</div>';
     try {
-        await PAGES[page]();
+        await PAGES[page](token);
     } catch (e) {
-        content.innerHTML = `<div class="empty">加载失败：${esc(e.message)}</div>`;
+        if (navigationTracker.isCurrent(token)) {
+            content.innerHTML = `<div class="empty">加载失败：${esc(e.message)}</div>`;
+        }
     }
 }
 

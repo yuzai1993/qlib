@@ -22,8 +22,15 @@ fi
 
 # cron 环境无交互 shell；密钥放 ~/.qlib_live_env（sh 语法，勿进 git）
 # 注意不要 source ~/.zshrc——它是 zsh 专用（oh-my-zsh），bash 下会中途退出
+# LIVE_TRADING_CONFIRM 只接受本次调用显式传入；环境文件不能永久打开实盘门禁。
+CALLER_LIVE_TRADING_CONFIRM="${LIVE_TRADING_CONFIRM:-}"
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
+unset LIVE_TRADING_CONFIRM
+if [[ "$CALLER_LIVE_TRADING_CONFIRM" == "YES" ]]; then
+    export LIVE_TRADING_CONFIRM="YES"
+fi
+unset CALLER_LIVE_TRADING_CONFIRM
 RUN_MODE="${LIVE_RUN_MODE:-SIMULATE}"
 
 LOCK_ROOT="${SCRIPT_DIR}/.locks"

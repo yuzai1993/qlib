@@ -9,6 +9,13 @@
 - **涨跌幅**：使用 Tushare 接口返回的 pct_chg（不再用复权价计算）
 - 所有价格字段（open/high/low/close）统一前复权，**不做首日标准化**，保持真实价格
 - 支持**天级增量更新**
+- 正常的单交易日更新按 `trade_date` 各调用一次全市场 `daily` 和
+  `adj_factor`，不再为每只股票分别请求；Tushare 官方日线单次上限为
+  6000 行，当前 A 股股票池可在一次请求内返回
+- 批量结果会在写文件前校验日期、字段、重复行、6000 行截断风险和股票池覆盖率；
+  校验或接口失败时整批回退到原有逐股票采集，避免发布半批数据
+- 多日历史回补及传入 `limit_nums` 的调试任务仍使用逐股票路径；停牌股票在单日
+  批量结果中没有新行，其已有历史 CSV 不会被清空或覆盖
 
 ## 环境
 
@@ -57,6 +64,10 @@ python collector.py update_data_to_bin --qlib_dir ~/.qlib/qlib_data/cn_data --st
 ```
 
 不传 `start_date` 时，取**在 calendars/day_future.txt 中但不在 calendars/day.txt 中的最早日期**；若 day_future.txt 不存在或差集为空，则回退为 day.txt 最后一日的下一日或昨日。
+
+日志出现 `full-market daily batch saved` 表示使用快速路径；出现
+`falling back to per-symbol collection` 表示批量接口或完整性校验失败，任务已自动切换到
+较慢但兼容的逐股票路径，应结合后续 `all steps OK` 判断当日入库是否最终成功。
 
 若需**手动分步**做增量：先在本目录执行 `download_data` 和 `normalize_data`，再在仓库根目录执行 `python scripts/dump_bin.py dump_update --data_path scripts/data_collector/tushare/normalize --qlib_dir <qlib_dir> ...`（参数同上面 dump_all，仅把 `dump_all` 改为 `dump_update`）。
 

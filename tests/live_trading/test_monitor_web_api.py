@@ -329,6 +329,7 @@ def test_web_monitor_exposes_no_marker_or_publish_controls(client):
         for path in (
             "live_trading/web/static/index.html",
             "live_trading/web/static/js/app.js",
+            "live_trading/web/static/js/monitor_runtime.js",
         )
     )
 

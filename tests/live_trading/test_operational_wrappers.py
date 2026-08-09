@@ -847,6 +847,46 @@ def test_publish_wrappers_load_run_mode_from_cron_env_file(tmp_path):
         assert "LIVE_TRADING_CONFIRM=YES" in result.stderr
 
 
+def test_publish_wrappers_preserve_explicit_confirmation_across_env_unset(
+    tmp_path,
+):
+    config_id = "csi1000_b6m_b2s_postclose_real"
+    for name in ("run_publish_cron.sh", "run_publish_catchup_cron.sh"):
+        root = tmp_path / name / "repo"
+        live_dir = root / "live_trading"
+        live_dir.mkdir(parents=True)
+        wrapper = live_dir / name
+        shutil.copy2(REPO_ROOT / "live_trading" / name, wrapper)
+        (live_dir / ".locks" / f"{config_id}_postclose.lock").mkdir(
+            parents=True,
+        )
+
+        home = tmp_path / name / "home"
+        home.mkdir()
+        (home / ".qlib_live_env").write_text(
+            "export LIVE_RUN_MODE='LIVE'\n"
+            "unset LIVE_TRADING_CONFIRM\n",
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env.update({
+            "HOME": str(home),
+            "LIVE_TRADING_CONFIRM": "YES",
+        })
+
+        result = subprocess.run(
+            ["bash", str(wrapper), config_id],
+            cwd=root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        assert result.returncode == 75, (name, result.stdout, result.stderr)
+        assert "postclose pipeline holds" in result.stderr
+
+
 def test_wrappers_are_configurable_and_default_to_real_system():
     for name in WRAPPERS:
         text = (REPO_ROOT / "live_trading" / name).read_text(encoding="utf-8")

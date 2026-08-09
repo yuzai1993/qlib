@@ -2,7 +2,7 @@
 
 const content = document.getElementById('content');
 let currentPage = 'dashboard';
-let refreshTimer = null;
+const chartManager = MonitorRuntime.createChartManager(window);
 
 async function api(path) {
     const resp = await fetch('/api' + path);
@@ -111,6 +111,7 @@ function renderExecutionStatus(ov) {
 }
 
 function drawNavChart(nav, benchmarkName) {
+    chartManager.clear();
     const el = document.getElementById('nav-chart');
     if (!el || !nav.length) return;
     const chart = echarts.init(el, 'dark');
@@ -132,7 +133,7 @@ function drawNavChart(nav, benchmarkName) {
               lineStyle: { width: 1.5, type: 'dashed' } },
         ],
     });
-    window.addEventListener('resize', () => chart.resize(), { once: true });
+    chartManager.replace(chart);
 }
 
 /* ---------- 持仓 ---------- */
@@ -466,6 +467,7 @@ function resolvePredInstrument(q) {
 }
 
 async function loadPredMeanChart() {
+    chartManager.clear();
     const q = (document.getElementById('pred-query')?.value || '').trim();
     const hit = resolvePredInstrument(q);
 
@@ -482,8 +484,6 @@ async function loadPredMeanChart() {
 
     const el = document.getElementById('pred-mean-chart');
     if (!el) return;
-    const prev = echarts.getInstanceByDom(el);
-    if (prev) prev.dispose();
     if (!meanData.length) {
         el.innerHTML = '<div class="loading">暂无数据</div>';
         return;
@@ -523,7 +523,7 @@ async function loadPredMeanChart() {
                  axisLabel: { formatter: v => Number(v).toFixed(4) } },
         series,
     });
-    window.addEventListener('resize', () => chart.resize(), { once: true });
+    chartManager.replace(chart);
 }
 
 window.predSearch = async function (page) {
@@ -689,6 +689,7 @@ const PAGES = {
 };
 
 async function navigate(page) {
+    chartManager.clear();
     currentPage = page;
     document.querySelectorAll('.sidebar nav a').forEach(a =>
         a.classList.toggle('active', a.dataset.page === page));
@@ -704,12 +705,4 @@ document.querySelectorAll('.sidebar nav a').forEach(a => {
     a.onclick = (ev) => { ev.preventDefault(); navigate(a.dataset.page); };
 });
 
-function scheduleRefresh() {
-    if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(() => {
-        if (currentPage === 'dashboard') navigate('dashboard');
-    }, 60000);
-}
-
 navigate('dashboard');
-scheduleRefresh();

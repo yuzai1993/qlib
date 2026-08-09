@@ -322,6 +322,8 @@ async function toggleBatchDetail(batchId, token) {
 /* ---------- 预测信号 ---------- */
 
 let predInstruments = [];
+const predInstrumentResource = MonitorRuntime.createLazyResource(
+    () => api('/predictions/instruments'));
 let predPage = 0;
 let predSortBy = 'rank';
 let predSortOrder = 'asc';
@@ -333,12 +335,22 @@ function predDisplayCode(s) {
 }
 
 async function renderPredictions(token) {
-    const [dates, instruments] = await Promise.all([
-        api('/predictions/dates'),
-        api('/predictions/instruments'),
-    ]);
-    if (!navigationTracker.isCurrent(token)) return;
-    predInstruments = instruments || [];
+    return MonitorRuntime.loadPredictionPage({
+        loadDates: () => api('/predictions/dates'),
+        isCurrent: () => navigationTracker.isCurrent(token),
+        renderShell: dates => renderPredictionShell(dates, token),
+        loadPrimary: () => Promise.all([
+            loadPredSummary(token),
+            loadPredMeanChart(token),
+            predSearch(0, token),
+        ]),
+        instrumentResource: predInstrumentResource,
+        acceptInstruments: rows => { predInstruments = rows || []; },
+        rejectInstruments: () => { predInstruments = []; },
+    });
+}
+
+function renderPredictionShell(dates, token) {
     predPage = 0;
     predSortBy = 'rank';
     predSortOrder = 'asc';
@@ -349,7 +361,7 @@ async function renderPredictions(token) {
         content.innerHTML = html + `<div class="empty">暂无预测数据。
             新发布的批次会自动落库；历史数据可运行
             backfill_predictions.py 回填</div>`;
-        return;
+        return false;
     }
 
     const dateOptions = dates.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
@@ -396,9 +408,7 @@ async function renderPredictions(token) {
         }
     });
 
-    await Promise.all([
-        loadPredSummary(token), loadPredMeanChart(token), predSearch(0, token),
-    ]);
+    return true;
 }
 
 function setupPredAutocomplete(token) {

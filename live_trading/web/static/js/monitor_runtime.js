@@ -39,5 +39,33 @@
             currentPage() { return page; },
         };
     }
-    return { createChartManager, createNavigationTracker };
+    function createLazyResource(loader) {
+        let promise = null;
+        return {
+            load() {
+                if (!promise) promise = Promise.resolve().then(loader);
+                return promise;
+            },
+        };
+    }
+    async function loadPredictionPage(options) {
+        const dates = await options.loadDates();
+        if (!options.isCurrent()) return;
+        if (options.renderShell(dates) === false) return;
+        options.instrumentResource.load().then(
+            rows => {
+                if (options.isCurrent()) options.acceptInstruments(rows);
+            },
+            error => {
+                if (options.isCurrent()) options.rejectInstruments(error);
+            },
+        );
+        await options.loadPrimary();
+    }
+    return {
+        createChartManager,
+        createLazyResource,
+        createNavigationTracker,
+        loadPredictionPage,
+    };
 }));

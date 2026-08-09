@@ -48,6 +48,41 @@ test('navigation tracker invalidates every older page token', () => {
     assert.equal(tracker.currentPage(), 'alerts');
 });
 
+test('lazy resource invokes its loader once per page lifetime', async () => {
+    const { createLazyResource } = require(runtimePath);
+    let calls = 0;
+    const resource = createLazyResource(async () => {
+        calls += 1;
+        return ['SH600000'];
+    });
+    const [first, second] = await Promise.all([resource.load(), resource.load()]);
+    assert.deepEqual(first, ['SH600000']);
+    assert.deepEqual(second, ['SH600000']);
+    assert.equal(calls, 1);
+});
+
+test('prediction primary rendering does not wait for instruments', async () => {
+    const { createLazyResource, loadPredictionPage } = require(runtimePath);
+    const instruments = createDeferred();
+    const events = [];
+    const resource = createLazyResource(() => instruments.promise);
+    await loadPredictionPage({
+        loadDates: async () => ['2026-08-07'],
+        renderShell: dates => events.push(`shell:${dates[0]}`),
+        loadPrimary: async () => events.push('primary'),
+        instrumentResource: resource,
+        acceptInstruments: rows => events.push(`instruments:${rows.length}`),
+        rejectInstruments: () => events.push('instrument-error'),
+        isCurrent: () => true,
+    });
+    assert.deepEqual(events, ['shell:2026-08-07', 'primary']);
+    instruments.resolve(['SH600000']);
+    await instruments.promise;
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(events,
+        ['shell:2026-08-07', 'primary', 'instruments:1']);
+});
+
 function createDeferred() {
     let resolve;
     let reject;

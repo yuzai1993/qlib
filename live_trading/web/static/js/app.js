@@ -752,6 +752,7 @@ async function navigate(page) {
         await PAGES[page](token);
     } catch (e) {
         if (navigationTracker.isCurrent(token)) {
+            chartManager.clear();
             content.innerHTML = `<div class="empty">加载失败：${esc(e.message)}</div>`;
         }
     }

@@ -255,6 +255,55 @@ test('an older dashboard response cannot overwrite a newer alerts page', async (
     assert.equal(harness.content.innerHTML, alertsHtml);
 });
 
+test('an older dashboard rejection cannot alter the alerts page or chart', async () => {
+    const overview = createDeferred();
+    const nav = createDeferred();
+    const responses = {
+        '/api/overview': overview.promise,
+        '/api/nav': nav.promise,
+        '/api/alerts?limit=100': Promise.resolve([]),
+    };
+    const harness = createAppHarness(async pathname => ({
+        ok: true, json: async () => responses[pathname],
+    }));
+    await harness.context.navigate('alerts');
+    const alertsHtml = harness.content.innerHTML;
+    harness.context.drawNavChart([{
+        date: '2026-08-07', cumulative_return: 0.01,
+        benchmark_cumulative_return: 0.02,
+    }], 'new page chart');
+    const activeChart = vm.runInContext('chartManager.current()', harness.context);
+
+    overview.reject(new Error('late dashboard failure'));
+    await new Promise(resolve => setImmediate(resolve));
+
+    assert.equal(harness.content.innerHTML, alertsHtml);
+    assert.equal(activeChart.disposed, 0);
+    assert.equal(vm.runInContext('chartManager.current()', harness.context), activeChart);
+});
+
+test('current prediction load failure disposes its completed chart', async () => {
+    const summary = createDeferred();
+    const harness = createPredictionHarness(pathname => {
+        if (pathname.startsWith('/api/predictions/summary?')) {
+            return summary.promise;
+        }
+        return undefined;
+    });
+    const navigation = harness.context.navigate('predictions');
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(harness.charts.length, 1);
+    assert.equal(vm.runInContext('chartManager.current()', harness.context),
+        harness.charts[0]);
+
+    summary.reject(new Error('summary unavailable'));
+    await navigation;
+
+    assert.match(harness.content.innerHTML, /加载失败：summary unavailable/);
+    assert.equal(harness.charts[0].disposed, 1);
+    assert.equal(vm.runInContext('chartManager.current()', harness.context), null);
+});
+
 test('newer prediction summary wins when responses arrive out of order', async () => {
     const oldSummary = createDeferred();
     const newSummary = createDeferred();

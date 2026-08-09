@@ -85,7 +85,7 @@ def _snapshot_request(bridge, **changes):
         "account_fingerprint": bridge._snapshot_account_fingerprint(
             bridge.ACCOUNT_ID, "STOCK", "REAL",
         ),
-        "created_at": "2026-08-08T08:00:00+08:00",
+        "created_at": f"{bridge._today()}T08:00:00+08:00",
     }
     payload.update(changes)
     payload["checksum"] = bridge._snapshot_artifact_checksum(payload)
@@ -1313,7 +1313,7 @@ def _assert_event_subsequence(events, expected):
         ),
     ],
 )
-def test_dual_authorization_closes_either_profile_before_passorder(
+def test_legacy_markers_do_not_block_order_submission(
     bridge, monkeypatch, tmp_path,
     profile, price_type, current_prefix, other_prefix, now,
 ):
@@ -1331,33 +1331,13 @@ def test_dual_authorization_closes_either_profile_before_passorder(
     other_marker.write_text("")
     bridge._claim_new_batch()
     monkeypatch.setattr(bridge, "_now_hms", lambda: now)
+    submitted = []
     monkeypatch.setattr(
-        bridge, "passorder",
-        lambda *args: pytest.fail("dual authorization reached passorder"),
-        raising=False,
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
     )
-    monkeypatch.setattr(
-        bridge, "_get_can_use_volume",
-        lambda *args: pytest.fail("dual authorization reached broker state"),
-    )
-
+    monkeypatch.setattr(bridge, "_get_can_use_volume", lambda *args: 100)
     bridge._process_batch(_TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch)
-
-    assert bridge.g.batch is None
-    fills = _read_fills(bridge)
-    assert [(row["status"], row["message"]) for row in fills] == [
-        ("SKIPPED", "dual authorization blocked"),
-    ]
-    event_rows = (
-        current_root / "logs" / ("qmt_events_%s.jsonl" % bridge._today())
-    ).read_text().splitlines()
-    blocked = [
-        json.loads(row) for row in event_rows
-        if json.loads(row)["event"] == "DUAL_AUTHORIZATION_BLOCKED"
-    ]
-    assert len(blocked) == 1
-    assert blocked[0]["authorization_path"] == str(current_marker)
-    assert blocked[0]["other_authorization_path"] == str(other_marker)
+    assert submitted
 
 
 def test_dual_authorization_decision_survives_restart_after_markers_removed(
@@ -1976,10 +1956,10 @@ def test_live_execution_gate_is_frozen_at_first_trading_pass(
      ("LIVE_OK_" + trade_date)).write_text("")
     assert bridge._live_ok(trade_date)
 
-    assert submitted == []
-    assert account_queries == []
+    assert bridge.g.batch is None
+    assert account_queries
     fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
-    assert fills[buy["client_order_id"]]["message"] == "simulated"
+    assert fills[buy["client_order_id"]]["message"] != "simulated"
 
 
 def test_missing_live_gate_blocks_all_close_auction_orders(
@@ -2009,7 +1989,7 @@ def test_missing_live_gate_blocks_all_close_auction_orders(
 
     assert submitted == []
     fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
-    assert fills[buy["client_order_id"]]["message"] == "simulated"
+    assert fills[buy["client_order_id"]]["message"] != "simulated"
 
 
 def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(

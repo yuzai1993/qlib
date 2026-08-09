@@ -253,3 +253,10 @@ DB 已 terminal 但 archive 未完整时同样失败关闭，不能补造或继�
 | Mac 报持仓漂移 | 对照 QMT 委托/成交、`account_*.jsonl` 和本地 fills，先停下一日 LIVE |
 
 共享目录每天持久化 `qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl`，客户端重启不会清除。FormulaOutput 仅作为辅助日志。
+# 当前简化运行方式（2026-08-09）
+
+主发布端不再创建或检查 `LIVE_OK`、`PR49_LIVE_OK`、`LIVE_TRADING_CONFIRM`，也不判断模拟/真实账户。QMT 操作员负责启动正确的策略实例并在 QMT 内确认账户绑定；任何已启动且指向主 inbox 的实例都会消费已发布信号。账本、成交回执和监控仅用于审计，不是执行闸门。
+
+主策略卖出测试：先让 macOS 正常发布买入批次，再使用 `override_main_signal.py` 为上次买入标的生成 SELL 覆盖批次。不要改写原始预测或原批次。
+
+prType=49 调试：复制 `qmt_pr49_debug.py` 到单独的 QMT 策略，绑定独立目录 `D:\qmt_bridge\pr49_debug`。在该目录放置 request.json，策略会以 `prType=49` 发出 BUY/SELL 并将完整返回写入 `qmt_pr49_events.jsonl`；它不接主监控、不写主账本。

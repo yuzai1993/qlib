@@ -8,7 +8,10 @@ import pytest
 from live_trading.scripts import run_publish_signals as publish
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.signal_schema import compute_checksum
-from live_trading.scripts.override_main_signal import build_override
+from live_trading.scripts.override_main_signal import (
+    build_override,
+    replace_unclaimed_batch,
+)
 
 
 def _config():
@@ -212,6 +215,77 @@ def test_manual_sell_override_preserves_source_and_is_sell_only(tmp_path):
     assert orders[0].quantity == 100
     assert "source=20260810_main_001" in orders[0].reason
     assert header.batch_id != source.batch_id
+
+
+def test_replace_unclaimed_batch_archives_buy_and_publishes_held_sell(tmp_path):
+    from live_trading.modules.signal_publisher import SignalPublisher
+    from live_trading.modules.signal_schema import BatchHeader, SignalOrder
+
+    root = tmp_path / "bridge"
+    root.mkdir()
+    db_path = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db_path))
+    recorder.upsert_position("601326.SH", 100, 3.39, "2026-08-07")
+    source = BatchHeader(
+        batch_id="20260811_main_001", strategy_id="main",
+        trade_date="2026-08-11", signal_date="2026-08-10",
+        account_id="QMT_MANAGED", account_type="STOCK",
+        account_environment="REAL", mode="LIVE",
+        created_at="2026-08-10T20:00:00+08:00", order_count=1, checksum="",
+    )
+    buy = SignalOrder(
+        batch_id=source.batch_id, client_order_id="20260811001001B",
+        stock_code="600033.SH", side="BUY", quantity=0,
+        target_value=10000.0, price_type="CLOSE_AUCTION_LIMIT",
+        limit_price=0.0, priority=20, instrument_qlib="SH600033",
+        reason="topk_dropout",
+    )
+    recorder.record_publish_plan(source, [buy])
+    SignalPublisher(root).publish(source, [buy])
+
+    path = replace_unclaimed_batch(
+        root, db_path, source.batch_id, "601326.SH", 100,
+        "sell verification", "operator", 900,
+    )
+
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    assert rows[0]["trade_date"] == "2026-08-11"
+    assert rows[1]["side"] == "SELL"
+    assert rows[1]["quantity"] == 100
+    assert rows[1]["stock_code"] == "601326.SH"
+    assert rows[1]["instrument_qlib"] == "SH601326"
+    assert rows[1]["price_type"] == "CLOSE_AUCTION_LIMIT"
+    assert not (root / "inbox" / f"signal_{source.batch_id}.done").exists()
+    assert (root / "archive" / "superseded" / f"signal_{source.batch_id}.done").is_file()
+    replacement_id = rows[0]["batch_id"]
+    assert recorder.get_batch(source.batch_id)["superseded_by"] == replacement_id
+
+
+def test_replace_unclaimed_batch_rejects_insufficient_holding(tmp_path):
+    root = tmp_path / "bridge"
+    root.mkdir()
+    db_path = tmp_path / "live.db"
+    LiveRecorder(str(db_path)).upsert_position("601326.SH", 99, 3.39)
+
+    with pytest.raises(SystemExit, match="available holding"):
+        replace_unclaimed_batch(
+            root, db_path, "20260811_main_001", "601326.SH", 100,
+            "sell verification", "operator", 900,
+        )
+
+
+def test_replace_unclaimed_batch_rejects_processing_artifact(tmp_path):
+    root = tmp_path / "bridge"
+    (root / "processing").mkdir(parents=True)
+    (root / "processing" / "signal_20260811_main_001.done").write_text("x")
+    db_path = tmp_path / "live.db"
+    LiveRecorder(str(db_path)).upsert_position("601326.SH", 100, 3.39)
+
+    with pytest.raises(SystemExit, match="processing artifact"):
+        replace_unclaimed_batch(
+            root, db_path, "20260811_main_001", "601326.SH", 100,
+            "sell verification", "operator", 900,
+        )
 
 
 def test_main_paused_audit_preview_does_not_create_batch_or_inbox(

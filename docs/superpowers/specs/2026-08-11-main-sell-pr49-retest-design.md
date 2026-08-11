@@ -23,24 +23,31 @@ signals cannot start formal portfolio construction without a later decision.
 
 ## PR49 debug strategy
 
-The standalone debug script accepts a staged `request.json` but calls
+The standalone debug script accepts a staged `request.pending.json`, atomically
+activates it as `request.json` when the new strategy starts, and calls
 `passorder` only when local QMT time is between `15:05:00` and `15:25:00` on
-the request's exact `trade_date`. Before the window it appends a bounded
-`WAIT_WINDOW` event and leaves the request unchanged. After the window or on a
-date mismatch it records a terminal `ERROR` and moves the request to
-`request.json.processed`; it never submits late or on another date.
+the request's exact `trade_date`. The old strategy does not recognize the
+pending filename, so it cannot consume tomorrow's request before the Windows
+source is upgraded. Before the requested date the new strategy records a
+bounded `WAIT_DATE`; on the requested date before the window it records a
+bounded `WAIT_WINDOW`. Both cases leave the request unchanged. After the
+requested date, or after the window on that date, it records a terminal
+`ERROR` and moves the request to `request.json.processed`; it never submits
+late or on another date.
 
 The request schema requires `request_id`, `trade_date`, `side`, `stock_code`,
 and `quantity`. The 2026-08-12 request is BUY `688223.SH`, quantity 100, with a
 new request ID distinct from the rejected 2026-08-11 attempt. A successful
 attempt records full sanitized passorder arguments, `PASSORDER_RETURN`, and
 subsequent QMT callbacks in the persistent event log. The debug strategy stays
-independent from the main inbox, ledger, and monitoring service.
+independent from the main inbox, ledger, and monitoring service. Its tracked
+source intentionally leaves `ACCOUNT_ID` blank; the real account is bound only
+in the Windows/QMT-local copy so no broker account secret enters Git.
 
 ## Failure handling
 
 - Any main-batch artifact already in `processing` blocks replacement.
-- Any stale PR49 `request.json` or duplicate request ID blocks staging.
+- Any stale PR49 active/pending request or duplicate request ID blocks staging.
 - Neither strategy retries a request after `PASSORDER_ATTEMPT`.
 - Missing account binding, malformed request, wrong date, or missed PR49 window
   produces explicit evidence and no order.

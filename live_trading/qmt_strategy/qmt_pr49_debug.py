@@ -6,6 +6,7 @@ bridge, marker files, monitoring, and the main ledger.
 """
 
 import json
+import datetime
 import os
 import time
 
@@ -17,6 +18,7 @@ STRATEGY_NAME = "qlib_pr49_debug"
 ACCOUNT_ID = ""  # QMT-local account id; never commit the broker account number
 SUBMIT_START = "15:05:00"
 SUBMIT_END = "15:25:00"
+POLL_SECONDS = 3
 _LAST_WAIT_KEY = None
 
 
@@ -32,6 +34,50 @@ def init(ContextInfo):
         "INIT", strategy=STRATEGY_NAME, account_bound=bool(ACCOUNT_ID),
         prType=49, submit_start=SUBMIT_START, submit_end=SUBMIT_END,
     )
+    _register_timer(ContextInfo)
+
+
+def timer_callback(ContextInfo):
+    try:
+        handlebar(ContextInfo)
+    except Exception as exc:
+        _event(
+            "TIMER_ERROR", error=str(exc),
+            error_type=type(exc).__name__, prType=49,
+        )
+
+
+def _register_timer(ContextInfo):
+    day = time.strftime("%Y%m%d")
+    first_compact = day + SUBMIT_START.replace(":", "")
+    method = "schedule_run" if hasattr(ContextInfo, "schedule_run") else "run_time"
+    try:
+        if hasattr(ContextInfo, "schedule_run"):
+            result = ContextInfo.schedule_run(
+                timer_callback, first_compact, -1,
+                datetime.timedelta(seconds=POLL_SECONDS), "qlib_pr49_poll",
+            )
+            first_wakeup = first_compact
+        else:
+            first_wakeup = (
+                time.strftime("%Y-%m-%d") + " " + SUBMIT_START
+            )
+            result = ContextInfo.run_time(
+                "timer_callback", "%dnSecond" % POLL_SECONDS, first_wakeup,
+            )
+        _event(
+            "TIMER_REGISTERED", method=method, registered=True,
+            first_wakeup=first_wakeup, interval_seconds=POLL_SECONDS,
+            timer_name="qlib_pr49_poll", result=repr(result),
+        )
+    except Exception as exc:
+        _event(
+            "TIMER_REGISTERED", method=method, registered=False,
+            first_wakeup=first_compact, interval_seconds=POLL_SECONDS,
+            timer_name="qlib_pr49_poll", error=str(exc),
+            error_type=type(exc).__name__,
+        )
+        raise
 
 
 def _now_parts():

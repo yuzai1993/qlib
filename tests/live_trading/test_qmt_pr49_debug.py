@@ -1,8 +1,68 @@
 import json
+import datetime
 
 import pytest
 
 from live_trading.qmt_strategy import qmt_pr49_debug as debug
+
+
+class _ScheduleContext:
+    def __init__(self):
+        self.calls = []
+
+    def schedule_run(self, *args):
+        self.calls.append(args)
+        return 19
+
+
+def test_init_registers_repeating_fixed_price_timer(tmp_path, monkeypatch):
+    event_path = tmp_path / "events.jsonl"
+    monkeypatch.setattr(debug, "BRIDGE_ROOT", str(tmp_path))
+    monkeypatch.setattr(debug, "EVENT_LOG", str(event_path))
+    context = _ScheduleContext()
+
+    debug.init(context)
+
+    assert len(context.calls) == 1
+    callback, first_wakeup, repeat, interval, name = context.calls[0]
+    assert callback is debug.timer_callback
+    assert first_wakeup.endswith("150500")
+    assert repeat == -1
+    assert interval == datetime.timedelta(seconds=3)
+    assert name == "qlib_pr49_poll"
+    events = [json.loads(line) for line in event_path.read_text().splitlines()]
+    assert [row["event"] for row in events] == ["INIT", "TIMER_REGISTERED"]
+    assert events[-1]["registered"] is True
+
+
+def test_registered_timer_callback_submits_in_window_once(tmp_path, monkeypatch):
+    request_path = tmp_path / "request.json"
+    event_path = tmp_path / "events.jsonl"
+    request_path.write_text(json.dumps({
+        "request_id": "PR49B20260813688223",
+        "trade_date": "2026-08-13",
+        "side": "BUY",
+        "stock_code": "688223.SH",
+        "quantity": 100,
+    }))
+    calls = []
+    monkeypatch.setattr(debug, "BRIDGE_ROOT", str(tmp_path))
+    monkeypatch.setattr(debug, "REQUEST", str(request_path))
+    monkeypatch.setattr(debug, "PENDING_REQUEST", str(tmp_path / "request.pending.json"))
+    monkeypatch.setattr(debug, "EVENT_LOG", str(event_path))
+    monkeypatch.setattr(debug, "ACCOUNT_ID", "8890116049")
+    monkeypatch.setattr(debug, "_now_parts", lambda: ("2026-08-13", "15:05:01"))
+    monkeypatch.setattr(debug, "passorder", lambda *args: calls.append(args), raising=False)
+    context = _ScheduleContext()
+
+    debug.init(context)
+    callback = context.calls[0][0]
+    callback(context)
+    callback(context)
+
+    assert len(calls) == 1
+    assert calls[0][3:7] == ("688223.SH", 49, 0, 100)
+    assert (tmp_path / "request.json.PR49B20260813688223.processed").is_file()
 
 
 @pytest.mark.parametrize(

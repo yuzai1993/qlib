@@ -79,6 +79,7 @@ python collector.py update_data_to_bin --qlib_dir ~/.qlib/qlib_data/cn_data --st
 2. 指数成分日更
 3. vwap 巡检
 4. 前复权回溯完整性巡检（CSI300，近 90 天）
+5. ST 日频名单增量更新（`st_calendar.py update`）
 
 **原则：** 每一步都会跑完（单步失败不阻断后续）；任一步失败通过 Server酱推微信（环境变量 `SERVERCHAN_SENDKEY`，建议放在 `~/.qlib_live_env`）；任一步失败则脚本最终以非 0 退出。stdout/stderr 追加到 **qlib 根目录** 下 `logs/data/YYYY-MM-DD.log`。
 
@@ -101,6 +102,42 @@ crontab -e
 ```bash
 /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/run_update_to_bin.sh
 ```
+
+## ST 日频名单
+
+回测 Phase M（`--st-daily`）与实盘 `run_publish_signals.py` 共用同一份缓存
+`scripts/data_collector/tushare/st_daily.csv`（gitignore，不进 git）。查询只做
+`st_symbols_on(daily, as_of)`，禁止用「当前名字含 ST」的静态快照。
+
+两路来源与优先级：
+
+- `stock_st(trade_date=YYYYMMDD)`：交易所日频权威，**只按交易日拉**。禁止
+  `start_date/end_date` 范围查询（实测会被截成 1000 行）。单日 `len>=1000` 拒收。
+- `namechange`：区间展开到 qlib 交易日历。必须按 `ann_date` **年度分片**
+  （`YYYY0101`–`YYYY1231`）；任一年 `len>=10000` 拒收。另补一次无日期全量只做差集兜底。
+- 同日两路都有时以 `stock_st` 为准。
+- 退市整理期：`name` 含「退」（沪市前缀 `退市创兴`、深/北市后缀 `天龙退`）由
+  `namechange` + `stock_basic.delist_date` 覆盖；`stock_st` 不含整理期。
+
+首次部署必须手工 backfill（数分钟、约 2340 次 `stock_st` 调用）：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python \
+  scripts/data_collector/tushare/st_calendar.py update \
+  --qlib-dir ~/.qlib/qlib_data/cn_data --backfill
+```
+
+缓存缺失时增量 `update` 以非 0 退出，提示先 `--backfill`。日更只追加新交易日，
+并刷新当年与上一年 `namechange`。审计区间 `st_calendar.csv` 仅供人读，不参与过滤。
+
+产物（均 gitignore）：
+
+- `st_daily.csv`：过滤唯一事实来源
+- `st_namechange_raw.csv`：namechange 原始区间
+- `st_calendar.csv`：由日频压出的区间，仅审计
+
+盘后 `run_postclose_cron.sh` 已先跑 `run_update_to_bin.sh` 再发布；ST 名单会在
+publish 之前更新。发布侧缓存 `max_date < signal_date` 会直接失败，不得静默跳过。
 
 ## 修改计划
 

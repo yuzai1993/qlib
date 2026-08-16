@@ -325,6 +325,7 @@ bash live_trading/run_monitor_cron.sh postmarket csi1000_b6m_b2s_postclose_real
 
 - crontab 只维护一行，每个工作日 16:00 启动一次；
 - 先串行运行回执导入、`postmarket`、Tushare 行情更新和股票名称缓存刷新；仅在行情更新成功后运行 `report`；
+- Tushare 日更（`run_update_to_bin.sh`）在复权巡检之后会增量刷新 ST 日频名单 `scripts/data_collector/tushare/st_daily.csv`；发布脚本按 `signal_date` 查同一份缓存，命中 ST / 退市整理期则分数置 NaN。缓存缺失或 `max_date` 落后于 `signal_date` 时发布失败，须先成功跑完日更（首次部署还要手工 `--backfill`）；
 - postclose 完成后立即发布下一交易日，发布完成后立即运行 `evening` 完整性检查；
 - 三个阶段之间没有额外定时或等待。
 

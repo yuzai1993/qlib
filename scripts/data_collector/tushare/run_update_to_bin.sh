@@ -153,6 +153,22 @@ if [[ "$adj_status" -ne 0 ]]; then
 除权日 close 收益率与 \$change 偏差过大，历史前复权可能未正确回溯。"
 fi
 
+# ---------- 5) ST 日频名单（stock_st + namechange）----------
+log "===== ST daily index update ====="
+if "$PYTHON" scripts/data_collector/tushare/st_calendar.py update \
+  --qlib-dir ~/.qlib/qlib_data/cn_data
+then
+  log "st_calendar update OK"
+else
+  status=$?
+  alert_fail "ST日频名单日更" \
+    "st_calendar.py update 退出码：${status}
+
+最近日志：
+----------------------------------------
+$(tail -n 80 "$logfile" || echo "无法读取日志")"
+fi
+
 # ---------- 汇总 ----------
 if [[ "$FAILED" -ne 0 ]]; then
   log "===== FAILED steps: ${FAILURES[*]} ====="

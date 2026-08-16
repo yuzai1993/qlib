@@ -3,6 +3,7 @@
 import json
 from types import SimpleNamespace
 
+import pandas as pd
 import pytest
 
 from live_trading.scripts import run_publish_signals as publish
@@ -11,6 +12,15 @@ from live_trading.modules.signal_schema import compute_checksum
 from live_trading.scripts.override_main_signal import (
     build_override,
     replace_unclaimed_batch,
+)
+
+DAILY_ST = pd.DataFrame(
+    {
+        "symbol": ["SZ300029", "SZ300029"],
+        "date": ["2026-04-24", "2026-06-18"],
+        "name": ["*ST天龙", "天龙退"],
+        "source": ["stock_st", "namechange"],
+    }
 )
 
 
@@ -329,6 +339,12 @@ def test_main_paused_audit_preview_does_not_create_batch_or_inbox(
         publish, "get_signal_date_and_scores",
         lambda *_args: ("2026-08-10", [], ["2026-08-10"]),
     )
+    st_daily = tmp_path / "st_daily.csv"
+    st_daily.write_text(
+        "symbol,date,name,source\nSZ000001,2026-08-10,平安银行,stock_st\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("QLIB_ST_DAILY", str(st_daily))
     monkeypatch.setattr(publish, "get_price_instruments", lambda *_args: [])
     monkeypatch.setattr(publish, "get_prev_close", lambda *_args: {})
     monkeypatch.setattr(
@@ -349,3 +365,19 @@ def test_main_paused_audit_preview_does_not_create_batch_or_inbox(
     assert preview["sell_count"] == 0
     assert recorder.list_batches() == []
     assert not (tmp_path / "bridge" / "inbox").exists()
+
+
+def test_publish_nans_st_symbols_on_signal_date():
+    import numpy as np
+
+    scores = pd.Series([1.0, 2.0, 3.0], index=["SZ000001", "SZ300029", "SH600000"])
+    out = publish.apply_st_daily(scores, DAILY_ST, "2026-04-24")
+    assert np.isnan(out["SZ300029"])
+    assert out["SZ000001"] == 1.0
+    assert np.isnan(publish.apply_st_daily(scores, DAILY_ST, "2026-06-18")["SZ300029"])
+
+
+def test_publish_refuses_stale_cache():
+    scores = pd.Series([1.0], index=["SZ000001"])
+    with pytest.raises(SystemExit, match="st_daily"):
+        publish.apply_st_daily(scores, DAILY_ST, "2026-08-14")

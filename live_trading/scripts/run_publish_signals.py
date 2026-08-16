@@ -22,6 +22,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -42,6 +45,11 @@ from live_trading.modules.signal_schema import (
     validate_batch,
 )
 from qlib.contrib.strategy.topk_dropout import stable_rank_scores
+
+_TUSHARE_DIR = PROJECT_ROOT / "scripts" / "data_collector" / "tushare"
+if str(_TUSHARE_DIR) not in sys.path:
+    sys.path.insert(0, str(_TUSHARE_DIR))
+from st_calendar import load_daily, st_symbols_on  # noqa: E402
 
 logger = logging.getLogger("live_trading.publish")
 
@@ -285,6 +293,35 @@ def build_order_planner(config: dict, execution_profile=None) -> OrderPlanner:
     })
 
 
+def resolve_st_daily_path() -> Path:
+    override = os.environ.get("QLIB_ST_DAILY")
+    if override:
+        return Path(override).expanduser()
+    return PROJECT_ROOT / "scripts" / "data_collector" / "tushare" / "st_daily.csv"
+
+
+def load_st_daily_or_exit(path: Path | None = None) -> pd.DataFrame:
+    daily_path = path or resolve_st_daily_path()
+    if not daily_path.is_file():
+        raise SystemExit("ST daily index missing; run st_calendar.py update")
+    return load_daily(daily_path)
+
+
+def apply_st_daily(scores, daily, as_of):
+    as_of = pd.Timestamp(as_of).strftime("%Y-%m-%d")
+    if daily is None or daily.empty or str(daily["date"].max()) < as_of:
+        raise SystemExit(
+            f"st_daily covers up to {'<empty>' if daily is None or daily.empty else daily['date'].max()}, "
+            f"signal_date={as_of}; run st_calendar.py update"
+        )
+    if not isinstance(scores, pd.Series):
+        scores = pd.Series(scores, dtype=float)
+    banned = st_symbols_on(daily, as_of)
+    out = scores.astype(float).copy()
+    out.loc[out.index.astype(str).str.upper().isin(banned)] = np.nan
+    return out
+
+
 def main():
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -321,7 +358,13 @@ def main():
     signal_date, scores, trade_dates = get_signal_date_and_scores(
         config, trade_date
     )
-    logger.info("signal_date=%s, scored %d instruments", signal_date, len(scores))
+    st_daily = load_st_daily_or_exit()
+    scores = apply_st_daily(scores, st_daily, signal_date)
+    banned = st_symbols_on(st_daily, signal_date)
+    logger.info(
+        "signal_date=%s, scored %d instruments, ST daily banned %d",
+        signal_date, len(scores), len(banned),
+    )
 
     # 持久化全市场分数供监控查询（dry-run 不落库）
     preview_only = args.dry_run or args.audit_preview is not None
@@ -334,6 +377,13 @@ def main():
     current_positions = to_strategy_positions(qmt_positions)
     cash = recorder.get_cash()
     logger.info("live positions: %d, cash: %.2f", len(current_positions), cash)
+    held_st = sorted(
+        str(code).upper()
+        for code in current_positions
+        if str(code).upper() in {s.upper() for s in banned}
+    )
+    if held_st:
+        logger.info("ST daily hits currently held (will NaN for dropout): %s", held_st)
 
     # 3. 昨收价（含持仓与候选 topk）
     strategy_cfg = config["strategy"]

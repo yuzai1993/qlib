@@ -246,7 +246,7 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 
 **过滤**（评估宇宙；top-k 与等权基准同口径）：
 
-1. ST 名单：`backtest/configs/regime-adapt/st_names.csv`（`--st-names`）
+1. ST 日频名单：`scripts/data_collector/tushare/st_daily.csv`（`--st-daily`）。来源 Tushare stock_st（按交易日，2017-01-03 起）+ namechange（区间展开，回溯至 1999，并用 stock_basic.delist_date 覆盖退市整理期）；同名含「退」的整理期股票一并剔除。回测与实盘发布查同一份缓存。
 2. 成交额 ≥ 1000 万：本地无 `$amount`，用 `$volume × ($close/$factor) × 100`
 3. 上市 ≥ 60 交易日
 4. 另保留 t+1 涨停/零量剔除（`--exclude-limit-up`）

@@ -3115,6 +3115,9 @@ def _process_batch(ContextInfo, batch):
     if batch.dual_authorization_blocked:
         _finalize_dual_authorization_block(batch)
         return
+    if not batch.orders:
+        _finalize_batch(batch)
+        return
     now = _now_hms()
     if now < TRADE_START:
         return
@@ -3129,22 +3132,18 @@ def _process_batch(ContextInfo, batch):
         batch.trading_started = True
         batch.phase_started = time.time()
         trade_date = batch.header.get("trade_date", "")
-        batch.dual_authorization_blocked = (
-            batch.header.get("mode") == "LIVE"
-            and os.path.isfile(_authorization_path(trade_date))
-            and _other_profile_authorized(trade_date)
-        )
+        # Legacy marker files are ignored.  Account/runtime selection happens
+        # in the QMT strategy instance, not in the publisher's inbox.
+        batch.dual_authorization_blocked = False
         if batch.dual_authorization_blocked:
             batch.execution_authorized = False
             batch.execution_live = False
             _save_active_state(batch)
             _finalize_dual_authorization_block(batch)
             return
-        batch.execution_authorized = (
-            batch.broker_authorized
-            and batch.header.get("mode") == "LIVE"
-            and _live_ok(trade_date)
-        )
+        # The publisher is execution-neutral.  Whether this instance sends
+        # orders to a paper or real account is selected in QMT itself.
+        batch.execution_authorized = batch.broker_authorized
         if batch.execution_authorized and ACCOUNT_ENVIRONMENT == "REAL":
             preflight_ok, preflight_message = _real_account_preflight(
                 _account_id(batch))
@@ -3165,12 +3164,7 @@ def _process_batch(ContextInfo, batch):
         batch.execution_live = batch.execution_authorized
         _save_active_state(batch)
 
-    mode_live = (
-        batch.execution_authorized
-        and _live_ok(batch.header.get("trade_date", ""))
-    )
-    if batch.header.get("mode") == "LIVE" and not mode_live:
-        _log("LIVE batch but LIVE_OK switch missing -> simulate/skip")
+    mode_live = batch.execution_authorized
 
     account_id = _account_id(batch)
     sells = [o for o in batch.orders if o["side"] == "SELL"]

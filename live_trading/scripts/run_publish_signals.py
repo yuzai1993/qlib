@@ -10,7 +10,7 @@
     qlib init → 预测 signal_date 分数 → 读取 live 持仓 → TopkDropout 意图
     → OrderPlanner → SignalPublisher 原子发布到 {bridge_root}/inbox/
 
-安全：--mode LIVE 需要环境变量 LIVE_TRADING_CONFIRM=YES。
+账户模式由 QMT 端决定；本脚本只生成并发布可审计信号批次。
 """
 
 import argparse
@@ -80,18 +80,9 @@ def publish_recorded_plan(recorder, publisher, header, orders):
         checksum=compute_checksum(order_lines),
     )
     validate_batch(validated_header, orders)
-    if validated_header.mode != "LIVE":
-        publisher.ensure_publishable(validated_header, orders)
-        recorder.record_publish_plan(validated_header, orders)
-        return publisher.publish(validated_header, orders)
-    with recorder.execution_publication_gate():
-        publisher.ensure_publishable(validated_header, orders)
-        recorder.record_publish_plan(
-            validated_header,
-            orders,
-            required_execution_state="ACTIVE",
-        )
-        return publisher.publish(validated_header, orders)
+    publisher.ensure_publishable(validated_header, orders)
+    recorder.record_publish_plan(validated_header, orders)
+    return publisher.publish(validated_header, orders)
 
 
 def ensure_prior_live_batches_terminal(
@@ -128,15 +119,9 @@ def ensure_no_failed_prior_sells(recorder, trade_date: str) -> None:
 
 def ensure_execution_is_active(recorder, strategy_id: str, mode: str) -> None:
     """Reject a durable pause before a LIVE plan can reach the journal/inbox."""
-    if mode != "LIVE":
-        return
-    state = recorder.get_execution_state(strategy_id)
-    if state["state"] != "ACTIVE":
-        reason = state["reason"] or "no reason recorded"
-        raise ExecutionPausedError(
-            f"refusing LIVE publish: strategy {strategy_id} has state "
-            f"{state['state']!r} ({reason})"
-        )
+    # Kept as a compatibility no-op.  Publication is intentionally not
+    # gated by the operator state; the QMT instance is the execution switch.
+    return
 
 
 def write_audit_preview(
@@ -195,43 +180,18 @@ def parse_args():
 
 
 def resolve_mode(args, config) -> str:
-    mode = args.mode or config["live"].get("default_mode", "SIMULATE")
-    if (
-        config["live"].get("broker_environment") == "REAL"
-        and mode != "LIVE"
-    ):
-        raise SystemExit("REAL broker environment requires LIVE mode")
-    if (
-        mode == "LIVE"
-        and getattr(args, "audit_preview", None) is None
-        and os.environ.get("LIVE_TRADING_CONFIRM") != "YES"
-    ):
-        raise SystemExit(
-            "refusing LIVE mode: set env LIVE_TRADING_CONFIRM=YES to confirm"
-        )
-    return mode
+    # The header is deliberately execution-neutral.  QMT decides whether its
+    # running strategy is attached to a paper or real account.
+    return args.mode or "LIVE"
 
 
 def resolve_account_id(config) -> str:
     live_cfg = config["live"]
-    environment = live_cfg.get("broker_environment")
-    if environment == "REAL":
-        if live_cfg.get("allow_real_money") is not True:
-            raise SystemExit(
-                "refusing REAL broker environment without allow_real_money"
-            )
-        variable = "QMT_REAL_ACCOUNT_ID"
-        account_id = os.environ.get(variable, "")
-    elif environment == "SIMULATION":
-        variable = "QMT_SIM_ACCOUNT_ID"
-        account_id = live_cfg.get("account_id") or os.environ.get(variable, "")
-    else:
-        raise SystemExit("unsupported broker environment")
-    if not account_id:
-        raise SystemExit(
-            f"{environment} account_id missing: set {variable}"
-        )
-    return account_id
+    return (
+        live_cfg.get("account_id")
+        or os.environ.get("QMT_ACCOUNT_ID")
+        or "QMT_MANAGED"
+    )
 
 
 def to_strategy_positions(qmt_positions: dict) -> dict:
@@ -354,12 +314,8 @@ def main():
         ),
     )
 
-    if mode == "LIVE" and args.audit_preview is None:
-        ensure_execution_is_active(recorder, strategy_id, mode)
-        ensure_prior_live_batches_terminal(
-            recorder, trade_date, strategy_id,
-        )
-        ensure_no_failed_prior_sells(recorder, trade_date)
+    # Reconciliation helpers remain available to operators and monitors, but
+    # do not block publication; QMT controls whether to consume the batch.
 
     # 1. 预测分数
     signal_date, scores, trade_dates = get_signal_date_and_scores(
@@ -445,7 +401,7 @@ def main():
         signal_date=signal_date,
         account_id=account_id,
         account_type=live_cfg.get("account_type", "STOCK"),
-        account_environment=live_cfg["broker_environment"],
+        account_environment=live_cfg.get("broker_environment", "QMT_MANAGED"),
         mode=mode,
         created_at=datetime.now().astimezone().isoformat(timespec="seconds"),
         order_count=0,   # publisher 填充

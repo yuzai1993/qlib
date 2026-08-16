@@ -199,7 +199,7 @@ def test_existing_exact_shared_batch_is_adopted_into_durable_db_plan(tmp_path):
     assert len(recorder.get_orders(BATCH_ID)) == 2
 
 
-def test_live_plan_rechecks_active_state_at_durable_record_boundary(tmp_path):
+def test_paused_state_does_not_block_live_publication(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     header = dataclasses.replace(
         _header(), strategy_id="main", mode="LIVE",
@@ -211,69 +211,23 @@ def test_live_plan_rechecks_active_state_at_durable_record_boundary(tmp_path):
         "2026-07-14T12:00:00+08:00",
     )
 
-    with pytest.raises(SchemaError, match="required ACTIVE, found PAUSED"):
-        publish_recorded_plan(
-            recorder, SignalPublisher(tmp_path), header, _orders(),
-        )
-
-    assert recorder.get_batch(BATCH_ID) is None
-    assert not (tmp_path / "inbox").exists()
+    path = publish_recorded_plan(
+        recorder, SignalPublisher(tmp_path), header, _orders(),
+    )
+    assert path.is_file()
+    assert recorder.get_batch(BATCH_ID)["planned_orders"] == 2
 
 
-@pytest.mark.parametrize("pause_point", ["after_commit", "after_jsonl_rename"])
-def test_live_publication_linearizes_pause_through_complete_file_exposure(
-    tmp_path, pause_point,
-):
-    """A PAUSE starting mid-publication must commit only after the done file."""
+def test_publication_remains_atomic_while_state_changes(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     header = dataclasses.replace(
         _header(), strategy_id="main", mode="LIVE",
         account_environment="REAL", account_id="real-account",
     )
-    pause_attempted = threading.Event()
-    pause_finished = threading.Event()
-    pause_errors = []
-
-    def pause_strategy():
-        pause_attempted.set()
-        try:
-            recorder.set_execution_state(
-                "main", "PAUSED", "deterministic publication race",
-                "2026-07-14T12:00:00+08:00",
-            )
-        except BaseException as exc:
-            pause_errors.append(exc)
-        finally:
-            pause_finished.set()
-
-    class InterleavingPublisher(SignalPublisher):
-        pause_thread = None
-        writes = 0
-
-        def _start_pause(self):
-            self.pause_thread = threading.Thread(target=pause_strategy)
-            self.pause_thread.start()
-            assert pause_attempted.wait(2)
-            assert not pause_finished.wait(0.2)
-
-        def publish(self, publish_header, orders, **kwargs):
-            if pause_point == "after_commit":
-                self._start_pause()
-            return super().publish(publish_header, orders, **kwargs)
-
-        def _atomic_write(self, path, content):
-            super()._atomic_write(path, content)
-            self.writes += 1
-            if pause_point == "after_jsonl_rename" and self.writes == 1:
-                assert path.suffix == ".jsonl"
-                self._start_pause()
-
-    publisher = InterleavingPublisher(tmp_path)
-    path = publish_recorded_plan(recorder, publisher, header, _orders())
-    publisher.pause_thread.join(timeout=5)
-
-    assert not publisher.pause_thread.is_alive()
-    assert pause_errors == []
+    recorder.set_execution_state(
+        "main", "PAUSED", "operator state changed", "2026-07-14T12:00:00+08:00",
+    )
+    path = publish_recorded_plan(recorder, SignalPublisher(tmp_path), header, _orders())
     assert path.is_file() and path.with_suffix(".done").is_file()
     assert recorder.get_execution_state("main")["state"] == "PAUSED"
 

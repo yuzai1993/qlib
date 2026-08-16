@@ -408,3 +408,6 @@ bash live_trading/run_monitor_cron.sh evening csi1000_b6m_b2s_postclose_real
 - 回滚：停用新 cron、停止 QMT strategy ID、保留 SQLite 与 bridge archive。不要自动恢复旧 CSI300 调度。
 
 发生账本/券商持仓或现金差异时，先停止下一日 LIVE 发布并按 QMT 委托、成交和账户快照核对。当前实盘账本价值调整固定为 0；任何人工账本修正都应使用有审计记录的管理入口。
+# 当前执行边界（2026-08-09）
+
+主发布端只生成并发布信号，不创建或检查 `LIVE_OK`、`PR49_LIVE_OK`，不读取 `LIVE_TRADING_CONFIRM`，也不判断 SIMULATION/REAL。账户选择和是否启动交易完全由 QMT 策略实例负责；账本、成交回执、日志和监控继续保留用于审计。旧 marker/授权段落仅为历史说明，不属于当前默认流程。

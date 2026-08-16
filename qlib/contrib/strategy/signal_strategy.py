@@ -22,6 +22,7 @@ from qlib.contrib.strategy.order_generator import OrderGenerator, OrderGenWOInte
 from qlib.contrib.strategy.optimizer import EnhancedIndexingOptimizer
 from qlib.contrib.strategy.topk_dropout import (
     calculate_topk_buy_value,
+    select_daily_topk,
     select_topk_dropout,
 )
 
@@ -144,6 +145,15 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         self.only_tradable = only_tradable
         self.forbid_all_trade_at_limit = forbid_all_trade_at_limit
 
+    def _select_instruments(self, pred_score, current_stock_list):
+        return select_topk_dropout(
+            pred_score,
+            current_stock_list,
+            topk=self.topk,
+            n_drop=self.n_drop,
+            initial_buy_count=self.initial_buy_count,
+        )
+
     def generate_trade_decision(self, execute_result=None):
         # get the number of trading step finished, trade_step can be [0, 1, 2, ..., trade_len - 1]
         trade_step = self.trade_calendar.get_trade_step()
@@ -212,13 +222,7 @@ class TopkDropoutStrategy(BaseSignalStrategy):
             and self.method_buy == "top"
             and self.method_sell == "bottom"
         ):
-            selection = select_topk_dropout(
-                pred_score,
-                current_stock_list,
-                topk=self.topk,
-                n_drop=self.n_drop,
-                initial_buy_count=self.initial_buy_count,
-            )
+            selection = self._select_instruments(pred_score, current_stock_list)
             sell = selection.sell
             buy = selection.buy
         else:
@@ -330,6 +334,16 @@ class TopkDropoutStrategy(BaseSignalStrategy):
             )
             buy_order_list.append(buy_order)
         return TradeDecisionWO(sell_order_list + buy_order_list, self)
+
+
+class DailyTopkStrategy(TopkDropoutStrategy):
+    """每日把持仓换成当日分数最高的 topk，无 n_drop / hold 缓冲。"""
+
+    def __init__(self, *, topk, n_drop=None, hold_thresh=1, **kwargs):
+        super().__init__(topk=topk, n_drop=topk, hold_thresh=1, **kwargs)
+
+    def _select_instruments(self, pred_score, current_stock_list):
+        return select_daily_topk(pred_score, current_stock_list, topk=self.topk)
 
 
 class WeightStrategyBase(BaseSignalStrategy):

@@ -42,6 +42,7 @@ from config_loader import (
     load_config,
     normalize_exchange_kwargs,
     resolve_backtest_model_source,
+    resolve_benchmark_series,
 )
 from report_utils import (
     build_pred_label,
@@ -346,6 +347,7 @@ def run_train_backtest_once(
         port_cfg["backtest"]["exchange_kwargs"] = normalize_exchange_kwargs(
             port_cfg["backtest"].get("exchange_kwargs")
         )
+        port_cfg = resolve_benchmark_series(port_cfg)
         port_cfg["strategy"]["kwargs"]["model"] = model
         port_cfg["strategy"]["kwargs"]["dataset"] = dataset
 
@@ -468,6 +470,7 @@ def run_backtest_only_once(
         port_cfg["backtest"]["exchange_kwargs"] = normalize_exchange_kwargs(
             port_cfg["backtest"].get("exchange_kwargs")
         )
+        port_cfg = resolve_benchmark_series(port_cfg)
         port_cfg["strategy"]["kwargs"]["model"] = model
         port_cfg["strategy"]["kwargs"]["dataset"] = dataset
 

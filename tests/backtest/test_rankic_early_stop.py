@@ -522,6 +522,51 @@ def test_rankic_fit_uses_instance_protocol_without_preparing_test(monkeypatch):
     assert all(call[0] != "test" for call in dataset.prepare_calls)
 
 
+def test_fit_prepared_feeds_frames_directly_without_dataset(monkeypatch):
+    """Fails if the chunked-preparation entry bypasses the adapter contract."""
+    from backtest.models import rankic_early_stop
+
+    train = _model_frame(np.arange(40, dtype=float), days=("2019-12-02", "2019-12-03"))
+    valid = _model_frame(np.arange(40, dtype=float))
+    captured = {}
+
+    def fake_parent_fit(self, prepared_dataset):
+        captured["frames"] = prepared_dataset.prepare(
+            ["train", "valid"],
+            col_set=["feature", "label"],
+            data_key="learn",
+        )
+        return "fit-result"
+
+    monkeypatch.setattr(rankic_early_stop.DEnsembleModel, "fit", fake_parent_fit)
+    model = RankICEarlyStoppingDEnsembleModel(early_stopping_rounds=20)
+    model.rankic_evals_result = [{"stale": True}]
+
+    result = model.fit_prepared(train, valid)
+
+    assert result == "fit-result"
+    assert captured["frames"] == (train, valid)
+    assert model.rankic_evals_result == []
+
+
+def test_fit_prepared_rejects_mismatched_feature_columns(monkeypatch):
+    """Fails if train/valid feature schema drift goes undetected."""
+    from backtest.models import rankic_early_stop
+
+    train = _model_frame(np.arange(40, dtype=float), days=("2019-12-02", "2019-12-03"))
+    valid = _model_frame(np.arange(40, dtype=float))
+    valid = valid[valid.columns[::-1]]  # 打乱列顺序
+    monkeypatch.setattr(
+        rankic_early_stop.DEnsembleModel,
+        "fit",
+        lambda self, ds: pytest.fail("must not reach parent fit"),
+    )
+    model = RankICEarlyStoppingDEnsembleModel(early_stopping_rounds=20)
+
+    with pytest.raises(ValueError, match="feature columns"):
+        model.fit_prepared(train, valid)
+
+
 def test_rankic_fit_keeps_h40_train_for_three_submodels_and_parent_prediction(monkeypatch):
     """Fails if the H1 valid frame leaks into SR/FS or changes parent prediction."""
     from backtest.models import rankic_early_stop

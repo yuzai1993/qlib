@@ -14,6 +14,7 @@ dist/
 *.hd5
 *.csv
 !scripts/data_collector/csindex_v2/manual_fixes.csv
+!backtest/configs/regime-adapt/*.csv
 
 .env
 **/jq_credentials.env

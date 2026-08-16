@@ -115,3 +115,26 @@ def select_topk_dropout(
     buy_count = max(len(sell) + position_delta, 0)
     buy = tuple(today[:buy_count])
     return TopkSelection(sell=sell, buy=buy)
+
+
+def select_daily_topk(
+    scores: pd.Series,
+    current_stock_list: Iterable[str],
+    *,
+    topk: int,
+) -> TopkSelection:
+    """每日把持仓换成当日分数最高的 topk（无 n_drop / hold 缓冲）。
+
+    与 TopkDropout 不同：只要某只股票跌出当日 topk 就卖、新进 topk 就买，
+    不限制每日替换只数。
+    """
+    if topk < 0:
+        raise ValueError("topk must be non-negative")
+    ranked_scores = stable_rank_scores(scores)
+    target = list(ranked_scores.index[:topk])
+    target_set = set(target)
+    held = list(current_stock_list)
+    sell = tuple(instrument for instrument in held if instrument not in target_set)
+    held_set = set(held)
+    buy = tuple(instrument for instrument in target if instrument not in held_set)
+    return TopkSelection(sell=sell, buy=buy)

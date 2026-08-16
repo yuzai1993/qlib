@@ -210,6 +210,23 @@ def test_cli_accepts_valid_segment():
     assert args.eval_end is None
 
 
+def test_cli_rejects_deprecated_st_names(capsys):
+    with pytest.raises(SystemExit):
+        evaluator.parse_args(
+            [
+                "--config",
+                "dummy.yaml",
+                "--sessions",
+                "session:42",
+                "--output",
+                "out.json",
+                "--st-names",
+                "st_names.csv",
+            ]
+        )
+    assert "--st-names 已废弃" in capsys.readouterr().err
+
+
 def test_cli_requires_self_role_for_custom_evaluation_label():
     with pytest.raises(SystemExit):
         evaluator.parse_args(

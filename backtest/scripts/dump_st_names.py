@@ -1,4 +1,8 @@
-"""导出 A 股代码-名称表，供 eval_ic_multi_pool --st-names 剔除 ST。
+"""已废弃：静态 ST 名称表，仅供历史对照。
+
+过滤请改用 scripts/data_collector/tushare/st_daily.csv（--st-daily）。
+本脚本导出的是当前名字快照，不能覆盖退市整理期，也没有交易日维度。
+"""
 
 优先 AkShare（无需 token）；失败再尝试环境变量 TUSHARE_TOKEN。
 写出 CSV：symbol,name（qlib 代码，如 SZ000001）。

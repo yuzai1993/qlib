@@ -44,6 +44,7 @@ from config_loader import (
     resolve_backtest_model_source,
     resolve_benchmark_series,
 )
+from universe_filter import wrap_model_predict
 from report_utils import (
     build_pred_label,
     generate_run_figures,
@@ -54,6 +55,24 @@ from report_utils import (
 )
 
 RESULT_ROOT.mkdir(parents=True, exist_ok=True)
+
+
+def maybe_wrap_universe_filter(model, cfg: dict):
+    """YAML 有 universe_filter 时包装 predict，使策略看到过滤后分数。"""
+    spec = cfg.get("universe_filter")
+    if not spec:
+        return model
+    wrapped = wrap_model_predict(model, spec, project_root=QLIB_ROOT)
+    print(f"[universe_filter] 已启用: {spec}", flush=True)
+    return wrapped
+
+
+def dump_universe_filter_stats(model, run_dir: Path) -> None:
+    stats = getattr(model, "filter_stats", None)
+    if not stats:
+        return
+    write_json(run_dir / "universe_filter_stats.json", stats)
+    print(f"[universe_filter] 统计已写入 {run_dir / 'universe_filter_stats.json'}", flush=True)
 
 
 def load_backtest_model(source_info: dict):
@@ -354,6 +373,7 @@ def run_train_backtest_once(
         with R.start(experiment_name=backtest_exp):
             recorder = R.get_recorder(recorder_id=train_rid, experiment_name=train_exp)
             model = recorder.load_object("trained_model")
+            model = maybe_wrap_universe_filter(model, cfg)
             port_cfg["strategy"]["kwargs"]["model"] = model
 
             recorder = R.get_recorder()
@@ -404,6 +424,7 @@ def run_train_backtest_once(
             pred_label=pred_label,
             generate_figures=generate_figures,
         )
+        dump_universe_filter_stats(model, run_dir)
         print(f"[Run {run_idx}] 报告已保存至 {run_dir}")
         print(f"[Run {run_idx}] 主要指标: {metrics}")
 
@@ -461,6 +482,7 @@ def run_backtest_only_once(
 
     try:
         model = load_backtest_model(source_info)
+        model = maybe_wrap_universe_filter(model, cfg)
         print(f"[Run {run_idx}] 已加载模型: {source_info['model_path']}")
         print(f"[Run {run_idx}] Handler: {handler_class}")
 
@@ -529,6 +551,7 @@ def run_backtest_only_once(
             pred_label=pred_label,
             generate_figures=bool(cfg["run"].get("generate_figures", False)),
         )
+        dump_universe_filter_stats(model, run_dir)
         print(f"[Run {run_idx}] 报告已保存至 {run_dir}")
         print(f"[Run {run_idx}] 主要指标: {metrics}")
 

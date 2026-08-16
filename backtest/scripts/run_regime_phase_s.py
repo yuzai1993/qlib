@@ -42,6 +42,10 @@ WARMUP_START = "2020-02-03"
 
 SEEDS = (42, 1000, 2000, 3000, 4000)
 
+DEFAULT_UNIVERSE_FILTER = {
+    "st_daily": "scripts/data_collector/tushare/st_daily.csv",
+}
+
 # 全A 与训练池一致：剔除指数 / B 股 / 北交所
 ALL_A_INSTRUMENTS = {
     "market": "all",
@@ -230,6 +234,7 @@ def build_config(
                 "trade_unit": 100,
             },
         },
+        "universe_filter": dict(DEFAULT_UNIVERSE_FILTER, pool=pool),
     }
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     path = CONFIG_DIR / f"bt_{tag}.yaml"

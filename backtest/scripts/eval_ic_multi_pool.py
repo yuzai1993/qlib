@@ -6,7 +6,8 @@
 - 评测标签固定为默认 `Ref($close, -2)/Ref($close, -1) - 1`，与训练标签无关，
   保证不同标签实验的 IC 可比；
 - 全A 池（all）自动剔除上市不足 --min-listing-days 个交易日的股票；
-  可选 --st-names 提供 symbol,name 映射以剔除 ST 股，未提供时输出中注明。
+  用 --st-daily 提供日频 ST 名单（默认 scripts/data_collector/tushare/st_daily.csv
+  需显式传入）；--st-names 已废弃。
 
 用法示例：
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/eval_ic_multi_pool.py \
@@ -36,6 +37,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(QLIB_ROOT))
 sys.path.insert(0, str(SCRIPTS_DIR))
 
+from universe_filter import UniverseFilterSpec, build_keep_mask  # noqa: E402
 from config_loader import (  # noqa: E402
     build_handler_kwargs,
     load_config,
@@ -460,7 +462,7 @@ def evaluate_multi_horizon(
     *,
     horizons: Sequence[int],
     min_listing_days: int = 60,
-    st_symbols: Optional[set[str]] = None,
+    st_daily: Optional[Path] = None,
     min_count: int = 20,
     segment: str = "test",
     eval_end: Optional[str] = None,
@@ -497,7 +499,7 @@ def evaluate_multi_horizon(
         ),
         "filters": {
             "min_listing_days": int(min_listing_days),
-            "st_filter": "enabled" if st_symbols is not None else "unavailable",
+            "st_filter": "daily" if st_daily is not None else "unavailable",
             "min_amount": float(min_amount),
         },
         "primary_cell": {"k": PRIMARY_K, "h": PRIMARY_H},
@@ -505,7 +507,7 @@ def evaluate_multi_horizon(
         "turnover_reliable": bool(eval_dates is None),
         "sessions": [{"session": s, "seed": seed} for s, seed in sessions],
         "data_version": str(pd.Timestamp(D.calendar(start_time="2020-01-01")[-1]).date()),
-        "st_filter": "enabled" if st_symbols is not None else "unavailable（未剔除 ST）",
+        "st_filter": "daily" if st_daily is not None else "unavailable（未剔除 ST）",
         "pools": {},
     }
 
@@ -524,15 +526,15 @@ def evaluate_multi_horizon(
                     mask = mask & _listing_age_mask(
                         label.index, pool, min_listing_days, effective_end
                     )
-                if st_symbols:
-                    inst = label.index.get_level_values("instrument").str.upper()
-                    mask = mask & ~pd.Series(inst.isin(st_symbols), index=label.index)
+                st_keep = _st_keep_mask(label.index, st_daily, pool)
+                if st_keep is not None:
+                    mask = mask & st_keep
                 if min_amount > 0:
                     amt_ok = amount_mask(pool, eval_start, effective_end, min_amount)
                     mask = mask & amt_ok.reindex(label.index).fillna(False)
                 print(
                     f"[{pool}] 过滤后保留 {int(mask.mean()*10000)/100:.2f}% "
-                    f"(listing>={min_listing_days}, ST={'on' if st_symbols else 'off'}, "
+                    f"(listing>={min_listing_days}, ST={'daily' if st_daily else 'off'}, "
                     f"amount>={min_amount:.0f})",
                     flush=True,
                 )
@@ -1057,14 +1059,23 @@ def _listing_age_mask(index: pd.MultiIndex, pool: str, min_days: int, end: str) 
     return (dt_pos - inst_first) >= min_days
 
 
-def _load_st_symbols(st_names: Optional[Path]) -> Optional[set[str]]:
-    """读取 symbol,name 两列 CSV，返回名称含 ST 的代码集合。"""
-    if st_names is None:
+def _st_keep_mask(
+    index: pd.MultiIndex, st_daily: Optional[Path], pool: str = ""
+) -> Optional[pd.Series]:
+    """按日查 st_daily；未提供路径则不过滤。样本日超出缓存则抛错。"""
+    if st_daily is None:
         return None
-    df = pd.read_csv(st_names)
-    sym_col, name_col = df.columns[0], df.columns[1]
-    mask = df[name_col].astype(str).str.upper().str.contains("ST")
-    return set(df.loc[mask, sym_col].astype(str).str.upper())
+    spec = UniverseFilterSpec(
+        st_daily=Path(st_daily),
+        min_amount=0.0,
+        min_listing_days=0,
+        pool=pool,
+    )
+    keep = build_keep_mask(index, spec)
+    aligned = keep.reindex(index)
+    if aligned.isna().any():
+        raise ValueError("st_daily keep mask could not align to sample index")
+    return aligned.astype(bool)
 
 
 def _yearly_summaries(daily: pd.DataFrame) -> dict[str, dict]:
@@ -1080,7 +1091,7 @@ def evaluate(
     pools: Sequence[str],
     *,
     min_listing_days: int = 60,
-    st_symbols: Optional[set[str]] = None,
+    st_daily: Optional[Path] = None,
     min_count: int = 20,
     segment: str = "test",
     eval_label_expr: str = EVAL_LABEL_EXPR,
@@ -1108,7 +1119,7 @@ def evaluate(
         "effective_eval_segment": [eval_start, effective_end],
         "sessions": [{"session": s, "seed": seed} for s, seed in sessions],
         "data_version": str(pd.Timestamp(D.calendar(start_time="2020-01-01")[-1]).date()),
-        "st_filter": "enabled" if st_symbols is not None else "unavailable（未剔除 ST）",
+        "st_filter": "daily" if st_daily is not None else "unavailable（未剔除 ST）",
         "pools": {},
     }
     if segment == "test":
@@ -1129,9 +1140,9 @@ def evaluate(
                 effective_end,
             )
             label = label[mask]
-        if st_symbols:
-            keep = ~label.index.get_level_values("instrument").str.upper().isin(st_symbols)
-            label = label[keep]
+        st_keep = _st_keep_mask(label.index, st_daily, pool)
+        if st_keep is not None:
+            label = label[st_keep]
 
         dataset = _build_dataset(
             cfg,
@@ -1209,7 +1220,7 @@ def evaluate_rolling(
     pools: Sequence[str],
     *,
     min_listing_days: int = 60,
-    st_symbols: Optional[set[str]] = None,
+    st_daily: Optional[Path] = None,
     min_count: int = 20,
 ) -> dict:
     """Evaluate stitched walk-forward predictions through the canonical IC path."""
@@ -1248,7 +1259,7 @@ def evaluate_rolling(
             pd.Timestamp(D.calendar(start_time="2020-01-01")[-1]).date()
         ),
         "st_filter": (
-            "enabled" if st_symbols is not None else "unavailable（未剔除 ST）"
+            "daily" if st_daily is not None else "unavailable（未剔除 ST）"
         ),
         "pools": {},
     }
@@ -1265,11 +1276,9 @@ def evaluate_rolling(
                 official_end,
             )
             label = label[mask]
-        if st_symbols:
-            keep = ~label.index.get_level_values("instrument").str.upper().isin(
-                st_symbols
-            )
-            label = label[keep]
+        st_keep = _st_keep_mask(label.index, st_daily, pool)
+        if st_keep is not None:
+            label = label[st_keep]
 
         predictions: dict[Any, list[pd.Series]] = {
             row["seed"]: [] for row in manifest["sessions"]
@@ -1379,7 +1388,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
     p.add_argument("--output", required=True, type=Path, help="输出 JSON 路径")
     p.add_argument("--min-listing-days", type=int, default=60, help="全A 池最短上市交易日数")
-    p.add_argument("--st-names", type=Path, default=None, help="可选 symbol,name CSV 用于剔除 ST")
+    p.add_argument("--st-daily", type=Path, default=None, help="日频 ST 名单 CSV（symbol,date,name,source）")
+    p.add_argument("--st-names", type=Path, default=None, help=argparse.SUPPRESS)
     p.add_argument("--min-count", type=int, default=20, help="单日截面最少样本数")
     p.add_argument(
         "--eval-label",
@@ -1452,6 +1462,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="评估日成交额下限（元）；0=不启用。1000 万传入 10000000",
     )
     args = p.parse_args(argv)
+    if args.st_names is not None:
+        p.error("--st-names 已废弃，改用 --st-daily")
     if (
         args.eval_label != EVAL_LABEL_EXPR
         and args.eval_label_role != "self"
@@ -1489,7 +1501,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     _init_qlib(cfg)
 
     sessions = [_parse_session(s) for s in args.sessions]
-    st_symbols = _load_st_symbols(args.st_names)
+    st_daily = args.st_daily
     if args.horizons is not None:
         result = evaluate_multi_horizon(
             cfg,
@@ -1497,7 +1509,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             args.pools,
             horizons=args.horizons,
             min_listing_days=args.min_listing_days,
-            st_symbols=st_symbols,
+            st_daily=st_daily,
             min_count=args.min_count,
             segment=args.segment,
             eval_end=args.eval_end,
@@ -1521,7 +1533,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             sessions,
             args.pools,
             min_listing_days=args.min_listing_days,
-            st_symbols=st_symbols,
+            st_daily=st_daily,
             min_count=args.min_count,
         )
     else:
@@ -1530,7 +1542,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             sessions,
             args.pools,
             min_listing_days=args.min_listing_days,
-            st_symbols=st_symbols,
+            st_daily=st_daily,
             min_count=args.min_count,
             segment=args.segment,
             eval_label_expr=args.eval_label,

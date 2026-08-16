@@ -1,0 +1,50 @@
+# regime-adapt 评估配置 | M0-fast（Alpha158Technical+range，无 regime 特征）
+# 仅供 eval_ic_multi_pool.py 推理用：instruments 由 --pools 覆盖，handler 时间由脚本按分段重写
+# 评估窗 = 计划 v3 2.4 节候选窗 2020-08-03..2026-07-31，实际评估日由 --date-list 冻结清单限定
+run:
+  mode: train_only
+  note: eval_regime_adapt_m0fast
+  n_runs: 1
+  from_session: null
+  from_run: 1
+  generate_figures: false
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: csi1000
+  benchmark: SH000852
+  handler:
+    class: Alpha158Technical
+    module_path: backtest.features.technical
+    start_time: '2020-02-03'
+    end_time: '2026-07-31'
+    fit_start_time: '2020-02-03'
+    fit_end_time: '2020-08-03'
+    feature_groups:
+    - range
+    infer_processors:
+    - class: ProcessInf
+    label:
+    - - Ref($close, -41)/Ref($close, -1)-1
+    - - LABEL0
+    learn_processors:
+    - class: DropnaLabel
+    - class: CSRankNorm
+      kwargs:
+        fields_group: label
+segments:
+  train:
+  - '2004-01-02'
+  - '2020-07-31'
+  valid:
+  - '2020-08-03'
+  - '2026-07-31'
+  test:
+  - '2020-08-03'
+  - '2026-07-31'
+model:
+  class: LGBModel
+  module_path: qlib.contrib.model.gbdt
+  kwargs:
+    loss: mse
+    seed: 42

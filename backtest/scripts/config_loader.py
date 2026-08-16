@@ -231,6 +231,32 @@ def normalize_exchange_kwargs(exchange_kwargs: Optional[dict]) -> dict:
     return out
 
 
+def resolve_benchmark_series(port_cfg: dict) -> dict:
+    """把 `benchmark: {equal_weight_csv: ...}` 换成 qlib 可用的 pd.Series。
+
+    必须在 port_cfg 的 json 往返之后调用（Series 不可 JSON 序列化）。
+    qlib 的 `PortfolioMetrics._cal_benchmark` 对 pd.Series 直接采用，
+    index 为交易日、值为当日涨跌幅。
+    """
+    bench = (port_cfg.get("backtest") or {}).get("benchmark")
+    if not isinstance(bench, dict) or "equal_weight_csv" not in bench:
+        return port_cfg
+
+    import pandas as pd
+
+    path = Path(bench["equal_weight_csv"])
+    if not path.is_absolute():
+        path = BACKTEST_ROOT.parent / path
+    if not path.is_file():
+        raise ConfigError(f"等权基准文件不存在: {path}（先跑 build_equal_weight_benchmark.py）")
+    df = pd.read_csv(path, index_col=0, parse_dates=True)
+    series = df.iloc[:, 0].astype(float).sort_index()
+    if series.empty:
+        raise ConfigError(f"等权基准为空: {path}")
+    port_cfg["backtest"]["benchmark"] = series
+    return port_cfg
+
+
 def build_port_analysis_config(cfg: dict) -> dict:
     """组装 PortAnaRecord 配置（不含 model/dataset 运行时对象）。"""
     strategy = cfg["strategy"]

@@ -4,6 +4,7 @@ import pytest
 
 from qlib.contrib.strategy.topk_dropout import (
     calculate_topk_buy_value,
+    select_daily_topk,
     select_topk_dropout,
     stable_rank_scores,
 )
@@ -198,3 +199,40 @@ def test_legacy_buy_value_still_splits_available_cash():
     )
 
     assert value == pytest.approx(4_750.0)
+
+
+def test_daily_topk_replaces_any_name_outside_today_topk():
+    scores = _scores(8)
+    # 持有 top3 + 一只掉出 top4 的 6；卖掉 6 后缺 1 个名额，买入第 4 名
+    held = list(scores.index[:3]) + [scores.index[6]]
+    selection = select_daily_topk(scores, held, topk=4)
+    assert selection.sell == (scores.index[6],)
+    assert selection.buy == (scores.index[3],)
+
+
+def test_daily_topk_trims_extra_holding_already_in_topk():
+    scores = _scores(8)
+    held = list(scores.index[:4]) + [scores.index[6]]
+    selection = select_daily_topk(scores, held, topk=4)
+    assert selection.sell == (scores.index[6],)
+    assert selection.buy == ()
+
+
+def test_daily_topk_keeps_unchanged_when_already_topk():
+    scores = _scores(8)
+    held = list(scores.index[:4])
+    selection = select_daily_topk(scores, held, topk=4)
+    assert selection.sell == ()
+    assert selection.buy == ()
+
+
+def test_daily_topk_is_not_capped_by_n_drop():
+    """对照：n_drop=1 的 Dropout 一天只能换 1 只；daily topk 一次换完。"""
+    scores = _scores(8)
+    held = list(scores.index[4:8])  # 最差 4 只
+    daily = select_daily_topk(scores, held, topk=4)
+    dropout = select_topk_dropout(scores, held, topk=4, n_drop=1)
+    assert set(daily.sell) == set(held)
+    assert daily.buy == tuple(scores.index[:4])
+    assert len(dropout.sell) == 1
+    assert len(dropout.buy) == 1

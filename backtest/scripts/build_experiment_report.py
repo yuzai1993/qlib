@@ -114,7 +114,8 @@ PHASE_M_LEGEND_HTML = """
 </tbody>
 </table>
 <p class="meta">读表建议：同一方向内横向对比各测试集 RankIC；优先关注研究主目标池 <b>CSI1000</b>，再看 CSI300 / CSI500 是否同步改善（防过拟合单一市场）。
-默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。每个方向表格第一行为对应 <code>baseline_ref</code> 的 baseline 指标。</p>
+默认测试集为三指数，不含全A（需评估全A 时在实验设计中显式指定）。每个方向表格第一行为对应 <code>baseline_ref</code> 的 baseline 指标。
+本报告只服务 CSI1000 历史 Phase M（IC/RankIC）；Phase M v1（全A / M0 H20）见 <a href="phase_m_v1_report.html">phase_m_v1_report.html</a>。</p>
 </section>
 """
 
@@ -481,6 +482,8 @@ def build_html(rows: Sequence[dict]) -> str:
     by_direction: dict[str, list[dict]] = {}
     for r in rows:
         if _phase_of(r) == "S":
+            continue
+        if str(r.get("phase_m_protocol") or "") == "v1":
             continue
         by_direction.setdefault(r.get("direction") or "uncategorized", []).append(r)
 

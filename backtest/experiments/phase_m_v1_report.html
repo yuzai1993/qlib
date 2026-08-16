@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Phase M v1 总报告</title>
+<style>
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+       margin: 24px auto; max-width: 1280px; color: #1a1a2e; background: #fafafa; }
+h1 { font-size: 22px; } h2 { font-size: 18px; margin-top: 36px;
+     border-bottom: 2px solid #2563eb; padding-bottom: 6px; }
+h3 { font-size: 15px; margin: 16px 0 8px; color: #333; }
+.meta { color: #666; font-size: 13px; }
+nav, .legend { background: #fff; border: 1px solid #ddd; border-radius: 8px;
+      padding: 12px 20px; margin: 16px 0; }
+nav ul { margin: 6px 0; padding-left: 20px; }
+nav a { color: #2a5aa0; text-decoration: none; } nav a:hover { text-decoration: underline; }
+.legend table { margin: 8px 0 0; font-size: 13px; }
+.legend th { text-align: left; }
+table.exp { border-collapse: collapse; width: 100%; background: #fff; font-size: 13px;
+        margin: 12px 0; }
+table.exp th, table.exp td { border: 1px solid #ddd; padding: 6px 8px;
+        vertical-align: top; }
+table.exp th { background: #eef2f7; white-space: nowrap; text-align: center; }
+table.exp td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.exp td.name { white-space: nowrap; font-weight: 600; }
+table.exp td.content { max-width: 360px; font-size: 12px; color: #333; }
+table.exp tr:nth-child(even) { background: #f7f9fb; }
+table.exp th.primary { background: #dbeafe; }
+table.exp td.primary { background: #f0f7ff; }
+table.exp tr.baseline { background: #eff6ff; }
+.note { font-size: 12px; color: #64748b; }
+.empty { color: #999; }
+a { color: #2a5aa0; }
+</style>
+</head>
+<body>
+<h1>Phase M v1 总报告</h1>
+<p class="meta">生成时间 2026-08-16 14:53:24 ·
+数据源 <code>backtest/experiments/registry.jsonl</code>（仅 <code>phase_m_protocol=v1</code>）·
+规范 <code>backtest/EXPERIMENT_STANDARD.md</code> 第 5.1.2 节。
+CSI1000 历史 Phase M（IC/RankIC）见 <a href="report.html">report.html</a>。</p>
+<section class="legend">
+<h3>评估口径（已冻结）</h3>
+<ul class="meta">
+<li><b>无北极星</b>。主格：<b>top5 × h5</b>。</li>
+<li>主指标：扣费净年化、扣费波动（HAC 年化标准差）、扣费夏普（净年化/波动）。主表次列：非扣费年化、日换手。</li>
+<li>日换手 = 相隔 h 日的单边换手 / h（h=5 全换仓 → 日换手 20%）；年化成本 = 238 × 日换手 × 0.092%。</li>
+<li>过滤（评估宇宙，top-k 与等权基准同口径）：ST 名单、成交额 ≥ 1000 万、上市 ≥ 60 交易日；另剔 t+1 涨停/零量。</li>
+<li>当前 baseline = <b>M0 H20</b>（<code>regime-adapt/m0-h20-label-v4</code>）。子维度（网格 / 风格 / 分年）只在各实验详细报告。</li>
+</ul>
+</section>
+<nav><b>目录</b><ul><li><a href="#direction-regime-adapt">regime-adapt（M0 训练标签期限）</a>（7 个实验）</li></ul></nav>
+<h2 id="direction-regime-adapt">regime-adapt（M0 训练标签期限）</h2><p class="meta">对照 baseline：<b>M0 H20</b>（<code>regime-adapt/m0-h20-label-v4</code>）；表格第一行固定为该基线。</p><table class="exp"><thead><tr><th>实验名</th><th>实验内容 / 假设</th><th class="primary">扣费净年化</th><th class="primary">扣费波动</th><th class="primary">扣费夏普</th><th>非扣费年化</th><th>日换手</th><th>详细报告</th></tr></thead><tbody><tr class="baseline"><td class="name">M0 H20（当前 baseline）<div class="note">regime-adapt/m0-h20-label-v4</div></td><td class="content">不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普</td><td class="num primary">+24.7%</td><td class="num primary">33.3%</td><td class="num primary">0.74</td><td class="num">+28.6%</td><td class="num">18.2%</td><td><a href="regime_adapt_m0_label_report.html">regime_adapt_m0_label_report.html</a></td></tr><tr><td class="name">M0 H1<div class="note">regime-adapt/m0-h1-label-v4</div></td><td class="content">不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普</td><td class="num primary">-9.1%</td><td class="num primary">33.5%</td><td class="num primary">-0.27</td><td class="num">-4.8%</td><td class="num">19.7%</td><td><a href="regime_adapt_m0_label_report.html">regime_adapt_m0_label_report.html</a></td></tr><tr><td class="name">M0 H2<div class="note">regime-adapt/m0-h2-label-v4</div></td><td class="content">不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普</td><td class="num primary">+13.0%</td><td class="num primary">29.7%</td><td class="num primary">0.44</td><td class="num">+17.3%</td><td class="num">19.6%</td><td><a href="regime_adapt_m0_label_report.html">regime_adapt_m0_label_report.html</a></td></tr><tr><td class="name">M0 H3<div class="note">regime-adapt/m0-h3-label-v4</div></td><td class="content">不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普</td><td class="num primary">+14.9%</td><td class="num primary">30.9%</td><td class="num primary">0.48</td><td class="num">+19.2%</td><td class="num">19.5%</td><td><a href="regime_adapt_m0_label_report.html">regime_adapt_m0_label_report.html</a></td></tr><tr><td class="name">M0 H5<div class="note">regime-adapt/m0-h5-label-v4</div></td><td class="content">不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普</td><td class="num primary">+18.5%</td><td class="num primary">32.4%</td><td class="num primary">0.57</td><td class="num">+22.7%</td><td class="num">19.4%</td><td><a href="regime_adapt_m0_label_report.html">regime_adapt_m0_label_report.html</a></td></tr><tr><td class="name">M0 H10<div class="note">regime-adapt/m0-h10-label-v4</div></td><td class="content">不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普</td><td class="num primary">+22.8%</td><td class="num primary">35.3%</td><td class="num primary">0.65</td><td class="num">+26.9%</td><td class="num">18.7%</td><td><a href="regime_adapt_m0_label_report.html">regime_adapt_m0_label_report.html</a></td></tr><tr><td class="name">M0 H40<div class="note">regime-adapt/m0-h40-label-v4</div></td><td class="content">不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普</td><td class="num primary">+21.3%</td><td class="num primary">31.3%</td><td class="num primary">0.68</td><td class="num">+25.3%</td><td class="num">18.1%</td><td><a href="regime_adapt_m0_label_report.html">regime_adapt_m0_label_report.html</a></td></tr></tbody></table>
+</body>
+</html>

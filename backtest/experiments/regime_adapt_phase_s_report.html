@@ -1,0 +1,160 @@
+<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'>
+<title>regime-adapt Phase S 回测</title>
+<style>
+    body{font-family:-apple-system,'PingFang SC',sans-serif;margin:0;background:#f6f7f9;color:#1c2733;}
+    .wrap{max-width:1280px;margin:0 auto;padding:28px 20px 64px;}
+    h1{font-size:24px;margin:0 0 6px;} h2{font-size:18px;margin:28px 0 8px;border-left:4px solid #2563eb;padding-left:10px;}
+    h3{font-size:14px;margin:16px 0 6px;color:#334155;}
+    .meta{color:#64748b;font-size:13px;margin-bottom:16px;}
+    table{border-collapse:collapse;width:100%;background:#fff;font-size:12px;margin:6px 0 14px;}
+    th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:center;}
+    th{background:#f1f5f9;} td.l,th.l{text-align:left;}
+    .primary{background:#eff6ff;font-weight:600;}
+    .hero td{background:#fffbeb;}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin:8px 0;}
+    .note{font-size:12px;color:#64748b;}
+    ul{margin:6px 0;padding-left:20px;}
+    .sd{color:#94a3b8;font-size:10px;}
+    a{color:#2563eb;}
+    </style></head><body><div class='wrap'>
+<h1>regime-adapt Phase S 回测报告</h1>
+<p class='meta'>回测窗 <b>2020-08-03 ~ 2026-07-31</b> · 主表池 <b>all</b> · 策略 B4-S topk=22 n_drop=2 hold_thresh=2 risk_degree=0.90 · 成交价 close · limit_threshold=0.095 · 费率 买 0.021% / 卖 0.071% / 最低 5 元（往返 0.092%，QMT 2026-07-16 校准）· account 1000 万 · 五种子 [42,1000,2000,3000,4000]，表中为均值，<span class='sd'>小字为种子标准差</span>。</p>
+<div class='card'><ul>
+<li><b>交易费率</b>：open_cost=0.00021（买入 0.021%），close_cost=0.00071（卖出 0.071%），min_cost=5 元，trade_unit=100。与 EXPERIMENT_STANDARD / 实盘 QMT 校准一致，不是历史 万五/千 1.5 口径。</li>
+<li><b>股票池</b>：本轮主回测改为全A（NameDFilter <code>SH60/SH68/SZ00/SZ30</code>，与训练池一致）。中证全指 SH000985 本地无数据，基准暂用沪深300 SH000300 占位；CSI1000 / SH000852 上一轮结果保留作对照，不作为本轮判据。</li>
+<li><b>策略对照</b>：B4-S（topk=22 / n_drop=2 / hold_thresh=2）vs 每日换仓 DailyTopk（每日持仓 = 当日分数最高 22 只，无 dropout 缓冲）。</li>
+</ul></div>
+<h2>0. 池 × 策略对照（全周期夏普 / 后段 Alpha）</h2>
+<table><thead><tr><th class='l'>臂</th><th>全A · B4-S<br>夏普</th><th>全A · B4-S<br>后段α</th><th>全A · 每日Topk<br>夏普</th><th>全A · 每日Topk<br>后段α</th><th>CSI1000 · B4-S（上一轮）<br>夏普</th><th>CSI1000 · B4-S（上一轮）<br>后段α</th></tr></thead><tbody>
+<tr class='hero'><td class='l'><b>M0 H5</b></td><td>0.77</td><td class='primary'>+20.6%</td><td>0.40</td><td class='primary'>+7.2%</td><td>0.56</td><td class='primary'>+9.6%</td></tr>
+<tr class='hero'><td class='l'><b>M3 H5</b></td><td>0.95</td><td class='primary'>+21.9%</td><td>0.65</td><td class='primary'>+22.4%</td><td>0.66</td><td class='primary'>+12.8%</td></tr>
+<tr><td class='l'><b>M0 H10</b></td><td>1.00</td><td class='primary'>+20.8%</td><td>0.56</td><td class='primary'>+16.8%</td><td>0.62</td><td class='primary'>+8.4%</td></tr>
+<tr><td class='l'><b>M0 H40</b></td><td>1.61</td><td class='primary'>+27.8%</td><td>0.77</td><td class='primary'>+20.5%</td><td>0.74</td><td class='primary'>+1.0%</td></tr>
+<tr><td class='l'><b>B6-M 现役</b></td><td>1.27</td><td class='primary'>+6.5%</td><td>0.92</td><td class='primary'>+6.1%</td><td>0.86</td><td class='primary'>+2.4%</td></tr>
+</tbody></table>
+<div class='card'><ul>
+<li><b>为什么不是规范 B4-S 的 full 窗（2020-01-13 起）</b>：regime 臂的训练样本截至 2020-07-31，2020-01-13~07-31 落在训练集内，用它回测会高估。故统一改为 <b>2020-08-03</b> 起。B6-M 训练集为 2016-01-02~2020-01-10，同窗对它也是样本外，可直接对比。</li>
+<li><b>Alpha/Beta 口径</b>：对扣费后组合日收益与基准日收益做 CAPM 回归（rf=0，250 交易日年化），逐年分段独立回归。2020 与 2026 为部分年份。</li>
+<li><b>与 Phase M 头部口径的关系</b>：本表是真实 TopkDropout 回测（含 n_drop 缓冲、涨跌停限制、显性费用），头部口径第 4 节的「扣费净超额」是它的上界，两者不应直接等同。</li>
+</ul></div>
+<h2>1. 全周期指标</h2>
+<table><thead><tr><th class='l'>臂</th><th>年化收益</th><th>夏普</th><th>Alpha</th><th>Beta</th><th>最大回撤</th><th>Calmar</th><th>年化单边换手</th><th>累计收益</th><th>基准年化</th></tr></thead><tbody>
+<tr class='hero'><td class='l'><b>M0 H5</b><div class='note'>M0 H5（全A 长窗单 LGBM，训练标签 H5）</div></td><td>+19.2%<div class='sd'>±2.6%</div></td><td>0.77<div class='sd'>±0.11</div></td><td>+18.2%<div class='sd'>±2.7%</div></td><td>0.81<div class='sd'>±0.01</div></td><td>-36.3%<div class='sd'>±3.0%</div></td><td>0.53<div class='sd'>±0.11</div></td><td>20.3x<div class='sd'>±0.31</div></td><td>+157.3%<div class='sd'>±37.1%</div></td><td>+1.2%</td></tr>
+<tr class='hero'><td class='l'><b>M3 H5</b><div class='note'>M3 H5（regime 特征 + 风格平衡权重，训练标签 H5）</div></td><td>+24.7%<div class='sd'>±2.9%</div></td><td>0.95<div class='sd'>±0.12</div></td><td>+23.6%<div class='sd'>±2.9%</div></td><td>0.90<div class='sd'>±0.02</div></td><td>-31.0%<div class='sd'>±2.7%</div></td><td>0.80<div class='sd'>±0.14</div></td><td>21.2x<div class='sd'>±0.20</div></td><td>+249.1%<div class='sd'>±58.9%</div></td><td>+1.2%</td></tr>
+<tr><td class='l'><b>M0 H10</b><div class='note'>M0 H10（同配方，训练标签 H10）</div></td><td>+25.2%<div class='sd'>±4.4%</div></td><td>1.00<div class='sd'>±0.17</div></td><td>+24.2%<div class='sd'>±4.4%</div></td><td>0.82<div class='sd'>±0.02</div></td><td>-33.5%<div class='sd'>±3.1%</div></td><td>0.76<div class='sd'>±0.19</div></td><td>20.2x<div class='sd'>±0.20</div></td><td>+270.4%<div class='sd'>±109.9%</div></td><td>+1.2%</td></tr>
+<tr><td class='l'><b>M0 H40</b><div class='note'>M0 H40（同配方，训练标签 H40；标签对照）</div></td><td>+31.0%<div class='sd'>±1.8%</div></td><td>1.61<div class='sd'>±0.08</div></td><td>+30.3%<div class='sd'>±1.8%</div></td><td>0.57<div class='sd'>±0.02</div></td><td>-21.5%<div class='sd'>±1.8%</div></td><td>1.46<div class='sd'>±0.21</div></td><td>21.0x<div class='sd'>±0.06</div></td><td>+446.1%<div class='sd'>±55.2%</div></td><td>+1.2%</td></tr>
+<tr><td class='l'><b>B6-M 现役</b><div class='note'>B6-M 现役实盘模型（csi1000 2016-2020 DoubleEnsemble H40）</div></td><td>+19.6%<div class='sd'>±1.4%</div></td><td>1.27<div class='sd'>±0.08</div></td><td>+19.1%<div class='sd'>±1.4%</div></td><td>0.44<div class='sd'>±0.01</div></td><td>-19.8%<div class='sd'>±2.0%</div></td><td>1.00<div class='sd'>±0.06</div></td><td>21.1x<div class='sd'>±0.16</div></td><td>+193.2%<div class='sd'>±24.0%</div></td><td>+1.2%</td></tr>
+</tbody></table>
+<h2>2. 前后段对照（原始问题：2024-09 起 alpha 消失）</h2>
+<p class='note'>按整年平均会把 2024-09 之后的 4 个月稀释进 2024 全年，故在此按用户提出的断点单独切段。</p>
+<h3>前段 2020-08 ~ 2024-08</h3>
+<table><thead><tr><th class='l'>臂</th><th>年化收益</th><th>基准年化</th><th class='primary'>Alpha</th><th class='primary'>Beta</th><th>夏普</th><th>最大回撤</th><th>Calmar</th><th>交易日</th></tr></thead><tbody>
+<tr class='hero'><td class='l'><b>M0 H5</b></td><td class=''>+10.7%<div class='sd'>±3.5%</div></td><td class=''>-7.3%</td><td class='primary'>+16.3%<div class='sd'>±3.5%</div></td><td class='primary'>0.78<div class='sd'>±0.01</div></td><td class=''>0.44<div class='sd'>±0.15</div></td><td class=''>-35.3%<div class='sd'>±3.2%</div></td><td class=''>0.31<div class='sd'>±0.12</div></td><td class=''>992</td></tr>
+<tr class='hero'><td class='l'><b>M3 H5</b></td><td class=''>+17.1%<div class='sd'>±6.0%</div></td><td class=''>-7.3%</td><td class='primary'>+23.3%<div class='sd'>±6.1%</div></td><td class='primary'>0.85<div class='sd'>±0.03</div></td><td class=''>0.67<div class='sd'>±0.22</div></td><td class=''>-30.0%<div class='sd'>±3.1%</div></td><td class=''>0.59<div class='sd'>±0.25</div></td><td class=''>992</td></tr>
+<tr><td class='l'><b>M0 H10</b></td><td class=''>+19.1%<div class='sd'>±5.3%</div></td><td class=''>-7.3%</td><td class='primary'>+24.7%<div class='sd'>±5.3%</div></td><td class='primary'>0.77<div class='sd'>±0.02</div></td><td class=''>0.77<div class='sd'>±0.21</div></td><td class=''>-32.2%<div class='sd'>±2.9%</div></td><td class=''>0.60<div class='sd'>±0.19</div></td><td class=''>992</td></tr>
+<tr><td class='l'><b>M0 H40</b></td><td class=''>+27.0%<div class='sd'>±3.4%</div></td><td class=''>-7.3%</td><td class='primary'>+31.1%<div class='sd'>±3.5%</div></td><td class='primary'>0.56<div class='sd'>±0.01</div></td><td class=''>1.43<div class='sd'>±0.18</div></td><td class=''>-21.5%<div class='sd'>±1.8%</div></td><td class=''>1.27<div class='sd'>±0.23</div></td><td class=''>992</td></tr>
+<tr><td class='l'><b>B6-M 现役</b></td><td class=''>+20.8%<div class='sd'>±2.8%</div></td><td class=''>-7.3%</td><td class='primary'>+23.4%<div class='sd'>±2.8%</div></td><td class='primary'>0.37<div class='sd'>±0.01</div></td><td class=''>1.44<div class='sd'>±0.19</div></td><td class=''>-13.2%<div class='sd'>±3.4%</div></td><td class=''>1.67<div class='sd'>±0.50</div></td><td class=''>992</td></tr>
+</tbody></table>
+<h3>后段 2024-09 ~ 2026-07（alpha 消失区间）</h3>
+<table><thead><tr><th class='l'>臂</th><th>年化收益</th><th>基准年化</th><th class='primary'>Alpha</th><th class='primary'>Beta</th><th>夏普</th><th>最大回撤</th><th>Calmar</th><th>交易日</th></tr></thead><tbody>
+<tr class='hero'><td class='l'><b>M0 H5</b></td><td class=''>+37.5%<div class='sd'>±6.2%</div></td><td class=''>+19.5%</td><td class='primary'>+20.6%<div class='sd'>±6.2%</div></td><td class='primary'>0.86<div class='sd'>±0.03</div></td><td class=''>1.44<div class='sd'>±0.26</div></td><td class=''>-28.9%<div class='sd'>±5.8%</div></td><td class=''>1.35<div class='sd'>±0.36</div></td><td class=''>462</td></tr>
+<tr class='hero'><td class='l'><b>M3 H5</b></td><td class=''>+40.9%<div class='sd'>±5.2%</div></td><td class=''>+19.5%</td><td class='primary'>+21.9%<div class='sd'>±5.5%</div></td><td class='primary'>0.98<div class='sd'>±0.02</div></td><td class=''>1.50<div class='sd'>±0.22</div></td><td class=''>-26.2%<div class='sd'>±4.6%</div></td><td class=''>1.62<div class='sd'>±0.45</div></td><td class=''>462</td></tr>
+<tr><td class='l'><b>M0 H10</b></td><td class=''>+38.4%<div class='sd'>±4.7%</div></td><td class=''>+19.5%</td><td class='primary'>+20.8%<div class='sd'>±4.8%</div></td><td class='primary'>0.90<div class='sd'>±0.03</div></td><td class=''>1.45<div class='sd'>±0.18</div></td><td class=''>-27.7%<div class='sd'>±5.4%</div></td><td class=''>1.43<div class='sd'>±0.33</div></td><td class=''>462</td></tr>
+<tr><td class='l'><b>M0 H40</b></td><td class=''>+39.5%<div class='sd'>±2.8%</div></td><td class=''>+19.5%</td><td class='primary'>+27.8%<div class='sd'>±2.8%</div></td><td class='primary'>0.60<div class='sd'>±0.04</div></td><td class=''>1.99<div class='sd'>±0.15</div></td><td class=''>-16.8%<div class='sd'>±2.1%</div></td><td class=''>2.40<div class='sd'>±0.47</div></td><td class=''>462</td></tr>
+<tr><td class='l'><b>B6-M 现役</b></td><td class=''>+17.3%<div class='sd'>±2.2%</div></td><td class=''>+19.5%</td><td class='primary'>+6.5%<div class='sd'>±2.4%</div></td><td class='primary'>0.55<div class='sd'>±0.02</div></td><td class=''>1.00<div class='sd'>±0.14</div></td><td class=''>-19.6%<div class='sd'>±2.1%</div></td><td class=''>0.89<div class='sd'>±0.20</div></td><td class=''>462</td></tr>
+</tbody></table>
+<h2>3. 逐年 Alpha / Beta</h2>
+<h3>3.1 M0 H5</h3>
+<table><thead><tr><th class='l'>年</th><th>年化收益</th><th>基准年化</th><th class='primary'>Alpha</th><th class='primary'>Beta</th><th>夏普</th><th>最大回撤</th><th>年化单边换手</th><th>交易日</th></tr></thead><tbody>
+<tr><td class='l'>2020 <span class="note">(部分年)</span></td><td class=''>-43.8%<div class='sd'>±15.5%</div></td><td class=''>+26.7%</td><td class='primary'>-62.3%<div class='sd'>±16.2%</div></td><td class='primary'>0.69<div class='sd'>±0.05</div></td><td class=''>-2.67<div class='sd'>±0.83</div></td><td class=''>-18.7%<div class='sd'>±5.6%</div></td><td class=''>17.8x<div class='sd'>±0.69</div></td><td class=''>103</td></tr>
+<tr><td class='l'>2021</td><td class=''>+23.1%<div class='sd'>±8.1%</div></td><td class=''>-3.8%</td><td class='primary'>+24.7%<div class='sd'>±8.1%</div></td><td class='primary'>0.43<div class='sd'>±0.01</div></td><td class=''>1.10<div class='sd'>±0.40</div></td><td class=''>-11.4%<div class='sd'>±0.8%</div></td><td class=''>19.7x<div class='sd'>±0.32</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2022</td><td class=''>+6.4%<div class='sd'>±5.9%</div></td><td class=''>-23.1%</td><td class='primary'>+29.3%<div class='sd'>±5.9%</div></td><td class='primary'>0.99<div class='sd'>±0.01</div></td><td class=''>0.23<div class='sd'>±0.21</div></td><td class=''>-31.5%<div class='sd'>±1.9%</div></td><td class=''>20.9x<div class='sd'>±0.25</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2023</td><td class=''>+8.0%<div class='sd'>±5.6%</div></td><td class=''>-11.6%</td><td class='primary'>+15.7%<div class='sd'>±5.8%</div></td><td class='primary'>0.67<div class='sd'>±0.03</div></td><td class=''>0.54<div class='sd'>±0.37</div></td><td class=''>-11.7%<div class='sd'>±0.9%</div></td><td class=''>21.6x<div class='sd'>±0.29</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2024</td><td class=''>+65.3%<div class='sd'>±9.9%</div></td><td class=''>+16.4%</td><td class='primary'>+47.0%<div class='sd'>±10.6%</div></td><td class='primary'>1.11<div class='sd'>±0.09</div></td><td class=''>1.82<div class='sd'>±0.31</div></td><td class=''>-30.9%<div class='sd'>±3.1%</div></td><td class=''>22.0x<div class='sd'>±0.21</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2025</td><td class=''>+48.5%<div class='sd'>±5.0%</div></td><td class=''>+17.9%</td><td class='primary'>+33.3%<div class='sd'>±4.2%</div></td><td class='primary'>0.85<div class='sd'>±0.05</div></td><td class=''>2.38<div class='sd'>±0.18</div></td><td class=''>-11.6%<div class='sd'>±1.3%</div></td><td class=''>22.0x<div class='sd'>±0.26</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2026 <span class="note">(部分年)</span></td><td class=''>-30.8%<div class='sd'>±15.1%</div></td><td class=''>+0.3%</td><td class='primary'>-31.0%<div class='sd'>±15.1%</div></td><td class='primary'>0.59<div class='sd'>±0.10</div></td><td class=''>-1.16<div class='sd'>±0.57</div></td><td class=''>-28.9%<div class='sd'>±5.8%</div></td><td class=''>14.4x<div class='sd'>±3.56</div></td><td class=''>139</td></tr>
+</tbody></table>
+<h3>3.2 M3 H5</h3>
+<table><thead><tr><th class='l'>年</th><th>年化收益</th><th>基准年化</th><th class='primary'>Alpha</th><th class='primary'>Beta</th><th>夏普</th><th>最大回撤</th><th>年化单边换手</th><th>交易日</th></tr></thead><tbody>
+<tr><td class='l'>2020 <span class="note">(部分年)</span></td><td class=''>-29.8%<div class='sd'>±15.4%</div></td><td class=''>+26.7%</td><td class='primary'>-49.2%<div class='sd'>±13.9%</div></td><td class='primary'>0.73<div class='sd'>±0.09</div></td><td class=''>-1.87<div class='sd'>±1.19</div></td><td class=''>-15.2%<div class='sd'>±4.5%</div></td><td class=''>17.1x<div class='sd'>±1.23</div></td><td class=''>103</td></tr>
+<tr><td class='l'>2021</td><td class=''>+42.4%<div class='sd'>±11.2%</div></td><td class=''>-3.8%</td><td class='primary'>+44.6%<div class='sd'>±11.2%</div></td><td class='primary'>0.57<div class='sd'>±0.04</div></td><td class=''>2.04<div class='sd'>±0.52</div></td><td class=''>-10.7%<div class='sd'>±1.8%</div></td><td class=''>20.3x<div class='sd'>±0.20</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2022</td><td class=''>+13.9%<div class='sd'>±10.5%</div></td><td class=''>-23.1%</td><td class='primary'>+36.6%<div class='sd'>±10.8%</div></td><td class='primary'>0.98<div class='sd'>±0.04</div></td><td class=''>0.48<div class='sd'>±0.35</div></td><td class=''>-29.2%<div class='sd'>±3.1%</div></td><td class=''>21.7x<div class='sd'>±0.26</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2023</td><td class=''>+19.1%<div class='sd'>±5.5%</div></td><td class=''>-11.6%</td><td class='primary'>+28.0%<div class='sd'>±5.6%</div></td><td class='primary'>0.76<div class='sd'>±0.05</div></td><td class=''>1.15<div class='sd'>±0.33</div></td><td class=''>-10.0%<div class='sd'>±1.4%</div></td><td class=''>21.6x<div class='sd'>±0.25</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2024</td><td class=''>+49.8%<div class='sd'>±8.6%</div></td><td class=''>+16.4%</td><td class='primary'>+28.1%<div class='sd'>±9.0%</div></td><td class='primary'>1.32<div class='sd'>±0.06</div></td><td class=''>1.23<div class='sd'>±0.27</div></td><td class=''>-24.9%<div class='sd'>±3.7%</div></td><td class=''>22.3x<div class='sd'>±0.39</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2025</td><td class=''>+44.9%<div class='sd'>±4.5%</div></td><td class=''>+17.9%</td><td class='primary'>+31.8%<div class='sd'>±4.5%</div></td><td class='primary'>0.73<div class='sd'>±0.03</div></td><td class=''>2.64<div class='sd'>±0.19</div></td><td class=''>-7.4%<div class='sd'>±0.8%</div></td><td class=''>21.9x<div class='sd'>±0.53</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2026 <span class="note">(部分年)</span></td><td class=''>-16.4%<div class='sd'>±16.4%</div></td><td class=''>+0.3%</td><td class='primary'>-16.7%<div class='sd'>±16.4%</div></td><td class='primary'>0.79<div class='sd'>±0.04</div></td><td class=''>-0.57<div class='sd'>±0.56</div></td><td class=''>-26.2%<div class='sd'>±4.6%</div></td><td class=''>20.6x<div class='sd'>±0.98</div></td><td class=''>139</td></tr>
+</tbody></table>
+<h3>3.3 M0 H10</h3>
+<table><thead><tr><th class='l'>年</th><th>年化收益</th><th>基准年化</th><th class='primary'>Alpha</th><th class='primary'>Beta</th><th>夏普</th><th>最大回撤</th><th>年化单边换手</th><th>交易日</th></tr></thead><tbody>
+<tr><td class='l'>2020 <span class="note">(部分年)</span></td><td class=''>-30.9%<div class='sd'>±11.1%</div></td><td class=''>+26.7%</td><td class='primary'>-50.7%<div class='sd'>±11.0%</div></td><td class='primary'>0.74<div class='sd'>±0.03</div></td><td class=''>-1.84<div class='sd'>±0.68</div></td><td class=''>-14.8%<div class='sd'>±3.2%</div></td><td class=''>17.7x<div class='sd'>±1.15</div></td><td class=''>103</td></tr>
+<tr><td class='l'>2021</td><td class=''>+38.7%<div class='sd'>±3.8%</div></td><td class=''>-3.8%</td><td class='primary'>+40.3%<div class='sd'>±3.7%</div></td><td class='primary'>0.42<div class='sd'>±0.04</div></td><td class=''>1.70<div class='sd'>±0.19</div></td><td class=''>-12.8%<div class='sd'>±1.9%</div></td><td class=''>20.3x<div class='sd'>±0.40</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2022</td><td class=''>+1.6%<div class='sd'>±5.8%</div></td><td class=''>-23.1%</td><td class='primary'>+24.0%<div class='sd'>±5.9%</div></td><td class='primary'>0.97<div class='sd'>±0.01</div></td><td class=''>0.06<div class='sd'>±0.21</div></td><td class=''>-32.2%<div class='sd'>±2.9%</div></td><td class=''>21.2x<div class='sd'>±0.29</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2023</td><td class=''>+14.3%<div class='sd'>±8.4%</div></td><td class=''>-11.6%</td><td class='primary'>+22.4%<div class='sd'>±8.9%</div></td><td class='primary'>0.69<div class='sd'>±0.05</div></td><td class=''>0.87<div class='sd'>±0.49</div></td><td class=''>-11.3%<div class='sd'>±2.1%</div></td><td class=''>21.3x<div class='sd'>±0.39</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2024</td><td class=''>+80.4%<div class='sd'>±7.4%</div></td><td class=''>+16.4%</td><td class='primary'>+61.4%<div class='sd'>±7.4%</div></td><td class='primary'>1.16<div class='sd'>±0.03</div></td><td class=''>2.17<div class='sd'>±0.21</div></td><td class=''>-25.4%<div class='sd'>±1.8%</div></td><td class=''>21.9x<div class='sd'>±0.13</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2025</td><td class=''>+45.1%<div class='sd'>±9.6%</div></td><td class=''>+17.9%</td><td class='primary'>+30.4%<div class='sd'>±9.8%</div></td><td class='primary'>0.82<div class='sd'>±0.06</div></td><td class=''>2.22<div class='sd'>±0.51</div></td><td class=''>-11.7%<div class='sd'>±2.1%</div></td><td class=''>21.9x<div class='sd'>±0.39</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2026 <span class="note">(部分年)</span></td><td class=''>-27.5%<div class='sd'>±18.6%</div></td><td class=''>+0.3%</td><td class='primary'>-27.7%<div class='sd'>±18.6%</div></td><td class='primary'>0.64<div class='sd'>±0.03</div></td><td class=''>-1.07<div class='sd'>±0.72</div></td><td class=''>-27.7%<div class='sd'>±5.4%</div></td><td class=''>12.6x<div class='sd'>±3.46</div></td><td class=''>139</td></tr>
+</tbody></table>
+<h3>3.4 M0 H40</h3>
+<table><thead><tr><th class='l'>年</th><th>年化收益</th><th>基准年化</th><th class='primary'>Alpha</th><th class='primary'>Beta</th><th>夏普</th><th>最大回撤</th><th>年化单边换手</th><th>交易日</th></tr></thead><tbody>
+<tr><td class='l'>2020 <span class="note">(部分年)</span></td><td class=''>+5.7%<div class='sd'>±8.8%</div></td><td class=''>+26.7%</td><td class='primary'>-11.5%<div class='sd'>±8.8%</div></td><td class='primary'>0.64<div class='sd'>±0.03</div></td><td class=''>0.36<div class='sd'>±0.54</div></td><td class=''>-7.8%<div class='sd'>±2.1%</div></td><td class=''>19.8x<div class='sd'>±0.50</div></td><td class=''>103</td></tr>
+<tr><td class='l'>2021</td><td class=''>+51.6%<div class='sd'>±6.7%</div></td><td class=''>-3.8%</td><td class='primary'>+52.6%<div class='sd'>±6.8%</div></td><td class='primary'>0.25<div class='sd'>±0.02</div></td><td class=''>2.74<div class='sd'>±0.45</div></td><td class=''>-11.5%<div class='sd'>±2.0%</div></td><td class=''>21.1x<div class='sd'>±0.27</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2022</td><td class=''>+13.3%<div class='sd'>±7.5%</div></td><td class=''>-23.1%</td><td class='primary'>+30.4%<div class='sd'>±8.2%</div></td><td class='primary'>0.74<div class='sd'>±0.04</div></td><td class=''>0.63<div class='sd'>±0.33</div></td><td class=''>-19.8%<div class='sd'>±2.1%</div></td><td class=''>21.4x<div class='sd'>±0.55</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2023</td><td class=''>+16.8%<div class='sd'>±5.5%</div></td><td class=''>-11.6%</td><td class='primary'>+22.2%<div class='sd'>±5.5%</div></td><td class='primary'>0.47<div class='sd'>±0.03</div></td><td class=''>1.40<div class='sd'>±0.46</div></td><td class=''>-7.3%<div class='sd'>±2.4%</div></td><td class=''>21.7x<div class='sd'>±0.31</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2024</td><td class=''>+53.4%<div class='sd'>±3.8%</div></td><td class=''>+16.4%</td><td class='primary'>+40.6%<div class='sd'>±4.4%</div></td><td class='primary'>0.78<div class='sd'>±0.05</div></td><td class=''>2.07<div class='sd'>±0.26</div></td><td class=''>-20.4%<div class='sd'>±2.5%</div></td><td class=''>20.6x<div class='sd'>±0.65</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2025</td><td class=''>+35.8%<div class='sd'>±4.3%</div></td><td class=''>+17.9%</td><td class='primary'>+24.6%<div class='sd'>±4.2%</div></td><td class='primary'>0.63<div class='sd'>±0.03</div></td><td class=''>2.32<div class='sd'>±0.28</div></td><td class=''>-7.1%<div class='sd'>±0.9%</div></td><td class=''>21.9x<div class='sd'>±0.37</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2026 <span class="note">(部分年)</span></td><td class=''>+21.7%<div class='sd'>±4.8%</div></td><td class=''>+0.3%</td><td class='primary'>+21.6%<div class='sd'>±4.8%</div></td><td class='primary'>0.35<div class='sd'>±0.03</div></td><td class=''>1.01<div class='sd'>±0.22</div></td><td class=''>-16.8%<div class='sd'>±2.1%</div></td><td class=''>18.6x<div class='sd'>±1.17</div></td><td class=''>139</td></tr>
+</tbody></table>
+<h3>3.5 B6-M 现役</h3>
+<table><thead><tr><th class='l'>年</th><th>年化收益</th><th>基准年化</th><th class='primary'>Alpha</th><th class='primary'>Beta</th><th>夏普</th><th>最大回撤</th><th>年化单边换手</th><th>交易日</th></tr></thead><tbody>
+<tr><td class='l'>2020 <span class="note">(部分年)</span></td><td class=''>+13.4%<div class='sd'>±7.6%</div></td><td class=''>+26.7%</td><td class='primary'>+1.3%<div class='sd'>±6.6%</div></td><td class='primary'>0.45<div class='sd'>±0.04</div></td><td class=''>1.15<div class='sd'>±0.63</div></td><td class=''>-6.2%<div class='sd'>±0.9%</div></td><td class=''>21.4x<div class='sd'>±0.57</div></td><td class=''>103</td></tr>
+<tr><td class='l'>2021</td><td class=''>+41.5%<div class='sd'>±6.1%</div></td><td class=''>-3.8%</td><td class='primary'>+42.0%<div class='sd'>±6.2%</div></td><td class='primary'>0.14<div class='sd'>±0.02</div></td><td class=''>2.56<div class='sd'>±0.46</div></td><td class=''>-8.7%<div class='sd'>±1.4%</div></td><td class=''>21.1x<div class='sd'>±0.29</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2022</td><td class=''>+15.9%<div class='sd'>±3.3%</div></td><td class=''>-23.1%</td><td class='primary'>+27.2%<div class='sd'>±3.3%</div></td><td class='primary'>0.49<div class='sd'>±0.01</div></td><td class=''>1.05<div class='sd'>±0.20</div></td><td class=''>-8.5%<div class='sd'>±0.7%</div></td><td class=''>21.0x<div class='sd'>±0.51</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2023</td><td class=''>+6.2%<div class='sd'>±6.8%</div></td><td class=''>-11.6%</td><td class='primary'>+10.4%<div class='sd'>±7.1%</div></td><td class='primary'>0.37<div class='sd'>±0.04</div></td><td class=''>0.55<div class='sd'>±0.59</div></td><td class=''>-8.9%<div class='sd'>±2.0%</div></td><td class=''>21.6x<div class='sd'>±0.30</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2024</td><td class=''>+36.4%<div class='sd'>±3.5%</div></td><td class=''>+16.4%</td><td class='primary'>+25.2%<div class='sd'>±3.7%</div></td><td class='primary'>0.68<div class='sd'>±0.01</div></td><td class=''>1.81<div class='sd'>±0.20</div></td><td class=''>-10.7%<div class='sd'>±1.6%</div></td><td class=''>20.8x<div class='sd'>±0.38</div></td><td class=''>242</td></tr>
+<tr><td class='l'>2025</td><td class=''>+19.0%<div class='sd'>±4.7%</div></td><td class=''>+17.9%</td><td class='primary'>+9.9%<div class='sd'>±4.6%</div></td><td class='primary'>0.51<div class='sd'>±0.02</div></td><td class=''>1.41<div class='sd'>±0.35</div></td><td class=''>-7.5%<div class='sd'>±0.7%</div></td><td class=''>21.0x<div class='sd'>±0.31</div></td><td class=''>243</td></tr>
+<tr><td class='l'>2026 <span class="note">(部分年)</span></td><td class=''>-12.1%<div class='sd'>±8.8%</div></td><td class=''>+0.3%</td><td class='primary'>-12.2%<div class='sd'>±8.8%</div></td><td class='primary'>0.31<div class='sd'>±0.03</div></td><td class=''>-0.71<div class='sd'>±0.51</div></td><td class=''>-19.6%<div class='sd'>±2.1%</div></td><td class=''>21.2x<div class='sd'>±0.31</div></td><td class=''>139</td></tr>
+</tbody></table>
+<h2>4. 逐种子明细（主臂）</h2>
+<table><thead><tr><th class='l'>种子</th><th>年化</th><th>夏普</th><th>Alpha</th><th>Beta</th><th>最大回撤</th><th>Calmar</th><th>累计</th><th>图</th></tr></thead><tbody>
+<tr><td class='l'>42</td><td>+21.0%</td><td>0.83</td><td>+20.0%</td><td>0.81</td><td>-37.5%</td><td>0.56</td><td>+181.6%</td><td class='l'></td></tr>
+<tr><td class='l'>1000</td><td>+14.9%</td><td>0.60</td><td>+13.9%</td><td>0.82</td><td>-38.3%</td><td>0.39</td><td>+98.9%</td><td class='l'></td></tr>
+<tr><td class='l'>2000</td><td>+20.6%</td><td>0.82</td><td>+19.5%</td><td>0.83</td><td>-37.0%</td><td>0.56</td><td>+175.2%</td><td class='l'></td></tr>
+<tr><td class='l'>3000</td><td>+18.3%</td><td>0.73</td><td>+17.3%</td><td>0.81</td><td>-37.8%</td><td>0.49</td><td>+142.2%</td><td class='l'></td></tr>
+<tr><td class='l'>4000</td><td>+21.1%</td><td>0.88</td><td>+20.1%</td><td>0.79</td><td>-31.1%</td><td>0.68</td><td>+188.5%</td><td class='l'></td></tr>
+</tbody></table>
+<p class='note'>图为 Plotly HTML（report_graph=净值/回撤/换手，risk_analysis=风险分解，score_ic=IC 序列，model_performance=分组收益）；每个 session 的 <code>run_01/report.html</code> 也内嵌了全部图。</p>
+<table><thead><tr><th class='l'>种子</th><th>年化</th><th>夏普</th><th>Alpha</th><th>Beta</th><th>最大回撤</th><th>Calmar</th><th>累计</th><th>图</th></tr></thead><tbody>
+<tr><td class='l'>42</td><td>+25.4%</td><td>1.04</td><td>+24.3%</td><td>0.86</td><td>-27.0%</td><td>0.94</td><td>+268.1%</td><td class='l'></td></tr>
+<tr><td class='l'>1000</td><td>+22.8%</td><td>0.87</td><td>+21.6%</td><td>0.91</td><td>-33.9%</td><td>0.67</td><td>+207.3%</td><td class='l'></td></tr>
+<tr><td class='l'>2000</td><td>+25.7%</td><td>0.99</td><td>+24.6%</td><td>0.89</td><td>-29.6%</td><td>0.87</td><td>+266.3%</td><td class='l'></td></tr>
+<tr><td class='l'>3000</td><td>+28.6%</td><td>1.06</td><td>+27.5%</td><td>0.93</td><td>-31.9%</td><td>0.90</td><td>+327.5%</td><td class='l'></td></tr>
+<tr><td class='l'>4000</td><td>+21.1%</td><td>0.78</td><td>+20.0%</td><td>0.91</td><td>-32.6%</td><td>0.65</td><td>+176.2%</td><td class='l'></td></tr>
+</tbody></table>
+<p class='note'>图为 Plotly HTML（report_graph=净值/回撤/换手，risk_analysis=风险分解，score_ic=IC 序列，model_performance=分组收益）；每个 session 的 <code>run_01/report.html</code> 也内嵌了全部图。</p>
+<h2>5. 跨口径对照：头部北极星 IR vs 回测夏普</h2>
+<table><thead><tr><th class='l'>臂</th><th>头部北极星 IR<br>(Phase M v2, 全A 9 格)</th><th>回测夏普<br>(Phase S, csi1000)</th><th>回测 Alpha</th><th>回测 Beta</th><th>回测最大回撤</th></tr></thead><tbody>
+<tr class='hero'><td class='l'><b>M0 H5</b></td><td>1.306</td><td>0.77</td><td>+18.2%</td><td>0.81</td><td>-36.3%</td></tr>
+<tr class='hero'><td class='l'><b>M3 H5</b></td><td>1.474</td><td>0.95</td><td>+23.6%</td><td>0.90</td><td>-31.0%</td></tr>
+<tr><td class='l'><b>M0 H10</b></td><td>1.330</td><td>1.00</td><td>+24.2%</td><td>0.82</td><td>-33.5%</td></tr>
+<tr><td class='l'><b>M0 H40</b></td><td>1.249</td><td>1.61</td><td>+30.3%</td><td>0.57</td><td>-21.5%</td></tr>
+<tr><td class='l'><b>B6-M 现役</b></td><td>0.652</td><td>1.27</td><td>+19.1%</td><td>0.44</td><td>-19.8%</td></tr>
+</tbody></table>
+<h2>6. 结论</h2><div class='card'><ul>
+<li><b>后段（2024-09 起）M0 H40 全面最优</b>：Alpha +27.8%、夏普 1.99、年化 +39.5%（同期基准 +27.0%）。这一段就是用户提出的「alpha 消失」区间，也是判断能否换模型的唯一相关区间。</li>
+<li><b>回测复现了 alpha 消失，并定位到现役模型</b>（前段 → 后段 Alpha）：M0 H5 +16.3% → +20.6%；M3 H5 +23.3% → +21.9%；M0 H10 +24.7% → +20.8%；M0 H40 +31.1% → +27.8%；B6-M 现役 +23.4% → +6.5%。B6-M 与 M0 H40 这两个 H40 长标签臂在后段几乎归零，而三个短标签臂（H5/H10）仍有 8~13% Alpha，短标签是关键变量。</li>
+<li><b>不要用全周期夏普排序做决策</b>：M0 H40 1.61 &gt; B6-M 现役 1.27 &gt; M0 H10 1.00 &gt; M3 H5 0.95 &gt; M0 H5 0.77，这个排序完全被<b>前段</b>主导（前段 992 日 vs 后段 462 日）。而前段对 B6-M 有结构性便宜：它的训练窗是 2016-01~2020-01，离前段（2020-08~2024-08）比离后段近得多，衰减还没发生。把两段混在一起平均，等于用一段已经失效的历史去否决在当前段有效的模型。</li>
+<li><b>Phase M 头部口径得到了验证</b>：头部北极星 IR 排序 M3 H5 1.474 &gt; M0 H10 1.330 &gt; M0 H5 1.306 &gt; M0 H40 1.249 &gt; B6-M 现役 0.652，后段回测夏普排序 M0 H40 &gt; M3 H5 &gt; M0 H10 &gt; M0 H5 &gt; B6-M 现役。两者基本一致（仅相邻位互换），说明 v2 头部口径对当前段的真实策略表现是有判别力的；它与全周期夏普不一致，是因为全周期夏普本身被前段污染。</li>
+<li><b>Beta 是跨口径差异的次要来源</b>：头部 IR 是相对当日全A 等权均值的横截面超额，与指数 Beta 无关；回测夏普是绝对收益/绝对波动，含 Beta 暴露。全A 长窗训练的 M0/M3 系列在 csi1000 上组合 Beta 约 0.85~0.95，csi1000 池内训练的 B6-M 只有 0.59——B6-M 的低波防御风格是它前段夏普高、后段（小盘高波行情）跟不上的同一个原因。注意表中 Alpha 已按 CAPM 扣掉 Beta 贡献，后段 M0 H40 的 Alpha 优势不是靠 Beta 换来的。</li>
+<li><b>换手在策略层被 n_drop 抹平</b>：头部口径下 H5 换手明显高于 H40，但 B4-S 的 <code>n_drop=2 / hold_thresh=2</code> 把实际换手锁在约 21~22x 年化单边（各臂相差 &lt;4%），所以「短标签换手成本更高」在真实策略里几乎不成立——那是头部口径按 h 日全额换仓假设产生的伪劣势。这条推翻了 12.5 节「H5 因换手高而净超额落后 H10」的判断。</li>
+<li><b>regime 特征与标签期限存在强交互，方向相反</b>：H40 下加 regime 特征<b>有害</b>（M3-fast H40 头部 NS 0.827 vs M0-fast H40 1.249，−0.42）；H5 下加 regime 特征<b>有益</b>（M3 H5 1.474 vs M0 H5 1.306，+0.17），后段回测 Alpha 也从 +9.6% 抬到 +12.8%。分风格看，H5 上的增益主要来自把 M0 H5 最弱的 T 段（大盘趋势）从 0.843 修到 1.321。一个自洽的解释是：40 日标签本身已把风格切换平滑掉，此时 11 个日频风格特征提供不了可用信号、只增加了过拟合维度；5 日标签的收益才真正随当期风格摆动，特征才有发力点。这也意味着<b>之前基于 H40 得出的「方案 1（加风格特征）无效」结论只在 H40 下成立</b>，不能外推到短标签。</li>
+</ul></div>
+<div class='card'><b>建议的下一步</b><ul>
+<li>候选晋升对象是 <b>M3 H5</b>，但它的回撤（-34.8% 全周期 / -22.4% 后段）与 Beta（0.93）都显著高于现役 B6-M，直接换会改变账户风险画像。晋升前需要 Phase S 侧的调参（risk_degree / topk / 是否加波动上限），而不是照搬 B4-S。</li>
+<li>M3 H5 与 B6-M 的失效区间几乎互补（前段 B6-M 强、后段 M3 H5 强），值得直接测一版按 regime 在两者间切换或做等权组合的方案——这正是原始方案 2。</li>
+<li>本轮所有 regime 臂都是全A 长窗（2004-2020）训练、单 LGBM。确认方向后应换回 B6-M 的 DoubleEnsemble 并重做超参，当前臂间差异里混着「单模型 vs 集成」这个未控变量。</li>
+</ul></div>
+<div class='card note'><ul>
+<li>数据：<code>backtest/result/phase_s_regime/*.json</code>；每次回测 session 在 <code>backtest/result/*_phase_s_*</code>。</li>
+<li>Alpha/Beta 由 <code>strategy_stability_metrics.summarize_years()</code> 计算，与 registry 中 B4-S 诊断同口径（250 交易日年化）。</li>
+<li>换手为 qlib report 的 turnover 列年化后除 2（单边）。</li>
+</ul></div></div></body></html>

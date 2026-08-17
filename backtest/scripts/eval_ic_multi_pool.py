@@ -6,8 +6,8 @@
 - 评测标签固定为默认 `Ref($close, -2)/Ref($close, -1) - 1`，与训练标签无关，
   保证不同标签实验的 IC 可比；
 - 全A 池（all）自动剔除上市不足 --min-listing-days 个交易日的股票；
-  用 --st-daily 提供日频 ST 名单（默认 scripts/data_collector/tushare/st_daily.csv
-  需显式传入）；--st-names 已废弃。
+  默认按日频 ST 名单过滤（scripts/data_collector/tushare/st_daily.csv，可用
+  --st-daily 覆盖）；缓存缺失则退出。--st-names 已废弃。
 
 用法示例：
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/eval_ic_multi_pool.py \
@@ -37,7 +37,11 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(QLIB_ROOT))
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-from universe_filter import UniverseFilterSpec, build_keep_mask  # noqa: E402
+from universe_filter import (  # noqa: E402
+    DEFAULT_ST_DAILY,
+    UniverseFilterSpec,
+    build_keep_mask,
+)
 from config_loader import (  # noqa: E402
     build_handler_kwargs,
     load_config,
@@ -1388,7 +1392,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
     p.add_argument("--output", required=True, type=Path, help="输出 JSON 路径")
     p.add_argument("--min-listing-days", type=int, default=60, help="全A 池最短上市交易日数")
-    p.add_argument("--st-daily", type=Path, default=None, help="日频 ST 名单 CSV（symbol,date,name,source）")
+    p.add_argument(
+        "--st-daily",
+        type=Path,
+        default=DEFAULT_ST_DAILY,
+        help="日频 ST 名单 CSV（symbol,date,name,source）；默认仓库内 st_daily.csv",
+    )
     p.add_argument("--st-names", type=Path, default=None, help=argparse.SUPPRESS)
     p.add_argument("--min-count", type=int, default=20, help="单日截面最少样本数")
     p.add_argument(
@@ -1495,13 +1504,25 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     return args
 
 
+def require_st_daily(path: Path) -> Path:
+    """CLI 入口强制日频 ST 缓存存在；缺失则退出而不是静默跳过。"""
+    resolved = Path(path).expanduser()
+    if not resolved.is_absolute():
+        resolved = QLIB_ROOT / resolved
+    if not resolved.is_file():
+        raise SystemExit(
+            f"st_daily 不存在: {resolved}；请先运行 st_calendar.py update --backfill"
+        )
+    return resolved
+
+
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
     cfg = load_config(args.config)
     _init_qlib(cfg)
 
     sessions = [_parse_session(s) for s in args.sessions]
-    st_daily = args.st_daily
+    st_daily = require_st_daily(args.st_daily)
     if args.horizons is not None:
         result = evaluate_multi_horizon(
             cfg,

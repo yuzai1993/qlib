@@ -20,7 +20,7 @@ COMMON=(--pools all --segment test
   --exclude-limit-up
   --min-listing-days 60
   --min-amount 10000000
-  --st-names "$CFG/st_names.csv"
+  --st-daily scripts/data_collector/tushare/st_daily.csv
   --regime-labels "$CFG/monthly_regime_labels_eval_window_v1.csv"
   --regime-pools all)
 

@@ -10,7 +10,12 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from universe_filter import build_keep_mask, parse_universe_filter  # noqa: E402
+from universe_filter import (  # noqa: E402
+    DEFAULT_ST_DAILY_REL,
+    build_keep_mask,
+    default_universe_filter,
+    parse_universe_filter,
+)
 
 
 def test_parse_universe_filter_resolves_st_daily(tmp_path):
@@ -62,3 +67,19 @@ def test_build_keep_mask_rejects_dates_beyond_cache(tmp_path):
     spec.min_listing_days = 0
     with pytest.raises(ValueError, match="st_daily"):
         build_keep_mask(idx, spec)
+
+
+def test_default_universe_filter_injects_st_daily():
+    spec = default_universe_filter(None)
+    assert spec["st_daily"] == DEFAULT_ST_DAILY_REL
+
+
+def test_default_universe_filter_keeps_explicit_st_daily():
+    spec = default_universe_filter({"st_daily": "/tmp/custom.csv", "pool": "all"})
+    assert spec["st_daily"] == "/tmp/custom.csv"
+    assert spec["pool"] == "all"
+
+
+def test_default_universe_filter_rejects_st_names():
+    with pytest.raises(ValueError, match="st_names 已废弃"):
+        default_universe_filter({"st_names": "st_names.csv"})

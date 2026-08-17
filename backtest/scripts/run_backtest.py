@@ -44,7 +44,7 @@ from config_loader import (
     resolve_backtest_model_source,
     resolve_benchmark_series,
 )
-from universe_filter import wrap_model_predict
+from universe_filter import default_universe_filter, wrap_model_predict
 from report_utils import (
     build_pred_label,
     generate_run_figures,
@@ -58,10 +58,8 @@ RESULT_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 def maybe_wrap_universe_filter(model, cfg: dict):
-    """YAML 有 universe_filter 时包装 predict，使策略看到过滤后分数。"""
-    spec = cfg.get("universe_filter")
-    if not spec:
-        return model
+    """回测一律按日频 ST 过滤；YAML 可覆盖路径，但不得再用 st_names。"""
+    spec = default_universe_filter(cfg.get("universe_filter"))
     wrapped = wrap_model_predict(model, spec, project_root=QLIB_ROOT)
     print(f"[universe_filter] 已启用: {spec}", flush=True)
     return wrapped

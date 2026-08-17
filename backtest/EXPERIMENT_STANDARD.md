@@ -156,7 +156,7 @@ handler 时间：`start_time=2003-01-02`，Phase M `end_time >= 2026-07-16`、Ph
 | 全A | `all` | 2006-01-02 | 2020-01-10 | 中证全指 SH000985 本地无数据，训练/回测配置暂用 SH000300 占位（Phase M 只看 IC/RankIC 不受影响；全A 策略回测结论仅供参考） |
 
 - **默认训练池 = 基线训练池 CSI1000**（train 2016-01-02 ~ 2020-01-10）；**默认测试集 = csi1000 / csi300 / csi500**，其中 CSI1000 为研究主目标池。用同一个训练好的模型分别打分评估（跨池推理只需取数打分，无需重训）。
-- **全A**：暂不纳入默认测试矩阵；若实验显式要求评估全A，剔除评估日距该股数据起始不足 60 个交易日的股票（次新股）；ST 股在股票名称缓存可用时一并剔除（`eval_ic_multi_pool.py --st-names`），不可用时在结果中注明"未剔除 ST"。
+- **全A**：暂不纳入默认测试矩阵；若实验显式要求评估全A，剔除评估日距该股数据起始不足 60 个交易日的股票（次新股）；ST / 退市整理期一律按日频名单 `scripts/data_collector/tushare/st_daily.csv` 剔除（`eval_ic_multi_pool.py` 默认启用，缓存缺失则退出）。
 - 上表中其余池的训练配置仅用于**训练样本类实验**（direction 如 `train-data`：更换训练池、调整训练起点、样本加权等）；此类实验须在 registry 中注明所用训练池，并与相同训练池的基线组对比。
 - Phase S 默认在**研究主目标池**（当前 CSI1000）的连续全历史 `full` 段（2020-01-13 ~ 2026-07-31）执行比较与选型；`valid` / `test` 只供历史审计或复现，其余池作稳健性参考。所有 full 结果必须标注 `full_history_in_sample`，不得表述为样本外检验。当前实盘配置仍为 CSI300；研究目标池变更不自动修改实盘配置或 B1。
 
@@ -246,7 +246,7 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 
 **过滤**（评估宇宙；top-k 与等权基准同口径）：
 
-1. ST 日频名单：`scripts/data_collector/tushare/st_daily.csv`（`--st-daily`）。来源 Tushare stock_st（按交易日，2017-01-03 起）+ namechange（区间展开，回溯至 1999，并用 stock_basic.delist_date 覆盖退市整理期）；同名含「退」的整理期股票一并剔除。回测与实盘发布查同一份缓存。
+1. ST 日频名单：`scripts/data_collector/tushare/st_daily.csv`（Phase M 评估默认启用，可用 `--st-daily` 覆盖路径；缓存缺失则退出）。来源 Tushare stock_st（按交易日，2017-01-03 起）+ namechange（区间展开，回溯至 1999，并用 stock_basic.delist_date 覆盖退市整理期）；同名含「退」的整理期股票一并剔除。回测与实盘发布查同一份缓存。
 2. 成交额 ≥ 1000 万：本地无 `$amount`，用 `$volume × ($close/$factor) × 100`
 3. 上市 ≥ 60 交易日
 4. 另保留 t+1 涨停/零量剔除（`--exclude-limit-up`）

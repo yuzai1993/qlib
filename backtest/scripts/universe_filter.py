@@ -17,6 +17,8 @@ import pandas as pd
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 EXP_ROOT = SCRIPTS_DIR.parents[1]
+DEFAULT_ST_DAILY_REL = "scripts/data_collector/tushare/st_daily.csv"
+DEFAULT_ST_DAILY = EXP_ROOT / DEFAULT_ST_DAILY_REL
 _TUSHARE_DIR = EXP_ROOT / "scripts" / "data_collector" / "tushare"
 if str(_TUSHARE_DIR) not in sys.path:
     sys.path.insert(0, str(_TUSHARE_DIR))
@@ -85,6 +87,16 @@ class FilterStats:
             f"amount>={self.min_amount:.0f} listing>={self.min_listing_days} "
             f"recent_traded>={self.min_recent_trading_days}"
         )
+
+
+def default_universe_filter(raw: Optional[dict] = None) -> dict:
+    """回测缺省 universe_filter：强制走日频 ST，拒绝静态 st_names。"""
+    spec = dict(raw or {})
+    if spec.get("st_names") and not spec.get("st_daily"):
+        raise ValueError("universe_filter.st_names 已废弃，改用 st_daily")
+    spec.pop("st_names", None)
+    spec.setdefault("st_daily", DEFAULT_ST_DAILY_REL)
+    return spec
 
 
 def parse_universe_filter(raw: dict, *, project_root: Optional[Path] = None) -> UniverseFilterSpec:

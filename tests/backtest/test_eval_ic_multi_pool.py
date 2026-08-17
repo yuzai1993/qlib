@@ -208,6 +208,7 @@ def test_cli_accepts_valid_segment():
     assert args.eval_label == evaluator.EVAL_LABEL_EXPR
     assert args.eval_label_role == "fixed_1d"
     assert args.eval_end is None
+    assert args.st_daily == evaluator.DEFAULT_ST_DAILY
 
 
 def test_cli_rejects_deprecated_st_names(capsys):
@@ -225,6 +226,12 @@ def test_cli_rejects_deprecated_st_names(capsys):
             ]
         )
     assert "--st-names 已废弃" in capsys.readouterr().err
+
+
+def test_require_st_daily_exits_when_missing(tmp_path):
+    missing = tmp_path / "st_daily.csv"
+    with pytest.raises(SystemExit, match="st_daily"):
+        evaluator.require_st_daily(missing)
 
 
 def test_cli_requires_self_role_for_custom_evaluation_label():

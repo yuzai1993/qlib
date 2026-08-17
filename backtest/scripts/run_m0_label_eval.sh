@@ -17,9 +17,6 @@ echo "===== M0LABEL-START $(date '+%F %H:%M') =====" | tee -a "$LOG"
 echo "----- pytest -----" | tee -a "$LOG"
 $PY -m pytest tests/backtest/test_regime_adapt.py tests/backtest/test_eval_ic_multi_pool.py -q --tb=short | tee -a "$LOG"
 
-echo "----- ST names -----" | tee -a "$LOG"
-$PY backtest/scripts/dump_st_names.py --out "$CFG/st_names.csv" | tee -a "$LOG"
-
 echo "----- alt labels h2/h3/h20 -----" | tee -a "$LOG"
 $PY backtest/scripts/build_regime_alt_labels.py --horizons 2 3 20 | tee -a "$LOG"
 
@@ -44,7 +41,7 @@ COMMON=(--pools all --segment test
   --exclude-limit-up
   --min-listing-days 60
   --min-amount 10000000
-  --st-names "$CFG/st_names.csv"
+  --st-daily scripts/data_collector/tushare/st_daily.csv
   --regime-labels "$CFG/monthly_regime_labels_eval_window_v1.csv"
   --regime-pools all)
 

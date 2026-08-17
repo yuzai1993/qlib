@@ -105,7 +105,7 @@ crontab -e
 
 ## ST 日频名单
 
-回测 Phase M（`--st-daily`）与实盘 `run_publish_signals.py` 共用同一份缓存
+回测 Phase M（默认 `--st-daily`）与实盘 `run_publish_signals.py` 共用同一份缓存
 `scripts/data_collector/tushare/st_daily.csv`（gitignore，不进 git）。查询只做
 `st_symbols_on(daily, as_of)`，禁止用「当前名字含 ST」的静态快照。
 

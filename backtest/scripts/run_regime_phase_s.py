@@ -32,6 +32,7 @@ sys.path.insert(0, str(EXP_ROOT))
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from strategy_stability_metrics import summarize_stability  # noqa: E402
+from universe_filter import DEFAULT_ST_DAILY_REL  # noqa: E402
 
 PYTHON = "/opt/anaconda3/envs/qlib/bin/python"
 CONFIG_DIR = EXP_ROOT / "backtest" / "configs" / "regime-adapt" / "phase-s"
@@ -43,7 +44,7 @@ WARMUP_START = "2020-02-03"
 SEEDS = (42, 1000, 2000, 3000, 4000)
 
 DEFAULT_UNIVERSE_FILTER = {
-    "st_daily": "scripts/data_collector/tushare/st_daily.csv",
+    "st_daily": DEFAULT_ST_DAILY_REL,
 }
 
 # 全A 与训练池一致：剔除指数 / B 股 / 北交所

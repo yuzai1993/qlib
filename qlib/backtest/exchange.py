@@ -43,7 +43,7 @@ class Exchange:
         codes: Union[list, str] = "all",
         deal_price: Union[str, Tuple[str, str], List[str], None] = None,
         subscribe_fields: list = [],
-        limit_threshold: Union[Tuple[str, str], float, None] = None,
+        limit_threshold: Union[Tuple[str, str], float, str, None] = None,
         volume_threshold: Union[tuple, dict, None] = None,
         open_cost: float = 0.0015,
         close_cost: float = 0.0025,
@@ -68,10 +68,11 @@ class Exchange:
                                   "$" to the expression)
         :param subscribe_fields: list, subscribe fields. This expressions will be added to the query and `self.quote`.
                                  It is useful when users want more fields to be queried
-        :param limit_threshold: Union[Tuple[str, str], float, None]
+        :param limit_threshold: Union[Tuple[str, str], float, str, None]
                                 1) `None`: no limitation
                                 2) float, 0.1 for example, default None
-                                3) Tuple[str, str]: (<the expression for buying stock limitation>,
+                                3) "market_cn": A-share board-aware caps (main 9.5%, ChiNext/STAR 19.5%)
+                                4) Tuple[str, str]: (<the expression for buying stock limitation>,
                                                      <the expression for sell stock limitation>)
                                                     `False` value indicates the stock is tradable
                                                     `True` value indicates the stock is limited and not tradable
@@ -257,20 +258,23 @@ class Exchange:
 
     LT_TP_EXP = "(exp)"  # Tuple[str, str]:  the limitation is calculated by a Qlib expression.
     LT_FLT = "float"  # float:  the trading limitation is based on `abs($change) < limit_threshold`
+    LT_MARKET_CN = "market_cn"  # A-share board-aware caps
     LT_NONE = "none"  # none:  there is no trading limitation
 
-    def _get_limit_type(self, limit_threshold: Union[tuple, float, None]) -> str:
+    def _get_limit_type(self, limit_threshold: Union[tuple, float, str, None]) -> str:
         """get limit type"""
         if isinstance(limit_threshold, tuple):
             return self.LT_TP_EXP
         elif isinstance(limit_threshold, float):
             return self.LT_FLT
+        elif limit_threshold == self.LT_MARKET_CN:
+            return self.LT_MARKET_CN
         elif limit_threshold is None:
             return self.LT_NONE
         else:
             raise NotImplementedError(f"This type of `limit_threshold` is not supported")
 
-    def _update_limit(self, limit_threshold: Union[Tuple, float, None]) -> None:
+    def _update_limit(self, limit_threshold: Union[Tuple, float, str, None]) -> None:
         # $close may contain NaN, the nan indicates that the stock is not tradable at that timestamp
         suspended = self.quote_df["$close"].isna()
         # check limit_threshold
@@ -290,6 +294,10 @@ class Exchange:
             self.quote_df["limit_sell"] = (
                 self.quote_df["$change"].le(-limit_threshold) | suspended
             )  # pylint: disable=E1130
+        elif limit_type == self.LT_MARKET_CN:
+            from .cn_limit import apply_market_cn_limits
+
+            apply_market_cn_limits(self.quote_df)
 
     @staticmethod
     def _get_vol_limit(volume_threshold: Union[tuple, dict, None]) -> Tuple[Optional[list], Optional[list], set]:

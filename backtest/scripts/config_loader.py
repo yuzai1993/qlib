@@ -272,15 +272,30 @@ def build_port_analysis_config(cfg: dict) -> dict:
     if "topk" in strategy and "topk" not in kwargs:
         kwargs["topk"] = strategy["topk"]
     is_soft = "SoftTopk" in cls
+    # 阶梯策略按持有天数到期退出，没有 n_drop / hold_thresh，透传会直接 TypeError
+    is_cohort_ladder = "CohortLadder" in cls
     is_topk_dropout = cls.startswith("TopkDropout") or (
         "TopkDropout" in cls and not is_soft
     )
+    if is_cohort_ladder and "horizon" in strategy and "horizon" not in kwargs:
+        kwargs["horizon"] = strategy["horizon"]
+    if is_cohort_ladder and "force_sell_rank" in strategy and "force_sell_rank" not in kwargs:
+        kwargs["force_sell_rank"] = strategy["force_sell_rank"]
+    if is_cohort_ladder and "refill_force_sell" in strategy and "refill_force_sell" not in kwargs:
+        kwargs["refill_force_sell"] = strategy["refill_force_sell"]
     if is_topk_dropout and "n_drop" in strategy and "n_drop" not in kwargs:
         kwargs["n_drop"] = strategy["n_drop"]
     if is_topk_dropout and "hold_thresh" in strategy and "hold_thresh" not in kwargs:
         kwargs["hold_thresh"] = strategy["hold_thresh"]
+    if is_topk_dropout and "force_sell_rank" in strategy and "force_sell_rank" not in kwargs:
+        kwargs["force_sell_rank"] = strategy["force_sell_rank"]
     # 兼容旧 YAML：n_drop 写在 strategy 顶层时，非 SoftTopk 仍透传
-    if not is_soft and "n_drop" in strategy and "n_drop" not in kwargs:
+    if (
+        not is_soft
+        and not is_cohort_ladder
+        and "n_drop" in strategy
+        and "n_drop" not in kwargs
+    ):
         kwargs["n_drop"] = strategy["n_drop"]
 
     return {

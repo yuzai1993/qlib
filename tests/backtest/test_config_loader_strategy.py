@@ -58,6 +58,95 @@ def test_topk_dropout_hold_thresh_passthrough():
     assert kw["hold_thresh"] == 3
 
 
+def test_topk_dropout_force_sell_rank_passthrough():
+    cfg = _base_cfg(hold_thresh=5, force_sell_rank=100)
+
+    pac = cl.build_port_analysis_config(cfg)
+    kw = pac["strategy"]["kwargs"]
+
+    assert kw["hold_thresh"] == 5
+    assert kw["force_sell_rank"] == 100
+
+
+def test_cohort_ladder_passes_force_sell_rank():
+    cfg = _base_cfg(
+        **{
+            "class": "CohortLadderStrategy",
+            "module_path": "qlib.contrib.strategy.signal_strategy",
+            "topk": 3,
+            "horizon": 5,
+            "force_sell_rank": 100,
+            "kwargs": {"risk_degree": 0.9},
+        }
+    )
+    cfg["strategy"].pop("n_drop", None)
+
+    kw = cl.build_port_analysis_config(cfg)["strategy"]["kwargs"]
+
+    assert kw["horizon"] == 5
+    assert kw["force_sell_rank"] == 100
+    assert "n_drop" not in kw
+
+
+def test_cohort_ladder_passes_refill_force_sell():
+    cfg = _base_cfg(
+        **{
+            "class": "CohortLadderStrategy",
+            "module_path": "qlib.contrib.strategy.signal_strategy",
+            "topk": 3,
+            "horizon": 5,
+            "force_sell_rank": 100,
+            "refill_force_sell": True,
+            "kwargs": {"risk_degree": 0.9},
+        }
+    )
+    cfg["strategy"].pop("n_drop", None)
+
+    kw = cl.build_port_analysis_config(cfg)["strategy"]["kwargs"]
+
+    assert kw["force_sell_rank"] == 100
+    assert kw["refill_force_sell"] is True
+
+
+def test_cohort_ladder_passes_horizon_and_no_n_drop():
+    """阶梯策略没有 n_drop（按持有天数退出），透传 n_drop 会直接报错。"""
+    cfg = _base_cfg(
+        **{
+            "class": "CohortLadderStrategy",
+            "module_path": "qlib.contrib.strategy.signal_strategy",
+            "topk": 5,
+            "horizon": 5,
+            "kwargs": {"risk_degree": 0.9},
+        }
+    )
+    cfg["strategy"].pop("n_drop", None)
+
+    pac = cl.build_port_analysis_config(cfg)
+    kw = pac["strategy"]["kwargs"]
+
+    assert kw["topk"] == 5
+    assert kw["horizon"] == 5
+    assert "n_drop" not in kw
+    assert "hold_thresh" not in kw
+
+
+def test_cohort_ladder_ignores_stray_n_drop_from_legacy_yaml():
+    cfg = _base_cfg(
+        **{
+            "class": "CohortLadderStrategy",
+            "module_path": "qlib.contrib.strategy.signal_strategy",
+            "topk": 5,
+            "horizon": 5,
+            "n_drop": 1,
+            "kwargs": {"risk_degree": 0.9},
+        }
+    )
+
+    kw = cl.build_port_analysis_config(cfg)["strategy"]["kwargs"]
+
+    assert "n_drop" not in kw
+
+
 def test_pairwise_win_count_rows_and_dict():
     rows_a = [
         {"seed": 1, "excess_with_cost_information_ratio": 0.6},

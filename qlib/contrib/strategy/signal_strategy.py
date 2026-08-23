@@ -22,8 +22,18 @@ from qlib.contrib.strategy.order_generator import OrderGenerator, OrderGenWOInte
 from qlib.contrib.strategy.optimizer import EnhancedIndexingOptimizer
 from qlib.contrib.strategy.topk_dropout import (
     calculate_topk_buy_value,
+    cap_buy_to_free_slots,
     select_daily_topk,
     select_topk_dropout,
+    stable_rank_scores,
+)
+from qlib.contrib.strategy.cohort_ladder import (
+    CohortLedger,
+    cohort_budget,
+    force_sell_names,
+    ledger_sell_amounts,
+    select_ladder_buys,
+    select_ladder_refills,
 )
 
 
@@ -92,6 +102,7 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         method_buy="top",
         hold_thresh=1,
         initial_buy_count=None,
+        force_sell_rank=None,
         only_tradable=False,
         forbid_all_trade_at_limit=True,
         **kwargs,
@@ -113,6 +124,10 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         initial_buy_count : int or None
             When set, an underfilled portfolio buys at most this many new
             stocks per trading date and does not drop holdings until full.
+        force_sell_rank : int or None
+            1-based rank. Holdings worse than this (or missing a score) are sold
+            even if they have not reached ``hold_thresh``, and do not consume
+            ``n_drop``.
         only_tradable : bool
             will the strategy only consider the tradable stock when buying and selling.
 
@@ -142,17 +157,43 @@ class TopkDropoutStrategy(BaseSignalStrategy):
         self.method_buy = method_buy
         self.hold_thresh = hold_thresh
         self.initial_buy_count = initial_buy_count
+        self.force_sell_rank = force_sell_rank
         self.only_tradable = only_tradable
         self.forbid_all_trade_at_limit = forbid_all_trade_at_limit
 
-    def _select_instruments(self, pred_score, current_stock_list):
+    def _select_instruments(self, pred_score, current_stock_list, sellable=None):
         return select_topk_dropout(
             pred_score,
             current_stock_list,
             topk=self.topk,
             n_drop=self.n_drop,
             initial_buy_count=self.initial_buy_count,
+            sellable=sellable,
+            force_sell_rank=self.force_sell_rank,
         )
+
+    def _sellable_holdings(self, current_stock_list, position, start_time, end_time):
+        """当日真正卖得掉的持仓：可成交且已满足 hold_thresh。"""
+        bar = self.trade_calendar.get_freq()
+        return [
+            code
+            for code in current_stock_list
+            if self.trade_exchange.is_stock_tradable(
+                stock_id=code,
+                start_time=start_time,
+                end_time=end_time,
+                direction=None if self.forbid_all_trade_at_limit else OrderDir.SELL,
+            )
+            and position.get_stock_count(code, bar=bar) >= self.hold_thresh
+        ]
+
+    def _is_force_sell(self, code, pred_score) -> bool:
+        if self.force_sell_rank is None:
+            return False
+        ranked = stable_rank_scores(pred_score)
+        if code not in ranked.index:
+            return True
+        return int(ranked.index.get_loc(code)) + 1 > int(self.force_sell_rank)
 
     def generate_trade_decision(self, execute_result=None):
         # get the number of trading step finished, trade_step can be [0, 1, 2, ..., trade_len - 1]
@@ -222,7 +263,13 @@ class TopkDropoutStrategy(BaseSignalStrategy):
             and self.method_buy == "top"
             and self.method_sell == "bottom"
         ):
-            selection = self._select_instruments(pred_score, current_stock_list)
+            selection = self._select_instruments(
+                pred_score,
+                current_stock_list,
+                sellable=self._sellable_holdings(
+                    current_stock_list, current_temp, trade_start_time, trade_end_time
+                ),
+            )
             sell = selection.sell
             buy = selection.buy
         else:
@@ -272,9 +319,12 @@ class TopkDropoutStrategy(BaseSignalStrategy):
             ):
                 continue
             if code in sell:
-                # check hold limit
+                # check hold limit；掉出 force_sell_rank 的票不受最短持仓约束
                 time_per_step = self.trade_calendar.get_freq()
-                if current_temp.get_stock_count(code, bar=time_per_step) < self.hold_thresh:
+                if (
+                    current_temp.get_stock_count(code, bar=time_per_step) < self.hold_thresh
+                    and not self._is_force_sell(code, pred_score)
+                ):
                     continue
                 # sell order
                 sell_amount = current_temp.get_stock_amount(code=code)
@@ -295,8 +345,11 @@ class TopkDropoutStrategy(BaseSignalStrategy):
                     # update cash
                     cash += trade_val - trade_cost
         # buy new stock
-        # note the current has been changed
-        # current_stock_list = current_temp.get_stock_list()
+        # 按实际成交的卖出后的持仓数收敛买入数：计划卖单可能因停牌/hold_thresh 落空，
+        # 若仍按计划买入，持仓会超过 topk 并让次日的买入预算变成 0，组合就此冻死。
+        buy = cap_buy_to_free_slots(
+            buy, held_count=len(current_temp.get_stock_list()), topk=self.topk
+        )
         value = calculate_topk_buy_value(
             cash=cash,
             total_value=decision_total_value,
@@ -342,8 +395,178 @@ class DailyTopkStrategy(TopkDropoutStrategy):
     def __init__(self, *, topk, n_drop=None, hold_thresh=1, **kwargs):
         super().__init__(topk=topk, n_drop=topk, hold_thresh=1, **kwargs)
 
-    def _select_instruments(self, pred_score, current_stock_list):
-        return select_daily_topk(pred_score, current_stock_list, topk=self.topk)
+    def _select_instruments(self, pred_score, current_stock_list, sellable=None):
+        return select_daily_topk(
+            pred_score, current_stock_list, topk=self.topk, sellable=sellable
+        )
+
+
+class CohortLadderStrategy(BaseSignalStrategy):
+    """真阶梯：每日买入当日 top-k，每只持满 ``horizon`` 天到期无条件卖出。
+
+    这是 Phase M 主格 top-k × h 的执行层等价物——评估年化 ``mean(p) × 238/h`` 恒等于
+    这条阶梯的算术年化。与 ``TopkDropoutStrategy`` 的区别见
+    ``qlib.contrib.strategy.cohort_ladder`` 的模块说明：退出看持有天数而非打分排名，
+    且同一只票允许被多个分层同时持有。
+    """
+
+    def __init__(
+        self,
+        *,
+        topk: int,
+        horizon: int,
+        only_tradable: bool = False,
+        forbid_all_trade_at_limit: bool = True,
+        force_sell_rank: int | None = None,
+        refill_force_sell: bool = False,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        if topk <= 0:
+            raise ValueError("topk must be a positive integer")
+        if horizon <= 0:
+            raise ValueError("horizon must be a positive integer")
+        if force_sell_rank is not None and int(force_sell_rank) < 1:
+            raise ValueError("force_sell_rank must be a positive integer or None")
+        self.topk = int(topk)
+        self.horizon = int(horizon)
+        self.only_tradable = only_tradable
+        self.forbid_all_trade_at_limit = forbid_all_trade_at_limit
+        self.force_sell_rank = None if force_sell_rank is None else int(force_sell_rank)
+        self.refill_force_sell = bool(refill_force_sell)
+        self._ledger = CohortLedger(horizon=self.horizon)
+
+    def _tradable(self, code, direction, start_time, end_time) -> bool:
+        return self.trade_exchange.is_stock_tradable(
+            stock_id=code,
+            start_time=start_time,
+            end_time=end_time,
+            direction=None if self.forbid_all_trade_at_limit else direction,
+        )
+
+    def generate_trade_decision(self, execute_result=None):
+        trade_step = self.trade_calendar.get_trade_step()
+        trade_start_time, trade_end_time = self.trade_calendar.get_step_time(trade_step)
+        pred_start_time, pred_end_time = self.trade_calendar.get_step_time(trade_step, shift=1)
+        if trade_step == 0:
+            # 同一个策略实例可能被复用于多次回测，账龄必须从头算
+            self._ledger = CohortLedger(horizon=self.horizon)
+        pred_score = self.signal.get_signal(start_time=pred_start_time, end_time=pred_end_time)
+        if isinstance(pred_score, pd.DataFrame):
+            pred_score = pred_score.iloc[:, 0]
+        if pred_score is None:
+            return TradeDecisionWO([], self)
+
+        current_temp: Position = copy.deepcopy(self.trade_position)
+        decision_total_value = current_temp.calculate_value()
+        self._ledger.reconcile(current_temp.get_stock_amount_dict())
+
+        sell_order_list = []
+        sold: dict[str, float] = {}
+        force_proceeds = 0.0
+        position_amounts = current_temp.get_stock_amount_dict()
+        extracted = self._ledger.extract(
+            force_sell_names(pred_score, self._ledger.holdings(), self.force_sell_rank)
+        )
+        due = ledger_sell_amounts(self._ledger.due(), position_amounts)
+        to_sell = dict(due)
+        for code, amount in ledger_sell_amounts(extracted, position_amounts).items():
+            to_sell[code] = to_sell.get(code, 0.0) + amount
+        for code, amount in to_sell.items():
+            if not self._tradable(code, OrderDir.SELL, trade_start_time, trade_end_time):
+                continue
+            sell_order = Order(
+                stock_id=code,
+                amount=amount,
+                start_time=trade_start_time,
+                end_time=trade_end_time,
+                direction=Order.SELL,
+            )
+            if not self.trade_exchange.check_order(sell_order):
+                continue
+            sell_order_list.append(sell_order)
+            trade_val, _, _ = self.trade_exchange.deal_order(sell_order, position=current_temp)
+            dealt = getattr(sell_order, "deal_amount", None)
+            sold[code] = float(amount if dealt is None else dealt)
+            if code in extracted:
+                force_proceeds += float(trade_val)
+        self._ledger.settle({code: amount for code, amount in sold.items() if code in due})
+        self._ledger.park_unsold(
+            {
+                code: amount - sold.get(code, 0.0)
+                for code, amount in extracted.items()
+                if amount - sold.get(code, 0.0) > 1e-9
+            }
+        )
+
+        is_buyable = lambda code: self._tradable(
+            code, OrderDir.BUY, trade_start_time, trade_end_time
+        )
+        buy = select_ladder_buys(pred_score, k=self.topk, is_buyable=is_buyable)
+        budget = cohort_budget(
+            total_value=decision_total_value,
+            cash=current_temp.get_cash(),
+            risk_degree=self.risk_degree,
+            horizon=self.horizon,
+        )
+        buy_order_list, filled, spent = self._orders_for_names(
+            buy, budget, trade_start_time, trade_end_time
+        )
+        force_sold = tuple(code for code in extracted if sold.get(code, 0.0) > 1e-9)
+        if self.refill_force_sell and force_sold:
+            refills = select_ladder_refills(
+                pred_score,
+                n=len(force_sold),
+                exclude=set(buy) | set(self._ledger.holdings()),
+                is_buyable=is_buyable,
+            )
+            refill_budget = min(force_proceeds, max(current_temp.get_cash() - spent, 0.0))
+            extra_orders, extra_filled, _ = self._orders_for_names(
+                refills, refill_budget, trade_start_time, trade_end_time
+            )
+            buy_order_list.extend(extra_orders)
+            for code, amount in extra_filled.items():
+                filled[code] = filled.get(code, 0.0) + amount
+        # 空分层也要占位：漏记一天会让整条阶梯的账龄提前一天，到期日全部错位
+        self._ledger.add(filled)
+        return TradeDecisionWO(sell_order_list + buy_order_list, self)
+
+    def _orders_for_names(self, names, budget, trade_start_time, trade_end_time):
+        orders = []
+        filled: dict[str, float] = {}
+        spent = 0.0
+        if not names or budget <= 0:
+            return orders, filled, spent
+        value = float(budget) / len(names)
+        for code in names:
+            buy_price = self.trade_exchange.get_deal_price(
+                stock_id=code,
+                start_time=trade_start_time,
+                end_time=trade_end_time,
+                direction=OrderDir.BUY,
+            )
+            if not buy_price or not np.isfinite(buy_price):
+                continue
+            factor = self.trade_exchange.get_factor(
+                stock_id=code, start_time=trade_start_time, end_time=trade_end_time
+            )
+            buy_amount = self.trade_exchange.round_amount_by_trade_unit(
+                value / buy_price, factor
+            )
+            if buy_amount <= 0:
+                continue
+            orders.append(
+                Order(
+                    stock_id=code,
+                    amount=buy_amount,
+                    start_time=trade_start_time,
+                    end_time=trade_end_time,
+                    direction=Order.BUY,
+                )
+            )
+            filled[code] = filled.get(code, 0.0) + float(buy_amount)
+            spent += float(buy_amount) * float(buy_price)
+        return orders, filled, spent
 
 
 class WeightStrategyBase(BaseSignalStrategy):

@@ -40,7 +40,7 @@ def get_exchange(
     open_cost: float = 0.0015,
     close_cost: float = 0.0025,
     min_cost: float = 5.0,
-    limit_threshold: Union[Tuple[str, str], float, None] | None = None,
+    limit_threshold: Union[Tuple[str, str], float, str, None] | None = None,
     deal_price: Union[str, Tuple[str, str], List[str]] | None = None,
     **kwargs: Any,
 ) -> Exchange:

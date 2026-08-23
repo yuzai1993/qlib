@@ -4,6 +4,7 @@ import pytest
 
 from qlib.contrib.strategy.topk_dropout import (
     calculate_topk_buy_value,
+    cap_buy_to_free_slots,
     select_daily_topk,
     select_topk_dropout,
     stable_rank_scores,
@@ -236,3 +237,131 @@ def test_daily_topk_is_not_capped_by_n_drop():
     assert daily.buy == tuple(scores.index[:4])
     assert len(dropout.sell) == 1
     assert len(dropout.buy) == 1
+
+
+# --- 停牌/不可成交持仓：防止组合自锁死循环 ---
+
+
+def test_unsellable_holding_does_not_consume_drop_slot():
+    """最差持仓当日不可卖时，n_drop 名额应让给次差的可卖持仓，而不是空转。"""
+    scores = _scores(8)
+    held = list(scores.index[:3]) + [scores.index[6], scores.index[7]]
+    sellable = [*scores.index[:3], scores.index[6]]
+
+    stuck = select_topk_dropout(scores, held, topk=5, n_drop=1)
+    fixed = select_topk_dropout(scores, held, topk=5, n_drop=1, sellable=sellable)
+
+    # 旧行为把卖单浪费在卖不掉的 index[7] 上
+    assert stuck.sell == (scores.index[7],)
+    assert fixed.sell == (scores.index[6],)
+    assert fixed.buy == (scores.index[3],)
+
+
+def test_unsellable_holding_still_occupies_topk_slot():
+    """不可卖的持仓仍占一个仓位，不能因此多买一只导致持仓超 topk。"""
+    scores = _scores(8)
+    held = list(scores.index[:3]) + [scores.index[6], scores.index[7]]
+    sellable = [*scores.index[:3], scores.index[6]]
+
+    sel = select_topk_dropout(scores, held, topk=5, n_drop=1, sellable=sellable)
+
+    assert len(held) - len(sel.sell) + len(sel.buy) == 5
+
+
+def test_all_holdings_unsellable_yields_no_orders():
+    scores = _scores(8)
+    held = list(scores.index[:5])
+
+    sel = select_topk_dropout(scores, held, topk=5, n_drop=1, sellable=[])
+
+    assert sel.sell == ()
+    assert sel.buy == ()
+
+
+def test_over_topk_holding_shrinks_when_worst_is_unsellable():
+    """回归 2026 死锁：持仓 6 只且最差不可卖时，必须仍能卖出可成交的最差持仓。"""
+    scores = _scores(8)
+    held = list(scores.index[:4]) + [scores.index[6], scores.index[7]]
+    sellable = [*scores.index[:4], scores.index[6]]
+
+    sel = select_topk_dropout(scores, held, topk=5, n_drop=1, sellable=sellable)
+
+    assert sel.sell == (scores.index[6],)
+    assert sel.buy == ()
+    assert len(held) - len(sel.sell) == 5
+
+
+def test_force_sell_rank_dumps_name_outside_threshold_without_using_n_drop():
+    """掉出前 100 必卖；未满持仓天数的前 100 名仍不能卖，n_drop 留给可卖持仓。"""
+    scores = _scores(120)
+    outside = scores.index[110]
+    mid = scores.index[50]
+    held = list(scores.index[:3]) + [mid, outside]
+    sellable = list(scores.index[:3]) + [mid]
+
+    without = select_topk_dropout(
+        scores, held, topk=5, n_drop=1, sellable=sellable,
+    )
+    forced = select_topk_dropout(
+        scores, held, topk=5, n_drop=1, sellable=sellable, force_sell_rank=100,
+    )
+
+    assert without.sell == (mid,)
+    assert outside not in without.sell
+    assert set(forced.sell) == {outside, mid}
+    assert forced.buy == (scores.index[3], scores.index[4])
+    assert len(held) - len(forced.sell) + len(forced.buy) == 5
+
+
+def test_force_sell_missing_score_is_treated_as_outside_rank():
+    scores = _scores(10)
+    ghost = "SZ399999"
+    held = list(scores.index[:4]) + [ghost]
+    sel = select_topk_dropout(
+        scores, held, topk=5, n_drop=1, force_sell_rank=100,
+    )
+    assert ghost in sel.sell
+
+
+def test_force_sell_rank_none_keeps_legacy_dropout():
+    scores = _scores(120)
+    outside = scores.index[110]
+    held = list(scores.index[:4]) + [outside]
+    legacy = select_topk_dropout(scores, held, topk=5, n_drop=1)
+    assert legacy.sell == (outside,)
+    assert legacy.buy == (scores.index[4],)
+
+
+def test_sellable_defaults_to_all_holdings():
+    scores = _scores(8)
+    held = list(scores.index[:3]) + [scores.index[6], scores.index[7]]
+
+    assert select_topk_dropout(scores, held, topk=5, n_drop=1) == select_topk_dropout(
+        scores, held, topk=5, n_drop=1, sellable=held
+    )
+
+
+def test_daily_topk_keeps_unsellable_holding_and_caps_buys():
+    scores = _scores(8)
+    held = list(scores.index[:2]) + [scores.index[6], scores.index[7]]
+    sellable = [*scores.index[:2], scores.index[6]]
+
+    sel = select_daily_topk(scores, held, topk=4, sellable=sellable)
+
+    assert sel.sell == (scores.index[6],)
+    assert sel.buy == (scores.index[2],)
+    assert len(held) - len(sel.sell) + len(sel.buy) == 4
+
+
+@pytest.mark.parametrize(
+    "buy,held_count,expected",
+    [
+        (("A", "B"), 4, ("A",)),
+        (("A",), 5, ()),
+        (("A", "B"), 3, ("A", "B")),
+        ((), 3, ()),
+        (("A",), 6, ()),
+    ],
+)
+def test_cap_buy_to_free_slots(buy, held_count, expected):
+    assert cap_buy_to_free_slots(buy, held_count=held_count, topk=5) == expected

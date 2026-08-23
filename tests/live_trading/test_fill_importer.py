@@ -2223,3 +2223,30 @@ def test_buy_gross_beyond_the_epsilon_is_still_rejected(tmp_path):
 
     with pytest.raises(SchemaError, match="exceeds target_value"):
         recorder.apply_fill(FillEvent.from_dict(fill))
+
+
+def test_odd_lot_sell_receipt_imports(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "oddlot.db"), opening_cash=100_000.0)
+    # 120 股的零股持仓正是 absorb_broker_excess 吸收送股后的样子
+    recorder.upsert_position("600000.SH", 120, 9.0)
+    fill = _fill(batch_id="odd", client_order_id="odd-1", side="SELL",
+                 stock_code="600000.SH", requested=120, filled=120, price=10.0)
+    _record_plan(recorder, [fill], batch_id="odd")
+
+    recorder.apply_fill(FillEvent.from_dict(fill))
+
+    # 120 股 @ 10.0 扣费后入账，现金必须涨
+    assert recorder.get_cash() > 100_000.0
+
+
+@pytest.mark.parametrize("requested", [0, -100])
+def test_non_positive_requested_qty_is_still_rejected(tmp_path, requested):
+    recorder = LiveRecorder(str(tmp_path / ("bad%d.db" % abs(requested))))
+    fill = _fill(batch_id="bad", client_order_id="bad-1", side="SELL",
+                 stock_code="600000.SH", requested=120, filled=0, price=0.0)
+    _record_plan(recorder, [fill], batch_id="bad")
+
+    with pytest.raises(SchemaError, match="requested_qty"):
+        recorder.apply_fill(
+            FillEvent.from_dict(dict(fill, requested_qty=requested))
+        )

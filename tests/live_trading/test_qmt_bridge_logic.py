@@ -3554,3 +3554,35 @@ def test_star_market_above_the_floor_is_still_a_lot_multiple(bridge):
 def test_missing_close_price_sizes_to_zero_never_guesses(bridge):
     assert bridge._ladder_buy_shares(60_000.0, 0.0) == 0
     assert bridge._sized_buy_shares("600000.SH", 60_000.0, 0.0) == 0
+
+
+def test_odd_lot_sell_batch_is_accepted(bridge, monkeypatch, tmp_path):
+    """零股来自 absorb_broker_excess 吸收的送股。阶梯到期时整层一次性卖出，
+    含零股的层同样合规——bridge 不能因为不是整百就整批拒收。"""
+    current_root, other_root = _profile_roots(tmp_path, "AFTER_HOURS_FIXED_PRICE")
+    _activate_profile(bridge, "AFTER_HOURS_FIXED_PRICE", current_root, other_root)
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    order["price_type"] = "AFTER_HOURS_CLOSE"
+    order["quantity"] = 120
+    _write_batch(bridge, bridge._today(), [order])
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch is not None
+    assert bridge.g.batch.orders[0]["quantity"] == 120
+
+
+@pytest.mark.parametrize("quantity", [0, -100, 100.5, True, None])
+def test_non_positive_or_non_integer_sell_quantity_is_still_rejected(
+    bridge, monkeypatch, tmp_path, quantity,
+):
+    current_root, other_root = _profile_roots(tmp_path, "AFTER_HOURS_FIXED_PRICE")
+    _activate_profile(bridge, "AFTER_HOURS_FIXED_PRICE", current_root, other_root)
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    order["price_type"] = "AFTER_HOURS_CLOSE"
+    order["quantity"] = quantity
+    _write_batch(bridge, bridge._today(), [order])
+
+    bridge._claim_new_batch()
+
+    assert bridge.g.batch is None

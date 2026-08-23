@@ -1588,10 +1588,12 @@ class LiveRecorder:
                 raise SchemaError(
                     f"fill side mismatch: {fill.side!r} != {order['side']!r}"
                 )
-            if fill.requested_qty <= 0 or fill.requested_qty % 100 != 0:
+            # 整百约束已下移到下单器（CohortOrderManager._sell_quantity：
+            # 不足一手只能整笔清仓）。这里再查一遍会挡掉合规的零股卖出。
+            if fill.requested_qty <= 0:
                 raise SchemaError(
                     f"fill requested_qty invalid for plan: {fill.requested_qty!r} "
-                    "must be a positive whole lot"
+                    "must be positive"
                 )
             if fill.side == "SELL" and fill.requested_qty > order["quantity"]:
                 raise SchemaError(

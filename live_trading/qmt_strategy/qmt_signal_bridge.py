@@ -1382,9 +1382,12 @@ def _parse_and_check(jsonl_path, done_path):
             if not math.isfinite(target_value) or target_value <= 0.0:
                 return reject("BUY target_value invalid")
         else:
+            # Odd lots are legal on the sell side: absorb_broker_excess folds
+            # bonus shares into the ladder, and a maturing layer is always sold
+            # whole. Rejecting non-multiples of 100 would drop the entire batch.
             if (not isinstance(quantity, int) or isinstance(quantity, bool)
-                    or quantity <= 0 or quantity % 100 != 0):
-                return reject("SELL quantity must be a positive whole lot")
+                    or quantity <= 0):
+                return reject("SELL quantity must be a positive integer")
             if target_value != 0 and target_value != 0.0:
                 return reject("SELL target_value must be zero")
         if max_quantity is None:

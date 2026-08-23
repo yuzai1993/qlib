@@ -381,3 +381,82 @@ def test_publish_refuses_stale_cache():
     scores = pd.Series([1.0], index=["SZ000001"])
     with pytest.raises(SystemExit, match="st_daily"):
         publish.apply_st_daily(scores, DAILY_ST, "2026-08-14")
+
+
+def test_ladder_branch_persists_reconciled_state_before_deciding(tmp_path):
+    """reconcile 结果必须落库，否则次日 settle 弹错层。"""
+    from live_trading.modules.cohort_store import CohortState
+
+    recorder = LiveRecorder(str(tmp_path / "l.db"), opening_cash=1_000_000.0)
+    recorder.save_cohort_state(
+        CohortState(
+            layers=(
+                ("2026-08-19", {"SH600000": 100}),
+                ("2026-08-20", {"SH600000": 200}),
+            ),
+            pending={},
+        )
+    )
+
+    # 券商只有 100 股：最新层整单落空，reconcile 应把它削掉并写回
+    state = publish.reconcile_cohort_state(
+        recorder, broker_positions={"SH600000": 100}, horizon=5,
+    )
+
+    assert state.layers == (
+        ("2026-08-19", {"SH600000": 100}),
+        ("2026-08-20", {}),
+    )
+    assert recorder.load_cohort_state() == state
+
+
+def test_ladder_branch_reports_absorbed_broker_excess(tmp_path):
+    from live_trading.modules.cohort_store import CohortState
+
+    recorder = LiveRecorder(str(tmp_path / "l.db"), opening_cash=1_000_000.0)
+    recorder.save_cohort_state(
+        CohortState(layers=(("2026-08-19", {"SH600000": 400}),), pending={})
+    )
+
+    state = publish.reconcile_cohort_state(
+        recorder, broker_positions={"SH600000": 520}, horizon=5,
+    )
+
+    assert state.layers == (("2026-08-19", {"SH600000": 520}),)
+
+
+def test_audit_preview_estimates_netting_for_overlapping_names():
+    rows = publish.netting_preview(
+        orders=[
+            {"side": "SELL", "stock_code": "SH600000", "quantity": 600,
+             "target_value": 0.0, "reason": "cohort_due"},
+            {"side": "BUY", "stock_code": "SH600000", "quantity": 0,
+             "target_value": 60_000.0, "reason": "cohort_layer"},
+            {"side": "BUY", "stock_code": "SZ000001", "quantity": 0,
+             "target_value": 60_000.0, "reason": "cohort_layer"},
+        ],
+        close_prices={"SH600000": 100.0, "SZ000001": 20.0},
+        trade_unit=100,
+    )
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["stock_code"] == "SH600000"
+    assert row["S"] == 600
+    assert row["V"] == 60_000.0
+    assert row["B_est"] == 600          # floor(60000 / 100 / 100) * 100
+    assert row["net_est"] == 0
+    assert row["estimate"] is True
+
+
+def test_netting_preview_skips_buys_without_a_matching_sell():
+    rows = publish.netting_preview(
+        orders=[
+            {"side": "BUY", "stock_code": "SZ000001", "quantity": 0,
+             "target_value": 60_000.0, "reason": "cohort_layer"},
+        ],
+        close_prices={"SZ000001": 20.0},
+        trade_unit=100,
+    )
+
+    assert rows == []

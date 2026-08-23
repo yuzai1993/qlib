@@ -141,6 +141,7 @@ def write_audit_preview(
     current_positions: dict,
     orders: list,
     generated_at: str | None = None,
+    netting_estimate: list | None = None,
 ) -> None:
     """Atomically write an evidence-only plan without creating a batch or inbox file."""
     rendered_orders = [json.loads(order.to_json_line()) for order in orders]
@@ -157,6 +158,8 @@ def write_audit_preview(
         "sell_count": sum(order["side"] == "SELL" for order in rendered_orders),
         "orders": rendered_orders,
     }
+    if netting_estimate:
+        payload["netting_estimate"] = netting_estimate
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
@@ -322,6 +325,58 @@ def apply_st_daily(scores, daily, as_of):
     return out
 
 
+def reconcile_cohort_state(recorder, broker_positions: dict, horizon: int):
+    """发布前把分层账本对齐券商持仓，并**立即写回**。
+
+    写回是必需的：次日回执导入时 settle 必须作用在同一个已对齐的账本上，
+    否则弹出的到期层与发布时看到的不是同一层。
+    """
+    from live_trading.modules.cohort_store import reconciled_state
+
+    state, absorbed = reconciled_state(
+        recorder.load_cohort_state(), broker_positions, horizon=horizon,
+    )
+    recorder.save_cohort_state(state)
+    if absorbed:
+        logger.warning(
+            "absorbed broker share excess into ledger: %s", absorbed,
+        )
+    return state
+
+
+def netting_preview(orders: list, close_prices: dict, trade_unit: int) -> list:
+    """审计预览：估算 bridge 侧抵销结果。
+
+    B_est 用 T 日收盘价估算，**只是估计值**——权威记录是 bridge 提交前写的
+    LADDER_NET 事件，它用当日实际收盘价。本函数仅供发布前 sanity check。
+    """
+    sells = {
+        order["stock_code"]: int(order["quantity"])
+        for order in orders if order["side"] == "SELL"
+    }
+    rows = []
+    for order in orders:
+        if order["side"] != "BUY":
+            continue
+        code = order["stock_code"]
+        if code not in sells:
+            continue
+        price = close_prices.get(code)
+        if price is None or float(price) <= 0:
+            continue
+        value = float(order["target_value"])
+        b_est = int(value / float(price) // trade_unit) * trade_unit
+        rows.append({
+            "stock_code": code,
+            "S": sells[code],
+            "V": value,
+            "B_est": b_est,
+            "net_est": b_est - sells[code],
+            "estimate": True,
+        })
+    return rows
+
+
 def main():
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -359,12 +414,27 @@ def main():
         config, trade_date
     )
     st_daily = load_st_daily_or_exit()
-    scores = apply_st_daily(scores, st_daily, signal_date)
-    banned = st_symbols_on(st_daily, signal_date)
-    logger.info(
-        "signal_date=%s, scored %d instruments, ST daily banned %d",
-        signal_date, len(scores), len(banned),
-    )
+    universe_spec = config.get("universe_filter")
+    if universe_spec:
+        # build_keep_mask 已含同一份 st_daily.csv 的日频 ST 判定，
+        # 再叠 apply_st_daily 就是两处各判一次。
+        from live_trading.modules.universe_gate import filter_scores
+
+        scores, filter_stats = filter_scores(
+            scores,
+            signal_date=signal_date,
+            raw_spec=universe_spec,
+            project_root=PROJECT_ROOT,
+        )
+        banned = ()
+        logger.info("universe filter stats: %s", filter_stats)
+    else:
+        scores = apply_st_daily(scores, st_daily, signal_date)
+        banned = st_symbols_on(st_daily, signal_date)
+        logger.info(
+            "signal_date=%s, scored %d instruments, ST daily banned %d",
+            signal_date, len(scores), len(banned),
+        )
 
     # 持久化全市场分数供监控查询（dry-run 不落库）
     preview_only = args.dry_run or args.audit_preview is not None
@@ -392,23 +462,49 @@ def main():
     )
     prev_close = get_prev_close(config, need_price, signal_date)
 
-    # 4. TopkDropout 意图
-    from live_trading.modules.order_manager import OrderManager
+    # 4. 下单意图
     total_value = calculate_account_value(
         cash,
         current_positions,
         prev_close,
         recorder.get_value_adjustment(),
     )
-    intents = OrderManager(config).generate_orders(
-        scores,
-        current_positions,
-        cash,
-        prev_close,
-        total_value,
-        signal_date=signal_date,
-        trade_dates=trade_dates,
-    )
+    if strategy_cfg.get("class") == "CohortLadderStrategy":
+        from live_trading.modules.cohort_order_manager import CohortOrderManager
+        from live_trading.modules.cohort_store import reconciled_state
+
+        horizon = int(strategy_cfg["horizon"])
+        broker_positions = {
+            code: value["shares"] for code, value in current_positions.items()
+        }
+        # 预览态不写回：dry-run 不该留下任何账本痕迹
+        cohort_state = (
+            reconciled_state(
+                recorder.load_cohort_state(), broker_positions, horizon=horizon,
+            )[0]
+            if preview_only
+            else reconcile_cohort_state(recorder, broker_positions, horizon)
+        )
+        intents = CohortOrderManager(config).generate_orders(
+            scores=scores,
+            cohort_state=cohort_state,
+            broker_positions=broker_positions,
+            cash=cash,
+            close_prices=prev_close,
+            total_value=total_value,
+        )
+    else:
+        from live_trading.modules.order_manager import OrderManager
+
+        intents = OrderManager(config).generate_orders(
+            scores,
+            current_positions,
+            cash,
+            prev_close,
+            total_value,
+            signal_date=signal_date,
+            trade_dates=trade_dates,
+        )
     if not intents:
         logger.info("no orders planned for %s; publishing terminal empty batch", trade_date)
 
@@ -426,6 +522,14 @@ def main():
             trade_date=trade_date,
             current_positions=current_positions,
             orders=orders,
+            # 抵销是阶梯独有的：TopkDropout 的买卖不会落在同一只票上
+            netting_estimate=(
+                netting_preview(
+                    intents, prev_close, int(config["exchange"]["trade_unit"]),
+                )
+                if strategy_cfg.get("class") == "CohortLadderStrategy"
+                else None
+            ),
         )
         logger.info("wrote audit preview to %s", args.audit_preview)
 

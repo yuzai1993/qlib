@@ -944,9 +944,24 @@ Run:
 /opt/anaconda3/envs/qlib/bin/python live_trading/scripts/verify_ladder_dry_run.py \
   --signal-date 2026-07-30
 ```
-Expected: `top3 match: True`，且 `max |live - reference|` 在 1e-9 量级。
+Expected: `top3 match: True`。
 
-**若 top3 不等**：先看 `max_gap`。`max_gap` 极小但 top3 不同 → 是并列名次的稳定排序问题，查 `stable_rank_scores` 与 `blend_score_series` 的排序键。`max_gap` 很大 → 合成或宇宙过滤对不上，逐项查：成员顺序无关（z-score 后等权平均对顺序不敏感）、`filter_pipe` 是否生效（全A 应被 `^(SH60|SH68|SZ00|SZ30)` 削掉一批）、`universe_filter` 四项是否与回测同参。**不要为了让它相等去调 topk 或过滤参数**——那是拿 test 段调参。
+**实测（2026-08-23，signal_date 2026-07-30）：`top3 match: True`，但 `max |live - reference| = 1.33e-03`，远大于计划预期的 1e-9。已定因，结论是无害的口径差异，不需要改任何一侧的实现。**
+
+定因过程见 `live_trading/scripts/diagnose_ladder_gap.py`（吃 `--dump-dir` 落下的 z-score **之前**的逐成员原始分数）：
+
+1. 手算合成能复现落盘的合成到 `2.28e-11` —— 合成代码本身没问题。
+2. 参考帧当日 5207 只，live 5203 只，多出的 4 只全是**指数**：`SH000300` / `SH000852` / `SH000903` / `SH000905`。live 一只都不多。
+3. 合成是「按日横截面 z-score 后等权平均」，所以多这 4 行会改变当日的 μ 与 σ。参考帧的横截面均值恰好是 `+0.000000`（z-score 在含指数的 5207 只上做的），剔掉这 4 只后为 `+0.000219`、σ 从 `0.977278` 变 `0.977593`。
+4. 因此差值几乎就是一个逐日仿射变换：拟合出 `scale=1.000308`、`shift=+0.000219` —— 与上面的 σ 比值 `0.977593/0.977278=1.000322` 和均值偏移 `0.000219` 对得上。残差只剩 `1.69e-05`（残差非零是因为 5 个成员各自的 (μ,σ) 偏移不同，逐成员仿射的平均不是单一仿射）。
+
+**为什么无害：仿射变换保序。** 真阶梯只用当日 top-k，而 `scale > 0` 的仿射不改变任何名次。当日实测 4880 只里 4850 只名次完全相同、Spearman `0.999999998`，仅有的 30 处移动都在残差量级的尾部。能翻掉选股的只有那 `1.69e-05` 的非仿射残差，不是 `1.33e-03`——**用原始分数差当风险阈值会把风险高估约 80 倍。**
+
+`live_trading/scripts/probe_topk_margin.py` 用正确尺度扫了全测试期 1211 个交易日的 rank3/rank4 间距：p1 = `5.8e-04`、p50 = `4.4e-02`；**间距低于 `1.69e-05` 的有 0 天，低于 6 倍保守上界 `1.0e-04` 的也是 0 天**（低于被误用的 `1.33e-03` 的有 31 天，2.56%——这个数字没有意义）。即这处偏差在整个测试期内一天都翻不动 top-3。
+
+**方向性判断：live 是更正确的一侧。** 指数不可交易，本不该参与可交易截面的标准化；是 BT v4 的预测帧被 4 只指数轻微污染了。但 BT v4 是已确立的基线，改回测意味着重训重跑、重立基线（`backtest/EXPERIMENT_STANDARD.md` 6.x），而收益是零——因为它决策中性。故**登记为已知的、有界的、live-only 口径差异**，并把 dry-run 的验收口径从「绝对分数 ε」改成「top-k / 名次一致」。Plan 3 的 parity 门禁据此比名次，不比原始分数。
+
+**若后续 top3 不等**：`max_gap` 极小但 top3 不同 → 并列名次的稳定排序问题，查 `stable_rank_scores` 与 `blend_score_series` 的排序键。`max_gap` 很大且**不是**上述仿射形态（拟合残差与 `max_gap` 同量级）→ 合成或宇宙过滤真的对不上，逐项查：成员顺序无关（z-score 后等权平均对顺序不敏感）、`filter_pipe` 是否生效（全A 应被 `^(SH60|SH68|SZ00|SZ30)` 削掉一批）、`universe_filter` 四项是否与回测同参。**不要为了让它相等去调 topk 或过滤参数**——那是拿 test 段调参。
 
 - [ ] **Step 4: 把实测数字写回 spec 4.2**
 
@@ -963,6 +978,8 @@ Expected: `top3 match: True`，且 `max |live - reference|` 在 1e-9 量级。
 
 ```bash
 git add live_trading/scripts/verify_ladder_dry_run.py \
+        live_trading/scripts/diagnose_ladder_gap.py \
+        live_trading/scripts/probe_topk_margin.py \
         docs/superpowers/specs/2026-08-23-live-v4-cohort-ladder-netting-design.md
 git commit -m "test(live): verify the all-A dry-run reproduces the BT v4 prediction frame and record its cost"
 ```
@@ -2445,7 +2462,7 @@ git commit -m "feat(bridge): gate submission on close finality and attempt from 
 - [ ] `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/ tests/backtest/test_cohort_ladder.py tests/backtest/test_cohort_ladder_strategy.py -q` 全绿
 - [ ] `check_backtest_parity.py` 对四个配置（新 ladder + 三个存量）全部通过
 - [ ] 全A `--dry-run` 跑通，输出 3 个 BUY（`reason=cohort_layer`）且无 traceback
-- [ ] `verify_ladder_dry_run.py --signal-date 2026-07-30` 打印 `top3 match: True`，`max |live - reference|` ≤ 1e-9
+- [x] `verify_ladder_dry_run.py --signal-date 2026-07-30` 打印 `top3 match: True`。~~`max |live - reference|` ≤ 1e-9~~ —— 该口径已作废：实测 `1.33e-03`，已定因为回测帧混入 4 只指数导致的**逐日仿射差**（Task 4 Step 3）。仿射保序，验收改判名次：Spearman ≥ 0.9999999，且全测试期 1211 天 rank3/rank4 间距无一天低于仿射残差的 6 倍上界 `1e-4`（实测 0 天，已由 `probe_topk_margin.py` 核实）
 - [ ] 全A dry-run 的墙钟与峰值 RSS 已实测并写回 spec 4.2
 - [ ] spec 第 6 节列的 bridge 侧单测全部落地：抵销五情形、板块最低申报、收盘价缺失、精确性回归、终态门禁、预算含卖出所得（计划一已覆盖）、买单阶段触发、现金封顶仍生效
 - [ ] `ENABLE_LADDER_NETTING` 仓库默认 `False`，且有用例断言默认关闭时 CLOSE_AUCTION 行为逐字不变

@@ -48,7 +48,10 @@ from config_loader import (  # noqa: E402
     load_session_model_info,
     resolve_session_dir,
 )
+from ensemble_preds import blend_score_series  # noqa: E402
 from eval_protocol import daily_ic, summarize_ic  # noqa: E402
+
+OFFICIAL_SIGNAL = "seed_zscore_mean"
 
 EVAL_LABEL_EXPR = "Ref($close, -2)/Ref($close, -1) - 1"
 DEFAULT_POOLS = ("csi300", "csi500", "csi1000")  # 默认不含全A；需评估时显式 --pools ... all
@@ -68,6 +71,24 @@ def _horizon_label_expr(horizon: int) -> str:
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
     return f"Ref($close, -{horizon + 1})/Ref($close, -1) - 1"
+
+
+def label_window_cutoff(
+    calendar: pd.DatetimeIndex, horizon: int
+) -> Optional[pd.Timestamp]:
+    """最后一个前视窗完整落在 `calendar` 内的评估日；日历装不下一个窗则返回 None。
+
+    标签 `Ref($close, -(h+1))/Ref($close, -1) - 1` 在日 t 记入 t+1→t+h+1 的收益，
+    因此末尾 h+1 天的平仓日在窗口之外。评估仍按 ×238/h 年化，等于把窗口外的行情
+    按 h 天速度记账；在样本不足一年的末段年份里权重被严重放大——2026 的 6 个末端日
+    （权重 4.3%）篮子收益 +25%~+35%，把当年净年化从 -0.2% 抬到 +38.0%，也正是主格
+    与真阶梯回测 35pp 缺口的全部来源（见 diag_eval_window_edge.py）。
+    """
+    if horizon < 1:
+        raise ValueError("horizon must be >= 1")
+    if len(calendar) < horizon + 2:
+        return None
+    return pd.Timestamp(calendar[-(horizon + 2)])
 
 
 def load_date_list(path: Path) -> pd.DatetimeIndex:
@@ -97,10 +118,10 @@ def day_regime_map(dates: pd.DatetimeIndex, monthly: pd.Series) -> pd.Series:
 
 
 TRADING_DAYS_PER_YEAR = 238
-# 2026-08-16 用户口径：取消北极星；主格 top5×h5；诊断网格 5/15/50 × 2/3/5/10
-HEAD_K_CORE = (5, 15, 50)
-HEAD_H_CORE = (2, 3, 5, 10)
-PRIMARY_K = 5
+# 2026-08-22 用户口径：官方主格 top3×h5；诊断网格仍可含邻域 k/h
+HEAD_K_CORE = (1, 2, 3, 4, 5)
+HEAD_H_CORE = (2, 3, 4, 5)
+PRIMARY_K = 3
 PRIMARY_H = 5
 NORTH_STAR_METRIC = "net_sharpe"
 # 日收益量级 O(1e-2)；方差低于此即视为退化（残差恒定），IR 判为无定义
@@ -115,13 +136,6 @@ DEFAULT_MIN_AMOUNT = 10_000_000.0
 COST_ONE_WAY_BUY = 0.00021
 COST_ONE_WAY_SELL = 0.00071
 COST_ROUND_TRIP = COST_ONE_WAY_BUY + COST_ONE_WAY_SELL
-
-# 涨跌幅限制：主板 10%、创业板/科创板 20%（创业板 20% 自 2020-08-24 起）。
-# 用 9.5%/19.5% 作封板判定阈值，避开除权与四舍五入噪声。
-LIMIT_CAP_MAIN = 0.095
-LIMIT_CAP_WIDE = 0.195
-CHINEXT_WIDE_FROM = pd.Timestamp("2020-08-24")
-
 
 def entry_tradable_mask(pool: str, start: str, end: str) -> pd.Series:
     """t+1 建仓可成交掩码：t+1 未涨停封板且当日有成交量。
@@ -142,17 +156,11 @@ def entry_tradable_mask(pool: str, start: str, end: str) -> pd.Series:
     df.index = df.index.set_names(["instrument", "datetime"])
     df = df.swaplevel().sort_index()
     df.columns = ["ret_next", "vol_next"]
-    inst = df.index.get_level_values("instrument").str.upper()
+    from qlib.backtest.cn_limit import limit_cap_array
+
+    inst = df.index.get_level_values("instrument")
     dts = df.index.get_level_values("datetime")
-    cap = np.where(
-        inst.str.startswith("SH68"),
-        LIMIT_CAP_WIDE,
-        np.where(
-            inst.str.startswith("SZ30") & (dts >= CHINEXT_WIDE_FROM),
-            LIMIT_CAP_WIDE,
-            LIMIT_CAP_MAIN,
-        ),
-    )
+    cap = limit_cap_array(inst, dts)
     ok = (df["ret_next"].to_numpy() < cap) & (df["vol_next"].to_numpy() > 0)
     ok &= df.notna().all(axis=1).to_numpy()
     return pd.Series(ok, index=df.index)
@@ -338,18 +346,23 @@ def summarize_head_series(
     port: Optional[pd.Series] = None,
     bench: Optional[pd.Series] = None,
 ) -> dict[str, Any]:
-    """单格头部汇总：年化超额（×238/h）、HAC-IR、appraisal，以及换手与扣费净额。
+    """单格头部汇总：官方年化用绝对收益（×238/h）；超额列只留审计。
 
     `turnover_period` = 相隔 h 日的单边换手率；`turnover` = 日换手 = period / h
     （h 日换掉 100% → 日换手 1/h）。年化成本 = 238 × 日换手 × 0.092%。
+    传入 `port` 时，`ann` / `net_ann` / `net_ann_vol` / `net_sharpe` 都基于绝对收益；
+    未传入时回退到超额序列（旧调用方）。
     """
     e = pd.Series(excess).dropna().astype(float)
     n = int(len(e))
+    p = pd.Series(port).dropna().astype(float) if port is not None else None
     out: dict[str, Any] = {
         "n_days": n,
         "ann_excess": float(e.mean() * TRADING_DAYS_PER_YEAR / horizon) if n else None,
         "ir": hac_ir(e, horizon) if n else None,
     }
+    if p is not None and n:
+        out["ann"] = float(p.mean() * TRADING_DAYS_PER_YEAR / horizon)
     if port is not None and bench is not None and n:
         out.update(appraisal(port, bench, horizon))
     if sets and k:
@@ -361,14 +374,142 @@ def summarize_head_series(
             cost = TRADING_DAYS_PER_YEAR * (period / horizon) * COST_ROUND_TRIP
             out["ann_cost"] = float(cost)
             out["net_ann_excess"] = float(out["ann_excess"] - cost)
+            if out.get("ann") is not None:
+                out["net_ann"] = float(out["ann"] - cost)
             if out.get("ann_alpha") is not None:
                 out["net_ann_alpha"] = float(out["ann_alpha"] - cost)
-            # 成本按常数从日超额里扣，HAC 波动不变；夏普用扣费净年化 / 该波动
-            vol = hac_vol(e, horizon)
+            series_for_vol = p if p is not None else e
+            official_net = out["net_ann"] if p is not None else out["net_ann_excess"]
+            vol = hac_vol(series_for_vol, horizon)
             out["net_ann_vol"] = vol
-            if vol and vol > 0:
-                out["net_sharpe"] = float(out["net_ann_excess"] / vol)
+            if vol and vol > 0 and official_net is not None:
+                out["net_sharpe"] = float(official_net / vol)
     return out
+
+
+def compute_head_blocks(
+    pred: pd.Series,
+    labels: dict[int, pd.Series],
+    horizons: Sequence[int],
+    head_k: Sequence[int],
+    *,
+    min_count: int = 20,
+    eval_dates: Optional[pd.DatetimeIndex] = None,
+    head_tradable: Optional[pd.Series] = None,
+    regime_monthly: Optional[pd.Series] = None,
+    want_regime: Optional[bool] = None,
+) -> dict[str, Any]:
+    """单条分数的头部网格 / 分年 / 分风格。官方主格应对合成信号调用一次。"""
+    if want_regime is None:
+        want_regime = regime_monthly is not None
+    rec: dict[str, Any] = {"head": {}, "head_regimes": {}, "head_years": {}}
+    for h in horizons:
+        by_k = daily_head_panel(
+            pred,
+            labels[h],
+            head_k,
+            min_count=min_count,
+            tradable=head_tradable,
+        )
+        for k in head_k:
+            excess = by_k[int(k)]["excess"]
+            sets = by_k[int(k)]["sets"]
+            port = by_k[int(k)]["port"]
+            bench = by_k[int(k)]["bench"]
+            if eval_dates is not None:
+                excess = excess[excess.index.isin(eval_dates)]
+                port = port[port.index.isin(eval_dates)]
+                bench = bench[bench.index.isin(eval_dates)]
+                sets = {d: v for d, v in sets.items() if d in set(eval_dates)}
+            rec["head"].setdefault(str(int(k)), {})[str(int(h))] = summarize_head_series(
+                excess, int(h), sets=sets, k=int(k), port=port, bench=bench
+            )
+            if want_regime and len(excess):
+                regs = day_regime_map(pd.DatetimeIndex(excess.index), regime_monthly)
+                for reg in sorted(regs.dropna().unique()):
+                    mask_r = (regs == reg).to_numpy()
+                    days_r = set(pd.DatetimeIndex(excess.index)[mask_r])
+                    rec["head_regimes"].setdefault(str(reg), {}).setdefault(
+                        str(int(k)), {}
+                    )[str(int(h))] = summarize_head_series(
+                        excess[mask_r],
+                        int(h),
+                        sets=sets,
+                        k=int(k),
+                        turnover_days=days_r,
+                        port=port[mask_r],
+                        bench=bench[mask_r],
+                    )
+            if len(excess):
+                years = np.asarray(pd.DatetimeIndex(excess.index).year)
+                for year in sorted(set(int(y) for y in years)):
+                    mask_y = years == year
+                    days_y = set(pd.DatetimeIndex(excess.index)[mask_y])
+                    rec["head_years"].setdefault(str(year), {}).setdefault(
+                        str(int(k)), {}
+                    )[str(int(h))] = summarize_head_series(
+                        excess[mask_y],
+                        int(h),
+                        sets=sets,
+                        k=int(k),
+                        turnover_days=days_y,
+                        port=port[mask_y],
+                        bench=bench[mask_y],
+                    )
+    rec["primary"] = (rec["head"].get(str(PRIMARY_K), {}) or {}).get(str(PRIMARY_H), {})
+    rec["ir_by_h"] = {
+        str(int(h)): grid_mean_ir(rec["head"], HEAD_K_CORE, [h]) for h in HEAD_H_CORE
+    }
+    return rec
+
+
+def official_ic_from_pred(
+    pred: pd.Series,
+    labels: dict[int, pd.Series],
+    horizons: Sequence[int],
+    *,
+    min_count: int = 20,
+    eval_dates: Optional[pd.DatetimeIndex] = None,
+) -> dict[str, Any]:
+    """单条分数的全宇宙 IC / RankIC；官方列读 h5。"""
+    rec: dict[str, Any] = {}
+    for h in horizons:
+        daily = _filter_daily_dates(
+            daily_ic(pred, labels[h], min_count=min_count), eval_dates
+        )
+        rec[f"h{h}"] = summarize_ic(daily)
+    rec["mean_h"] = _mean_over_horizons({f"h{h}": rec[f"h{h}"] for h in horizons})
+    return rec
+
+
+def official_head_from_preds(
+    preds: Sequence[pd.Series],
+    labels: dict[int, pd.Series],
+    horizons: Sequence[int],
+    head_k: Sequence[int],
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """先合成一条分数，再算头部网格与全宇宙 RankIC。"""
+    blended = blend_score_series(preds)
+    rec = compute_head_blocks(blended, labels, horizons, head_k, **kwargs)
+    rec.update(
+        official_ic_from_pred(
+            blended,
+            labels,
+            horizons,
+            min_count=int(kwargs.get("min_count") or 20),
+            eval_dates=kwargs.get("eval_dates"),
+        )
+    )
+    return rec
+
+
+def official_pool_block(doc: Optional[dict], pool: str = "all") -> dict:
+    """官方主格读 ensemble；旧 JSON 无该块时回退 seed_mean。"""
+    if not doc:
+        return {}
+    block = ((doc.get("pools") or {}).get(pool) or {})
+    return block.get("ensemble") or block.get("seed_mean") or {}
 
 
 def grid_mean_ir(
@@ -408,6 +549,7 @@ def _mean_head_grid(seed_recs: Sequence[dict], key: str) -> dict:
         for h in sorted(hs, key=lambda x: int(x)):
             cell: dict[str, Any] = {}
             for metric in (
+                "ann",
                 "ann_excess",
                 "ir",
                 "beta",
@@ -418,6 +560,7 @@ def _mean_head_grid(seed_recs: Sequence[dict], key: str) -> dict:
                 "turnover",
                 "turnover_period",
                 "ann_cost",
+                "net_ann",
                 "net_ann_excess",
                 "net_ann_vol",
                 "net_sharpe",
@@ -459,6 +602,68 @@ def _stock_only_mask(index: pd.MultiIndex) -> pd.Series:
     return pd.Series(inst.str.match(_STOCK_PREFIX_RE), index=index)
 
 
+def prepare_pool_labels(
+    pool: str,
+    eval_start: str,
+    effective_end: str,
+    horizons: Sequence[int],
+    cutoffs: dict[int, Optional[pd.Timestamp]],
+    *,
+    min_listing_days: int = 60,
+    st_daily: Optional[Path] = None,
+    st_names: Optional[Path] = None,
+    min_amount: float = 0.0,
+) -> dict[int, pd.Series]:
+    """评估宇宙过滤 + 前视窗截断后的各期限标签。"""
+    labels: dict[int, pd.Series] = {}
+    mask = None
+    for h in horizons:
+        label = _fetch_label(
+            pool, eval_start, effective_end, expression=_horizon_label_expr(h)
+        )
+        if mask is None:
+            mask = pd.Series(True, index=label.index)
+            if pool == "all":
+                mask = mask & _stock_only_mask(label.index)
+            if min_listing_days:
+                mask = mask & _listing_age_mask(
+                    label.index, pool, min_listing_days, effective_end
+                )
+            st_keep = _st_keep_mask(label.index, st_daily, pool)
+            if st_keep is not None:
+                mask = mask & st_keep
+            elif st_names is not None:
+                st_df = pd.read_csv(st_names)
+                col = "symbol" if "symbol" in st_df.columns else st_df.columns[0]
+                bad = set(st_df[col].astype(str).str.upper())
+                inst = label.index.get_level_values("instrument").str.upper()
+                mask = mask & ~pd.Series(inst.isin(bad), index=label.index)
+            if min_amount > 0:
+                amt_ok = amount_mask(pool, eval_start, effective_end, min_amount)
+                mask = mask & amt_ok.reindex(label.index).fillna(False)
+            print(
+                f"[{pool}] 过滤后保留 {int(mask.mean()*10000)/100:.2f}% "
+                f"(listing>={min_listing_days}, "
+                f"ST={'daily' if st_daily else ('names' if st_names else 'off')}, "
+                f"amount>={min_amount:.0f})",
+                flush=True,
+            )
+        label = label[mask]
+        cutoff = cutoffs[int(h)]
+        if cutoff is not None:
+            dts = label.index.get_level_values("datetime")
+            dropped = int((dts.unique() > cutoff).sum())
+            label = label[dts <= cutoff]
+            if dropped:
+                print(
+                    f"[{pool}] h={h} 截断末端 {dropped} 个评估日"
+                    f"（平仓日越出 {effective_end}，收益在窗口内无法兑现）",
+                    flush=True,
+                )
+        labels[h] = label
+    return labels
+
+
 def evaluate_multi_horizon(
     cfg: dict,
     sessions: Sequence[tuple[str, Any]],
@@ -467,6 +672,7 @@ def evaluate_multi_horizon(
     horizons: Sequence[int],
     min_listing_days: int = 60,
     st_daily: Optional[Path] = None,
+    st_names: Optional[Path] = None,
     min_count: int = 20,
     segment: str = "test",
     eval_end: Optional[str] = None,
@@ -484,6 +690,10 @@ def evaluate_multi_horizon(
         raise ValueError("horizons must be unique")
     eval_start, effective_end = _effective_segment(cfg, segment, end_override=eval_end)
     models = [(seed, _load_model(session)) for session, seed in sessions]
+    window_calendar = pd.DatetimeIndex(
+        D.calendar(start_time=eval_start, end_time=effective_end)
+    )
+    cutoffs = {int(h): label_window_cutoff(window_calendar, h) for h in horizons}
 
     result: dict[str, Any] = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
@@ -503,47 +713,44 @@ def evaluate_multi_horizon(
         ),
         "filters": {
             "min_listing_days": int(min_listing_days),
-            "st_filter": "daily" if st_daily is not None else "unavailable",
+            "st_filter": (
+                "daily"
+                if st_daily is not None
+                else ("names" if st_names is not None else "unavailable")
+            ),
             "min_amount": float(min_amount),
         },
         "primary_cell": {"k": PRIMARY_K, "h": PRIMARY_H},
+        "official_signal": OFFICIAL_SIGNAL,
         "cost_round_trip": COST_ROUND_TRIP,
         "turnover_reliable": bool(eval_dates is None),
         "sessions": [{"session": s, "seed": seed} for s, seed in sessions],
         "data_version": str(pd.Timestamp(D.calendar(start_time="2020-01-01")[-1]).date()),
-        "st_filter": "daily" if st_daily is not None else "unavailable（未剔除 ST）",
+        "st_filter": (
+            "daily"
+            if st_daily is not None
+            else ("names" if st_names is not None else "unavailable（未剔除 ST）")
+        ),
+        # 末端 h+1 天的平仓日越出窗口，收益在窗口内无法兑现，已截断（见 label_window_cutoff）
+        "label_window_cutoff": {
+            f"h{h}": None if cutoffs[int(h)] is None else str(cutoffs[int(h)].date())
+            for h in horizons
+        },
         "pools": {},
     }
 
     for pool in pools:
-        labels: dict[int, pd.Series] = {}
-        mask = None
-        for h in horizons:
-            label = _fetch_label(
-                pool, eval_start, effective_end, expression=_horizon_label_expr(h)
-            )
-            if mask is None:
-                mask = pd.Series(True, index=label.index)
-                if pool == "all":
-                    mask = mask & _stock_only_mask(label.index)
-                if min_listing_days:
-                    mask = mask & _listing_age_mask(
-                        label.index, pool, min_listing_days, effective_end
-                    )
-                st_keep = _st_keep_mask(label.index, st_daily, pool)
-                if st_keep is not None:
-                    mask = mask & st_keep
-                if min_amount > 0:
-                    amt_ok = amount_mask(pool, eval_start, effective_end, min_amount)
-                    mask = mask & amt_ok.reindex(label.index).fillna(False)
-                print(
-                    f"[{pool}] 过滤后保留 {int(mask.mean()*10000)/100:.2f}% "
-                    f"(listing>={min_listing_days}, ST={'daily' if st_daily else 'off'}, "
-                    f"amount>={min_amount:.0f})",
-                    flush=True,
-                )
-            label = label[mask]
-            labels[h] = label
+        labels = prepare_pool_labels(
+            pool,
+            eval_start,
+            effective_end,
+            horizons,
+            cutoffs,
+            min_listing_days=min_listing_days,
+            st_daily=st_daily,
+            st_names=st_names,
+            min_amount=min_amount,
+        )
 
         head_tradable = None
         if head_k and exclude_limit_up:
@@ -557,8 +764,10 @@ def evaluate_multi_horizon(
         dataset = _build_dataset(cfg, pool, segment=segment, end_override=eval_end)
         want_regime = regime_monthly is not None and pool in regime_pools
         pool_out: dict[str, Any] = {"seeds": {}}
+        seed_preds: list[pd.Series] = []
         for seed, model in models:
             pred = _normalize_prediction(model.predict(dataset, segment=segment))
+            seed_preds.append(pred)
             rec: dict[str, Any] = {}
             for h in horizons:
                 daily = _filter_daily_dates(
@@ -598,73 +807,19 @@ def evaluate_multi_horizon(
                         }
                     rec["tail"][f"top{k}"] = entry
             if head_k:
-                rec["head"] = {}
-                rec["head_regimes"] = {}
-                rec["head_years"] = {}
-                for h in horizons:
-                    by_k = daily_head_panel(
+                rec.update(
+                    compute_head_blocks(
                         pred,
-                        labels[h],
+                        labels,
+                        horizons,
                         head_k,
                         min_count=min_count,
-                        tradable=head_tradable,
+                        eval_dates=eval_dates,
+                        head_tradable=head_tradable,
+                        regime_monthly=regime_monthly,
+                        want_regime=want_regime,
                     )
-                    for k in head_k:
-                        excess = by_k[int(k)]["excess"]
-                        sets = by_k[int(k)]["sets"]
-                        port = by_k[int(k)]["port"]
-                        bench = by_k[int(k)]["bench"]
-                        if eval_dates is not None:
-                            excess = excess[excess.index.isin(eval_dates)]
-                            port = port[port.index.isin(eval_dates)]
-                            bench = bench[bench.index.isin(eval_dates)]
-                            sets = {d: v for d, v in sets.items() if d in set(eval_dates)}
-                        rec["head"].setdefault(str(int(k)), {})[str(int(h))] = (
-                            summarize_head_series(
-                                excess, int(h), sets=sets, k=int(k), port=port, bench=bench
-                            )
-                        )
-                        if want_regime and len(excess):
-                            regs = day_regime_map(
-                                pd.DatetimeIndex(excess.index), regime_monthly
-                            )
-                            for reg in sorted(regs.dropna().unique()):
-                                mask_r = (regs == reg).to_numpy()
-                                days_r = set(pd.DatetimeIndex(excess.index)[mask_r])
-                                rec["head_regimes"].setdefault(str(reg), {}).setdefault(
-                                    str(int(k)), {}
-                                )[str(int(h))] = summarize_head_series(
-                                    excess[mask_r],
-                                    int(h),
-                                    sets=sets,
-                                    k=int(k),
-                                    turnover_days=days_r,
-                                    port=port[mask_r],
-                                    bench=bench[mask_r],
-                                )
-                        if len(excess):
-                            years = np.asarray(pd.DatetimeIndex(excess.index).year)
-                            for year in sorted(set(int(y) for y in years)):
-                                mask_y = years == year
-                                days_y = set(pd.DatetimeIndex(excess.index)[mask_y])
-                                rec["head_years"].setdefault(str(year), {}).setdefault(
-                                    str(int(k)), {}
-                                )[str(int(h))] = summarize_head_series(
-                                    excess[mask_y],
-                                    int(h),
-                                    sets=sets,
-                                    k=int(k),
-                                    turnover_days=days_y,
-                                    port=port[mask_y],
-                                    bench=bench[mask_y],
-                                )
-                rec["primary"] = (
-                    rec["head"].get(str(PRIMARY_K), {}) or {}
-                ).get(str(PRIMARY_H), {})
-                rec["ir_by_h"] = {
-                    str(int(h)): grid_mean_ir(rec["head"], HEAD_K_CORE, [h])
-                    for h in HEAD_H_CORE
-                }
+                )
             pool_out["seeds"][str(seed)] = rec
 
         seed_recs = list(pool_out["seeds"].values())
@@ -720,11 +875,26 @@ def evaluate_multi_horizon(
                     ]
                     seed_mean["head_years"][year] = _mean_head_grid(subset, "head")
         pool_out["seed_mean"] = seed_mean
+        official = seed_mean
+        if head_k and seed_preds:
+            pool_out["ensemble"] = official_head_from_preds(
+                seed_preds,
+                labels,
+                horizons,
+                head_k,
+                min_count=min_count,
+                eval_dates=eval_dates,
+                head_tradable=head_tradable,
+                regime_monthly=regime_monthly,
+                want_regime=want_regime,
+            )
+            official = pool_out["ensemble"]
         result["pools"][pool] = pool_out
-        prim = seed_mean.get("primary") or {}
+        prim = official.get("primary") or {}
         print(
-            f"[{pool}] primary k{PRIMARY_K}h{PRIMARY_H} "
-            f"net_ann={prim.get('net_ann_excess')} "
+            f"[{pool}] official={OFFICIAL_SIGNAL if official is not seed_mean else 'seed_mean'} "
+            f"k{PRIMARY_K}h{PRIMARY_H} "
+            f"net_ann={prim.get('net_ann', prim.get('net_ann_excess'))} "
             f"net_vol={prim.get('net_ann_vol')} "
             f"net_sharpe={prim.get('net_sharpe')}",
             flush=True,
@@ -1041,6 +1211,39 @@ def amount_mask(pool: str, start: str, end: str, min_amount: float) -> pd.Series
     factor = df["factor"].replace(0, np.nan)
     amount = df["volume"] * (df["close"] / factor) * AMOUNT_LOT_SIZE
     return (amount >= float(min_amount)).fillna(False)
+
+
+def rolling_all_traded(volume: pd.Series, window: int) -> pd.Series:
+    """(datetime, instrument) 成交量 → 近 window 个交易日是否**全部**有成交。
+
+    停牌日 volume 为 NaN、零量日为 0，两者都算未成交；历史不足 window 天判为 False。
+    """
+    if window <= 0:
+        return pd.Series(True, index=volume.index)
+    wide = volume.unstack(level="instrument")
+    traded = wide.notna() & (wide > 0)
+    ok = traded.astype("float64").rolling(window, min_periods=window).min() == 1.0
+    return ok.stack(future_stack=True).reindex(volume.index).fillna(False)
+
+
+def recent_trading_mask(pool: str, start: str, end: str, window: int) -> pd.Series:
+    """近 window 个交易日全部有成交的掩码；长期停牌与退市整理期个股会被剔除。
+
+    需要 start 之前 window-1 个交易日的历史才能判断首日，故向前扩窗取数。
+    """
+    from qlib.data import D
+
+    if window <= 0:
+        return pd.Series(dtype=bool)
+    cal = pd.DatetimeIndex(D.calendar(start_time="2000-01-01", end_time=end))
+    pos = int(cal.searchsorted(pd.Timestamp(start)))
+    ext_start = str(cal[max(pos - window + 1, 0)].date())
+    df = D.features(D.instruments(pool), ["$volume"], start_time=ext_start, end_time=end)
+    df.index = df.index.set_names(["instrument", "datetime"])
+    volume = df.swaplevel().sort_index()["$volume"]
+    mask = rolling_all_traded(volume, window)
+    dts = mask.index.get_level_values("datetime")
+    return mask[dts >= pd.Timestamp(start)]
 
 
 def _listing_age_mask(index: pd.MultiIndex, pool: str, min_days: int, end: str) -> pd.Series:
@@ -1471,8 +1674,6 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="评估日成交额下限（元）；0=不启用。1000 万传入 10000000",
     )
     args = p.parse_args(argv)
-    if args.st_names is not None:
-        p.error("--st-names 已废弃，改用 --st-daily")
     if (
         args.eval_label != EVAL_LABEL_EXPR
         and args.eval_label_role != "self"
@@ -1531,6 +1732,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             horizons=args.horizons,
             min_listing_days=args.min_listing_days,
             st_daily=st_daily,
+            st_names=args.st_names,
             min_count=args.min_count,
             segment=args.segment,
             eval_end=args.eval_end,

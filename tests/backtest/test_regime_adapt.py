@@ -8,7 +8,16 @@ import pytest
 
 from backtest.features.regime import broadcast_day_features
 from backtest.models.rankic_early_stop import load_valid_dates
-from backtest.models.regime_adapt import compose_day_weights, load_day_weights
+from backtest.models.regime_adapt import (
+    RegimeSingleLGBMModel,
+    RegimeWeightedDEnsembleModel,
+    compact_sample_reweight,
+    compose_day_weights,
+    load_day_weights,
+    pack_loss_curve_edges,
+    top3_h5_net_ann,
+    top5_h5_net_ann,
+)
 from backtest.scripts.eval_ic_multi_pool import (
     EVAL_LABEL_EXPR,
     HEAD_H_CORE,
@@ -245,6 +254,26 @@ def test_summarize_head_series_net_sharpe_is_net_ann_over_hac_vol():
     assert out["net_sharpe"] == pytest.approx(out["net_ann_excess"] / vol)
 
 
+def test_summarize_head_series_official_ann_uses_port_not_excess():
+    """官方年化/波动/夏普用头部绝对收益；超额列只留审计。"""
+    dates = pd.date_range("2024-01-02", periods=80, freq="B")
+    rng = np.random.default_rng(4)
+    port = pd.Series(0.004 + rng.normal(0, 0.01, len(dates)), index=dates)
+    bench = pd.Series(0.001 + rng.normal(0, 0.008, len(dates)), index=dates)
+    excess = port - bench
+    sets = {d: frozenset({f"S{i % 2}"}) for i, d in enumerate(dates)}
+
+    out = summarize_head_series(excess, 1, sets=sets, k=1, port=port, bench=bench)
+
+    assert out["ann"] == pytest.approx(float(port.mean() * 238))
+    assert out["ann_excess"] == pytest.approx(float(excess.mean() * 238))
+    assert out["net_ann"] == pytest.approx(out["ann"] - out["ann_cost"])
+    assert out["net_ann_excess"] == pytest.approx(out["ann_excess"] - out["ann_cost"])
+    vol = hac_vol(port, 1)
+    assert out["net_ann_vol"] == pytest.approx(vol)
+    assert out["net_sharpe"] == pytest.approx(out["net_ann"] / vol)
+
+
 def test_summarize_head_series_adds_appraisal_when_port_bench_given():
     rng = np.random.default_rng(2)
     dates = pd.date_range("2024-01-02", periods=300, freq="B")
@@ -361,3 +390,221 @@ def test_broadcast_day_features_missing_column_raises():
 
     with pytest.raises(ValueError, match="missing columns"):
         broadcast_day_features(df, day, ["amount_surge"])
+
+
+def test_top3_h5_net_ann_matches_summarize_head_series():
+    dates = pd.date_range("2024-01-02", periods=40, freq="B")
+    insts = [f"S{i:02d}" for i in range(25)]
+    idx = _panel_index(dates, insts)
+    rank = {c: 25 - i for i, c in enumerate(insts)}
+    pred = pd.Series([rank[i] for i in idx.get_level_values("instrument")], index=idx)
+    lab = {c: 0.05 if int(c[1:]) < 3 else 0.0 for c in insts}
+    label = pd.Series([lab[i] for i in idx.get_level_values("instrument")], index=idx)
+
+    score = top3_h5_net_ann(pred.to_numpy(), label.to_numpy(), idx)
+
+    panel = daily_head_panel(pred, label, [3])[3]
+    expected = summarize_head_series(
+        panel["excess"],
+        5,
+        sets=panel["sets"],
+        k=3,
+        port=panel["port"],
+        bench=panel["bench"],
+    )["net_ann"]
+    assert score == pytest.approx(expected)
+
+
+def test_top5_h5_net_ann_matches_summarize_head_series():
+    dates = pd.date_range("2024-01-02", periods=40, freq="B")
+    insts = [f"S{i:02d}" for i in range(25)]
+    idx = _panel_index(dates, insts)
+    rank = {c: 25 - i for i, c in enumerate(insts)}
+    pred = pd.Series([rank[i] for i in idx.get_level_values("instrument")], index=idx)
+    lab = {c: 0.05 if int(c[1:]) < 5 else 0.0 for c in insts}
+    label = pd.Series([lab[i] for i in idx.get_level_values("instrument")], index=idx)
+
+    score = top5_h5_net_ann(pred.to_numpy(), label.to_numpy(), idx)
+
+    panel = daily_head_panel(pred, label, [5])[5]
+    expected = summarize_head_series(
+        panel["excess"],
+        5,
+        sets=panel["sets"],
+        k=5,
+        port=panel["port"],
+        bench=panel["bench"],
+    )["net_ann"]
+    assert score == pytest.approx(expected)
+
+
+def test_top5_h5_net_ann_drops_untradable_from_picks_and_benchmark():
+    dates = pd.date_range("2024-01-02", periods=40, freq="B")
+    insts = [f"S{i:02d}" for i in range(25)]
+    idx = _panel_index(dates, insts)
+    rank = {c: 25 - i for i, c in enumerate(insts)}
+    pred = pd.Series([rank[i] for i in idx.get_level_values("instrument")], index=idx)
+    lab = {c: 0.10 if c == "S00" else 0.01 for c in insts}
+    label = pd.Series([lab[i] for i in idx.get_level_values("instrument")], index=idx)
+    tradable = pd.Series(idx.get_level_values("instrument") != "S00", index=idx)
+
+    with_a = top5_h5_net_ann(pred.to_numpy(), label.to_numpy(), idx)
+    without_a = top5_h5_net_ann(pred.to_numpy(), label.to_numpy(), idx, tradable=tradable)
+    assert without_a != pytest.approx(with_a)
+
+    panel = daily_head_panel(pred, label, [5], tradable=tradable)[5]
+    expected = summarize_head_series(
+        panel["excess"],
+        5,
+        sets=panel["sets"],
+        k=5,
+        port=panel["port"],
+        bench=panel["bench"],
+    )["net_ann"]
+    assert without_a == pytest.approx(expected)
+    first_set = next(iter(panel["sets"].values()))
+    assert "S00" not in first_set
+
+
+def test_regime_single_default_es_metric_is_rankic():
+    model = RegimeSingleLGBMModel(early_stopping_rounds=5, num_boost_round=8)
+    assert model.es_metric == "daily_rank_ic"
+
+
+def test_regime_single_rejects_unknown_es_metric():
+    with pytest.raises(ValueError, match="es_metric"):
+        RegimeSingleLGBMModel(es_metric="sharpe", early_stopping_rounds=5)
+
+
+def _tiny_lgbm_frame(seed: int, days, n_inst: int = 20, n_feat: int = 4):
+    insts = [f"S{i:02d}" for i in range(n_inst)]
+    idx = _panel_index(days, insts)
+    rng = np.random.default_rng(seed)
+    feat = rng.normal(size=(len(idx), n_feat))
+    label = feat[:, 0] * 0.1 + rng.normal(scale=0.02, size=len(idx))
+    cols = pd.MultiIndex.from_tuples(
+        [("feature", f"F{i}") for i in range(n_feat)] + [("label", "LABEL0")]
+    )
+    return pd.DataFrame(np.column_stack([feat, label]), index=idx, columns=cols)
+
+
+def test_fit_prepared_records_top3_h5_net_ann():
+    train = _tiny_lgbm_frame(0, pd.date_range("2019-01-02", periods=30, freq="B"))
+    valid = _tiny_lgbm_frame(1, pd.date_range("2020-01-02", periods=40, freq="B"))
+    model = RegimeSingleLGBMModel(
+        es_metric="top3_h5_net_ann",
+        early_stopping_rounds=5,
+        num_boost_round=12,
+        seed=42,
+        num_leaves=8,
+        min_data_in_leaf=5,
+        num_threads=1,
+    )
+    model.fit_prepared(train, valid)
+    rec = model.rankic_evals_result[0]
+    assert rec["es_metric"] == "top3_h5_net_ann"
+    assert rec["best_iteration"] >= 1
+    assert np.isfinite(rec["best_score"])
+
+
+def test_fit_prepared_records_top5_h5_net_ann():
+    train = _tiny_lgbm_frame(0, pd.date_range("2019-01-02", periods=30, freq="B"))
+    valid = _tiny_lgbm_frame(1, pd.date_range("2020-01-02", periods=40, freq="B"))
+    model = RegimeSingleLGBMModel(
+        es_metric="top5_h5_net_ann",
+        early_stopping_rounds=5,
+        num_boost_round=12,
+        seed=42,
+        num_leaves=8,
+        min_data_in_leaf=5,
+        num_threads=1,
+    )
+    model.fit_prepared(train, valid)
+    rec = model.rankic_evals_result[0]
+    assert rec["es_metric"] == "top5_h5_net_ann"
+    assert rec["best_iteration"] >= 1
+    assert np.isfinite(rec["best_score"])
+
+
+def test_fit_prepared_default_still_records_daily_rank_ic():
+    train = _tiny_lgbm_frame(0, pd.date_range("2019-01-02", periods=20, freq="B"))
+    valid = _tiny_lgbm_frame(1, pd.date_range("2020-01-02", periods=20, freq="B"))
+    model = RegimeSingleLGBMModel(
+        early_stopping_rounds=5,
+        num_boost_round=10,
+        seed=42,
+        num_leaves=8,
+        min_data_in_leaf=5,
+        num_threads=1,
+    )
+    model.fit_prepared(train, valid)
+    rec = model.rankic_evals_result[0]
+    assert rec.get("es_metric", "daily_rank_ic") == "daily_rank_ic"
+    assert "best_score" in rec
+
+
+def _tiny_densemble(**kwargs):
+    defaults = dict(
+        protocol_id="regime-adapt-v1",
+        early_stopping_rounds=5,
+        epochs=8,
+        num_models=1,
+        enable_sr=False,
+        enable_fs=False,
+        bins_fs=5,
+        sample_ratios=[0.8, 0.7, 0.6, 0.5, 0.4],
+        sub_weights=[1],
+        seed=42,
+        num_leaves=8,
+        min_data_in_leaf=5,
+        num_threads=1,
+    )
+    defaults.update(kwargs)
+    return RegimeWeightedDEnsembleModel(**defaults)
+
+
+def test_regime_densemble_default_es_metric_is_rankic():
+    model = _tiny_densemble()
+    assert model.es_metric == "daily_rank_ic"
+
+
+def test_regime_densemble_rejects_unknown_es_metric():
+    with pytest.raises(ValueError, match="es_metric"):
+        _tiny_densemble(es_metric="sharpe")
+
+
+def test_densemble_fit_prepared_records_top3_h5_net_ann():
+    train = _tiny_lgbm_frame(0, pd.date_range("2019-01-02", periods=30, freq="B"))
+    valid = _tiny_lgbm_frame(1, pd.date_range("2020-01-02", periods=40, freq="B"))
+    model = _tiny_densemble(es_metric="top3_h5_net_ann")
+    model.fit_prepared(train, valid)
+    rec = model.rankic_evals_result[0]
+    assert rec["es_metric"] == "top3_h5_net_ann"
+    assert rec["best_iteration"] >= 1
+    assert np.isfinite(rec["best_score"])
+
+
+def test_compact_sample_reweight_matches_official_sr():
+    from qlib.contrib.model.double_ensemble import DEnsembleModel
+
+    rng = np.random.default_rng(0)
+    curve = pd.DataFrame(rng.normal(size=(180, 30)))
+    values = pd.Series(rng.random(180))
+    dummy = DEnsembleModel.__new__(DEnsembleModel)
+    dummy.alpha1 = 1
+    dummy.alpha2 = 1
+    dummy.bins_sr = 10
+    dummy.decay = 0.5
+    official = DEnsembleModel.sample_reweight(dummy, curve, values, 2)
+    packed, part = pack_loss_curve_edges(curve.to_numpy())
+    compact = compact_sample_reweight(
+        packed,
+        values,
+        2,
+        part=part,
+        alpha1=1,
+        alpha2=1,
+        bins_sr=10,
+        decay=0.5,
+    )
+    np.testing.assert_allclose(official.to_numpy(), compact.to_numpy(), rtol=1e-10, atol=1e-10)

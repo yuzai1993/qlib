@@ -211,21 +211,21 @@ def test_cli_accepts_valid_segment():
     assert args.st_daily == evaluator.DEFAULT_ST_DAILY
 
 
-def test_cli_rejects_deprecated_st_names(capsys):
-    with pytest.raises(SystemExit):
-        evaluator.parse_args(
-            [
-                "--config",
-                "dummy.yaml",
-                "--sessions",
-                "session:42",
-                "--output",
-                "out.json",
-                "--st-names",
-                "st_names.csv",
-            ]
-        )
-    assert "--st-names 已废弃" in capsys.readouterr().err
+def test_cli_accepts_st_names_snapshot():
+    args = evaluator.parse_args(
+        [
+            "--config",
+            "dummy.yaml",
+            "--sessions",
+            "session:42",
+            "--output",
+            "out.json",
+            "--st-names",
+            "st_names.csv",
+        ]
+    )
+    assert args.st_names is not None
+    assert args.st_names.name == "st_names.csv"
 
 
 def test_require_st_daily_exits_when_missing(tmp_path):
@@ -449,3 +449,108 @@ def test_cli_accepts_rolling_mode():
     )
 
     assert args.rolling is True
+
+
+def _panel(dates, insts, values):
+    index = pd.MultiIndex.from_product(
+        [pd.to_datetime(dates), insts],
+        names=["datetime", "instrument"],
+    )
+    return pd.Series(list(values) * len(dates), index=index, dtype="float64")
+
+
+def test_blend_score_series_is_daily_zscore_then_mean():
+    dates = ["2021-01-04"]
+    insts = ["A", "B", "C"]
+    left = _panel(dates, insts, [3.0, 2.0, 1.0])
+    right = _panel(dates, insts, [1.0, 2.0, 3.0])
+
+    blended = evaluator.blend_score_series([left, right])
+
+    # [1,2,3] 的样本标准差为 1，z 分别为 ±1 / 0；等权后全 0。
+    assert blended.to_numpy() == pytest.approx([0.0, 0.0, 0.0], abs=1e-9)
+
+
+def test_official_head_includes_h5_rank_ic_on_blended_signal():
+    """官方合成信号要带全宇宙 h5 RankIC，不能只靠 seed_mean 冒充。"""
+    dates = pd.bdate_range("2021-01-04", periods=25)
+    insts = ["A", "B", "C"]
+    seed_a = _panel(dates, insts, [3.0, 2.0, 1.0])
+    seed_b = _panel(dates, insts, [2.5, 1.5, 0.5])
+    labels = {5: _panel(dates, insts, [0.05, 0.02, -0.01])}
+
+    official = evaluator.official_head_from_preds(
+        [seed_a, seed_b],
+        labels,
+        horizons=[5],
+        head_k=[3],
+        min_count=1,
+    )
+
+    assert official["h5"]["rank_ic_mean"] == pytest.approx(1.0)
+    assert official["mean_h"]["rank_ic_mean"] == pytest.approx(1.0)
+
+
+def test_official_head_uses_blended_signal_not_seed_metric_mean():
+    dates = pd.bdate_range("2021-01-04", periods=25)
+    insts = ["A", "B", "C"]
+    seed_a = _panel(dates, insts, [3.0, 1.0, 0.0])
+    seed_b = _panel(dates, insts, [1.0, 9.0, 0.0])
+    labels = {1: _panel(dates, insts, [0.02, -0.01, 0.00])}
+
+    official = evaluator.official_head_from_preds(
+        [seed_a, seed_b],
+        labels,
+        horizons=[1],
+        head_k=[1],
+        min_count=1,
+    )
+    seed_recs = [
+        evaluator.compute_head_blocks(seed_a, labels, [1], [1], min_count=1),
+        evaluator.compute_head_blocks(seed_b, labels, [1], [1], min_count=1),
+    ]
+    metric_mean = evaluator._mean_head_grid(seed_recs, "head")
+
+    ens_ann = official["head"]["1"]["1"]["ann_excess"]
+    mean_ann = metric_mean["1"]["1"]["ann_excess"]
+    assert ens_ann is not None
+    assert mean_ann is not None
+    assert ens_ann != pytest.approx(mean_ann, abs=1e-9)
+
+
+def test_label_window_cutoff_drops_days_whose_exit_leaves_the_window():
+    # 标签 Ref($close,-(h+1))/Ref($close,-1)-1 在日 t 记入 t+1→t+h+1 的收益，
+    # 故最后 h+1 天的平仓日落在窗口外；h=5 时 20 天日历只有前 14 天可用。
+    calendar = pd.bdate_range("2021-01-04", periods=20)
+
+    cutoff = evaluator.label_window_cutoff(calendar, 5)
+
+    assert cutoff == calendar[13]
+    assert int((calendar > cutoff).sum()) == 6
+
+
+def test_label_window_cutoff_scales_with_horizon():
+    calendar = pd.bdate_range("2021-01-04", periods=20)
+
+    assert int((calendar > evaluator.label_window_cutoff(calendar, 1)).sum()) == 2
+    assert int((calendar > evaluator.label_window_cutoff(calendar, 10)).sum()) == 11
+
+
+def test_label_window_cutoff_is_none_when_calendar_cannot_hold_one_window():
+    calendar = pd.bdate_range("2021-01-04", periods=6)
+
+    assert evaluator.label_window_cutoff(calendar, 5) is None
+
+
+def test_official_pool_block_prefers_ensemble():
+    doc = {
+        "pools": {
+            "all": {
+                "seed_mean": {"head": {"5": {"5": {"net_ann_excess": 0.20}}}},
+                "ensemble": {"head": {"5": {"5": {"net_ann_excess": 0.11}}}},
+            }
+        }
+    }
+
+    block = evaluator.official_pool_block(doc)
+    assert block["head"]["5"]["5"]["net_ann_excess"] == 0.11

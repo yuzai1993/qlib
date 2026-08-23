@@ -8,6 +8,20 @@ from typing import Sequence
 import pandas as pd
 
 
+def _zscore_by_day(score: pd.Series) -> pd.Series:
+    return score.groupby(level="datetime").transform(
+        lambda values: (values - values.mean()) / (values.std() + 1e-12)
+    )
+
+
+def blend_score_series(scores: Sequence[pd.Series]) -> pd.Series:
+    """多个预测按交易日截面 z-score 后等权平均；与回测 ensemble 同一条合成信号。"""
+    if not scores:
+        raise ValueError("至少需要一个预测序列")
+    standardized = [_zscore_by_day(score) for score in scores]
+    return pd.concat(standardized, axis=1).mean(axis=1).rename("score")
+
+
 def _as_score_series(pred: object, path: Path) -> pd.Series:
     if isinstance(pred, pd.DataFrame):
         if pred.shape[1] != 1:
@@ -25,18 +39,13 @@ def ensemble_preds(pred_paths: Sequence[Path]) -> pd.Series:
     if not pred_paths:
         raise ValueError("至少需要一个预测文件")
 
-    standardized = []
+    scores = []
     for path_like in pred_paths:
         path = Path(path_like)
         if not path.is_file():
             raise FileNotFoundError(f"预测文件不存在: {path}")
-        score = _as_score_series(pd.read_pickle(path), path)
-        zscore = score.groupby(level="datetime").transform(
-            lambda values: (values - values.mean()) / (values.std() + 1e-12)
-        )
-        standardized.append(zscore)
-
-    return pd.concat(standardized, axis=1).mean(axis=1).rename("score")
+        scores.append(_as_score_series(pd.read_pickle(path), path))
+    return blend_score_series(scores)
 
 
 def fuse_horizons(pred_1d: pd.Series, pred_10d: pd.Series) -> pd.Series:

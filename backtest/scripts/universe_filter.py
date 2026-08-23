@@ -212,6 +212,36 @@ def build_keep_mask(index: pd.MultiIndex, spec: UniverseFilterSpec) -> pd.Series
         n_hit = int((~flag).sum())
         keep = keep & flag
     keep.attrs["n_st_hits"] = n_hit
+    dts = pd.DatetimeIndex(norm_idx.get_level_values("datetime"))
+    if len(dts):
+        end = str(dts.max().date())
+        start = str(dts.min().date())
+        if spec.pool == "all":
+            from eval_ic_multi_pool import _stock_only_mask  # noqa: WPS433
+
+            keep = keep & _stock_only_mask(norm_idx)
+        if spec.min_listing_days:
+            from eval_ic_multi_pool import _listing_age_mask  # noqa: WPS433
+
+            keep = keep & _listing_age_mask(
+                norm_idx, spec.pool, spec.min_listing_days, end
+            )
+        if spec.min_amount > 0:
+            from eval_ic_multi_pool import amount_mask  # noqa: WPS433
+
+            amt = amount_mask(spec.pool, start, end, spec.min_amount)
+            amt_idx, _ = normalize_dt_inst_index(amt.index)
+            amt_s = pd.Series(np.asarray(amt, dtype=bool), index=amt_idx)
+            keep = keep & amt_s.reindex(norm_idx).fillna(False)
+        if spec.min_recent_trading_days > 0:
+            from eval_ic_multi_pool import recent_trading_mask  # noqa: WPS433
+
+            rec = recent_trading_mask(
+                spec.pool, start, end, spec.min_recent_trading_days
+            )
+            rec_idx, _ = normalize_dt_inst_index(rec.index)
+            rec_s = pd.Series(np.asarray(rec, dtype=bool), index=rec_idx)
+            keep = keep & rec_s.reindex(norm_idx).fillna(False)
     return keep.astype(bool)
 
 

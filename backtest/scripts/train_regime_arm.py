@@ -53,11 +53,23 @@ VALID_WARMUP_START = "2020-02-03"  # 70% 日集自 2020-08-03 起，前置 ~6 �
 VALID_END = "2026-07-31"
 TRAIN_DATES_CSV = CONF_DIR / "train_dates_v1.csv"
 VALID_DATES_CSV = CONF_DIR / "test_dates_stratified_70.csv"
+ST_DAILY = EXP_ROOT / "scripts" / "data_collector" / "tushare" / "st_daily.csv"
+ST_NAMES = CONF_DIR / "st_names.csv"
+EVAL_START = "2020-08-03"
 DAY_WEIGHTS_CSV = {
     "m0": CONF_DIR / "day_weights_m0_v1.csv",  # 仅下采样补偿 → 期望自然分布
     "m3": CONF_DIR / "day_weights_m3_v1.csv",  # 55/30/15 + 48m 半衰期 + 补偿
 }
 HANDLER_NAME = {"m0": "Alpha158Technical", "m3": "Alpha158RegimeTechnical"}
+
+
+def resolve_es_valid_source(es_metric: str, es_valid: str = "auto") -> str:
+    """决定早停 valid 帧：评估窗全样本，或 v1 的 70% 分层日集。"""
+    if es_valid not in ("auto", "eval_window", "stratified70"):
+        raise ValueError(f"es_valid must be auto/eval_window/stratified70, got {es_valid!r}")
+    if es_valid != "auto":
+        return es_valid
+    return "eval_window"
 
 # 阶段 1 筛选臂：B3-M 冻结超参（feature-b2/range 单 LGBModel，除 seed 外不动）
 # + cs-rank-norm 标签（分块缓存自带）；早停协议同 DoubleEnsemble 臂（RankIC 锚点）
@@ -149,6 +161,97 @@ def build_valid_frame(
     return frame
 
 
+def _st_keep_for_eval(index: pd.MultiIndex) -> pd.Series:
+    """与正式评估同一套 ST：优先日频 st_daily，否则退回 M0 v4 用的 st_names 快照。"""
+    from backtest.scripts.eval_ic_multi_pool import _st_keep_mask
+
+    if ST_DAILY.exists():
+        keep = _st_keep_mask(index, ST_DAILY, "all")
+        if keep is not None:
+            return keep
+    if not ST_NAMES.exists():
+        raise FileNotFoundError(f"缺少 ST 名单: {ST_DAILY} 或 {ST_NAMES}")
+    df = pd.read_csv(ST_NAMES)
+    col = "symbol" if "symbol" in df.columns else df.columns[0]
+    bad = set(df[col].astype(str).str.upper())
+    inst = index.get_level_values("instrument").str.upper()
+    return pd.Series(~inst.isin(bad), index=index)
+
+
+def build_t5h5es_valid_frame(
+    arm: str,
+    instruments=None,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """全A 评估窗特征 + H5 标签 + 评估过滤，供 top5×h5 扣费净年化早停。"""
+    from qlib.data.dataset import DatasetH
+    from qlib.data.dataset.handler import DataHandlerLP
+
+    from backtest.scripts.eval_ic_multi_pool import (
+        DEFAULT_MIN_AMOUNT,
+        _fetch_label,
+        _horizon_label_expr,
+        _listing_age_mask,
+        _stock_only_mask,
+        amount_mask,
+        entry_tradable_mask,
+    )
+    from backtest.scripts.prepare_regime_train_chunks import build_handler
+
+    t0 = time.time()
+    pool = "all" if instruments is None else instruments
+    print("[valid-t5h5es] 开始建 handler / 取特征 …", flush=True)
+    handler = build_handler(arm, VALID_WARMUP_START, VALID_END, instruments=instruments)
+    dataset = DatasetH(
+        handler=handler,
+        segments={
+            "train": TRAIN_SEGMENT,
+            "valid": (EVAL_START, VALID_END),
+            "test": (EVAL_START, VALID_END),
+        },
+    )
+    features = dataset.prepare(
+        slice(EVAL_START, VALID_END),
+        col_set="feature",
+        data_key=DataHandlerLP.DK_I,
+    )
+    del dataset, handler
+    gc.collect()
+    print(
+        f"[valid-t5h5es] 特征 {features.shape[0]} 行, {time.time() - t0:.0f}s, "
+        f"峰值 RSS {rss_gb():.2f} GB；开始取 H5 标签与过滤 …",
+        flush=True,
+    )
+    if not isinstance(features.columns, pd.MultiIndex):
+        features.columns = pd.MultiIndex.from_product([["feature"], features.columns])
+
+    label = _fetch_label(pool, EVAL_START, VALID_END, expression=_horizon_label_expr(5))
+    mask = _stock_only_mask(label.index) if pool == "all" else pd.Series(True, index=label.index)
+    mask = mask & _listing_age_mask(label.index, pool, 60, VALID_END)
+    mask = mask & _st_keep_for_eval(label.index)
+    amt_ok = amount_mask(pool, EVAL_START, VALID_END, DEFAULT_MIN_AMOUNT)
+    mask = mask & amt_ok.reindex(label.index).fillna(False)
+    label = label[mask]
+    tradable = entry_tradable_mask(pool, EVAL_START, VALID_END)
+
+    keep = features.index.isin(label.index)
+    frame = features.loc[keep].astype("float32")
+    label = label.reindex(frame.index)
+    frame[("label", "LABEL0")] = label.to_numpy()
+    frame = frame.loc[label.notna().to_numpy()]
+    tradable = tradable.reindex(frame.index).fillna(False)
+    counts = frame.groupby(level="datetime").size()
+    if counts.empty or (counts < 20).any():
+        raise ValueError("t5h5es valid frame requires at least 20 instruments per day")
+    print(
+        f"[valid-t5h5es] {frame.shape[0]} 行 x {frame.shape[1]} 列, "
+        f"{counts.size} 天, tradable={float(tradable.mean()):.4f}, "
+        f"{frame.memory_usage(deep=True).sum() / 1e9:.2f} GB, "
+        f"{time.time() - t0:.0f}s, 峰值 RSS {rss_gb():.2f} GB",
+        flush=True,
+    )
+    return frame, tradable
+
+
 def load_train_matrix(arm: str, years: list[int]) -> pd.DataFrame:
     """拼接年度缓存块并过滤到保留训练日集（D 态下采样行协议）。"""
     kept = pd.read_csv(TRAIN_DATES_CSV, comment="#")
@@ -188,6 +291,8 @@ def save_session(
     session_name: str,
     model,
     summary: dict,
+    *,
+    weight_arm: str | None = None,
 ) -> Path:
     session_dir = RESULT_ROOT / session_name
     run_dir = session_dir / "run_01"
@@ -215,10 +320,17 @@ def save_session(
         },
         "regime_adapt": {
             "arm": arm,
+            "weight_arm": weight_arm or arm,
             "seed": seed,
             "train_dates_csv": str(TRAIN_DATES_CSV.relative_to(EXP_ROOT)),
-            "valid_dates_csv": str(VALID_DATES_CSV.relative_to(EXP_ROOT)),
-            "day_weights_csv": str(DAY_WEIGHTS_CSV[arm].relative_to(EXP_ROOT)),
+            "valid_dates_csv": (
+                None
+                if summary.get("es_valid_source") == "eval_window"
+                or summary.get("es_metric") in ("top5_h5_net_ann", "top3_h5_net_ann")
+                else str(VALID_DATES_CSV.relative_to(EXP_ROOT))
+            ),
+            "es_metric": summary.get("es_metric", "daily_rank_ic"),
+            "day_weights_csv": str(DAY_WEIGHTS_CSV[weight_arm or arm].relative_to(EXP_ROOT)),
             "regime_csv": str(REGIME_CSV.relative_to(EXP_ROOT)) if arm == "m3" else None,
             "label": summary.get("label_expr", LABEL_EXPR),
             "label_horizon": summary.get("label_horizon", 40),
@@ -247,6 +359,13 @@ def save_session(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--arm", required=True, choices=["m0", "m3"])
+    parser.add_argument(
+        "--weights",
+        choices=["m0", "m3"],
+        default=None,
+        help="日权重；默认与 --arm 相同。"
+        "只加 regime 特征: --arm m3 --weights m0；只改采样: --arm m0 --weights m3",
+    )
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument(
         "--model",
@@ -269,6 +388,18 @@ def main() -> None:
         default=40,
         help="训练标签期限；40=缓存自带 H40。其余从 labels/ 缓存覆盖 CSRankNorm 标签",
     )
+    parser.add_argument(
+        "--es-metric",
+        default="daily_rank_ic",
+        choices=["daily_rank_ic", "top5_h5_net_ann", "top3_h5_net_ann"],
+        help="早停尺子；daily_rank_ic=现行 v4 默认，top3/top5 为历史头部尺子",
+    )
+    parser.add_argument(
+        "--es-valid",
+        default="auto",
+        choices=["auto", "eval_window", "stratified70"],
+        help="早停 valid 帧；auto/eval_window=评估窗（v4），stratified70=v1 的 499 日集",
+    )
     args = parser.parse_args()
 
     import qlib
@@ -279,6 +410,7 @@ def main() -> None:
     from backtest.models.regime_adapt import RegimeWeightedDEnsembleModel
 
     years = args.years or list(range(2004, 2021))
+    weight_arm = args.weights or args.arm
     single = args.model == "single"
     kwargs = dict(FROZEN_SINGLE_KWARGS if single else FROZEN_MODEL_KWARGS)
     overridden = False
@@ -294,23 +426,57 @@ def main() -> None:
         overridden = True
     tag = "regimeadaptfast" if single else "regimeadapt"
     h_tag = "" if args.label_horizon == 40 else f"h{args.label_horizon}"
+    es_valid_source = resolve_es_valid_source(args.es_metric, args.es_valid)
+    es_tag = {
+        "top5_h5_net_ann": "t5h5es",
+        "top3_h5_net_ann": "t3h5es",
+    }.get(args.es_metric, "")
+    if not es_tag and args.es_metric == "daily_rank_ic" and es_valid_source == "eval_window":
+        es_tag = "rankices"
+    combo = args.arm if weight_arm == args.arm else f"{args.arm}w{weight_arm}"
     session_name = args.session_name or (
-        f"{datetime.now():%Y%m%d_%H%M%S}_{tag}_{args.arm}{h_tag}_s{args.seed}"
+        f"{datetime.now():%Y%m%d_%H%M%S}_{tag}_{combo}{h_tag}{es_tag}_s{args.seed}"
     )
-
     t_all = time.time()
-    valid_dates = load_valid_dates(str(VALID_DATES_CSV), ("2020-08-03", VALID_END))
-    # valid 帧确定性（冻结日集 + 冻结 handler 配置），按臂缓存复用（种子间相同）
-    valid_cache = (
-        CACHE_ROOT / args.arm / "valid_frame_70.pkl" if args.valid_instruments is None else None
-    )
-    if valid_cache is not None and valid_cache.exists():
-        df_valid = pd.read_pickle(valid_cache)
-        print(f"[valid] 命中缓存 {valid_cache.name}: {df_valid.shape[0]} 行", flush=True)
+    tradable = None
+    if es_valid_source == "eval_window":
+        valid_cache = (
+            CACHE_ROOT / args.arm / "valid_frame_t5h5es.pkl"
+            if args.valid_instruments is None
+            else None
+        )
+        if valid_cache is not None and valid_cache.exists():
+            cached = pd.read_pickle(valid_cache)
+            df_valid = cached["frame"]
+            tradable = cached["tradable"]
+            print(
+                f"[valid] 命中缓存 {valid_cache.name}: {df_valid.shape[0]} 行 "
+                f"es_valid={es_valid_source} es_metric={args.es_metric}",
+                flush=True,
+            )
+        else:
+            df_valid, tradable = build_t5h5es_valid_frame(
+                args.arm, instruments=args.valid_instruments
+            )
+            if valid_cache is not None:
+                valid_cache.parent.mkdir(parents=True, exist_ok=True)
+                pd.to_pickle({"frame": df_valid, "tradable": tradable}, valid_cache)
     else:
-        df_valid = build_valid_frame(args.arm, valid_dates, instruments=args.valid_instruments)
-        if valid_cache is not None:
-            df_valid.to_pickle(valid_cache)
+        valid_dates = load_valid_dates(str(VALID_DATES_CSV), ("2020-08-03", VALID_END))
+        valid_cache = (
+            CACHE_ROOT / args.arm / "valid_frame_70.pkl"
+            if args.valid_instruments is None
+            else None
+        )
+        if valid_cache is not None and valid_cache.exists():
+            df_valid = pd.read_pickle(valid_cache)
+            print(f"[valid] 命中缓存 {valid_cache.name}: {df_valid.shape[0]} 行", flush=True)
+        else:
+            df_valid = build_valid_frame(
+                args.arm, valid_dates, instruments=args.valid_instruments
+            )
+            if valid_cache is not None:
+                df_valid.to_pickle(valid_cache)
     df_train = load_train_matrix(args.arm, years)
     if args.label_horizon != 40:
         lab_path = CACHE_ROOT / "labels" / f"h{args.label_horizon}_csrank.pkl"
@@ -345,13 +511,18 @@ def main() -> None:
     from backtest.models.regime_adapt import RegimeSingleLGBMModel
 
     model_cls = RegimeSingleLGBMModel if single else RegimeWeightedDEnsembleModel
-    model = model_cls(
+    model_kwargs = dict(
         protocol_id="regime-adapt-v1",
-        valid_dates_csv=str(VALID_DATES_CSV),
-        day_weights_csv=str(DAY_WEIGHTS_CSV[args.arm]),
+        valid_dates_csv=(
+            None if es_valid_source == "eval_window" else str(VALID_DATES_CSV)
+        ),
+        day_weights_csv=str(DAY_WEIGHTS_CSV[weight_arm]),
         seed=args.seed,
         **kwargs,
     )
+    model_kwargs["es_metric"] = args.es_metric
+    model_kwargs["tradable_mask"] = tradable
+    model = model_cls(**model_kwargs)
     t0 = time.time()
     model.fit_prepared(df_train, df_valid)
     t_fit = time.time() - t0
@@ -359,6 +530,7 @@ def main() -> None:
 
     summary = {
         "arm": args.arm,
+        "weight_arm": weight_arm,
         "seed": args.seed,
         "model": args.model,
         "frozen_hyperparams": "B3-M (feature-b2/range) + cs-rank-norm" if single else "B6-M (mh_rankic_es_lr010)",
@@ -373,12 +545,17 @@ def main() -> None:
         "train_days": int(df_train.index.get_level_values("datetime").nunique()),
         "valid_shape": list(df_valid.shape),
         "valid_days": int(df_valid.index.get_level_values("datetime").nunique()),
+        "es_metric": args.es_metric,
+        "es_valid": args.es_valid,
+        "es_valid_source": es_valid_source,
         "rankic_evals": model.rankic_evals_result,
         "fit_seconds": round(t_fit, 1),
         "total_seconds": round(time.time() - t_all, 1),
         "peak_rss_gb": round(rss_gb(), 2),
     }
-    session_dir = save_session(args.arm, args.seed, session_name, model, summary)
+    session_dir = save_session(
+        args.arm, args.seed, session_name, model, summary, weight_arm=weight_arm
+    )
     print(f"[done] session={session_dir.relative_to(EXP_ROOT)}", flush=True)
     print(json.dumps(summary["rankic_evals"], ensure_ascii=False), flush=True)
 

@@ -675,3 +675,30 @@ def test_ladder_live_config_marks_live_only_deviations():
     assert strategy["netting"] == "live_only"
     assert strategy["absorb_broker_excess"] == "live_only"
     assert strategy["no_buyable_substitution"] == "live_only"
+
+
+def test_live_filter_pipe_entries_build_real_qlib_filters():
+    """NameDFilter.from_config 直接下标取 filter_start_time / filter_end_time，
+    缺键即 KeyError。必须真的构造一次，只断言 kwarg 被透传是查不出来的。"""
+    from qlib.data import filter as qlib_filter
+
+    entries = _ladder_config()["handler"]["filter_pipe"]
+    assert entries, "ladder config must declare a filter_pipe"
+    for entry in entries:
+        builder = getattr(qlib_filter, entry["filter_type"])
+        assert builder.from_config(entry) is not None
+
+
+def test_live_filter_pipe_matches_the_bt_v4_backtest_verbatim():
+    import yaml
+
+    baseline = (
+        REPO_ROOT / "backtest" / "configs" / "regime-adapt" / "phase-s"
+        / "bt_m0h20rankices_all_ladder_k3h5_ensemble.yaml"
+    )
+    backtest = yaml.safe_load(baseline.read_text(encoding="utf-8"))
+
+    assert (
+        _ladder_config()["handler"]["filter_pipe"]
+        == backtest["data"]["handler"]["instruments"]["filter_pipe"]
+    )

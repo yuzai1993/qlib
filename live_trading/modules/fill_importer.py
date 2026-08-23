@@ -399,6 +399,25 @@ class LiveRecorder:
                         trade_date, import_sequence DESC, batch_id DESC
                     );
 
+                CREATE TABLE IF NOT EXISTS cohort_layers (
+                    buy_trade_date TEXT NOT NULL,
+                    stock_code     TEXT NOT NULL,
+                    shares         INTEGER NOT NULL,
+                    updated_at     TEXT DEFAULT (datetime('now', 'localtime')),
+                    PRIMARY KEY (buy_trade_date, stock_code)
+                );
+
+                CREATE TABLE IF NOT EXISTS cohort_layer_dates (
+                    buy_trade_date TEXT PRIMARY KEY,
+                    seq            INTEGER NOT NULL UNIQUE
+                );
+
+                CREATE TABLE IF NOT EXISTS cohort_pending (
+                    stock_code TEXT PRIMARY KEY,
+                    shares     INTEGER NOT NULL,
+                    updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+                );
+
                 CREATE TABLE IF NOT EXISTS execution_state (
                     strategy_id TEXT PRIMARY KEY,
                     state TEXT NOT NULL,
@@ -2388,6 +2407,62 @@ class LiveRecorder:
                     value["opened_trade_date"] = row["opened_trade_date"]
                 positions[row["stock_code"]] = value
             return positions
+
+    # ---------- 分层账本（真阶梯专用）----------
+
+    def load_cohort_state(self):
+        """按 seq 升序还原分层账本；空层靠 cohort_layer_dates 占位。"""
+        from live_trading.modules.cohort_store import CohortState
+
+        with self._conn() as conn:
+            dates = [
+                row["buy_trade_date"]
+                for row in conn.execute(
+                    "SELECT buy_trade_date FROM cohort_layer_dates ORDER BY seq"
+                )
+            ]
+            shares_by_date: dict[str, dict[str, int]] = {date: {} for date in dates}
+            for row in conn.execute(
+                "SELECT buy_trade_date, stock_code, shares FROM cohort_layers"
+            ):
+                bucket = shares_by_date.get(row["buy_trade_date"])
+                if bucket is None:
+                    raise SchemaError(
+                        "cohort_layers references an unregistered layer date: "
+                        f"{row['buy_trade_date']}"
+                    )
+                bucket[row["stock_code"]] = int(row["shares"])
+            pending = {
+                row["stock_code"]: int(row["shares"])
+                for row in conn.execute("SELECT stock_code, shares FROM cohort_pending")
+            }
+        return CohortState(
+            layers=tuple((date, shares_by_date[date]) for date in dates),
+            pending=pending,
+        )
+
+    def save_cohort_state(self, state) -> None:
+        """整体重写三张表。_conn() 正常退出即提交、异常即回滚，天然原子。"""
+        with self._conn() as conn:
+            conn.execute("DELETE FROM cohort_layers")
+            conn.execute("DELETE FROM cohort_layer_dates")
+            conn.execute("DELETE FROM cohort_pending")
+            for seq, (date, shares) in enumerate(state.layers):
+                conn.execute(
+                    "INSERT INTO cohort_layer_dates (buy_trade_date, seq) VALUES (?, ?)",
+                    (date, seq),
+                )
+                for code, amount in shares.items():
+                    conn.execute(
+                        "INSERT INTO cohort_layers (buy_trade_date, stock_code, shares) "
+                        "VALUES (?, ?, ?)",
+                        (date, code, int(amount)),
+                    )
+            for code, amount in state.pending.items():
+                conn.execute(
+                    "INSERT INTO cohort_pending (stock_code, shares) VALUES (?, ?)",
+                    (code, int(amount)),
+                )
 
     # ---------- 券商快照（二道对账）----------
 

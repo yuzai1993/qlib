@@ -9,6 +9,11 @@ from live_trading.modules.cohort_store import (
     reconciled_state,
     state_to_ledger,
 )
+from live_trading.modules.fill_importer import LiveRecorder
+
+
+def _recorder(tmp_path):
+    return LiveRecorder(str(tmp_path / "ladder.db"), opening_cash=1_000_000.0)
 
 
 def test_state_to_ledger_preserves_layer_order():
@@ -156,3 +161,70 @@ def test_empty_state_advances_from_scratch():
     )
 
     assert out.layers == (("2026-08-20", {"SH600000": 100}),)
+
+
+def test_load_cohort_state_is_empty_on_fresh_db(tmp_path):
+    assert _recorder(tmp_path).load_cohort_state() == EMPTY_COHORT_STATE
+
+
+def test_save_then_load_cohort_state_round_trips(tmp_path):
+    recorder = _recorder(tmp_path)
+    state = CohortState(
+        layers=(
+            ("2026-08-17", {"SH600000": 100}),
+            ("2026-08-18", {}),
+            ("2026-08-19", {"SZ000001": 200, "SH600519": 300}),
+        ),
+        pending={"SH601318": 400},
+    )
+
+    recorder.save_cohort_state(state)
+
+    assert recorder.load_cohort_state() == state
+
+
+def test_saved_empty_layer_keeps_its_ladder_slot(tmp_path):
+    recorder = _recorder(tmp_path)
+    recorder.save_cohort_state(
+        CohortState(
+            layers=(("2026-08-18", {}), ("2026-08-19", {"SH600000": 100})),
+            pending={},
+        )
+    )
+
+    loaded = recorder.load_cohort_state()
+
+    assert [date for date, _ in loaded.layers] == ["2026-08-18", "2026-08-19"]
+    assert loaded.layers[0][1] == {}
+
+
+def test_save_cohort_state_replaces_previous_snapshot(tmp_path):
+    recorder = _recorder(tmp_path)
+    recorder.save_cohort_state(
+        CohortState(
+            layers=(("2026-08-19", {"SH600000": 100}),), pending={"SZ000001": 50},
+        )
+    )
+
+    recorder.save_cohort_state(
+        CohortState(layers=(("2026-08-20", {"SH600519": 200}),), pending={})
+    )
+
+    loaded = recorder.load_cohort_state()
+    assert loaded.layers == (("2026-08-20", {"SH600519": 200}),)
+    assert loaded.pending == {}
+
+
+def test_cohort_state_survives_a_full_day_advance(tmp_path):
+    recorder = _recorder(tmp_path)
+    recorder.save_cohort_state(
+        CohortState(layers=(("2026-08-19", {"SH600000": 100}),), pending={})
+    )
+
+    state = advanced_state(
+        recorder.load_cohort_state(), horizon=5, trade_date="2026-08-20",
+        sold={}, filled={"SZ000001": 200},
+    )
+    recorder.save_cohort_state(state)
+
+    assert recorder.load_cohort_state() == state

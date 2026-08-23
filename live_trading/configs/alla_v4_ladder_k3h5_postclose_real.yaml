@@ -48,9 +48,13 @@ handler:
     - class: "ProcessInf"
   feature_groups:
     - "range"
+  # 两个 null 键不是冗余：NameDFilter.from_config 用直接下标取它们，缺键即 KeyError。
+  # 同时与 BT v4 回测配置逐字相等，parity 才能整段比对。
   filter_pipe:
     - filter_type: "NameDFilter"
       name_rule_re: "^(SH60|SH68|SZ00|SZ30)"
+      filter_start_time: null
+      filter_end_time: null
 
 universe_filter:
   st_daily: "scripts/data_collector/tushare/st_daily.csv"

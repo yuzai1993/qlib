@@ -177,12 +177,10 @@ def validate_order(order: SignalOrder) -> None:
         if order.target_value <= 0:
             raise SchemaError(f"BUY target_value must be > 0: {order.target_value!r}")
     else:
+        # 不要求整手：送股与部分成交残量必然带零股，而 A 股「不足一手只能一次性
+        # 全部卖出」这条规则要看持仓才能判，schema 看不到持仓，交由下单器执行。
         if not isinstance(order.quantity, int) or isinstance(order.quantity, bool) or order.quantity <= 0:
             raise SchemaError(f"SELL quantity must be positive int: {order.quantity!r}")
-        if order.quantity % TRADE_UNIT != 0:
-            raise SchemaError(
-                f"SELL quantity must be multiple of {TRADE_UNIT}: {order.quantity}"
-            )
         if float(order.target_value) != 0.0:
             raise SchemaError(f"SELL target_value must be 0: {order.target_value!r}")
     if order.max_quantity is None:

@@ -147,7 +147,7 @@ def test_publish_conflicting_retry_is_rejected(tmp_path):
 
 def test_publish_validates_orders(tmp_path):
     import dataclasses
-    bad = [dataclasses.replace(_orders()[0], quantity=150)]
+    bad = [dataclasses.replace(_orders()[0], quantity=-100)]
     with pytest.raises(Exception):
         SignalPublisher(tmp_path).publish(_header(), bad)
     # 校验失败不得留下任何文件

@@ -166,11 +166,23 @@ def test_validate_order_accepts_after_hours_fixed_price_protocol():
     validate_order(_order(price_type="AFTER_HOURS_CLOSE"))
 
 
+def test_sell_allows_odd_lot_for_full_position_liquidation():
+    """送股 / 部分成交残量会产生非整百股数，schema 不该在这里拦。
+
+    「不足一手只能整笔卖出」需要持仓信息才能判定，由下单器负责。
+    """
+    validate_order(_order(quantity=120))
+
+
+def test_sell_still_rejects_non_integer_quantity():
+    with pytest.raises(SchemaError, match="positive int"):
+        validate_order(_order(quantity=100.5))
+
+
 @pytest.mark.parametrize("bad_kwargs", [
     {"side": "HOLD"},
     {"quantity": 0},
     {"quantity": -100},
-    {"quantity": 150},          # 非整手
     {"target_value": 1.0},
     {"limit_price": 1.0},
     {"price_type": "FIX"},

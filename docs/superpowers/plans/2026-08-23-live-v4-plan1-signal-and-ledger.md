@@ -3168,7 +3168,7 @@ git commit -m "feat(live): advance cohort ladder from actual fills after receipt
 ## 交给计划二的接口
 
 - 信号批次里 BUY 带 `target_value`（即 spec 4.4 的 `V`）、`quantity == 0`、`reason == "cohort_layer"`；SELL 带 `quantity`（即 `S`）、`target_value == 0`、`reason == "cohort_due"`。bridge 侧抵销所需的两个量都已在批次里，**信号 schema 无需再改**。
-- 奇数股 SELL 已被允许通过 schema（Task 7），bridge 侧的板块感知最低申报（科创板 ≥200 股）要自己判，不能假设收到的 `quantity` 是整百。
+- 奇数股 SELL 已被允许通过 schema（Task 7），bridge 侧的板块感知最低申报（科创板 ≥200 股）要自己判，不能假设收到的 `quantity` 是整百。**注意 `qmt_signal_bridge.py:1385-1387` 还镜像着一份整百校验**（`quantity % 100 != 0` → `reject("SELL quantity must be a positive whole lot")`），计划二必须同步放开，否则含零股的到期层会在 bridge 侧被整批拒收。
 - `live.execution_session` 已是 `AFTER_HOURS_FIXED_PRICE`，但 `submit_after` 仍是 profile 缺省的 `15:05:00`。spec 4.7.1 的 15:00:05 自适应提交由计划二实现。
 - `qmt_signal_bridge.py` 第 1488 行附近允许的 strategy_id 列表**尚未**加入 `alla_v4_ladder_k3h5_postclose_real`，计划二必须补，否则 bridge 会拒收批次。
 - `PR49_PROBE_CHECKLIST.md` 与 `tests/live_trading/test_repository_boundaries.py:54-72` 仍锁着 `MAX_ORDER_QUANTITY = 100` 与旧 DB 路径两个 token，取消数量闸时要同步改测试。

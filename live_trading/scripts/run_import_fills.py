@@ -62,6 +62,29 @@ def main():
         state = "NONE" if lifecycle is None else lifecycle["state"]
         print(f"probe lifecycle state={state}")
 
+    if config.get("strategy", {}).get("class") == "CohortLadderStrategy":
+        from live_trading.modules.cohort_advance import advance_after_import
+
+        batches = recorder.list_batches(limit=1, strategy_id=strategy_id)
+        if not batches:
+            print("no imported trade date; cohort ladder not advanced")
+        else:
+            trade_date = batches[0]["trade_date"]
+            advanced = advance_after_import(
+                recorder,
+                trade_date=trade_date,
+                horizon=int(config["strategy"]["horizon"]),
+                strategy_id=strategy_id,
+            )
+            if advanced is None:
+                print(f"cohort ladder already advanced for {trade_date}")
+            else:
+                print(
+                    f"cohort ladder advanced to {trade_date}: "
+                    f"{len(advanced.layers)} layers, "
+                    f"{len(advanced.pending)} pending names"
+                )
+
     positions = recorder.get_positions()
     print(f"\nlive positions ({len(positions)}), cash={recorder.get_cash():.2f}:")
     for code, pos in sorted(positions.items()):

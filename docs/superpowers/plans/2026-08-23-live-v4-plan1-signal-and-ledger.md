@@ -3161,13 +3161,13 @@ git commit -m "feat(live): advance cohort ladder from actual fills after receipt
 
 全部满足才算完成，才可以进入计划二：
 
-- [ ] `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/ tests/backtest/test_cohort_ladder.py tests/backtest/test_cohort_ladder_strategy.py -v` 全绿
-- [ ] `alla_v4_ladder_k3h5_postclose_real` 的 `--dry-run` 能跑通，且 Task 11 Step 7 的五条人工核对全部满足
-- [ ] `smoke_cohort_cycle.py` 打印 OK：阶梯能长到 5 层、到期层正确退出、卖不掉的残量进 `_pending` 并在次日重新进 `due`
-- [ ] 全A dry-run 的墙钟时间与峰值内存已实测并写回 spec 4.2
-- [ ] 旧配置 `csi1000_b6m_b2s_postclose_real` 的 cron 未被改动，仍在正常运行
-- [ ] 五个精简后的模型 artifact 已 Git 跟踪（合计约 7 MB，非 289 MB），五个 SHA-256 已填进配置且与 `openssl dgst -sha256` 一致
-- [ ] `test_exported_model_predicts_identically` 五个种子全绿——精简前后预测逐点严格相等，证明这只是体积优化
+- [x] `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/ tests/backtest/test_cohort_ladder.py tests/backtest/test_cohort_ladder_strategy.py -v` 全绿（964 passed）
+- [ ] **未达成（已改判给计划二/三）**：`alla_v4_ladder_k3h5_postclose_real` 的 `--dry-run` 与 Task 11 Step 7 的五条人工核对。被 `backtest_parity` 门禁挡住：`validate_configured_backtest` 要求 `parity.backtest_config` 指向的回测配置存在，而全A 阶梯的 parity 回测配置尚未建，且 `backtest_parity.py` 本身还不认识五种子 `model.members` 与 `topk/horizon` 两个阶梯参数——改它属于计划三「parity 门禁扩展」的范围。**这是计划一的规划缺陷**：把 dry-run 放进计划一，却把它依赖的 parity 门禁改造放进了计划三。
+- [x] `smoke_cohort_cycle.py` 打印 OK：阶梯能长到 5 层、到期层正确退出、卖不掉的残量进 `_pending` 并在次日重新进 `due`
+- [ ] **未达成**：全A dry-run 的墙钟时间与峰值内存。与上一条同因——跑不起来就量不到。
+- [x] 旧配置 `csi1000_b6m_b2s_postclose_real` 的 cron 未被改动，仍在正常运行
+- [x] 五个精简后的模型 artifact 已 Git 跟踪（`live_trading/models/v4_rankices/`，实测 8.1 MB，非 289 MB），五个 SHA-256 已填进配置且与 `openssl dgst -sha256` 逐个一致
+- [x] `test_exported_model_predicts_identically` 五个种子全绿——精简前后预测逐点严格相等，证明这只是体积优化
 
 ## 交给计划二的接口
 
@@ -3181,3 +3181,4 @@ git commit -m "feat(live): advance cohort ladder from actual fills after receipt
 - `PR49_PROBE_CHECKLIST.md` 与 `tests/live_trading/test_repository_boundaries.py:54-72` 仍锁着 `MAX_ORDER_QUANTITY = 100` 与旧 DB 路径两个 token，取消数量闸时要同步改测试。
 - 各 `run_*_cron.sh` 与 crontab 里的 config id **仍指向旧配置**，这是刻意的：计划一全程只用 `--dry-run`，不动任何调度。切换属于计划三的切换手册。
 - 账本推进（Task 12）已接在 `run_import_fills.py` 上并且幂等（同一交易日重复推进返回 `None`）。计划三加监控时可以直接用 `cohort_layers` / `cohort_pending` 两张表做每日对账，不必另建状态。
+- **全A dry-run 未跑过，接线只有单测背书。**计划二动 bridge 之前先补两件事：（1）建 `backtest/configs/alla_v4_ladder_k3h5_parity.yaml`；（2）扩 `backtest_parity.py` 认 `model.members`（逐个比 SHA）与 `strategy.topk/horizon`。跑通 dry-run 再往下走，否则 Mac 侧信号从未在真实全A 数据上端到端产出过，bridge 侧的抵销与定量就没有可信输入可测。

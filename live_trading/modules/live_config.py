@@ -76,8 +76,14 @@ def _validate_trading_config(config: dict) -> None:
         raise ValueError("live.kind must be STRATEGY or OPERATOR_PROBE")
 
     profile = get_execution_profile(live.get("execution_session"))
-    if kind == "STRATEGY" and profile.name != "CLOSE_AUCTION":
-        raise ValueError("live.kind STRATEGY requires CLOSE_AUCTION")
+    # BT v4 真阶梯把主策略搬到盘后固定价，所以 STRATEGY 两个通道都合法；价类型与
+    # 四个时点仍逐项对齐 profile，半切换的配置照旧 fail-closed。
+    if kind == "STRATEGY" and profile.name not in {
+        "CLOSE_AUCTION", "AFTER_HOURS_FIXED_PRICE",
+    }:
+        raise ValueError(
+            "live.kind STRATEGY requires CLOSE_AUCTION or AFTER_HOURS_FIXED_PRICE"
+        )
     if kind == "OPERATOR_PROBE" and profile.name != "AFTER_HOURS_FIXED_PRICE":
         raise ValueError(
             "live.kind OPERATOR_PROBE requires AFTER_HOURS_FIXED_PRICE"
@@ -154,6 +160,22 @@ def _validate_trading_config(config: dict) -> None:
     if kind == "STRATEGY":
         strategy = config.get("strategy", {})
         topk = strategy.get("topk")
+        if strategy.get("class") == "CohortLadderStrategy":
+            # 阶梯每天恒定加一层、h 天后满仓，建仓爬坡是结构性的，
+            # 没有 TopkDropout 那种首日限量的 initial_buy_count。
+            horizon = strategy.get("horizon")
+            if (
+                isinstance(horizon, bool)
+                or not isinstance(horizon, int)
+                or not isinstance(topk, int)
+                or horizon <= 0
+                or topk <= 0
+            ):
+                raise ValueError(
+                    "CohortLadderStrategy requires positive integer "
+                    "strategy.topk and strategy.horizon"
+                )
+            return
         initial_buy_count = strategy.get("initial_buy_count")
         if (
             isinstance(initial_buy_count, bool)

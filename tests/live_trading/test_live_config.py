@@ -22,6 +22,10 @@ PROBE_LIVE_PATH = (
     REPO_ROOT / "live_trading" / "configs" /
     "csi1000_pr49_one_lot_probe.yaml"
 )
+LADDER_LIVE_PATH = (
+    REPO_ROOT / "live_trading" / "configs" /
+    "alla_v4_ladder_k3h5_postclose_real.yaml"
+)
 
 
 def test_execution_profiles_define_the_qmt_and_signal_price_contracts():
@@ -80,36 +84,102 @@ def test_operator_probe_rejects_decoy_main_strategy_binding(tmp_path):
         load_live_config(path, project_root=tmp_path)
 
 
-@pytest.mark.parametrize(
-    "change,message",
-    [
-        (("live", "close_auction_price_type", 49), "price_type"),
-        (("live", "execution_session", "AFTER_HOURS_FIXED_PRICE"), "STRATEGY"),
-    ],
-)
-def test_strategy_config_rejects_fixed_price_profile(tmp_path, change, message):
-    import yaml
-
-    config = {
+def _strategy_config(**live_overrides):
+    live = {
+        "kind": "STRATEGY",
+        "strategy_id": "main",
+        "broker_environment": "REAL",
+        "allow_real_money": True,
+        "default_mode": "LIVE",
+        "execution_session": "CLOSE_AUCTION",
+        "close_auction_price_type": 11,
+        "submit_after": "14:57:05",
+        "cancel_at": "15:00:05",
+        "finalize_at": "15:00:30",
+        "snapshot_after": "15:01:00",
+    }
+    live.update(live_overrides)
+    return {
         "account": {"opening_cash": 1_000_000.0},
         "strategy": {"topk": 30, "initial_buy_count": 2},
-        "live": {
-            "kind": "STRATEGY",
-            "strategy_id": "main",
-            "broker_environment": "REAL",
-            "allow_real_money": True,
-            "default_mode": "LIVE",
-            "execution_session": "CLOSE_AUCTION",
-            "close_auction_price_type": 11,
-            "submit_after": "14:57:05",
-        },
+        "live": live,
     }
-    section, key, value = change
-    config[section][key] = value
+
+
+def _write_strategy_config(tmp_path, config):
+    import yaml
+
     path = tmp_path / "main.yaml"
     path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    return path
 
-    with pytest.raises(ValueError, match=message):
+
+def test_strategy_config_rejects_price_type_from_the_other_profile(tmp_path):
+    path = _write_strategy_config(
+        tmp_path, _strategy_config(close_auction_price_type=49),
+    )
+
+    with pytest.raises(ValueError, match="price_type"):
+        load_live_config(path, project_root=tmp_path)
+
+
+def test_strategy_config_accepts_after_hours_fixed_price(tmp_path):
+    """v4 真阶梯把主策略搬到盘后固定价，不再是 operator probe 专属。"""
+    path = _write_strategy_config(tmp_path, _strategy_config(
+        execution_session="AFTER_HOURS_FIXED_PRICE",
+        close_auction_price_type=49,
+        submit_after="15:05:00",
+        cancel_at="15:28:00",
+        finalize_at="15:30:00",
+        snapshot_after="15:31:00",
+    ))
+
+    cfg = load_live_config(path, project_root=tmp_path)
+
+    assert cfg["live"]["execution_session"] == "AFTER_HOURS_FIXED_PRICE"
+
+
+def test_strategy_config_rejects_half_switched_execution_session(tmp_path):
+    """只改 session 不改价类型与时点，必须 fail-closed。"""
+    path = _write_strategy_config(
+        tmp_path, _strategy_config(execution_session="AFTER_HOURS_FIXED_PRICE"),
+    )
+
+    with pytest.raises(ValueError, match="price_type"):
+        load_live_config(path, project_root=tmp_path)
+
+
+def test_strategy_config_rejects_unknown_execution_session(tmp_path):
+    path = _write_strategy_config(
+        tmp_path, _strategy_config(execution_session="MORNING_AUCTION"),
+    )
+
+    with pytest.raises(ValueError):
+        load_live_config(path, project_root=tmp_path)
+
+
+def test_ladder_strategy_needs_horizon_instead_of_initial_buy_count(tmp_path):
+    """阶梯每天加一层、h 天后满仓，建仓爬坡是结构性的，没有 initial_buy_count。"""
+    config = _strategy_config()
+    config["strategy"] = {"class": "CohortLadderStrategy", "topk": 3, "horizon": 5}
+    path = _write_strategy_config(tmp_path, config)
+
+    cfg = load_live_config(path, project_root=tmp_path)
+
+    assert cfg["strategy"]["horizon"] == 5
+
+
+@pytest.mark.parametrize("strategy", [
+    {"class": "CohortLadderStrategy", "topk": 3},
+    {"class": "CohortLadderStrategy", "topk": 3, "horizon": 0},
+    {"class": "CohortLadderStrategy", "horizon": 5},
+])
+def test_ladder_strategy_rejects_missing_or_bad_horizon(tmp_path, strategy):
+    config = _strategy_config()
+    config["strategy"] = strategy
+    path = _write_strategy_config(tmp_path, config)
+
+    with pytest.raises(ValueError, match="horizon|topk"):
         load_live_config(path, project_root=tmp_path)
 
 
@@ -549,3 +619,59 @@ def test_invalid_performance_baseline_fails_closed(tmp_path, baseline):
         load_live_config(
             _write_baseline_config(tmp_path, baseline), project_root=tmp_path,
         )
+
+
+def _ladder_config():
+    return load_live_config(LADDER_LIVE_PATH, project_root=REPO_ROOT)
+
+
+def test_ladder_live_config_matches_bt_v4_parameters():
+    config = _ladder_config()
+
+    assert config["strategy"]["class"] == "CohortLadderStrategy"
+    assert config["strategy"]["topk"] == 3
+    assert config["strategy"]["horizon"] == 5
+    assert config["strategy"]["risk_degree"] == 0.90
+    assert config["strategy"]["only_tradable"] is False
+    assert config["strategy"]["forbid_all_trade_at_limit"] is False
+    assert config["data"]["instruments"] == "all"
+    assert config["live"]["execution_session"] == "AFTER_HOURS_FIXED_PRICE"
+    assert config["live"]["strategy_id"] == "alla_v4_ladder_k3h5_postclose_real"
+
+
+def test_ladder_live_config_declares_five_ensemble_members():
+    config = _ladder_config()
+
+    members = config["model"]["members"]
+    assert [m["seed"] for m in members] == [42, 1000, 2000, 3000, 4000]
+    assert config["model"]["ensemble"] == "daily_zscore_mean"
+    for member in members:
+        assert len(member["sha256"]) == 64
+        assert (REPO_ROOT / member["model_path"]).is_file()
+
+
+def test_ladder_live_config_member_hashes_match_the_tracked_artifacts():
+    """配置里的哈希必须与磁盘上的 artifact 一致，否则加载时才 fail-closed。"""
+    import hashlib
+
+    for member in _ladder_config()["model"]["members"]:
+        payload = (REPO_ROOT / member["model_path"]).read_bytes()
+        assert hashlib.sha256(payload).hexdigest() == member["sha256"], member
+
+
+def test_ladder_live_config_declares_all_four_universe_filters():
+    spec = _ladder_config()["universe_filter"]
+
+    assert spec["st_daily"] == "scripts/data_collector/tushare/st_daily.csv"
+    assert spec["min_amount"] == 10_000_000
+    assert spec["min_listing_days"] == 60
+    assert spec["min_recent_trading_days"] == 60
+    assert spec["pool"] == "all"
+
+
+def test_ladder_live_config_marks_live_only_deviations():
+    strategy = _ladder_config()["strategy"]
+
+    assert strategy["netting"] == "live_only"
+    assert strategy["absorb_broker_excess"] == "live_only"
+    assert strategy["no_buyable_substitution"] == "live_only"

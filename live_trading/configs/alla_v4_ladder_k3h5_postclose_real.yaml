@@ -1,0 +1,132 @@
+# All-A real account: BT v4 true ladder (CohortLadderStrategy k3 x h5) on the
+# v4 RankIC ES five-seed ensemble, executed via after-hours fixed price.
+# Account ID is private and must come from QMT_REAL_ACCOUNT_ID.
+
+data:
+  qlib_dir: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "all"
+  benchmark: "SH000985"
+
+account:
+  opening_cash: 1000000.0
+  opening_value_adjustment: 0.0
+
+provenance:
+  repository: "/Users/yuxianqi/Project/qlib_exp"
+  strategy_baseline_config: "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_ladder_k3h5_ensemble.yaml"
+
+model:
+  experiment_name: "regime-adapt/m0-h20-rankices-v1"
+  baseline_ref: "v4"
+  model_class: "backtest.models.regime_adapt.RegimeSingleLGBMModel"
+  ensemble: "daily_zscore_mean"
+  members:
+    - seed: 42
+      model_path: "live_trading/models/v4_rankices/s42/trained_model"
+      sha256: "3c75ee96fb8868d1200145b97141529b8852a204c6f4615d321a93da71368ecd"
+    - seed: 1000
+      model_path: "live_trading/models/v4_rankices/s1000/trained_model"
+      sha256: "38f9dea415b528916105a6f472adf9b1ff3032fca92250c4d66db0323f5acdbc"
+    - seed: 2000
+      model_path: "live_trading/models/v4_rankices/s2000/trained_model"
+      sha256: "ff605722c4beece2cfa38324c0e3480c0fbb96fcfc35774a2838f39c4e131729"
+    - seed: 3000
+      model_path: "live_trading/models/v4_rankices/s3000/trained_model"
+      sha256: "75d8f5a38ce13683a7f75760b220e678ecb9c055d93be2bb83df4edcc636b260"
+    - seed: 4000
+      model_path: "live_trading/models/v4_rankices/s4000/trained_model"
+      sha256: "ff795a6fe4500e0e2affc9c8aa14be603173290a93ee3b04fc91907796ff5525"
+
+handler:
+  class: "Alpha158Technical"
+  module: "backtest.features.technical"
+  start_time: "2020-02-03"
+  fit_start_time: "2020-02-03"
+  fit_end_time: "2020-08-03"
+  infer_processors:
+    - class: "ProcessInf"
+  feature_groups:
+    - "range"
+  filter_pipe:
+    - filter_type: "NameDFilter"
+      name_rule_re: "^(SH60|SH68|SZ00|SZ30)"
+
+universe_filter:
+  st_daily: "scripts/data_collector/tushare/st_daily.csv"
+  min_amount: 10000000
+  min_listing_days: 60
+  min_recent_trading_days: 60
+  pool: "all"
+
+stock_names:
+  source: "tushare"
+
+strategy:
+  class: "CohortLadderStrategy"
+  topk: 3
+  horizon: 5
+  risk_degree: 0.90
+  only_tradable: false
+  forbid_all_trade_at_limit: false
+  # 实盘独有、回测不存在的三项偏离；parity 门禁按字段比对，缺字段即 ParityError
+  netting: "live_only"
+  absorb_broker_excess: "live_only"
+  no_buyable_substitution: "live_only"
+
+exchange:
+  freq: "day"
+  deal_price: "close"
+  limit_threshold: "market_cn"
+  open_cost: 0.00021
+  close_cost: 0.00071
+  min_cost: 5.0
+  trade_unit: 100
+
+parity:
+  backtest_config: "backtest/configs/alla_v4_ladder_k3h5_parity.yaml"
+
+live:
+  bridge_root: "/Volumes/qmt_bridge"
+  strategy_id: "alla_v4_ladder_k3h5_postclose_real"
+  account_id: ""
+  account_type: "STOCK"
+  broker_environment: "REAL"
+  allow_real_money: true
+  default_mode: "LIVE"
+  execution_session: "AFTER_HOURS_FIXED_PRICE"
+  close_auction_price_type: 49
+  submit_after: "15:05:00"
+  cancel_at: "15:28:00"
+  finalize_at: "15:30:00"
+  snapshot_after: "15:31:00"
+  max_orders_per_day: 40
+
+storage:
+  db_path: "live_trading/data/alla_v4_ladder_k3h5_postclose_real.db"
+  log_dir: "live_trading/logs/alla_v4_ladder_k3h5_postclose_real"
+
+fees:
+  commission_rate: 0.00020
+  min_commission: 5.0
+  stamp_duty_rate: 0.0005
+  transfer_fee_rate: 0.00001
+  dividend_tax_rate: 0.20
+
+monitor:
+  benchmark: "SH000985"
+  benchmark_name: "中证全指"
+  notify:
+    channel: "serverchan"
+    daily_report: true
+  thresholds:
+    daily_loss: -0.03
+    consecutive_loss_days: 5
+    reject_rate: 0.5
+    cash_tolerance: 100.0
+  broker_reconcile:
+    cash_check: true
+
+web:
+  host: "127.0.0.1"
+  port: 8082

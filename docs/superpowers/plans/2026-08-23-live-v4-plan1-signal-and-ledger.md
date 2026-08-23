@@ -2478,7 +2478,11 @@ web:
 Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/test_live_config.py -v`
 Expected: 全部 PASS
 
-- [ ] **Step 6: 改三处硬编码的主策略 ID**
+- [x] **Step 6: 改三处硬编码的主策略 ID —— 实施时判定必须推迟到计划三，未执行**
+
+这三个常量服务的是 **operator probe**：`operator_probe.py:428` 与 `live_config.py:113` 都要求探针配置的 `live.main_strategy_id` **等于**该常量，而 `csi1000_pr49_one_lot_probe.yaml:12` 写死了 `csi1000_b6m_b2s_postclose_real`；`run_monitor.py:255` 也用它读主策略的执行状态。计划一的全局约束是「旧配置的 cron 保持原样运行，新配置只以 `--dry-run` 验证」，此时改常量会造成两个真实后果：探针配置立刻校验失败（fail-closed，探针无法发布），且探针的暂停保护会指向一个没在跑的阶梯策略，把真正在跑的 CSI1000 漏在保护之外。这三处与 bridge 的 strategy_id 白名单、cron config id 属于同一次切换动作，一并放到计划三。
+
+被跳过的原始步骤内容（留给计划三照做）：
 
 在下面三处把 `csi1000_b6m_b2s_postclose_real` 换成 `alla_v4_ladder_k3h5_postclose_real`：
 
@@ -3171,6 +3175,9 @@ git commit -m "feat(live): advance cohort ladder from actual fills after receipt
 - 奇数股 SELL 已被允许通过 schema（Task 7），bridge 侧的板块感知最低申报（科创板 ≥200 股）要自己判，不能假设收到的 `quantity` 是整百。**注意 `qmt_signal_bridge.py:1385-1387` 还镜像着一份整百校验**（`quantity % 100 != 0` → `reject("SELL quantity must be a positive whole lot")`），计划二必须同步放开，否则含零股的到期层会在 bridge 侧被整批拒收。
 - `live.execution_session` 已是 `AFTER_HOURS_FIXED_PRICE`，但 `submit_after` 仍是 profile 缺省的 `15:05:00`。spec 4.7.1 的 15:00:05 自适应提交由计划二实现。
 - `qmt_signal_bridge.py` 第 1488 行附近允许的 strategy_id 列表**尚未**加入 `alla_v4_ladder_k3h5_postclose_real`，计划二必须补，否则 bridge 会拒收批次。
+- `operator_probe.MAIN_STRATEGY_ID` / `web/api.MAIN_REAL_STRATEGY_ID` / `live_config._OPERATOR_PROBE_MAIN_STRATEGY_ID` 三个常量**仍指向 CSI1000**（计划一刻意不动，理由见 Task 10 Step 6）。切换时要与 `csi1000_pr49_one_lot_probe.yaml` 的 `main_strategy_id` 同步改，否则探针配置会 fail-closed。
+- `live_config.py` 现在允许 `kind: STRATEGY` 搭配 `AFTER_HOURS_FIXED_PRICE`（原先只有 operator probe 可用盘后固定价）。价类型与四个时点仍逐项对齐 profile，半切换的配置照旧 fail-closed。
+- `live_config.py` 对 `CohortLadderStrategy` 校验 `topk` / `horizon` 而非 `initial_buy_count`——阶梯每天恒定加一层、h 天后满仓，建仓爬坡是结构性的，没有首日限量这个概念。
 - `PR49_PROBE_CHECKLIST.md` 与 `tests/live_trading/test_repository_boundaries.py:54-72` 仍锁着 `MAX_ORDER_QUANTITY = 100` 与旧 DB 路径两个 token，取消数量闸时要同步改测试。
 - 各 `run_*_cron.sh` 与 crontab 里的 config id **仍指向旧配置**，这是刻意的：计划一全程只用 `--dry-run`，不动任何调度。切换属于计划三的切换手册。
 - 账本推进（Task 12）已接在 `run_import_fills.py` 上并且幂等（同一交易日重复推进返回 `None`）。计划三加监控时可以直接用 `cohort_layers` / `cohort_pending` 两张表做每日对账，不必另建状态。

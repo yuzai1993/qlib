@@ -291,3 +291,96 @@ class TestLedgerState:
 
         assert ledger.to_state()["cohorts"] == [{"SZ000001": 100.0}]
         assert ledger.to_state()["pending"] == {}
+
+
+class TestAbsorbBrokerExcess:
+    """`reconcile` 只削台账多出的部分；反向缺口（送股 / 手工买卖）由本方法吸收。
+
+    实盘专用，回测里策略是持仓的唯一作用者，不会发生。
+    """
+
+    def test_prorates_into_existing_layers(self):
+        ledger = CohortLedger(horizon=3)
+        ledger.add({"SH600000": 100.0})
+        ledger.add({"SH600000": 300.0})
+        # 台账合计 400 股；券商 520 股（3:10 送股得 120 股）
+
+        absorbed = ledger.absorb_broker_excess({"SH600000": 520.0})
+
+        assert absorbed == {"SH600000": 120.0}
+        # 120 按 100:300 等比例 → 30 / 90
+        assert ledger.to_state()["cohorts"] == [
+            {"SH600000": 130.0},
+            {"SH600000": 390.0},
+        ]
+        assert ledger.holdings() == {"SH600000": 520.0}
+
+    def test_remainder_goes_to_the_largest_fractional_share(self):
+        ledger = CohortLedger(horizon=3)
+        ledger.add({"SH600000": 100.0})
+        ledger.add({"SH600000": 200.0})
+        # 台账 300 股，券商 310 股，excess=10；等比例 3.33 / 6.67
+        # 最大余额法：floor 得 3 / 6，余 1 补给小数部分更大的那层
+
+        absorbed = ledger.absorb_broker_excess({"SH600000": 310.0})
+
+        assert absorbed == {"SH600000": 10.0}
+        assert ledger.holdings() == {"SH600000": 310.0}
+        assert ledger.to_state()["cohorts"] == [
+            {"SH600000": 103.0},
+            {"SH600000": 207.0},
+        ]
+
+    def test_without_layers_goes_to_pending(self):
+        ledger = CohortLedger(horizon=3)
+        ledger.add({"SH600000": 100.0})
+        # SZ000001 在阶梯里完全没有分层（运维手工买入）
+
+        absorbed = ledger.absorb_broker_excess(
+            {"SH600000": 100.0, "SZ000001": 500.0}
+        )
+
+        assert absorbed == {"SZ000001": 500.0}
+        assert ledger.to_state()["pending"] == {"SZ000001": 500.0}
+        # pending 的语义就是脱离账龄、次日全量进 due
+        assert ledger.due()["SZ000001"] == 500.0
+
+    def test_is_noop_when_ledger_matches_or_exceeds(self):
+        ledger = CohortLedger(horizon=3)
+        ledger.add({"SH600000": 100.0})
+        ledger.add({"SZ000001": 200.0})
+        before = ledger.to_state()
+
+        # 相等 / 券商更少（该 reconcile 管）/ 券商为 0，三种都不该动
+        absorbed = ledger.absorb_broker_excess({
+            "SH600000": 100.0, "SZ000001": 50.0, "SH600519": 0.0,
+        })
+
+        assert absorbed == {}
+        assert ledger.to_state() == before
+
+    def test_only_layers_holding_that_name_participate(self):
+        ledger = CohortLedger(horizon=3)
+        ledger.add({"SH600000": 100.0})
+        ledger.add({"SZ000001": 900.0})  # 不持有 SH600000 的层不参与分配
+
+        absorbed = ledger.absorb_broker_excess(
+            {"SH600000": 150.0, "SZ000001": 900.0}
+        )
+
+        assert absorbed == {"SH600000": 50.0}
+        assert ledger.to_state()["cohorts"] == [
+            {"SH600000": 150.0},
+            {"SZ000001": 900.0},
+        ]
+
+    def test_absorbed_total_exactly_matches_the_gap(self):
+        """并入总量必须与账实差完全相等，不允许留零头。"""
+        ledger = CohortLedger(horizon=4)
+        ledger.add({"SH600000": 111.0})
+        ledger.add({"SH600000": 222.0})
+        ledger.add({"SH600000": 333.0})
+
+        ledger.absorb_broker_excess({"SH600000": 666.0 + 97.0})
+
+        assert ledger.holdings() == {"SH600000": 763.0}

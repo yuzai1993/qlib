@@ -17,6 +17,7 @@ Phase M 主格 top-k × h 的评估年化 ``mean(p) × 238/h``（见
 
 from __future__ import annotations
 
+import math
 from typing import Any, Callable, Iterable, Mapping, Optional
 
 import pandas as pd
@@ -247,6 +248,50 @@ class CohortLedger:
             if float(amount) > _EPS
         }
         return ledger
+
+    def absorb_broker_excess(self, actual: Mapping[str, float]) -> dict[str, float]:
+        """券商股数多于台账时，把超出部分并入台账（**实盘专用，回测不调用**）。
+
+        ``reconcile`` 只削减台账多出的部分，反向缺口它直接跳过。实盘的送股 / 转增 /
+        配股 / 运维手工买卖都会让券商多于台账，而多出的股数对阶梯完全不可见——到期时
+        ``ledger_sell_amounts`` 取小只卖台账那份，超出量会永久沉淀成孤儿仓位。
+
+        该票已有分层 → 按各层股数等比例并入（最大余额法分配整股余数，余数并列时偏向
+        股数更多的层），随各层自然到期卖出，语义上「送股属于原仓位」；完全没有分层 →
+        并入 ``_pending``，那里的语义正好是脱离账龄、每日全量进 ``due``，尽快清掉。
+
+        返回每只票实际吸收的股数，供审计记录。
+        """
+        absorbed: dict[str, float] = {}
+        ledger_totals = self.holdings()
+        for name, amount in actual.items():
+            broker = float(amount)
+            if broker <= _EPS:
+                continue
+            excess = float(round(broker - ledger_totals.get(name, 0.0)))
+            if excess <= _EPS:
+                continue
+            buckets = [c for c in self._cohorts if c.get(name, 0.0) > _EPS]
+            if not buckets:
+                self._pending[name] = self._pending.get(name, 0.0) + excess
+                absorbed[name] = excess
+                continue
+            weights = [bucket[name] for bucket in buckets]
+            total = sum(weights)
+            exact = [excess * weight / total for weight in weights]
+            shares = [math.floor(value) for value in exact]
+            remainder = int(round(excess - sum(shares)))
+            order = sorted(
+                range(len(buckets)),
+                key=lambda i: (-(exact[i] - shares[i]), -weights[i]),
+            )
+            for i in order[:remainder]:
+                shares[i] += 1
+            for bucket, extra in zip(buckets, shares):
+                if extra > 0:
+                    bucket[name] = bucket[name] + float(extra)
+            absorbed[name] = float(sum(shares))
+        return absorbed
 
 
 def ledger_sell_amounts(

@@ -88,10 +88,13 @@ class CohortOrderManager:
 
         orders = [
             {
-                "side": "SELL",
-                "stock_code": code,
-                "quantity": quantity,
-                "target_value": 0.0,
+                "instrument": code,
+                "direction": "SELL",
+                "target_shares": quantity,
+                # _sell_quantity already weighed the position: below one lot it
+                # returns the whole holding on purpose. Let the planner know so
+                # it does not round that odd lot back down.
+                "shares_are_final": True,
                 "reason": "cohort_due",
             }
             for code, quantity in sells.items()
@@ -115,9 +118,8 @@ class CohortOrderManager:
             if per_name <= 0:
                 continue
             orders.append({
-                "side": "BUY",
-                "stock_code": code,
-                "quantity": 0,
+                "instrument": code,
+                "direction": "BUY",
                 "target_value": per_name,
                 "reason": "cohort_layer",
             })

@@ -351,14 +351,14 @@ def netting_preview(orders: list, close_prices: dict, trade_unit: int) -> list:
     LADDER_NET 事件，它用当日实际收盘价。本函数仅供发布前 sanity check。
     """
     sells = {
-        order["stock_code"]: int(order["quantity"])
-        for order in orders if order["side"] == "SELL"
+        order["instrument"]: int(order["target_shares"])
+        for order in orders if order["direction"] == "SELL"
     }
     rows = []
     for order in orders:
-        if order["side"] != "BUY":
+        if order["direction"] != "BUY":
             continue
-        code = order["stock_code"]
+        code = order["instrument"]
         if code not in sells:
             continue
         price = close_prices.get(code)

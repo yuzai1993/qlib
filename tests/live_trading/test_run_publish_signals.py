@@ -322,7 +322,7 @@ def test_main_paused_audit_preview_does_not_create_batch_or_inbox(
     order = SimpleNamespace(
         side="BUY", stock_code="600000.SH", quantity=0, target_value=1_000.0,
         client_order_id="order-1", batch_id="20260811_strategy-main_001",
-        to_json_line=lambda: '{"side":"BUY","stock_code":"600000.SH"}',
+        to_json_line=lambda: '{"side":"BUY","instrument":"600000.SH"}',
     )
     monkeypatch.setattr(
         publish, "parse_args", lambda: SimpleNamespace(
@@ -428,11 +428,11 @@ def test_ladder_branch_reports_absorbed_broker_excess(tmp_path):
 def test_audit_preview_estimates_netting_for_overlapping_names():
     rows = publish.netting_preview(
         orders=[
-            {"side": "SELL", "stock_code": "SH600000", "quantity": 600,
+            {"direction": "SELL", "instrument": "SH600000", "target_shares": 600,
              "target_value": 0.0, "reason": "cohort_due"},
-            {"side": "BUY", "stock_code": "SH600000", "quantity": 0,
+            {"direction": "BUY", "instrument": "SH600000",
              "target_value": 60_000.0, "reason": "cohort_layer"},
-            {"side": "BUY", "stock_code": "SZ000001", "quantity": 0,
+            {"direction": "BUY", "instrument": "SZ000001",
              "target_value": 60_000.0, "reason": "cohort_layer"},
         ],
         close_prices={"SH600000": 100.0, "SZ000001": 20.0},
@@ -452,7 +452,7 @@ def test_audit_preview_estimates_netting_for_overlapping_names():
 def test_netting_preview_skips_buys_without_a_matching_sell():
     rows = publish.netting_preview(
         orders=[
-            {"side": "BUY", "stock_code": "SZ000001", "quantity": 0,
+            {"direction": "BUY", "instrument": "SZ000001",
              "target_value": 60_000.0, "reason": "cohort_layer"},
         ],
         close_prices={"SZ000001": 20.0},

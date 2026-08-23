@@ -143,3 +143,47 @@ def test_output_passes_schema_validation():
     prev_close = {"SH600000": 10.00, "SZ000001": 20.00}
     for o in _planner().plan(intents, prev_close, BATCH_ID, TRADE_DATE):
         validate_order(o)
+
+
+def test_per_intent_reason_overrides_the_batch_default():
+    """真阶梯一张批次里两种成因：到期卖 cohort_due、当日买 cohort_layer。
+    批次级的单一 reason 装不下。"""
+    intents = [
+        {"instrument": "SH600000", "direction": "BUY", "target_value": 15_000.0,
+         "reason": "cohort_layer"},
+        {"instrument": "SZ000001", "direction": "SELL", "target_shares": 800,
+         "reason": "cohort_due"},
+    ]
+    orders = _planner().plan(intents, {}, BATCH_ID, TRADE_DATE)
+
+    assert [o.reason for o in orders] == ["cohort_due", "cohort_layer"]
+
+
+def test_intents_without_a_reason_still_take_the_batch_default():
+    intents = [
+        {"instrument": "SZ000001", "direction": "SELL", "target_shares": 800},
+    ]
+    orders = _planner().plan(intents, {}, BATCH_ID, TRADE_DATE)
+
+    assert orders[0].reason == "topk_dropout"
+
+
+def test_a_final_share_count_is_not_rounded_down_again():
+    """账本可能因送股持有零股，清仓卖单就是零股。再取整一次会剩下 50 股
+    永远卖不掉，而那一层已经在账本里被标记到期。"""
+    intents = [
+        {"instrument": "SZ000001", "direction": "SELL", "target_shares": 150,
+         "shares_are_final": True},
+    ]
+    orders = _planner().plan(intents, {}, BATCH_ID, TRADE_DATE)
+
+    assert orders[0].quantity == 150
+
+
+def test_a_share_count_that_is_not_final_is_still_rounded_down():
+    intents = [
+        {"instrument": "SZ000001", "direction": "SELL", "target_shares": 150},
+    ]
+    orders = _planner().plan(intents, {}, BATCH_ID, TRADE_DATE)
+
+    assert orders[0].quantity == 100

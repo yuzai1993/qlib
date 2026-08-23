@@ -61,6 +61,8 @@ class OrderPlanner:
 
         Args:
             intents: [{"instrument", "direction", "target_shares"}, ...]
+                Optional per-intent keys: "reason" overrides the batch default,
+                "shares_are_final" keeps a SELL quantity off the lot rounding.
             prev_close: retained for caller compatibility; unused by v2 orders
             batch_id: 批次 ID
             trade_date: 计划执行日 YYYY-MM-DD
@@ -79,10 +81,16 @@ class OrderPlanner:
             for intent in intent_list:
                 inst = intent["instrument"]
                 if side == "SELL":
-                    quantity = (
-                        int(intent["target_shares"] // self.trade_unit)
-                        * self.trade_unit
-                    )
+                    if intent.get("shares_are_final"):
+                        # The producer already sized this against the actual
+                        # position; an odd lot here is a deliberate full exit,
+                        # and rounding it down would strand the remainder.
+                        quantity = int(intent["target_shares"])
+                    else:
+                        quantity = (
+                            int(intent["target_shares"] // self.trade_unit)
+                            * self.trade_unit
+                        )
                     if quantity <= 0:
                         logger.warning(
                             "drop SELL %s: shares %s rounds to 0",
@@ -113,7 +121,7 @@ class OrderPlanner:
                     limit_price=0.0,
                     priority=priority,
                     instrument_qlib=inst,
-                    reason=reason,
+                    reason=intent.get("reason", reason),
                 ))
                 seq += 1
 

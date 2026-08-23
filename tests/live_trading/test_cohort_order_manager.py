@@ -62,8 +62,8 @@ def test_buys_top_k_without_dedup_against_existing_layers():
         total_value=1_000_000.0,
     )
 
-    buys = [o for o in orders if o["side"] == "BUY"]
-    assert [o["stock_code"] for o in buys] == ["SH600000", "SZ000001", "SH600519"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
+    assert [o["instrument"] for o in buys] == ["SH600000", "SZ000001", "SH600519"]
 
 
 def test_each_buy_carries_one_third_of_the_daily_layer_budget():
@@ -78,11 +78,11 @@ def test_each_buy_carries_one_third_of_the_daily_layer_budget():
         total_value=1_000_000.0,
     )
 
-    buys = [o for o in orders if o["side"] == "BUY"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
     # 预算 = 1_000_000 × 0.90 / 5 = 180_000，三等分 = 60_000
     assert len(buys) == 3
     for order in buys:
-        assert order["quantity"] == 0          # BUY 由券商按 target_value 定量
+        assert "target_shares" not in order   # BUY 由券商按 target_value 定量
         assert order["target_value"] == pytest.approx(60_000.0)
 
 
@@ -101,7 +101,7 @@ def test_budget_includes_estimated_sell_proceeds():
         total_value=1_000_000.0,
     )
 
-    buys = [o for o in orders if o["side"] == "BUY"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
     # 目标 180_000 > 快照现金 100_000；加上卖出所得后现金约 119_986 元，
     # 预算 = min(180_000, 119_986) 被现金卡住，故必须显著高于 100_000
     assert sum(o["target_value"] for o in buys) > 119_000
@@ -120,7 +120,7 @@ def test_budget_without_due_layer_falls_back_to_snapshot_cash():
         total_value=1_000_000.0,
     )
 
-    buys = [o for o in orders if o["side"] == "BUY"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
     assert sum(o["target_value"] for o in buys) == pytest.approx(90_000.0)
 
 
@@ -136,11 +136,11 @@ def test_due_layer_becomes_sell_orders_capped_by_broker_position():
         total_value=1_000_000.0,
     )
 
-    sells = [o for o in orders if o["side"] == "SELL"]
+    sells = [o for o in orders if o["direction"] == "SELL"]
     assert len(sells) == 1
-    assert sells[0]["stock_code"] == "SH600000"
-    assert sells[0]["quantity"] == 300
-    assert sells[0]["target_value"] == 0.0
+    assert sells[0]["instrument"] == "SH600000"
+    assert sells[0]["target_shares"] == 300
+    assert "target_value" not in sells[0]   # 卖单按股数，金额由 planner 置 0
     assert sells[0]["reason"] == "cohort_due"
 
 
@@ -157,8 +157,8 @@ def test_pending_remnant_is_retried_as_sell():
         total_value=1_000_000.0,
     )
 
-    sells = [o for o in orders if o["side"] == "SELL"]
-    assert [(o["stock_code"], o["quantity"]) for o in sells] == [("SH600000", 200)]
+    sells = [o for o in orders if o["direction"] == "SELL"]
+    assert [(o["instrument"], o["target_shares"]) for o in sells] == [("SH600000", 200)]
 
 
 def test_odd_lot_sell_allowed_only_when_it_clears_the_position():
@@ -175,8 +175,8 @@ def test_odd_lot_sell_allowed_only_when_it_clears_the_position():
         total_value=1_000_000.0,
     )
 
-    sells = [o for o in orders if o["side"] == "SELL"]
-    assert [(o["stock_code"], o["quantity"]) for o in sells] == [("SH600000", 120)]
+    sells = [o for o in orders if o["direction"] == "SELL"]
+    assert [(o["instrument"], o["target_shares"]) for o in sells] == [("SH600000", 120)]
 
 
 def test_odd_lot_sell_rounds_down_when_position_remains():
@@ -193,8 +193,8 @@ def test_odd_lot_sell_rounds_down_when_position_remains():
         total_value=1_000_000.0,
     )
 
-    sells = [o for o in orders if o["side"] == "SELL"]
-    assert [(o["stock_code"], o["quantity"]) for o in sells] == [("SH600000", 100)]
+    sells = [o for o in orders if o["direction"] == "SELL"]
+    assert [(o["instrument"], o["target_shares"]) for o in sells] == [("SH600000", 100)]
 
 
 def test_sub_lot_sell_below_one_lot_is_dropped_when_position_remains():
@@ -210,7 +210,7 @@ def test_sub_lot_sell_below_one_lot_is_dropped_when_position_remains():
         total_value=1_000_000.0,
     )
 
-    assert [o for o in orders if o["side"] == "SELL"] == []
+    assert [o for o in orders if o["direction"] == "SELL"] == []
 
 
 # 原 test_names_missing_a_close_price_are_not_buyable 编码的是被废弃的顺延行为，
@@ -232,8 +232,8 @@ def test_universe_filtered_names_are_never_bought():
         total_value=1_000_000.0,
     )
 
-    buys = [o for o in orders if o["side"] == "BUY"]
-    assert [o["stock_code"] for o in buys] == ["SZ000001", "SH600519"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
+    assert [o["instrument"] for o in buys] == ["SZ000001", "SH600519"]
 
 
 def test_sells_come_before_buys():
@@ -248,7 +248,7 @@ def test_sells_come_before_buys():
         total_value=1_000_000.0,
     )
 
-    sides = [o["side"] for o in orders]
+    sides = [o["direction"] for o in orders]
     assert sides.index("SELL") < sides.index("BUY")
 
 
@@ -269,7 +269,7 @@ def test_a_name_without_a_close_price_is_still_bought():
         total_value=1_000_000.0,
     )
 
-    bought = [o["stock_code"] for o in orders if o["side"] == "BUY"]
+    bought = [o["instrument"] for o in orders if o["direction"] == "BUY"]
     assert bought == ["SH600001", "SH600002", "SH600003"]
 
 
@@ -285,7 +285,7 @@ def test_budget_is_split_by_the_number_of_names_actually_selected():
         total_value=1_000_000.0,
     )
 
-    buys = [o for o in orders if o["side"] == "BUY"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
     assert len(buys) == 2
     assert all(o["target_value"] == pytest.approx(_BUDGET / 2) for o in buys)
 
@@ -302,6 +302,49 @@ def test_full_cross_section_still_splits_by_topk():
         total_value=1_000_000.0,
     )
 
-    buys = [o for o in orders if o["side"] == "BUY"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
     assert len(buys) == 3
     assert all(o["target_value"] == pytest.approx(_BUDGET / 3) for o in buys)
+
+
+def test_intents_speak_the_vocabulary_order_planner_actually_reads():
+    """OrderPlanner 是两个策略共用的契约，它读 direction/instrument。
+    发 side/stock_code 会在 _merge_intents 里炸成 PlanError。"""
+    manager = CohortOrderManager(CONFIG)
+
+    orders = manager.generate_orders(
+        scores=_scores({"SH600000": 3.0, "SZ000001": 2.0, "SH600519": 1.0}),
+        cohort_state=_due_layer({"SH601318": 300}),
+        broker_positions={"SH601318": 300},
+        cash=1_000_000.0,
+        close_prices={"SH601318": 10.0},
+        total_value=1_000_000.0,
+    )
+
+    sells = [o for o in orders if o["direction"] == "SELL"]
+    buys = [o for o in orders if o["direction"] == "BUY"]
+    assert [o["instrument"] for o in sells] == ["SH601318"]
+    assert sells[0]["target_shares"] == 300
+    assert sells[0]["reason"] == "cohort_due"
+    assert [o["instrument"] for o in buys] == ["SH600000", "SZ000001", "SH600519"]
+    assert all(o["reason"] == "cohort_layer" for o in buys)
+    assert not any("side" in o or "stock_code" in o for o in orders)
+
+
+def test_a_sell_the_manager_already_sized_is_marked_final():
+    """零股清仓是 manager 深思熟虑的结果（spec 4.7 的「不足一手整笔卖出」）。
+    不打标记，planner 会再向下取整到 100，悄悄丢掉 50 股。"""
+    manager = CohortOrderManager(CONFIG)
+
+    orders = manager.generate_orders(
+        scores=_scores({"SH600000": 3.0, "SZ000001": 2.0, "SH600519": 1.0}),
+        cohort_state=_due_layer({"SH601318": 150}),
+        broker_positions={"SH601318": 150},
+        cash=1_000_000.0,
+        close_prices={"SH601318": 10.0},
+        total_value=1_000_000.0,
+    )
+
+    sell = next(o for o in orders if o["direction"] == "SELL")
+    assert sell["target_shares"] == 150
+    assert sell["shares_are_final"] is True

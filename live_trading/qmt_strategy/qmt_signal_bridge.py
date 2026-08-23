@@ -2566,6 +2566,43 @@ def _max_affordable_quantity(cash, price, requested_qty):
     return 0
 
 
+def _board_min_shares(stock_code):
+    """Minimum single-order size for after-hours fixed-price trading.
+
+    STAR Market (SH688*) requires at least 200 shares per buy order; the main
+    board and ChiNext take any multiple of 100. Derived from the exchange rule,
+    not from the broker, because a rejected order costs us the whole layer.
+    """
+    symbol = str(stock_code).split(".")[0]
+    return 200 if symbol.startswith("688") else 100
+
+
+def _ladder_buy_shares(target_value, close_price, lot=100):
+    """Share count for one ladder layer, share-for-share equal to the backtest.
+
+    Mirrors qlib/backtest/exchange.py round_amount_by_trade_unit:
+        (deal_amount * factor + 0.1) // trade_unit * trade_unit / factor
+    The backtest feeds it an adjusted price and multiplies the result back by
+    factor to get real shares, and raw_close == adj_close / factor, so factor
+    cancels out entirely and the raw close below is exact.
+
+    The +0.1 is not cosmetic. Dropping it costs a full lot whenever
+    target_value / close_price lands in [x*100 - 0.1, x*100): at V/C = 299.95
+    this returns 300 while a plain floor returns 200.
+    """
+    if close_price <= 0 or target_value <= 0:
+        return 0
+    return int((float(target_value) / float(close_price) + 0.1) // lot) * lot
+
+
+def _sized_buy_shares(stock_code, target_value, close_price, lot=100):
+    """Final B: lot-rounded shares, zeroed when below the board minimum."""
+    shares = _ladder_buy_shares(target_value, close_price, lot)
+    if shares < _board_min_shares(stock_code):
+        return 0
+    return shares
+
+
 def _target_requested_quantity(price, target_value):
     if price <= 0 or target_value <= 0:
         return 0

@@ -3488,3 +3488,69 @@ def test_stale_snapshot_marker_dropped_without_query(bridge, monkeypatch):
 ])
 def test_qmt_stock_code_suffix(bridge, symbol, exchange, expected):
     assert bridge._qmt_stock_code(symbol, exchange) == expected
+
+
+def _backtest_shares(target_value, close_price, factor=1.0, trade_unit=100):
+    """qlib/backtest/exchange.py round_amount_by_trade_unit 的真实股数。
+
+    回测传的是复权价，返回值也是复权口径，乘回 factor 才是真实股数；
+    raw_close = adj_close / factor，所以 factor 完全约掉。这里直接用未复权价。
+    """
+    adjusted = target_value / (close_price * factor)
+    return (adjusted * factor + 0.1) // trade_unit * trade_unit
+
+
+@pytest.mark.parametrize(
+    "target_value,close_price",
+    [
+        (60_000.0, 10.0),      # 整好 6000 股
+        (60_000.0, 13.37),     # 普通零头
+        (2_999.5, 10.0),       # V/C = 299.95：+0.1 抬进下一手的临界窗口
+        (29_995.0, 100.0),     # 同一临界窗口，另一个价位
+        (1_000_000.0, 3.01),
+        (999.0, 10.0),         # 不足一手
+    ],
+)
+def test_buy_sizing_equals_the_backtest_share_for_share(
+    bridge, target_value, close_price,
+):
+    assert bridge._ladder_buy_shares(target_value, close_price) == int(
+        _backtest_shares(target_value, close_price)
+    )
+
+
+def test_the_missing_epsilon_would_have_cost_a_whole_lot(bridge):
+    """锁住 +0.1：丢掉它时 V/C=299.95 会算成 200 股而不是 300 股。"""
+    assert bridge._ladder_buy_shares(2_999.5, 10.0) == 300
+    assert int(2_999.5 / 10.0 / 100.0) * 100 == 200
+
+
+@pytest.mark.parametrize(
+    "stock_code,expected",
+    [
+        ("600000.SH", 100),
+        ("000001.SZ", 100),
+        ("300750.SZ", 100),
+        ("688111.SH", 200),
+    ],
+)
+def test_board_minimum_declaration_size(bridge, stock_code, expected):
+    assert bridge._board_min_shares(stock_code) == expected
+
+
+def test_star_market_below_two_hundred_shares_is_zeroed(bridge):
+    # 科创板盘后固定价单笔买入不得少于 200 股
+    assert bridge._sized_buy_shares("688111.SH", 1_500.0, 10.0) == 0
+    assert bridge._sized_buy_shares("688111.SH", 2_500.0, 10.0) == 200
+    # 主板同样金额照常成单
+    assert bridge._sized_buy_shares("600000.SH", 1_500.0, 10.0) == 100
+
+
+def test_star_market_above_the_floor_is_still_a_lot_multiple(bridge):
+    # 与回测 trade_unit=100 一致：200 股门槛之上仍取 100 的整数倍
+    assert bridge._sized_buy_shares("688111.SH", 35_000.0, 10.0) == 3_500
+
+
+def test_missing_close_price_sizes_to_zero_never_guesses(bridge):
+    assert bridge._ladder_buy_shares(60_000.0, 0.0) == 0
+    assert bridge._sized_buy_shares("600000.SH", 60_000.0, 0.0) == 0

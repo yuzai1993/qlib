@@ -1610,7 +1610,11 @@ class LiveRecorder:
                         f"authorized max {order['max_quantity']!r}"
                     )
                 fill_gross = float(fill.filled_qty) * float(fill.avg_price)
-                if fill_gross > float(order["target_value"]) + 1e-6:
+                # B 用回测同款的 +0.1 精度补偿取整（见 bridge _ladder_buy_shares），
+                # 所以 B*C 可以比 target_value 多出至多 0.1 股的钱。容差写死 1e-6
+                # 会让落在那个窗口里的单子在导入时硬失败。
+                allowance = 0.1 * float(fill.avg_price) + 1e-6
+                if fill_gross > float(order["target_value"]) + allowance:
                     raise SchemaError(
                         f"BUY fill gross {fill_gross:.6f} exceeds target_value "
                         f"{order['target_value']:.6f}"

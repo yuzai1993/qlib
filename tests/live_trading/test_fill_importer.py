@@ -2191,3 +2191,35 @@ def test_reconcile_counts(env):
     assert result["planned"] == 3
     assert result["terminal"] == 2
     assert result["missing"] == 1
+
+
+def test_buy_gross_may_exceed_target_value_by_the_rounding_epsilon(tmp_path):
+    """+0.1 的精度补偿让 B*C 可以比 target_value 多出至多 0.1*C 元。
+    容差写死 1e-6 会让落在那个窗口里的单子在导入时硬失败。"""
+    recorder = LiveRecorder(str(tmp_path / "epsilon.db"), opening_cash=100_000.0)
+    # V = 2999.5, C = 10.0 -> B = 300（含 +0.1），gross = 3000.0 > V
+    fill = dict(
+        _fill(batch_id="eps", client_order_id="eps-1", side="BUY",
+              stock_code="600000.SH", requested=300, filled=300, price=10.0),
+        target_value=2_999.5,
+    )
+    _record_plan(recorder, [fill], batch_id="eps")
+
+    recorder.apply_fill(FillEvent.from_dict(fill))
+
+    assert recorder.get_positions()["600000.SH"]["shares"] == 300
+
+
+def test_buy_gross_beyond_the_epsilon_is_still_rejected(tmp_path):
+    recorder = LiveRecorder(
+        str(tmp_path / "epsilon-over.db"), opening_cash=100_000.0
+    )
+    fill = dict(
+        _fill(batch_id="eps2", client_order_id="eps2-1", side="BUY",
+              stock_code="600000.SH", requested=400, filled=400, price=10.0),
+        target_value=2_999.5,
+    )
+    _record_plan(recorder, [fill], batch_id="eps2")
+
+    with pytest.raises(SchemaError, match="exceeds target_value"):
+        recorder.apply_fill(FillEvent.from_dict(fill))

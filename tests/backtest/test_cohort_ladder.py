@@ -228,3 +228,66 @@ class TestLedgerSellAmounts:
 
     def test_drops_names_absent_from_the_position(self):
         assert ledger_sell_amounts({"A": 100.0}, {"B": 60.0}) == {}
+
+
+class TestLedgerState:
+    """跨进程持久化用的序列化：发布与回执导入是两个进程。"""
+
+    def test_to_state_preserves_layer_order_and_empty_layers(self):
+        ledger = CohortLedger(horizon=3)
+        ledger.add({"SH600000": 100.0})
+        ledger.add({})  # 全部买单落空的空层，必须占位
+        ledger.add({"SZ000001": 200.0, "SH600000": 300.0})
+
+        state = ledger.to_state()
+
+        assert state["horizon"] == 3
+        assert state["cohorts"] == [
+            {"SH600000": 100.0},
+            {},
+            {"SZ000001": 200.0, "SH600000": 300.0},
+        ]
+        assert state["pending"] == {}
+
+    def test_to_state_includes_pending_remnant(self):
+        ledger = CohortLedger(horizon=1)
+        ledger.add({"SH600000": 500.0})
+        ledger.settle({"SH600000": 200.0})  # 到期只卖掉 200，300 转入 pending
+
+        state = ledger.to_state()
+
+        assert state["pending"] == {"SH600000": 300.0}
+        assert state["cohorts"] == []
+
+    def test_from_state_round_trips_and_due_is_unchanged(self):
+        original = CohortLedger(horizon=3)
+        original.add({"SH600000": 100.0})
+        original.add({})
+        original.add({"SZ000001": 200.0})
+        original.settle({})  # 已有 3 层，弹出最老层进 pending
+        original.add({"SH600519": 400.0})
+
+        restored = CohortLedger.from_state(original.to_state())
+
+        assert restored.horizon == original.horizon
+        assert restored.to_state() == original.to_state()
+        assert restored.due() == original.due()
+        assert restored.holdings() == original.holdings()
+
+    def test_from_state_rejects_more_layers_than_horizon(self):
+        state = {"horizon": 2, "cohorts": [{}, {}, {}], "pending": {}}
+
+        with pytest.raises(ValueError, match="exceeds horizon"):
+            CohortLedger.from_state(state)
+
+    def test_from_state_drops_zero_amounts(self):
+        state = {
+            "horizon": 2,
+            "cohorts": [{"SH600000": 0.0, "SZ000001": 100.0}],
+            "pending": {"SH600519": 0.0},
+        }
+
+        ledger = CohortLedger.from_state(state)
+
+        assert ledger.to_state()["cohorts"] == [{"SZ000001": 100.0}]
+        assert ledger.to_state()["pending"] == {}

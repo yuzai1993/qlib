@@ -17,7 +17,7 @@ Phase M 主格 top-k × h 的评估年化 ``mean(p) × 238/h``（见
 
 from __future__ import annotations
 
-from typing import Callable, Iterable, Mapping, Optional
+from typing import Any, Callable, Iterable, Mapping, Optional
 
 import pandas as pd
 
@@ -207,6 +207,46 @@ class CohortLedger:
                 surplus -= cut
                 if bucket[name] <= _EPS:
                     del bucket[name]
+
+    def to_state(self) -> dict[str, Any]:
+        """导出可序列化的台账快照，供跨进程持久化。
+
+        ``cohorts`` 保持索引 0 最老的层序；空层照样导出，否则重建后阶梯账龄会错位。
+        """
+        return {
+            "horizon": self.horizon,
+            "cohorts": [dict(cohort) for cohort in self._cohorts],
+            "pending": dict(self._pending),
+        }
+
+    @classmethod
+    def from_state(cls, state: Mapping[str, Any]) -> "CohortLedger":
+        """从 ``to_state`` 的快照重建台账。
+
+        层数的合法区间是 ``[0, horizon]``：每日先 ``settle``（层数达 ``horizon`` 时
+        弹出最老层）再 ``add``（恒定追加一层）。超出即说明有人重复推进过某一天，
+        此时宁可拒绝也不能放行——多出来的层会让后续所有到期日集体错位。
+        """
+        ledger = cls(int(state["horizon"]))
+        cohorts = list(state.get("cohorts") or [])
+        if len(cohorts) > ledger.horizon:
+            raise ValueError(
+                f"cohorts ({len(cohorts)}) exceeds horizon ({ledger.horizon})"
+            )
+        ledger._cohorts = [
+            {
+                str(name): float(amount)
+                for name, amount in cohort.items()
+                if float(amount) > _EPS
+            }
+            for cohort in cohorts
+        ]
+        ledger._pending = {
+            str(name): float(amount)
+            for name, amount in (state.get("pending") or {}).items()
+            if float(amount) > _EPS
+        }
+        return ledger
 
 
 def ledger_sell_amounts(

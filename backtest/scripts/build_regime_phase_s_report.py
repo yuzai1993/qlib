@@ -52,7 +52,8 @@ HEAD_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_head_v2"
 YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"]
 
 FULL_COLS = [
-    ("annualized_return", "年化收益", "pct"),
+    ("annualized_return", "累乘年化", "pct"),
+    ("annualized_return_arith", "算术年化", "pct"),
     ("sharpe_ratio", "夏普", "num"),
     ("alpha", "Alpha", "pct"),
     ("beta", "Beta", "num"),
@@ -163,7 +164,7 @@ def main() -> None:
         f"<style>{css}</style></head><body><div class='wrap'>",
         "<h1>regime-adapt Phase S 回测报告</h1>",
         f"<p class='meta'>回测窗 <b>{window[0]} ~ {window[1]}</b> · "
-        f"主表池 <b>{pool}</b> · 策略 {strategy} · 成交价 close · limit_threshold=0.095 · "
+        f"主表池 <b>{pool}</b> · 策略 {strategy} · 成交价 close · limit_threshold=market_cn · "
         f"费率 买 {fees['open_cost']*100:.3f}% / 卖 {fees['close_cost']*100:.3f}% / "
         f"最低 {fees['min_cost']:.0f} 元（往返 0.092%，QMT 2026-07-16 校准）· account 1000 万 · "
         "五种子 [42,1000,2000,3000,4000]，表中为均值，<span class='sd'>小字为种子标准差</span>。</p>",

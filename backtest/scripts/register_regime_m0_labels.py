@@ -14,18 +14,24 @@ EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_m0_labels"
 REG = EXP_ROOT / "backtest" / "experiments" / "registry.jsonl"
 
-BASELINE_ID = "regime-adapt/m0-h20-label-v4"
+BASELINE_ID = "regime-adapt/m0-h20-t5h5-es-v1"
+H20_ID = "regime-adapt/m0-h20-label-v4"
+EVAL_FILES = {"m0h20": "eval_m0h20_st_daily.json"}
 DETAIL_REPORT = "backtest/experiments/regime_adapt_m0_label_report.html"
 HYPOTHESIS = "不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普"
+GRID_ID = "regime-adapt/m0-label-k123-h2345"
+GRID_FILES = {
+    "m0h20es": "eval_m0h20es_k123h2345.json",
+    "m0h20": "eval_m0h20_k123h2345.json",
+}
+GRID_HYPOTHESIS = (
+    "在更小持仓 k∈{1,2,3,4,5} 与更短持有 h∈{2,3,4,5} 上看 M0 H20 ES / M0 H20 "
+    "的扣费净年化、波动、夏普；不改官方主格 top5×h5"
+)
 
+# 2026-08-19 起总报告只保留 baseline 版本；H1/H2/H3/H5/H10/H40 已归档，禁止再 upsert。
 ARMS = [
-    ("regime-adapt/m0-h1-label-v4", "m0h1", 1, "M0 训练标签 H1，主格 top5×h5"),
-    ("regime-adapt/m0-h2-label-v4", "m0h2", 2, "M0 训练标签 H2，主格 top5×h5"),
-    ("regime-adapt/m0-h3-label-v4", "m0h3", 3, "M0 训练标签 H3，主格 top5×h5"),
-    ("regime-adapt/m0-h5-label-v4", "m0h5", 5, "M0 训练标签 H5，主格 top5×h5"),
-    ("regime-adapt/m0-h10-label-v4", "m0h10", 10, "M0 训练标签 H10，主格 top5×h5"),
     ("regime-adapt/m0-h20-label-v4", "m0h20", 20, "M0 训练标签 H20，主格 top5×h5"),
-    ("regime-adapt/m0-h40-label-v4", "m0h40", 40, "M0 训练标签 H40，主格 top5×h5"),
 ]
 
 PRIMARY_H = 5
@@ -42,26 +48,33 @@ def daily_turnover(prim: dict, h: int = PRIMARY_H):
     return daily
 
 
+def eval_filename(key: str) -> str:
+    return EVAL_FILES.get(key, f"eval_{key}.json")
+
+
 def snap(key: str) -> dict | None:
-    path = EVAL_DIR / f"eval_{key}.json"
+    path = EVAL_DIR / eval_filename(key)
     if not path.exists():
         return None
     doc = json.loads(path.read_text())
-    sm = doc["pools"]["all"]["seed_mean"]
-    prim = (sm.get("head") or {}).get("5", {}).get("5", {})
+    pool = doc["pools"]["all"]
+    sm = pool.get("ensemble") or pool.get("seed_mean") or {}
+    prim = (sm.get("head") or {}).get("3", {}).get("5", {})
     regimes = {}
     for reg, grid in (sm.get("head_regimes") or {}).items():
-        regimes[reg] = (grid.get("5") or {}).get("5") or {}
+        regimes[reg] = (grid.get("3") or {}).get("5") or {}
     years = {
-        yr: (grid.get("5") or {}).get("5") or {}
+        yr: (grid.get("3") or {}).get("5") or {}
         for yr, grid in (sm.get("head_years") or {}).items()
     }
     return {
-        "primary_k": 5,
+        "primary_k": 3,
         "primary_h": 5,
-        "net_ann_excess": prim.get("net_ann_excess"),
+        "net_ann": prim.get("net_ann"),
         "net_ann_vol": prim.get("net_ann_vol"),
         "net_sharpe": prim.get("net_sharpe"),
+        "ann": prim.get("ann"),
+        "net_ann_excess": prim.get("net_ann_excess"),
         "ann_excess": prim.get("ann_excess"),
         "turnover": daily_turnover(prim),
         "n_days": prim.get("n_days"),
@@ -69,6 +82,7 @@ def snap(key: str) -> dict | None:
         "primary_years": years,
         "head": sm.get("head"),
         "filters": doc.get("filters"),
+        "official_signal": doc.get("official_signal"),
     }
 
 
@@ -85,14 +99,27 @@ def build_row(exp_id: str, key: str, hh: int, note: str, metrics: dict) -> dict:
         "seeds": [42, 1000, 2000, 3000, 4000],
         "hypothesis": HYPOTHESIS,
         "eval_protocol": (
-            "allA_top5_h5_net_ann/vol/sharpe | 网格 5/15/50×2/3/5/10 | "
-            "上市>=60 + ST + 成交额>=1000万 + 剔t+1涨停"
+            "allA_top3_h5_net_ann/vol/sharpe | 官方=五种子zscore均值信号一次评估 | "
+            "网格 5/15/50×2/3/5/10 | 上市>=60 + 日频ST + 成交额>=1000万 + 剔t+1涨停"
         ),
-        "eval_output": f"backtest/result/eval_regime_m0_labels/eval_{key}.json",
+        "eval_output": f"backtest/result/eval_regime_m0_labels/{eval_filename(key)}",
         "detail_report": DETAIL_REPORT,
         "metrics": metrics,
-        "note": note,
-        "baseline_ref": "self" if exp_id == BASELINE_ID else BASELINE_ID,
+        "note": (
+            "官方评估：日频 ST + 五种子 z-score 等权合成后再算 top5×h5"
+            "（eval_m0h20_st_daily.json）；"
+            "eval_m0h20.json 保留 8/16 st_names 对照；"
+            "seed_mean 只作稳健性"
+            if exp_id == H20_ID
+            else note
+        ),
+        "display_name": "M0 H20",
+        "baseline_ref": BASELINE_ID if exp_id == H20_ID else H20_ID,
+        "baseline_version": "v1",
+        "result_dirs": [
+            f"backtest/result/regimeadaptfast_m0h20_s{s}"
+            for s in (42, 1000, 2000, 3000, 4000)
+        ],
         "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
     }
 
@@ -113,6 +140,84 @@ def write_registry(rows: list[dict]) -> None:
     REG.write_text(text, encoding="utf-8")
 
 
+def snap_k123_grid() -> dict | None:
+    arms: dict[str, dict] = {}
+    for key, fname in GRID_FILES.items():
+        path = EVAL_DIR / fname
+        if not path.exists():
+            return None
+        doc = json.loads(path.read_text())
+        pool = doc["pools"]["all"]
+        sm = pool.get("ensemble") or pool.get("seed_mean") or {}
+        arms[key] = {
+            "head": sm.get("head"),
+            "head_years": sm.get("head_years"),
+            "head_regimes": sm.get("head_regimes"),
+            "filters": doc.get("filters"),
+            "official_signal": doc.get("official_signal"),
+            "n_days": ((sm.get("head") or {}).get("1") or {}).get("5", {}).get("n_days"),
+        }
+    return {
+        "grid_k": [1, 2, 3, 4, 5],
+        "grid_h": [2, 3, 4, 5],
+        "arms": arms,
+    }
+
+
+def build_grid_row(metrics: dict) -> dict:
+    return {
+        "exp_id": GRID_ID,
+        "direction": "regime-adapt",
+        "phase": "M",
+        "phase_m_protocol": "v1",
+        "date": date.today().isoformat(),
+        "state": "completed",
+        "arm": "m0-h20",
+        "display_name": "M0 标签网格 k1-5×h2345",
+        "train_label_horizon": 20,
+        "seeds": [42, 1000, 2000, 3000, 4000],
+        "hypothesis": GRID_HYPOTHESIS,
+        "eval_protocol": (
+            "allA_k1to5_h2345_net_ann/vol/sharpe | 官方=五种子zscore均值信号一次评估 | "
+            "网格 1/2/3/4/5×2/3/4/5 | 上市>=60 + 日频ST + 成交额>=1000万 + 剔t+1涨停 | "
+            "不覆盖官方 top5×h5 JSON"
+        ),
+        "eval_output": f"backtest/result/eval_regime_m0_labels/{GRID_FILES['m0h20']}",
+        "detail_report": DETAIL_REPORT,
+        "metrics": metrics,
+        "note": (
+            "本轮只重评仍在的 M0 H20 ES / M0 H20；"
+            "不改写 m0-h20-label-v4 / m0-h20-t5h5-es-v1 的官方 top5×h5 数字"
+        ),
+        "baseline_ref": BASELINE_ID,
+        "result_dirs": [
+            f"backtest/result/regimeadaptfast_m0h20_t5h5es_s{s}"
+            for s in (42, 1000, 2000, 3000, 4000)
+        ]
+        + [
+            f"backtest/result/regimeadaptfast_m0h20_s{s}"
+            for s in (42, 1000, 2000, 3000, 4000)
+        ],
+        "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
+    }
+
+
+def upsert_grid_row() -> None:
+    metrics = snap_k123_grid()
+    if metrics is None:
+        raise SystemExit(f"missing {GRID_FILES} under {EVAL_DIR}")
+    rows = load_registry()
+    index_by_id = {row.get("exp_id"): i for i, row in enumerate(rows)}
+    row = build_grid_row(metrics)
+    if GRID_ID in index_by_id:
+        rows[index_by_id[GRID_ID]] = row
+        print("replace", GRID_ID)
+    else:
+        rows.append(row)
+        print("append", GRID_ID)
+    write_registry(rows)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="upsert Phase M v1 M0 改标签 registry 行")
     parser.add_argument(
@@ -120,7 +225,16 @@ def main() -> None:
         action="store_true",
         help="重写这 7 行（与默认 upsert 相同，显式声明）",
     )
+    parser.add_argument(
+        "--grid",
+        choices=("k123h2345",),
+        default=None,
+        help="只登记小 k/短 h 网格重评，不改写官方 top5×h5 行",
+    )
     args = parser.parse_args()
+    if args.grid == "k123h2345":
+        upsert_grid_row()
+        return
     _ = args.refresh  # 默认即 upsert；--refresh 只作显式别名
 
     rows = load_registry()
@@ -136,6 +250,9 @@ def main() -> None:
             continue
         row = build_row(exp_id, key, hh, note, metrics)
         if exp_id in index_by_id:
+            prev = rows[index_by_id[exp_id]]
+            if prev.get("metrics_st_names") and "metrics_st_names" not in row:
+                row["metrics_st_names"] = prev["metrics_st_names"]
             rows[index_by_id[exp_id]] = row
             n_replace += 1
             print("replace", exp_id)

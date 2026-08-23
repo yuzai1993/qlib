@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -113,3 +114,60 @@ def test_load_configured_pred_label_rejects_missing_raw_label():
         assert "label" in str(exc).lower()
     else:
         raise AssertionError("missing label must be rejected")
+
+
+def test_prepare_signal_and_port_cfg_resolves_ew_bench_and_filters(tmp_path, monkeypatch):
+    csv = tmp_path / "bench.csv"
+    csv.write_text("datetime,ret\n2020-08-03,0.01\n2020-08-04,-0.02\n", encoding="utf-8")
+    index = pd.MultiIndex.from_tuples(
+        [
+            (pd.Timestamp("2020-08-03"), "SH600000"),
+            (pd.Timestamp("2020-08-03"), "SZ000001"),
+        ],
+        names=["datetime", "instrument"],
+    )
+    pred = pd.DataFrame({"score": [1.0, 2.0]}, index=index)
+    filtered = pred.copy()
+    filtered.iloc[1, 0] = float("nan")
+    stats = SimpleNamespace(as_dict=lambda: {"n_keep": 1, "n_raw": 2})
+    seen = {}
+
+    def fake_filter(frame, spec):
+        seen["pool"] = spec.pool
+        seen["min_amount"] = spec.min_amount
+        return filtered, stats
+
+    monkeypatch.setattr(run_pred_backtest, "filter_pred", fake_filter)
+    cfg = {
+        "data": {
+            "benchmark": {"equal_weight_csv": str(csv)},
+            "instruments": "all",
+            "handler": {"class": "H", "module_path": "m"},
+        },
+        "strategy": {
+            "class": "TopkDropoutStrategy",
+            "module_path": "qlib.contrib.strategy.signal_strategy",
+            "topk": 5,
+            "n_drop": 1,
+            "hold_thresh": 1,
+            "kwargs": {"risk_degree": 0.9},
+        },
+        "backtest": {
+            "account": 1_000_000,
+            "exchange_kwargs": {"deal_price": "close", "limit_threshold": 0.095},
+        },
+        "universe_filter": {
+            "pool": "all",
+            "min_amount": 10_000_000,
+            "min_listing_days": 60,
+        },
+    }
+
+    port_cfg, out_pred, filter_stats = run_pred_backtest.prepare_signal_and_port_cfg(cfg, pred)
+
+    assert isinstance(port_cfg["backtest"]["benchmark"], pd.Series)
+    assert port_cfg["backtest"]["benchmark"].iloc[0] == 0.01
+    assert seen == {"pool": "all", "min_amount": 10_000_000}
+    assert filter_stats == {"n_keep": 1, "n_raw": 2}
+    assert pd.isna(out_pred.iloc[1, 0])
+    assert port_cfg["strategy"]["kwargs"]["signal"] is out_pred

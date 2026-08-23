@@ -1,0 +1,74 @@
+# 由 run_regime_phase_s.py 生成，勿手改
+run:
+  mode: pred_backtest
+  note: phase_s_m0h20es_all_top5d1h5_ensemble
+  n_runs: 1
+  generate_figures: true
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: all
+  benchmark:
+    equal_weight_csv: backtest/configs/regime-adapt/bench_ew_all.csv
+  handler:
+    class: Alpha158Technical
+    module_path: backtest.features.technical
+    instruments:
+      market: all
+      filter_pipe:
+      - filter_type: NameDFilter
+        name_rule_re: ^(SH60|SH68|SZ00|SZ30)
+        filter_start_time: null
+        filter_end_time: null
+    start_time: '2020-02-03'
+    end_time: '2026-07-31'
+    fit_start_time: '2020-02-03'
+    fit_end_time: '2020-08-03'
+    feature_groups:
+    - range
+    infer_processors:
+    - class: ProcessInf
+    label:
+    - - Ref($close, -21)/Ref($close, -1)-1
+    - - LABEL0
+    learn_processors:
+    - class: DropnaLabel
+segments:
+  train:
+  - '2020-02-03'
+  - '2020-07-31'
+  valid:
+  - '2020-08-03'
+  - '2026-07-31'
+  test:
+  - '2020-08-03'
+  - '2026-07-31'
+model:
+  class: RegimeSingleLGBMModel
+  module_path: backtest.models.regime_adapt
+strategy:
+  class: TopkDropoutStrategy
+  module_path: qlib.contrib.strategy.signal_strategy
+  topk: 5
+  n_drop: 1
+  hold_thresh: 5
+  kwargs:
+    risk_degree: 0.9
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+backtest:
+  account: 1000000
+  exchange_kwargs:
+    freq: day
+    deal_price: close
+    limit_threshold: market_cn
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5.0
+    trade_unit: 100
+universe_filter:
+  st_daily: scripts/data_collector/tushare/st_daily.csv
+  min_amount: 10000000
+  min_listing_days: 60
+  min_recent_trading_days: 60
+  pool: all

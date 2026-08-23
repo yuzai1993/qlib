@@ -333,6 +333,7 @@ def run_train_backtest_once(
     task: dict,
     port_analysis_config: dict,
     generate_figures: bool = False,
+    cfg: dict | None = None,
 ) -> dict:
     print(f"\n{'='*60}")
     print(f"  Run {run_idx}/{n_runs}  [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]")
@@ -751,6 +752,7 @@ def main():
                 task,
                 port_analysis_config,
                 generate_figures=bool(run.get("generate_figures", False)),
+                cfg=cfg,
             )
             all_results.append(result)
             print(f"[Run {i}] 结果已追加写入 {session_dir / 'all_runs_results.csv'}")

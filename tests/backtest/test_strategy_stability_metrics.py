@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "backtest/scripts"))
 from strategy_stability_metrics import (  # noqa: E402
     IncompletePortfolioError,
     summarize_period,
+    summarize_regimes,
     summarize_stability,
 )
 
@@ -41,20 +42,40 @@ def test_period_metrics_use_after_cost_absolute_returns():
     metrics = summarize_period(report)
 
     expected_vol = net.std(ddof=1) * math.sqrt(250)
-    expected_return = net.mean() * 250
+    expected_arith = net.mean() * 250
     wealth = (1.0 + net).cumprod()
+    expected_cagr = float(wealth.iloc[-1] ** (250 / 3) - 1.0)
     expected_mdd = (wealth / wealth.cummax() - 1.0).min()
-    assert metrics["annualized_return"] == pytest.approx(expected_return)
+    assert metrics["annualized_return"] == pytest.approx(expected_cagr)
+    assert metrics["annualized_return_arith"] == pytest.approx(expected_arith)
     assert metrics["annualized_volatility"] == pytest.approx(expected_vol)
-    assert metrics["sharpe_ratio"] == pytest.approx(expected_return / expected_vol)
+    assert metrics["sharpe_ratio"] == pytest.approx(expected_arith / expected_vol)
     assert metrics["max_drawdown"] == pytest.approx(expected_mdd)
-    assert metrics["calmar_ratio"] == pytest.approx(expected_return / abs(expected_mdd))
+    assert metrics["calmar_ratio"] == pytest.approx(expected_cagr / abs(expected_mdd))
     assert metrics["annualized_one_way_turnover"] == pytest.approx(25.0)
     assert metrics["benchmark_cumulative_return"] == pytest.approx((1.001**3) - 1.0)
-    assert metrics["benchmark_annualized_return"] == pytest.approx(0.001 * 250)
+    assert metrics["benchmark_annualized_return"] == pytest.approx(1.001 ** 250 - 1.0)
+    assert metrics["benchmark_annualized_return_arith"] == pytest.approx(0.001 * 250)
     # constant benchmark => zero variance => beta/alpha unavailable
     assert metrics["beta"] is None
     assert metrics["alpha"] is None
+
+
+def test_sharpe_stays_arithmetic_when_cagr_diverges():
+    """波动大时 CAGR 远小于算术年化；夏普分子必须仍是算术。"""
+    dates = pd.bdate_range("2021-01-04", periods=20)
+    rets = [0.08, -0.07] * 10
+    report = _report(dates.strftime("%Y-%m-%d"), rets, [0.0] * 20)
+    net = pd.Series(rets, dtype=float)
+    metrics = summarize_period(report)
+    arith = float(net.mean() * 250)
+    vol = float(net.std(ddof=1) * math.sqrt(250))
+    wealth = float((1.0 + net).prod())
+    cagr = wealth ** (250 / 20) - 1.0
+    assert cagr < arith
+    assert metrics["annualized_return"] == pytest.approx(cagr)
+    assert metrics["annualized_return_arith"] == pytest.approx(arith)
+    assert metrics["sharpe_ratio"] == pytest.approx(arith / vol)
 
 
 def test_alpha_beta_use_after_cost_returns_versus_benchmark():
@@ -115,6 +136,27 @@ def test_calendar_years_keep_continuous_holdings_and_mark_partial_boundaries():
     assert summary["positive_complete_years"] == 2
     assert summary["complete_year_sharpe_median"] is None
     assert summary["worst_complete_year_max_drawdown"] == pytest.approx(0.0)
+
+
+def test_summarize_regimes_splits_days_by_month_end_label():
+    report = _report(
+        ["2021-05-06", "2021-05-07", "2021-10-08", "2021-10-11"],
+        [0.02, 0.02, -0.01, -0.01],
+        [0.0, 0.0, 0.0, 0.0],
+        bench=[0.001, 0.001, 0.001, 0.001],
+    )
+    labels = pd.Series(
+        ["T", "D"],
+        index=pd.to_datetime(["2021-05-31", "2021-10-31"]),
+    )
+
+    out = summarize_regimes(report, labels)
+
+    assert set(out) == {"D", "T"}
+    assert out["T"]["n_days"] == 2
+    assert out["D"]["n_days"] == 2
+    assert out["T"]["annualized_return"] > 0
+    assert out["D"]["annualized_return"] < 0
 
 
 def test_missing_required_report_column_is_rejected():

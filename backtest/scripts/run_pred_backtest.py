@@ -28,10 +28,12 @@ from config_loader import (
     build_port_analysis_config,
     load_config,
     normalize_exchange_kwargs,
+    resolve_benchmark_series,
 )
 from report_utils import build_pred_label, make_session_dir, write_json
 from run_backtest import _finalize_session, _save_run_report, extract_metrics
 from phase_s_protocol import sha256_file
+from universe_filter import filter_pred, parse_universe_filter
 
 
 class ExternalPredPortAnaRecord(PortAnaRecord):
@@ -129,6 +131,36 @@ def prepare_pred_artifact(
     }
 
 
+def prepare_signal_and_port_cfg(
+    cfg: dict, pred: pd.DataFrame
+) -> tuple[dict, pd.DataFrame, Optional[dict]]:
+    """组装 PortAna 配置：解析等权基准，并按 YAML 做宇宙过滤。"""
+    port_cfg = json.loads(json.dumps(build_port_analysis_config(cfg)))
+    port_cfg["backtest"]["exchange_kwargs"] = normalize_exchange_kwargs(
+        port_cfg["backtest"].get("exchange_kwargs")
+    )
+    port_cfg = resolve_benchmark_series(port_cfg)
+    out_pred: pd.DataFrame = pred
+    filter_stats: Optional[dict] = None
+    raw_spec = cfg.get("universe_filter")
+    if raw_spec:
+        spec = parse_universe_filter(raw_spec)
+        filtered, stats = filter_pred(pred, spec)
+        if isinstance(filtered, pd.Series):
+            filtered = filtered.to_frame("score")
+        out_pred = filtered
+        filter_stats = stats.as_dict()
+    port_cfg["strategy"]["kwargs"]["signal"] = out_pred
+    return port_cfg, out_pred, filter_stats
+
+
+def _jsonable_backtest(backtest: dict, fallback_bench: object) -> dict:
+    out = dict(backtest)
+    if isinstance(out.get("benchmark"), pd.Series):
+        out["benchmark"] = fallback_bench
+    return out
+
+
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="直接对外部预测执行 TopkDropout 回测，不训练模型")
     parser.add_argument("--pred", required=True, type=Path, help="外部 pred.pkl（MultiIndex datetime/instrument）")
@@ -179,11 +211,7 @@ def main() -> None:
         skip_copy=bool(args.skip_pred_copy),
     )
 
-    port_cfg = json.loads(json.dumps(build_port_analysis_config(cfg)))
-    port_cfg["backtest"]["exchange_kwargs"] = normalize_exchange_kwargs(
-        port_cfg["backtest"].get("exchange_kwargs")
-    )
-    port_cfg["strategy"]["kwargs"]["signal"] = pred
+    port_cfg, pred, filter_stats = prepare_signal_and_port_cfg(cfg, pred)
     run_dir = session_dir / "run_01"
     run_dir.mkdir()
     result: dict = {"run": 1, "status": "failed"}
@@ -197,7 +225,9 @@ def main() -> None:
         "created_at": start_time.isoformat(timespec="seconds"),
         "config_path": cfg["_config_path"],
         **pred_artifact,
-        "backtest": port_cfg["backtest"],
+        "backtest": _jsonable_backtest(
+            port_cfg["backtest"], cfg.get("data", {}).get("benchmark")
+        ),
         "strategy": {
             "class": port_cfg["strategy"]["class"],
             **{
@@ -208,6 +238,9 @@ def main() -> None:
         },
     }
     write_json(session_dir / "meta.json", meta)
+    if filter_stats:
+        write_json(run_dir / "universe_filter_stats.json", filter_stats)
+        print(f"[universe_filter] 统计已写入 {run_dir / 'universe_filter_stats.json'}", flush=True)
 
     try:
         with R.start(experiment_name=experiment_name):

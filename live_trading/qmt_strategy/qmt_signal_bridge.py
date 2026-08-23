@@ -774,10 +774,14 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
         "qmt_order_id": str(qmt_order_id),
         "message": message,
         "ts": datetime.datetime.now().isoformat(),
+        # Shares satisfied by same-day internal transfer instead of a market
+        # order. Mac reconstructs the ladder move from applied_qty + netted_qty.
+        "netted_qty": int(order.get("netted_qty", 0) or 0),
     }
     prev = batch.fills.get(order["client_order_id"])
     if prev is not None and prev["status"] == status \
-            and prev["filled_qty"] == event["filled_qty"]:
+            and prev["filled_qty"] == event["filled_qty"] \
+            and prev.get("netted_qty", 0) == event["netted_qty"]:
         return  # no change, do not spam the file
     batch.fills[order["client_order_id"]] = event
     with open(_fills_path(batch.batch_id()), "a") as f:

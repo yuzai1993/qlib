@@ -250,6 +250,7 @@ class LiveRecorder:
                     applied_qty INTEGER NOT NULL DEFAULT 0,
                     applied_amount REAL NOT NULL DEFAULT 0,
                     applied_fee REAL NOT NULL DEFAULT 0,
+                    netted_qty INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY (batch_id, client_order_id)
                 );
 
@@ -467,6 +468,11 @@ class LiveRecorder:
             if "applied_fee" not in cols:
                 conn.execute(
                     "ALTER TABLE fills ADD COLUMN applied_fee REAL NOT NULL DEFAULT 0"
+                )
+            if "netted_qty" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN netted_qty "
+                    "INTEGER NOT NULL DEFAULT 0"
                 )
             position_cols = {
                 r["name"] for r in conn.execute("PRAGMA table_info(positions)")
@@ -705,17 +711,18 @@ class LiveRecorder:
                     applied_qty INTEGER NOT NULL DEFAULT 0,
                     applied_amount REAL NOT NULL DEFAULT 0,
                     applied_fee REAL NOT NULL DEFAULT 0,
+                    netted_qty INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY (batch_id, client_order_id)
                 );
                 INSERT INTO fills (
                     batch_id, client_order_id, mode, stock_code, side, status,
                     requested_qty, filled_qty, avg_price, qmt_order_id, message,
-                    ts, applied_qty, applied_amount, applied_fee
+                    ts, applied_qty, applied_amount, applied_fee, netted_qty
                 )
                 SELECT batch_id, client_order_id, mode, stock_code, side, status,
                        requested_qty, filled_qty, avg_price, qmt_order_id, message,
                        ts, applied_qty,
-                       applied_qty * COALESCE(avg_price, 0), applied_fee
+                       applied_qty * COALESCE(avg_price, 0), applied_fee, 0
                 FROM fills_legacy;
                 DROP TABLE fills_legacy;
             """)
@@ -729,6 +736,11 @@ class LiveRecorder:
                 conn.execute(
                     "UPDATE fills SET applied_amount = "
                     "applied_qty * COALESCE(avg_price, 0)"
+                )
+            if "netted_qty" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN netted_qty "
+                    "INTEGER NOT NULL DEFAULT 0"
                 )
 
         if self._primary_key_columns(conn, "signal_orders") == ["client_order_id"]:
@@ -1682,8 +1694,8 @@ class LiveRecorder:
                 """INSERT INTO fills (client_order_id, batch_id, mode, stock_code,
                        side, status, requested_qty, filled_qty, avg_price,
                        qmt_order_id, message, ts, applied_qty, applied_amount,
-                       applied_fee)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       applied_fee, netted_qty)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON CONFLICT(batch_id, client_order_id) DO UPDATE SET
                        status=excluded.status,
                        filled_qty=excluded.filled_qty,
@@ -1693,12 +1705,15 @@ class LiveRecorder:
                        ts=excluded.ts,
                        applied_qty=excluded.applied_qty,
                        applied_amount=excluded.applied_amount,
-                       applied_fee=excluded.applied_fee""",
+                       applied_fee=excluded.applied_fee,
+                       netted_qty=excluded.netted_qty""",
+                # netted_qty 只落盘，绝不参与 delta_qty / delta_amount / fee_delta：
+                # 抵销的全部意义就是「不动持仓、不动现金、不计费」。
                 (fill.client_order_id, fill.batch_id, fill.mode, fill.stock_code,
                  fill.side, fill.status, fill.requested_qty, fill.filled_qty,
                  fill.avg_price, fill.qmt_order_id, fill.message, fill.ts,
                  applied_qty + delta_qty, applied_amount + delta_amount,
-                 applied_fee + fee_delta),
+                 applied_fee + fee_delta, int(fill.netted_qty)),
             )
             self._refresh_operator_probe_lifecycle_conn(conn)
 

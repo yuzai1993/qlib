@@ -10,7 +10,7 @@ def _fill(**kw):
         "batch_id": "b1", "client_order_id": "c1", "mode": "LIVE",
         "stock_code": "SH600000", "side": "BUY", "status": "FILLED",
         "requested_qty": 100, "filled_qty": 100, "applied_qty": 100,
-        "avg_price": 10.0,
+        "avg_price": 10.0, "netted_qty": 0,
     }
     base.update(kw)
     return base
@@ -138,3 +138,41 @@ def test_advance_after_import_records_empty_layer_when_no_batch(tmp_path, monkey
     )
 
     assert state.layers[-1] == ("2026-08-20", {})
+
+
+def test_netted_shares_count_as_sold_and_bought_without_any_market_fill():
+    """B > S 的净买：卖腿一股没成交，但 S 股是转记走的，到期层必须退掉。"""
+    sold, filled = day_executions([
+        _fill(client_order_id="c1", side="SELL", stock_code="SH600000",
+              status="SKIPPED", applied_qty=0, netted_qty=300),
+        _fill(client_order_id="c2", side="BUY", stock_code="SH600000",
+              applied_qty=200, netted_qty=300),
+    ])
+
+    assert sold == {"SH600000": 300.0}
+    assert filled == {"SH600000": 500.0}
+
+
+def test_residual_sell_adds_to_the_transferred_amount():
+    """B < S 的净卖：转记 B，残余卖单成交 g，到期层退 B + g。"""
+    sold, filled = day_executions([
+        _fill(client_order_id="c1", side="SELL", stock_code="SH600000",
+              status="PARTIAL", applied_qty=100, netted_qty=200),
+        _fill(client_order_id="c2", side="BUY", stock_code="SH600000",
+              status="SKIPPED", applied_qty=0, netted_qty=200),
+    ])
+
+    assert sold == {"SH600000": 300.0}
+    assert filled == {"SH600000": 200.0}
+
+
+def test_fully_offset_pair_produces_no_orders_but_still_rolls_the_ledger():
+    sold, filled = day_executions([
+        _fill(client_order_id="c1", side="SELL", stock_code="SH600000",
+              status="SKIPPED", applied_qty=0, netted_qty=300),
+        _fill(client_order_id="c2", side="BUY", stock_code="SH600000",
+              status="SKIPPED", applied_qty=0, netted_qty=300),
+    ])
+
+    assert sold == {"SH600000": 300.0}
+    assert filled == {"SH600000": 300.0}

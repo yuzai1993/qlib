@@ -2,9 +2,11 @@
 
 没有这一步，``due()`` 永远返回同一层、``add`` 永远不记新层，阶梯彻底失效。
 
-汇总用 ``fills.applied_qty`` 而非 ``filled_qty``：``applied_qty`` 是已真正计入持仓的
-增量（``apply_fill`` 维护的幂等账），与券商持仓同源。取批次时**包含**被 supersede 的
-批次——它们在被顶掉前可能已有部分成交落进持仓，那些股数必须同样进账本。
+汇总用 ``fills.applied_qty + netted_qty`` 而非 ``filled_qty``：``applied_qty`` 是已真正
+计入持仓的增量（``apply_fill`` 维护的幂等账），与券商持仓同源；``netted_qty`` 是被同名
+当日买卖抵销、因而没有走市场的股数——它没进持仓，但在账本里确实从到期层转到了今日层，
+不加上它阶梯就会漏掉整整一层。取批次时**包含**被 supersede 的批次——它们在被顶掉前
+可能已有部分成交落进持仓，那些股数必须同样进账本。
 """
 
 from __future__ import annotations
@@ -28,7 +30,11 @@ def day_executions(
             continue
         if fill.get("status") not in TERMINAL_FILL_STATUS:
             continue
-        quantity = float(fill.get("applied_qty") or 0)
+        # applied_qty 是真正进持仓的股数；netted_qty 是被同名抵销转记掉的股数。
+        # 到期层要退掉「卖出的 + 转记走的」，今日层要记入「买到的 + 转记来的」。
+        quantity = float(fill.get("applied_qty") or 0) + float(
+            fill.get("netted_qty") or 0
+        )
         if quantity <= 0:
             continue
         bucket = filled if fill.get("side") == "BUY" else sold

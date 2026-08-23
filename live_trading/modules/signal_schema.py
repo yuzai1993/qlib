@@ -112,6 +112,10 @@ class FillEvent:
     qmt_order_id: str
     message: str
     ts: str
+    # 被同名当日买卖抵销掉、因而没有走市场的股数（见 spec 4.4）。
+    # 走独立字段而不是伪造成交额：伪造会让 apply_fill 重新计费，
+    # 正好抹掉抵销省下的那 0.092%。
+    netted_qty: int = 0
 
     def to_json_line(self) -> str:
         return _to_json_line(self, "fill_event")

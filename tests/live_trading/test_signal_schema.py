@@ -314,3 +314,31 @@ def test_validate_fill_rejects_bad_quantities_and_prices(changes):
     )
     with pytest.raises(SchemaError):
         validate_fill(dataclasses.replace(f, **changes))
+
+
+def test_fill_event_carries_netted_qty_and_defaults_to_zero():
+    from live_trading.modules.signal_schema import FillEvent
+
+    plain = FillEvent(
+        batch_id="b", client_order_id="c", mode="LIVE", stock_code="SH600000",
+        side="SELL", status="SKIPPED", requested_qty=300, filled_qty=0,
+        avg_price=0.0, qmt_order_id="", message="", ts="t",
+    )
+
+    assert plain.netted_qty == 0
+    assert '"netted_qty":0' in plain.to_json_line()
+
+
+def test_fill_event_ignores_unknown_receipt_keys():
+    """加字段必须对旧回执文件双向兼容。"""
+    from live_trading.modules.signal_schema import FillEvent
+
+    parsed = FillEvent.from_dict({
+        "type": "fill_event", "batch_id": "b", "client_order_id": "c",
+        "mode": "LIVE", "stock_code": "SH600000", "side": "SELL",
+        "status": "SKIPPED", "requested_qty": 300, "filled_qty": 0,
+        "avg_price": 0.0, "qmt_order_id": "", "message": "", "ts": "t",
+        "some_future_field": 1,
+    })
+
+    assert parsed.netted_qty == 0

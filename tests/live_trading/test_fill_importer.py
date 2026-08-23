@@ -2239,6 +2239,55 @@ def test_odd_lot_sell_receipt_imports(tmp_path):
     assert recorder.get_cash() > 100_000.0
 
 
+def test_netted_receipt_moves_no_shares_no_cash_and_charges_no_fee(tmp_path):
+    """抵销省下的就是这两腿的手续费。若把它们写成正常成交回执，
+    apply_fill 会重新计费，正好把省下的钱抹掉。"""
+    recorder = LiveRecorder(str(tmp_path / "netted.db"), opening_cash=100_000.0)
+    fill = _fill(batch_id="net", client_order_id="net-1", side="SELL",
+                 stock_code="600000.SH", requested=300, filled=0, price=0.0,
+                 status="SKIPPED")
+    _record_plan(recorder, [fill], batch_id="net")
+
+    recorder.apply_fill(FillEvent.from_dict(dict(fill, netted_qty=300)))
+
+    assert recorder.get_cash() == pytest.approx(100_000.0)
+    assert recorder.get_positions().get("600000.SH") is None
+    row = recorder.get_fills("net")[0]
+    assert row["netted_qty"] == 300
+    assert row["applied_qty"] == 0
+    assert row["applied_fee"] == pytest.approx(0.0)
+
+
+def test_netted_qty_column_is_added_to_a_pre_existing_database(tmp_path):
+    """存量库要能在线迁移出这一列，不能要求重建。"""
+    path = tmp_path / "legacy.db"
+    with sqlite3.connect(path) as conn:
+        conn.executescript("""
+            CREATE TABLE fills (
+                batch_id TEXT NOT NULL, client_order_id TEXT NOT NULL,
+                mode TEXT NOT NULL, stock_code TEXT NOT NULL, side TEXT NOT NULL,
+                status TEXT NOT NULL, requested_qty INTEGER, filled_qty INTEGER,
+                avg_price REAL, qmt_order_id TEXT, message TEXT, ts TEXT,
+                applied_qty INTEGER NOT NULL DEFAULT 0,
+                applied_amount REAL NOT NULL DEFAULT 0,
+                applied_fee REAL NOT NULL DEFAULT 0,
+                PRIMARY KEY (batch_id, client_order_id)
+            );
+            INSERT INTO fills VALUES
+                ('b','c','LIVE','SH600000','SELL','FILLED',300,300,10.0,'q','',
+                 't',300,3000.0,1.5);
+        """)
+
+    # 不给 opening_cash：已有成交的库不允许再播种期初现金
+    LiveRecorder(str(path))
+
+    with sqlite3.connect(path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM fills").fetchone()
+    assert row["netted_qty"] == 0
+    assert row["applied_qty"] == 300
+
+
 @pytest.mark.parametrize("requested", [0, -100])
 def test_non_positive_requested_qty_is_still_rejected(tmp_path, requested):
     recorder = LiveRecorder(str(tmp_path / ("bad%d.db" % abs(requested))))

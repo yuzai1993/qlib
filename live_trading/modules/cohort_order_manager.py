@@ -3,6 +3,9 @@
 只决定**名字与预算**，不决定股数：BUY 带 target_value、quantity=0，由 bridge 在
 提交时刻用已确定的收盘价定量并与到期卖单抵销（见 spec 4.4）。这样 B 与回测的
 round_amount_by_trade_unit(V / C, factor) 逐股相等，不引入动量倾斜。
+
+选股不看收盘价：无价的票照样入选并均分预算（spec 4.7 的「实盘不顺延」），
+按价预筛等于替补了下一名。
 """
 
 from __future__ import annotations
@@ -94,14 +97,10 @@ class CohortOrderManager:
             for code, quantity in sells.items()
         ]
 
-        # 发布期不做可买过滤：T 日 16:00 无从判断 T+1 的封板/停牌，且已决定不顺延。
-        # 只剔掉没有收盘价的票——那样连预算都算不了。
-        priced = (
-            scores[[code in close_prices for code in scores.index]]
-            if len(scores)
-            else scores
-        )
-        buys = select_ladder_buys(priced, k=self.topk, is_buyable=None)
+        # 发布期不做任何可买过滤：T 日 16:00 无从判断 T+1 的封板/停牌，
+        # 且 spec 4.7 已决定不顺延。买入腿只带 target_value，不需要价格，
+        # 所以也不能按 close_prices 预筛截面——那等于替补了下一名。
+        buys = select_ladder_buys(scores, k=self.topk, is_buyable=None)
 
         budget = cohort_budget(
             total_value=float(total_value),
@@ -109,7 +108,9 @@ class CohortOrderManager:
             risk_degree=self.risk_degree,
             horizon=self.horizon,
         )
-        per_name = budget / self.topk if self.topk else 0.0
+        # 与回测 _orders_for_names 的 budget / len(names) 一致：
+        # 截面不足 topk 时除以 topk 会让每只都少买。
+        per_name = budget / len(buys) if buys else 0.0
         for code in buys:
             if per_name <= 0:
                 continue

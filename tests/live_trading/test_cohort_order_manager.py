@@ -213,20 +213,8 @@ def test_sub_lot_sell_below_one_lot_is_dropped_when_position_remains():
     assert [o for o in orders if o["side"] == "SELL"] == []
 
 
-def test_names_missing_a_close_price_are_not_buyable():
-    manager = CohortOrderManager(CONFIG)
-
-    orders = manager.generate_orders(
-        scores=_scores({"SH600000": 3.0, "SZ000001": 2.0}),
-        cohort_state=CohortState(),
-        broker_positions={},
-        cash=1_000_000.0,
-        close_prices={"SH600000": 10.0},  # SZ000001 无价
-        total_value=1_000_000.0,
-    )
-
-    buys = [o for o in orders if o["side"] == "BUY"]
-    assert [o["stock_code"] for o in buys] == ["SH600000"]
+# 原 test_names_missing_a_close_price_are_not_buyable 编码的是被废弃的顺延行为，
+# 已被 test_a_name_without_a_close_price_is_still_bought 取代。
 
 
 def test_universe_filtered_names_are_never_bought():
@@ -262,3 +250,58 @@ def test_sells_come_before_buys():
 
     sides = [o["side"] for o in orders]
     assert sides.index("SELL") < sides.index("BUY")
+
+
+_BUDGET = 1_000_000.0 * 0.90 / 5  # cohort_budget 的稳态目标
+
+
+def test_a_name_without_a_close_price_is_still_bought():
+    """spec 4.7 已批准「实盘不顺延」。按价格预筛截面等于替补了下一名，
+    那是回测才做的顺延，实盘不能做——买入腿在 Mac 侧根本不需要价格。"""
+    orders = CohortOrderManager(CONFIG).generate_orders(
+        scores=_scores(
+            {"SH600001": 3.0, "SH600002": 2.0, "SH600003": 1.0, "SH600004": 0.5}
+        ),
+        cohort_state=CohortState(),
+        broker_positions={},
+        cash=1_000_000.0,
+        close_prices={"SH600001": 10.0, "SH600003": 10.0},  # 600002 无价
+        total_value=1_000_000.0,
+    )
+
+    bought = [o["stock_code"] for o in orders if o["side"] == "BUY"]
+    assert bought == ["SH600001", "SH600002", "SH600003"]
+
+
+def test_budget_is_split_by_the_number_of_names_actually_selected():
+    """回测 _orders_for_names 用 budget / len(names)。截面不足 topk 时
+    除以 topk 会让每只都少买，与回测不等。"""
+    orders = CohortOrderManager(CONFIG).generate_orders(
+        scores=_scores({"SH600001": 2.0, "SH600002": 1.0}),
+        cohort_state=CohortState(),
+        broker_positions={},
+        cash=1_000_000.0,
+        close_prices={"SH600001": 10.0, "SH600002": 10.0},
+        total_value=1_000_000.0,
+    )
+
+    buys = [o for o in orders if o["side"] == "BUY"]
+    assert len(buys) == 2
+    assert all(o["target_value"] == pytest.approx(_BUDGET / 2) for o in buys)
+
+
+def test_full_cross_section_still_splits_by_topk():
+    orders = CohortOrderManager(CONFIG).generate_orders(
+        scores=_scores(
+            {"SH600001": 3.0, "SH600002": 2.0, "SH600003": 1.0, "SH600004": 0.5}
+        ),
+        cohort_state=CohortState(),
+        broker_positions={},
+        cash=1_000_000.0,
+        close_prices={},
+        total_value=1_000_000.0,
+    )
+
+    buys = [o for o in orders if o["side"] == "BUY"]
+    assert len(buys) == 3
+    assert all(o["target_value"] == pytest.approx(_BUDGET / 3) for o in buys)

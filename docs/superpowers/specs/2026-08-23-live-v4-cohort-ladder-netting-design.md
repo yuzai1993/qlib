@@ -154,8 +154,9 @@ keep = build_keep_mask(single_day_index, spec)
 时 `build_keep_mask` 自身会抛错，fail-closed 行为不变。
 
 **成本提示（已实测）**。handler 从 CSI1000（约 1000 只）扩到全A（约 5400 只）后，一次完整
-信号生成实测**墙钟 1189 秒（19.8 分钟）、峰值 RSS 6.57 GiB**（2026-08-23，signal_date
-2026-07-30，Apple Silicon / 16 GB；其中 1174 秒花在 handler 的 `Init data`）。16:00 发布
+`--dry-run`（含日历校验、五种子推断、宇宙过滤、下单意图与订单行）实测**墙钟 1098 秒
+（18.3 分钟）、峰值 RSS 6.63 GiB**（2026-08-24，signal_date 2026-07-30，Apple Silicon /
+16 GB；其中 1075 秒花在 handler 的 `Init data`，即 98% 的时间都在建特征帧）。16:00 发布
 cron 的时间预算据此定为 40 分钟（留一倍余量应对冷缓存）。峰值内存已占 16 GB 机器的 41%，
 后续若特征增多需盯住这条；跑不完或换不动内存就改预构建特征帧缓存。
 

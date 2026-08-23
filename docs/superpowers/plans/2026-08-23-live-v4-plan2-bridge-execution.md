@@ -2459,15 +2459,15 @@ git commit -m "feat(bridge): gate submission on close finality and attempt from 
 
 全部满足才算完成，才可以进入计划三：
 
-- [ ] `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/ tests/backtest/test_cohort_ladder.py tests/backtest/test_cohort_ladder_strategy.py -q` 全绿
-- [ ] `check_backtest_parity.py` 对四个配置（新 ladder + 三个存量）全部通过
-- [ ] 全A `--dry-run` 跑通，输出 3 个 BUY（`reason=cohort_layer`）且无 traceback
+- [x] `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/ tests/backtest/test_cohort_ladder.py tests/backtest/test_cohort_ladder_strategy.py -q` 全绿（1071 passed，2026-08-24）
+- [x] `check_backtest_parity.py` 对四个配置全部通过：`alla_v4_ladder_k3h5_postclose_real` / `csi1000_b6m_b2s_postclose_real` / `csi1000_b6m_b2s_postclose` / `csi300_topk10_live`。（`csi1000_pr49_one_lot_probe` 是 `OPERATOR_PROBE`，没有对照回测，不在此列）
+- [x] 全A `--dry-run` 跑通（`EXIT=0`，无 traceback），输出 3 个 BUY：`301511.SZ` / `301196.SZ` / `603002.SH`，各 `target_value=60000.00`，与 `verify_ladder_dry_run.py` 的 top3 一致。`reason=cohort_layer`（卖腿 `cohort_due`）已单独核验——dry-run 的打印格式不含 reason 字段
 - [x] `verify_ladder_dry_run.py --signal-date 2026-07-30` 打印 `top3 match: True`。~~`max |live - reference|` ≤ 1e-9~~ —— 该口径已作废：实测 `1.33e-03`，已定因为回测帧混入 4 只指数导致的**逐日仿射差**（Task 4 Step 3）。仿射保序，验收改判名次：Spearman ≥ 0.9999999，且全测试期 1211 天 rank3/rank4 间距无一天低于仿射残差的 6 倍上界 `1e-4`（实测 0 天，已由 `probe_topk_margin.py` 核实）
-- [ ] 全A dry-run 的墙钟与峰值 RSS 已实测并写回 spec 4.2
-- [ ] spec 第 6 节列的 bridge 侧单测全部落地：抵销五情形、板块最低申报、收盘价缺失、精确性回归、终态门禁、预算含卖出所得（计划一已覆盖）、买单阶段触发、现金封顶仍生效
-- [ ] `ENABLE_LADDER_NETTING` 仓库默认 `False`，且有用例断言默认关闭时 CLOSE_AUCTION 行为逐字不变
-- [ ] `MAX_ORDER_QUANTITY` 仍为 `100`，`tests/live_trading/test_repository_boundaries.py` 与 `test_operational_wrappers.py` 的 token 断言未被改动
-- [ ] 旧配置 `csi1000_b6m_b2s_postclose_real` 与 `csi1000_pr49_one_lot_probe` 的 cron 未被改动；`render_qmt_runtime.py` 未被调用
+- [x] 全A dry-run 的墙钟与峰值 RSS 已实测并写回 spec 4.2：**墙钟 1098 秒、峰值 RSS 6.63 GiB**，其中 1075 秒（98%）在 handler 的 `Init data`
+- [x] spec 第 6 节列的 bridge 侧单测全部落地：抵销五情形、板块最低申报、收盘价缺失、精确性回归、终态门禁、预算含卖出所得（计划一已覆盖）、买单阶段触发、现金封顶仍生效
+- [x] `ENABLE_LADDER_NETTING` 仓库默认 `False`（`qmt_signal_bridge.py:54`），`test_netting_is_off_by_default_so_close_auction_is_untouched` 断言默认关闭时两腿照常下单
+- [x] `MAX_ORDER_QUANTITY` 仍为 `100`（`qmt_signal_bridge.py:49`），两处 token 断言未被改动
+- [x] 旧配置的 cron 未被改动；`render_qmt_runtime.py` 未被调用（自计划起点 `5cf3cd8e` 起 diff 为空）
 
 ## 不在本计划内（明确留给计划三）
 

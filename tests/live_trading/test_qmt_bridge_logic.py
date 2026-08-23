@@ -3572,6 +3572,24 @@ def test_odd_lot_sell_batch_is_accepted(bridge, monkeypatch, tmp_path):
     assert bridge.g.batch.orders[0]["quantity"] == 120
 
 
+@pytest.mark.parametrize(
+    "sell_shares,buy_shares,side,quantity,transferred",
+    [
+        (300, 500, "BUY", 200, 300),    # B > S：净买
+        (500, 300, "SELL", 200, 300),   # B < S：净卖
+        (300, 300, None, 0, 300),       # B == S：无单，全部转记
+        (300, 0, "SELL", 300, 0),       # 不在今日 top3 / 科创板被置 0
+        (0, 300, "BUY", 300, 0),        # 无到期层
+    ],
+)
+def test_netting_arithmetic(
+    bridge, sell_shares, buy_shares, side, quantity, transferred,
+):
+    assert bridge._net_ladder_pair(sell_shares, buy_shares) == (
+        side, quantity, transferred,
+    )
+
+
 @pytest.mark.parametrize("quantity", [0, -100, 100.5, True, None])
 def test_non_positive_or_non_integer_sell_quantity_is_still_rejected(
     bridge, monkeypatch, tmp_path, quantity,
@@ -3586,3 +3604,233 @@ def test_non_positive_or_non_integer_sell_quantity_is_still_rejected(
     bridge._claim_new_batch()
 
     assert bridge.g.batch is None
+
+
+def _ladder_batch(bridge, sell_qty, target_value, code="000001.SZ"):
+    """一张同名到期卖 + 当日买的批次，用于抵销接线测试。
+
+    sell_qty <= 0 时只放 BUY，用于「无到期层」的情形。
+    """
+    sell = _order(coid="20260714001001S", side="SELL", priority=10)
+    buy = _order(coid="20260714001002B", side="BUY", priority=20)
+    for order in (sell, buy):
+        order["price_type"] = "AFTER_HOURS_CLOSE"
+        order["stock_code"] = code
+    sell["quantity"] = sell_qty
+    buy["target_value"] = target_value
+    orders = [sell, buy] if sell_qty > 0 else [buy]
+    _write_batch(bridge, bridge._today(), orders, mode="LIVE")
+    return sell, buy
+
+
+def _ladder_ticks(bridge, ctx, ticks=2):
+    """跑批次直到收尾，两次 tick 之间把 SELL 阶段的 4 分钟等待视作已过去。
+
+    等待计时器在第一个交易 pass 才起算，所以单次 tick 到不了 BUY 阶段。
+    Task 9 会把买单阶段的触发改成卖单终态，届时这个快进不再必要。
+    """
+    for _ in range(ticks):
+        batch = bridge.g.batch
+        if batch is None:
+            return
+        bridge._process_batch(ctx, batch)
+        if bridge.g.batch is not None:
+            bridge.g.batch.phase_started = 1.0
+
+
+def _run_after_hours(bridge, monkeypatch, tmp_path, now="15:05:30"):
+    current_root, other_root = _profile_roots(tmp_path, "AFTER_HOURS_FIXED_PRICE")
+    _activate_profile(bridge, "AFTER_HOURS_FIXED_PRICE", current_root, other_root)
+    bridge.ENABLE_LADDER_NETTING = True
+    bridge.MAX_ORDER_QUANTITY = 0
+    marker = Path(current_root) / "state" / ("PR49_LIVE_OK_" + bridge._today())
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text("")
+    monkeypatch.setattr(bridge, "_now_hms", lambda: now)
+    monkeypatch.setattr(bridge, "_get_can_use_volume", lambda *a: 100_000)
+    monkeypatch.setattr(
+        bridge, "_get_available_cash", lambda account_id: 10_000_000.0)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    monkeypatch.setattr(bridge, "_real_account_preflight", lambda a: (True, ""))
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+    return submitted
+
+
+def test_net_buy_submits_only_the_difference_and_skips_the_sell_leg(
+    bridge, monkeypatch, tmp_path,
+):
+    # C = 10.0, V = 5000 -> B = 500; S = 300 -> net BUY 200, transferred 300
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    sides = [args[0] for args in submitted]
+    assert sides == [23]                       # 23 = BUY, no SELL passorder
+    assert submitted[0][6] == 200              # quantity argument
+    fills = {row["client_order_id"]: row for row in _read_fills(bridge)}
+    sell_fill = fills["20260714001001S"]
+    assert sell_fill["status"] == "SKIPPED"
+    assert sell_fill["netted_qty"] == 300
+    assert sell_fill["filled_qty"] == 0
+
+
+def test_net_sell_submits_the_residual_and_skips_the_buy_leg(
+    bridge, monkeypatch, tmp_path,
+):
+    # C = 10.0, V = 3000 -> B = 300; S = 500 -> net SELL 200, transferred 300
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=500, target_value=3_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    assert [args[0] for args in submitted] == [24]     # 24 = SELL
+    assert submitted[0][6] == 200
+    fills = {row["client_order_id"]: row for row in _read_fills(bridge)}
+    assert fills["20260714001002B"]["status"] == "SKIPPED"
+    assert fills["20260714001002B"]["netted_qty"] == 300
+    assert fills["20260714001002B"]["requested_qty"] == 300
+
+
+def test_exact_offset_submits_nothing_and_transfers_everything(
+    bridge, monkeypatch, tmp_path,
+):
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=3_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    assert submitted == []
+    fills = {row["client_order_id"]: row for row in _read_fills(bridge)}
+    assert all(row["netted_qty"] == 300 for row in fills.values())
+    assert bridge.g.batch is None      # 全部终态，批次已收尾
+
+
+def test_odd_lot_due_amount_is_never_netted(bridge, monkeypatch, tmp_path):
+    """S=120 时 net=B-S 不是整百，买入不允许非整百。该票整体走不抵销的老路，
+    两腿都正常下单，代价是那一次的往返费。"""
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=120, target_value=5_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    assert sorted(args[0] for args in submitted) == [23, 24]
+    assert all(row["netted_qty"] == 0 for row in _read_fills(bridge))
+
+
+def test_netting_decision_is_frozen_across_a_restart(bridge, monkeypatch, tmp_path):
+    """C 只在提交时刻读一次。重启后重算可能拿到不同的 B，而卖腿可能已经
+    按旧决策提交过——两个不自洽的 B 会让转记股数与实际下单量对不上。"""
+    _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0)
+    bridge._claim_new_batch()
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0), ticks=1)
+    assert bridge.g.batch is not None, "SELL 阶段结束批次应仍在处理中"
+    frozen = [dict(o) for o in bridge.g.batch.orders]
+
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    bridge.g.batch.phase_started = 1.0
+    # 价格变了也不该改变已冻结的决策
+    _ladder_ticks(bridge, _TickCtx(20.0, up_stop=22.0, down_stop=18.0))
+
+    for before, after in zip(frozen, bridge.g.batch.orders):
+        assert before["netted_qty"] == after["netted_qty"]
+        assert before["net_quantity"] == after["net_quantity"]
+        assert before["netting_close"] == after["netting_close"]
+
+
+def test_ladder_net_event_records_every_buy_with_its_close_and_read_time(
+    bridge, monkeypatch, tmp_path,
+):
+    """spec 4.7.1 的次日逐单对账要拿 C 与读取时刻。非重叠买单也要有，
+    否则兜底路径下用错价的单子对不上账。"""
+    _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    events = [e for e in _read_events(bridge) if e["event"] == "LADDER_NET"]
+    assert len(events) == 1
+    event = events[0]
+    assert event["due_shares"] == 300
+    assert event["target_value"] == 5_000.0
+    assert event["official_close"] == 10.0
+    assert event["official_close_read_at"]
+    assert event["sized_shares"] == 500
+    assert event["net_side"] == "BUY"
+    assert event["net_quantity"] == 200
+    assert event["transferred_shares"] == 300
+
+
+def test_netting_is_off_by_default_so_close_auction_is_untouched(
+    bridge, monkeypatch, tmp_path,
+):
+    assert bridge.ENABLE_LADDER_NETTING is False
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0)
+    bridge.ENABLE_LADDER_NETTING = False
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    assert sorted(args[0] for args in submitted) == [23, 24]
+    assert all(row["netted_qty"] == 0 for row in _read_fills(bridge))
+
+
+def test_broker_cash_still_caps_the_frozen_net_quantity(
+    bridge, monkeypatch, tmp_path,
+):
+    """spec 4.7.2 的职责划分：Mac 防欠配、bridge 防超买。冻结 B 之后
+    券商现金封顶必须照旧生效，否则 Mac 把预算算大就会真的超买。"""
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=0, target_value=5_000.0, code="600000.SH")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 2_100.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    # B = 500 股，但 2100 元只够 200 股（含佣金与过户费）
+    assert submitted and submitted[0][6] == 200
+
+
+def test_frozen_quantity_below_affordable_floor_is_skipped_not_shrunk_to_zero(
+    bridge, monkeypatch, tmp_path,
+):
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=0, target_value=5_000.0, code="600000.SH")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 50.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    assert submitted == []
+    fill = _read_fills(bridge)[0]
+    assert fill["status"] == "SKIPPED"
+    assert "insufficient actual cash" in fill["message"]
+
+
+def test_unavailable_close_errors_the_order_and_never_guesses(
+    bridge, monkeypatch, tmp_path,
+):
+    """spec 4.4 边界情形最后一行：收盘价取不到就整单 ERROR，不猜价、不下单，
+    该层变薄。_plan_ladder_netting 不冻结任何决策，BUY 阶段走现有 ERROR 分支。"""
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=0, target_value=5_000.0, code="600000.SH")
+    monkeypatch.setattr(bridge, "_official_close", lambda ctx, code: 0.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(0.0))
+
+    assert submitted == []
+    fill = _read_fills(bridge)[0]
+    assert fill["status"] == "ERROR"
+    assert fill["message"] == "official close unavailable"

@@ -48,6 +48,10 @@ LIMIT_PRICE_TYPE = 11
 # explicitly selected account environment has passed one-lot acceptance.
 MAX_ORDER_QUANTITY = 100
 MAX_ORDERS_PER_BATCH = 40
+# Same-name buy/sell offsetting for the cohort ladder. Repository default is
+# False so a stray copy never nets; the QMT-local rendered copy opts in, the
+# same posture as ALLOW_REAL_MONEY.
+ENABLE_LADDER_NETTING = False
 MAX_BATCH_BYTES = 256 * 1024
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
@@ -117,6 +121,7 @@ class Batch(object):
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
         self.remaining_cash = None    # one broker cash snapshot for BUY phase
+        self.netting_planned = False  # ladder offsetting decided once, then frozen
         self.order_evidence = {}      # persisted query/API/callback audit state
         self.processing_jsonl = None
         self.processing_done = None
@@ -640,6 +645,7 @@ def _save_active_state(batch):
         "submitted": sorted(batch.submitted.keys()),
         "fills": batch.fills,
         "remaining_cash": batch.remaining_cash,
+        "netting_planned": batch.netting_planned,
         "order_evidence": batch.order_evidence,
         "orders": batch.orders,
     }
@@ -675,6 +681,7 @@ def _load_active_state(batch):
     batch.submitted = dict((coid, True) for coid in payload.get("submitted", []))
     batch.fills = payload.get("fills", {})
     batch.remaining_cash = payload.get("remaining_cash")
+    batch.netting_planned = bool(payload.get("netting_planned", False))
     loaded_evidence = payload.get("order_evidence", {})
     batch.order_evidence = (
         loaded_evidence if isinstance(loaded_evidence, dict) else {}
@@ -2610,6 +2617,25 @@ def _sized_buy_shares(stock_code, target_value, close_price, lot=100):
     return shares
 
 
+def _net_ladder_pair(sell_shares, buy_shares):
+    """Offset one name's maturing sell against the same day's buy.
+
+    Both legs would fill at the same closing price under prType=49, so
+    "sell S then buy B" and "submit the net only" end at the identical
+    position; the difference is the round-trip fee on min(S, B) shares.
+    Returns (side, quantity, transferred); side None means submit nothing.
+    """
+    sell_shares = int(sell_shares)
+    buy_shares = int(buy_shares)
+    transferred = min(sell_shares, buy_shares)
+    net = buy_shares - sell_shares
+    if net > 0:
+        return "BUY", net, transferred
+    if net < 0:
+        return "SELL", -net, transferred
+    return None, 0, transferred
+
+
 def _target_requested_quantity(price, target_value):
     if price <= 0 or target_value <= 0:
         return 0
@@ -3155,6 +3181,77 @@ def _finalize_dual_authorization_block(batch):
     _finalize_batch(batch)
 
 
+def _plan_ladder_netting(ContextInfo, batch):
+    """Size every BUY once and freeze the offsetting decision into the orders.
+
+    Runs on the first trading pass only. Freezing matters: the close is read
+    once here, and by the time the BUY phase runs the SELL leg may already be
+    submitted. A second, different B would leave the transferred share count
+    and the submitted quantity mutually inconsistent.
+
+    batch.orders is persisted by _save_active_state, so writing the decision
+    into the order dicts survives a restart with no extra plumbing.
+    """
+    if not ENABLE_LADDER_NETTING or batch.netting_planned:
+        return
+    batch.netting_planned = True
+    due_by_code = {}
+    for order in batch.orders:
+        if order["side"] == "SELL":
+            due_by_code[order["stock_code"]] = order
+
+    for buy in [o for o in batch.orders if o["side"] == "BUY"]:
+        code = buy["stock_code"]
+        close_price = _official_close(ContextInfo, code)
+        read_at = datetime.datetime.now().isoformat()
+        if close_price <= 0.0:
+            # Leave it to the BUY phase's existing "official close unavailable"
+            # branch: never guess a price, never place the order.
+            continue
+        sized = _sized_buy_shares(code, float(buy["target_value"]), close_price)
+        sell = due_by_code.get(code)
+        due_shares = int(sell["quantity"]) if sell is not None else 0
+        # An odd due amount cannot be netted: B - S would not be a lot multiple
+        # and buys must be whole lots. That name pays the round trip instead.
+        offsetable = sell is not None and due_shares % 100 == 0
+        if offsetable:
+            side, quantity, transferred = _net_ladder_pair(due_shares, sized)
+        else:
+            side, quantity, transferred = "BUY", sized, 0
+
+        buy["netting_close"] = close_price
+        buy["netting_sized_shares"] = sized
+        buy["netted_qty"] = transferred
+        buy["net_quantity"] = quantity if side == "BUY" else 0
+        if offsetable:
+            # The sell leg carries the same close: next-day reconciliation of the
+            # transferred shares needs the price the decision was made at.
+            sell["netting_close"] = close_price
+            sell["netted_qty"] = transferred
+            sell["net_quantity"] = quantity if side == "SELL" else 0
+
+        _log_event(
+            "LADDER_NET",
+            batch_id=batch.batch_id(),
+            stock_code=code,
+            buy_client_order_id=buy["client_order_id"],
+            sell_client_order_id=(
+                sell["client_order_id"] if sell is not None else ""
+            ),
+            due_shares=due_shares,
+            offsetable=offsetable,
+            target_value=float(buy["target_value"]),
+            official_close=close_price,
+            official_close_read_at=read_at,
+            sized_shares=sized,
+            net_side=side or "NONE",
+            net_quantity=quantity,
+            transferred_shares=transferred,
+            message="ladder netting decided",
+        )
+    _save_active_state(batch)
+
+
 def _process_batch(ContextInfo, batch):
     if batch.dual_authorization_blocked:
         _finalize_dual_authorization_block(batch)
@@ -3210,6 +3307,8 @@ def _process_batch(ContextInfo, batch):
 
     mode_live = batch.execution_authorized
 
+    _plan_ladder_netting(ContextInfo, batch)
+
     account_id = _account_id(batch)
     sells = [o for o in batch.orders if o["side"] == "SELL"]
     buys = [o for o in batch.orders if o["side"] == "BUY"]
@@ -3218,6 +3317,15 @@ def _process_batch(ContextInfo, batch):
         for order in sells:
             if order["client_order_id"] in batch.submitted:
                 continue
+            frozen = order.get("net_quantity")
+            if frozen is not None:
+                if int(frozen) <= 0:
+                    # Fully transferred internally: terminal receipt, no order.
+                    batch.submitted[order["client_order_id"]] = True
+                    _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                                "netted against same-day buy")
+                    continue
+                order["quantity"] = int(frozen)
             if mode_live:
                 can_use = _get_can_use_volume(account_id, order["stock_code"])
                 if can_use < order["quantity"]:
@@ -3263,9 +3371,23 @@ def _process_batch(ContextInfo, batch):
         for order in buys:
             if order["client_order_id"] in batch.submitted:
                 continue
-            close_price = _official_close(ContextInfo, order["stock_code"])
-            target_requested = _target_requested_quantity(
-                close_price, float(order["target_value"]))
+            frozen = order.get("net_quantity")
+            if frozen is not None and int(frozen) <= 0:
+                # Fully covered by the internal transfer; nothing to buy.
+                order["quantity"] = int(order.get("netted_qty", 0) or 0)
+                batch.submitted[order["client_order_id"]] = True
+                _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                            "netted against same-day due sell")
+                continue
+            close_price = order.get("netting_close")
+            if close_price is None:
+                close_price = _official_close(ContextInfo, order["stock_code"])
+            close_price = float(close_price)
+            if frozen is not None:
+                target_requested = int(frozen)
+            else:
+                target_requested = _target_requested_quantity(
+                    close_price, float(order["target_value"]))
             if close_price <= 0.0:
                 order["quantity"] = 100
                 batch.submitted[order["client_order_id"]] = True
@@ -3295,10 +3417,12 @@ def _process_batch(ContextInfo, batch):
                         )
                         continue
                     reservation_price = limit_price
-                requested = _target_requested_quantity(
-                    close_price, float(order["target_value"]))
+                # Broker cash still caps the frozen quantity: Mac guards against
+                # under-deployment, the bridge guards against overbuying.
                 quantity = _max_affordable_quantity(
-                    batch.remaining_cash, reservation_price, requested)
+                    batch.remaining_cash, reservation_price, target_requested)
+            elif frozen is not None:
+                quantity = target_requested
             else:
                 quantity = _target_buy_quantity(
                     None, close_price, float(order["target_value"]))

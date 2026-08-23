@@ -49,7 +49,7 @@ def test_load_operator_probe_config_is_isolated_from_strategy_publishing():
     assert cfg["live"]["close_auction_price_type"] == 49
     assert cfg["live"]["bridge_root"] == "/Volumes/qmt_bridge/pr49_probe"
     assert cfg["live"]["max_orders_per_day"] == 100
-    assert cfg["live"]["submit_after"] == "15:05:00"
+    assert cfg["live"]["submit_after"] == "15:00:05"
     assert cfg["live"]["cancel_at"] == "15:28:00"
     assert cfg["live"]["finalize_at"] == "15:30:00"
     assert cfg["live"]["snapshot_after"] == "15:31:00"
@@ -128,7 +128,7 @@ def test_strategy_config_accepts_after_hours_fixed_price(tmp_path):
     path = _write_strategy_config(tmp_path, _strategy_config(
         execution_session="AFTER_HOURS_FIXED_PRICE",
         close_auction_price_type=49,
-        submit_after="15:05:00",
+        submit_after="15:00:05",
         cancel_at="15:28:00",
         finalize_at="15:30:00",
         snapshot_after="15:31:00",
@@ -253,7 +253,7 @@ def test_operator_probe_timing_fields_are_required_and_profile_bound(
             "default_mode": "LIVE",
             "execution_session": "AFTER_HOURS_FIXED_PRICE",
             "close_auction_price_type": 49,
-            "submit_after": "15:05:00",
+            "submit_after": "15:00:05",
             "cancel_at": "15:28:00",
             "finalize_at": "15:30:00",
             "snapshot_after": "15:31:00",
@@ -298,7 +298,7 @@ def test_operator_probe_rejects_cross_profile_or_shared_bridge(
             "default_mode": "LIVE",
             "execution_session": "AFTER_HOURS_FIXED_PRICE",
             "close_auction_price_type": 49,
-            "submit_after": "15:05:00",
+            "submit_after": "15:00:05",
             "cancel_at": "15:28:00",
             "finalize_at": "15:30:00",
             "snapshot_after": "15:31:00",
@@ -345,7 +345,7 @@ def test_operator_probe_requires_real_live_and_one_lot_limit(
             "default_mode": "LIVE",
             "execution_session": "AFTER_HOURS_FIXED_PRICE",
             "close_auction_price_type": 49,
-            "submit_after": "15:05:00",
+            "submit_after": "15:00:05",
             "cancel_at": "15:28:00",
             "finalize_at": "15:30:00",
             "snapshot_after": "15:31:00",
@@ -702,3 +702,19 @@ def test_live_filter_pipe_matches_the_bt_v4_backtest_verbatim():
         _ladder_config()["handler"]["filter_pipe"]
         == backtest["data"]["handler"]["instruments"]["filter_pipe"]
     )
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["alla_v4_ladder_k3h5_postclose_real", "csi1000_pr49_one_lot_probe"],
+)
+def test_after_hours_configs_declare_the_adaptive_submission_start(name):
+    """两个引用 AFTER_HOURS_FIXED_PRICE 的配置必须跟着 profile 一起改，
+    否则 live_config 的逐项比对会把它们 fail-closed 掉。"""
+    import yaml
+
+    path = REPO_ROOT / "live_trading" / "configs" / (name + ".yaml")
+    with open(path, encoding="utf-8") as handle:
+        config = yaml.safe_load(handle)
+    assert config["live"]["execution_session"] == "AFTER_HOURS_FIXED_PRICE"
+    assert config["live"]["submit_after"] == "15:00:05"

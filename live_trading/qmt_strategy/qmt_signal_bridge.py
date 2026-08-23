@@ -60,6 +60,7 @@ SNAPSHOT_PUBLISH_CUTOFF = "14:45:00"
 SNAPSHOT_ADVANCE_GATE_NAME = "SNAPSHOT_ORDER_ADVANCE.lock"
 SELL_DEADLINE = "14:57:05"
 TRADE_START = "14:57:05"
+SUBMIT_DEADLINE = "14:57:05"
 CANCEL_AT = "15:00:05"
 FINALIZE_AT = "15:00:30"
 SNAPSHOT_REFRESH_AT = "15:01:00"
@@ -69,6 +70,8 @@ _EXECUTION_PROFILES = {
         "signal_price_type": "CLOSE_AUCTION_LIMIT",
         "qmt_price_type": 11,
         "submit_after": "14:57:05",
+        # Equal to submit_after: the finality gate must never engage here.
+        "submit_deadline": "14:57:05",
         "cancel_at": "15:00:05",
         "finalize_at": "15:00:30",
         "snapshot_after": "15:01:00",
@@ -82,7 +85,12 @@ _EXECUTION_PROFILES = {
     "AFTER_HOURS_FIXED_PRICE": {
         "signal_price_type": "AFTER_HOURS_CLOSE",
         "qmt_price_type": 49,
-        "submit_after": "15:05:00",
+        # Earliest attempt. The close is settled at 15:00:00; what follows is
+        # only quote propagation delay, and matching does not start until
+        # 15:05, so this still queues ahead of every 15:05 arrival while the
+        # finality gate keeps us from sizing off the frozen 14:57 price.
+        "submit_after": "15:00:05",
+        "submit_deadline": "15:01:00",
         "cancel_at": "15:28:00",
         "finalize_at": "15:30:00",
         "snapshot_after": "15:31:00",
@@ -92,7 +100,7 @@ _EXECUTION_PROFILES = {
         # begins at 15:05, so a relative timeout measured from a 15:00:05
         # submission expires before a single sell could possibly have filled.
         "sell_deadline": "15:09:00",
-        "timer_start": "15:04:55",
+        "timer_start": "14:59:55",
     },
 }
 
@@ -524,12 +532,14 @@ def _activate_profile_settings():
     global LIMIT_PRICE_TYPE
     global SELL_DEADLINE
     global TRADE_START
+    global SUBMIT_DEADLINE
     global CANCEL_AT
     global FINALIZE_AT
     global SNAPSHOT_REFRESH_AT
     LIMIT_PRICE_TYPE = settings["qmt_price_type"]
     SELL_DEADLINE = settings["sell_deadline"]
     TRADE_START = settings["submit_after"]
+    SUBMIT_DEADLINE = settings["submit_deadline"]
     CANCEL_AT = settings["cancel_at"]
     FINALIZE_AT = settings["finalize_at"]
     SNAPSHOT_REFRESH_AT = settings["snapshot_after"]
@@ -2548,6 +2558,44 @@ def _official_close(ContextInfo, stock_code):
     return _positive_price(_tick_field(tick, "lastPrice"))
 
 
+def _close_is_final(tick):
+    """Whether the tick's price is the settled close.
+
+    Returns None when QMT does not expose a usable finality signal at all;
+    the caller then falls back to the fixed deadline. Exchange rule 3.6.7
+    fixes the close at 15:00:00, so anything stamped at or after that is
+    settled and everything before it is the frozen 14:57 auction price.
+
+    Deliberately does not use a volume jump as a signal: a name with no
+    closing-auction trade would be misread as "not updated yet", and in
+    exactly that case the 14:57 price already is the correct close.
+    """
+    if tick is None:
+        return None
+    timetag = _tick_field(tick, "timetag")
+    if not isinstance(timetag, str):
+        return None
+    stamp = timetag.strip()[-8:]
+    if not re.match(r"^\d{2}:\d{2}:\d{2}$", stamp):
+        return None
+    return stamp >= "15:00:00"
+
+
+def _batch_close_is_final(ContextInfo, batch):
+    """True only when every name in the batch reports a settled close.
+
+    A name whose finality is unknown counts as not settled: waiting until the
+    deadline is the cheap failure, sizing off a stale price is not. All-unknown
+    means the signal does not exist here, which the caller treats as "go at the
+    deadline" -- the fixed 15:01 behaviour.
+    """
+    signals = [_close_is_final(_get_tick(ContextInfo, o["stock_code"]))
+               for o in batch.orders]
+    if not signals or all(s is None for s in signals):
+        return None
+    return all(s is True for s in signals)
+
+
 def _instrument_limit_price(ContextInfo, stock_code, side):
     getter = getattr(ContextInfo, "get_instrument_detail", None)
     if getter is None:
@@ -2709,6 +2757,7 @@ def _market_price_evidence(ContextInfo, stock_code, official_close):
     tick = _get_tick(ContextInfo, stock_code)
     tick_fields = _safe_detail(tick or {}, [
         ("latest_price", "lastPrice"),
+        ("timetag", "timetag", "m_strTime", "time"),
         ("pre_close_price", "lastClose", "preClose", "preClosePrice"),
         ("open_price", "open", "openPrice"),
         ("high_price", "high", "highPrice"),
@@ -3267,6 +3316,18 @@ def _process_batch(ContextInfo, batch):
     now = _now_hms()
     if now < TRADE_START:
         return
+    if not batch.trading_started and now < SUBMIT_DEADLINE:
+        finality = _batch_close_is_final(ContextInfo, batch)
+        if finality is not True:
+            _log_event(
+                "CLOSE_FINALITY_WAIT",
+                batch_id=batch.batch_id(),
+                now=now,
+                submit_deadline=SUBMIT_DEADLINE,
+                finality=finality,
+                message="close not settled yet; retrying before the deadline",
+            )
+            return
     if now >= CANCEL_AT:
         # _force_finalize_if_near_close owns polling/cancel from this point.
         # Never place a fresh order after the cancellation cutoff.
@@ -3841,6 +3902,7 @@ def init(ContextInfo):
         poll_seconds=int(POLL_SECONDS),
         sell_deadline=SELL_DEADLINE,
         submit_after=TRADE_START,
+        submit_deadline=SUBMIT_DEADLINE,
         cancel_at=CANCEL_AT,
         finalize_at=FINALIZE_AT,
         snapshot_after=SNAPSHOT_REFRESH_AT,

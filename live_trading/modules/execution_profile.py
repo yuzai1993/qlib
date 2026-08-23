@@ -18,6 +18,8 @@ class ExecutionProfile:
     # Absolute clock time the buy phase stops waiting for sells to settle.
     # Internal sequencing, not part of the operator-verified config contract.
     sell_deadline: str
+    # Latest attempt: past this the close-finality gate stops deferring.
+    submit_deadline: str
 
 
 _EXECUTION_PROFILES = {
@@ -31,17 +33,19 @@ _EXECUTION_PROFILES = {
         snapshot_after="15:01:00",
         authorization_prefix="LIVE_OK_",
         sell_deadline="14:57:05",
+        submit_deadline="14:57:05",
     ),
     "AFTER_HOURS_FIXED_PRICE": ExecutionProfile(
         name="AFTER_HOURS_FIXED_PRICE",
         signal_price_type="AFTER_HOURS_CLOSE",
         qmt_price_type=49,
-        submit_after="15:05:00",
+        submit_after="15:00:05",
         cancel_at="15:28:00",
         finalize_at="15:30:00",
         snapshot_after="15:31:00",
         authorization_prefix="PR49_LIVE_OK_",
         sell_deadline="15:09:00",
+        submit_deadline="15:01:00",
     ),
 }
 

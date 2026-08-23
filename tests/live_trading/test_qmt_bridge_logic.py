@@ -1020,6 +1020,7 @@ def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
         "signal_price_type": "CLOSE_AUCTION_LIMIT",
         "qmt_price_type": 11,
         "submit_after": "14:57:05",
+        "submit_deadline": "14:57:05",
         "cancel_at": "15:00:05",
         "finalize_at": "15:00:30",
         "snapshot_after": "15:01:00",
@@ -1031,6 +1032,7 @@ def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
     assert bridge._expected_signal_price_type() == "CLOSE_AUCTION_LIMIT"
     assert bridge.LIMIT_PRICE_TYPE == 11
     assert bridge.SELL_DEADLINE == "14:57:05"
+    assert bridge.SUBMIT_DEADLINE == "14:57:05"
     assert bridge.TRADE_START == "14:57:05"
     assert bridge.CANCEL_AT == "15:00:05"
     assert bridge.FINALIZE_AT == "15:00:30"
@@ -1055,19 +1057,21 @@ def test_after_hours_profile_activates_isolated_pr49_contract(bridge, tmp_path):
     assert bridge._profile_settings() == {
         "signal_price_type": "AFTER_HOURS_CLOSE",
         "qmt_price_type": 49,
-        "submit_after": "15:05:00",
+        "submit_after": "15:00:05",
+        "submit_deadline": "15:01:00",
         "cancel_at": "15:28:00",
         "finalize_at": "15:30:00",
         "snapshot_after": "15:31:00",
         "authorization_prefix": "PR49_LIVE_OK_",
         "other_authorization_prefix": "LIVE_OK_",
         "sell_deadline": "15:09:00",
-        "timer_start": "15:04:55",
+        "timer_start": "14:59:55",
     }
     assert bridge._expected_signal_price_type() == "AFTER_HOURS_CLOSE"
     assert bridge.LIMIT_PRICE_TYPE == 49
     assert bridge.SELL_DEADLINE == "15:09:00"
-    assert bridge.TRADE_START == "15:05:00"
+    assert bridge.SUBMIT_DEADLINE == "15:01:00"
+    assert bridge.TRADE_START == "15:00:05"
     assert bridge.CANCEL_AT == "15:28:00"
     assert bridge.FINALIZE_AT == "15:30:00"
     assert bridge.SNAPSHOT_REFRESH_AT == "15:31:00"
@@ -1076,7 +1080,7 @@ def test_after_hours_profile_activates_isolated_pr49_contract(bridge, tmp_path):
     )
     assert bridge.g.trading_enabled is True
     postclose = next(call for call in context.calls if call[4] == "qlib_postclose_poll")
-    assert postclose[1].endswith("150455")
+    assert postclose[1].endswith("145955")
 
 
 def test_invalid_execution_profile_disables_runtime_with_structured_error(
@@ -2196,7 +2200,7 @@ class _TickCtx:
     def __init__(
         self, last_price, ask_price=None, bid_price=None,
         up_stop=0.0, down_stop=0.0, detail_error=False,
-        after_hours=True,
+        after_hours=True, timetag="20260731 15:00:01",
     ):
         self._last = last_price
         self._ask = [] if ask_price is None else [ask_price]
@@ -2205,6 +2209,9 @@ class _TickCtx:
         self._down_stop = down_stop
         self._detail_error = detail_error
         self._after_hours = after_hours
+        # Settled close by default: these cases are about order handling, not
+        # about the finality gate, and a stale stamp would defer every one.
+        self._timetag = timetag
 
     def get_full_tick(self, codes):
         return {
@@ -2212,6 +2219,7 @@ class _TickCtx:
                 "lastPrice": self._last,
                 "askPrice": self._ask,
                 "bidPrice": self._bid,
+                "timetag": self._timetag,
             }
             for c in codes
         }
@@ -3913,3 +3921,108 @@ def test_after_hours_sell_deadline_is_four_minutes_past_the_match_start(bridge):
 def test_close_auction_never_waits_for_sells(bridge):
     _activate_profile_only(bridge, "CLOSE_AUCTION")
     assert bridge.SELL_DEADLINE == "14:57:05"
+
+
+@pytest.mark.parametrize(
+    "timetag,expected",
+    [
+        ("20260731 15:00:00", True),
+        ("20260731 15:00:03", True),
+        ("20260731 14:56:50", False),
+        ("20260731 14:59:59", False),
+        ("15:00:01", True),
+        ("", None),
+        (None, None),
+        ("garbage", None),
+        (20260731150000, None),
+    ],
+)
+def test_close_finality_from_tick_timetag(bridge, timetag, expected):
+    assert bridge._close_is_final({"timetag": timetag}) is expected
+
+
+def test_batch_finality_requires_every_name_and_reports_unknown(bridge):
+    class Ctx:
+        def __init__(self, tags):
+            self._tags = tags
+
+        def get_full_tick(self, codes):
+            return {c: {"timetag": self._tags[c]} for c in codes}
+
+    batch = type("B", (), {"orders": [
+        {"stock_code": "600000.SH"}, {"stock_code": "000001.SZ"},
+    ]})()
+
+    both_final = Ctx({"600000.SH": "20260731 15:00:01",
+                      "000001.SZ": "20260731 15:00:02"})
+    assert bridge._batch_close_is_final(both_final, batch) is True
+
+    one_stale = Ctx({"600000.SH": "20260731 15:00:01",
+                     "000001.SZ": "20260731 14:56:50"})
+    assert bridge._batch_close_is_final(one_stale, batch) is False
+
+    # 一只有信号一只没有：按未终态处理，等到兜底时点
+    partial = Ctx({"600000.SH": "20260731 15:00:01", "000001.SZ": ""})
+    assert bridge._batch_close_is_final(partial, batch) is False
+
+    # 全都没有信号：QMT 不暴露该字段，退化成固定兜底
+    none_at_all = Ctx({"600000.SH": "", "000001.SZ": None})
+    assert bridge._batch_close_is_final(none_at_all, batch) is None
+
+
+def test_after_hours_profile_attempts_from_fifteen_hundred_oh_five(bridge):
+    _activate_profile_only(bridge, "AFTER_HOURS_FIXED_PRICE")
+    assert bridge.TRADE_START == "15:00:05"
+    assert bridge.SUBMIT_DEADLINE == "15:01:00"
+    assert bridge._profile_settings()["timer_start"] == "14:59:55"
+
+
+def test_close_auction_gate_never_engages(bridge):
+    _activate_profile_only(bridge, "CLOSE_AUCTION")
+    assert bridge.SUBMIT_DEADLINE == bridge.TRADE_START == "14:57:05"
+
+
+def test_stale_close_defers_submission_until_the_deadline(
+    bridge, monkeypatch, tmp_path,
+):
+    """15:00:05 起试，但收盘价还没终态就不能定量——那会用 14:57 的冻结价
+    算出错的股数（spec 4.7.1 的尾部风险）。"""
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path, now="15:00:06")
+    _ladder_batch(bridge, sell_qty=0, target_value=5_000.0, code="600000.SH")
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    stale = _TickCtx(10.0, up_stop=11.0, down_stop=9.0)
+    monkeypatch.setattr(bridge, "_get_tick",
+                        lambda ctx, code: {"lastPrice": 10.0,
+                                           "timetag": "20260731 14:56:50"})
+    bridge._process_batch(stale, batch)
+    assert submitted == []
+    assert batch.trading_started is False
+
+    events = [e for e in _read_events(bridge) if e["event"] == "CLOSE_FINALITY_WAIT"]
+    assert events
+
+    # 到兜底时点，按现行 official_close > 0 门禁照常提交
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:01:00")
+    bridge._process_batch(stale, batch)
+    assert submitted
+
+
+def test_final_close_submits_immediately_without_waiting_for_the_deadline(
+    bridge, monkeypatch, tmp_path,
+):
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path, now="15:00:06")
+    _ladder_batch(bridge, sell_qty=0, target_value=5_000.0, code="600000.SH")
+    monkeypatch.setattr(bridge, "_get_tick",
+                        lambda ctx, code: {"lastPrice": 10.0,
+                                           "timetag": "20260731 15:00:01"})
+    bridge._claim_new_batch()
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch)
+    assert submitted
+
+
+def test_market_price_evidence_records_the_timetag(bridge):
+    """兜底路径的对账要靠这个字段；不采集就无法把静默错价变成 CRIT。"""
+    ctx = _TickCtx(10.0)
+    evidence = bridge._market_price_evidence(ctx, "600000.SH", 10.0)
+    assert "timetag" in evidence["tick_fields"]

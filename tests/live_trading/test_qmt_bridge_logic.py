@@ -1025,11 +1025,12 @@ def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
         "snapshot_after": "15:01:00",
         "authorization_prefix": "LIVE_OK_",
         "other_authorization_prefix": "PR49_LIVE_OK_",
-        "sell_wait_seconds": 0,
+        "sell_deadline": "14:57:05",
         "timer_start": "14:56:55",
     }
     assert bridge._expected_signal_price_type() == "CLOSE_AUCTION_LIMIT"
     assert bridge.LIMIT_PRICE_TYPE == 11
+    assert bridge.SELL_DEADLINE == "14:57:05"
     assert bridge.TRADE_START == "14:57:05"
     assert bridge.CANCEL_AT == "15:00:05"
     assert bridge.FINALIZE_AT == "15:00:30"
@@ -1060,11 +1061,12 @@ def test_after_hours_profile_activates_isolated_pr49_contract(bridge, tmp_path):
         "snapshot_after": "15:31:00",
         "authorization_prefix": "PR49_LIVE_OK_",
         "other_authorization_prefix": "LIVE_OK_",
-        "sell_wait_seconds": 240,
+        "sell_deadline": "15:09:00",
         "timer_start": "15:04:55",
     }
     assert bridge._expected_signal_price_type() == "AFTER_HOURS_CLOSE"
     assert bridge.LIMIT_PRICE_TYPE == 49
+    assert bridge.SELL_DEADLINE == "15:09:00"
     assert bridge.TRADE_START == "15:05:00"
     assert bridge.CANCEL_AT == "15:28:00"
     assert bridge.FINALIZE_AT == "15:30:00"
@@ -3624,18 +3626,19 @@ def _ladder_batch(bridge, sell_qty, target_value, code="000001.SZ"):
 
 
 def _ladder_ticks(bridge, ctx, ticks=2):
-    """跑批次直到收尾，两次 tick 之间把 SELL 阶段的 4 分钟等待视作已过去。
+    """跑批次直到收尾，第一个 tick 之后把时钟推过卖单截止时点。
 
-    等待计时器在第一个交易 pass 才起算，所以单次 tick 到不了 BUY 阶段。
-    Task 9 会把买单阶段的触发改成卖单终态，届时这个快进不再必要。
+    这些用例只关心抵销的算术与接线，不关心买单是被卖单终态触发的还是被
+    截止兜底触发的。真提交的卖腿在测试里永远不会成交，所以走兜底那条路。
+    monkeypatch 记的是原值，这里直接改属性不影响它 teardown 时还原。
     """
-    for _ in range(ticks):
+    for index in range(ticks):
         batch = bridge.g.batch
         if batch is None:
             return
         bridge._process_batch(ctx, batch)
-        if bridge.g.batch is not None:
-            bridge.g.batch.phase_started = 1.0
+        if index == 0:
+            bridge._now_hms = lambda: "15:09:30"
 
 
 def _run_after_hours(bridge, monkeypatch, tmp_path, now="15:05:30"):
@@ -3657,6 +3660,16 @@ def _run_after_hours(bridge, monkeypatch, tmp_path, now="15:05:30"):
         bridge, "passorder", lambda *args: submitted.append(args), raising=False,
     )
     return submitted
+
+
+def _write_terminal_fill(bridge, batch, order):
+    bridge._write_fill(batch, order, "FILLED", int(order["quantity"]), 10.0,
+                       "q1", "filled")
+
+
+def _activate_profile_only(bridge, profile):
+    bridge.EXECUTION_PROFILE = profile
+    bridge._activate_profile_settings()
 
 
 def test_net_buy_submits_only_the_difference_and_skips_the_sell_leg(
@@ -3834,3 +3847,69 @@ def test_unavailable_close_errors_the_order_and_never_guesses(
     fill = _read_fills(bridge)[0]
     assert fill["status"] == "ERROR"
     assert fill["message"] == "official close unavailable"
+
+
+def test_buy_phase_starts_as_soon_as_every_sell_is_terminal(
+    bridge, monkeypatch, tmp_path,
+):
+    """现有代码算出了 sells_done 却只用来打日志，于是卖单 30 秒成交也要
+    干等满超时，买单错过最好的队列位置。"""
+    _run_after_hours(bridge, monkeypatch, tmp_path, now="15:05:30")
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0, code="600000.SH")
+    bridge.ENABLE_LADDER_NETTING = False
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    ctx = _TickCtx(10.0, up_stop=11.0, down_stop=9.0)
+
+    bridge._process_batch(ctx, batch)
+    # 卖单已提交并被回执标记终态
+    for order in batch.orders:
+        if order["side"] == "SELL":
+            _write_terminal_fill(bridge, batch, order)
+    bridge._process_batch(ctx, batch)
+
+    assert batch.phase == "BUY"
+
+
+def test_sell_phase_holds_while_sells_are_still_open_before_the_deadline(
+    bridge, monkeypatch, tmp_path,
+):
+    _run_after_hours(bridge, monkeypatch, tmp_path, now="15:05:30")
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0, code="600000.SH")
+    bridge.ENABLE_LADDER_NETTING = False
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0, down_stop=9.0), batch)
+
+    assert batch.phase == "SELL"
+
+
+def test_sell_timeout_is_an_absolute_clock_time_not_a_relative_duration(
+    bridge, monkeypatch, tmp_path,
+):
+    """提交提前到 15:00:05 后，240 秒相对超时会在 15:04 前后触发——撮合
+    (15:05) 还没开始、一笔卖单都不可能成交，买单于是按快照现金发出，
+    spec 4.7.2 的欠配照旧。超时必须从撮合开始起算。"""
+    _run_after_hours(bridge, monkeypatch, tmp_path, now="15:06:00")
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0, code="600000.SH")
+    bridge.ENABLE_LADDER_NETTING = False
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    # 相对时长早已耗尽（phase_started 在很久以前）
+    monkeypatch.setattr(bridge.time, "time", lambda: batch.phase_started + 10_000)
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0, down_stop=9.0), batch)
+    assert batch.phase == "SELL", "15:06 还没到卖单截止，不该转 BUY"
+
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:09:00")
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0, down_stop=9.0), batch)
+    assert batch.phase == "BUY"
+
+
+def test_after_hours_sell_deadline_is_four_minutes_past_the_match_start(bridge):
+    _activate_profile_only(bridge, "AFTER_HOURS_FIXED_PRICE")
+    assert bridge.SELL_DEADLINE == "15:09:00"
+
+
+def test_close_auction_never_waits_for_sells(bridge):
+    _activate_profile_only(bridge, "CLOSE_AUCTION")
+    assert bridge.SELL_DEADLINE == "14:57:05"

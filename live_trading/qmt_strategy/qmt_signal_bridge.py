@@ -58,7 +58,7 @@ POLL_SECONDS = 3           # min interval between polls (handlebar is tick-drive
 SNAPSHOT_OBSERVER_START = "09:35:00"
 SNAPSHOT_PUBLISH_CUTOFF = "14:45:00"
 SNAPSHOT_ADVANCE_GATE_NAME = "SNAPSHOT_ORDER_ADVANCE.lock"
-SELL_WAIT_TIMEOUT_SEC = 0
+SELL_DEADLINE = "14:57:05"
 TRADE_START = "14:57:05"
 CANCEL_AT = "15:00:05"
 FINALIZE_AT = "15:00:30"
@@ -74,7 +74,9 @@ _EXECUTION_PROFILES = {
         "snapshot_after": "15:01:00",
         "authorization_prefix": "LIVE_OK_",
         "other_authorization_prefix": "PR49_LIVE_OK_",
-        "sell_wait_seconds": 0,
+        # Same as submit_after: the close auction has no sell-then-buy
+        # sequencing, so the BUY phase must never wait.
+        "sell_deadline": "14:57:05",
         "timer_start": "14:56:55",
     },
     "AFTER_HOURS_FIXED_PRICE": {
@@ -86,7 +88,10 @@ _EXECUTION_PROFILES = {
         "snapshot_after": "15:31:00",
         "authorization_prefix": "PR49_LIVE_OK_",
         "other_authorization_prefix": "LIVE_OK_",
-        "sell_wait_seconds": 4 * 60,
+        # Absolute, not a duration from phase start. Continuous matching only
+        # begins at 15:05, so a relative timeout measured from a 15:00:05
+        # submission expires before a single sell could possibly have filled.
+        "sell_deadline": "15:09:00",
         "timer_start": "15:04:55",
     },
 }
@@ -517,13 +522,13 @@ def _expected_signal_price_type():
 def _activate_profile_settings():
     settings = _profile_settings()
     global LIMIT_PRICE_TYPE
-    global SELL_WAIT_TIMEOUT_SEC
+    global SELL_DEADLINE
     global TRADE_START
     global CANCEL_AT
     global FINALIZE_AT
     global SNAPSHOT_REFRESH_AT
     LIMIT_PRICE_TYPE = settings["qmt_price_type"]
-    SELL_WAIT_TIMEOUT_SEC = settings["sell_wait_seconds"]
+    SELL_DEADLINE = settings["sell_deadline"]
     TRADE_START = settings["submit_after"]
     CANCEL_AT = settings["cancel_at"]
     FINALIZE_AT = settings["finalize_at"]
@@ -3351,10 +3356,10 @@ def _process_batch(ContextInfo, batch):
         _poll_status(batch)
         sells_done = all(_order_is_terminal(batch, o["client_order_id"])
                          for o in sells) if sells else True
-        wait_elapsed = (
-            time.time() - batch.phase_started
-        ) >= SELL_WAIT_TIMEOUT_SEC
-        if not sells or wait_elapsed:
+        # spec 4.7.2: the buy budget needs the sell proceeds, so start buying
+        # the moment every sell is terminal instead of burning the full wait.
+        wait_elapsed = _now_hms() >= SELL_DEADLINE
+        if not sells or sells_done or wait_elapsed:
             batch.phase = "BUY"
             batch.phase_started = time.time()
             _save_active_state(batch)
@@ -3834,7 +3839,7 @@ def init(ContextInfo):
         max_order_quantity=int(MAX_ORDER_QUANTITY),
         max_orders_per_batch=int(MAX_ORDERS_PER_BATCH),
         poll_seconds=int(POLL_SECONDS),
-        sell_wait_seconds=int(SELL_WAIT_TIMEOUT_SEC),
+        sell_deadline=SELL_DEADLINE,
         submit_after=TRADE_START,
         cancel_at=CANCEL_AT,
         finalize_at=FINALIZE_AT,

@@ -43,11 +43,13 @@ from live_trading.modules.pipeline_monitor import (
     check_account,
     check_broker_reconcile,
     check_evening,
+    check_fill_ratio,
     check_netting_close,
     check_postmarket,
     check_probe_execution,
     check_report,
     check_snapshot_protocol_status,
+    weighted_fill_ratio,
 )
 from live_trading.modules.snapshot import build_snapshot, sum_live_fills_amount
 from live_trading.scripts.next_trade_date import next_open_date
@@ -557,6 +559,22 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
             if netting_prices.get(ql) is not None
         })
 
+    # 成交率：连续三日的判断要跨交易日，所以放在拿得到 calendar 的 report 阶段。
+    thresholds = _thresholds(config)
+    window = int(thresholds.get("fill_ratio_streak_days", 3))
+    ratios_by_date = {}
+    for d in [c for c in calendar if c <= date][-window:]:
+        day_fills = fills if d == date else recorder.get_fills_by_dates([d])
+        ratios_by_date[d] = {
+            "BUY": weighted_fill_ratio(day_fills, "BUY"),
+            "SELL": weighted_fill_ratio(day_fills, "SELL"),
+        }
+    findings += check_fill_ratio(date, ratios_by_date, thresholds)
+    today_ratios = ratios_by_date.get(date, {})
+    logger.info("fill_ratio %s: buy=%s sell=%s", date,
+                _fmt_ratio(today_ratios.get("BUY")),
+                _fmt_ratio(today_ratios.get("SELL")))
+
     daily_row, position_rows, missing = build_snapshot(
         date, positions, cash, prices, bench_close,
         prev_snapshot, fills_amount,
@@ -577,7 +595,8 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
 
     if config.get("monitor", {}).get("notify", {}).get("daily_report", True):
         title = f"[实盘日报] {date}"
-        body = _daily_report_md(date, daily_row, fills, findings, corp_applied)
+        body = _daily_report_md(date, daily_row, fills, findings, corp_applied,
+                                fill_ratios=today_ratios)
         ok = notifier.send(title, body)
         logger.info("daily report sent=%s", ok)
     return findings
@@ -598,7 +617,12 @@ def _fmt_pct(v):
     return f"{v*100:+.2f}%" if v is not None else "—"
 
 
-def _daily_report_md(date, snap, fills, findings, corp_applied=None) -> str:
+def _fmt_ratio(value) -> str:
+    return "n/a" if value is None else f"{value:.1%}"
+
+
+def _daily_report_md(date, snap, fills, findings, corp_applied=None,
+                     fill_ratios=None) -> str:
     traded = [f for f in fills if f["mode"] == "LIVE"
               and f["status"] in {"FILLED", "PARTIAL"}]
     account_details = [
@@ -619,6 +643,11 @@ def _daily_report_md(date, snap, fills, findings, corp_applied=None) -> str:
         f"　费用 {snap.get('fees', 0):,.2f}",
         f"**当日 LIVE 成交** {len(traded)} 笔",
     ]
+    if fill_ratios:
+        lines.append(
+            f"**加权成交率** 买 {_fmt_ratio(fill_ratios.get('BUY'))}"
+            f"　卖 {_fmt_ratio(fill_ratios.get('SELL'))}"
+        )
     if traded:
         for f in traded:
             lines.append(f"- {f['side']} {f['stock_code']} "

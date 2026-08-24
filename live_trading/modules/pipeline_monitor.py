@@ -20,6 +20,11 @@ DEFAULT_THRESHOLDS = {
     "consecutive_loss_days": 5,
     "reject_rate": 0.5,
     "cash_tolerance": 100.0,
+    # 盘后固定价格通道的成交率回退触发（spec 第 8 节）。买不成不是滑点，
+    # 是系统性欠配：层会变薄且没有替补。
+    "fill_ratio_buy_floor": 0.80,
+    "fill_ratio_buy_hard_floor": 0.50,
+    "fill_ratio_streak_days": 3,
 }
 
 
@@ -206,6 +211,76 @@ def check_postmarket(trade_date, batches, reconciles, fills,
             "NEGATIVE_POSITION", CRIT,
             f"{trade_date} 卖出量超过昨日持仓：{', '.join(oversold)}，"
             "账本可能漂移，停止次日发布并全量核对"))
+    return findings
+
+
+def weighted_fill_ratio(fills, side):
+    """按意图股数加权的单侧成交率；该侧没有任何意图时返回 None。
+
+    分母用 intended_qty（阶梯抵销前本意要的股数），不用 requested_qty：后者在部分
+    抵销时是市场腿、在完全抵销时被改写成全额，两种口径混在一起算不出可比的比率。
+    分子把 netted_qty 计入已成交——抵销掉的股数确实进了仓位，只是没走市场。
+    """
+    intended = 0
+    obtained = 0
+    for f in fills:
+        if f.get("mode") != "LIVE" or f.get("side") != side:
+            continue
+        want = int(f.get("intended_qty") or 0) or int(f.get("requested_qty") or 0)
+        if want <= 0:
+            continue
+        got = int(f.get("applied_qty") or f.get("filled_qty") or 0)
+        intended += want
+        obtained += min(got + int(f.get("netted_qty") or 0), want)
+    if intended <= 0:
+        return None
+    return obtained / float(intended)
+
+
+def check_fill_ratio(trade_date, ratios_by_date, thresholds) -> list:
+    """成交率门禁：盘后固定价格通道的头号风险（spec 第 8 节）。
+
+    盘后固定价格是在一个独立的薄池子里按时间优先逐笔撮合，需要对手盘；而回测
+    假设以收盘价成交、深度无限。成交率显著低于 100% 的后果不是滑点而是系统性
+    欠配：买不成则层变薄且无替补，卖不成则 _pending 持续累积。
+
+    只报事实，不自动改 execution_state：暂停发布是人的决定。
+    """
+    buy = (ratios_by_date.get(trade_date) or {}).get("BUY")
+    if buy is None:
+        return []  # 当日没有买入意图，无从判断
+
+    hard = float(thresholds.get(
+        "fill_ratio_buy_hard_floor",
+        DEFAULT_THRESHOLDS["fill_ratio_buy_hard_floor"]))
+    soft = float(thresholds.get(
+        "fill_ratio_buy_floor", DEFAULT_THRESHOLDS["fill_ratio_buy_floor"]))
+    need = int(thresholds.get(
+        "fill_ratio_streak_days",
+        DEFAULT_THRESHOLDS["fill_ratio_streak_days"]))
+
+    findings = []
+    if buy < hard:
+        findings.append(Finding(
+            "FILL_RATIO_CRITICAL", CRIT,
+            f"{trade_date} 买入侧加权成交率 {buy:.1%} 低于硬下限 {hard:.0%}，"
+            "暂停次日发布并评估切回 CLOSE_AUCTION"))
+    elif buy < soft:
+        findings.append(Finding(
+            "FILL_RATIO_LOW", WARN,
+            f"{trade_date} 买入侧加权成交率 {buy:.1%} 低于 {soft:.0%}，"
+            "盘后对手盘可能不足，留意是否连续"))
+
+    recent = [
+        ratios_by_date[d].get("BUY")
+        for d in sorted(ratios_by_date) if d <= trade_date
+    ][-need:]
+    if len(recent) == need and all(r is not None and r < soft for r in recent):
+        findings.append(Finding(
+            "FILL_RATIO_STREAK", CRIT,
+            f"{trade_date} 买入侧加权成交率连续 {need} 个交易日低于 {soft:.0%}"
+            f"（{', '.join(f'{r:.1%}' for r in recent)}），"
+            "触发回退条件：暂停发布并评估切回 CLOSE_AUCTION"))
     return findings
 
 

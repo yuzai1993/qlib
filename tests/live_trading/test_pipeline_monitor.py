@@ -1,4 +1,5 @@
 """pipeline_monitor：每条规则触发/不触发的边界。"""
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -8,13 +9,16 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.pipeline_monitor import (
+    DEFAULT_THRESHOLDS,
     check_account,
     check_broker_reconcile,
     check_evening,
+    check_fill_ratio,
     check_netting_close,
     check_postmarket,
     check_probe_execution,
     check_report,
+    weighted_fill_ratio,
 )
 from live_trading.modules.fill_importer import LiveRecorder
 from live_trading.modules.execution_state import ExecutionStateError
@@ -825,6 +829,261 @@ def test_every_mismatched_name_is_named_in_one_finding():
                    if f.rule == "NETTING_CLOSE_MISMATCH")
     assert "600000.SH" in message
     assert "000001.SZ" in message
+
+
+def _lfill(side="BUY", intended=300, applied=300, netted=0, code="600000.SH",
+           status="FILLED", netting_close=0.0):
+    return {"batch_id": BATCH["batch_id"], "mode": "LIVE", "status": status,
+            "side": side, "stock_code": code, "filled_qty": applied,
+            "applied_qty": applied, "netted_qty": netted,
+            "intended_qty": intended, "message": "",
+            "netting_close": netting_close}
+
+
+def test_a_fully_filled_day_is_one_hundred_percent():
+    assert weighted_fill_ratio([_lfill()], "BUY") == 1.0
+
+
+def test_netted_shares_count_as_filled():
+    """抵销掉的股数确实进了仓位，只是没走市场。"""
+    assert weighted_fill_ratio([_lfill(applied=0, netted=300)], "BUY") == 1.0
+
+
+def test_the_ratio_is_weighted_by_intended_shares_not_by_order_count():
+    fills = [_lfill(intended=1000, applied=1000),
+             _lfill(intended=100, applied=0, code="000001.SZ")]
+    assert weighted_fill_ratio(fills, "BUY") == pytest.approx(1000 / 1100)
+
+
+def test_a_skipped_order_drags_the_ratio_down():
+    """买不成就是欠配，不是「不算」。"""
+    assert weighted_fill_ratio(
+        [_lfill(applied=0, status="SKIPPED")], "BUY") == 0.0
+
+
+def test_no_intent_on_a_side_is_unknown_not_zero():
+    assert weighted_fill_ratio([_lfill(side="SELL")], "BUY") is None
+
+
+def test_intended_qty_falls_back_to_requested_for_legacy_receipts():
+    fill = _lfill()
+    del fill["intended_qty"]
+    fill["requested_qty"] = 300
+    assert weighted_fill_ratio([fill], "BUY") == 1.0
+
+
+def test_simulation_fills_do_not_count_towards_the_live_ratio():
+    fill = _lfill(applied=0, status="SKIPPED")
+    fill["mode"] = "SIMULATE"
+    assert weighted_fill_ratio([fill], "BUY") is None
+
+
+def test_the_ratio_never_exceeds_one_hundred_percent():
+    """市场腿全成 + 抵销腿，分子不得超过本意股数。"""
+    fills = [_lfill(intended=500, applied=200, netted=300)]
+    assert weighted_fill_ratio(fills, "BUY") == 1.0
+
+
+def test_a_healthy_run_of_days_is_silent():
+    ratios = {
+        "2026-07-10": {"BUY": 0.95, "SELL": 1.0},
+        "2026-07-13": {"BUY": 1.0, "SELL": 1.0},
+        "2026-07-14": {"BUY": 0.9, "SELL": 1.0},
+    }
+    assert check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS) == []
+
+
+def test_a_single_day_below_the_hard_floor_is_critical():
+    ratios = {"2026-07-14": {"BUY": 0.4, "SELL": 1.0}}
+    findings = check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS)
+    assert "FILL_RATIO_CRITICAL" in _rules(findings)
+    assert all(f.level == "CRIT" for f in findings)
+
+
+@pytest.mark.parametrize("ratio,expected", [
+    (0.49, "FILL_RATIO_CRITICAL"),
+    (0.50, "FILL_RATIO_LOW"),     # 「低于 50%」不含 50% 本身
+    (0.79, "FILL_RATIO_LOW"),
+])
+def test_the_floors_are_exclusive_boundaries(ratio, expected):
+    findings = check_fill_ratio(
+        "2026-07-14", {"2026-07-14": {"BUY": ratio}}, DEFAULT_THRESHOLDS,
+    )
+    assert expected in _rules(findings)
+
+
+def test_exactly_at_the_soft_floor_is_silent():
+    assert check_fill_ratio(
+        "2026-07-14", {"2026-07-14": {"BUY": 0.80}}, DEFAULT_THRESHOLDS,
+    ) == []
+
+
+def test_three_consecutive_days_below_the_soft_floor_trip_the_rollback():
+    ratios = {
+        "2026-07-10": {"BUY": 0.75, "SELL": 1.0},
+        "2026-07-13": {"BUY": 0.7, "SELL": 1.0},
+        "2026-07-14": {"BUY": 0.79, "SELL": 1.0},
+    }
+    findings = check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS)
+    assert "FILL_RATIO_STREAK" in _rules(findings)
+    assert any(f.level == "CRIT" for f in findings)
+
+
+def test_a_streak_broken_by_a_good_day_does_not_trip():
+    ratios = {
+        "2026-07-10": {"BUY": 0.7, "SELL": 1.0},
+        "2026-07-13": {"BUY": 0.95, "SELL": 1.0},
+        "2026-07-14": {"BUY": 0.7, "SELL": 1.0},
+    }
+    findings = check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS)
+    assert "FILL_RATIO_STREAK" not in _rules(findings)
+
+
+def test_one_soft_breach_warns_without_tripping_the_rollback():
+    ratios = {"2026-07-14": {"BUY": 0.7, "SELL": 1.0}}
+    findings = check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS)
+    assert "FILL_RATIO_LOW" in _rules(findings)
+    assert "FILL_RATIO_STREAK" not in _rules(findings)
+
+
+def test_a_short_history_cannot_trip_the_streak():
+    """建仓期前两天历史不足，不能凑出连续三日。"""
+    ratios = {"2026-07-13": {"BUY": 0.1, "SELL": 1.0},
+              "2026-07-14": {"BUY": 0.1, "SELL": 1.0}}
+    findings = check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS)
+    assert "FILL_RATIO_STREAK" not in _rules(findings)
+
+
+def test_an_unknown_buy_ratio_today_is_silent():
+    ratios = {"2026-07-14": {"BUY": None, "SELL": 1.0}}
+    assert check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS) == []
+
+
+def test_a_gap_day_without_a_ratio_breaks_the_streak():
+    """没有买入意图的那天不能当成「低于下限」凑进连续计数。"""
+    ratios = {
+        "2026-07-10": {"BUY": 0.7, "SELL": 1.0},
+        "2026-07-13": {"BUY": None, "SELL": 1.0},
+        "2026-07-14": {"BUY": 0.7, "SELL": 1.0},
+    }
+    findings = check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS)
+    assert "FILL_RATIO_STREAK" not in _rules(findings)
+
+
+def test_future_dates_do_not_leak_into_the_streak_window():
+    ratios = {
+        "2026-07-13": {"BUY": 0.7, "SELL": 1.0},
+        "2026-07-14": {"BUY": 0.7, "SELL": 1.0},
+        "2026-07-15": {"BUY": 0.7, "SELL": 1.0},
+    }
+    findings = check_fill_ratio("2026-07-14", ratios, DEFAULT_THRESHOLDS)
+    assert "FILL_RATIO_STREAK" not in _rules(findings)
+
+
+def _report_recorder(tmp_path, fills):
+    """一个只够 run_report 跑通的账本：一个 LIVE 批次 + 直接落库的回执。
+
+    这里不走 apply_fill：要验的是 run_report 的汇总与门禁接线，回执入库那条链路
+    已由 test_fill_importer 覆盖。
+    """
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db))
+    store = MonitorStore(str(db))
+    batch_id = "20260714_alla_v4_ladder_001"
+    recorder.record_batch(batch_id, "2026-07-14", "LIVE", len(fills))
+    with sqlite3.connect(db) as conn:
+        for index, row in enumerate(fills):
+            conn.execute(
+                """INSERT INTO fills (batch_id, client_order_id, mode,
+                       stock_code, side, status, requested_qty, filled_qty,
+                       avg_price, qmt_order_id, message, ts, applied_qty,
+                       applied_amount, applied_fee, netted_qty, netting_close,
+                       intended_qty)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (batch_id, "coid%d" % index, row["mode"], row["stock_code"],
+                 row["side"], row["status"], row["intended_qty"],
+                 row["filled_qty"], 10.0, "", "", "t", row["applied_qty"],
+                 0.0, 0.0, row["netted_qty"], row.get("netting_close", 0.0),
+                 row["intended_qty"]),
+            )
+    return recorder, store
+
+
+def _stub_report_boundaries(monkeypatch, closes):
+    monkeypatch.setattr(run_monitor, "fetch_close_prices",
+                        lambda codes, date: dict(closes))
+    monkeypatch.setattr(run_monitor, "fetch_benchmark_close",
+                        lambda benchmark, date: 4000.0)
+    monkeypatch.setattr(run_monitor, "run_corporate_actions",
+                        lambda date, recorder, store, config: ([], []))
+
+
+class _Notifier:
+    def __init__(self):
+        self.bodies = []
+
+    def send(self, title, body):
+        self.bodies.append(body)
+        return True
+
+
+def test_run_report_publishes_the_weighted_fill_ratio(monkeypatch, tmp_path):
+    """成交率是盘后固定价格通道的头号风险指标，必须真的出现在日报里。"""
+    recorder, store = _report_recorder(tmp_path, [
+        _lfill(side="BUY", intended=1000, applied=500),
+        _lfill(side="SELL", intended=300, applied=300, code="000001.SZ"),
+    ])
+    _stub_report_boundaries(monkeypatch, {})
+    notifier = _Notifier()
+
+    findings = run_monitor.run_report(
+        "2026-07-14", ["2026-07-14"], recorder, store,
+        {"monitor": {"notify": {"daily_report": True}}}, notifier,
+    )
+
+    # 买入侧 500/1000 = 50%：正好在硬下限上，按「低于」的字面语义只 WARN
+    assert "FILL_RATIO_LOW" in _rules(findings)
+    assert notifier.bodies
+    assert "**加权成交率** 买 50.0%　卖 100.0%" in notifier.bodies[0]
+
+
+def test_run_report_flags_a_stale_sizing_close(monkeypatch, tmp_path):
+    recorder, store = _report_recorder(tmp_path, [
+        _lfill(side="BUY", intended=300, applied=300, netting_close=9.80),
+    ])
+    # 权威收盘价 10.00，bridge 用了 9.80：正是「读到 14:57 冻结价」的形状
+    _stub_report_boundaries(monkeypatch, {"SH600000": 10.00})
+    monkeypatch.setattr(run_monitor, "qmt_to_qlib", lambda code: "SH600000")
+
+    findings = run_monitor.run_report(
+        "2026-07-14", ["2026-07-14"], recorder, store,
+        {"monitor": {"notify": {"daily_report": False}}}, _Notifier(),
+    )
+
+    assert "NETTING_CLOSE_MISMATCH" in _rules(findings)
+
+
+def test_run_report_does_not_reconcile_orders_without_a_frozen_close(
+    monkeypatch, tmp_path,
+):
+    """没按冻结价定量的批次不该触发对账，也不该去拉行情。"""
+    recorder, store = _report_recorder(tmp_path, [
+        _lfill(side="BUY", intended=300, applied=300),
+    ])
+    _stub_report_boundaries(monkeypatch, {})
+
+    def explode(code):
+        raise AssertionError("不该为无冻结价的批次做逐单对账")
+
+    monkeypatch.setattr(run_monitor, "qmt_to_qlib", explode)
+
+    findings = run_monitor.run_report(
+        "2026-07-14", ["2026-07-14"], recorder, store,
+        {"monitor": {"notify": {"daily_report": False}}}, _Notifier(),
+    )
+
+    assert "NETTING_CLOSE_MISMATCH" not in _rules(findings)
+    assert "NETTING_CLOSE_UNVERIFIED" not in _rules(findings)
 
 
 def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):

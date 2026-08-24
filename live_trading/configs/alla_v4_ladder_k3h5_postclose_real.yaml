@@ -128,6 +128,11 @@ monitor:
     consecutive_loss_days: 5
     reject_rate: 0.5
     cash_tolerance: 100.0
+    # 盘后固定价格通道的头号风险是成交率。回退触发：连续 3 个交易日买入侧
+    # 加权成交率 < 80%，或任一日 < 50%（spec 第 8 节）。
+    fill_ratio_buy_floor: 0.80
+    fill_ratio_buy_hard_floor: 0.50
+    fill_ratio_streak_days: 3
   broker_reconcile:
     cash_check: true
 

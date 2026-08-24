@@ -111,13 +111,13 @@ try {
       $StateRoot, "LIVE_OK_$TradeDate"
     )
     $OtherMarker = [System.IO.Path]::Combine(
-      $BridgeRoot, "pr49_probe", "state", "PR49_LIVE_OK_$TradeDate"
+      $StateRoot, "PR49_LIVE_OK_$TradeDate"
     )
   }
   else {
     $CutoffText = "$TradeDate 15:05:00"
     $OwnMarker = [System.IO.Path]::Combine(
-      $BridgeRoot, "pr49_probe", "state", "PR49_LIVE_OK_$TradeDate"
+      $StateRoot, "PR49_LIVE_OK_$TradeDate"
     )
     $OtherMarker = [System.IO.Path]::Combine(
       $StateRoot, "LIVE_OK_$TradeDate"

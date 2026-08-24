@@ -558,17 +558,15 @@ def _canonical_bridge_root(path):
 def _validate_profile_roots():
     current_root = _canonical_bridge_root(BRIDGE_ROOT)
     other_root = _canonical_bridge_root(OTHER_BRIDGE_ROOT)
-    if EXECUTION_PROFILE == "CLOSE_AUCTION":
-        expected_other = os.path.normcase(os.path.join(
-            current_root, "pr49_probe",
-        ))
-        valid = other_root == expected_other
-    else:
-        expected_current = os.path.normcase(os.path.join(
-            other_root, "pr49_probe",
-        ))
-        valid = current_root == expected_current
-    if not valid:
+    nested_from_current = os.path.normcase(
+        os.path.join(current_root, "pr49_probe")
+    )
+    nested_from_other = os.path.normcase(
+        os.path.join(other_root, "pr49_probe")
+    )
+    pair_nested = current_root == nested_from_other
+    pair_parent = other_root == nested_from_current
+    if not (pair_nested or pair_parent):
         raise ValueError(
             "profile roots must be an exact main/pr49_probe direct pair"
         )
@@ -641,7 +639,13 @@ def _live_ok(trade_date):
 
 
 def _other_profile_authorized(trade_date):
-    return os.path.isfile(_other_authorization_path(trade_date))
+    prefix = _profile_settings()["other_authorization_prefix"]
+    name = prefix + trade_date
+    candidates = (
+        os.path.join(OTHER_BRIDGE_ROOT, "state", name),
+        os.path.join(BRIDGE_ROOT, "state", name),
+    )
+    return any(os.path.isfile(path) for path in candidates)
 
 
 def _active_state_path(batch_id):

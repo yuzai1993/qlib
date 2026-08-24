@@ -1109,7 +1109,7 @@ def test_invalid_execution_profile_disables_runtime_with_structured_error(
     "CLOSE_AUCTION", "AFTER_HOURS_FIXED_PRICE",
 ])
 @pytest.mark.parametrize("invalid_layout", [
-    "equality", "reversal", "deeper", "other_child", "sibling",
+    "equality", "deeper", "other_child", "sibling",
     "traversal", "dot_spelling",
 ])
 def test_unsafe_profile_root_layout_disables_before_runtime_side_effects(
@@ -1119,9 +1119,6 @@ def test_unsafe_profile_root_layout_disables_before_runtime_side_effects(
     probe_root = main_root / "pr49_probe"
     if invalid_layout == "equality":
         current_root, other_root = main_root, main_root
-    elif invalid_layout == "reversal":
-        current_root, other_root = _profile_roots(tmp_path, profile)
-        current_root, other_root = other_root, current_root
     elif invalid_layout == "deeper":
         if profile == "CLOSE_AUCTION":
             current_root, other_root = main_root, probe_root / "deeper"
@@ -4115,3 +4112,43 @@ def test_market_price_evidence_records_the_timetag(bridge):
 def test_bridge_snapshot_whitelist_includes_the_ladder_strategy(bridge):
     assert "alla_v4_ladder_k3h5_postclose_real" \
         in bridge._SNAPSHOT_REQUEST_STRATEGIES
+
+
+def test_after_hours_may_sit_on_the_main_root(tmp_path, bridge):
+    main_root = tmp_path / "main"
+    probe_root = main_root / "pr49_probe"
+    main_root.mkdir()
+    probe_root.mkdir()
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", main_root, probe_root,
+    )
+    assert bridge.g.trading_enabled is True
+    assert bridge._authorization_path("2026-08-25").endswith(
+        os.path.join("main", "state", "PR49_LIVE_OK_2026-08-25")
+    )
+
+
+def test_a_close_auction_marker_on_the_same_root_blocks_after_hours(
+    tmp_path, bridge,
+):
+    main_root = tmp_path / "main"
+    probe_root = main_root / "pr49_probe"
+    main_root.mkdir()
+    probe_root.mkdir()
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", main_root, probe_root,
+    )
+    marker = main_root / "state" / "LIVE_OK_2026-08-25"
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text("authorized\n", encoding="ascii")
+    assert bridge._other_profile_authorized("2026-08-25") is True
+
+
+def test_legacy_after_hours_on_the_nested_probe_root_still_boots(
+    tmp_path, bridge,
+):
+    current, other = _profile_roots(tmp_path, "AFTER_HOURS_FIXED_PRICE")
+    _activate_profile(
+        bridge, "AFTER_HOURS_FIXED_PRICE", current, other,
+    )
+    assert bridge.g.trading_enabled is True

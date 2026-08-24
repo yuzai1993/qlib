@@ -2793,3 +2793,10 @@ def test_the_two_snapshot_whitelists_are_mirrored():
     ).read_text(encoding="utf-8")
     for strategy_id in operator_probe.SNAPSHOT_REQUEST_STRATEGIES:
         assert '"%s"' % strategy_id in bridge_src, strategy_id
+
+
+def test_after_hours_snapshots_are_collected_on_the_main_root():
+    assert operator_probe.QMT_PROFILE_BRIDGE_ROOTS == {
+        "CLOSE_AUCTION": r"D:\qmt_bridge",
+        "AFTER_HOURS_FIXED_PRICE": r"D:\qmt_bridge",
+    }

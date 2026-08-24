@@ -116,6 +116,9 @@ def test_windows_marker_creator_uses_shared_lock_and_rechecks_inside_it():
         REPO_ROOT / "live_trading/modules/signal_publisher.py"
     ).read_text(encoding="utf-8")
     assert 'AUTHORIZATION_LOCK_NAME = "OPERATOR_AUTHORIZATION.lock"' in publisher
+    assert '$StateRoot, "PR49_LIVE_OK_$TradeDate"' in text
+    assert text.count("PR49_LIVE_OK_$TradeDate") == 2
+    assert 'pr49_probe", "state", "PR49_LIVE_OK_' not in text
 
 
 def _marker_commit_contract(script_text, failure):

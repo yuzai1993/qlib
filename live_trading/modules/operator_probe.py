@@ -50,7 +50,7 @@ SNAPSHOT_REQUEST_STRATEGIES = {
 }
 QMT_PROFILE_BRIDGE_ROOTS = {
     "CLOSE_AUCTION": r"D:\qmt_bridge",
-    "AFTER_HOURS_FIXED_PRICE": r"D:\qmt_bridge\pr49_probe",
+    "AFTER_HOURS_FIXED_PRICE": r"D:\qmt_bridge",
 }
 
 

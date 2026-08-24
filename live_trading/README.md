@@ -333,6 +333,8 @@ bash live_trading/run_monitor_cron.sh postmarket csi1000_b6m_b2s_postclose_real
 `live_trading/.scheduler/<config>/<YYYY-MM-DD>/<stage>.json`。每次调用都会按
 postclose → publish → evening 的固定顺序补齐尚无回执的阶段；无论成功还是失败，每阶段每天都只自动尝试一次。某阶段失败会让整条流水线最终返回非零，但不会阻止后续阶段执行，失败后仍按告警提示人工恢复，不会形成盲目重试。
 
+两项依赖权威收盘价的对账只能放在 `report`，因为 `postmarket` 跑在行情更新之前，那时 T 日收盘价还没入库：`NETTING_CLOSE_MISMATCH`（bridge 定量用价是否等于权威收盘价）与 `FILL_RATIO_*`（分侧加权成交率与回退触发）。行情更新失败会连带跳过 `report`，这两项当天就没有对账证据——必须先修好数据再手工补跑 `run_monitor_cron.sh report <config_id>`，不得在缺证据的情况下放行次日发布。
+
 `run_postclose_cron.sh` 即使遇到导入、postmarket 或股票名称刷新告警也会继续后续步骤，避免非关键问题连带阻断信号发布；行情更新失败时跳过日报，由更新脚本直接告警。股票名称从 Tushare 刷新到本地 SQLite 缓存，Web 页面只读本地数据，不在请求期间访问外网。该脚本在整个流水线期间持有 `.locks/<config>_postclose.lock`，并与发布任务执行双向锁检查；任一方向发现并发都失败关闭，避免读取正在改写的数据。
 
 所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，默认新 CSI1000 配置。调度器和阶段 wrapper 都使用原子目录锁防止并发；残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回，不再被吞掉。系统不自动重试失败阶段或补发，`evening` 告警后必须先检查原因再人工恢复。

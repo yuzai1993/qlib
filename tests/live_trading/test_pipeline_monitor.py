@@ -11,6 +11,7 @@ from live_trading.modules.pipeline_monitor import (
     check_account,
     check_broker_reconcile,
     check_evening,
+    check_netting_close,
     check_postmarket,
     check_probe_execution,
     check_report,
@@ -760,6 +761,70 @@ def test_a_partially_netted_day_with_one_real_fill_is_not_an_incident():
         fills, prev_positions={"600000.SH": 200},
     )
     assert "ALL_ORDERS_SKIPPED" not in _rules(findings)
+
+
+def _priced_fill(used, code="600000.SH"):
+    fill = _fill(code=code)
+    fill["netting_close"] = used
+    return fill
+
+
+def test_netting_close_matching_the_official_close_is_silent():
+    assert check_netting_close(
+        "2026-07-14", [_priced_fill(10.00)], {"600000.SH": 10.00},
+    ) == []
+
+
+def test_a_stale_netting_close_is_critical():
+    """14:57 的冻结价与 15:00 定盘价不同，是静默错单，必须转成 CRIT。"""
+    findings = check_netting_close(
+        "2026-07-14", [_priced_fill(9.80)], {"600000.SH": 10.00},
+    )
+    assert "NETTING_CLOSE_MISMATCH" in _rules(findings)
+    assert all(f.level == "CRIT" for f in findings)
+
+
+def test_a_missing_official_close_is_critical_not_silent():
+    """拿不到权威价就等于对不了账，不能当成对上了。"""
+    findings = check_netting_close("2026-07-14", [_priced_fill(9.80)], {})
+    assert "NETTING_CLOSE_UNVERIFIED" in _rules(findings)
+    assert all(f.level == "CRIT" for f in findings)
+
+
+def test_orders_not_priced_by_a_frozen_close_are_skipped():
+    """netting_close == 0 表示本单不是按冻结价定量的（如 TopkDropout 批次）。"""
+    assert check_netting_close("2026-07-14", [_priced_fill(0.0)], {}) == []
+
+
+def test_float_noise_within_a_cent_does_not_alarm():
+    assert check_netting_close(
+        "2026-07-14", [_priced_fill(10.000004)], {"600000.SH": 10.0},
+    ) == []
+
+
+def test_a_high_priced_name_uses_the_relative_tolerance():
+    """$close/$factor 的浮点误差随价格放大，绝对一分钱不够用。"""
+    assert check_netting_close(
+        "2026-07-14", [_priced_fill(800.03)], {"600000.SH": 800.0},
+    ) == []
+
+
+def test_a_non_positive_official_close_counts_as_unverified():
+    findings = check_netting_close(
+        "2026-07-14", [_priced_fill(10.0)], {"600000.SH": 0.0},
+    )
+    assert "NETTING_CLOSE_UNVERIFIED" in _rules(findings)
+
+
+def test_every_mismatched_name_is_named_in_one_finding():
+    fills = [_priced_fill(9.8), _priced_fill(20.0, code="000001.SZ")]
+    findings = check_netting_close(
+        "2026-07-14", fills, {"600000.SH": 10.0, "000001.SZ": 21.0},
+    )
+    message = next(f.message for f in findings
+                   if f.rule == "NETTING_CLOSE_MISMATCH")
+    assert "600000.SH" in message
+    assert "000001.SZ" in message
 
 
 def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):

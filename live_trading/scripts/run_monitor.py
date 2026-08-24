@@ -43,6 +43,7 @@ from live_trading.modules.pipeline_monitor import (
     check_account,
     check_broker_reconcile,
     check_evening,
+    check_netting_close,
     check_postmarket,
     check_probe_execution,
     check_report,
@@ -537,6 +538,24 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
 
     fills = recorder.get_fills_by_dates([date])
     fills_amount = sum_live_fills_amount(fills)
+
+    # 定量用价对账。只能放在 report 阶段：postclose 的顺序是 postmarket -> update
+    # -> report，postmarket 跑的时候 T 日权威收盘价还没入库。取价范围限定在真正
+    # 按冻结价定量过的票，不必为此多拉一遍全持仓。
+    netting_codes = {
+        f["stock_code"] for f in fills
+        if float(f.get("netting_close") or 0.0) > 0.0
+    }
+    if netting_codes:
+        netting_by_qmt = {code: qmt_to_qlib(code) for code in netting_codes}
+        netting_prices = fetch_close_prices(
+            list(netting_by_qmt.values()), date,
+        )
+        findings += check_netting_close(date, fills, {
+            qmt: netting_prices[ql]
+            for qmt, ql in netting_by_qmt.items()
+            if netting_prices.get(ql) is not None
+        })
 
     daily_row, position_rows, missing = build_snapshot(
         date, positions, cash, prices, bench_close,

@@ -4,6 +4,7 @@
 由 run_monitor.py 负责落库（pipeline_events / alerts）与推送。
 """
 
+import math
 from collections import namedtuple
 
 Finding = namedtuple("Finding", "rule level message")
@@ -205,6 +206,52 @@ def check_postmarket(trade_date, batches, reconciles, fills,
             "NEGATIVE_POSITION", CRIT,
             f"{trade_date} 卖出量超过昨日持仓：{', '.join(oversold)}，"
             "账本可能漂移，停止次日发布并全量核对"))
+    return findings
+
+
+def check_netting_close(trade_date, fills, official_closes,
+                        rel_tol=1e-4, abs_tol=0.01) -> list:
+    """逐单核对 bridge 定量时读到的收盘价与权威收盘价。
+
+    这条对账是接受「旧价定量」尾部风险的前提（spec 第 8 节）。盘后固定价格通道
+    从 15:00:05 起自适应提交，若收盘价终态信号不可用而回落到 15:01 固定提交，
+    理论上仍可能读到 14:57 的冻结价并通过 `> 0` 门禁——股数就按错价算出去了，
+    而且当天没有任何症状。把它转成次日 CRIT 是唯一的兜底。
+
+    netting_close == 0 的单子不是按冻结收盘价定量的（如 TopkDropout 批次），跳过。
+    拿不到权威价一律 CRIT：对不了账不等于对上了。
+    """
+    priced = [f for f in fills if float(f.get("netting_close") or 0.0) > 0.0]
+    if not priced:
+        return []
+
+    findings = []
+    mismatched = []
+    unverified = []
+    for f in priced:
+        code = f["stock_code"]
+        used = float(f["netting_close"])
+        official = official_closes.get(code)
+        if official is None or not math.isfinite(float(official)) \
+                or float(official) <= 0:
+            unverified.append(code)
+            continue
+        official = float(official)
+        if abs(used - official) > max(abs_tol, rel_tol * official):
+            mismatched.append(f"{code} 用价 {used:.4f} 权威价 {official:.4f}")
+
+    if mismatched:
+        findings.append(Finding(
+            "NETTING_CLOSE_MISMATCH", CRIT,
+            f"{trade_date} bridge 定量用价与权威收盘价不符："
+            f"{'；'.join(sorted(mismatched))}。"
+            "股数可能按 14:57 冻结价算出，核对当日委托并评估是否切回 CLOSE_AUCTION"))
+    if unverified:
+        findings.append(Finding(
+            "NETTING_CLOSE_UNVERIFIED", CRIT,
+            f"{trade_date} 取不到权威收盘价，无法核对定量用价："
+            f"{', '.join(sorted(set(unverified)))}。"
+            "对不了账不等于对上了，请人工核对后再放行次日发布"))
     return findings
 
 

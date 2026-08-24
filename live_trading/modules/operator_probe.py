@@ -41,7 +41,13 @@ SNAPSHOT_PUBLISH_CUTOFF = "14:45:00"
 SNAPSHOT_ADVANCE_GATE_NAME = "SNAPSHOT_ORDER_ADVANCE.lock"
 SNAPSHOT_MAC_LIFECYCLE_LOCK_NAME = "SNAPSHOT_MAC_LIFECYCLE.lock"
 MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
-SNAPSHOT_REQUEST_STRATEGIES = {MAIN_STRATEGY_ID, PROBE_STRATEGY_ID}
+# 全A 真阶梯（BT v4）。切换期间与 csi1000 主策略并存于白名单：白名单只管
+# 「谁可以请求账户快照」，不决定谁在被调度。bridge 侧 _SNAPSHOT_REQUEST_STRATEGIES
+# 必须与本集合逐项一致，test_the_two_snapshot_whitelists_are_mirrored 守这条。
+LADDER_STRATEGY_ID = "alla_v4_ladder_k3h5_postclose_real"
+SNAPSHOT_REQUEST_STRATEGIES = {
+    MAIN_STRATEGY_ID, PROBE_STRATEGY_ID, LADDER_STRATEGY_ID,
+}
 QMT_PROFILE_BRIDGE_ROOTS = {
     "CLOSE_AUCTION": r"D:\qmt_bridge",
     "AFTER_HOURS_FIXED_PRICE": r"D:\qmt_bridge\pr49_probe",

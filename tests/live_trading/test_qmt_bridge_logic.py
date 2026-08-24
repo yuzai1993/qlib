@@ -4110,3 +4110,8 @@ def test_market_price_evidence_records_the_timetag(bridge):
     ctx = _TickCtx(10.0)
     evidence = bridge._market_price_evidence(ctx, "600000.SH", 10.0)
     assert "timetag" in evidence["tick_fields"]
+
+
+def test_bridge_snapshot_whitelist_includes_the_ladder_strategy(bridge):
+    assert "alla_v4_ladder_k3h5_postclose_real" \
+        in bridge._SNAPSHOT_REQUEST_STRATEGIES

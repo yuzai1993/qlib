@@ -2777,3 +2777,19 @@ def test_probe_sell_positions_only_snapshot_without_symbol_is_not_evidence(
     assert recorder.get_broker_positions("2026-08-10") == {}
     assert recorder.get_operator_probe_lifecycle(STRATEGY_ID)["state"] \
         == "SELL_PLANNED"
+
+
+LADDER_STRATEGY_ID = "alla_v4_ladder_k3h5_postclose_real"
+
+
+def test_the_ladder_strategy_may_request_an_account_snapshot():
+    assert LADDER_STRATEGY_ID in operator_probe.SNAPSHOT_REQUEST_STRATEGIES
+
+
+def test_the_two_snapshot_whitelists_are_mirrored():
+    """Mac 与 bridge 各存一份，任一侧漏改都会让快照观测在切换当天被拒。"""
+    bridge_src = (
+        REPO_ROOT / "live_trading" / "qmt_strategy" / "qmt_signal_bridge.py"
+    ).read_text(encoding="utf-8")
+    for strategy_id in operator_probe.SNAPSHOT_REQUEST_STRATEGIES:
+        assert '"%s"' % strategy_id in bridge_src, strategy_id

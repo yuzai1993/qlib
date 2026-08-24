@@ -586,9 +586,10 @@ def test_audit_preview_loader_rejects_unsafe_strategy_path():
 # ---------- postmarket ----------
 
 def _fill(status="FILLED", side="BUY", code="600000.SH", qty=100, mode="LIVE",
-          batch_id=BATCH["batch_id"], message=""):
+          batch_id=BATCH["batch_id"], message="", netted_qty=0):
     return {"batch_id": batch_id, "mode": mode, "status": status, "side": side,
-            "stock_code": code, "filled_qty": qty, "message": message}
+            "stock_code": code, "filled_qty": qty, "message": message,
+            "netted_qty": netted_qty}
 
 
 def test_postmarket_ok():
@@ -708,6 +709,55 @@ def test_postmarket_live_fill_does_not_report_all_skipped():
         {BATCH["batch_id"]: {"planned": 2, "terminal": 2, "missing": 0}},
         [_fill(), _fill(status="SKIPPED", code="000001.SZ", qty=0)],
         prev_positions={},
+    )
+    assert "ALL_ORDERS_SKIPPED" not in _rules(findings)
+
+
+def test_a_fully_netted_ladder_day_is_not_an_all_skipped_incident():
+    """三只票全额抵销：回执全 SKIPPED 且 filled_qty=0，但股数确实动了。"""
+    fills = [
+        _fill(status="SKIPPED", side="SELL", code="600000.SH", qty=0,
+              netted_qty=300, message="netted against same-day buy"),
+        _fill(status="SKIPPED", side="BUY", code="600000.SH", qty=0,
+              netted_qty=300, message="netted against same-day due sell"),
+    ]
+    findings = check_postmarket(
+        "2026-07-14",
+        [{**BATCH, "mode": "LIVE", "planned_orders": 2}],
+        {BATCH["batch_id"]: {"planned": 2, "terminal": 2, "missing": 0}},
+        fills, prev_positions={"600000.SH": 300},
+    )
+    assert "ALL_ORDERS_SKIPPED" not in _rules(findings)
+
+
+def test_all_skipped_with_nothing_netted_is_still_critical():
+    """真的什么都没发生：既没成交也没抵销，仍须 CRIT。"""
+    fills = [
+        _fill(status="SKIPPED", code="600000.SH", qty=0,
+              message="official close unavailable"),
+        _fill(status="SKIPPED", code="000001.SZ", qty=0,
+              message="official close unavailable"),
+    ]
+    findings = check_postmarket(
+        "2026-07-14",
+        [{**BATCH, "mode": "LIVE", "planned_orders": 2}],
+        {BATCH["batch_id"]: {"planned": 2, "terminal": 2, "missing": 0}},
+        fills, prev_positions={},
+    )
+    assert "ALL_ORDERS_SKIPPED" in _rules(findings)
+
+
+def test_a_partially_netted_day_with_one_real_fill_is_not_an_incident():
+    fills = [
+        _fill(status="SKIPPED", side="SELL", code="600000.SH", qty=0,
+              netted_qty=200, message="netted against same-day buy"),
+        _fill(status="FILLED", side="BUY", code="600000.SH", qty=100),
+    ]
+    findings = check_postmarket(
+        "2026-07-14",
+        [{**BATCH, "mode": "LIVE", "planned_orders": 2}],
+        {BATCH["batch_id"]: {"planned": 2, "terminal": 2, "missing": 0}},
+        fills, prev_positions={"600000.SH": 200},
     )
     assert "ALL_ORDERS_SKIPPED" not in _rules(findings)
 

@@ -174,6 +174,9 @@ def check_postmarket(trade_date, batches, reconciles, fills,
         and all(
             f.get("status") == "SKIPPED"
             and int(f.get("filled_qty") or 0) == 0
+            # 抵销掉的股数是真的动了，只是没走市场（spec 4.4）。
+            # 少了这一条，抵销越成功这条 CRIT 就越响。
+            and int(f.get("netted_qty") or 0) == 0
             for f in live_fills
         )
     ):

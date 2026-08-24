@@ -1565,7 +1565,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: 跑脚本**
+- [x] **Step 2: 跑脚本**
 
 ```bash
 cd /Users/yuxianqi/Project/qlib_exp && \
@@ -1580,7 +1580,7 @@ BT v4 产物；找不到就在提交信息里注明该前提。
 > macOS 注意：本脚本会触发 Qlib 并行取数，**必须**以文件形式运行，不能用
 > heredoc/stdin（见 `.cursor/rules/qlib-shell-multiprocessing.mdc`）。
 
-- [ ] **Step 3: 把实测数字写回 spec**
+- [x] **Step 3: 把实测数字写回 spec**
 
 `docs/superpowers/specs/2026-08-23-live-v4-cohort-ladder-netting-design.md` 第 8 节
 「名字集合与回测不同」那一段，把「频率待诊断脚本量化」替换为实测结论，格式：
@@ -1591,7 +1591,7 @@ BT v4 产物；找不到就在提交信息里注明该前提。
 topk=3）：发生顺延的交易日 X 个（Y%），平均每日顺延 Z 次，凑不满 top3 的交易日 W 个（V%）。
 ```
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add live_trading/scripts/diagnose_ladder_skip_rate.py \
@@ -1603,18 +1603,30 @@ git commit -m "feat: quantify how often the ladder's backtest defers an unbuyabl
 
 ## 完成标准
 
-- [ ] 全套实盘单测通过：
-      `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/live_trading/ -v`
-- [ ] 一个三只票全额抵销的交易日不再产生 `ALL_ORDERS_SKIPPED`，而一个真的什么都没发生的
+全部达成，2026-08-24 逐条核验：
+
+- [x] 全套实盘单测通过：`pytest tests/live_trading/ -q` → **1077 passed**
+- [x] 一个三只票全额抵销的交易日不再产生 `ALL_ORDERS_SKIPPED`，而一个真的什么都没发生的
       交易日仍然 CRIT
-- [ ] `fills` 表有 `netting_close` 与 `intended_qty` 两列，且历史库能就地迁移出来
-- [ ] `report` 阶段会因「定量用价与权威收盘价不符」或「取不到权威价」报 CRIT
-- [ ] `report` 阶段输出买卖两侧加权成交率，并在单日 < 50% 或连续 3 日 < 80% 时报 CRIT
-- [ ] `render_main_source()` 不传任何可选参数时，产出的运行时是
+- [x] `fills` 表有 `netting_close` 与 `intended_qty` 两列，且历史库能就地迁移出来
+      （另跑了一次手工验证：缺两列的旧库经 `LiveRecorder` 构造后补齐，历史行完好、新列取
+      到 0 默认值）
+- [x] `report` 阶段会因「定量用价与权威收盘价不符」或「取不到权威价」报 CRIT
+- [x] `report` 阶段输出买卖两侧加权成交率，并在单日 < 50% 或连续 3 日 < 80% 时报 CRIT
+      （两个下限都是**严格**不等号：正好 50% 不报 CRIT，正好 80% 不计入连续计数）
+- [x] `render_main_source()` 不传任何可选参数时，产出的运行时是
       `AFTER_HOURS_FIXED_PRICE` + `ENABLE_LADDER_NETTING = True` + `MAX_ORDER_QUANTITY = 0`；
-      而仓库模板本身仍是保守的三个值
-- [ ] 新策略 id 同时在 Mac 与 bridge 两份快照白名单里
-- [ ] 顺延频率的实测数字已回写 spec 第 8 节（若跳过 Task 7，在此注明）
+      而仓库模板本身仍是保守的 `CLOSE_AUCTION` / `False` / `100`
+- [x] 新策略 id 同时在 Mac 与 bridge 两份快照白名单里（并有一个测试锁住两份白名单互为镜像）
+- [x] 顺延频率的实测数字已回写 spec 第 8 节：224/1211 天（18.5%）发生顺延，但凑不满 top3
+      的天数为 0——实盘「不顺延」的后果是换名字而非层变薄
+
+### 留给计划四的已知缺口
+
+- **`report` 依赖 `update` 成功。** `NETTING_CLOSE_MISMATCH` 与 `FILL_RATIO_*` 都活在
+  `report` 阶段，而 `report` 在 `update` 失败时被整体跳过——那天这两项对账不会跑，也不会
+  有人被告知它们没跑。建仓期必须人工确认 `report` 真的执行了。已记在 `README.md` 调度节。
+- **收盘价对账只在次日发生。** 定量用错价当天无法发现，只能次日 CRIT 后回溯。
 
 ## 不在本计划内（归计划四：切换手册）
 

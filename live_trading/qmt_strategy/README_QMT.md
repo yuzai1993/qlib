@@ -171,7 +171,9 @@ Shadow 通过后，必须同时满足：
 1. Mac 发布 `mode=LIVE`，且进程环境有 `LIVE_TRADING_CONFIRM=YES`；
 2. Windows 当天存在 `D:\qmt_bridge\state\LIVE_OK_YYYY-MM-DD`。
 
-此外保持 `MAX_ORDER_QUANTITY = 100`。这会把每个可执行买卖订单限制为一手。每天开盘前确认 QMT UI 绑定的是模拟账户，收盘后逐单核对价格类型、官方收盘价、数量、委托状态和回执。
+仓库模板里 `MAX_ORDER_QUANTITY = 100`、`ENABLE_LADDER_NETTING = False`、`EXECUTION_PROFILE = "CLOSE_AUCTION"` 是**故意保守**的：模板被误当成生产脚本直接跑也不会造成损失。生产形态一律由 [`live_trading/scripts/render_qmt_runtime.py`](../scripts/render_qmt_runtime.py) 渲染产生——盘后固定价格通道、开启阶梯抵销、`MAX_ORDER_QUANTITY = 0`（即无上限）。**不要手工编辑本地副本里的这三个常量**：渲染产物是唯一的生产事实来源，手改会让运行时与仓库记录对不上。需要回退到收盘集合竞价时，重新渲染并传 `execution_profile="CLOSE_AUCTION", enable_ladder_netting=False`，不要就地改文件。
+
+一手阶段（`MAX_ORDER_QUANTITY = 100`）把每个可执行买卖订单限制为一手，那是探针的刻意限制。每天开盘前确认 QMT UI 绑定的账户，收盘后逐单核对价格类型、官方收盘价、数量、委托状态和回执。
 
 删除 `LIVE_OK` 只禁止后续新提交。已经提交的 LIVE 订单仍会继续查询、撤单和终结。
 执行决定在 14:57:05 首次交易唤醒时冻结；首次缺少 `LIVE_OK` 的批次即使稍后补建开关，也会整批保持 simulated。

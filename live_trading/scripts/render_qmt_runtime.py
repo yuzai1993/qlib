@@ -29,11 +29,28 @@ def _validate_account_id(account_id: str) -> str:
     return value
 
 
-def render_main_source(source: str, account_id: str, expected_cash: float) -> str:
+_VALID_EXECUTION_PROFILES = ("CLOSE_AUCTION", "AFTER_HOURS_FIXED_PRICE")
+
+
+def render_main_source(source: str, account_id: str, expected_cash: float, *,
+                       execution_profile: str = "AFTER_HOURS_FIXED_PRICE",
+                       enable_ladder_netting: bool = True,
+                       max_order_quantity: int = 0) -> str:
+    """把仓库模板渲染成生产运行时。
+
+    渲染而不是改仓库默认值：模板保持最保守形态（旧通道、不抵销、一手上限），
+    生产形态只出现在渲染产物里，模板被误当生产脚本直接跑也不会造成损失。
+    默认参数就是生产形态——漏传参数会得到正确结果，而不是静默退回一手探针。
+    """
     account_id = _validate_account_id(account_id)
     cash = float(expected_cash)
     if not math.isfinite(cash) or cash < 0:
         raise ValueError("expected cash must be a finite non-negative number")
+    if execution_profile not in _VALID_EXECUTION_PROFILES:
+        raise ValueError(f"unknown execution profile: {execution_profile!r}")
+    cap = int(max_order_quantity)
+    if cap < 0:
+        raise ValueError("max order quantity must not be negative")
     settings = (
         ("ACCOUNT_ID", f'"{account_id}"'),
         ("STRATEGY_NAME", '"qlib_bridge_main"'),
@@ -41,6 +58,10 @@ def render_main_source(source: str, account_id: str, expected_cash: float) -> st
         ("ALLOW_REAL_MONEY", "True"),
         ("REAL_EXPECTED_INITIAL_CASH", f"{cash:.2f}"),
         ("REAL_REQUIRE_EMPTY_POSITIONS", "False"),
+        ("EXECUTION_PROFILE", f'"{execution_profile}"'),
+        ("ENABLE_LADDER_NETTING", "True" if enable_ladder_netting else "False"),
+        # 0 = 无上限。真阶梯单笔约 6 万元，一手闸会把每层砍成 100 股。
+        ("MAX_ORDER_QUANTITY", str(cap)),
     )
     rendered = source
     for name, value in settings:

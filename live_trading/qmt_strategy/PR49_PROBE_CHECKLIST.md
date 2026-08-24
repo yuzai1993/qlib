@@ -1,5 +1,9 @@
 # prType=49 一手 BUY→次交易日 SELL 操作清单
 
+> 说明：本清单描述的是**一手探针阶段**的约束。`MAX_ORDER_QUANTITY = 100` 是探针的
+> 刻意限制，不是主策略的生产设置——主策略的上限由 `render_qmt_runtime.py` 渲染决定
+> （生产值为 `0`，即无上限）。探针的退役状态见全A 真阶梯的切换手册。
+
 本清单只用于真实账户上的受控一手探针，不是正式建仓入口。探针固定使用：
 
 - `live_trading/configs/csi1000_pr49_one_lot_probe.yaml`

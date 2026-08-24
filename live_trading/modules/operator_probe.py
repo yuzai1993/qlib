@@ -40,6 +40,8 @@ SNAPSHOT_EVIDENCE_PURPOSE = "SHARED_REAL_ACCOUNT_OPERATOR_PREFLIGHT"
 SNAPSHOT_PUBLISH_CUTOFF = "14:45:00"
 SNAPSHOT_ADVANCE_GATE_NAME = "SNAPSHOT_ORDER_ADVANCE.lock"
 SNAPSHOT_MAC_LIFECYCLE_LOCK_NAME = "SNAPSHOT_MAC_LIFECYCLE.lock"
+# Historical operator-probe pairing. Do not retarget at the ladder:
+# a leftover probe config would then be able to pause the new main.
 MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 # 全A 真阶梯（BT v4）。切换期间与 csi1000 主策略并存于白名单：白名单只管
 # 「谁可以请求账户快照」，不决定谁在被调度。bridge 侧 _SNAPSHOT_REQUEST_STRATEGIES

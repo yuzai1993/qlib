@@ -16,6 +16,8 @@ from live_trading.modules.monitor_store import MonitorStore
 
 MONITOR_STAGES = ["postmarket", "report", "evening"]
 PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
+# Historical operator-probe pairing. Do not retarget this at the ladder:
+# a leftover probe config would then be able to pause the new main.
 MAIN_REAL_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 PROBE_PROFILE = "AFTER_HOURS_FIXED_PRICE"
 
@@ -46,6 +48,9 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
     def _profile_name(strategy_id: str) -> str:
         if strategy_id == PROBE_STRATEGY_ID:
             return PROBE_PROFILE
+        current_id = config["live"].get("strategy_id", "")
+        if strategy_id == current_id:
+            return config["live"].get("execution_session") or "CLOSE_AUCTION"
         return "CLOSE_AUCTION"
 
     def _probe_lifecycle():
@@ -118,7 +123,7 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             "strategy_statuses": [
                 {
                     "strategy_id": main_strategy_id,
-                    "execution_profile": "CLOSE_AUCTION",
+                    "execution_profile": _profile_name(main_strategy_id),
                     "execution_state": main_state,
                     "active_batch_id": (
                         (_latest_active(main_strategy_id, "LIVE") or {}).get(

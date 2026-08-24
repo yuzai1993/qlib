@@ -13,6 +13,8 @@ from live_trading.modules.execution_profile import get_execution_profile
 _BASELINE_KEYS = {
     "first_snapshot_date", "opening_total_value", "benchmark_close",
 }
+# Historical operator-probe pairing. Leave pointing at CSI1000 so a
+# leftover probe yaml cannot pause the ladder.
 _OPERATOR_PROBE_MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 
 

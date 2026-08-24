@@ -151,6 +151,29 @@ def client(tmp_path):
     return TestClient(app)
 
 
+def test_overview_reads_the_execution_session_from_the_loaded_config(tmp_path):
+    db = tmp_path / "live.db"
+    LiveRecorder(str(db), opening_cash=100_000.0)
+    app = create_app({
+        "live": {
+            "bridge_root": str(tmp_path / "bridge"),
+            "strategy_id": "alla_v4_ladder_k3h5_postclose_real",
+            "execution_session": "AFTER_HOURS_FIXED_PRICE",
+            "default_mode": "LIVE",
+        },
+        "monitor": {"benchmark_name": "中证全指"},
+        "storage": {"db_path": str(db)},
+    }, Path("/"))
+    data = TestClient(app).get("/api/overview").json()
+    assert data["strategy_id"] == "alla_v4_ladder_k3h5_postclose_real"
+    assert data["execution_profile"] == "AFTER_HOURS_FIXED_PRICE"
+    main_row = next(
+        row for row in data["strategy_statuses"]
+        if row["strategy_id"] == "alla_v4_ladder_k3h5_postclose_real"
+    )
+    assert main_row["execution_profile"] == "AFTER_HOURS_FIXED_PRICE"
+
+
 def test_overview(client):
     r = client.get("/api/overview")
     assert r.status_code == 200

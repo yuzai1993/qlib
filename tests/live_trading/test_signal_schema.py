@@ -342,3 +342,43 @@ def test_fill_event_ignores_unknown_receipt_keys():
     })
 
     assert parsed.netted_qty == 0
+    assert parsed.netting_close == 0.0
+    assert parsed.intended_qty == 0
+
+
+def test_fill_event_carries_the_pricing_evidence_and_defaults_to_zero():
+    plain = FillEvent(
+        batch_id="b", client_order_id="c", mode="LIVE", stock_code="SH600000",
+        side="SELL", status="SKIPPED", requested_qty=300, filled_qty=0,
+        avg_price=0.0, qmt_order_id="", message="", ts="t",
+    )
+
+    assert plain.netting_close == 0.0
+    assert plain.intended_qty == 0
+    assert '"netting_close":0.0' in plain.to_json_line()
+    assert '"intended_qty":0' in plain.to_json_line()
+
+
+@pytest.mark.parametrize("changes", [
+    {"netting_close": -1.0},
+    {"netting_close": float("nan")},
+    {"netting_close": float("inf")},
+    {"intended_qty": -100},
+])
+def test_validate_fill_rejects_bad_pricing_evidence(changes):
+    f = FillEvent(
+        batch_id="20260714_csi300_topk10_001",
+        client_order_id="20260714001001S",
+        mode="LIVE",
+        stock_code="600000.SH",
+        side="SELL",
+        status="FILLED",
+        requested_qty=800,
+        filled_qty=800,
+        avg_price=10.45,
+        qmt_order_id="1",
+        message="",
+        ts="2026-07-14T09:31:12+08:00",
+    )
+    with pytest.raises(SchemaError):
+        validate_fill(dataclasses.replace(f, **changes))

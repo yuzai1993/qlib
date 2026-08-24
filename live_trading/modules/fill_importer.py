@@ -251,6 +251,8 @@ class LiveRecorder:
                     applied_amount REAL NOT NULL DEFAULT 0,
                     applied_fee REAL NOT NULL DEFAULT 0,
                     netted_qty INTEGER NOT NULL DEFAULT 0,
+                    netting_close REAL NOT NULL DEFAULT 0,
+                    intended_qty INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY (batch_id, client_order_id)
                 );
 
@@ -472,6 +474,16 @@ class LiveRecorder:
             if "netted_qty" not in cols:
                 conn.execute(
                     "ALTER TABLE fills ADD COLUMN netted_qty "
+                    "INTEGER NOT NULL DEFAULT 0"
+                )
+            if "netting_close" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN netting_close "
+                    "REAL NOT NULL DEFAULT 0"
+                )
+            if "intended_qty" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN intended_qty "
                     "INTEGER NOT NULL DEFAULT 0"
                 )
             position_cols = {
@@ -712,6 +724,8 @@ class LiveRecorder:
                     applied_amount REAL NOT NULL DEFAULT 0,
                     applied_fee REAL NOT NULL DEFAULT 0,
                     netted_qty INTEGER NOT NULL DEFAULT 0,
+                    netting_close REAL NOT NULL DEFAULT 0,
+                    intended_qty INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY (batch_id, client_order_id)
                 );
                 INSERT INTO fills (
@@ -740,6 +754,16 @@ class LiveRecorder:
             if "netted_qty" not in cols:
                 conn.execute(
                     "ALTER TABLE fills ADD COLUMN netted_qty "
+                    "INTEGER NOT NULL DEFAULT 0"
+                )
+            if "netting_close" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN netting_close "
+                    "REAL NOT NULL DEFAULT 0"
+                )
+            if "intended_qty" not in cols:
+                conn.execute(
+                    "ALTER TABLE fills ADD COLUMN intended_qty "
                     "INTEGER NOT NULL DEFAULT 0"
                 )
 
@@ -1694,8 +1718,8 @@ class LiveRecorder:
                 """INSERT INTO fills (client_order_id, batch_id, mode, stock_code,
                        side, status, requested_qty, filled_qty, avg_price,
                        qmt_order_id, message, ts, applied_qty, applied_amount,
-                       applied_fee, netted_qty)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       applied_fee, netted_qty, netting_close, intended_qty)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON CONFLICT(batch_id, client_order_id) DO UPDATE SET
                        status=excluded.status,
                        filled_qty=excluded.filled_qty,
@@ -1706,14 +1730,18 @@ class LiveRecorder:
                        applied_qty=excluded.applied_qty,
                        applied_amount=excluded.applied_amount,
                        applied_fee=excluded.applied_fee,
-                       netted_qty=excluded.netted_qty""",
-                # netted_qty 只落盘，绝不参与 delta_qty / delta_amount / fee_delta：
-                # 抵销的全部意义就是「不动持仓、不动现金、不计费」。
+                       netted_qty=excluded.netted_qty,
+                       netting_close=excluded.netting_close,
+                       intended_qty=excluded.intended_qty""",
+                # netted_qty / netting_close / intended_qty 都只落盘，绝不参与
+                # delta_qty / delta_amount / fee_delta：抵销的全部意义就是
+                # 「不动持仓、不动现金、不计费」。后两个纯粹是对账与指标的证据。
                 (fill.client_order_id, fill.batch_id, fill.mode, fill.stock_code,
                  fill.side, fill.status, fill.requested_qty, fill.filled_qty,
                  fill.avg_price, fill.qmt_order_id, fill.message, fill.ts,
                  applied_qty + delta_qty, applied_amount + delta_amount,
-                 applied_fee + fee_delta, int(fill.netted_qty)),
+                 applied_fee + fee_delta, int(fill.netted_qty),
+                 float(fill.netting_close), int(fill.intended_qty)),
             )
             self._refresh_operator_probe_lifecycle_conn(conn)
 

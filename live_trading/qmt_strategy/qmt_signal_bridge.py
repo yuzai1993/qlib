@@ -782,6 +782,7 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
     requested_qty = int(order.get("quantity", 0) or 0)
     if requested_qty <= 0 and order.get("side") == "BUY":
         requested_qty = 100
+    intended_qty = int(order.get("intended_qty", 0) or 0) or requested_qty
     event = {
         "type": "fill_event",
         "batch_id": batch.batch_id(),
@@ -799,6 +800,13 @@ def _write_fill(batch, order, status, filled_qty, avg_price, qmt_order_id, messa
         # Shares satisfied by same-day internal transfer instead of a market
         # order. Mac reconstructs the ladder move from applied_qty + netted_qty.
         "netted_qty": int(order.get("netted_qty", 0) or 0),
+        # The close this order was sized on. Mac reconciles it against the
+        # official close next, turning a silently mispriced size into a CRIT.
+        # 0 means the order was not sized off a frozen close at all.
+        "netting_close": float(order.get("netting_close", 0.0) or 0.0),
+        # Pre-netting ladder intent, the only sound denominator for a fill
+        # ratio. Falls back to requested_qty for batches that never netted.
+        "intended_qty": intended_qty,
     }
     prev = batch.fills.get(order["client_order_id"])
     if prev is not None and prev["status"] == status \
@@ -3277,12 +3285,17 @@ def _plan_ladder_netting(ContextInfo, batch):
         buy["netting_sized_shares"] = sized
         buy["netted_qty"] = transferred
         buy["net_quantity"] = quantity if side == "BUY" else 0
+        # What the ladder actually wanted, before netting. requested_qty cannot
+        # serve this role: on a partial offset it is the market leg, and on a
+        # full offset the buy leg gets rewritten to the transferred amount.
+        buy["intended_qty"] = sized
         if offsetable:
             # The sell leg carries the same close: next-day reconciliation of the
             # transferred shares needs the price the decision was made at.
             sell["netting_close"] = close_price
             sell["netted_qty"] = transferred
             sell["net_quantity"] = quantity if side == "SELL" else 0
+            sell["intended_qty"] = due_shares
 
         _log_event(
             "LADDER_NET",

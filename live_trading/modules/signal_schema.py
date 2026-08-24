@@ -116,6 +116,14 @@ class FillEvent:
     # 走独立字段而不是伪造成交额：伪造会让 apply_fill 重新计费，
     # 正好抹掉抵销省下的那 0.092%。
     netted_qty: int = 0
+    # bridge 当时用于定量的收盘价。Mac 在 report 阶段拿权威收盘价与它逐单对账，
+    # 把「读到 14:57 冻结价」这类静默错误转成 CRIT（spec 第 8 节，不得省略）。
+    # 0 表示本单不是按冻结收盘价定量的（如 TopkDropout 批次），对账端跳过。
+    netting_close: float = 0.0
+    # 阶梯本意要的股数（抵销前）。成交率的分母只能用它：requested_qty 在部分抵销
+    # 时是市场腿、在完全抵销时被改写成全额，两种口径混着算不出可比的比率。
+    # 0 表示退化为 requested_qty。
+    intended_qty: int = 0
 
     def to_json_line(self) -> str:
         return _to_json_line(self, "fill_event")
@@ -280,6 +288,24 @@ def validate_fill(fill: FillEvent) -> None:
     ):
         raise SchemaError(
             f"avg_price must be positive when filled_qty > 0: {fill.avg_price!r}"
+        )
+    if (
+        isinstance(fill.netting_close, bool)
+        or not isinstance(fill.netting_close, (int, float))
+        or not math.isfinite(float(fill.netting_close))
+        or fill.netting_close < 0
+    ):
+        raise SchemaError(
+            "netting_close must be a non-negative finite number: "
+            f"{fill.netting_close!r}"
+        )
+    if (
+        isinstance(fill.intended_qty, bool)
+        or not isinstance(fill.intended_qty, int)
+        or fill.intended_qty < 0
+    ):
+        raise SchemaError(
+            f"intended_qty must be a non-negative int: {fill.intended_qty!r}"
         )
     from live_trading.modules.code_map import qmt_to_qlib
     try:

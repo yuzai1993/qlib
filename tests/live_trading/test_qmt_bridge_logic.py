@@ -3733,6 +3733,90 @@ def test_exact_offset_submits_nothing_and_transfers_everything(
     assert bridge.g.batch is None      # 全部终态，批次已收尾
 
 
+def test_receipts_carry_the_close_the_bridge_sized_on(
+    bridge, monkeypatch, tmp_path,
+):
+    """定价证据必须随回执离开 Windows：Mac 侧的次日对账只有这一条路。
+
+    netting_close 本来只写进 bridge 本地的 active_*.json，Mac 没有任何 reader。
+    """
+    _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    fills = {row["client_order_id"]: row for row in _read_fills(bridge)}
+    assert fills
+    for row in fills.values():
+        assert row["netting_close"] == 10.0
+
+
+def test_intended_qty_is_the_pre_netting_ladder_target(
+    bridge, monkeypatch, tmp_path,
+):
+    """intended_qty 是阶梯本意要的股数，与抵销无关。
+
+    C = 10.0, V = 5000 -> B = 500；S = 300 -> net BUY 200, transferred 300。
+    买腿只往市场送 200，但本意是 500——这个差别只在「市场腿」上看得见，所以要把
+    它推到终态才有回执。requested_qty 顶不了成交率分母这个位置，就是因为它在这里
+    是 200：拿它当分母，抵销掉的 300 股会让比率算出 250%。
+    """
+    _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    batch = bridge.g.batch
+    assert batch is not None, "买腿还没终态，批次不该收尾"
+    buy_order = next(o for o in batch.orders if o["side"] == "BUY")
+    _write_terminal_fill(bridge, batch, buy_order)
+
+    fills = {row["client_order_id"]: row for row in _read_fills(bridge)}
+    buy = fills["20260714001002B"]
+    sell = fills["20260714001001S"]
+    assert buy["requested_qty"] == 200
+    assert buy["intended_qty"] == 500
+    assert sell["intended_qty"] == 300
+
+
+def test_a_fully_offset_pair_reports_intent_on_both_legs(
+    bridge, monkeypatch, tmp_path,
+):
+    """完全抵销：两腿都没走市场，但本意各是 300 股，成交率必须算成 100%。"""
+    _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty=300, target_value=3_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    fills = {row["client_order_id"]: row for row in _read_fills(bridge)}
+    assert len(fills) == 2
+    for row in fills.values():
+        assert row["intended_qty"] == 300
+        assert row["netted_qty"] == 300
+        assert row["intended_qty"] >= row["netted_qty"]
+
+
+def test_receipts_without_netting_fall_back_to_requested_intent(
+    bridge, monkeypatch, tmp_path,
+):
+    """没抵销过的批次（如 TopkDropout）：intended 退化为 requested，close 留 0。"""
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    bridge.ENABLE_LADDER_NETTING = False
+    _ladder_batch(bridge, sell_qty=300, target_value=5_000.0)
+    bridge._claim_new_batch()
+
+    _ladder_ticks(bridge, _TickCtx(10.0, up_stop=11.0, down_stop=9.0))
+
+    assert submitted, "关掉抵销后两腿都该真下单"
+    fills = {row["client_order_id"]: row for row in _read_fills(bridge)}
+    for row in fills.values():
+        assert row["netting_close"] == 0.0
+        assert row["intended_qty"] == row["requested_qty"]
+
+
 def test_odd_lot_due_amount_is_never_netted(bridge, monkeypatch, tmp_path):
     """S=120 时 net=B-S 不是整百，买入不允许非整百。该票整体走不抵销的老路，
     两腿都正常下单，代价是那一次的往返费。"""

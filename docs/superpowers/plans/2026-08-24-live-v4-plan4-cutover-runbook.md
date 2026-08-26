@@ -911,4 +911,19 @@ git commit -m "docs: record the live cutover onto the all-A v4 ladder"
   cohort_* 行数全是 0。这是计划一/二 dry-run 误 seed 的。任务 8 起账前必须先删这个
   空库再按券商现金重建——用户明确同意后才能删。
 
-（任务 4、5、6、11 往这里追加。没有记录等于没做。）
+### 2026-08-26 · 任务 4、5（生产账户观察日志）
+
+文件：`/Volumes/qmt_bridge/observe/observe_20260826.jsonl`（约 1.6 GB；策略从 25 日 23:00
+一直挂到 26 日晚，应尽快停掉）。10 只名单齐。收盘窗口切片 14:49–15:07。
+
+**任务 4 未通过（切换硬停止）。** 10/10 的 `after_hours_eligible` 全程是 `None`。
+`get_instrument_detail` 返回约 30 个字段（`InstrumentID` / `UpStopPrice` / `PreClose` /
+`IsTrading` 等），**没有** `IsAfterHoursTrading` / `AfterHoursTrading` / `FixedPriceTrading`
+或任何名字里带 after/fixed/hours 的键。按 spec 4.7，字段缺失即 fail-closed：切到盘后后
+**所有订单**会在 `passorder` 前变 `SECURITY_ELIGIBILITY_ERROR`。不是「这 10 只不能盘后」，
+是券商接口根本没给资格字段。
+
+**任务 5 通过。** tick 带 `timetag`。10 只都在 15:00:00 ±2 秒从 `close_is_final=False`
+翻成 `True`（最慢的浦发/东方财富 15:00:02）。自适应提交可用，不必退回固定 15:01。
+
+（任务 6、11 往这里追加。没有记录等于没做。）

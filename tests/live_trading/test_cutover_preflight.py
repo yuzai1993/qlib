@@ -3,8 +3,8 @@ from pathlib import Path
 
 from live_trading.scripts.cutover_preflight import cutover_preflight
 
-CONFIG_REL = Path("live_trading/configs/alla_v4_ladder_k3h5_postclose_real.yaml")
-DB_REL = Path("live_trading/data/alla_v4_ladder_k3h5_postclose_real.db")
+CONFIG_REL = Path("live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml")
+DB_REL = Path("live_trading/data/alla_v4_ladder_k1h5_postclose_real.db")
 
 
 def _write_yaml(root: Path, opening_cash: float) -> None:
@@ -19,7 +19,7 @@ def _write_yaml(root: Path, opening_cash: float) -> None:
         model:
           members: []
         live:
-          strategy_id: alla_v4_ladder_k3h5_postclose_real
+          strategy_id: alla_v4_ladder_k1h5_postclose_real
     """), encoding="utf-8")
 
 

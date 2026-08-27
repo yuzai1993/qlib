@@ -2780,10 +2780,12 @@ def test_probe_sell_positions_only_snapshot_without_symbol_is_not_evidence(
 
 
 LADDER_STRATEGY_ID = "alla_v4_ladder_k3h5_postclose_real"
+OBSERVATION_LADDER_STRATEGY_ID = "alla_v4_ladder_k1h5_postclose_real"
 
 
 def test_the_ladder_strategy_may_request_an_account_snapshot():
     assert LADDER_STRATEGY_ID in operator_probe.SNAPSHOT_REQUEST_STRATEGIES
+    assert OBSERVATION_LADDER_STRATEGY_ID in operator_probe.SNAPSHOT_REQUEST_STRATEGIES
 
 
 def test_the_two_snapshot_whitelists_are_mirrored():

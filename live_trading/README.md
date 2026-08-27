@@ -1,25 +1,32 @@
-# CSI1000 B6-M 收盘集合竞价实盘交易
+# 全A v4 观察实盘（top1×h5）
 
-当前活动系统是 `csi1000_b6m_b2s_postclose_real`。它使用冻结的 B6-M seed 4000、CSI1000、Top30/Drop2/Hold20，以及每天 Top2 的渐进建仓；QMT 在 14:57 收盘集合竞价使用 `prType=11` 显式限价。
+当前活动系统是 `alla_v4_ladder_k1h5_postclose_real`。模型仍是 v4 五种子 RankIC ES
+等权，执行是盘后固定价格 `prType=49`。策略先用 **top1 × horizon=5、仓位 100%、
+期初 30 万** 观察；稳定后再切回 100 万的 `alla_v4_ladder_k3h5_postclose_real`。
+CSI1000 旧系统已 `PAUSED`，只作历史账本。
+
+**执行开关是 QMT 策略的启停，不是 `LIVE_OK_` / `PR49_LIVE_OK_`。**
+Mac 只发布信号；Windows 上策略在跑就会吃 inbox。不要为日常交易建 marker。
 
 Windows QMT、SMB 桥接和 Server酱通知已完成基础连接验收。真实资金账号只通过本地
-`QMT_REAL_ACCOUNT_ID` 与 QMT UI 绑定，不写入 Git；`LIVE_OK` 和后续晋级仍是显式步骤。
-旧模拟盘配置仅作历史材料，不应再调度。
+`QMT_REAL_ACCOUNT_ID` 与 QMT UI 绑定，不写入 Git。生产根是
+`/Users/yuxianqi/Project/qlib`，不是 `qlib_exp` worktree。
 
 ## 固定契约
 
 | 项目 | 值 |
 |---|---|
-| 活动配置 | `live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml` |
-| 对照配置 | `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml` |
-| 股票池 / benchmark | CSI1000 / `SH000852` |
-| 账户口径 | 真实账号由 `QMT_REAL_ACCOUNT_ID` 提供；账本初始经济基准 1,000,000 元、价值调整 0；当前现金/持仓只信任已导入券商快照 |
-| 策略 | Top30 / Drop2 / initial Top2 / Hold20 / risk 0.93（保留 7% 现金） |
-| 研究策略基线 | `qlib_exp/backtest/configs/strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml` |
-| 模型 | B6-M seed 4000，SHA-256 `368a503c...e6325` |
-| 账本 | `live_trading/data/csi1000_b6m_b2s_postclose_real.db` |
-| 账户环境 | `REAL`，`allow_real_money: true`，每单最多 100 股 |
-| 执行时间 | 14:57:05 买卖同时进入收盘集合竞价，15:00:30 终结，15:01 快照 |
+| 活动配置 | `live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml` |
+| 对照配置 | `backtest/configs/alla_v4_ladder_k1h5_parity.yaml` |
+| 股票池 / benchmark | 全A 四重过滤 / `SH000985` |
+| 账户口径 | 真实账号由 `QMT_REAL_ACCOUNT_ID` 提供；账本期初 300,000 元、价值调整 0 |
+| 策略 | `CohortLadderStrategy` topk=1 horizon=5 risk_degree=1.0 |
+| 模型 | v4 五种子日截面 z-score 等权 |
+| 账本 | `live_trading/data/alla_v4_ladder_k1h5_postclose_real.db` |
+| 账户环境 | `REAL`，`allow_real_money: true` |
+| 执行 | 盘后固定价格 `prType=49`，15:00:05 起试 / 15:01 兜底 |
+| 授权 | 无 marker。QMT 启停即开关 |
+| 后续切换 | `alla_v4_ladder_k3h5_postclose_real`（100 万、top3×h5、risk 0.90） |
 
 欠仓阶段在实际持仓达到 30 只前不卖出，每天最多买入两只未持仓股票。每只买入目标毛市值始终是 `当前总资产 × 0.93 / 30`。持仓超过 30 只时禁止新增买单，优先恢复目标持仓数。
 

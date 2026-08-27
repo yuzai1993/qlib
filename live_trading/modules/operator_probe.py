@@ -47,8 +47,10 @@ MAIN_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 # 「谁可以请求账户快照」，不决定谁在被调度。bridge 侧 _SNAPSHOT_REQUEST_STRATEGIES
 # 必须与本集合逐项一致，test_the_two_snapshot_whitelists_are_mirrored 守这条。
 LADDER_STRATEGY_ID = "alla_v4_ladder_k3h5_postclose_real"
+OBSERVATION_LADDER_STRATEGY_ID = "alla_v4_ladder_k1h5_postclose_real"
 SNAPSHOT_REQUEST_STRATEGIES = {
     MAIN_STRATEGY_ID, PROBE_STRATEGY_ID, LADDER_STRATEGY_ID,
+    OBSERVATION_LADDER_STRATEGY_ID,
 }
 QMT_PROFILE_BRIDGE_ROOTS = {
     "CLOSE_AUCTION": r"D:\qmt_bridge",

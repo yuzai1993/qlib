@@ -1,0 +1,93 @@
+# Deployment-parity config for alla_v4_ladder_k1h5_postclose_real.
+# Same model and universe as BT v4; observation size is k1 x h5 / 300_000 / 100%.
+# Do not hand-tune: any drift here means the live gate stops matching this pair.
+
+run:
+  mode: backtest_only
+  note: "alla_v4_ladder_k1h5_parity"
+  n_runs: 1
+  generate_figures: false
+
+parity:
+  live_config: "live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml"
+  model_experiment_name: "regime-adapt/m0-h20-rankices-v1"
+  model_members:
+    - model_path: "live_trading/models/v4_rankices/s42/trained_model"
+      sha256: "3c75ee96fb8868d1200145b97141529b8852a204c6f4615d321a93da71368ecd"
+    - model_path: "live_trading/models/v4_rankices/s1000/trained_model"
+      sha256: "38f9dea415b528916105a6f472adf9b1ff3032fca92250c4d66db0323f5acdbc"
+    - model_path: "live_trading/models/v4_rankices/s2000/trained_model"
+      sha256: "ff605722c4beece2cfa38324c0e3480c0fbb96fcfc35774a2838f39c4e131729"
+    - model_path: "live_trading/models/v4_rankices/s3000/trained_model"
+      sha256: "75d8f5a38ce13683a7f75760b220e678ecb9c055d93be2bb83df4edcc636b260"
+    - model_path: "live_trading/models/v4_rankices/s4000/trained_model"
+      sha256: "ff795a6fe4500e0e2affc9c8aa14be603173290a93ee3b04fc91907796ff5525"
+  execution_price_proxy: "close"
+  broker_environment: "REAL"
+  close_auction_price_type: 49
+  execution_session: "AFTER_HOURS_FIXED_PRICE"
+  signal_price_type: "AFTER_HOURS_CLOSE"
+  netting: "live_only"
+  absorb_broker_excess: "live_only"
+  no_buyable_substitution: "live_only"
+
+data:
+  provider_uri: "~/.qlib/qlib_data/cn_data"
+  region: "cn"
+  instruments: "all"
+  benchmark: "SH000985"
+  handler:
+    class: "Alpha158Technical"
+    module_path: "backtest.features.technical"
+    start_time: "2020-02-03"
+    end_time: "2026-07-31"
+    fit_start_time: "2020-02-03"
+    fit_end_time: "2020-08-03"
+    infer_processors:
+      - class: "ProcessInf"
+    feature_groups:
+      - "range"
+    instruments:
+      market: "all"
+      filter_pipe:
+        - filter_type: "NameDFilter"
+          name_rule_re: "^(SH60|SH68|SZ00|SZ30)"
+          filter_start_time: null
+          filter_end_time: null
+
+segments:
+  train: ["2020-02-03", "2020-07-31"]
+  valid: ["2020-08-03", "2026-07-31"]
+  test: ["2020-08-03", "2026-07-31"]
+
+model:
+  class: "RegimeSingleLGBMModel"
+  module_path: "backtest.models.regime_adapt"
+
+strategy:
+  class: "CohortLadderStrategy"
+  module_path: "qlib.contrib.strategy.signal_strategy"
+  topk: 1
+  horizon: 5
+  kwargs:
+    risk_degree: 1.0
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+
+backtest:
+  account: 300000.0
+  exchange_kwargs:
+    freq: "day"
+    deal_price: "close"
+    limit_threshold: "market_cn"
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5.0
+    trade_unit: 100
+
+universe_filter:
+  st_daily: "scripts/data_collector/tushare/st_daily.csv"
+  min_amount: 10000000
+  min_listing_days: 60
+  min_recent_trading_days: 60
+  pool: "all"

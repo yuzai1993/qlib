@@ -15,17 +15,19 @@ BRIDGE_ROOT = r"D:\qmt_bridge"
 OBSERVE_DIR = os.path.join(BRIDGE_ROOT, "observe")
 STRATEGY_NAME = "qlib_observe_security"
 POLL_SECONDS = 1
+# 2026-08-26 eligibility probe: two names per board that should be eligible.
+# 600000.SH is the old one-lot probe name, kept as the known-good control.
 CODES = [
     "600000.SH",
-    "688001.SH",
+    "600519.SH",
+    "601318.SH",
     "688981.SH",
+    "688041.SH",
     "300750.SZ",
     "300059.SZ",
     "000001.SZ",
     "000858.SZ",
     "002415.SZ",
-    "601318.SH",
-    "600519.SH",
 ]
 
 _AFTER_HOURS_KEYS = (

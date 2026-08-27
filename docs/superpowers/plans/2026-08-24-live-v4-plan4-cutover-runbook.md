@@ -21,6 +21,12 @@
 - **禁止**创建、删除、改写任何授权 marker（`LIVE_OK_*` / `PR49_LIVE_OK_*` / `.intent.*`）。
   marker 是不可逆授权事实；回退只能停实例、留证据。
 - **禁止**在用户未点名当日交易日的情况下跑 `LIVE_TRADING_CONFIRM=YES` 的发布。
+- **生产根是 `/Users/yuxianqi/Project/qlib`，不是本 worktree `qlib_exp`。** 账本、cron、
+  launchd、`~/.qlib_live_env`、任务 7–9 的装机与起账都在 `qlib`。`qlib` 现挂 `main`
+  （无阶梯配置）；`qlib_exp` 是同一仓库的 worktree，挂 `exp/workspace`。T 日必须先把
+  本分支的代码落到 `qlib` 工作区（不能直接 `checkout exp/workspace`，该分支已被
+  worktree 占用），再在 `qlib` 起新账本。`qlib_exp/live_trading/data/` 里的
+  `alla_v4_*.db` 只是 dry-run 残留，**不是**生产库。现网 crontab 是 **23:00** 不是 16:00。
 - **禁止**对任务 4–8 使用 `--publish`、PowerShell 授权脚本、QMT `passorder`，除非用户
   当条消息明确写出交易日和动作。
 - 账户号、`TUSHARE_TOKEN`、`QMT_REAL_ACCOUNT_ID` 不得写入 Git、计划正文或提交信息。
@@ -916,14 +922,33 @@ git commit -m "docs: record the live cutover onto the all-A v4 ladder"
 文件：`/Volumes/qmt_bridge/observe/observe_20260826.jsonl`（约 1.6 GB；策略从 25 日 23:00
 一直挂到 26 日晚，应尽快停掉）。10 只名单齐。收盘窗口切片 14:49–15:07。
 
-**任务 4 未通过（切换硬停止）。** 10/10 的 `after_hours_eligible` 全程是 `None`。
-`get_instrument_detail` 返回约 30 个字段（`InstrumentID` / `UpStopPrice` / `PreClose` /
-`IsTrading` 等），**没有** `IsAfterHoursTrading` / `AfterHoursTrading` / `FixedPriceTrading`
-或任何名字里带 after/fixed/hours 的键。按 spec 4.7，字段缺失即 fail-closed：切到盘后后
-**所有订单**会在 `passorder` 前变 `SECURITY_ELIGIBILITY_ERROR`。不是「这 10 只不能盘后」，
-是券商接口根本没给资格字段。
+**任务 4 字段探测未通过，用户口头覆盖。** 10/10 的 `after_hours_eligible` 全程是 `None`。
+`get_instrument_detail` 没有资格键。用户确认生产账户盘后资格已开通，不再把字段探测当
+切换硬停止。
 
 **任务 5 通过。** tick 带 `timetag`。10 只都在 15:00:00 ±2 秒从 `close_is_final=False`
 翻成 `True`（最慢的浦发/东方财富 15:00:02）。自适应提交可用，不必退回固定 15:01。
 
-（任务 6、11 往这里追加。没有记录等于没做。）
+### 2026-08-27 · 任务 6（卖单跳过，PAUSE 未做）
+
+生产旧账本：`/Users/yuxianqi/Project/qlib/live_trading/data/csi1000_b6m_b2s_postclose_real.db`。
+用户确认券商已无 `600123.SH`、已空仓。**未发卖单。** 旧账本 `positions` 仍留着 8/25 的
+`600123.SH` 100 股，按「旧账本冻结、不迁到新账本」保留，不手工改行。
+
+`set_execution_state.py --state PAUSED` 已于 2026-08-27 23:42 +08 在 `qlib` 生产库落地
+（`strategy_id=csi1000_b6m_b2s_postclose_real`，reason 为 retired/replaced）。未改 crontab、
+未改 launchd、未改 `LIVE_CONFIG_ID`。停之前今晚 23:00 已发布
+`20260828_csi1000_b6m_b2s_postclose_real_001`（inbox 里有 jsonl+.done）；PAUSE 不撤回该文件，
+8/28 只要不建 `LIVE_OK_` 就不会成交。现网仍是：
+
+- crontab `0 23 * * 1-5 .../qlib/live_trading/run_scheduler_cron.sh csi1000_b6m_b2s_postclose_real`
+- `LIVE_CONFIG_ID=csi1000_b6m_b2s_postclose_real`
+- `qlib` 工作区是 `main`，**还没有** `alla_v4_ladder_k3h5_postclose_real.yaml`
+
+### 2026-08-27 · 观察盘改口（任务 7 前）
+
+用户改口：先跑 30 万 / `risk_degree=1.0` / top1×h5（`alla_v4_ladder_k1h5_postclose_real`），
+稳定后再切 100 万 top3×h5。执行开关改为 QMT 启停，不再用 `LIVE_OK_` / `PR49_LIVE_OK_`。
+生产根仍是 `/Users/yuxianqi/Project/qlib`。k3h5 配置保留不删。
+
+（任务 11 往这里追加。没有记录等于没做。）

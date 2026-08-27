@@ -4112,6 +4112,8 @@ def test_market_price_evidence_records_the_timetag(bridge):
 def test_bridge_snapshot_whitelist_includes_the_ladder_strategy(bridge):
     assert "alla_v4_ladder_k3h5_postclose_real" \
         in bridge._SNAPSHOT_REQUEST_STRATEGIES
+    assert "alla_v4_ladder_k1h5_postclose_real" \
+        in bridge._SNAPSHOT_REQUEST_STRATEGIES
 
 
 def test_after_hours_may_sit_on_the_main_root(tmp_path, bridge):

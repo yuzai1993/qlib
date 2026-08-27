@@ -1,5 +1,10 @@
 # QMT 收盘集合竞价桥接部署
 
+当前生产主实例应编译为盘后固定价格（`EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"`，
+`prType=49`）。**日常开关是本策略在 QMT 里的启停**，不要再创建 `LIVE_OK_` /
+`PR49_LIVE_OK_`；bridge 会忽略这些文件。停策略 = 当天不交易；开策略且 inbox 有
+LIVE 批次 = 到点下单。
+
 `qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并在 14:57 收盘集合竞价使用指定价 `prType=11`。买单显式传当日涨停价，卖单显式传当日跌停价。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
 
 仓库源码默认失败关闭为 `SIMULATION` 且 `ALLOW_REAL_MONEY=False`。真实资金只能在 QMT 本地副本中显式选择 `REAL`，并与 Mac 的 REAL 批次双向匹配。

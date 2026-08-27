@@ -412,13 +412,13 @@ def test_monitor_launch_agent_owns_loopback_service():
     assert plist["ProgramArguments"] == [
         "/bin/bash",
         "/Users/yuxianqi/Project/qlib/live_trading/run_web_service.sh",
-        "csi1000_b6m_b2s_postclose_real",
+        "alla_v4_ladder_k1h5_postclose_real",
     ]
     assert plist["StandardOutPath"].endswith(
-        "csi1000_b6m_b2s_postclose_real_web_service.stdout.log"
+        "alla_v4_ladder_k1h5_postclose_real_web_service.stdout.log"
     )
     assert plist["StandardErrorPath"].endswith(
-        "csi1000_b6m_b2s_postclose_real_web_service.stderr.log"
+        "alla_v4_ladder_k1h5_postclose_real_web_service.stderr.log"
     )
 
 
@@ -875,7 +875,7 @@ def test_publish_wrappers_preserve_explicit_confirmation_across_env_unset(
 def test_wrappers_are_configurable_and_default_to_real_system():
     for name in WRAPPERS:
         text = (REPO_ROOT / "live_trading" / name).read_text(encoding="utf-8")
-        assert "csi1000_b6m_b2s_postclose_real" in text
+        assert "alla_v4_ladder_k1h5_postclose_real" in text
         assert "LIVE_CONFIG_ID" in text
         assert "QLIB_LIVE_CONFIG_ID" in text
         assert "LOCK_DIR" in text
@@ -913,8 +913,8 @@ def test_crontab_uses_one_durable_scheduler_entry():
     ]
 
     assert commands == [
-        "0 16 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
-        "run_scheduler_cron.sh csi1000_b6m_b2s_postclose_real"
+        "0 23 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
+        "run_scheduler_cron.sh alla_v4_ladder_k1h5_postclose_real"
     ]
     assert "run_publish_catchup_cron.sh" not in text
 

@@ -1529,6 +1529,7 @@ _SNAPSHOT_REQUEST_STRATEGIES = (
     "csi1000_b6m_b2s_postclose_real",
     "csi1000_pr49_one_lot_probe",
     "alla_v4_ladder_k3h5_postclose_real",
+    "alla_v4_ladder_k1h5_postclose_real",
 )
 
 

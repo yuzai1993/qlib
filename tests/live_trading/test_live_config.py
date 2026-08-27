@@ -26,6 +26,10 @@ LADDER_LIVE_PATH = (
     REPO_ROOT / "live_trading" / "configs" /
     "alla_v4_ladder_k3h5_postclose_real.yaml"
 )
+OBSERVATION_LADDER_LIVE_PATH = (
+    REPO_ROOT / "live_trading" / "configs" /
+    "alla_v4_ladder_k1h5_postclose_real.yaml"
+)
 
 
 def test_execution_profiles_define_the_qmt_and_signal_price_contracts():
@@ -625,6 +629,18 @@ def _ladder_config():
     return load_live_config(LADDER_LIVE_PATH, project_root=REPO_ROOT)
 
 
+def test_observation_ladder_is_k1h5_full_risk_three_hundred_thousand():
+    config = load_live_config(OBSERVATION_LADDER_LIVE_PATH, project_root=REPO_ROOT)
+
+    assert config["strategy"]["class"] == "CohortLadderStrategy"
+    assert config["strategy"]["topk"] == 1
+    assert config["strategy"]["horizon"] == 5
+    assert config["strategy"]["risk_degree"] == 1.0
+    assert config["account"]["opening_cash"] == 300_000.0
+    assert config["live"]["execution_session"] == "AFTER_HOURS_FIXED_PRICE"
+    assert config["live"]["strategy_id"] == "alla_v4_ladder_k1h5_postclose_real"
+
+
 def test_ladder_live_config_matches_bt_v4_parameters():
     config = _ladder_config()
 
@@ -706,7 +722,11 @@ def test_live_filter_pipe_matches_the_bt_v4_backtest_verbatim():
 
 @pytest.mark.parametrize(
     "name",
-    ["alla_v4_ladder_k3h5_postclose_real", "csi1000_pr49_one_lot_probe"],
+    [
+        "alla_v4_ladder_k1h5_postclose_real",
+        "alla_v4_ladder_k3h5_postclose_real",
+        "csi1000_pr49_one_lot_probe",
+    ],
 )
 def test_after_hours_configs_declare_the_adaptive_submission_start(name):
     """两个引用 AFTER_HOURS_FIXED_PRICE 的配置必须跟着 profile 一起改，

@@ -12,10 +12,10 @@ from pathlib import Path
 import yaml
 
 PLACEHOLDER_CASH = 1_000_000.0
-CONFIG_REL = Path("live_trading/configs/alla_v4_ladder_k3h5_postclose_real.yaml")
+CONFIG_REL = Path("live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml")
 CRONTAB_REL = Path("live_trading/crontab.csi1000_postclose.example")
 OLD_CONFIG_ID = "csi1000_b6m_b2s_postclose_real"
-NEW_CONFIG_ID = "alla_v4_ladder_k3h5_postclose_real"
+NEW_CONFIG_ID = "alla_v4_ladder_k1h5_postclose_real"
 
 
 def _file_sha256(path: Path) -> str:

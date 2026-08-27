@@ -32,6 +32,12 @@ LADDER_LIVE_PATH = (
 LADDER_BACKTEST_PATH = (
     REPO_ROOT / "backtest/configs/alla_v4_ladder_k3h5_parity.yaml"
 )
+OBSERVATION_LADDER_LIVE_PATH = (
+    REPO_ROOT / "live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml"
+)
+OBSERVATION_LADDER_BACKTEST_PATH = (
+    REPO_ROOT / "backtest/configs/alla_v4_ladder_k1h5_parity.yaml"
+)
 
 
 def _configs():
@@ -199,6 +205,19 @@ def test_ladder_pair_passes_parity_as_shipped():
     live, backtest = _ladder_configs()
 
     validate_backtest_parity(live, backtest)
+
+
+def test_observation_ladder_pair_passes_parity_as_shipped():
+    live = load_live_config(OBSERVATION_LADDER_LIVE_PATH, REPO_ROOT)
+    backtest = yaml.safe_load(
+        OBSERVATION_LADDER_BACKTEST_PATH.read_text(encoding="utf-8")
+    )
+
+    validate_backtest_parity(live, backtest)
+    assert (
+        validate_configured_backtest(live, REPO_ROOT)
+        == OBSERVATION_LADDER_BACKTEST_PATH
+    )
 
 
 def test_ladder_config_resolves_its_parity_backtest_from_disk():

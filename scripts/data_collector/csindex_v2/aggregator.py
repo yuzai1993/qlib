@@ -147,14 +147,12 @@ def aggregate() -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
-    # 除 csi2000 外仅保留官方来源（content / excel / pdf / manual）
+    # 成分变更不再使用 Tushare；csi2000 改为官网每日快照写入。
     before = len(changes)
-    changes = changes[
-        (changes["index_name"] == "csi2000") | (changes["source"] != "tushare")
-    ].reset_index(drop=True)
+    changes = changes[changes["source"] != "tushare"].reset_index(drop=True)
     dropped = before - len(changes)
     if dropped:
-        logger.info(f"非 csi2000 指数丢弃 {dropped} 条 tushare 记录（仅 csi2000 使用 tushare）")
+        logger.info(f"丢弃 {dropped} 条 tushare 成分记录")
 
     # 软去重：tushare 差分记录若与公告记录同 (指数,股票,方向) 且生效日相差 ≤45 天，
     # 视为同一事件的月度粗化版本，丢弃 tushare 版

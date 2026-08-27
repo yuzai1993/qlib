@@ -1060,3 +1060,41 @@ def test_daily_entrypoint_fails_when_hybrid_refresh_fails(monkeypatch):
     )
 
     assert update_indices_daily.run() == 1
+
+
+def test_daily_entrypoint_ignores_csi2000_snapshot_drift(monkeypatch):
+    checks = {
+        name: {
+            "ok": True,
+            "snap_date": "2026-08-18",
+            "snap_count": 1,
+            "error": None,
+            "pending_add": [],
+            "pending_drop": [],
+            "unexplained_local": [],
+            "unexplained_snap": [],
+        }
+        for name in updater.OFFICIAL_INDICES
+    }
+    checks["csi2000"] = {
+        "ok": False,
+        "snap_date": "2026-08-18",
+        "snap_count": 2000,
+        "error": None,
+        "pending_add": [],
+        "pending_drop": [],
+        "unexplained_local": ["SH600530"],
+        "unexplained_snap": ["SH688592"],
+    }
+    monkeypatch.setattr(
+        updater,
+        "update_daily",
+        lambda: {
+            "new_details": 0,
+            "rebuilt": True,
+            "hybrid_error": None,
+            "snapshot_check": checks,
+        },
+    )
+
+    assert update_indices_daily.run() == 0

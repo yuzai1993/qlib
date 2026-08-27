@@ -6,7 +6,7 @@
   csi500   官方公告为主；两条快速纳入由人工审核的 Tushare 月末快照补录；
              自「无缺失定期调样」的最早一期起算（2015-12-14 生效）
   csi1000  仅官方公告；同上（2015-12-14 生效，上市初期 2015-06 无完整公告）
-  csi2000  Tushare 月末差分，初始名单按公告日 2023-08-10 正推
+  csi2000  官网每日成分快照
 
 输出: changes/index_starts.json
 """
@@ -148,7 +148,7 @@ def build_index_start_records(
 
     # csi2000
     records["csi2000"] = {
-        "data_source": "tushare",
+        "data_source": "official_daily_snapshot",
         "index_launch": INDEX_LAUNCH["csi2000"],
         "coverage_start_effective": CSI2000_ANCHOR["effective_date"],
         "coverage_start_announce": CSI2000_ANCHOR["announce_date"],
@@ -158,8 +158,8 @@ def build_index_start_records(
             else CSI2000_ANCHOR["effective_date"]
         ),
         "source_id": CSI2000_ANCHOR["source_id"],
-        "build_mode": "forward_from_anchor",
-        "note": CSI2000_ANCHOR["note"],
+        "build_mode": "snapshot_patch",
+        "note": "daily official snapshot patches current membership",
     }
     return records
 

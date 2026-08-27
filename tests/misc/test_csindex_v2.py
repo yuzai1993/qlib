@@ -183,6 +183,8 @@ def test_index_start_metadata_discloses_csi500_manual_snapshot_fixes():
         == "official_with_manual_tushare_snapshot_fixes"
     )
     assert records["csi1000"]["data_source"] == "official_only"
+    assert records["csi2000"]["data_source"] == "official_daily_snapshot"
+    assert records["csi2000"]["build_mode"] == "snapshot_patch"
 
 
 def test_interval_errors_check_structure_overlap_and_snapshot():
@@ -299,14 +301,38 @@ def test_diff_snapshot_lag_window_expires():
     assert result["unexplained_local"] == ["SH601001"]
 
 
-def test_updater_never_writes_instruments_from_snapshot():
-    """回归守卫：快照对齐（回写 instruments）逻辑必须保持删除状态。"""
+def test_csi300_500_1000_never_write_from_snapshot():
+    """300/500/1000 仍只校验快照，不得把官网当前名单回写 instruments。"""
     from scripts.data_collector.csindex_v2 import updater
 
     assert not hasattr(updater, "apply_snapshot_diff")
     assert not hasattr(updater, "sync_from_official_snapshots")
     source = (CSINDEX_V2_DIR / "updater.py").read_text()
     assert "_write_instruments_df" not in source
+
+
+def test_apply_snapshot_to_intervals_patches_current_roster():
+    from scripts.data_collector.csindex_v2.builder import apply_snapshot_to_intervals
+
+    existing = pd.DataFrame(
+        [
+            {"symbol": "SH600000", "start": "2020-01-01", "end": "2099-12-31"},
+            {"symbol": "SZ000001", "start": "2020-01-01", "end": "2099-12-31"},
+            {"symbol": "SH600001", "start": "2019-01-01", "end": "2024-01-01"},
+        ]
+    )
+    snapshot = {"SZ000001", "SZ300750"}
+
+    result = apply_snapshot_to_intervals(existing, "2026-08-18", snapshot)
+
+    open_rows = result[result["end"] == "2099-12-31"]
+    assert set(open_rows["symbol"]) == {"SZ000001", "SZ300750"}
+    dropped = result[result["symbol"] == "SH600000"].iloc[0]
+    assert dropped["end"] == "2026-08-18"
+    added = result[result["symbol"] == "SZ300750"].iloc[0]
+    assert added["start"] == "2026-08-18"
+    historical = result[result["symbol"] == "SH600001"].iloc[0]
+    assert historical["end"] == "2024-01-01"
 
 
 def test_change_errors_detect_event_key_and_calendar_problems():

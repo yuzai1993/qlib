@@ -127,11 +127,9 @@ def change_errors(changes: pd.DataFrame, calendar: list[str]) -> list[str]:
     if non_trading.any():
         errors.append(f"生效日非交易日 {int(non_trading.sum())} 条")
 
-    wrong_source = (changes["index_name"] != "csi2000") & (
-        changes["source"] == "tushare"
-    )
-    if wrong_source.any():
-        errors.append(f"非 csi2000 使用 Tushare {int(wrong_source.sum())} 条")
+    tushare_rows = changes["source"] == "tushare"
+    if tushare_rows.any():
+        errors.append(f"成分变更不得使用 Tushare {int(tushare_rows.sum())} 条")
     return errors
 
 

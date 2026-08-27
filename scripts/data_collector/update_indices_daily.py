@@ -1,10 +1,9 @@
 """每日更新四指数成分并安装到 qlib instruments。
 
 数据源：仅中证官网（csindex_v2）
-  - 公告增量：维护成分区间（公告日口径，含当前在册）——唯一写入来源
-  - 每日成分快照 XLS：只读校验（公告→生效窗口内的滞后属预期，不告警；
-    无法解释的漂移才失败）。快照绝不回写 instruments，否则会抹掉
-    公告日口径的调仓提前量。
+  - 公告增量：维护 csi300/500/1000 成分区间（公告日口径）
+  - 每日成分快照 XLS：300/500/1000 只读校验（公告→生效窗口内的滞后属预期；
+    无法解释的漂移才失败）。csi2000 用同一份快照补丁当前在册，漂移不失败。
 
 快照：
   csi300  .../000300cons.xls
@@ -40,7 +39,7 @@ def run() -> int:
             update_daily,
         )
 
-        logger.info("======== csindex_v2 日更（公告写入 + 官网快照只读校验）========")
+        logger.info("======== csindex_v2 日更（公告写入 + 2000 快照补丁）========")
         result = update_daily()
         logger.info(
             f"完成: new_details={result.get('new_details')} rebuilt={result.get('rebuilt')}"
@@ -56,6 +55,9 @@ def run() -> int:
             logger.error(f"hybrid 指数刷新失败: {hybrid_error}")
 
         for name in OFFICIAL_INDICES:
+            if name == "csi2000":
+                logger.info("csi2000 以官网快照写入当前在册，跳过只读漂移校验")
+                continue
             check = (result.get("snapshot_check") or {}).get(name)
             if not check:
                 ok = False

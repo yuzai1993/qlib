@@ -1,6 +1,6 @@
 # 中证规模指数成分股历史重建（csindex_v2）
 
-本文档描述如何从中证指数官网公告（及中证2000 的 Tushare 补充）重建沪深300 / 中证500 / 中证1000 / 中证2000 的历史成分区间，并输出 qlib 可用的 `instruments.txt`。
+本文档描述如何从中证指数官网公告（及中证2000 的官网每日成分快照）重建沪深300 / 中证500 / 中证1000 / 中证2000 的历史成分区间，并输出 qlib 可用的 `instruments.txt`。
 
 代码目录：`scripts/data_collector/csindex_v2/`
 缓存目录：`~/.cache/qlib/csindex_v2/`
@@ -34,7 +34,7 @@
 | **csi300**  | 仅官方公告        | **2005-04-08** | 2005-07-01 生效的全量名单从公告日 2005-06-22 起正推；上市日初始名单由首次调样反推 |
 | **csi500**  | 官方公告为主；2 条人工审核的 Tushare 月末快照补录 | **2015-11-30** | 定期调样使用官方公告；快速纳入缺失事件见 6.6 |
 | **csi1000** | 仅官方公告        | **2015-11-30** | 同上                               |
-| **csi2000** | Tushare 月末差分 | **2023-08-10** | 发布日初始 2000 只名单 + 月度快照差分          |
+| **csi2000** | 官网每日成分快照 | **2023-08-10** | 保留已有历史区间，按快照日补丁当前在册          |
 
 
 ### 为何 csi500/1000 不从上市日开始？
@@ -47,9 +47,9 @@ csi1000 上市初期（2014-10 ~ 2015-06）同样缺少可解析的完整官方�
 `SH601598`、`SH601868` 快速纳入由 Tushare 首次月末快照与前后成员数共同验证，作为
 `manual_fixes.csv` 的审核例外补入；日期只表示**首次可确认的月末快照日**，不声称是精确公告日。
 
-### 为何 csi2000 用 Tushare？
+### 为何 csi2000 用官网每日快照？
 
-中证2000 自发布后，定期调样名单多在指数页「拟生效样本」发布，公告侧经常无可用附件；Tushare `index_weight`（932000.CSI）可提供月末全量快照差分。
+中证2000 自发布后，定期调样名单多在指数页「拟生效样本」发布，公告侧经常无可用附件。日更直接下载 `932000cons.xls`，在已有区间上按快照日切开/纳入当前在册，不再用 Tushare 拉成分。
 
 ---
 
@@ -63,8 +63,8 @@ csi1000 上市初期（2014-10 ~ 2015-06）同样缺少可解析的完整官方�
                   └──────────────┘   └─────────────┬───────────────┘
                                                    │
                   ┌──────────────┐                 ▼
-                  │puller_tushare│ → parsed/tushare_gap_changes.csv
-                  │ (仅 csi2000) │                 │
+                  │ 932000cons   │ → builder 按快照补丁 csi2000 当前在册
+                  │ 官网每日快照 │                 │
                   └──────────────┘                 ▼
                                          ┌─────────────────┐
                                          │   aggregator    │
@@ -107,10 +107,9 @@ python -m scripts.data_collector.update_indices_daily
 1. 增量搜索公告（整页无新增即停）→ 详情/附件
 2. 下载四指数官网成分快照（`000300/000905/000852/932000cons.xls`）
 3. 解析构建历史区间后安装到 `~/.qlib/qlib_data/cn_data/instruments/`
-4. **官网快照只读校验，绝不回写 instruments**：区间用公告日口径（公告当天即
-   视为成分变更，抢在指数基金生效日调仓之前）；快照是生效日口径的「当前在册」，
-   公告→生效窗口内（`SNAPSHOT_LAG_DAYS`，默认 25 天）的差异属预期滞后，只记
-   日志；窗口外无法解释的漂移（漏公告/解析错）→ 校验失败并告警
+4. **csi300/500/1000 官网快照只读校验，不回写**：区间用公告日口径；快照是生效日口径，
+   公告→生效窗口内的差异属预期滞后。窗口外无法解释的漂移 → 校验失败并告警。
+   **csi2000 按官网快照补丁当前在册**，漂移不让日更失败。
 5. 快照另存 `snapshots/daily/YYYYMMDD/` 便于回溯
 
 ### 3.2 三路解析器
@@ -125,19 +124,17 @@ python -m scripts.data_collector.update_indices_daily
 
 只保留目标指数代码：`000300` / `000905` / `000852` / `932000`。
 
-### 3.3 Tushare 补齐（`puller_tushare.py`）
+### 3.3 中证2000 官网快照
 
-- **仅拉取 csi2000**（`PULL_WINDOWS` 已收窄）。
-- 月末 `index_weight` 快照缓存于 `tushare_snapshots/csi2000.parquet`。
-- 相邻月末差分 → add/remove；若窗口内命中已知定期调样日则 `date_precision=exact`，否则 `month`。
+日更下载 `932000cons.xls`。`builder.build_index("csi2000")` 读取已有区间（或已安装 `instruments`），按快照日补丁当前在册后写回。`puller_tushare.py` 不再参与成分日更。
 
 ### 3.4 聚合（`aggregator.py`）
 
 1. 合并 content / excel / pdf / tushare_gap。
-2. **非 csi2000 丢弃自动生成的全部 tushare 记录**；经人工审核的少数例外随后由
-   `manual_fixes.csv` 显式补回，避免把月度粗化事件批量混入官方事件流。
+2. **丢弃自动生成的全部 tushare 成分记录**；经人工审核的少数例外随后由
+   `manual_fixes.csv` 显式补回（来源是 `manual`，不是 tushare）。
 3. 硬去重：同 `(指数, 股票, 方向, 生效日)`，来源优先级 excel > pdf > content > tushare。
-4. 软去重：tushare 与官方同向且生效日相差 ≤45 天则丢 tushare（对 csi2000 仍有意义）。
+4. 软去重：若缓存里仍有 tushare 差分，与公告同向且生效日相差 ≤45 天则丢 tushare。
 5. 应用 `manual_fixes.csv`（add / drop / patch_date），同时传播人工记录的公告日和生效日。
 6. 写出 `all_changes.csv`、`full_lists.csv`、`coverage.txt`。
 
@@ -148,7 +145,7 @@ python -m scripts.data_collector.update_indices_daily
 | ---------------- | ------------------------------------------------------------------------- |
 | csi300           | 锚点 = 2005-07-01 生效的全量名单（full_lists source_id=6773）；公告日模式从 2005-06-22 正推，再反推 2005-04-08 初始 300 只 |
 | csi500 / csi1000 | 以当前官网快照为终点，**反推到 coverage_start**，再正序重建区间（保证终局与快照一致）                      |
-| csi2000          | 锚点 = 发布公告 xlsx 2000 只；公告日模式从 2023-08-10 正推                              |
+| csi2000          | 官网每日快照补丁当前在册；已关闭的历史区间保留                              |
 
 
 `index_starts.py` 自动检测 csi500/1000「无大缺口后的最早定期调样」作为起点，写入 `index_starts.json`。
@@ -191,10 +188,7 @@ python -m scripts.data_collector.csindex_v2.parser_content
 python -m scripts.data_collector.csindex_v2.parser_excel
 python -m scripts.data_collector.csindex_v2.parser_pdf
 
-# 仅当需要刷新 csi2000 差分
-# python -m scripts.data_collector.csindex_v2.puller_tushare
-
-# 聚合 + 构建
+# 聚合 + 构建（csi2000 用已缓存官网快照补丁当前在册）
 python -m scripts.data_collector.csindex_v2.aggregator
 python -m scripts.data_collector.csindex_v2.builder
 python -m scripts.data_collector.csindex_v2.validator
@@ -409,7 +403,7 @@ action,index_name,symbol,type,effective_date,announce_date,note
 2. **csi1000：2014-10 ~ 2015-06** 上市初期无完整官方变更链。
 3. **搜索关键词盲区**：标题只写「上证150等」而不含「中证1000/500」的临时调整可能漏爬，需用有证据的成对 manual 修正（见 600090→600223）。
 4. **证券换码**：官网很少发「旧码→新码」专用公告，需靠行情/重组公告 + manual 衔接（见 300114→302132）。
-5. **csi2000**：完全依赖 Tushare 月度粒度，临时调整日可能被贴到月末或最近定期日。
+5. **csi2000**：当前在册按官网快照日切换，快照日之前的历史区间不回放变更，临时调整的精确生效日可能被贴到首次看到该快照的日期。
 6. **反推起点 roster 数量**可能略偏离额定（如 csi500 起始约 502）：来自覆盖起点之前未建模的临时调整残差，正推过程中会被后续调样消化；以终局快照一致为准。
 
 ---
@@ -417,5 +411,6 @@ action,index_name,symbol,type,effective_date,announce_date,note
 ## 9. 设计取舍摘要
 
 - **宁可缩短覆盖区间，也不用 Tushare 填 csi300/500/1000**，保证这三段历史可追溯到官网公告（+ 少量有据可查的 manual）。
+- **csi2000 用官网每日快照补丁当前在册**，不再拉 Tushare 成分，也不因快照漂移让日更失败。
 - **csi500/1000 用「快照反推 + 截断起点」**，避免从残缺早期名单正推导致终局漂移。
 - **区间用公告日**：与「信息可知」时点对齐，便于实盘/研报对齐；`all_changes.csv` 仍保留真实生效日以便审计。若需成交日语义，改 `builder.DATE_MODE = "effective"` 后重建即可。

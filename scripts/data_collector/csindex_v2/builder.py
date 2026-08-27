@@ -6,7 +6,7 @@
   csi500   官方公告为主，两条快速纳入由人工审核的 Tushare 月末快照补录；
              自无缺失定期调样的最早一期（2015-12-14 生效）正推
   csi1000  仅官方公告；同上（2015-12-14 生效）
-  csi2000  Tushare 月末差分；初始名单按公告日 2023-08-10 正推
+  csi2000  官网每日成分快照；在已有区间上按快照日补丁当前在册
 
 输出:
   changes/{index}_intervals.csv
@@ -26,7 +26,6 @@ from loguru import logger
 from . import config as cfg
 from .index_starts import (
     CSI300_ANCHOR,
-    CSI2000_ANCHOR,
     INDEX_LAUNCH,
     build_index_start_records,
     write_index_starts,
@@ -119,24 +118,6 @@ def load_csi300_anchor(calendar: list[str]) -> tuple[str, set[str]]:
         calendar,
     )
     return anchor_date, set(sub["symbol"])
-
-
-def load_csi2000_anchor(calendar: list[str]) -> tuple[str, set[str]]:
-    """发布时的初始 2000 只；锚点日期服从当前日期口径。"""
-    path = cfg.FILES_DIR / "20230810_14883_中证2000指数.xlsx"
-    df = pd.read_excel(path, dtype=str)
-    syms = set()
-    for c in df.iloc[:, 3]:
-        s = _normalize_code(c)
-        if s:
-            syms.add(s)
-    assert len(syms) == 2000, f"csi2000 初始名单应为 2000 只，实际 {len(syms)}"
-    anchor_date = resolve_event_date(
-        CSI2000_ANCHOR["announce_date"],
-        CSI2000_ANCHOR["effective_date"],
-        calendar,
-    )
-    return anchor_date, syms
 
 
 # ── 变更记录 ──────────────────────────────────────────────────────────────────
@@ -249,6 +230,51 @@ def rosters_to_intervals(
     return pd.DataFrame(intervals).sort_values(["symbol", "start"]).reset_index(drop=True)
 
 
+def apply_snapshot_to_intervals(
+    intervals: pd.DataFrame, snap_date: str, snap_set: set[str],
+) -> pd.DataFrame:
+    """Patch open intervals so membership on snap_date matches the snapshot."""
+    columns = ["symbol", "start", "end"]
+    if intervals is None or intervals.empty:
+        rows = [
+            {"symbol": symbol, "start": snap_date, "end": "2099-12-31"}
+            for symbol in sorted(snap_set)
+        ]
+        return pd.DataFrame(rows, columns=columns)
+    frame = intervals.copy()
+    if "start_date" in frame.columns:
+        frame = frame.rename(columns={"start_date": "start", "end_date": "end"})
+    frame = frame[columns]
+    active = (frame["start"] <= snap_date) & (frame["end"] > snap_date)
+    current = set(frame.loc[active, "symbol"])
+    frame.loc[active & frame["symbol"].isin(current - snap_set), "end"] = snap_date
+    added = pd.DataFrame(
+        [
+            {"symbol": symbol, "start": snap_date, "end": "2099-12-31"}
+            for symbol in sorted(snap_set - current)
+        ],
+        columns=columns,
+    )
+    if not added.empty:
+        frame = pd.concat([frame, added], ignore_index=True)
+    return frame.sort_values(["symbol", "start"]).reset_index(drop=True)
+
+
+def _load_existing_intervals(index_name: str) -> pd.DataFrame:
+    candidates = (
+        cfg.CHANGES_DIR / f"{index_name}_instruments.txt",
+        Path("~/.qlib/qlib_data/cn_data/instruments") / f"{index_name}.txt",
+    )
+    for path in candidates:
+        path = path.expanduser()
+        if path.exists():
+            return pd.read_csv(
+                path, sep="\t", header=None,
+                names=["symbol", "start", "end"], dtype=str,
+            )
+    return pd.DataFrame(columns=["symbol", "start", "end"])
+
+
 def write_instruments(index_name: str, intervals: pd.DataFrame) -> Path:
     dest = cfg.CHANGES_DIR / f"{index_name}_instruments.txt"
     with dest.open("w") as f:
@@ -267,7 +293,6 @@ def build_index(
 ) -> None:
     expected = cfg.INDEX_META[index_name]["expected_size"]
     snap_date, snap_set = load_current_snapshot(index_name)
-    changes = load_changes(index_name, calendar)
     date_label = "公告日" if DATE_MODE == "announce" else "生效日"
     coverage_start = start_meta["coverage_start"]
     report.append(f"\n===== {index_name}（额定 {expected} 只，当前快照 {snap_date}）=====")
@@ -275,11 +300,20 @@ def build_index(
     report.append(f"  覆盖起始 ({date_label}): {coverage_start}")
     if start_meta.get("gap_before_start"):
         report.append(f"  起始前缺口: {start_meta['gap_before_start']}")
+    if index_name == "csi2000":
+        existing = _load_existing_intervals(index_name)
+        intervals = apply_snapshot_to_intervals(existing, snap_date, snap_set)
+        dest = write_instruments(index_name, intervals)
+        intervals.to_csv(cfg.CHANGES_DIR / f"{index_name}_intervals.csv", index=False)
+        report.append(
+            f"  官网快照写入当前在册 {len(snap_set)} 只 @ {snap_date} → {dest.name}"
+        )
+        return
+    changes = load_changes(index_name, calendar)
     report.append(
         f"  变更记录: {len(changes)} 条, "
         f"{changes['event_date'].min()} ~ {changes['event_date'].max()}（{date_label}）"
     )
-
     if index_name == "csi300":
         anchor_date, anchor_set = load_csi300_anchor(calendar)
         rosters = replay_forward(anchor_date, anchor_set, changes, expected, report)
@@ -291,9 +325,6 @@ def build_index(
         launch = INDEX_LAUNCH[index_name]
         if launch < anchor_date:
             rosters = [(launch, initial)] + rosters
-    elif index_name == "csi2000":
-        anchor_date, anchor_set = load_csi2000_anchor(calendar)
-        rosters = replay_forward(anchor_date, anchor_set, changes, expected, report)
     else:
         # csi500 / csi1000：从官方连续覆盖起点反推，再正序重建
         start_event = snap_to_trading_day(coverage_start, calendar)
@@ -334,7 +365,7 @@ def build_all() -> str:
         "构建报告",
         f"区间日期语义: {'公告日（缺公告日回退生效日）' if DATE_MODE == 'announce' else '生效日'}",
         "数据源: csi300/1000=仅官方公告, "
-        "csi500=官方公告+2条人工审核Tushare月末快照, csi2000=Tushare",
+        "csi500=官方公告+2条人工审核Tushare月末快照, csi2000=官网每日快照",
         f"起始日配置 → {cfg.CHANGES_DIR / 'index_starts.json'}",
     ]
     for index_name in ("csi300", "csi500", "csi1000", "csi2000"):

@@ -4,14 +4,15 @@
   1. 增量爬公告 + 下载四指数官网成分快照
   2. 解析 / 聚合 / 构建历史区间（公告日口径）
   3. 安装 csi300/500/1000/2000 到 qlib instruments
-  4. 用官网当日快照「只校验、不回写」当前在册
+  4. csi300/500/1000 用官网当日快照只读校验；csi2000 用同一份快照补丁当前在册
 
 日期口径（重要）：
-  instruments 区间统一使用**公告日**——公告发出当天即视为成分变更，
+  csi300/500/1000 的 instruments 区间统一使用**公告日**——公告发出当天即视为成分变更，
   以便在指数基金实际调仓（生效日）前提前跟随。官网快照反映的是
   **生效日**口径的「当前在册」，在公告→生效窗口内与本地在册存在
-  预期滞后（调入未生效 / 调出未生效）。因此快照绝不能写回 instruments，
+  预期滞后（调入未生效 / 调出未生效）。这三段快照绝不能写回 instruments，
   否则会抹掉公告日口径的提前量；快照只用于发现真实漂移（漏公告、解析错）。
+  csi2000 没有可用的完整公告链，改为按官网快照日补丁当前在册。
 
 快照 URL（与 crawler.SNAPSHOT_URL_TEMPLATE 一致）：
   csi300  https://.../cons/000300cons.xls
@@ -309,9 +310,10 @@ def archive_snapshots() -> None:
 def update_daily(force_rebuild: bool = True) -> dict:
     """
     每日入口：
-      公告增量 → 重建并安装官方指数 → 拼接并安装 hybrid → 官网快照只读校验
+      公告增量 → 重建并安装官方指数 → 拼接并安装 hybrid → 官网快照校验
 
-    instruments 始终以公告构建结果为准；快照差异只用于告警，不回写。
+    csi300/500/1000 以公告构建结果为准，快照差异只用于告警，不回写。
+    csi2000 由 builder 按官网快照补丁当前在册。
     hybrid 失败不会阻止官方安装和校验，但会记录错误供入口返回非零。
     """
     cfg.ensure_dirs()
@@ -341,7 +343,7 @@ def update_daily(force_rebuild: bool = True) -> dict:
         logger.exception(f"hybrid 指数刷新失败，保留上一次成功安装的文件: {error}")
 
     archive_snapshots()
-    logger.info("=== 官网快照只读校验（不回写 instruments）===")
+    logger.info("=== 官网快照校验（300/500/1000 只读；2000 已由 builder 写入）===")
     snap_check = check_against_official_snapshots(OFFICIAL_INDICES)
 
     members = {

@@ -17,8 +17,8 @@ from live_trading.modules.operator_probe import (
     build_account_snapshot_request,
     prepare_account_snapshot_request,
     publish_account_snapshot_request,
+    resolve_real_account_id as resolve_account_id,
 )
-from live_trading.scripts.run_publish_signals import resolve_account_id
 
 CONFIGS_DIR = PROJECT_ROOT / "live_trading" / "configs"
 

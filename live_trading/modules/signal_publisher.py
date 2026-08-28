@@ -137,8 +137,8 @@ class SignalPublisher:
         self._atomic_write(done_path, done_content)
 
         logger.info(
-            "published batch %s: %d orders, mode=%s -> %s",
-            header.batch_id, len(orders), header.mode, jsonl_path,
+            "published batch %s: %d orders -> %s",
+            header.batch_id, len(orders), jsonl_path,
         )
         return jsonl_path
 

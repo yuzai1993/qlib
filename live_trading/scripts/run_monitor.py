@@ -182,10 +182,13 @@ def run_postmarket(date, recorder, store, config) -> list:
                                prev_positions,
                                reject_rate=thresholds["reject_rate"])
     snapshot_roots = [Path(config["live"]["bridge_root"])]
-    if config.get("live", {}).get("broker_environment") == "REAL":
+    if config.get("live", {}).get("broker_environment") != "SIMULATION":
         snapshot_roots = list(_execution_roots(config))
     for snapshot_root in dict.fromkeys(snapshot_roots):
-        status_path = snapshot_root / "snapshot_requests" / "status.json"
+        request_root = snapshot_root / "snapshot_requests"
+        if not request_root.is_dir():
+            continue
+        status_path = request_root / "status.json"
         findings += check_snapshot_protocol_status(
             _read_json_object(status_path), str(status_path),
             _scan_snapshot_protocol_residue(snapshot_root, recorder),
@@ -193,7 +196,7 @@ def run_postmarket(date, recorder, store, config) -> list:
     # Any LIVE strategy on the shared account requires account-wide reconcile.
     # In particular, a PAUSED main must not hide drift created by the probe.
     account_batches = recorder.get_active_batches_by_date(date)
-    if any(b.get("mode") == "LIVE" for b in account_batches):
+    if any(b.get("mode") != "SIMULATE" for b in account_batches):
         reconcile_cfg = config.get("monitor", {}).get("broker_reconcile") or {}
         findings += check_broker_reconcile(
             date,
@@ -210,7 +213,7 @@ def run_postmarket(date, recorder, store, config) -> list:
             ),
             value_tolerance=thresholds["cash_tolerance"],
         )
-    if config.get("live", {}).get("broker_environment") == "REAL":
+    if config.get("live", {}).get("broker_environment") != "SIMULATION":
         findings += _run_probe_checks(date, recorder, config)
     return findings
 

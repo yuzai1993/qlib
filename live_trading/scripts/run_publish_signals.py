@@ -4,7 +4,7 @@
 用法：
     python live_trading/scripts/run_publish_signals.py \
         --config csi1000_b6m_b2s_postclose --trade-date 2026-08-03 \
-        [--mode SIMULATE] [--dry-run]
+        [--dry-run]
 
 流程（设计文档 §7.1）：
     qlib init → 预测 signal_date 分数 → 读取 live 持仓 → TopkDropout 意图
@@ -32,7 +32,6 @@ from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.backtest_parity import validate_configured_backtest
 from live_trading.modules.execution_profile import get_execution_profile
 from live_trading.modules.execution_state import (
-    ExecutionPausedError,
     validate_identifier,
 )
 from live_trading.modules.fill_importer import LiveRecorder
@@ -179,8 +178,6 @@ def parse_args():
     p = argparse.ArgumentParser(description="Publish QMT signal batch")
     p.add_argument("--config", required=True, help="live config id (configs/*.yaml)")
     p.add_argument("--trade-date", required=True, help="planned execution date YYYY-MM-DD")
-    p.add_argument("--mode", choices=["SIMULATE", "LIVE"], default=None,
-                   help="default: live.default_mode from config")
     p.add_argument("--seq", type=int, default=1, help="batch seq of the day")
     p.add_argument("--dry-run", action="store_true", help="print orders, do not write files")
     p.add_argument(
@@ -188,21 +185,6 @@ def parse_args():
         help="atomically write an evidence-only proposed plan (implies --dry-run)",
     )
     return p.parse_args()
-
-
-def resolve_mode(args, config) -> str:
-    # The header is deliberately execution-neutral.  QMT decides whether its
-    # running strategy is attached to a paper or real account.
-    return args.mode or "LIVE"
-
-
-def resolve_account_id(config) -> str:
-    live_cfg = config["live"]
-    return (
-        live_cfg.get("account_id")
-        or os.environ.get("QMT_ACCOUNT_ID")
-        or "QMT_MANAGED"
-    )
 
 
 def to_strategy_positions(qmt_positions: dict) -> dict:
@@ -392,8 +374,6 @@ def main():
     logger.info("Live/Backtest parity gate passed: %s", parity_path)
     execution_profile = get_execution_profile(live_cfg["execution_session"])
 
-    mode = resolve_mode(args, config)
-    account_id = resolve_account_id(config)
     trade_date = args.trade_date
     batch_id = f"{trade_date.replace('-', '')}_{strategy_id}_{args.seq:03d}"
 
@@ -534,7 +514,7 @@ def main():
         logger.info("wrote audit preview to %s", args.audit_preview)
 
     if preview_only:
-        print(f"[dry-run] batch {batch_id} mode={mode} ({len(orders)} orders):")
+        print(f"[dry-run] batch {batch_id} ({len(orders)} orders):")
         for o in orders:
             target = (
                 f"target_value={o.target_value:.2f}"
@@ -553,10 +533,7 @@ def main():
         strategy_id=strategy_id,
         trade_date=trade_date,
         signal_date=signal_date,
-        account_id=account_id,
         account_type=live_cfg.get("account_type", "STOCK"),
-        account_environment=live_cfg.get("broker_environment", "QMT_MANAGED"),
-        mode=mode,
         created_at=datetime.now().astimezone().isoformat(timespec="seconds"),
         order_count=0,   # publisher 填充
         checksum="",     # publisher 填充

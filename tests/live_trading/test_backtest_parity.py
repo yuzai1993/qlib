@@ -191,11 +191,6 @@ def test_publish_checks_parity_before_account_or_durable_side_effects(monkeypatc
         "validate_configured_backtest",
         lambda *args: (_ for _ in ()).throw(ParityError("drift")),
     )
-    monkeypatch.setattr(
-        publish,
-        "resolve_account_id",
-        lambda *args: pytest.fail("account resolution ran before parity gate"),
-    )
 
     with pytest.raises(ParityError, match="drift"):
         publish.main()

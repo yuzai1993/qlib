@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import math
 import os
 from pathlib import Path
 import re
@@ -32,7 +31,7 @@ def _validate_account_id(account_id: str) -> str:
 _VALID_EXECUTION_PROFILES = ("CLOSE_AUCTION", "AFTER_HOURS_FIXED_PRICE")
 
 
-def render_main_source(source: str, account_id: str, expected_cash: float, *,
+def render_main_source(source: str, account_id: str, expected_cash=None, *,
                        execution_profile: str = "AFTER_HOURS_FIXED_PRICE",
                        enable_ladder_netting: bool = True,
                        max_order_quantity: int = 0) -> str:
@@ -41,11 +40,10 @@ def render_main_source(source: str, account_id: str, expected_cash: float, *,
     渲染而不是改仓库默认值：模板保持最保守形态（旧通道、不抵销、一手上限），
     生产形态只出现在渲染产物里，模板被误当生产脚本直接跑也不会造成损失。
     默认参数就是生产形态——漏传参数会得到正确结果，而不是静默退回一手探针。
+    expected_cash 已不再写入运行时，保留参数只为兼容旧调用。
     """
+    del expected_cash
     account_id = _validate_account_id(account_id)
-    cash = float(expected_cash)
-    if not math.isfinite(cash) or cash < 0:
-        raise ValueError("expected cash must be a finite non-negative number")
     if execution_profile not in _VALID_EXECUTION_PROFILES:
         raise ValueError(f"unknown execution profile: {execution_profile!r}")
     cap = int(max_order_quantity)
@@ -54,10 +52,6 @@ def render_main_source(source: str, account_id: str, expected_cash: float, *,
     settings = (
         ("ACCOUNT_ID", f'"{account_id}"'),
         ("STRATEGY_NAME", '"qlib_bridge_main"'),
-        ("ACCOUNT_ENVIRONMENT", '"REAL"'),
-        ("ALLOW_REAL_MONEY", "True"),
-        ("REAL_EXPECTED_INITIAL_CASH", f"{cash:.2f}"),
-        ("REAL_REQUIRE_EMPTY_POSITIONS", "False"),
         ("EXECUTION_PROFILE", f'"{execution_profile}"'),
         ("ENABLE_LADDER_NETTING", "True" if enable_ladder_netting else "False"),
         # 0 = 无上限。真阶梯单笔约 6 万元，一手闸会把每层砍成 100 股。
@@ -93,12 +87,18 @@ def main() -> int:
     parser.add_argument("--main-source", type=Path, required=True)
     parser.add_argument("--pr49-source", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--expected-cash", type=float, required=True)
+    parser.add_argument("--expected-cash", type=float, required=False, default=0.0)
     args = parser.parse_args()
 
-    account_id = os.environ.get("QMT_REAL_ACCOUNT_ID", "")
+    main_source = args.main_source.read_text(encoding="utf-8")
+    source_account = re.search(
+        r'^ACCOUNT_ID\s*=\s*"(\d+)"', main_source, re.MULTILINE,
+    )
+    account_id = os.environ.get("QMT_REAL_ACCOUNT_ID") or (
+        source_account.group(1) if source_account else ""
+    )
     main_text = render_main_source(
-        args.main_source.read_text(encoding="utf-8"),
+        main_source,
         account_id,
         args.expected_cash,
     )

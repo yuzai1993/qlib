@@ -655,9 +655,9 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
         ledger_positions: {stock_code: shares} 账本持仓
         ledger_cash: 账本现金
         cash_tolerance: 现金差额容忍额（元）
-        check_cash: False 时跳过现金类告警（CASH_NEGATIVE /
-            BROKER_CASH_MISMATCH），只对持仓。QMT 模拟盘的可用资金口径
-            不可信、以账本为准时用；切真实账户后应恢复 True。
+        check_cash: False 时跳过现金和账户价值调整告警（CASH_NEGATIVE /
+            BROKER_CASH_MISMATCH / BROKER_VALUE_ADJUSTMENT_MISMATCH），
+            只对持仓股数。费用口径未核准时用。
         ledger_value_adjustment: 账本中不属于普通持仓的账户价值调整。
         broker_position_market_values: 券商逐仓市值；字段不完整时跳过
             账户价值调整对账。
@@ -714,7 +714,11 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
             for value in broker_position_market_values.values()
         )
     )
-    if aggregate_market_value is not None and position_values_complete:
+    if (
+        check_cash
+        and aggregate_market_value is not None
+        and position_values_complete
+    ):
         broker_residual = float(aggregate_market_value) - sum(
             float(value) for value in broker_position_market_values.values()
         )

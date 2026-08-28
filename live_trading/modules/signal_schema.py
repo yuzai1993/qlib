@@ -48,17 +48,23 @@ class BatchHeader:
     strategy_id: str
     trade_date: str
     signal_date: str
-    account_id: str
     account_type: str
-    account_environment: str
-    mode: str
     created_at: str
     order_count: int
     checksum: str
     schema_version: str = SCHEMA_VERSION
+    # Leftover audit stamps. New batches omit them; old files may still have them.
+    account_id: str = ""
+    account_environment: str = ""
+    mode: str = ""
 
     def to_json_line(self) -> str:
-        return _to_json_line(self, "batch_header")
+        d = {"type": "batch_header"}
+        d.update(asdict(self))
+        for key in ("account_id", "account_environment", "mode"):
+            if not d.get(key):
+                d.pop(key, None)
+        return json.dumps(d, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     @classmethod
     def from_dict(cls, d: dict) -> "BatchHeader":
@@ -225,15 +231,16 @@ def validate_batch(header: BatchHeader, orders: list) -> None:
         raise SchemaError(
             f"schema_version must be {SCHEMA_VERSION}: {header.schema_version!r}"
         )
-    if header.mode not in VALID_MODES:
+    if header.mode and header.mode not in VALID_MODES:
         raise SchemaError(f"invalid mode: {header.mode!r}")
-    if header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
+    if (
+        header.account_environment
+        and header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS
+    ):
         raise SchemaError(
             "account_environment must be SIMULATION or REAL: "
             f"{header.account_environment!r}"
         )
-    if header.account_environment == "REAL" and header.mode != "LIVE":
-        raise SchemaError("REAL account_environment requires LIVE mode")
     if not _DATE_RE.match(header.trade_date):
         raise SchemaError(f"trade_date must be YYYY-MM-DD: {header.trade_date!r}")
     if not _DATE_RE.match(header.signal_date):

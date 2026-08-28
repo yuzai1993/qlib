@@ -1,5 +1,5 @@
 # CSI1000 real account: frozen B6-M + B4-S steady state + staged Top2 build.
-# Account ID is private and must come from QMT_REAL_ACCOUNT_ID.
+# QMT start/stop and local account settings are the only execution switches.
 
 data:
   qlib_dir: "~/.qlib/qlib_data/cn_data"
@@ -65,11 +65,7 @@ parity:
 live:
   bridge_root: "/Volumes/qmt_bridge"
   strategy_id: "csi1000_b6m_b2s_postclose_real"
-  account_id: ""
   account_type: "STOCK"
-  broker_environment: "REAL"
-  allow_real_money: true
-  default_mode: "LIVE"
   execution_session: "CLOSE_AUCTION"
   close_auction_price_type: 11
   submit_after: "14:57:05"

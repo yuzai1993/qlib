@@ -53,10 +53,7 @@ live:
   # 共享目录：Mac 侧挂载点；Windows 侧对应 D:\qmt_bridge
   bridge_root: "/Volumes/qmt_bridge"
   strategy_id: "csi300_topk10"
-  # 资金账号不进 git：留空则要求通过环境变量 QMT_ACCOUNT_ID 提供
-  account_id: ""
   account_type: "STOCK"
-  default_mode: "LIVE"
   buy_slippage: 0.01
   sell_slippage: 0.01
   max_orders_per_day: 20

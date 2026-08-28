@@ -811,12 +811,10 @@ class LiveRecorder:
         planned_orders: int,
         account_environment: str = "SIMULATION",
     ) -> None:
-        if account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
+        if account_environment and account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
             raise SchemaError(
                 "account_environment must be SIMULATION or REAL"
             )
-        if account_environment == "REAL" and mode != "LIVE":
-            raise SchemaError("REAL account_environment requires LIVE mode")
         with self._conn() as conn:
             existing = conn.execute(
                 "SELECT * FROM batches WHERE batch_id=?", (batch_id,),
@@ -900,7 +898,7 @@ class LiveRecorder:
                 )
             if source["trade_date"] != replacement["trade_date"]:
                 raise SchemaError("superseding batches must share trade_date")
-            if source["mode"] != replacement["mode"]:
+            if (source["mode"] or "LIVE") != (replacement["mode"] or "LIVE"):
                 raise SchemaError("superseding batches must share mode")
             if self._batch_strategy_key(source) != self._batch_strategy_key(
                 replacement
@@ -1028,12 +1026,13 @@ class LiveRecorder:
 
     @staticmethod
     def _publish_plan_values(header, orders: list) -> tuple[str, list]:
-        if header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS:
+        if (
+            header.account_environment
+            and header.account_environment not in VALID_ACCOUNT_ENVIRONMENTS
+        ):
             raise SchemaError(
                 "account_environment must be SIMULATION or REAL"
             )
-        if header.account_environment == "REAL" and header.mode != "LIVE":
-            raise SchemaError("REAL account_environment requires LIVE mode")
         batch_id = header.batch_id
         order_checksum = compute_checksum([
             order.to_json_line() for order in orders
@@ -1072,14 +1071,14 @@ class LiveRecorder:
             return False
         batch_matches = (
             existing_batch["trade_date"] == header.trade_date
-            and existing_batch["mode"] == header.mode
+            and existing_batch["mode"] == (header.mode or "LIVE")
             and existing_batch["planned_orders"] == len(rows)
             and existing_batch["strategy_id"] == header.strategy_id
             and existing_batch["signal_date"] == header.signal_date
             and existing_batch["account_id"] == header.account_id
             and existing_batch["account_type"] == header.account_type
             and existing_batch["account_environment"]
-            == header.account_environment
+            == (header.account_environment or "REAL")
             and existing_batch["order_checksum"] == order_checksum
         )
         existing_rows = [tuple(row) for row in conn.execute(
@@ -1136,7 +1135,8 @@ class LiveRecorder:
             if exclusive_same_day_live:
                 conflict = conn.execute(
                     """SELECT batch_id FROM batches
-                         WHERE trade_date=? AND strategy_id=? AND mode='LIVE'
+                         WHERE trade_date=? AND strategy_id=?
+                           AND IFNULL(mode,'') != 'SIMULATE'
                            AND superseded_by IS NULL AND batch_id<>?
                          ORDER BY batch_id LIMIT 1""",
                     (header.trade_date, header.strategy_id, header.batch_id),
@@ -1163,9 +1163,9 @@ class LiveRecorder:
                     order_checksum)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    batch_id, header.trade_date, header.mode, len(rows),
+                    batch_id, header.trade_date, header.mode or "LIVE", len(rows),
                     header.strategy_id, header.signal_date, header.account_id,
-                    header.account_type, header.account_environment,
+                    header.account_type, header.account_environment or "REAL",
                     order_checksum,
                 ),
             )
@@ -1602,7 +1602,7 @@ class LiveRecorder:
             ).fetchone()
             if batch is None:
                 raise SchemaError(f"unknown fill batch_id: {fill.batch_id!r}")
-            if fill.mode != batch["mode"]:
+            if (fill.mode or "LIVE") != (batch["mode"] or "LIVE"):
                 raise SchemaError(
                     f"fill mode mismatch: {fill.mode!r} != {batch['mode']!r}"
                 )
@@ -2821,8 +2821,12 @@ class LiveRecorder:
                         "snapshot trade_date does not match durable batch"
                     )
             normalized_account = None if account is None else dict(account)
-            if account is not None and batch["account_environment"] == "REAL":
-                durable_account = str(batch["account_id"] or "")
+            if account is not None and (
+                batch["account_environment"] or "REAL"
+            ) == "REAL":
+                durable_account = str(
+                    batch["account_id"] or account.get("account_id") or ""
+                )
                 if not durable_account:
                     raise SchemaError(
                         "REAL snapshot batch requires a durable account_id"
@@ -2914,7 +2918,7 @@ class LiveRecorder:
                     sequence,
                     int(
                         normalized_account is not None
-                        and batch["account_environment"] == "REAL"
+                        and (batch["account_environment"] or "REAL") == "REAL"
                     ),
                     batch["strategy_id"],
                     "BATCH_RECONCILIATION",
@@ -3130,11 +3134,9 @@ class FillImporter:
         return count
 
     def import_account_snapshot_responses(self) -> int:
-        """Serialize publish/import DB state, archive, and gate release."""
-        self.snapshot_request_root.mkdir(parents=True, exist_ok=True)
-        self.snapshot_mac_lifecycle_lock.parent.mkdir(
-            parents=True, exist_ok=True,
-        )
+        """导入 snapshot-only 回执；目录不存在则跳过，不创建。"""
+        if not self.snapshot_request_root.is_dir():
+            return 0
         lifecycle_lock = FileLock(str(self.snapshot_mac_lifecycle_lock))
         importer_lock = FileLock(
             str(self.snapshot_request_root / "response_import.lock")

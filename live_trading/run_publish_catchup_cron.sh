@@ -10,7 +10,9 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 PYTHON="/opt/anaconda3/envs/qlib/bin/python"
 CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-alla_v4_ladder_k1h5_postclose_real}}}"
 
-RUN_MODE="${LIVE_RUN_MODE:-LIVE}"
+# QMT start/stop decides execution. Do not inherit LIVE_RUN_MODE.
+unset LIVE_TRADING_CONFIRM
+unset LIVE_RUN_MODE
 
 LOCK_ROOT="${SCRIPT_DIR}/.locks"
 mkdir -p "$LOCK_ROOT"
@@ -57,7 +59,7 @@ if [[ "$STATUS" -eq 2 ]]; then
 fi
 
 {
-    echo "===== $(date '+%Y-%m-%d %H:%M:%S') publish catchup config=${CONFIG_ID} mode=${RUN_MODE} trade_date=${TRADE_DATE} ====="
+    echo "===== $(date '+%Y-%m-%d %H:%M:%S') publish catchup config=${CONFIG_ID} trade_date=${TRADE_DATE} ====="
     if [[ -n "$EXISTING" ]]; then
         echo "skip: batch already present (${EXISTING})"
         exit 0
@@ -67,6 +69,5 @@ fi
     # 防止发布中途休眠；-i 抑制 idle sleep
     caffeinate -i "$PYTHON" live_trading/scripts/run_publish_signals.py \
         --config "$CONFIG_ID" \
-        --trade-date "$TRADE_DATE" \
-        --mode "$RUN_MODE"
+        --trade-date "$TRADE_DATE"
 } >>"$LOG_FILE" 2>&1

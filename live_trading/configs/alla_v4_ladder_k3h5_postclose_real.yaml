@@ -1,6 +1,6 @@
 # All-A real account: BT v4 true ladder (CohortLadderStrategy k3 x h5) on the
 # v4 RankIC ES five-seed ensemble, executed via after-hours fixed price.
-# Account ID is private and must come from QMT_REAL_ACCOUNT_ID.
+# QMT start/stop and local account settings are the only execution switches.
 
 data:
   qlib_dir: "~/.qlib/qlib_data/cn_data"
@@ -93,11 +93,7 @@ parity:
 live:
   bridge_root: "/Volumes/qmt_bridge"
   strategy_id: "alla_v4_ladder_k3h5_postclose_real"
-  account_id: ""
   account_type: "STOCK"
-  broker_environment: "REAL"
-  allow_real_money: true
-  default_mode: "LIVE"
   execution_session: "AFTER_HOURS_FIXED_PRICE"
   close_auction_price_type: 49
   submit_after: "15:00:05"
@@ -134,7 +130,7 @@ monitor:
     fill_ratio_buy_hard_floor: 0.50
     fill_ratio_streak_days: 3
   broker_reconcile:
-    cash_check: true
+    cash_check: false
 
 web:
   host: "127.0.0.1"

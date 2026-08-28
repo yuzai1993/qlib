@@ -17,9 +17,9 @@ from live_trading.modules.operator_probe import (
     OperatorProbeRequest,
     preview_operator_probe,
     publish_operator_probe,
+    resolve_real_account_id as resolve_account_id,
 )
 from live_trading.modules.signal_publisher import SignalPublisher
-from live_trading.scripts.run_publish_signals import resolve_account_id
 
 CONFIGS_DIR = PROJECT_ROOT / "live_trading" / "configs"
 

@@ -495,10 +495,7 @@ def _header(request: OperatorProbeRequest, live: dict, account_id: str) -> Batch
         strategy_id=live["strategy_id"],
         trade_date=request.trade_date,
         signal_date=request.trade_date,
-        account_id=account_id,
         account_type=live.get("account_type", "STOCK"),
-        account_environment="REAL",
-        mode="LIVE",
         created_at=f"{request.trade_date}T00:00:00+08:00",
         order_count=1,
         checksum="",
@@ -725,6 +722,18 @@ def preview_operator_probe(
     order = build_operator_order(request, config, recorder, request.trade_date)
     header = _header(request, live, account_id)
     return _normalized_header(header, order), order
+
+
+def resolve_real_account_id(config: dict) -> str:
+    """Probe/snapshot tools still bind the private real account.
+
+    The main publisher no longer reads QMT_* env vars. These operator
+    tools keep the existing REAL-account pairing.
+    """
+    configured = str((config.get("live") or {}).get("account_id") or "")
+    if configured:
+        return configured
+    return str(os.environ.get("QMT_REAL_ACCOUNT_ID") or "")
 
 
 def _validate_real_account(live: dict, account_id: str) -> None:

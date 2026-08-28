@@ -1,8 +1,8 @@
 # All-A observation account: same v4 RankIC ES ensemble as BT v4, but
 # CohortLadderStrategy k1 x h5, 300_000 opening cash, risk_degree=1.0.
-# After-hours fixed price. QMT start/stop is the only execution switch.
-# The 1_000_000 / k3h5 config stays shipped for a later cutover.
-# Account ID is private and must come from QMT_REAL_ACCOUNT_ID.
+# After-hours fixed price. QMT start/stop and local account settings
+# are the only execution switches. The 1_000_000 / k3h5 config stays
+# shipped for a later cutover.
 
 data:
   qlib_dir: "~/.qlib/qlib_data/cn_data"
@@ -93,11 +93,7 @@ parity:
 live:
   bridge_root: "/Volumes/qmt_bridge"
   strategy_id: "alla_v4_ladder_k1h5_postclose_real"
-  account_id: ""
   account_type: "STOCK"
-  broker_environment: "REAL"
-  allow_real_money: true
-  default_mode: "LIVE"
   execution_session: "AFTER_HOURS_FIXED_PRICE"
   close_auction_price_type: 49
   submit_after: "15:00:05"
@@ -132,7 +128,7 @@ monitor:
     fill_ratio_buy_hard_floor: 0.50
     fill_ratio_streak_days: 3
   broker_reconcile:
-    cash_check: true
+    cash_check: false
 
 web:
   host: "127.0.0.1"

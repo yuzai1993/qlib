@@ -14,12 +14,12 @@ if [[ ! "$CONFIG_ID" =~ ^[A-Za-z0-9_-]+$ ]]; then
     exit 1
 fi
 
-# Runtime credentials and network settings remain shared with the other cron
-# stages. The obsolete publication confirmation is intentionally ignored.
+# Runtime credentials remain shared with the other cron stages.
+# QMT start/stop and local account settings decide execution.
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
 unset LIVE_TRADING_CONFIRM
-RUN_MODE="${LIVE_RUN_MODE:-LIVE}"
+unset LIVE_RUN_MODE
 
 LOCK_ROOT="${SCRIPT_DIR}/.locks"
 mkdir -p "$LOCK_ROOT"
@@ -62,10 +62,9 @@ export MPLCONFIGDIR="${MPLCONFIGDIR:-/tmp/mplconfig-live}"
 mkdir -p "$MPLCONFIGDIR"
 
 {
-    echo "===== $(date '+%Y-%m-%d %H:%M:%S') publish config=${CONFIG_ID} mode=${RUN_MODE} trade_date=${TRADE_DATE} ====="
+    echo "===== $(date '+%Y-%m-%d %H:%M:%S') publish config=${CONFIG_ID} trade_date=${TRADE_DATE} ====="
     cd "$PROJECT_ROOT"
     caffeinate -i "$PYTHON" live_trading/scripts/run_publish_signals.py \
         --config "$CONFIG_ID" \
-        --trade-date "$TRADE_DATE" \
-        --mode "$RUN_MODE"
+        --trade-date "$TRADE_DATE"
 } >>"$LOG_FILE" 2>&1

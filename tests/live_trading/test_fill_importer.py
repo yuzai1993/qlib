@@ -1738,6 +1738,15 @@ def _snapshot_only_response(status="COMPLETE"):
     return response
 
 
+def test_import_account_snapshot_responses_skips_absent_directory(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    importer = FillImporter(tmp_path, recorder)
+
+    assert importer.import_account_snapshot_responses() == 0
+    assert not (tmp_path / "snapshot_requests").exists()
+    assert not (tmp_path / "state" / "SNAPSHOT_MAC_LIFECYCLE.lock").exists()
+
+
 def _write_snapshot_only_response(root, response):
     request = _snapshot_only_request_payload()
     archive = root / "snapshot_requests" / "archive"

@@ -53,8 +53,8 @@ def _validate_performance_baseline(config: dict) -> None:
             )
 
 
-def _validate_trading_config(config: dict) -> None:
-    live = config.get("live", {})
+def _validate_optional_environment_triad(live: dict) -> None:
+    """Leftover YAML switches still pair-check; STRATEGY no longer requires them."""
     if "broker_environment" not in live:
         return
     environment = live.get("broker_environment")
@@ -73,9 +73,17 @@ def _validate_trading_config(config: dict) -> None:
         )
     if environment == "REAL" and live.get("default_mode") != "LIVE":
         raise ValueError("REAL broker_environment requires default_mode=LIVE")
+
+
+def _validate_trading_config(config: dict) -> None:
+    live = config.get("live", {})
+    _validate_optional_environment_triad(live)
     kind = live.get("kind", "STRATEGY")
     if kind not in {"STRATEGY", "OPERATOR_PROBE"}:
         raise ValueError("live.kind must be STRATEGY or OPERATOR_PROBE")
+
+    if "execution_session" not in live:
+        return
 
     profile = get_execution_profile(live.get("execution_session"))
     # BT v4 真阶梯把主策略搬到盘后固定价，所以 STRATEGY 两个通道都合法；价类型与
@@ -107,8 +115,8 @@ def _validate_trading_config(config: dict) -> None:
 
     if kind == "OPERATOR_PROBE":
         if (
-            environment != "REAL"
-            or allow_real_money is not True
+            live.get("broker_environment") != "REAL"
+            or live.get("allow_real_money") is not True
             or live.get("default_mode") != "LIVE"
         ):
             raise ValueError("OPERATOR_PROBE requires REAL/LIVE")

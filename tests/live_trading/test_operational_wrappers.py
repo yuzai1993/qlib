@@ -31,11 +31,14 @@ def _read_runbooks():
         REPO_ROOT / "live_trading/qmt_strategy/PR49_PROBE_CHECKLIST.md"
     )
     checklist = checklist_path.read_text(encoding="utf-8")
-    return main, qmt, checklist
+    csi1000_sell = (
+        REPO_ROOT / "live_trading/qmt_strategy/CSI1000_OPERATOR_SELL_RUNBOOK.md"
+    ).read_text(encoding="utf-8")
+    return main, qmt, checklist, csi1000_sell
 
 
 def test_main_sell_runbook_documents_audited_preview_to_pause_flow():
-    main, _, _ = _read_runbooks()
+    _, _, _, csi1000_sell = _read_runbooks()
     required = [
         "--audit-preview",
         "preview 只是证据",
@@ -49,24 +52,18 @@ def test_main_sell_runbook_documents_audited_preview_to_pause_flow():
         "bash live_trading/run_monitor_cron.sh postmarket csi1000_b6m_b2s_postclose_real",
         "--state PAUSED",
     ]
-    assert all(token in main for token in required)
+    assert all(token in csi1000_sell for token in required)
 
 
 def test_two_instance_runbook_documents_exact_profile_isolation():
-    _, qmt, checklist = _read_runbooks()
+    _, qmt, checklist, _ = _read_runbooks()
     combined = qmt + checklist
     for token in (
         'EXECUTION_PROFILE = "CLOSE_AUCTION"',
         'EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"',
         r'BRIDGE_ROOT = r"D:\qmt_bridge"',
-        r'BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"',
-        r'OTHER_BRIDGE_ROOT = r"D:\qmt_bridge"',
-        r'OTHER_BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"',
         'STRATEGY_NAME = "qlib_bridge_main"',
-        'STRATEGY_NAME = "qlib_pr49_probe"',
-        'ACCOUNT_ENVIRONMENT = "REAL"',
-        "ALLOW_REAL_MONEY = True",
-        "MAX_ORDER_QUANTITY = 100",
+        "MAX_ORDER_QUANTITY = 0",
         "RUNTIME_CONFIG",
         "TIMER_REGISTERED",
         "QMT UI",
@@ -75,7 +72,7 @@ def test_two_instance_runbook_documents_exact_profile_isolation():
 
 
 def test_pr49_checklist_stops_for_fresh_confirmation_and_preserves_evidence():
-    _, _, checklist = _read_runbooks()
+    _, _, checklist, _ = _read_runbooks()
     required = [
         "BUY 日确认停点",
         "SELL 日确认停点",
@@ -105,8 +102,8 @@ def test_pr49_checklist_stops_for_fresh_confirmation_and_preserves_evidence():
 
 
 def test_snapshot_bootstrap_runbooks_and_cli_stop_before_authorization():
-    main, qmt, checklist = _read_runbooks()
-    combined = main + qmt + checklist
+    main, qmt, checklist, csi1000_sell = _read_runbooks()
+    combined = main + qmt + checklist + csi1000_sell
     for token in (
         "request_account_snapshot.py",
         "SNAPSHOT_OBSERVATION_CONFIRM=YES",
@@ -127,10 +124,10 @@ def test_snapshot_bootstrap_runbooks_and_cli_stop_before_authorization():
 
 
 def test_runbooks_use_only_the_locked_marker_creator():
-    main, _, checklist = _read_runbooks()
-    combined = main + checklist
+    main, _, checklist, csi1000_sell = _read_runbooks()
+    combined = main + checklist + csi1000_sell
 
-    assert "New-OperatorAuthorizationMarker.ps1" in main
+    assert "New-OperatorAuthorizationMarker.ps1" in csi1000_sell
     assert combined.count("New-OperatorAuthorizationMarker.ps1") >= 3
     assert "New-Item -ItemType File" not in combined
     assert "Remove-Item -LiteralPath" not in combined

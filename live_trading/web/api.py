@@ -107,7 +107,7 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             "strategy_id": current_strategy_id,
             "mode": (
                 active.get("mode", "") if active
-                else config["live"].get("default_mode", "")
+                else config["live"].get("default_mode") or "LIVE"
             ),
             "benchmark_name": config.get("monitor", {}).get(
                 "benchmark_name", "基准",

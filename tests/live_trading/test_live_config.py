@@ -384,7 +384,7 @@ def test_load_real_live_config_is_standalone():
     assert "mlruns_dir" not in cfg["model"]
     assert cfg["model"]["experiment_id"] == "836973677275181001"
     assert cfg["live"]["strategy_id"] == "csi300_topk10"
-    assert cfg["live"]["default_mode"] == "LIVE"  # 2026-07-14 起实盘开关打开
+    assert "default_mode" not in cfg["live"]
     assert cfg["fees"]["stamp_duty_rate"] == 0.0005
     assert "live_trading" in cfg["storage"]["db_path"]
     assert cfg["_config_id"] == "csi300_topk10_live"
@@ -419,9 +419,9 @@ def test_load_new_csi1000_paper_config():
         "only_tradable": False,
         "forbid_all_trade_at_limit": False,
     }
-    assert cfg["live"]["broker_environment"] == "SIMULATION"
-    assert cfg["live"]["allow_real_money"] is False
-    assert cfg["live"]["default_mode"] == "SIMULATE"
+    assert "broker_environment" not in cfg["live"]
+    assert "allow_real_money" not in cfg["live"]
+    assert "default_mode" not in cfg["live"]
     assert cfg["live"]["execution_session"] == "CLOSE_AUCTION"
     assert cfg["live"]["close_auction_price_type"] == 11
     assert cfg["live"]["submit_after"] == "14:57:05"
@@ -448,9 +448,9 @@ def test_load_csi1000_real_config_is_isolated_and_live_only():
     assert cfg["live"]["strategy_id"] == (
         "csi1000_b6m_b2s_postclose_real"
     )
-    assert cfg["live"]["broker_environment"] == "REAL"
-    assert cfg["live"]["allow_real_money"] is True
-    assert cfg["live"]["default_mode"] == "LIVE"
+    assert "broker_environment" not in cfg["live"]
+    assert "allow_real_money" not in cfg["live"]
+    assert "default_mode" not in cfg["live"]
     assert cfg["strategy"]["topk"] == 22
     assert cfg["strategy"]["hold_thresh"] == 2
     assert cfg["strategy"]["risk_degree"] == pytest.approx(0.90)
@@ -639,6 +639,10 @@ def test_observation_ladder_is_k1h5_full_risk_three_hundred_thousand():
     assert config["account"]["opening_cash"] == 300_000.0
     assert config["live"]["execution_session"] == "AFTER_HOURS_FIXED_PRICE"
     assert config["live"]["strategy_id"] == "alla_v4_ladder_k1h5_postclose_real"
+    assert config["monitor"]["broker_reconcile"]["cash_check"] is False
+    assert "broker_environment" not in config["live"]
+    assert "allow_real_money" not in config["live"]
+    assert "default_mode" not in config["live"]
 
 
 def test_ladder_live_config_matches_bt_v4_parameters():

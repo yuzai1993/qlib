@@ -33,37 +33,6 @@ def _config():
     }
 
 
-def test_account_resolution_is_qmt_managed(monkeypatch):
-    monkeypatch.delenv("QMT_ACCOUNT_ID", raising=False)
-    assert publish.resolve_account_id(_config()) == "QMT_MANAGED"
-
-
-def test_account_resolution_accepts_operator_selected_account(monkeypatch):
-    monkeypatch.setenv("QMT_ACCOUNT_ID", "operator-selected")
-    assert publish.resolve_account_id(_config()) == "operator-selected"
-
-
-def test_configured_account_id_is_preserved():
-    config = _config()
-    config["live"]["account_id"] = "8890116049"
-    assert publish.resolve_account_id(config) == "8890116049"
-
-def test_live_protocol_mode_needs_no_process_confirmation(monkeypatch):
-    args = SimpleNamespace(mode="LIVE")
-    monkeypatch.delenv("LIVE_TRADING_CONFIRM", raising=False)
-    assert publish.resolve_mode(args, _config()) == "LIVE"
-
-
-def test_qmt_account_selection_does_not_change_publisher_mode():
-    args = SimpleNamespace(mode="SIMULATE")
-    config = _config()
-    config["live"].update(
-        broker_environment="REAL", allow_real_money=True,
-    )
-
-    assert publish.resolve_mode(args, config) == "SIMULATE"
-
-
 def test_strategy_positions_preserve_opening_trade_date():
     positions = publish.to_strategy_positions({
         "600000.SH": {
@@ -333,8 +302,6 @@ def test_main_paused_audit_preview_does_not_create_batch_or_inbox(
     monkeypatch.setattr(publish, "load_live_config", lambda *_args: config)
     monkeypatch.setattr(publish, "validate_configured_backtest", lambda *_args: None)
     monkeypatch.setattr(publish, "get_execution_profile", lambda *_args: object())
-    monkeypatch.setattr(publish, "resolve_mode", lambda *_args: "LIVE")
-    monkeypatch.setattr(publish, "resolve_account_id", lambda *_args: "account")
     monkeypatch.setattr(
         publish, "get_signal_date_and_scores",
         lambda *_args: ("2026-08-10", [], ["2026-08-10"]),

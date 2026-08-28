@@ -7,7 +7,7 @@ LIVE 批次 = 到点下单。
 
 `qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并在 14:57 收盘集合竞价使用指定价 `prType=11`。买单显式传当日涨停价，卖单显式传当日跌停价。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
 
-仓库源码默认失败关闭为 `SIMULATION` 且 `ALLOW_REAL_MONEY=False`。真实资金只能在 QMT 本地副本中显式选择 `REAL`，并与 Mac 的 REAL 批次双向匹配。
+策略源码里写死 `ACCOUNT_ID`。启停本策略就是交易开关；批次头不再带账号、环境或 mode。
 
 ## 1. Windows 目录
 
@@ -25,59 +25,38 @@ D:\qmt_bridge\
 
 首次运行会创建子目录。通过 SMB 把根目录共享给 Mac；Mac 上的配置应指向 `/Volumes/qmt_bridge`。共享账户只需该目录的读写权限，不要给管理员权限。Windows 应使用固定局域网 IP，并在交易时段禁用睡眠和自动重启。
 
-## 2. 导入两个独立策略实例
+## 2. 导入生产策略实例
 
-在大 QMT 的模型交易/策略编辑器中新建两个内置 Python 策略，分别复制同一版
-`qmt_signal_bridge.py`，再只修改每个 QMT 本地副本的设置区。不得让两个实例共享
-inbox/processing/active state。
+在大 QMT 的模型交易/策略编辑器中新建一个内置 Python 策略，复制渲染后的
+`qmt_signal_bridge.py`。日常只跑这一份；启停本策略就是交易开关。
 
-主策略本地副本：
-
-```python
-EXECUTION_PROFILE = "CLOSE_AUCTION"
-BRIDGE_ROOT = r"D:\qmt_bridge"
-OTHER_BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"
-ACCOUNT_ID = "<只在 QMT 本地填写真实资金账号>"
-ACCOUNT_TYPE = "STOCK"
-STRATEGY_NAME = "qlib_bridge_main"
-ACCOUNT_ENVIRONMENT = "REAL"
-ALLOW_REAL_MONEY = True
-MAX_ORDER_QUANTITY = 100
-```
-
-盘后固定价格探针本地副本：
+生产本地副本（由 `render_qmt_runtime.py` 写出，不要手改这三个常量以外的通道设置）：
 
 ```python
 EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"
-BRIDGE_ROOT = r"D:\qmt_bridge\pr49_probe"
-OTHER_BRIDGE_ROOT = r"D:\qmt_bridge"
-ACCOUNT_ID = "<只在 QMT 本地填写真实资金账号>"
+BRIDGE_ROOT = r"D:\qmt_bridge"
+ACCOUNT_ID = "<仓库模板已写生产账号，渲染时也可覆盖>"
 ACCOUNT_TYPE = "STOCK"
-STRATEGY_NAME = "qlib_pr49_probe"
-ACCOUNT_ENVIRONMENT = "REAL"
-ALLOW_REAL_MONEY = True
-MAX_ORDER_QUANTITY = 100
+STRATEGY_NAME = "qlib_bridge_main"
+MAX_ORDER_QUANTITY = 0
+ENABLE_LADDER_NETTING = True
 ```
 
-两个实例的 `ACCOUNT_ID` 必须相同，并在两个 QMT UI 策略页面明确绑定同一真实账户；
-脱敏日志或源码设置不能代替 UI 复核。真实账号只写入 Windows 本地副本，不提交到 Git。
+仓库模板默认仍是收盘集合竞价、一手上限、不抵销，避免误把模板当生产脚本编译。
+需要回退到 `EXECUTION_PROFILE = "CLOSE_AUCTION"` 时重新渲染，不要就地改文件。
 
-共享账户已经持仓后，默认的空仓/初始资金预检会正确地失败关闭。每个实际测试日都从
-QMT UI 读取当时的可用资金，把两个本地副本的 `REAL_EXPECTED_INITIAL_CASH` 更新为该值，
-保留 `REAL_INITIAL_CASH_TOLERANCE = 100.0`，并设置
-`REAL_REQUIRE_EMPTY_POSITIONS = False`。逐个重新编译；不得用很大的 tolerance 绕过复核。
+`ACCOUNT_ID` 必须在 QMT UI 策略页面绑定同一真实账户；脱敏日志或源码设置不能代替
+UI 复核。
 
-编译后先只启动一个需要验收的执行实例。两个实例都可保持编译就绪，但主策略 SELL 与
-prType=49 探针不得同日授权。每次启动都在对应根目录的持久日志检查：
+每次启动都在根目录的持久日志检查：
 
 ```powershell
 Get-Content D:\qmt_bridge\logs\qmt_events_YYYY-MM-DD.jsonl -Tail 100
-Get-Content D:\qmt_bridge\pr49_probe\logs\qmt_events_YYYY-MM-DD.jsonl -Tail 100
 ```
 
 必须出现 `RUNTIME_CONFIG` 和 `TIMER_REGISTERED`。逐项核对 source SHA/version、QMT
-版本、策略名称、脱敏账户、profile、两个 root、price type、100 股上限及所有时间。
-不一致时停止策略，不能创建授权 marker。
+版本、策略名称、脱敏账户、profile、bridge root、price type 及所有时间。
+不一致时停止策略。
 
 ### 2.1 共享授权锁与 SMB 互操作验收
 
@@ -118,26 +97,22 @@ intent 内容与对应批次后，才允许人工隔离该 intent；不得把它
 
 ## 3. 定时与状态机
 
-策略在 `init` 中绑定账户回调并注册两个 `ContextInfo.schedule_run`：独立的只读
-`qlib_snapshot_observer` 从 09:35:00 起每 3 秒只扫描 snapshot request；原交易 timer
-仍从 14:56:55（probe 为 15:04:55）起每 3 秒推进订单状态机。snapshot callback 不调用
-订单 `_advance`；若 snapshot processor lock 正被另一 worker 持有，交易 timer 也失败关闭，
-不会继续 claim/order/passorder。旧 QMT 没有新版接口时两个 timer 都退回 `run_time`。
+策略在 `init` 中绑定账户回调，并注册一个 `ContextInfo.schedule_run`：交易 timer
+从 14:56:55（盘后 profile 为 14:59:55）起每 3 秒推进订单状态机。旧 QMT 没有新版
+接口时退回 `run_time`。
 
 执行顺序：
 
-1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、日期、账户和配置的账户环境；
-2. 主策略在 14:57:05 提交 SELL/BUY；固定价格探针在 15:05:00 提交一笔受控订单；
+1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、当日 `trade_date`；
+2. 收盘集合竞价 profile 在 14:57:05 提交；盘后固定价格 profile 从 15:00:05 起尝试，
+   15:05 连续撮合前由终价门控挡住尚未结算的收盘价；
 3. 用 `get_instrument_detail`（旧版为 `get_instrumentdetail`）读取 `UpStopPrice`/`DownStopPrice`；
-4. 主策略调用 `prType=11` 并显式传涨跌停价；探针调用 `prType=49`、`price=0`，同时把
-   官方收盘参考及来源写入日志；
+4. 集合竞价调用 `prType=11` 并显式传涨跌停价；盘后固定价格调用 `prType=49`、`price=0`，
+   同时把官方收盘参考及来源写入日志；
 5. 查询到真实 QMT 委托编号后才写 `ACCEPTED`；
-6. 15:00:05 后处理仍未终态委托，15:00:30 终结，15:01 重写账户与持仓快照。
+6. 撤单截止后处理仍未终态委托，到点终结，并写一笔账户与持仓快照到 `outbound/`。
 
 如果 `lastPrice` 缺失或非正数，BUY 失败关闭，不使用盘口价、滑点、昨收或信号价格回退。
-探针 profile 的时间为 15:05:00 提交、15:28:00 撤单、15:30:00 终结、15:31:00
-账户快照；其独立授权是 `PR49_LIVE_OK_YYYY-MM-DD`。主策略仍使用
-`LIVE_OK_YYYY-MM-DD`。同一天两个 marker 同时存在时，两个实例都在 `passorder` 前失败关闭。
 固定价格 profile 还要求 QMT 证券详情明确给出盘后固定价格资格；只有结构化
 `after_hours_eligible=true` 才会继续。false/缺失/无法解析时写
 `SECURITY_ELIGIBILITY_ERROR` 与 ERROR 回执，不调用 `passorder`。
@@ -180,66 +155,18 @@ Shadow 通过后，必须同时满足：
 
 一手阶段（`MAX_ORDER_QUANTITY = 100`）把每个可执行买卖订单限制为一手，那是探针的刻意限制。每天开盘前确认 QMT UI 绑定的账户，收盘后逐单核对价格类型、官方收盘价、数量、委托状态和回执。
 
-删除 `LIVE_OK` 只禁止后续新提交。已经提交的 LIVE 订单仍会继续查询、撤单和终结。
-执行决定在 14:57:05 首次交易唤醒时冻结；首次缺少 `LIVE_OK` 的批次即使稍后补建开关，也会整批保持 simulated。
+开关是 QMT 策略启停，不是 `LIVE_OK` 文件。停策略 = 当天不再认领新批次；已经提交的
+订单仍会继续查询、撤单和终结。
 
 ## 6. 实盘一手验收
 
-Mac 批次必须是 `account_environment=REAL` 与 `mode=LIVE`。主策略 SELL 使用当日
-`LIVE_OK`；探针使用不同的 `PR49_LIVE_OK`。一手结果验收前不得改动 100 股上限。
-两个 profile 的当日 marker 在 operator 批次发布前都必须不存在；marker 只能在批次
-发布后获得用户当日明确确认，再按各自 runbook 手工创建。旧 marker 会令初次发布、
-DB-only recovery 和 visible inbox 接管全部失败关闭，禁止通过删除执行证据绕过。
+一手验收是历史流程，不是现网日常。命令见
+[CSI1000 一手 SELL 验收](CSI1000_OPERATOR_SELL_RUNBOOK.md) 与
+[PR49_PROBE_CHECKLIST.md](PR49_PROBE_CHECKLIST.md)。现网合同见
+[实盘 README](../README.md)。
 
-主策略 SELL 的 preview→人工发布→导入→postmarket→`PAUSED` 命令见上级
-[实盘 README](../README.md)。prType=49 BUY→下一交易日 SELL 的逐项门禁见
-[PR49_PROBE_CHECKLIST.md](PR49_PROBE_CHECKLIST.md)。两条流程都要求发布前存在同交易日、
-与真实账户可靠绑定的 broker snapshot。受控入口是
-`live_trading/scripts/request_account_snapshot.py`：它只在所选实例的
-`snapshot_requests/inbox` 写独立 request/done；QMT 原子认领到 `processing`，只调用
-`get_trade_detail_data(..., "ACCOUNT"/"POSITION")`，把带 checksum 的 response/done 写到
-`responses` 后归档 request。该路径不解析 signal、不读取 `LIVE_OK`/`PR49_LIVE_OK`，也不
-调用 `passorder`。
-
-Mac CLI 先用 `--prepare` 把 canonical request/checksum 持久化为 `PREPARED`，但不写 SMB；
-人工逐字段复核 exact bytes 后，只能用 `--publish-request-id` 引用该 durable 行。publish
-不接受日期、用途或账号等业务字段重建，复核 profile/root/account/当天日期后原字节暴露，
-状态变为 `REQUESTED`。崩溃重试仍引用同一 request ID，不生成替代请求。
-新请求只能在交易日 `14:45:00` 之前发布；到点及之后 Mac 硬拒绝。QMT 还会校验
-request 的 `trade_date`、`publish_cutoff=14:45:00` 与同日且早于 cutoff 的 `created_at`，
-但 cutoff 前已发布的请求可在 cutoff 后继续由 observer 完成，未完成 residue 继续阻断。
-
-两个实例可任选一个作为 collector，但 request 中的 profile、canonical Windows root、
-requested-for strategy、REAL account fingerprint 和 purpose 必须逐项匹配，不能把 main
-root 的请求放入 probe root 或反向复用。QMT 重启会恢复
-`snapshot_requests/processing`；相同 terminal request 只记录 replay，改变任何字段或
-checksum 都保留证据并失败关闭。只读 timer 的冷启动只初始化 snapshot 目录、profile/root
-校验与账号回调绑定，不会恢复交易批次、注册交易 timer 或进入 `_advance`。
-
-`COMPLETE` 要求 ACCOUNT 恰好一行，且返回行自身的完整账号与 `ACCOUNT_ID` 精确匹配；
-masked-only、缺失、OTHER、多行均为 ERROR。POSITION 若暴露账号字段，也必须返回完整
-账号并精确匹配；masked 值只能展示，不能授权。request 内的 fingerprint 不能替代券商
-返回身份，只有完整账号校验后才重新计算 response fingerprint；落盘仅存 mask/fingerprint。
-`snapshot_requests/status.json` 会把任一半对、tmp/intent、processing、待导入 response 或
-不完整 archive 标记为 ERROR/blocking；原文件不会自动删除。Mac 成功导入 response 后，
-完整 request + COMPLETE response 四件套全部归档，下一 observer 周期才转 `CLEAR`。
-监控出现 `SNAPSHOT_RESIDUE_BLOCKED` 时必须处置，禁止绕过。观察完成后必须再次停止，确认
-没有授权 marker，再进入 operator batch 发布和用户确认流程。
-
-两个 profile 共享 main root 的 `state/SNAPSHOT_ORDER_ADVANCE.lock`；probe 不能在自身
-nested root 建另一把锁。Mac 用 `O_CREAT|O_EXCL` 写入 owner/request/profile/timestamp，
-并持续持有到 `IMPORTED_COMPLETE` + 完整四件套归档后由 importer 校验 owner/request 和
-所有 checksum 再释放。QMT 的订单 `_advance` 从 snapshot scan 到 claim/process 完成全程
-持有同一 gate；observer 不持有。gate 无 stale 自动恢复。残留时停止两个实例、保存元数据
-和目录证据，获得人工审批后受控移入 quarantine；禁止直接删除。首次部署必须在实际 SMB
-上双向证明 Windows 与 Mac 的 `O_EXCL` 互斥，单元测试不能替代该验收。
-
-Mac publisher/importer 共用主根 `state/SNAPSHOT_MAC_LIFECYCLE.lock`，并统一按“Mac 锁 → SQLite
-状态 → 四件套归档校验 → 最后删除 gate”的顺序执行。`REQUESTED` publisher retry 只能
-复核原 matching gate，缺失/损坏时不能重建 gate 或请求文件；terminal retry 也不能重建。
-DB 已 terminal 但 archive 未完整时同样失败关闭，不能补造或继续归档。postmarket monitor
-还要求 bridge root 和 inbox/processing/archive/responses
-四目录均存在且可列；缺失或 SMB list error 都是 CRIT，正常空目录才是 CLEAR control。
+QMT 桥接不再实现 `snapshot_requests` 观察协议，也不再读取 `LIVE_OK_` /
+`PR49_LIVE_OK_`。账户与持仓以批次终结时写入 `outbound/account_*.jsonl` 为准。
 
 ## 7. 恢复与排障
 
@@ -247,7 +174,7 @@ DB 已 terminal 但 archive 未完整时同样失败关闭，不能补造或继�
 |---|---|
 | 批次不消费 | QMT 策略是否运行；inbox 是否同时有 jsonl/done；trade_date 是否为今天 |
 | 15:00 后停止 | QMT 日志是否显示 timer 注册；版本是否退回 `run_time` |
-| LIVE 全部 simulated | 当日 `LIVE_OK` 是否存在；header mode 是否 LIVE |
+| LIVE 全部 simulated | QMT 是否绑对账号、策略是否在跑、批次是否被认领拒绝 |
 | BUY `official close unavailable` | `get_full_tick` 的 `lastPrice` 是否已更新为正数 |
 | 涨跌停价无效 | `get_instrument_detail` 是否返回正的 `UpStopPrice`/`DownStopPrice` |
 | 账户查询失败 | QMT UI 绑定账号、`ACCOUNT_ID`、header account ID 是否一致 |
@@ -255,8 +182,6 @@ DB 已 terminal 但 archive 未完整时同样失败关闭，不能补造或继�
 | 探针日志缺失 | 检查 `D:\qmt_bridge\pr49_probe\logs\qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl` |
 | API 返回但 UI 无委托 | 查 `ORDER_QUERY`/`ORDER_NOT_OBSERVED`；API return 本身不是 acceptance，必须有真实委托号、`ORDER_OBSERVED` 后才允许 `ACCEPTED` |
 | 重启后未恢复 | processing 的信号对是否完整；active state JSON 是否可读 |
-| `SNAPSHOT_RESIDUE_BLOCKED` | 查看 `snapshot_requests/status.json` 与四个子目录；完成 Mac 导入或人工核对半对/冲突，禁止删除证据强行放行 |
-| `SNAPSHOT_ORDER_ADVANCE.lock` 残留 | 同时停止 main/probe，保存 owner/request/profile/timestamp 与四目录清单；人工审批后受控 quarantine，禁止按年龄自动删锁 |
 | Mac 报持仓漂移 | 对照 QMT 委托/成交、`account_*.jsonl` 和本地 fills，先停下一日 LIVE |
 
 共享目录每天持久化 `qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl`，客户端重启不会清除。FormulaOutput 仅作为辅助日志。

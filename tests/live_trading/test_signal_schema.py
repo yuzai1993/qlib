@@ -249,14 +249,31 @@ def test_validate_batch_rejects_bad_mode_and_date():
     with pytest.raises(SchemaError):
         validate_batch(_header(trade_date="20260714"), [_order()])
     validate_batch(
-        _header(account_environment="REAL", mode="LIVE"), [_order()]
+        _header(account_environment="REAL", mode="SIMULATE"), [_order()]
     )
-    with pytest.raises(SchemaError, match="REAL.*LIVE"):
-        validate_batch(
-            _header(account_environment="REAL", mode="SIMULATE"), [_order()]
-        )
+    validate_batch(
+        _header(account_id="", account_environment="", mode=""), [_order()]
+    )
     with pytest.raises(SchemaError):
         validate_batch(_header(schema_version="1.0"), [_order()])
+
+
+def test_new_header_omits_execution_stamps():
+    header = BatchHeader(
+        batch_id="20260714_csi300_topk10_001",
+        strategy_id="csi300_topk10",
+        trade_date="2026-07-14",
+        signal_date="2026-07-11",
+        account_type="STOCK",
+        created_at="2026-07-11T21:05:00+08:00",
+        order_count=1,
+        checksum="sha256:abc",
+    )
+    payload = json.loads(header.to_json_line())
+    assert "mode" not in payload
+    assert "account_environment" not in payload
+    assert "account_id" not in payload
+    validate_batch(header, [_order()])
 
 
 # ---------- fill ----------

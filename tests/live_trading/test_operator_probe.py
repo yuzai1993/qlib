@@ -2788,15 +2788,6 @@ def test_the_ladder_strategy_may_request_an_account_snapshot():
     assert OBSERVATION_LADDER_STRATEGY_ID in operator_probe.SNAPSHOT_REQUEST_STRATEGIES
 
 
-def test_the_two_snapshot_whitelists_are_mirrored():
-    """Mac 与 bridge 各存一份，任一侧漏改都会让快照观测在切换当天被拒。"""
-    bridge_src = (
-        REPO_ROOT / "live_trading" / "qmt_strategy" / "qmt_signal_bridge.py"
-    ).read_text(encoding="utf-8")
-    for strategy_id in operator_probe.SNAPSHOT_REQUEST_STRATEGIES:
-        assert '"%s"' % strategy_id in bridge_src, strategy_id
-
-
 def test_after_hours_snapshots_are_collected_on_the_main_root():
     assert operator_probe.QMT_PROFILE_BRIDGE_ROOTS == {
         "CLOSE_AUCTION": r"D:\qmt_bridge",

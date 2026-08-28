@@ -1113,6 +1113,7 @@ def test_run_postmarket_reconciles_only_active_batches(monkeypatch, tmp_path):
         {"live": {
             "bridge_root": str(tmp_path),
             "strategy_id": CONFIG_ID,
+            "broker_environment": "SIMULATION",
         }},
     )
 
@@ -1138,6 +1139,7 @@ def test_run_postmarket_flags_missing_broker_snapshot(monkeypatch, tmp_path):
         {"live": {
             "bridge_root": str(tmp_path),
             "strategy_id": CONFIG_ID,
+            "broker_environment": "SIMULATION",
         }},
     )
 
@@ -1162,6 +1164,7 @@ def test_run_postmarket_skips_reconcile_for_simulate_batches(monkeypatch, tmp_pa
         {"live": {
             "bridge_root": str(tmp_path),
             "strategy_id": CONFIG_ID,
+            "broker_environment": "SIMULATION",
         }},
     )
 
@@ -1244,6 +1247,7 @@ def test_run_postmarket_detects_shared_snapshot_advance_gate_without_status(
     db = tmp_path / "live.db"
     recorder = LiveRecorder(str(db))
     store = MonitorStore(str(db))
+    _make_snapshot_protocol_directories(tmp_path)
     gate = tmp_path / "state" / "SNAPSHOT_ORDER_ADVANCE.lock"
     gate.parent.mkdir(parents=True)
     gate.write_text(
@@ -1283,7 +1287,7 @@ def _main_real_monitor_config(bridge_root):
 
 @pytest.mark.parametrize(
     "failure",
-    ["missing-root", "not-directory", "list-error", "residue"],
+    ["list-error", "residue"],
 )
 def test_main_real_postmarket_scans_nested_probe_snapshot_root(
     tmp_path, monkeypatch, failure,
@@ -1291,28 +1295,23 @@ def test_main_real_postmarket_scans_nested_probe_snapshot_root(
     main_root = tmp_path / "bridge"
     probe_root = main_root / "pr49_probe"
     _make_snapshot_protocol_directories(main_root)
-    target = probe_root
-    if failure == "missing-root":
-        pass
-    elif failure == "not-directory":
-        target.write_text("not a directory\n", encoding="utf-8")
+    _make_snapshot_protocol_directories(probe_root)
+    if failure == "residue":
+        target = probe_root / "snapshot_requests" / "processing"
+        (target / (
+            "request_snapshot_20260808_"
+            "0123456789abcdef0123456789abcdef.json"
+        )).write_text("{}\n", encoding="utf-8")
     else:
-        _make_snapshot_protocol_directories(probe_root)
-        if failure == "residue":
-            target = probe_root / "snapshot_requests" / "processing"
-            (target / (
-                "request_snapshot_20260808_"
-                "0123456789abcdef0123456789abcdef.json"
-            )).write_text("{}\n", encoding="utf-8")
-        else:
-            original_iterdir = Path.iterdir
+        target = probe_root
+        original_iterdir = Path.iterdir
 
-            def fail_probe_root(path):
-                if path == probe_root:
-                    raise OSError("simulated nested SMB list failure")
-                return original_iterdir(path)
+        def fail_probe_root(path):
+            if path == probe_root:
+                raise OSError("simulated nested SMB list failure")
+            return original_iterdir(path)
 
-            monkeypatch.setattr(Path, "iterdir", fail_probe_root)
+        monkeypatch.setattr(Path, "iterdir", fail_probe_root)
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     store = MonitorStore(str(tmp_path / "live.db"))
 
@@ -1353,7 +1352,7 @@ def test_run_postmarket_snapshot_protocol_empty_directories_are_clear(tmp_path):
     ]
 
 
-def test_run_postmarket_missing_snapshot_bridge_root_is_critical(tmp_path):
+def test_run_postmarket_skips_absent_snapshot_protocol(tmp_path):
     bridge_root = tmp_path / "missing-bridge"
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     store = MonitorStore(str(tmp_path / "live.db"))
@@ -1367,13 +1366,27 @@ def test_run_postmarket_missing_snapshot_bridge_root_is_critical(tmp_path):
         }},
     )
 
-    finding = next(
+    assert not [
         row for row in findings if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+    ]
+
+
+def test_run_postmarket_skips_missing_nested_probe_snapshot_root(tmp_path):
+    main_root = tmp_path / "bridge"
+    _make_snapshot_protocol_directories(main_root)
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    store = MonitorStore(str(tmp_path / "live.db"))
+
+    findings = run_monitor.run_postmarket(
+        "2026-08-08", recorder, store,
+        _main_real_monitor_config(main_root),
     )
-    assert finding.level == "CRIT"
-    assert str(bridge_root) in finding.message
-    assert "expected=directory" in finding.message
-    assert "observed=missing" in finding.message
+
+    assert not [
+        row for row in findings
+        if row.rule == "SNAPSHOT_RESIDUE_BLOCKED"
+        and "pr49_probe" in row.message
+    ]
 
 
 @pytest.mark.parametrize("missing", [
@@ -1407,20 +1420,16 @@ def test_run_postmarket_missing_snapshot_directory_is_critical(
 
 
 @pytest.mark.parametrize("failure_point", [
-    "bridge", "inbox", "processing", "archive", "responses",
+    "inbox", "processing", "archive", "responses",
 ])
 def test_run_postmarket_snapshot_path_must_be_directory(
     tmp_path, failure_point,
 ):
     bridge_root = tmp_path / "bridge"
-    if failure_point == "bridge":
-        bridge_root.write_text("not a directory\n", encoding="utf-8")
-        target = bridge_root
-    else:
-        _make_snapshot_protocol_directories(bridge_root)
-        target = bridge_root / "snapshot_requests" / failure_point
-        target.rmdir()
-        target.write_text("not a directory\n", encoding="utf-8")
+    _make_snapshot_protocol_directories(bridge_root)
+    target = bridge_root / "snapshot_requests" / failure_point
+    target.rmdir()
+    target.write_text("not a directory\n", encoding="utf-8")
     recorder = LiveRecorder(str(tmp_path / "live.db"))
     store = MonitorStore(str(tmp_path / "live.db"))
 
@@ -1610,7 +1619,7 @@ def test_broker_reconcile_without_snapshot_warns_once():
 
 
 def test_broker_reconcile_cash_check_disabled_only_checks_positions():
-    """模拟盘现金口径不可信：check_cash=False 关闭现金类告警，持仓照查。"""
+    """费用未核准时 check_cash=False：现金和价值调整都不告警，持仓照查。"""
     findings = check_broker_reconcile(
         "2026-07-30", _account(302311.0), {"688223.SH": 244500},
         {"688223.SH": 44500}, -619730.0, check_cash=False,
@@ -1620,7 +1629,23 @@ def test_broker_reconcile_cash_check_disabled_only_checks_positions():
     assert check_broker_reconcile(
         "2026-07-30", _account(302311.0), {"688223.SH": 244500},
         {"688223.SH": 244500}, -619730.0, check_cash=False,
+        ledger_value_adjustment=0.0,
+        broker_position_market_values={"688223.SH": 1.0},
+        value_tolerance=100.0,
     ) == []
+
+    money_only = check_broker_reconcile(
+        "2026-08-03",
+        _account(9_949_714.06, market_value=-680_000.0),
+        {},
+        {},
+        9_949_714.06,
+        check_cash=False,
+        ledger_value_adjustment=-681_126.98,
+        broker_position_market_values={},
+        value_tolerance=100.0,
+    )
+    assert money_only == []
 
 
 def test_broker_reconcile_tolerates_account_query_without_cash():

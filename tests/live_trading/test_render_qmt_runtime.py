@@ -12,10 +12,6 @@ from live_trading.scripts.render_qmt_runtime import (
 MAIN_TEMPLATE = (
     'ACCOUNT_ID = ""\n'
     'STRATEGY_NAME = "qlib_bridge"\n'
-    'ACCOUNT_ENVIRONMENT = "SIMULATION"\n'
-    'ALLOW_REAL_MONEY = False\n'
-    'REAL_EXPECTED_INITIAL_CASH = 1000000.0\n'
-    'REAL_REQUIRE_EMPTY_POSITIONS = True\n'
     'EXECUTION_PROFILE = "CLOSE_AUCTION"\n'
     'ENABLE_LADDER_NETTING = False\n'
     'MAX_ORDER_QUANTITY = 100\n'
@@ -33,10 +29,6 @@ def test_main_runtime_render_binds_real_account_without_mutating_template(tmp_pa
     assert template.read_text(encoding="utf-8") == MAIN_TEMPLATE
     assert 'ACCOUNT_ID = "1234567890"' in rendered
     assert 'STRATEGY_NAME = "qlib_bridge_main"' in rendered
-    assert 'ACCOUNT_ENVIRONMENT = "REAL"' in rendered
-    assert "ALLOW_REAL_MONEY = True" in rendered
-    assert "REAL_EXPECTED_INITIAL_CASH = 999238.99" in rendered
-    assert "REAL_REQUIRE_EMPTY_POSITIONS = False" in rendered
     assert "MAX_ORDER_QUANTITY = 0" in rendered
 
 

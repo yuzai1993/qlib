@@ -24,6 +24,16 @@ from eval_ic_multi_pool import (  # noqa: E402
 )
 
 
+def apply_end_time(cfg: dict, end_time: str) -> None:
+    """把评估窗右端改到 end_time，供一次性延长推理用。不改官方 YAML。"""
+    handler = cfg.setdefault("data", {}).setdefault("handler", {})
+    handler["end_time"] = end_time
+    segs = cfg.setdefault("segments", {})
+    for key in ("valid", "test"):
+        if key in segs and isinstance(segs[key], list) and len(segs[key]) == 2:
+            segs[key][1] = end_time
+
+
 def dump_preds(
     cfg: dict,
     sessions: list[tuple[str, object]],
@@ -59,9 +69,16 @@ def main(argv=None) -> None:
     p.add_argument("--segment", default="test")
     p.add_argument("--out-dir", type=Path, required=True)
     p.add_argument("--ensemble-name", default="ensemble_pred.pkl")
+    p.add_argument(
+        "--end-time",
+        default=None,
+        help="覆盖 config 的 valid/test 与 handler.end_time（只影响本次推理）",
+    )
     args = p.parse_args(argv)
 
     cfg = load_config(args.config)
+    if args.end_time:
+        apply_end_time(cfg, args.end_time)
     _init_qlib(cfg)
     dump_preds(
         cfg,

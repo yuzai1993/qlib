@@ -315,6 +315,7 @@ def build_config(
     generate_figures: bool,
     account: int = 10_000_000,
     universe_filter: Optional[dict] = None,
+    bt_end: str = BT_END,
 ) -> Path:
     spec = ARMS[arm]
     pool_spec = POOLS[pool]
@@ -324,7 +325,7 @@ def build_config(
         "module_path": spec["module"],
         "instruments": pool_spec["handler_instruments"],
         "start_time": WARMUP_START,
-        "end_time": BT_END,
+        "end_time": bt_end,
         "fit_start_time": WARMUP_START,
         "fit_end_time": BT_START,
         "feature_groups": ["range"],
@@ -354,8 +355,8 @@ def build_config(
         },
         "segments": {
             "train": [WARMUP_START, "2020-07-31"],
-            "valid": [BT_START, BT_END],
-            "test": [BT_START, BT_END],
+            "valid": [BT_START, bt_end],
+            "test": [BT_START, bt_end],
         },
         "model": {"class": model_cls, "module_path": model_mod},
         "strategy": strategy_section(strat),
@@ -402,12 +403,18 @@ def find_session_pred(session_dir: Path) -> Path:
     return pred
 
 
-def cached_arm_pred(arm: str, seed: int) -> Path:
+def cached_arm_pred(arm: str, seed: int, pred_dir: Optional[Path] = None) -> Path:
     session = ARMS[arm]["sessions"][seed]
-    return OUT_DIR / "preds" / f"{session}_pred.pkl"
+    root = pred_dir if pred_dir is not None else (OUT_DIR / "preds")
+    return root / f"{session}_pred.pkl"
 
 
-def find_arm_pred(arm: str, seed: int, seed_recs: dict[str, dict[str, Any]]) -> Path:
+def find_arm_pred(
+    arm: str,
+    seed: int,
+    seed_recs: dict[str, dict[str, Any]],
+    pred_dir: Optional[Path] = None,
+) -> Path:
     """优先用已有回测 pred；否则用 dump_regime_preds 缓存。"""
     rec = seed_recs.get(str(seed)) or {}
     if rec.get("session_dir"):
@@ -415,7 +422,7 @@ def find_arm_pred(arm: str, seed: int, seed_recs: dict[str, dict[str, Any]]) -> 
             return find_session_pred(EXP_ROOT / rec["session_dir"])
         except FileNotFoundError:
             pass
-    cached = cached_arm_pred(arm, seed)
+    cached = cached_arm_pred(arm, seed, pred_dir)
     if cached.is_file():
         return cached
     raise FileNotFoundError(
@@ -431,6 +438,7 @@ def build_ensemble_config(
     generate_figures: bool,
     account: int = 10_000_000,
     universe_filter: Optional[dict] = None,
+    bt_end: str = BT_END,
 ) -> Path:
     spec = ARMS[arm]
     pool_spec = POOLS[pool]
@@ -440,7 +448,7 @@ def build_ensemble_config(
         "module_path": spec["module"],
         "instruments": pool_spec["handler_instruments"],
         "start_time": WARMUP_START,
-        "end_time": BT_END,
+        "end_time": bt_end,
         "fit_start_time": WARMUP_START,
         "fit_end_time": BT_START,
         "feature_groups": ["range"],
@@ -468,8 +476,8 @@ def build_ensemble_config(
         },
         "segments": {
             "train": [WARMUP_START, "2020-07-31"],
-            "valid": [BT_START, BT_END],
-            "test": [BT_START, BT_END],
+            "valid": [BT_START, bt_end],
+            "test": [BT_START, bt_end],
         },
         "model": {"class": model_cls, "module_path": model_mod},
         "strategy": strategy_section(strat),
@@ -511,12 +519,14 @@ def run_ensemble(
     universe_filter: Optional[dict],
     out_dir: Path,
     seeds: Sequence[int] = SEEDS,
+    pred_dir: Optional[Path] = None,
+    bt_end: str = BT_END,
 ) -> Optional[dict]:
     """把已有五种子 pred 做截面 z-score 等权均值，再跑一次 pred_backtest。"""
     pred_paths: list[Path] = []
     for seed in seeds:
         try:
-            pred_paths.append(find_arm_pred(arm, int(seed), seed_recs))
+            pred_paths.append(find_arm_pred(arm, int(seed), seed_recs, pred_dir))
         except FileNotFoundError as exc:
             print(f"[FAIL] ensemble {exc}", flush=True)
             return None
@@ -531,6 +541,7 @@ def run_ensemble(
         generate_figures=generate_figures,
         account=account,
         universe_filter=universe_filter,
+        bt_end=bt_end,
     )
     proc = subprocess.run(
         [
@@ -574,6 +585,7 @@ def run_one(
     generate_figures: bool,
     account: int = 10_000_000,
     universe_filter: Optional[dict] = None,
+    bt_end: str = BT_END,
 ) -> Optional[Path]:
     """跑一次回测，返回 session 目录。"""
     cfg_path = build_config(
@@ -584,6 +596,7 @@ def run_one(
         generate_figures=generate_figures,
         account=account,
         universe_filter=universe_filter,
+        bt_end=bt_end,
     )
     proc = subprocess.run(
         [PYTHON, str(SCRIPTS_DIR / "run_backtest.py"), "--config", str(cfg_path)],
@@ -677,11 +690,34 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         default=False,
         help="全A 截面大，默认关图；需要时显式打开",
     )
+    p.add_argument(
+        "--end-time",
+        default=BT_END,
+        help=f"回测窗右端，默认官方窗 {BT_END}",
+    )
+    p.add_argument(
+        "--result-suffix",
+        default="",
+        help="结果子目录后缀，避免覆盖官方 JSON，例如 e20260830",
+    )
+    p.add_argument(
+        "--pred-dir",
+        type=Path,
+        default=None,
+        help="dump_regime_preds 缓存目录；默认 backtest/result/phase_s_regime/preds",
+    )
     args = p.parse_args(argv)
 
+    bt_end = str(args.end_time)
+    pred_dir = args.pred_dir
+    if pred_dir is not None and not pred_dir.is_absolute():
+        pred_dir = EXP_ROOT / pred_dir
     pool_spec = POOLS[args.pool]
     strat = STRATEGIES[args.strategy]
-    out_dir = OUT_DIR / f"{args.pool}_{args.strategy}"
+    subdir = f"{args.pool}_{args.strategy}"
+    if args.result_suffix:
+        subdir = f"{subdir}_{args.result_suffix}"
+    out_dir = OUT_DIR / subdir
     out_dir.mkdir(parents=True, exist_ok=True)
     for arm in args.arms:
         out_json = out_dir / f"{arm}.json"
@@ -691,7 +727,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         seeds_out = done.setdefault("seeds", {})
         done["arm"] = arm
         done["desc"] = ARMS[arm]["desc"]
-        done["backtest_window"] = [BT_START, BT_END]
+        done["backtest_window"] = [BT_START, bt_end]
         done["pool"] = args.pool
         done["benchmark"] = pool_spec["benchmark"]
         done["benchmark_note"] = pool_spec["benchmark_note"]
@@ -730,6 +766,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                     if args.universe_filter
                     else None
                 ),
+                bt_end=bt_end,
             )
             if session_dir is None:
                 continue
@@ -768,6 +805,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                     ),
                     out_dir=out_dir,
                     seeds=args.seeds,
+                    pred_dir=pred_dir,
+                    bt_end=bt_end,
                 )
                 if rec is not None:
                     done["ensemble"] = rec

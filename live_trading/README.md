@@ -49,14 +49,14 @@ CSI1000 一手 SELL / 快照 / marker 验收原文已迁到
 ## 文件与数据流
 
 ```text
-T 日 23:00 Mac  postclose（导入 → postmarket → Tushare 日更 → 股票名 → 成功才日报）
+T 日 22:30 Mac  postclose（导入 → postmarket → Tushare 日更 → 股票名 → 成功才日报）
              → 发布下一开市日 protocol-v2 批次 → evening 完整性检查
                                   │
                                   ▼
 T+1 日 Windows QMT  15:00:05 起试 / 15:01 兜底 → prType=49 → 15:30 终态并拍持仓快照
 ```
 
-23:00 是为了等 Tushare 收盘数据落稳；全A 冷启动建特征大约十几分钟。不要再按 16:00 理解现网。
+22:30 是为了等 Tushare 收盘数据落稳；全A 冷启动建特征大约十几分钟。不要再按 16:00 理解现网。
 
 BUY 计划只携带 `target_value`。只有查询到真实委托号才记录 `ACCEPTED`。持久日志在
 `D:\qmt_bridge\logs`。
@@ -111,7 +111,7 @@ test -w /Volumes/qmt_bridge/inbox
 
 [crontab.csi1000_postclose.example](crontab.csi1000_postclose.example) 是唯一的调度模板：
 
-- crontab 只维护一行，每个工作日 **23:00** 启动一次；
+- crontab 只维护一行，每个工作日 **22:30** 启动一次；
 - 先串行运行回执导入、`postmarket`、Tushare 行情更新和股票名称缓存刷新；仅在行情更新成功后运行 `report`；
 - Tushare 日更（`run_update_to_bin.sh`）在复权巡检之后会增量刷新 ST 日频名单
   `scripts/data_collector/tushare/st_daily.csv`；发布脚本按 `signal_date` 做四重宇宙过滤，
@@ -161,7 +161,6 @@ open http://127.0.0.1:8082
 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.stdout.log` 和
 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.stderr.log`。
 `run_web_service.sh` 会加载 `~/.qlib_live_env`，与 cron 使用同一套环境和活动配置。
-概览里若出现 `csi1000_pr49_one_lot_probe=ARMED`，那是空账本默认值，不是现网 cron。
 
 ## 日常命令
 
@@ -170,7 +169,7 @@ open http://127.0.0.1:8082
 find live_trading/.scheduler/alla_v4_ladder_k1h5_postclose_real/$(date +%Y-%m-%d) \
   -maxdepth 1 -name '*.json' -print
 
-# 23:00 收盘流水线（导入 → 检查 → 更新 → 日报）
+# 22:30 收盘流水线（导入 → 检查 → 更新 → 日报）
 bash live_trading/run_postclose_cron.sh alla_v4_ladder_k1h5_postclose_real
 
 # 发布下一开市日
@@ -199,7 +198,7 @@ bash live_trading/run_monitor_cron.sh evening alla_v4_ladder_k1h5_postclose_real
 
 人工恢复前先查看
 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_publish_cron.log`。
-若 SMB 不可访问，先恢复挂载；若 `postclose` 锁存在，先确认 23:00 流水线是否仍在运行。
+若 SMB 不可访问，先恢复挂载；若 `postclose` 锁存在，先确认 22:30 流水线是否仍在运行。
 不要和正在跑的 cron 叠在一起手工补跑。
 
 ## 失败关闭与恢复

@@ -607,11 +607,10 @@ def test_unreadable_claimed_batch_emits_sanitized_validation_event(
     assert event["done_file"] == done.name
     assert event["rejection_reason"]
     serialized = json.dumps(event, sort_keys=True)
-    assert "8890116049" not in serialized
     if case == "malformed_order":
         assert event["batch_id"] == "bad_batch"
         assert event["strategy_id"] == "probe"
-        assert event["account_id_masked"] == "88******49"
+        assert event["account_id"] == "8890116049"
 
 
 def test_structurally_invalid_order_fails_closed_without_crashing(bridge):
@@ -1108,7 +1107,7 @@ def test_persistent_log_appends_text_and_jsonl(bridge):
     assert "first" in text_log and "second" in text_log
 
 
-def test_successful_passorder_return_redacts_secrets_and_account(
+def test_successful_passorder_return_redacts_secrets(
     bridge, monkeypatch,
 ):
     bridge.ACCOUNT_ID = "8890116049"
@@ -1158,8 +1157,8 @@ def test_successful_passorder_return_redacts_secrets_and_account(
     assert "return-cookie-value" not in combined
     assert "return-auth-credential" not in combined
     assert "return-password-hint" not in combined
-    assert "8890116049" not in combined
-    assert "88******49" in combined
+    assert "8890116049" in combined
+    assert "88******49" not in combined
     assert "REDACTED" in combined
     assert "queued" in combined
     assert "qmt-order-101" in combined
@@ -1196,8 +1195,8 @@ def test_successful_error_persistence_redacts_external_message(
     combined = event_text + fills_text + text_log
     assert "hunter2" not in combined
     assert "bearer-value" not in combined
-    assert "8890116049" not in combined
-    assert "88******49" in combined
+    assert "8890116049" in combined
+    assert "88******49" not in combined
     assert "REDACTED" in combined
 
 
@@ -1237,8 +1236,8 @@ def test_external_message_redaction_uses_active_batch_account_context(
     assert "fake-session-456" not in persisted
     assert "fake-session-789" not in persisted
     assert "fake-credential-789" not in persisted
-    assert "8890116049" not in persisted
-    assert "88******49" in persisted
+    assert "8890116049" in persisted
+    assert "88******49" not in persisted
     assert "REDACTED" in persisted
 
 
@@ -1359,10 +1358,8 @@ def test_successful_order_persists_complete_evidence_sequence(
     assert preorder["broker"]["available_cash"] == 9990.0
     assert preorder["broker"]["can_use_shares"] == 200
     assert preorder["broker"]["frozen_shares"] == 100
-    assert preorder["passorder_arguments"]["account_id_masked"] == (
-        "88******49"
-    )
-    assert "account_id" not in preorder["passorder_arguments"]
+    assert preorder["passorder_arguments"]["account_id"] == "8890116049"
+    assert "account_id_masked" not in preorder["passorder_arguments"]
     returned = next(row for row in events
                     if row["event"] == "PASSORDER_RETURNED")
     assert returned["return_repr"] == "{'queued': True}"
@@ -1457,13 +1454,13 @@ def test_runtime_batch_timer_and_account_snapshot_evidence_is_sanitized(
 
     events = _read_events(bridge)
     runtime = next(row for row in events if row["event"] == "RUNTIME_CONFIG")
-    assert runtime["account_id_masked"] == "88******49"
+    assert runtime["account_id"] == "8890116049"
     assert runtime["qmt_version"] == "QMT-test-1"
     assert runtime["source_version"]
     assert runtime["source_sha256"].startswith("sha256:")
     assert runtime["execution_profile"] == "CLOSE_AUCTION"
     assert runtime["max_order_quantity"] == 100
-    assert "account_id" not in runtime
+    assert "account_id_masked" not in runtime
     timer = next(row for row in events if row["event"] == "TIMER_REGISTERED")
     assert timer["method"] == "schedule_run"
     assert timer["registered"] is True
@@ -1472,18 +1469,19 @@ def test_runtime_batch_timer_and_account_snapshot_evidence_is_sanitized(
                        if row["event"] == "BATCH_VALIDATED")
     assert batch_event["checksum_match"] is True
     assert batch_event["order_count"] == 1
-    assert batch_event["account_id_masked"] == "88******49"
+    assert batch_event["account_id"] == "8890116049"
     snapshot = [row for row in events
                 if row["event"] == "ACCOUNT_SNAPSHOT"][-1]
     assert snapshot["available_cash"] == 123.0
     assert snapshot["frozen_cash"] == 4.0
-    assert snapshot["account_id_masked"] == "88******49"
+    assert snapshot["account_id"] == "8890116049"
     serialized = json.dumps(events, sort_keys=True)
-    assert "8890116049" not in serialized
+    assert "8890116049" in serialized
+    assert "88******49" not in serialized
     assert "token" not in serialized.lower()
     exported_snapshot = (Path(bridge._account_snapshot_path(BATCH_ID))).read_text()
-    assert "8890116049" not in exported_snapshot
-    assert "88******49" in exported_snapshot
+    assert "8890116049" in exported_snapshot
+    assert "88******49" not in exported_snapshot
 
 
 def test_jsonl_log_write_failure_recovers_without_raising(
@@ -1765,7 +1763,7 @@ def test_fixed_price_passes_zero_and_logs_positive_close_reference_before_api(
 
 
 @pytest.mark.parametrize("after_hours", [False, None])
-def test_fixed_price_requires_positive_security_eligibility_before_api(
+def test_fixed_price_submits_without_security_eligibility(
     bridge, monkeypatch, tmp_path, after_hours,
 ):
     probe_root, main_root = _profile_roots(
@@ -1784,26 +1782,25 @@ def test_fixed_price_requires_positive_security_eligibility_before_api(
         "account_environment": "SIMULATION",
         "schema_version": "2.0",
     }, [order])
+    submitted = []
     monkeypatch.setattr(
         bridge, "passorder",
-        lambda *args: pytest.fail("ineligible security reached passorder"),
+        lambda *args: submitted.append(args),
         raising=False,
     )
 
     assert bridge._submit(
         _TickCtx(10.50, after_hours=after_hours), batch, order, True,
-    ) is False
+    ) is True
 
-    fill = batch.fills[order["client_order_id"]]
-    assert fill["status"] == "ERROR"
-    assert fill["message"] == (
-        "after-hours fixed-price eligibility not confirmed"
-    )
+    assert submitted
     events = _read_events(bridge)
+    assert not any(
+        event["event"] == "SECURITY_ELIGIBILITY_ERROR" for event in events
+    )
     _assert_event_subsequence(events, [
-        "SECURITY_DETAIL", "SECURITY_ELIGIBILITY_ERROR", "ORDER_FINALIZED",
+        "SECURITY_DETAIL", "PASSORDER_ATTEMPT",
     ])
-    assert not any(event["event"] == "PASSORDER_ATTEMPT" for event in events)
 
 
 def test_fixed_price_buy_sizes_and_reserves_at_close_but_passes_zero(

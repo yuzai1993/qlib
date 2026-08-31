@@ -31,7 +31,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-08-28-qmt-owns-execution"
+SOURCE_VERSION = "2026-08-31-no-eligibility-mask"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -171,7 +171,6 @@ _SECRET_KEY_PATTERN = (
     r"session[_-]?(?:id|key|identifier))[a-z0-9_-]*|session|auth|"
     r"auth[_-]?(?:value|header|data|info))"
 )
-_ACCOUNT_KEY_PATTERN = r"(?:account[_-]?id|accountid|account)"
 _REDACTED = "***REDACTED***"
 
 
@@ -198,45 +197,9 @@ def _redact_keyed_text(text, key_pattern, replacement):
     return bare.sub(replace_bare, quoted.sub(replace_quoted, text))
 
 
-def _known_account_ids(extra=None):
-    values = []
-    configured = str(globals().get("ACCOUNT_ID", "") or "")
-    if configured:
-        values.append(configured)
-    state = globals().get("g")
-    batch = getattr(state, "batch", None)
-    if batch is not None:
-        account_id = str(batch.header.get("account_id", "") or "")
-        if account_id:
-            values.append(account_id)
-    for account_id in getattr(state, "snapshot_accounts", {}).values():
-        account_id = str(account_id or "")
-        if account_id:
-            values.append(account_id)
-    if extra is not None:
-        if isinstance(extra, (list, tuple, set)):
-            supplied = extra
-        else:
-            supplied = (extra,)
-        for account_id in supplied:
-            account_id = str(account_id or "")
-            if account_id:
-                values.append(account_id)
-    return sorted(set(values), key=len, reverse=True)
-
-
 def _redact_text(value, limit=None, account_ids=None):
+    del account_ids
     text = str(value).replace("\r", " ").replace("\n", " ")
-    for account_id in _known_account_ids(account_ids):
-        # Short test/config placeholders such as "1" are not broker account
-        # identifiers and would corrupt prices, timestamps, and order ids.
-        if len(account_id) < 5:
-            continue
-        pattern = re.compile(
-            r"(?<![A-Za-z0-9])" + re.escape(account_id)
-            + r"(?![A-Za-z0-9])"
-        )
-        text = pattern.sub(_mask_account(account_id), text)
     authorization = re.compile(
         r"(?i)(\bauthorization\s*[:=]\s*)([^,;}\]]+)"
     )
@@ -269,7 +232,6 @@ def _redact_text(value, limit=None, account_ids=None):
         lambda match: match.group(1) + _REDACTED, text,
     )
     text = _redact_keyed_text(text, _SECRET_KEY_PATTERN, _REDACTED)
-    text = _redact_keyed_text(text, _ACCOUNT_KEY_PATTERN, _mask_account)
     if limit is not None:
         return text[:int(limit)]
     return text
@@ -306,11 +268,8 @@ def _is_secret_field_name(name):
 def _sanitize_value(
         value, field_name="", account_ids=None, depth=0,
         preserve_items=False):
-    normalized = _normalized_field_name(field_name)
     if _is_secret_field_name(field_name):
         return _REDACTED
-    if "accountid" in normalized or normalized == "account":
-        return _mask_account(value)
     if value is None or isinstance(value, (bool, int, float)):
         return value
     if isinstance(value, str):
@@ -443,15 +402,6 @@ def _safe_detail(obj, field_names):
         if found:
             result[str(output_name)] = _json_safe_value(value)
     return result
-
-
-def _mask_account(account_id):
-    value = str(account_id or "")
-    if not value:
-        return ""
-    if len(value) <= 4:
-        return "*" * len(value)
-    return value[:2] + ("*" * (len(value) - 4)) + value[-2:]
 
 
 def _evidence_for(batch, coid):
@@ -802,8 +752,8 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
                 "type": "account_snapshot",
                 "batch_id": batch_id,
                 "trade_date": trade_date,
-                "account_id_masked": _mask_account(
-                    getattr(a, "m_strAccountID", "") or account_id,
+                "account_id": (
+                    getattr(a, "m_strAccountID", "") or account_id
                 ),
                 "available_cash": _opt_float(a, "m_dAvailable"),
                 "total_asset": _opt_float(a, "m_dBalance", "m_dAssureAsset"),
@@ -857,7 +807,7 @@ def _dump_broker_snapshot(batch_id, trade_date, account_id, label):
             batch_id=batch_id,
             trade_date=trade_date,
             label=label,
-            account_id_masked=_mask_account(account_id),
+            account_id=account_id,
             account_type=ACCOUNT_TYPE,
             available_cash=account_row.get("available_cash"),
             frozen_cash=account_row.get("frozen_cash"),
@@ -1009,7 +959,7 @@ def _parse_and_check(jsonl_path, done_path):
             batch_id=_bounded_text(header.get("batch_id", ""), 128),
             strategy_id=_bounded_text(header.get("strategy_id", ""), 128),
             trade_date=_bounded_text(header.get("trade_date", ""), 32),
-            account_id_masked=_mask_account(header.get("account_id", "")),
+            account_id=header.get("account_id", ""),
             order_count=len(order_lines),
             jsonl_file=os.path.basename(jsonl_path),
             done_file=os.path.basename(done_path),
@@ -1038,7 +988,7 @@ def _parse_and_check(jsonl_path, done_path):
             strategy_id=header.get("strategy_id", ""),
             trade_date=header.get("trade_date", ""),
             mode=header.get("mode", ""),
-            account_id_masked=_mask_account(header.get("account_id", "")),
+            account_id=header.get("account_id", ""),
             account_type=header.get("account_type", ""),
             account_environment=header.get("account_environment", ""),
             order_count=len(orders),
@@ -1147,7 +1097,7 @@ def _parse_and_check(jsonl_path, done_path):
         strategy_id=header.get("strategy_id", ""),
         trade_date=header.get("trade_date", ""),
         mode=header.get("mode", ""),
-        account_id_masked=_mask_account(header.get("account_id", "")),
+        account_id=header.get("account_id", ""),
         account_type=header.get("account_type", ""),
         account_environment=header.get("account_environment", ""),
         order_count=len(orders),
@@ -1359,24 +1309,24 @@ def _get_available_cash(account_id):
         return None
     if not accounts:
         _log("ACCOUNT query returned no rows for account %s type %s"
-             % (_mask_account(account_id), ACCOUNT_TYPE))
+             % (account_id, ACCOUNT_TYPE))
         return None
     account = accounts[0]
     returned_id = str(getattr(account, "m_strAccountID", "") or "")
     if returned_id and returned_id != str(account_id):
         _log("ACCOUNT query id mismatch: requested %s returned %s"
-             % (_mask_account(account_id), _mask_account(returned_id)))
+             % (account_id, returned_id))
         return None
     raw = getattr(account, "m_dAvailable", None)
     try:
         available = float(raw)
     except (TypeError, ValueError):
         _log("ACCOUNT query missing available cash for account %s"
-             % _mask_account(account_id))
+             % account_id)
         return None
     if not math.isfinite(available) or available < 0.0:
         _log("ACCOUNT query invalid available cash for account %s: %s"
-             % (_mask_account(account_id), raw))
+             % (account_id, raw))
         return None
     return available
 
@@ -1577,8 +1527,6 @@ def _security_detail_evidence(ContextInfo, stock_code):
                 ("product_id", "ProductID", "m_strProductID"),
                 ("instrument_status", "InstrumentStatus", "Status"),
                 ("is_suspended", "IsSuspended", "SuspendFlag"),
-                ("after_hours_flag", "IsAfterHoursTrading",
-                 "AfterHoursTrading", "FixedPriceTrading"),
                 ("up_stop_price", "UpStopPrice"),
                 ("down_stop_price", "DownStopPrice"),
                 ("pre_close_price", "PreClose", "PreClosePrice",
@@ -1586,24 +1534,8 @@ def _security_detail_evidence(ContextInfo, stock_code):
             ])
         except Exception as exc:
             error = _bounded_text(exc)
-    after_hours = raw.get("after_hours_flag")
-    if isinstance(after_hours, bool):
-        eligible = after_hours
-    elif isinstance(after_hours, (int, float)):
-        eligible = after_hours != 0
-    elif isinstance(after_hours, str):
-        normalized = after_hours.strip().lower()
-        if normalized in ("1", "true", "yes", "y", "enabled"):
-            eligible = True
-        elif normalized in ("0", "false", "no", "n", "disabled"):
-            eligible = False
-        else:
-            eligible = None
-    else:
-        eligible = None
     return {
         "raw_fields": raw,
-        "after_hours_eligible": eligible,
         "detail_available": bool(raw),
         "error": error,
     }
@@ -1634,7 +1566,7 @@ def _market_price_evidence(ContextInfo, stock_code, official_close):
 
 def _preorder_broker_evidence(account_id, stock_code):
     result = {
-        "account_id_masked": _mask_account(account_id),
+        "account_id": account_id,
         "available_cash": None,
         "frozen_cash": None,
         "total_asset": None,
@@ -1678,7 +1610,7 @@ def _sanitized_passorder_arguments(batch, order, op_type, api_price):
     return {
         "op_type": int(op_type),
         "order_type": 1101,
-        "account_id_masked": _mask_account(_account_id(batch)),
+        "account_id": _account_id(batch),
         "stock_code": order["stock_code"],
         "price_type": int(LIMIT_PRICE_TYPE),
         "price": float(api_price),
@@ -1738,27 +1670,10 @@ def _submit(
         stock_code=order["stock_code"],
         execution_profile=EXECUTION_PROFILE,
         raw_fields=security["raw_fields"],
-        after_hours_eligible=security["after_hours_eligible"],
         detail_available=security["detail_available"],
         error=security["error"],
         message="security detail captured",
     )
-    if fixed_price and security["after_hours_eligible"] is not True:
-        message = "after-hours fixed-price eligibility not confirmed"
-        batch.submitted[coid] = True
-        _save_active_state(batch)
-        _log_event(
-            "SECURITY_ELIGIBILITY_ERROR",
-            batch_id=batch.batch_id(),
-            client_order_id=coid,
-            stock_code=order["stock_code"],
-            after_hours_eligible=security["after_hours_eligible"],
-            detail_available=security["detail_available"],
-            error=security["error"],
-            message=message,
-        )
-        _write_fill(batch, order, "ERROR", 0, 0.0, "", message)
-        return False
     market = _market_price_evidence(
         ContextInfo, order["stock_code"], official_close,
     )
@@ -2424,7 +2339,7 @@ def _bind_context_account(ContextInfo, event_name):
     binder(ACCOUNT_ID)
     _log_event(
         event_name,
-        account_id_masked=_mask_account(ACCOUNT_ID),
+        account_id=ACCOUNT_ID,
         message="QMT account callback binding enabled",
     )
 
@@ -2542,7 +2457,7 @@ def init(ContextInfo):
         source_sha256=source_sha,
         strategy_name=STRATEGY_NAME,
         qmt_version=_context_version(ContextInfo),
-        account_id_masked=_mask_account(ACCOUNT_ID),
+        account_id=ACCOUNT_ID,
         account_binding_configured=bool(ACCOUNT_ID),
         account_type=ACCOUNT_TYPE,
         execution_profile=EXECUTION_PROFILE,

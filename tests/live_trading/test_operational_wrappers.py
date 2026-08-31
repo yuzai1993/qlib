@@ -910,7 +910,7 @@ def test_crontab_uses_one_durable_scheduler_entry():
     ]
 
     assert commands == [
-        "0 23 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
+        "30 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
         "run_scheduler_cron.sh alla_v4_ladder_k1h5_postclose_real"
     ]
     assert "run_publish_catchup_cron.sh" not in text

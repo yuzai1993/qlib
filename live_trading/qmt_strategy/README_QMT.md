@@ -45,7 +45,7 @@ ENABLE_LADDER_NETTING = True
 仓库模板默认仍是收盘集合竞价、一手上限、不抵销，避免误把模板当生产脚本编译。
 需要回退到 `EXECUTION_PROFILE = "CLOSE_AUCTION"` 时重新渲染，不要就地改文件。
 
-`ACCOUNT_ID` 必须在 QMT UI 策略页面绑定同一真实账户；脱敏日志或源码设置不能代替
+`ACCOUNT_ID` 必须在 QMT UI 策略页面绑定同一真实账户；源码设置不能代替
 UI 复核。
 
 每次启动都在根目录的持久日志检查：
@@ -55,7 +55,7 @@ Get-Content D:\qmt_bridge\logs\qmt_events_YYYY-MM-DD.jsonl -Tail 100
 ```
 
 必须出现 `RUNTIME_CONFIG` 和 `TIMER_REGISTERED`。逐项核对 source SHA/version、QMT
-版本、策略名称、脱敏账户、profile、bridge root、price type 及所有时间。
+版本、策略名称、账户、profile、bridge root、price type 及所有时间。
 不一致时停止策略。
 
 ### 2.1 共享授权锁与 SMB 互操作验收
@@ -113,9 +113,8 @@ intent 内容与对应批次后，才允许人工隔离该 intent；不得把它
 6. 撤单截止后处理仍未终态委托，到点终结，并写一笔账户与持仓快照到 `outbound/`。
 
 如果 `lastPrice` 缺失或非正数，BUY 失败关闭，不使用盘口价、滑点、昨收或信号价格回退。
-固定价格 profile 还要求 QMT 证券详情明确给出盘后固定价格资格；只有结构化
-`after_hours_eligible=true` 才会继续。false/缺失/无法解析时写
-`SECURITY_ELIGIBILITY_ERROR` 与 ERROR 回执，不调用 `passorder`。
+盘后固定价格不再做证券资格门禁；QMT 详情只记日志，不拦截 `passorder`。
+快照和事件写完整 `account_id`，不做账号脱敏。
 
 ## 4. Shadow 验收
 

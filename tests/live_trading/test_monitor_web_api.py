@@ -186,6 +186,9 @@ def test_overview(client):
     assert data["account_value_adjustment"] == pytest.approx(-681_126.98)
     assert data["position_count"] == 2
     assert len(data["recent_alerts"]) == 1
+    assert data["nav"] == pytest.approx(1.0039)
+    assert data["sharpe"] is None  # 只有 1 个有效日收益
+    assert data["max_drawdown"] == pytest.approx(0.0)
 
 
 def test_overview_exposes_active_account_and_batch(client):
@@ -320,23 +323,28 @@ def test_cashflows(client):
     assert data["cash"] > 0
 
 
-def test_spa_renders_account_and_batch_lifecycle():
+def test_spa_keeps_core_pages_and_hides_ops_noise():
     html = (REPO_ROOT / "live_trading/web/static/index.html").read_text(
         encoding="utf-8",
     )
     js = (REPO_ROOT / "live_trading/web/static/js/app.js").read_text(
         encoding="utf-8",
     )
-    assert "ov.account_id" in js
-    assert "ov.active_batch_id" in js
+    assert 'data-page="dashboard"' in html
+    assert 'data-page="batches"' in html
+    assert 'data-page="predictions"' in html
+    assert 'data-page="positions"' not in html
+    assert 'data-page="cashflows"' not in html
+    assert 'data-page="pipeline"' not in html
+    assert 'data-page="alerts"' not in html
+    assert "strategy-badge" not in html
+    assert "execution-status" not in html
+    assert "ov.nav" in js
+    assert "ov.sharpe" in js
+    assert "ov.max_drawdown" in js
+    assert "positionsTable(pos)" in js
     assert "lifecycle_status" in js
     assert "已废弃" in js
-    assert "账号" in js
-    assert "execution-status" in html
-    assert "strategy_statuses" in js
-    assert "execution_profile" in js
-    assert "probe_lifecycle" in js
-    assert "stock_name" in js
 
 
 def test_web_monitor_exposes_no_marker_or_publish_controls(client):

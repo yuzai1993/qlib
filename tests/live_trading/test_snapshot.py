@@ -7,7 +7,11 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from live_trading.modules.snapshot import build_snapshot, sum_live_fills_amount
+from live_trading.modules.snapshot import (
+    build_snapshot,
+    compute_performance_metrics,
+    sum_live_fills_amount,
+)
 
 
 POSITIONS = {
@@ -240,3 +244,32 @@ def test_performance_baseline_populates_first_day_returns():
     assert daily["benchmark_daily_return"] == pytest.approx(-0.018456686)
     assert daily["benchmark_cumulative_return"] == pytest.approx(-0.018456686)
     assert daily["excess_return"] == pytest.approx(0.023785530)
+
+
+def test_performance_metrics_empty():
+    assert compute_performance_metrics([]) == {
+        "nav": None, "sharpe": None, "max_drawdown": None,
+    }
+
+
+def test_performance_metrics_first_day_is_unit_nav():
+    metrics = compute_performance_metrics([
+        {"date": "2026-07-12", "daily_return": None, "cumulative_return": 0.0},
+    ])
+    assert metrics["nav"] == pytest.approx(1.0)
+    assert metrics["sharpe"] is None
+    assert metrics["max_drawdown"] == pytest.approx(0.0)
+
+
+def test_performance_metrics_nav_sharpe_and_drawdown():
+    # 日收益 +10%、-5% → 净值 1.10、1.045；相对峰值回撤 1.045/1.10-1
+    metrics = compute_performance_metrics([
+        {"date": "2026-07-12", "daily_return": None, "cumulative_return": 0.0},
+        {"date": "2026-07-13", "daily_return": 0.10, "cumulative_return": 0.10},
+        {"date": "2026-07-14", "daily_return": -0.05, "cumulative_return": 0.045},
+    ])
+    assert metrics["nav"] == pytest.approx(1.045)
+    mean = (0.10 - 0.05) / 2
+    std = ((0.10 - mean) ** 2 + (-0.05 - mean) ** 2) ** 0.5  # ddof=1, n=2
+    assert metrics["sharpe"] == pytest.approx(mean / std * (250 ** 0.5))
+    assert metrics["max_drawdown"] == pytest.approx(1.045 / 1.10 - 1)

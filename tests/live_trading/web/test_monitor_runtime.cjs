@@ -42,10 +42,10 @@ test('navigation tracker invalidates every older page token', () => {
     const { createNavigationTracker } = require(runtimePath);
     const tracker = createNavigationTracker();
     const dashboard = tracker.begin('dashboard');
-    const alerts = tracker.begin('alerts');
+    const batches = tracker.begin('batches');
     assert.equal(tracker.isCurrent(dashboard), false);
-    assert.equal(tracker.isCurrent(alerts), true);
-    assert.equal(tracker.currentPage(), 'alerts');
+    assert.equal(tracker.isCurrent(batches), true);
+    assert.equal(tracker.currentPage(), 'batches');
 });
 
 test('lazy resource invokes its loader once per page lifetime', async () => {
@@ -95,8 +95,6 @@ function createAppHarness(fetchImpl) {
     const elements = {
         content,
         'nav-chart': {},
-        'strategy-badge': { innerHTML: '' },
-        'execution-status': { innerHTML: '' },
     };
     const intervals = [];
     const resizeHandlers = [];
@@ -169,7 +167,8 @@ function installPredictionElements(harness, query = '') {
 function createPredictionHarness(route, query = '') {
     const never = new Promise(() => {});
     const harness = createAppHarness(pathname => {
-        if (pathname === '/api/overview' || pathname === '/api/nav') return never;
+        if (pathname === '/api/overview' || pathname === '/api/nav'
+                || pathname === '/api/positions') return never;
         const custom = route(pathname);
         if (custom !== undefined) return jsonResponse(custom);
         if (pathname === '/api/predictions/dates') {
@@ -188,7 +187,7 @@ function createPredictionHarness(route, query = '') {
         if (pathname.startsWith('/api/predictions?')) {
             return jsonResponse({ data: [], total: 0 });
         }
-        if (pathname === '/api/alerts?limit=100') return jsonResponse([]);
+        if (pathname === '/api/batches') return jsonResponse([]);
         throw new Error(`unexpected request: ${pathname}`);
     });
     const elements = installPredictionElements(harness, query);
@@ -207,7 +206,7 @@ test('app starts once without scheduling automatic refresh', async () => {
         return never;
     });
     await Promise.resolve();
-    assert.deepEqual(paths.sort(), ['/api/nav', '/api/overview']);
+    assert.deepEqual(paths.sort(), ['/api/nav', '/api/overview', '/api/positions']);
     assert.equal(harness.intervals.length, 0);
 });
 
@@ -225,25 +224,29 @@ test('dashboard redraw disposes its previous ECharts instance', () => {
     assert.equal(harness.charts[1].resized, 1);
 });
 
-test('an older dashboard response cannot overwrite a newer alerts page', async () => {
+test('an older dashboard response cannot overwrite a newer batches page', async () => {
     const overview = createDeferred();
     const nav = createDeferred();
     const responses = {
         '/api/overview': overview.promise,
         '/api/nav': nav.promise,
-        '/api/alerts?limit=100': Promise.resolve([]),
+        '/api/positions': Promise.resolve({ positions: [], cash: null }),
+        '/api/batches': Promise.resolve([]),
     };
     const harness = createAppHarness(async pathname => ({
         ok: true, json: async () => responses[pathname],
     }));
-    await harness.context.navigate('alerts');
-    const alertsHtml = harness.content.innerHTML;
+    await harness.context.navigate('batches');
+    const batchesHtml = harness.content.innerHTML;
     overview.resolve({
         snapshot: null,
         strategy_id: 'main',
         mode: 'LIVE',
         account_id: '',
         active_batch_id: '',
+        nav: null,
+        sharpe: null,
+        max_drawdown: null,
         strategy_statuses: [],
         stages: {},
         recent_alerts: [],
@@ -251,23 +254,24 @@ test('an older dashboard response cannot overwrite a newer alerts page', async (
     nav.resolve([]);
     await Promise.all([overview.promise, nav.promise]);
     await new Promise(resolve => setImmediate(resolve));
-    assert.match(alertsHtml, /告警历史/);
-    assert.equal(harness.content.innerHTML, alertsHtml);
+    assert.match(batchesHtml, /批次与成交/);
+    assert.equal(harness.content.innerHTML, batchesHtml);
 });
 
-test('an older dashboard rejection cannot alter the alerts page or chart', async () => {
+test('an older dashboard rejection cannot alter the batches page or chart', async () => {
     const overview = createDeferred();
     const nav = createDeferred();
     const responses = {
         '/api/overview': overview.promise,
         '/api/nav': nav.promise,
-        '/api/alerts?limit=100': Promise.resolve([]),
+        '/api/positions': Promise.resolve({ positions: [], cash: null }),
+        '/api/batches': Promise.resolve([]),
     };
     const harness = createAppHarness(async pathname => ({
         ok: true, json: async () => responses[pathname],
     }));
-    await harness.context.navigate('alerts');
-    const alertsHtml = harness.content.innerHTML;
+    await harness.context.navigate('batches');
+    const batchesHtml = harness.content.innerHTML;
     harness.context.drawNavChart([{
         date: '2026-08-07', cumulative_return: 0.01,
         benchmark_cumulative_return: 0.02,
@@ -277,7 +281,7 @@ test('an older dashboard rejection cannot alter the alerts page or chart', async
     overview.reject(new Error('late dashboard failure'));
     await new Promise(resolve => setImmediate(resolve));
 
-    assert.equal(harness.content.innerHTML, alertsHtml);
+    assert.equal(harness.content.innerHTML, batchesHtml);
     assert.equal(activeChart.disposed, 0);
     assert.equal(vm.runInContext('chartManager.current()', harness.context), activeChart);
 });
@@ -443,12 +447,12 @@ test('stale instrument rejection is consumed and remains cached', async () => {
         return undefined;
     });
     await harness.context.navigate('predictions');
-    await harness.context.navigate('alerts');
-    const alertsHtml = harness.content.innerHTML;
+    await harness.context.navigate('batches');
+    const batchesHtml = harness.content.innerHTML;
 
     instruments.reject(new Error('instrument index unavailable'));
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(harness.content.innerHTML, alertsHtml);
+    assert.equal(harness.content.innerHTML, batchesHtml);
 
     await harness.context.navigate('predictions');
     assert.equal(instrumentCalls, 1);

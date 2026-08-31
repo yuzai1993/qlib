@@ -7,6 +7,8 @@
   分红派息计入收益；累计收益按日收益链式累乘，不受出入金扭曲。
 """
 
+import math
+
 # 会改变持仓/现金、计入换手的 LIVE 终态
 _TRADED_STATUS = {"FILLED", "PARTIAL"}
 
@@ -134,3 +136,54 @@ def build_snapshot(date, positions, cash, prices, bench_close,
         "external_flow": external_flow,
     }
     return daily_row, position_rows, missing
+
+
+# 与 EXPERIMENT_STANDARD 执行层夏普一致：算术年化 / (日收益标准差 ×√250)
+_SHARPE_DAYS = 250
+
+
+def compute_performance_metrics(snapshots):
+    """由日快照序列计算净值、夏普、最大回撤。
+
+    净值从 1.0 起算：``1 + cumulative_return``（出入金已从日收益剔除）。
+    夏普：``mean(r) / std(r, ddof=1) * sqrt(250)``；日收益不足 2 个则为 None。
+    最大回撤：净值相对历史峰值的最大跌幅（``min(nav / peak - 1)``）。
+    """
+    if not snapshots:
+        return {"nav": None, "sharpe": None, "max_drawdown": None}
+
+    rows = sorted(snapshots, key=lambda r: r["date"])
+    latest = rows[-1]
+    cum = latest.get("cumulative_return")
+    nav = None if cum is None else 1.0 + float(cum)
+
+    returns = [
+        float(r["daily_return"])
+        for r in rows if r.get("daily_return") is not None
+    ]
+    sharpe = None
+    if len(returns) >= 2:
+        n = len(returns)
+        mean = sum(returns) / n
+        var = sum((x - mean) ** 2 for x in returns) / (n - 1)
+        std = math.sqrt(var)
+        if std > 0:
+            sharpe = mean / std * math.sqrt(_SHARPE_DAYS)
+
+    max_dd = None
+    navs = [
+        1.0 + float(r["cumulative_return"])
+        for r in rows if r.get("cumulative_return") is not None
+    ]
+    if navs:
+        peak = navs[0]
+        max_dd = 0.0
+        for value in navs:
+            if value > peak:
+                peak = value
+            if peak > 0:
+                dd = value / peak - 1.0
+                if dd < max_dd:
+                    max_dd = dd
+
+    return {"nav": nav, "sharpe": sharpe, "max_drawdown": max_dd}

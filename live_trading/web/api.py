@@ -13,6 +13,7 @@ from fastapi import APIRouter, Query
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
 from live_trading.modules.monitor_store import MonitorStore
+from live_trading.modules.snapshot import compute_performance_metrics
 
 MONITOR_STAGES = ["postmarket", "report", "evening"]
 PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
@@ -96,8 +97,12 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
                 "at": e["created_at"],
             }
         alerts = store.get_alerts(limit=5)
+        metrics = compute_performance_metrics(store.get_snapshots())
         return {
             "snapshot": latest,
+            "nav": metrics["nav"],
+            "sharpe": metrics["sharpe"],
+            "max_drawdown": metrics["max_drawdown"],
             "cash": recorder.get_cash(),
             "account_value_adjustment": recorder.get_value_adjustment(),
             "position_count": len(recorder.get_positions()),

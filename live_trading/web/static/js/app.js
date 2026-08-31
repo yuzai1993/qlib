@@ -15,7 +15,10 @@ async function api(path) {
 const fmtMoney = v => v == null ? '—' :
     v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = v => v == null ? '—' : `${(v * 100).toFixed(2)}%`;
+const fmtNav = v => v == null ? '—' : Number(v).toFixed(4);
+const fmtSharpe = v => v == null ? '—' : Number(v).toFixed(2);
 const pctClass = v => v == null ? '' : (v >= 0 ? 'pos' : 'neg');
+const navClass = v => v == null ? '' : (v >= 1 ? 'pos' : 'neg');
 const fmtNum = v => v == null ? '—' : v.toLocaleString('zh-CN');
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -26,89 +29,37 @@ function modeBadge(mode) {
         : '<span class="badge badge-sim">SIM</span>';
 }
 
-function levelBadge(level) {
-    const cls = level === 'CRIT' ? 'badge-crit' : 'badge-warn';
-    return `<span class="badge ${cls}">${esc(level)}</span>`;
-}
-
 /* ---------- 概览 ---------- */
 
-const STAGE_NAMES = { postmarket: '盘后对账', report: '快照日报', evening: '信号发布' };
-
 async function renderDashboard(token) {
-    const [ov, nav] = await Promise.all([api('/overview'), api('/nav')]);
+    const [ov, nav, pos] = await Promise.all([
+        api('/overview'), api('/nav'), api('/positions'),
+    ]);
     if (!navigationTracker.isCurrent(token)) return;
     const s = ov.snapshot;
 
-    document.getElementById('strategy-badge').innerHTML =
-        `${esc(ov.strategy_id)} · ${esc(ov.mode)}<br>账号 ${esc(ov.account_id || '—')}`;
-    renderExecutionStatus(ov);
-
-    let html = `<h2>概览 <span class="card-sub">快照日 ${s ? esc(s.date) : '—'} · `
-        + `有效批次 ${esc(ov.active_batch_id || '—')}</span></h2>`;
-
-    html += '<div class="stage-lights">';
-    for (const st of ['postmarket', 'report', 'evening']) {
-        const e = ov.stages[st];
-        const status = e ? e.status : 'NONE';
-        const tip = e ? `${e.message || 'OK'} @ ${e.at}` : '今日未运行';
-        html += `<div class="stage-light" title="${esc(tip)}">
-            <span class="dot dot-${status}"></span>${STAGE_NAMES[st]}
-            <span class="card-sub">${e ? esc(e.status) : '未运行'}</span></div>`;
-    }
-    html += '</div>';
+    let html = `<h2>概览 <span class="card-sub">快照日 ${s ? esc(s.date) : '—'}</span></h2>`;
 
     if (!s) {
         html += '<div class="empty">暂无快照数据。首次运行：run_monitor.py --stage report</div>';
-        content.innerHTML = html;
-        return;
+    } else {
+        html += `<div class="card-grid">
+            <div class="card"><div class="card-label">总资产</div>
+                <div class="card-value">${fmtMoney(s.total_value)}</div></div>
+            <div class="card"><div class="card-label">净值</div>
+                <div class="card-value ${navClass(ov.nav)}">${fmtNav(ov.nav)}</div></div>
+            <div class="card"><div class="card-label">夏普</div>
+                <div class="card-value ${pctClass(ov.sharpe)}">${fmtSharpe(ov.sharpe)}</div></div>
+            <div class="card"><div class="card-label">最大回撤</div>
+                <div class="card-value ${pctClass(ov.max_drawdown)}">${fmtPct(ov.max_drawdown)}</div></div>
+        </div>`;
+        html += '<div class="chart" id="nav-chart"></div>';
     }
 
-    html += `<div class="card-grid">
-        <div class="card"><div class="card-label">总资产</div>
-            <div class="card-value">${fmtMoney(s.total_value)}</div>
-            <div class="card-sub">现金 ${fmtMoney(s.cash)}${s.total_value ? `（${fmtPct(s.cash / s.total_value)}）` : ''} · 应收 ${fmtMoney(s.receivables ?? 0)}<br>
-            待上市 ${fmtMoney(s.pending_market_value ?? 0)} · 红利税准备 ${fmtMoney(s.tax_provision ?? 0)}</div></div>
-        <div class="card"><div class="card-label">日收益</div>
-            <div class="card-value ${pctClass(s.daily_return)}">${fmtPct(s.daily_return)}</div></div>
-        <div class="card"><div class="card-label">累计收益</div>
-            <div class="card-value ${pctClass(s.cumulative_return)}">${fmtPct(s.cumulative_return)}</div>
-            <div class="card-sub">基准 ${fmtPct(s.benchmark_cumulative_return)}</div></div>
-        <div class="card"><div class="card-label">当日超额</div>
-            <div class="card-value ${pctClass(s.excess_return)}">${fmtPct(s.excess_return)}</div></div>
-        <div class="card"><div class="card-label">持仓 / 换手</div>
-            <div class="card-value">${s.position_count} 只</div>
-            <div class="card-sub">换手 ${fmtPct(s.turnover)} · 费用 ${fmtMoney(s.fees ?? 0)}</div></div>
-    </div>`;
-
-    html += '<div class="chart" id="nav-chart"></div>';
-
-    if (ov.recent_alerts.length) {
-        html += '<h3>最近告警</h3><table><tbody>';
-        for (const a of ov.recent_alerts.slice(0, 3)) {
-            html += `<tr><td>${esc(a.trade_date)}</td><td>${levelBadge(a.level)}</td>
-                <td style="text-align:left">${esc(a.rule)}: ${esc(a.message)}</td></tr>`;
-        }
-        html += '</tbody></table>';
-    }
+    html += '<h3>持仓</h3>' + positionsTable(pos);
 
     content.innerHTML = html;
-    drawNavChart(nav, ov.benchmark_name || '基准');
-}
-
-function renderExecutionStatus(ov) {
-    const target = document.getElementById('execution-status');
-    if (!target) return;
-    const rows = ov.strategy_statuses || [];
-    target.innerHTML = rows.map(row => {
-        const lifecycle = row.probe_lifecycle;
-        const stock = lifecycle
-            ? `<br>${esc(lifecycle.stock_code)} ${esc(lifecycle.stock_name || '')}`
-            : '';
-        const lifecycleState = lifecycle ? ` · ${esc(lifecycle.state)}` : '';
-        return `<div>${esc(row.strategy_id)}<br>${esc(row.execution_profile)} · `
-            + `${esc(row.execution_state)}${lifecycleState}${stock}</div>`;
-    }).join('<hr>');
+    if (s) drawNavChart(nav, ov.benchmark_name || '基准');
 }
 
 function drawNavChart(nav, benchmarkName) {
@@ -117,16 +68,17 @@ function drawNavChart(nav, benchmarkName) {
     if (!el || !nav.length) return;
     const chart = echarts.init(el, 'dark');
     const dates = nav.map(r => r.date);
-    const acct = nav.map(r => ((r.cumulative_return ?? 0) * 100).toFixed(3));
+    const acct = nav.map(r => (1 + (r.cumulative_return ?? 0)).toFixed(4));
     const bench = nav.map(r => r.benchmark_cumulative_return == null ? null :
-        (r.benchmark_cumulative_return * 100).toFixed(3));
+        (1 + r.benchmark_cumulative_return).toFixed(4));
     chart.setOption({
         backgroundColor: 'transparent',
-        tooltip: { trigger: 'axis', valueFormatter: v => v == null ? '—' : v + '%' },
+        tooltip: { trigger: 'axis', valueFormatter: v => v == null ? '—' : Number(v).toFixed(4) },
         legend: { data: ['账户', benchmarkName] },
         grid: { left: 50, right: 20, top: 40, bottom: 30 },
         xAxis: { type: 'category', data: dates },
-        yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+        yAxis: { type: 'value', scale: true,
+                 axisLabel: { formatter: v => Number(v).toFixed(2) } },
         series: [
             { name: '账户', type: 'line', data: acct, showSymbol: false,
               lineStyle: { width: 2 } },
@@ -135,39 +87,6 @@ function drawNavChart(nav, benchmarkName) {
         ],
     });
     chartManager.replace(chart);
-}
-
-/* ---------- 持仓 ---------- */
-
-async function renderPositions(token) {
-    const data = await api('/positions');
-    if (!navigationTracker.isCurrent(token)) return;
-    let html = '<h2>持仓</h2>';
-    html += `<div>回看日期：<select id="pos-date"><option value="">当前（最新快照）</option></select></div>`;
-    html += '<div id="pos-table">' + positionsTable(data) + '</div>';
-    content.innerHTML = html;
-
-    const hist = await api('/positions/history?date=' +
-        (data.positions[0]?.snapshot_date || ''));
-    if (!navigationTracker.isCurrent(token)) return;
-    const sel = document.getElementById('pos-date');
-    for (const d of hist.dates) {
-        const opt = document.createElement('option');
-        opt.value = d; opt.textContent = d;
-        sel.appendChild(opt);
-    }
-    sel.onchange = async () => {
-        const box = document.getElementById('pos-table');
-        if (!sel.value) {
-            const cur = await api('/positions');
-            if (!navigationTracker.isCurrent(token)) return;
-            box.innerHTML = positionsTable(cur);
-            return;
-        }
-        const h = await api('/positions/history?date=' + sel.value);
-        if (!navigationTracker.isCurrent(token)) return;
-        box.innerHTML = positionsTable(h);
-    };
 }
 
 function codeCell(code, name) {
@@ -647,99 +566,12 @@ window.predSearch = async function (page, token = predToken) {
     document.getElementById('pred-pagination').innerHTML = pag;
 };
 
-/* ---------- 资金流水 ---------- */
-
-const FLOW_NAMES = {
-    DEPOSIT: '入金', WITHDRAW: '出金', CORRECTION: '校正',
-    DIVIDEND: '分红派息', DIVIDEND_TAX: '红利税', BONUS_SHARES: '送转股',
-};
-
-async function renderCashflows(token) {
-    const data = await api('/cashflows?limit=200');
-    if (!navigationTracker.isCurrent(token)) return;
-    let html = `<h2>资金流水 <span class="card-sub">当前现金 ${fmtMoney(data.cash)}</span></h2>`;
-    if (!data.flows.length) {
-        content.innerHTML = html + `<div class="empty">暂无资金流水。
-            出入金/校正用 record_cash_flow.py 记录；分红送股由 report 阶段自动入账</div>`;
-        return;
-    }
-    html += `<table><thead><tr><th>交易日</th><th>类型</th><th>金额</th>
-        <th>关联股票</th><th>备注</th><th>记录时间</th></tr></thead><tbody>`;
-    for (const r of data.flows) {
-        const amtCls = r.amount > 0 ? 'pos' : (r.amount < 0 ? 'neg' : '');
-        html += `<tr><td>${esc(r.trade_date)}</td>
-            <td>${esc(FLOW_NAMES[r.flow_type] || r.flow_type)}</td>
-            <td class="${amtCls}">${fmtMoney(r.amount)}</td>
-            <td>${r.stock_code ? codeCell(r.stock_code, r.name) : '—'}</td>
-            <td style="text-align:left">${esc(r.note || '')}</td>
-            <td>${esc(r.created_at)}</td></tr>`;
-    }
-    html += '</tbody></table>';
-    content.innerHTML = html;
-}
-
-/* ---------- 流程健康 ---------- */
-
-async function renderPipeline(token) {
-    const data = await api('/pipeline?days=14');
-    if (!navigationTracker.isCurrent(token)) return;
-    const dates = Object.keys(data.days).sort().reverse();
-    let html = '<h2>流程健康 <span class="card-sub">绿=OK 黄=WARN 红=FAIL</span></h2>';
-    if (!dates.length) {
-        content.innerHTML = html + '<div class="empty">暂无流程事件</div>';
-        return;
-    }
-    const stages = data.stages;
-    html += `<div class="matrix" style="grid-template-columns: 110px repeat(${stages.length}, 1fr)">`;
-    html += '<div class="matrix-cell matrix-head">日期</div>';
-    for (const st of stages)
-        html += `<div class="matrix-cell matrix-head">${STAGE_NAMES[st] || esc(st)}</div>`;
-    for (const d of dates) {
-        html += `<div class="matrix-cell matrix-head">${esc(d)}</div>`;
-        for (const st of stages) {
-            const e = data.days[d][st];
-            const cls = e ? `cell-${e.status}` : '';
-            const tip = e ? `${e.message || 'OK'} @ ${e.at}` : '未运行';
-            html += `<div class="matrix-cell ${cls}" title="${esc(tip)}">${e ? esc(e.status) : '—'}</div>`;
-        }
-    }
-    html += '</div>';
-    content.innerHTML = html;
-}
-
-/* ---------- 告警 ---------- */
-
-async function renderAlerts(token) {
-    const alerts = await api('/alerts?limit=100');
-    if (!navigationTracker.isCurrent(token)) return;
-    let html = '<h2>告警历史</h2>';
-    if (!alerts.length) {
-        content.innerHTML = html + '<div class="empty">暂无告警，一切正常</div>';
-        return;
-    }
-    html += `<table><thead><tr><th>交易日</th><th>级别</th><th>规则</th>
-        <th>内容</th><th>推送</th><th>时间</th></tr></thead><tbody>`;
-    for (const a of alerts) {
-        html += `<tr><td>${esc(a.trade_date)}</td><td>${levelBadge(a.level)}</td>
-            <td>${esc(a.rule)}</td>
-            <td style="text-align:left">${esc(a.message)}</td>
-            <td>${a.sent_ok ? `已推(${esc(a.channel || '')})` : '未推'}</td>
-            <td>${esc(a.created_at)}</td></tr>`;
-    }
-    html += '</tbody></table>';
-    content.innerHTML = html;
-}
-
 /* ---------- 路由 ---------- */
 
 const PAGES = {
     dashboard: renderDashboard,
-    positions: renderPositions,
     batches: renderBatches,
     predictions: renderPredictions,
-    cashflows: renderCashflows,
-    pipeline: renderPipeline,
-    alerts: renderAlerts,
 };
 
 async function navigate(page) {

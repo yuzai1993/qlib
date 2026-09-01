@@ -17,6 +17,8 @@ if str(_BACKTEST_SCRIPTS) not in sys.path:
 from ensemble_preds import blend_score_series  # noqa: E402
 
 logger = logging.getLogger("live_trading.signal")
+# 每晚只出一天信号。Qlib 会按表达式自动向前取滚动窗，这里只决定输出多少天。
+_DEFAULT_INFERENCE_LOOKBACK_DAYS = 150
 
 
 class _InferenceDataset:
@@ -91,6 +93,17 @@ class SignalGenerator:
             )
         self._models = models
 
+    def _inference_start_time(self, end_date: str) -> str:
+        """日历日回看。YAML 里的 handler.start_time 只是研究配方，不用于加载。"""
+        lookback = self.config["handler"].get(
+            "inference_lookback_days", _DEFAULT_INFERENCE_LOOKBACK_DAYS
+        )
+        days = int(lookback)
+        if days <= 0:
+            raise ValueError("handler.inference_lookback_days must be positive")
+        start = pd.Timestamp(end_date) - pd.Timedelta(days=days)
+        return start.strftime("%Y-%m-%d")
+
     def _ensure_handler(self, end_date: str):
         """Create or extend the handler so it covers up to end_date."""
         if self._handler is not None and self._handler_end_date >= end_date:
@@ -98,13 +111,15 @@ class SignalGenerator:
 
         handler_cfg = self.config["handler"]
         data_cfg = self.config["data"]
+        start_time = self._inference_start_time(end_date)
 
         logger.info(
-            "Initializing %s handler (end_date=%s)...", handler_cfg["class"], end_date
+            "Initializing %s handler (start_time=%s end_date=%s)...",
+            handler_cfg["class"], start_time, end_date,
         )
         handler_kwargs = {
             "instruments": data_cfg["instruments"],
-            "start_time": handler_cfg["start_time"],
+            "start_time": start_time,
             "end_time": end_date,
             "fit_start_time": handler_cfg["fit_start_time"],
             "fit_end_time": handler_cfg["fit_end_time"],

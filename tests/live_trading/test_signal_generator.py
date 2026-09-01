@@ -180,6 +180,41 @@ def test_handler_uses_explicit_training_fit_window(monkeypatch):
     assert kwargs["fit_end_time"] == "2020-01-10"
     assert kwargs["infer_processors"] == [{"class": "ProcessInf"}]
     assert kwargs["feature_groups"] == ["range"]
+    # 每晚只出一天信号：加载窗按日历日回看，不跟研究 handler.start_time。
+    assert kwargs["start_time"] == "2026-02-22"
+    assert kwargs["end_time"] == "2026-07-22"
+
+
+def test_handler_lookback_days_can_be_overridden(monkeypatch):
+    captured = {}
+
+    class DummyHandler:
+        def fetch(self, **kwargs):
+            return pd.DataFrame()
+
+    monkeypatch.setattr(
+        "live_trading.modules.signal_generator.init_instance_by_config",
+        lambda config: captured.update(config) or DummyHandler(),
+    )
+    gen = SignalGenerator(
+        config={
+            "data": {"instruments": "all"},
+            "handler": {
+                "class": "Alpha158Technical",
+                "module": "backtest.features.technical",
+                "start_time": "2020-02-03",
+                "fit_start_time": "2020-02-03",
+                "fit_end_time": "2020-08-03",
+                "infer_processors": [{"class": "ProcessInf"}],
+                "inference_lookback_days": 10,
+            },
+        },
+        project_root=Path("."),
+    )
+
+    gen._ensure_handler("2026-09-01")
+
+    assert captured["kwargs"]["start_time"] == "2026-08-22"
 
 
 def test_load_model_from_git_tracked_relative_path(tmp_path):

@@ -213,8 +213,8 @@ def _common_comparisons(
          _get(backtest, "data.handler.class")),
         ("handler.module", _get(live, "handler.module"),
          _get(backtest, "data.handler.module_path")),
-        ("handler.start_time", _get(live, "handler.start_time"),
-         _get(backtest, "data.handler.start_time")),
+        # start_time 是研究回测的加载区间。实盘每晚只装信号日前
+        # inference_lookback_days，两边不必相等。
         ("handler.fit_start_time", _get(live, "handler.fit_start_time"),
          _get(backtest, "data.handler.fit_start_time")),
         ("handler.fit_end_time", _get(live, "handler.fit_end_time"),

@@ -202,6 +202,14 @@ def test_ladder_pair_passes_parity_as_shipped():
     validate_backtest_parity(live, backtest)
 
 
+def test_parity_ignores_handler_start_time_drift():
+    """实盘每晚只装信号日前一段；start_time 是加载窗，不是特征配方。"""
+    live, backtest = _ladder_configs()
+    live["handler"]["start_time"] = "2026-04-04"
+
+    validate_backtest_parity(live, backtest)
+
+
 def test_observation_ladder_pair_passes_parity_as_shipped():
     live = load_live_config(OBSERVATION_LADDER_LIVE_PATH, REPO_ROOT)
     backtest = yaml.safe_load(

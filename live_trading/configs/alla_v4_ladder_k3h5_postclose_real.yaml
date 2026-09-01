@@ -41,7 +41,9 @@ model:
 handler:
   class: "Alpha158Technical"
   module: "backtest.features.technical"
+  # 研究配方起点；parity 不比这一项。每晚发布按日历日回看加载。
   start_time: "2020-02-03"
+  inference_lookback_days: 150
   fit_start_time: "2020-02-03"
   fit_end_time: "2020-08-03"
   infer_processors:

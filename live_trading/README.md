@@ -56,7 +56,8 @@ T 日 22:30 Mac  postclose（导入 → postmarket → Tushare 日更 → 股票
 T+1 日 Windows QMT  15:00:05 起试 / 15:01 兜底 → prType=49 → 15:30 终态并拍持仓快照
 ```
 
-22:30 是为了等 Tushare 收盘数据落稳；全A 冷启动建特征大约十几分钟。不要再按 16:00 理解现网。
+22:30 是为了等 Tushare 收盘数据落稳。发布只装信号日前 150 个日历日的特征表
+（滚动窗由 Qlib 自动向前取）。不要再按 16:00 理解现网。
 
 BUY 计划只携带 `target_value`。只有查询到真实委托号才记录 `ACCEPTED`。持久日志在
 `D:\qmt_bridge\logs`。

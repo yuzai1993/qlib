@@ -107,7 +107,8 @@ intent 内容与对应批次后，才允许人工隔离该 intent；不得把它
 2. 收盘集合竞价 profile 在 14:57:05 提交；盘后固定价格 profile 从 15:00:05 起尝试，
    15:05 连续撮合前由终价门控挡住尚未结算的收盘价；
 3. 用 `get_instrument_detail`（旧版为 `get_instrumentdetail`）读取 `UpStopPrice`/`DownStopPrice`；
-4. 集合竞价调用 `prType=11` 并显式传涨跌停价；盘后固定价格调用 `prType=49`、`price=0`，
+4. 集合竞价调用 `prType=11` 并显式传涨跌停价；盘后固定价格调用 `prType=49`，
+   价格传当日官方收盘价（创业板买入限价不得低于收盘价，传 0 会被拒），
    同时把官方收盘参考及来源写入日志；
 5. 查询到真实 QMT 委托编号后才写 `ACCEPTED`；
 6. 撤单截止后处理仍未终态委托，到点终结，并写一笔账户与持仓快照到 `outbound/`。

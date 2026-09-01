@@ -9,7 +9,7 @@
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
 #     -> CLOSE_AUCTION: 14:57 / prType=11 / explicit daily side limits
-#     -> AFTER_HOURS_FIXED_PRICE: 15:05 / prType=49 / price=0
+#     -> AFTER_HOURS_FIXED_PRICE: 15:05 / prType=49 / official close
 #     -> poll order status by remark (client_order_id)
 #     -> profile-specific cancel, finalize, and account snapshot times
 #
@@ -31,7 +31,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-08-31-no-eligibility-mask"
+SOURCE_VERSION = "2026-09-01-pass-close"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -1643,7 +1643,7 @@ def _submit(
             official_close = _positive_price(official_close)
             if official_close <= 0.0:
                 raise ValueError("official close unavailable")
-            api_price = 0.0
+            api_price = official_close
         else:
             if limit_price is None:
                 limit_price = _instrument_limit_price(
@@ -1763,9 +1763,9 @@ def _submit(
             event_fields["official_close_reference"] = official_close
         _log_event("SUBMITTED_UNCONFIRMED", **event_fields)
         if fixed_price:
-            _log("passorder %s %s x%d prType=49 price=0 close=%s (%s)"
+            _log("passorder %s %s x%d prType=49 price=%s close=%s (%s)"
                  % (order["side"], order["stock_code"], order["quantity"],
-                    official_close, coid))
+                    api_price, official_close, coid))
         else:
             _log("passorder %s %s x%d prType=11 limit=%s (%s)"
                  % (order["side"], order["stock_code"], order["quantity"],

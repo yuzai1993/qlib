@@ -1712,7 +1712,7 @@ def test_fixed_price_requires_positive_official_close_before_api(
     )
 
 
-def test_fixed_price_passes_zero_and_logs_positive_close_reference_before_api(
+def test_fixed_price_passes_official_close_and_logs_close_reference_before_api(
     bridge, monkeypatch, tmp_path,
 ):
     probe_root, main_root = _profile_roots(
@@ -1748,7 +1748,7 @@ def test_fixed_price_passes_zero_and_logs_positive_close_reference_before_api(
 
     assert len(calls) == 1
     assert calls[0][4] == 49
-    assert calls[0][5] == 0.0
+    assert calls[0][5] == 10.50
     events = [
         json.loads(row) for row in (
             Path(bridge.BRIDGE_ROOT) / "logs" /
@@ -1759,7 +1759,7 @@ def test_fixed_price_passes_zero_and_logs_positive_close_reference_before_api(
         row for row in events if row["event"] == "SUBMITTED_UNCONFIRMED"
     ]
     assert submitted[0]["official_close_reference"] == 10.50
-    assert submitted[0]["limit_price"] == 0.0
+    assert submitted[0]["limit_price"] == 10.50
 
 
 @pytest.mark.parametrize("after_hours", [False, None])
@@ -1803,7 +1803,7 @@ def test_fixed_price_submits_without_security_eligibility(
     ])
 
 
-def test_fixed_price_buy_sizes_and_reserves_at_close_but_passes_zero(
+def test_fixed_price_buy_sizes_and_reserves_at_close_and_passes_close(
     bridge, monkeypatch, tmp_path,
 ):
     probe_root, main_root = _profile_roots(
@@ -1827,7 +1827,7 @@ def test_fixed_price_buy_sizes_and_reserves_at_close_but_passes_zero(
     bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
 
     assert len(submitted) == 1
-    assert submitted[0][4:7] == (49, 0.0, 100)
+    assert submitted[0][4:7] == (49, 10.0, 100)
     assert bridge.g.batch.remaining_cash == pytest.approx(
         10000.0 - bridge._estimated_buy_cost(100, 10.0)
     )

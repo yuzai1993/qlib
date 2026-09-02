@@ -153,7 +153,10 @@ class TushareCollectorCN(BaseCollector):
             limit_nums=limit_nums,
         )
 
-    INDEX_LIST = {"csi300": "000300", "csi100": "000903", "csi500": "000905", "csi1000": "000852"}
+    INDEX_LIST = {
+        "csi300": "000300", "csi100": "000903", "csi500": "000905",
+        "csi1000": "000852", "csi_all": "000985",
+    }
 
     def get_instrument_list(self) -> List[str]:
         logger.info("get HS stock symbols (Tushare)...")
@@ -330,8 +333,13 @@ class TushareCollectorCN(BaseCollector):
             logger.info(f"get bench data: {_index_name}({_index_code})......")
             try:
                 self.sleep()
-                ts_code = f"{_index_code}.SH"
-                df = pro.index_daily(ts_code=ts_code, start_date=_begin, end_date=_end)
+                suffixes = ("CSI", "SH") if _index_code == "000985" else ("SH",)
+                df = None
+                for suffix in suffixes:
+                    ts_code = f"{_index_code}.{suffix}"
+                    df = pro.index_daily(ts_code=ts_code, start_date=_begin, end_date=_end)
+                    if df is not None and not df.empty:
+                        break
                 if df is None or df.empty:
                     logger.warning(f"{_index_name} returned empty data")
                     continue

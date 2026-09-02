@@ -807,15 +807,19 @@ def test_live_execution_gate_is_frozen_at_first_trading_pass(
         raising=False,
     )
 
-    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    bridge._process_batch(
+        _TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch,
+    )
 
-    assert bridge.g.batch is None
+    assert bridge.g.batch is not None
+    assert bridge.g.batch.execution_authorized is True
+    assert bridge.g.batch.execution_live is True
+    assert submitted
     assert account_queries
-    fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
-    assert fills[buy["client_order_id"]]["message"] != "simulated"
+    assert all(f["message"] != "simulated" for f in _read_fills(bridge))
 
 
-def test_missing_live_gate_blocks_all_close_auction_orders(
+def test_missing_live_ok_marker_does_not_block_close_auction_orders(
     bridge, monkeypatch,
 ):
     sell = _order(coid="20260714001001S", side="SELL", priority=10)
@@ -825,6 +829,7 @@ def test_missing_live_gate_blocks_all_close_auction_orders(
         Path(bridge.BRIDGE_ROOT) / "state" /
         ("LIVE_OK_" + bridge._today())
     )
+    assert not gate.exists()
     bridge._claim_new_batch()
     monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
     monkeypatch.setattr(bridge.time, "time", lambda: 101.0)
@@ -838,11 +843,12 @@ def test_missing_live_gate_blocks_all_close_auction_orders(
         bridge, "passorder", lambda *args: submitted.append(args), raising=False,
     )
 
-    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    bridge._process_batch(
+        _TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch,
+    )
 
-    assert submitted == []
-    fills = {f["client_order_id"]: f for f in _read_fills(bridge)}
-    assert fills[buy["client_order_id"]]["message"] != "simulated"
+    assert [args[4:6] for args in submitted] == [(11, 9.90), (11, 10.10)]
+    assert all(f["message"] != "simulated" for f in _read_fills(bridge))
 
 
 def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
@@ -879,7 +885,7 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
     assert len(cash_reads) == 1
     assert [row["quantity"] for row in submitted] == [800, 100]
     assert all(row["price_type"] == 11 for row in submitted)
-    assert all(row["price"] == 11.0 for row in submitted)
+    assert all(row["price"] == 10.10 for row in submitted)
 
 
 def test_immutable_buy_maximum_caps_submission_when_rollout_cap_increases(
@@ -1093,6 +1099,116 @@ def test_close_auction_limit_price_uses_daily_side_limit(bridge):
 def test_close_auction_limit_price_fails_closed(bridge, side):
     with pytest.raises(ValueError, match="limit price"):
         bridge._instrument_limit_price(_TickCtx(10.0), "000001.SZ", side)
+
+
+def test_auction_offset_buy_is_last_plus_one_percent_rounded_up(bridge):
+    ctx = _TickCtx(8.86, up_stop=9.75, down_stop=8.0)
+    assert bridge._auction_offset_limit_price(ctx, "601998.SH", "BUY") == 8.95
+
+
+def test_auction_offset_sell_is_last_minus_one_percent_rounded_down(bridge):
+    ctx = _TickCtx(8.86, up_stop=9.75, down_stop=8.0)
+    assert bridge._auction_offset_limit_price(ctx, "601998.SH", "SELL") == 8.77
+
+
+def test_auction_offset_buy_clips_to_up_stop(bridge):
+    ctx = _TickCtx(10.0, up_stop=10.05, down_stop=9.0)
+    assert bridge._auction_offset_limit_price(ctx, "000001.SZ", "BUY") == 10.05
+
+
+def test_auction_offset_sell_clips_to_down_stop(bridge):
+    ctx = _TickCtx(10.0, up_stop=11.0, down_stop=9.95)
+    assert bridge._auction_offset_limit_price(ctx, "000001.SZ", "SELL") == 9.95
+
+
+def test_auction_offset_missing_last_price_fails_closed(bridge):
+    with pytest.raises(ValueError, match="last price"):
+        bridge._auction_offset_limit_price(
+            _TickCtx(0.0, up_stop=11.0, down_stop=9.0), "000001.SZ", "BUY",
+        )
+
+
+def test_close_auction_buy_passorder_uses_last_plus_one_percent(
+    bridge, monkeypatch,
+):
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(target_value=8_000.0)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    bridge.TRADE_START = "00:00:00"
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 20_000.0)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(
+        _TickCtx(8.86, up_stop=9.75, down_stop=8.0), bridge.g.batch,
+    )
+
+    assert len(submitted) == 1
+    assert submitted[0][4] == 11
+    assert submitted[0][5] == 8.95
+
+
+def test_close_auction_sell_passorder_uses_last_minus_one_percent(
+    bridge, monkeypatch,
+):
+    bridge.MAX_ORDER_QUANTITY = 0
+    order = _order(coid="20260714001001S", side="SELL", priority=10)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    bridge.TRADE_START = "00:00:00"
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
+    monkeypatch.setattr(bridge, "_get_can_use_volume", lambda *args: 800)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(
+        _TickCtx(8.86, up_stop=9.75, down_stop=8.0), bridge.g.batch,
+    )
+
+    assert len(submitted) == 1
+    assert submitted[0][4] == 11
+    assert submitted[0][5] == 8.77
+    assert submitted[0][6] == 800
+
+
+def test_close_auction_buy_reserves_at_offset_not_daily_up_limit(
+    bridge, monkeypatch,
+):
+    """涨停预留会把仓位压小；竞价应按即将提交的 last+1% 预留。"""
+    bridge.MAX_ORDER_QUANTITY = 0
+    order = _order(coid="20260714001001B", side="BUY", priority=20)
+    order.update(target_value=20_000.0)
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    (Path(bridge.BRIDGE_ROOT) / "state" /
+     ("LIVE_OK_" + bridge._today())).write_text("")
+    bridge._claim_new_batch()
+    bridge.TRADE_START = "00:00:00"
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:30")
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda account_id: 10_150.0)
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda account_id: {})
+    submitted = []
+    monkeypatch.setattr(
+        bridge, "passorder", lambda *args: submitted.append(args), raising=False,
+    )
+
+    bridge._process_batch(
+        _TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch,
+    )
+
+    assert len(submitted) == 1
+    assert submitted[0][4:7] == (11, 10.10, 1000)
 
 
 def test_persistent_log_appends_text_and_jsonl(bridge):

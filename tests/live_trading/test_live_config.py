@@ -637,7 +637,9 @@ def test_observation_ladder_is_k1h5_full_risk_three_hundred_thousand():
     assert config["strategy"]["horizon"] == 5
     assert config["strategy"]["risk_degree"] == 1.0
     assert config["account"]["opening_cash"] == 300_000.0
-    assert config["live"]["execution_session"] == "AFTER_HOURS_FIXED_PRICE"
+    assert config["live"]["execution_session"] == "CLOSE_AUCTION"
+    assert config["live"]["close_auction_price_type"] == 11
+    assert config["live"]["submit_after"] == "14:57:05"
     assert config["live"]["strategy_id"] == "alla_v4_ladder_k1h5_postclose_real"
     assert config["monitor"]["broker_reconcile"]["cash_check"] is False
     assert "broker_environment" not in config["live"]
@@ -727,13 +729,12 @@ def test_live_filter_pipe_matches_the_bt_v4_backtest_verbatim():
 @pytest.mark.parametrize(
     "name",
     [
-        "alla_v4_ladder_k1h5_postclose_real",
         "alla_v4_ladder_k3h5_postclose_real",
         "csi1000_pr49_one_lot_probe",
     ],
 )
 def test_after_hours_configs_declare_the_adaptive_submission_start(name):
-    """两个引用 AFTER_HOURS_FIXED_PRICE 的配置必须跟着 profile 一起改，
+    """引用 AFTER_HOURS_FIXED_PRICE 的配置必须跟着 profile 一起改，
     否则 live_config 的逐项比对会把它们 fail-closed 掉。"""
     import yaml
 

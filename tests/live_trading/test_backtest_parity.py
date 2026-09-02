@@ -324,6 +324,18 @@ def test_after_hours_channel_requires_close_deal_price():
         validate_backtest_parity(live, backtest)
 
 
+def test_close_auction_channel_requires_close_deal_price():
+    """收盘集合竞价对照也按收盘价撮合。回测改 vwap 必须 fail。"""
+    live = load_live_config(OBSERVATION_LADDER_LIVE_PATH, REPO_ROOT)
+    backtest = yaml.safe_load(
+        OBSERVATION_LADDER_BACKTEST_PATH.read_text(encoding="utf-8")
+    )
+    backtest["backtest"]["exchange_kwargs"]["deal_price"] = "vwap"
+
+    with pytest.raises(ParityError, match="deal_price"):
+        validate_backtest_parity(live, backtest)
+
+
 def test_execution_session_mismatch_is_caught():
     live, backtest = _ladder_configs()
     backtest["parity"]["execution_session"] = "CLOSE_AUCTION"

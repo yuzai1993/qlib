@@ -1,11 +1,11 @@
 # QMT 收盘集合竞价桥接部署
 
-当前生产主实例应编译为盘后固定价格（`EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"`，
-`prType=49`）。**日常开关是本策略在 QMT 里的启停**，不要再创建 `LIVE_OK_` /
+当前生产主实例应编译为收盘集合竞价（`EXECUTION_PROFILE = "CLOSE_AUCTION"`，
+`prType=11`）。**日常开关是本策略在 QMT 里的启停**，不要再创建 `LIVE_OK_` /
 `PR49_LIVE_OK_`；bridge 会忽略这些文件。停策略 = 当天不交易；开策略且 inbox 有
 LIVE 批次 = 到点下单。
 
-`qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并在 14:57 收盘集合竞价使用指定价 `prType=11`。买单显式传当日涨停价，卖单显式传当日跌停价。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
+`qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并在 14:57 收盘集合竞价使用指定价 `prType=11`。先取竞价前最后成交价，买单上浮 1% 向上靠档，卖单下浮 1% 向下靠档，再夹到当日涨跌停。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
 
 策略源码里写死 `ACCOUNT_ID`。启停本策略就是交易开关；批次头不再带账号、环境或 mode。
 
@@ -33,7 +33,7 @@ D:\qmt_bridge\
 生产本地副本（由 `render_qmt_runtime.py` 写出，不要手改这三个常量以外的通道设置）：
 
 ```python
-EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"
+EXECUTION_PROFILE = "CLOSE_AUCTION"
 BRIDGE_ROOT = r"D:\qmt_bridge"
 ACCOUNT_ID = "<仓库模板已写生产账号，渲染时也可覆盖>"
 ACCOUNT_TYPE = "STOCK"
@@ -43,7 +43,7 @@ ENABLE_LADDER_NETTING = True
 ```
 
 仓库模板默认仍是收盘集合竞价、一手上限、不抵销，避免误把模板当生产脚本编译。
-需要回退到 `EXECUTION_PROFILE = "CLOSE_AUCTION"` 时重新渲染，不要就地改文件。
+需要回退到 `EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"` 时重新渲染，不要就地改文件。
 
 `ACCOUNT_ID` 必须在 QMT UI 策略页面绑定同一真实账户；源码设置不能代替
 UI 复核。
@@ -106,10 +106,12 @@ intent 内容与对应批次后，才允许人工隔离该 intent；不得把它
 1. 认领当日 `signal_*.jsonl` + `.done`，检查 schema 2.0、checksum、当日 `trade_date`；
 2. 收盘集合竞价 profile 在 14:57:05 提交；盘后固定价格 profile 从 15:00:05 起尝试，
    15:05 连续撮合前由终价门控挡住尚未结算的收盘价；
-3. 用 `get_instrument_detail`（旧版为 `get_instrumentdetail`）读取 `UpStopPrice`/`DownStopPrice`；
-4. 集合竞价调用 `prType=11` 并显式传涨跌停价；盘后固定价格调用 `prType=49`，
-   价格传当日官方收盘价（创业板买入限价不得低于收盘价，传 0 会被拒），
-   同时把官方收盘参考及来源写入日志；
+3. 用 `get_full_tick` 的 `lastPrice` 取竞价前最后成交价，并用
+   `get_instrument_detail`（旧版为 `get_instrumentdetail`）读取涨跌停以便夹价；
+4. 集合竞价调用 `prType=11`：买单 `lastPrice * 1.01` 向上靠 0.01 档，卖单
+   `lastPrice * 0.99` 向下靠 0.01 档，再夹到当日涨跌停；盘后固定价格调用
+   `prType=49`，价格传当日官方收盘价（创业板买入限价不得低于收盘价，传 0
+   会被拒），同时把官方收盘参考及来源写入日志；
 5. 查询到真实 QMT 委托编号后才写 `ACCEPTED`；
 6. 撤单截止后处理仍未终态委托，到点终结，并写一笔账户与持仓快照到 `outbound/`。
 
@@ -151,7 +153,7 @@ Shadow 通过后，必须同时满足：
 1. Mac 发布 `mode=LIVE`，且进程环境有 `LIVE_TRADING_CONFIRM=YES`；
 2. Windows 当天存在 `D:\qmt_bridge\state\LIVE_OK_YYYY-MM-DD`。
 
-仓库模板里 `MAX_ORDER_QUANTITY = 100`、`ENABLE_LADDER_NETTING = False`、`EXECUTION_PROFILE = "CLOSE_AUCTION"` 是**故意保守**的：模板被误当成生产脚本直接跑也不会造成损失。生产形态一律由 [`live_trading/scripts/render_qmt_runtime.py`](../scripts/render_qmt_runtime.py) 渲染产生——盘后固定价格通道、开启阶梯抵销、`MAX_ORDER_QUANTITY = 0`（即无上限）。**不要手工编辑本地副本里的这三个常量**：渲染产物是唯一的生产事实来源，手改会让运行时与仓库记录对不上。需要回退到收盘集合竞价时，重新渲染并传 `execution_profile="CLOSE_AUCTION", enable_ladder_netting=False`，不要就地改文件。
+仓库模板里 `MAX_ORDER_QUANTITY = 100`、`ENABLE_LADDER_NETTING = False`、`EXECUTION_PROFILE = "CLOSE_AUCTION"` 是**故意保守**的：模板被误当成生产脚本直接跑也不会造成损失。生产形态一律由 [`live_trading/scripts/render_qmt_runtime.py`](../scripts/render_qmt_runtime.py) 渲染产生——收盘集合竞价通道、开启阶梯抵销、`MAX_ORDER_QUANTITY = 0`（即无上限）。**不要手工编辑本地副本里的这三个常量**：渲染产物是唯一的生产事实来源，手改会让运行时与仓库记录对不上。需要回退到盘后固定价格时，重新渲染并传 `execution_profile="AFTER_HOURS_FIXED_PRICE", enable_ladder_netting=False`，不要就地改文件。
 
 一手阶段（`MAX_ORDER_QUANTITY = 100`）把每个可执行买卖订单限制为一手，那是探针的刻意限制。每天开盘前确认 QMT UI 绑定的账户，收盘后逐单核对价格类型、官方收盘价、数量、委托状态和回执。
 
@@ -175,8 +177,8 @@ QMT 桥接不再实现 `snapshot_requests` 观察协议，也不再读取 `LIVE_
 | 批次不消费 | QMT 策略是否运行；inbox 是否同时有 jsonl/done；trade_date 是否为今天 |
 | 15:00 后停止 | QMT 日志是否显示 timer 注册；版本是否退回 `run_time` |
 | LIVE 全部 simulated | QMT 是否绑对账号、策略是否在跑、批次是否被认领拒绝 |
-| BUY `official close unavailable` | `get_full_tick` 的 `lastPrice` 是否已更新为正数 |
-| 涨跌停价无效 | `get_instrument_detail` 是否返回正的 `UpStopPrice`/`DownStopPrice` |
+| BUY `official close unavailable` / `auction last price unavailable` | `get_full_tick` 的 `lastPrice` 是否已更新为正数 |
+| 涨跌停价无效 | `get_instrument_detail` 是否返回正的 `UpStopPrice`/`DownStopPrice`；竞价夹价失败时仍会用未夹的 last±1% |
 | 账户查询失败 | QMT UI 绑定账号、`ACCOUNT_ID`、header account ID 是否一致 |
 | 回执缺失 | 检查 `processing/`、active state 与 `D:\qmt_bridge\logs\qmt_events_YYYY-MM-DD.jsonl` |
 | 探针日志缺失 | 检查 `D:\qmt_bridge\pr49_probe\logs\qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl` |

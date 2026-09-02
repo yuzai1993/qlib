@@ -28,8 +28,11 @@ _UNIVERSE_KEYS = (
     "min_recent_trading_days",
     "pool",
 )
-# 通道与成交价是绑定关系：盘后固定价恒以收盘价撮合。
-_SESSION_DEAL_PRICE = {"AFTER_HOURS_FIXED_PRICE": "close"}
+# 通道与成交价是绑定关系：盘后固定价和收盘集合竞价都以收盘价撮合。
+_SESSION_DEAL_PRICE = {
+    "AFTER_HOURS_FIXED_PRICE": "close",
+    "CLOSE_AUCTION": "close",
+}
 
 
 def _get(mapping: dict, path: str):

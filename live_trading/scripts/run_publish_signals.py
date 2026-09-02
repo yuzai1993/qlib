@@ -181,6 +181,11 @@ def parse_args():
     p.add_argument("--seq", type=int, default=1, help="batch seq of the day")
     p.add_argument("--dry-run", action="store_true", help="print orders, do not write files")
     p.add_argument(
+        "--reuse-predictions",
+        action="store_true",
+        help="reuse saved signal_date scores; do not run models again",
+    )
+    p.add_argument(
         "--audit-preview", type=Path, default=None,
         help="atomically write an evidence-only proposed plan (implies --dry-run)",
     )
@@ -225,8 +230,8 @@ def resolve_signal_calendar(
     ]
 
 
-def get_signal_date_and_scores(config, trade_date: str):
-    """初始化 qlib，取 trade_date 前最后一个交易日的预测分数。"""
+def resolve_publish_calendar(config, trade_date: str):
+    """初始化 qlib，只解析 signal_date，不跑模型。"""
     import qlib
     from qlib.data import D
 
@@ -236,12 +241,27 @@ def get_signal_date_and_scores(config, trade_date: str):
     )
     from live_trading.scripts.next_trade_date import next_open_date
 
-    signal_date, trade_dates = resolve_signal_calendar(
+    return resolve_signal_calendar(
         D.calendar(end_time=trade_date),
         trade_date,
         next_open_resolver=next_open_date,
     )
 
+
+def load_saved_prediction_scores(recorder, signal_date: str):
+    """把已落库的 signal_date 分数还原成 Series。缺失则 fail-closed。"""
+    raw = recorder.get_predictions_by_date(signal_date)
+    if not raw:
+        raise SystemExit(f"no saved predictions for signal_date {signal_date}")
+    return pd.Series(
+        {instrument: float(row["score"]) for instrument, row in raw.items()},
+        dtype=float,
+    )
+
+
+def get_signal_date_and_scores(config, trade_date: str):
+    """初始化 qlib，取 trade_date 前最后一个交易日的预测分数。"""
+    signal_date, trade_dates = resolve_publish_calendar(config, trade_date)
     from live_trading.modules.signal_generator import SignalGenerator
     gen = SignalGenerator(config, PROJECT_ROOT)
     scores = gen.predict(signal_date, allow_stale=False)
@@ -390,37 +410,46 @@ def main():
     # do not block publication; QMT controls whether to consume the batch.
 
     # 1. 预测分数
-    signal_date, scores, trade_dates = get_signal_date_and_scores(
-        config, trade_date
-    )
-    st_daily = load_st_daily_or_exit()
-    universe_spec = config.get("universe_filter")
-    if universe_spec:
-        # build_keep_mask 已含同一份 st_daily.csv 的日频 ST 判定，
-        # 再叠 apply_st_daily 就是两处各判一次。
-        from live_trading.modules.universe_gate import filter_scores
-
-        scores, filter_stats = filter_scores(
-            scores,
-            signal_date=signal_date,
-            raw_spec=universe_spec,
-            project_root=PROJECT_ROOT,
-        )
-        banned = ()
-        logger.info("universe filter stats: %s", filter_stats)
-    else:
-        scores = apply_st_daily(scores, st_daily, signal_date)
-        banned = st_symbols_on(st_daily, signal_date)
-        logger.info(
-            "signal_date=%s, scored %d instruments, ST daily banned %d",
-            signal_date, len(scores), len(banned),
-        )
-
-    # 持久化全市场分数供监控查询（dry-run 不落库）
     preview_only = args.dry_run or args.audit_preview is not None
-    if not preview_only:
-        saved = recorder.save_predictions(signal_date, scores)
-        logger.info("saved %d prediction scores for %s", saved, signal_date)
+    reuse_predictions = bool(getattr(args, "reuse_predictions", False))
+    if reuse_predictions:
+        signal_date, trade_dates = resolve_publish_calendar(config, trade_date)
+        scores = load_saved_prediction_scores(recorder, signal_date)
+        banned = ()
+        logger.info(
+            "reusing %d saved prediction scores for %s",
+            len(scores), signal_date,
+        )
+    else:
+        signal_date, scores, trade_dates = get_signal_date_and_scores(
+            config, trade_date
+        )
+        st_daily = load_st_daily_or_exit()
+        universe_spec = config.get("universe_filter")
+        if universe_spec:
+            # build_keep_mask 已含同一份 st_daily.csv 的日频 ST 判定，
+            # 再叠 apply_st_daily 就是两处各判一次。
+            from live_trading.modules.universe_gate import filter_scores
+
+            scores, filter_stats = filter_scores(
+                scores,
+                signal_date=signal_date,
+                raw_spec=universe_spec,
+                project_root=PROJECT_ROOT,
+            )
+            banned = ()
+            logger.info("universe filter stats: %s", filter_stats)
+        else:
+            scores = apply_st_daily(scores, st_daily, signal_date)
+            banned = st_symbols_on(st_daily, signal_date)
+            logger.info(
+                "signal_date=%s, scored %d instruments, ST daily banned %d",
+                signal_date, len(scores), len(banned),
+            )
+        # 持久化全市场分数供监控查询（dry-run 不落库）
+        if not preview_only:
+            saved = recorder.save_predictions(signal_date, scores)
+            logger.info("saved %d prediction scores for %s", saved, signal_date)
 
     # 2. 当前 live 持仓（QMT code → qlib instrument）
     qmt_positions = recorder.get_positions()

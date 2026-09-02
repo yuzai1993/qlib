@@ -14,6 +14,10 @@ CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-alla_v4_ladder_k1h5_pos
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
 
+if [[ -f "${SCRIPT_DIR}/scripts/ensure_bridge_mount.sh" ]]; then
+    bash "${SCRIPT_DIR}/scripts/ensure_bridge_mount.sh"
+fi
+
 mkdir -p "${SCRIPT_DIR}/logs"
 LOG_FILE="${SCRIPT_DIR}/logs/${CONFIG_ID}_import_cron.log"
 LOCK_ROOT="${SCRIPT_DIR}/.locks"

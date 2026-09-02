@@ -32,12 +32,12 @@ _VALID_EXECUTION_PROFILES = ("CLOSE_AUCTION", "AFTER_HOURS_FIXED_PRICE")
 
 
 def render_main_source(source: str, account_id: str, expected_cash=None, *,
-                       execution_profile: str = "AFTER_HOURS_FIXED_PRICE",
+                       execution_profile: str = "CLOSE_AUCTION",
                        enable_ladder_netting: bool = True,
                        max_order_quantity: int = 0) -> str:
     """把仓库模板渲染成生产运行时。
 
-    渲染而不是改仓库默认值：模板保持最保守形态（旧通道、不抵销、一手上限），
+    渲染而不是改仓库默认值：模板保持最保守形态（不抵销、一手上限），
     生产形态只出现在渲染产物里，模板被误当生产脚本直接跑也不会造成损失。
     默认参数就是生产形态——漏传参数会得到正确结果，而不是静默退回一手探针。
     expected_cash 已不再写入运行时，保留参数只为兼容旧调用。

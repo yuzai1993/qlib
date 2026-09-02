@@ -3122,15 +3122,27 @@ class FillImporter:
             return 0
 
         count = 0
+        errors = []
         for done_path in sorted(self.outbound.glob("account_*.done")):
             jsonl_path = done_path.with_suffix(".jsonl")
             if not jsonl_path.exists():
                 logger.warning("done without jsonl: %s", done_path)
                 continue
-            if self._import_snapshot(jsonl_path):
+            try:
+                imported = self._import_snapshot(jsonl_path)
+            except SchemaError as exc:
+                logger.error("skip broker snapshot %s: %s", jsonl_path.name, exc)
+                errors.append(f"{jsonl_path.name}: {exc}")
+                continue
+            if imported:
                 count += 1
             self._archive(jsonl_path)
             self._archive(done_path)
+        if errors:
+            raise SchemaError(
+                "broker snapshot import failed for "
+                + "; ".join(errors)
+            )
         return count
 
     def import_account_snapshot_responses(self) -> int:

@@ -17,6 +17,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from live_trading.modules.fees import fees_from_config
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
 from live_trading.modules.live_config import load_live_config
+from live_trading.modules.signal_schema import SchemaError
 
 logger = logging.getLogger("live_trading.import")
 
@@ -45,8 +46,14 @@ def main():
     n = importer.import_fills()
     print(f"imported {n} fill events")
 
-    snapshots = importer.import_broker_snapshots()
-    print(f"imported {snapshots} broker account snapshots")
+    snapshot_error = None
+    try:
+        snapshots = importer.import_broker_snapshots()
+        print(f"imported {snapshots} broker account snapshots")
+    except SchemaError as exc:
+        snapshot_error = exc
+        print(f"broker snapshot import incomplete: {exc}")
+        logger.error("broker snapshot import incomplete: %s", exc)
 
     observations = importer.import_account_snapshot_responses()
     print(f"imported {observations} snapshot-only observations")
@@ -89,6 +96,9 @@ def main():
     print(f"\nlive positions ({len(positions)}), cash={recorder.get_cash():.2f}:")
     for code, pos in sorted(positions.items()):
         print(f"  {code}  {pos['shares']} shares @ {pos['avg_cost']:.3f}")
+
+    if snapshot_error is not None:
+        raise snapshot_error
 
 
 if __name__ == "__main__":

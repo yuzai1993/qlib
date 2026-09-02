@@ -8,7 +8,8 @@
 # Flow per batch (selected by EXECUTION_PROFILE):
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
-#     -> CLOSE_AUCTION: 14:57 / prType=11 / explicit daily side limits
+#     -> CLOSE_AUCTION: 14:57 / prType=11 / lastPrice +/- 1% clipped
+#        to the daily limit
 #     -> AFTER_HOURS_FIXED_PRICE: 15:05 / prType=49 / official close
 #     -> poll order status by remark (client_order_id)
 #     -> profile-specific cancel, finalize, and account snapshot times
@@ -31,7 +32,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-09-01-pass-close"
+SOURCE_VERSION = "2026-09-02-auction-offset"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -1422,6 +1423,46 @@ def _instrument_limit_price(ContextInfo, stock_code, side):
     return price
 
 
+AUCTION_PRICE_OFFSET = 0.01
+PRICE_TICK = 0.01
+
+
+def _round_tick_up(price):
+    return math.ceil(round(float(price) / PRICE_TICK, 6)) * PRICE_TICK
+
+
+def _round_tick_down(price):
+    return math.floor(round(float(price) / PRICE_TICK, 6)) * PRICE_TICK
+
+
+def _optional_daily_limit(ContextInfo, stock_code, side):
+    try:
+        return _instrument_limit_price(ContextInfo, stock_code, side)
+    except Exception:
+        return None
+
+
+def _auction_offset_limit_price(ContextInfo, stock_code, side):
+    """Close-auction limit: last continuous trade +/- 1%, clipped to the daily limit."""
+    last_price = _official_close(ContextInfo, stock_code)
+    if last_price <= 0.0:
+        raise ValueError("auction last price unavailable for %s" % stock_code)
+    if side == "BUY":
+        limit_price = _round_tick_up(last_price * (1.0 + AUCTION_PRICE_OFFSET))
+        cap = _optional_daily_limit(ContextInfo, stock_code, "BUY")
+        if cap is not None:
+            limit_price = min(limit_price, cap)
+    else:
+        limit_price = _round_tick_down(last_price * (1.0 - AUCTION_PRICE_OFFSET))
+        floor = _optional_daily_limit(ContextInfo, stock_code, "SELL")
+        if floor is not None:
+            limit_price = max(limit_price, floor)
+    limit_price = round(float(limit_price), 2)
+    if limit_price <= 0.0:
+        raise ValueError("invalid auction limit price for %s" % stock_code)
+    return limit_price
+
+
 def _estimated_buy_cost(quantity, price):
     amount = float(quantity) * float(price)
     commission = max(amount * COMMISSION_RATE, MIN_COMMISSION)
@@ -1646,7 +1687,7 @@ def _submit(
             api_price = official_close
         else:
             if limit_price is None:
-                limit_price = _instrument_limit_price(
+                limit_price = _auction_offset_limit_price(
                     ContextInfo, order["stock_code"], order["side"])
             api_price = float(limit_price)
     except Exception as exc:
@@ -2190,7 +2231,7 @@ def _process_batch(ContextInfo, batch):
             if mode_live:
                 if EXECUTION_PROFILE == "CLOSE_AUCTION":
                     try:
-                        limit_price = _instrument_limit_price(
+                        limit_price = _auction_offset_limit_price(
                             ContextInfo, order["stock_code"], "BUY")
                     except Exception as exc:
                         order["quantity"] = target_requested

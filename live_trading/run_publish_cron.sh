@@ -18,6 +18,9 @@ fi
 # QMT start/stop and local account settings decide execution.
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
+if [[ -f "${SCRIPT_DIR}/scripts/ensure_bridge_mount.sh" ]]; then
+    bash "${SCRIPT_DIR}/scripts/ensure_bridge_mount.sh"
+fi
 unset LIVE_TRADING_CONFIRM
 unset LIVE_RUN_MODE
 

@@ -106,6 +106,84 @@ def test_generic_publisher_rejects_operator_probe_before_parity(monkeypatch):
         publish.main()
 
 
+def test_load_saved_prediction_scores_returns_series(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+    recorder.save_predictions("2026-09-02", {"SZ003816": 2.5, "SH601998": 1.1})
+
+    scores = publish.load_saved_prediction_scores(recorder, "2026-09-02")
+
+    assert list(scores.index) == ["SZ003816", "SH601998"] or set(scores.index) == {
+        "SZ003816", "SH601998",
+    }
+    assert scores["SZ003816"] == pytest.approx(2.5)
+    assert scores["SH601998"] == pytest.approx(1.1)
+
+
+def test_load_saved_prediction_scores_fails_closed_when_missing(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "live.db"))
+
+    with pytest.raises(SystemExit, match="no saved predictions"):
+        publish.load_saved_prediction_scores(recorder, "2026-09-02")
+
+
+def test_reuse_predictions_skips_model_inference(monkeypatch, tmp_path):
+    db_path = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db_path))
+    recorder.save_predictions("2026-09-02", {"SZ003816": 2.59})
+    config = {
+        "storage": {"db_path": str(db_path)},
+        "live": {
+            "kind": "STRATEGY", "strategy_id": "strategy-main",
+            "execution_session": "CLOSE_AUCTION", "bridge_root": str(tmp_path / "bridge"),
+            "max_orders_per_day": 40,
+        },
+        "exchange": {"trade_unit": 100},
+        "strategy": {"class": "TopkDropoutStrategy", "topk": 1},
+        "account": {},
+    }
+    order = SimpleNamespace(
+        side="BUY", stock_code="003816.SZ", quantity=0, target_value=1_000.0,
+        client_order_id="order-1", batch_id="20260903_strategy-main_003",
+        to_json_line=lambda: '{"side":"BUY"}',
+    )
+    monkeypatch.setattr(
+        publish, "parse_args", lambda: SimpleNamespace(
+            config="config-alias", trade_date="2026-09-03", seq=3,
+            dry_run=True, audit_preview=None, reuse_predictions=True,
+        ),
+    )
+    monkeypatch.setattr(publish, "load_live_config", lambda *_args: config)
+    monkeypatch.setattr(publish, "validate_configured_backtest", lambda *_args: None)
+    monkeypatch.setattr(
+        publish, "get_signal_date_and_scores",
+        lambda *_args: pytest.fail("must not re-predict"),
+    )
+    monkeypatch.setattr(
+        publish, "resolve_publish_calendar",
+        lambda *_args: ("2026-09-02", ["2026-09-02"]),
+    )
+    monkeypatch.setattr(publish, "get_price_instruments", lambda *_args: [])
+    monkeypatch.setattr(publish, "get_prev_close", lambda *_args: {})
+    monkeypatch.setattr(
+        publish, "build_order_planner",
+        lambda *_args: SimpleNamespace(plan=lambda *_args, **_kwargs: [order]),
+    )
+    from live_trading.modules import order_manager
+    monkeypatch.setattr(
+        order_manager, "OrderManager",
+        lambda *_args: SimpleNamespace(generate_orders=lambda *_args, **_kwargs: [{}]),
+    )
+    saved = []
+    monkeypatch.setattr(
+        LiveRecorder, "save_predictions",
+        lambda self, *args, **kwargs: saved.append(args) or 0,
+    )
+
+    publish.main()
+
+    assert saved == []
+
+
 def test_generic_publisher_binds_planner_to_selected_execution_profile():
     config = {
         "live": {

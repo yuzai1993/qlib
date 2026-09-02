@@ -39,9 +39,9 @@ def test_rendered_runtime_turns_netting_on():
     assert "ENABLE_LADDER_NETTING = False" not in rendered
 
 
-def test_rendered_runtime_selects_the_after_hours_channel():
+def test_rendered_runtime_selects_the_close_auction_channel():
     rendered = render_main_source(MAIN_TEMPLATE, "12345678", 100000.0)
-    assert 'EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"' in rendered
+    assert 'EXECUTION_PROFILE = "CLOSE_AUCTION"' in rendered
 
 
 def test_rendered_runtime_lifts_the_one_lot_cap():
@@ -54,9 +54,9 @@ def test_rendered_runtime_lifts_the_one_lot_cap():
 def test_the_channel_can_be_overridden_for_a_rollback_render():
     rendered = render_main_source(
         MAIN_TEMPLATE, "12345678", 100000.0,
-        execution_profile="CLOSE_AUCTION", enable_ladder_netting=False,
+        execution_profile="AFTER_HOURS_FIXED_PRICE", enable_ladder_netting=False,
     )
-    assert 'EXECUTION_PROFILE = "CLOSE_AUCTION"' in rendered
+    assert 'EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"' in rendered
     assert "ENABLE_LADDER_NETTING = False" in rendered
 
 
@@ -88,7 +88,7 @@ def test_the_real_bridge_template_is_renderable_and_conservative():
 
     rendered = render_main_source(bridge, "12345678", 100000.0)
 
-    assert 'EXECUTION_PROFILE = "AFTER_HOURS_FIXED_PRICE"' in rendered
+    assert 'EXECUTION_PROFILE = "CLOSE_AUCTION"' in rendered
     assert "ENABLE_LADDER_NETTING = True" in rendered
     assert "MAX_ORDER_QUANTITY = 0" in rendered
 

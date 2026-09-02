@@ -1621,6 +1621,55 @@ def test_legacy_snapshot_rows_are_backfilled_with_import_order(tmp_path):
     assert marker["imported_at"]
 
 
+def test_unimportable_older_snapshot_does_not_block_later_files(env):
+    """8/31 脱敏快照不能挡住后面带 account_id 的 9/2 快照。"""
+    bridge_root, recorder, importer = env
+    old_id = "20260831_old_masked_002"
+    new_id = "20260902_new_full_001"
+    recorder.record_publish_plan(BatchHeader(
+        batch_id=old_id,
+        strategy_id="snapshot-test",
+        trade_date="2026-08-31",
+        signal_date="2026-08-28",
+        account_id="",
+        account_type="STOCK",
+        account_environment="REAL",
+        mode="LIVE",
+        created_at="2026-08-31T00:00:00+08:00",
+        order_count=0,
+        checksum="",
+    ), [])
+    _record_real_snapshot_batch(recorder, batch_id=new_id)
+    _write_broker_snapshot(
+        bridge_root,
+        [{
+            "type": "account_snapshot",
+            "batch_id": old_id,
+            "trade_date": "2026-08-31",
+            "account_id_masked": "88******49",
+            "available_cash": 300000.0,
+            "total_asset": 300000.0,
+            "market_value": 0.0,
+            "frozen_cash": 0.0,
+            "ts": "2026-08-31T15:00:07",
+        }],
+        batch_id=old_id,
+    )
+    new_rows = _snapshot_rows(
+        batch_id=new_id, cash=273414.23, account_id="real-account",
+    )
+    _write_broker_snapshot(bridge_root, new_rows, batch_id=new_id)
+
+    with pytest.raises(SchemaError, match="durable account_id"):
+        importer.import_broker_snapshots()
+
+    assert recorder.get_broker_account_snapshot("2026-07-14")["available_cash"] == (
+        pytest.approx(273414.23)
+    )
+    assert (bridge_root / "outbound" / f"account_{old_id}.jsonl").exists()
+    assert not (bridge_root / "outbound" / f"account_{new_id}.jsonl").exists()
+
+
 def test_broker_snapshot_without_done_is_not_imported(env):
     bridge_root, recorder, importer = env
     recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)

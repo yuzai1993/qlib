@@ -1,7 +1,8 @@
 # 全A v4 观察实盘（top1 × h5）
 
 当前活动系统是 `alla_v4_ladder_k1h5_postclose_real`。模型是 v4 五种子 RankIC ES
-日截面 z-score 等权，执行是盘后固定价格 `prType=49`。策略先用 **top1 × horizon=5、
+日截面 z-score 等权，执行是收盘集合竞价 `prType=11`：竞价前提交，买单按最后成交价
+上浮 1%，卖单按下浮 1%，再夹到当日涨跌停。策略先用 **top1 × horizon=5、
 仓位 100%、期初 30 万** 观察；稳定后再切回 100 万的
 `alla_v4_ladder_k3h5_postclose_real`。研究基线 BT v4 仍是 k3×h5，本观察盘不改那条尺子。
 
@@ -24,13 +25,13 @@ Mac 只发布信号；Windows 上策略在跑、inbox 有 LIVE 批次，到点�
 | 模型 | v4 五种子日截面 z-score 等权 |
 | 账本 | `live_trading/data/alla_v4_ladder_k1h5_postclose_real.db` |
 | 账户 | QMT 策略源码里的 `ACCOUNT_ID`；启停策略即开关 |
-| 执行 | 盘后固定价格 `prType=49`，15:00:05 起试 / 15:01 兜底 / 15:28 撤单 / 15:30 终态并拍持仓快照 |
+| 执行 | 收盘集合竞价 `prType=11`，14:57:05 提交 / 15:00:05 撤单 / 15:00:30 终态 / 15:01 拍持仓快照；限价=竞价前最后成交价买卖各偏 1% |
 | 授权 | 无 marker。QMT 启停即开关 |
 | 后续切换 | `alla_v4_ladder_k3h5_postclose_real`（100 万、top3×h5、risk 0.90） |
 
 这不是旧 CSI1000 的「欠仓到 30 只再卖」。每天买当日第 1 名开一层，持满 5 个交易日到期卖；
 同一只可以多层叠加。每日买入预算是 `总资产 × 1.0 / 5`，再和现金取小。买单只带
-`target_value`、计划股数为 0；QMT 用已确定的官方收盘价算整手（科创板盘后最低 200 股）。
+`target_value`、计划股数为 0；QMT 用竞价前最后成交价算整手，买单按该价上浮 1% 预留现金。
 同名到期卖与当日买在 bridge 提交时刻净额化。
 
 ## 未调度的配置
@@ -53,7 +54,7 @@ T 日 22:30 Mac  postclose（导入 → postmarket → Tushare 日更 → 股票
              → 发布下一开市日 protocol-v2 批次 → evening 完整性检查
                                   │
                                   ▼
-T+1 日 Windows QMT  15:00:05 起试 / 15:01 兜底 → prType=49 → 15:30 终态并拍持仓快照
+T+1 日 Windows QMT  14:57:05 提交 → prType=11 last±1% → 15:00:30 终态并拍持仓快照
 ```
 
 22:30 是为了等 Tushare 收盘数据落稳。发布只装信号日前 150 个日历日的特征表
@@ -98,10 +99,13 @@ QMT 用策略源码里的 `ACCOUNT_ID` 下单。`QMT_REAL_ACCOUNT_ID` 只给探�
 
 Windows 安装与生产渲染见 [QMT 部署说明](qmt_strategy/README_QMT.md)。仓库里的
 `qmt_signal_bridge.py` 是保守模板（集合竞价、一手上限、不抵销）。生产形态由
-`live_trading/scripts/render_qmt_runtime.py` 渲出：盘后通道、开启阶梯抵销、
+`live_trading/scripts/render_qmt_runtime.py` 渲出：收盘集合竞价、开启阶梯抵销、
 `MAX_ORDER_QUANTITY=0`。不要直接拿仓库模板当生产脚本。
 
-Mac 的 `live.bridge_root` 必须指向已挂载的共享目录，发布前至少确认：
+Mac 的 `live.bridge_root` 必须指向已挂载的共享目录。cron 没有 Finder 会话，
+看不见桌面已经挂上的 SMB；调度/导入/发布会先跑
+`live_trading/scripts/ensure_bridge_mount.sh`。可在 `~/.qlib_live_env` 覆盖
+`QLIB_BRIDGE_SMB_URL`（默认 `//qmtshare@192.168.0.110/qmt_bridge`）。
 
 ```bash
 test -d /Volumes/qmt_bridge/inbox
@@ -209,7 +213,7 @@ bash live_trading/run_monitor_cron.sh evening alla_v4_ladder_k1h5_postclose_real
 - QMT 重启：从 `processing/` 和 `state/active_*.json` 恢复，已标记提交的订单不重提；
 - 活动状态损坏：保留 `.corrupt_*` 证据并把整批视为可能已提交，只查询/撤单/终结，绝不重提；
 - 畸形或超限批次：移入 archive；已有同名归档不覆盖，使用 `.repeat_*` 保留两份；
-- 15:00:05 起试、15:01 之后不再为等收盘价而 defer；15:28 撤未完成单，15:30 写终态；
+- 14:57:05 提交竞价、15:00:05 撤未完成单，15:00:30 写终态；
 - 回滚：停用 cron、停止 QMT 策略、保留 SQLite 与 bridge archive。不要自动恢复旧 CSI300 / CSI1000 调度。
 
 发生账本/券商持仓股数对不上时，先停 QMT 策略并停止下一日 LIVE 发布，再按委托、成交和账户快照核对。

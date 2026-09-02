@@ -24,9 +24,9 @@ parity:
       sha256: "ff795a6fe4500e0e2affc9c8aa14be603173290a93ee3b04fc91907796ff5525"
   execution_price_proxy: "close"
   broker_environment: "REAL"
-  close_auction_price_type: 49
-  execution_session: "AFTER_HOURS_FIXED_PRICE"
-  signal_price_type: "AFTER_HOURS_CLOSE"
+  close_auction_price_type: 11
+  execution_session: "CLOSE_AUCTION"
+  signal_price_type: "CLOSE_AUCTION_LIMIT"
   netting: "live_only"
   absorb_broker_excess: "live_only"
   no_buyable_substitution: "live_only"

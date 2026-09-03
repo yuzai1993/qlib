@@ -32,7 +32,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-09-02-auction-offset"
+SOURCE_VERSION = "2026-09-03-commission-086"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -87,7 +87,9 @@ _EXECUTION_PROFILES = {
 }
 
 # BUY-side fee estimate used only for local cash reservation.
-COMMISSION_RATE = 0.00020
+# Keep in sync with the current observation account:
+# live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml fees.
+COMMISSION_RATE = 0.000086  # 0.86 per 10k; min commission still 5
 MIN_COMMISSION = 5.0
 TRANSFER_FEE_RATE = 0.00001
 

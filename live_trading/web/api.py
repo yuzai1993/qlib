@@ -13,7 +13,10 @@ from fastapi import APIRouter, Query
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.fill_importer import FillImporter, LiveRecorder
 from live_trading.modules.monitor_store import MonitorStore
-from live_trading.modules.snapshot import compute_performance_metrics
+from live_trading.modules.snapshot import (
+    compute_performance_metrics,
+    value_live_book,
+)
 
 MONITOR_STAGES = ["postmarket", "report", "evening"]
 PROBE_STRATEGY_ID = "csi1000_pr49_one_lot_probe"
@@ -73,11 +76,56 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             "FAILED": "FAILED",
         }.get(lifecycle.get("state"), "FAILED")
 
+    def _fill_mark_prices(asof: Optional[str]) -> dict:
+        """现价优先级：估值快照 > 券商市值/股数 > 成交均价。
+
+        券商/成交按快照日再回落到今天，避免日报早于回执入库时整页空白。
+        """
+        prices = {}
+        current = recorder.get_positions()
+        if asof:
+            for row in store.get_position_snapshots(asof):
+                if row.get("close_price") is not None:
+                    prices[row["stock_code"]] = float(row["close_price"])
+        today = _date.today().strftime("%Y-%m-%d")
+        mark_days = []
+        for day in (asof, today):
+            if day and day not in mark_days:
+                mark_days.append(day)
+        for day in mark_days:
+            broker_mv = recorder.get_broker_position_market_values(day)
+            for code, mv in broker_mv.items():
+                if code in prices or mv is None:
+                    continue
+                shares = current.get(code, {}).get("shares")
+                if shares:
+                    prices[code] = float(mv) / shares
+            for fill in recorder.get_fills_by_dates([day]):
+                if fill.get("status") not in {"FILLED", "PARTIAL"}:
+                    continue
+                code = fill.get("stock_code")
+                px = fill.get("avg_price")
+                if code and px and code not in prices:
+                    prices[code] = float(px)
+        return prices
+
+    def _live_book(asof: Optional[str] = None):
+        latest = store.get_latest_snapshot()
+        mark_date = asof or (latest["date"] if latest else None)
+        book = value_live_book(
+            recorder.get_positions(),
+            recorder.get_cash(),
+            _fill_mark_prices(mark_date),
+        )
+        book["snapshot_date"] = mark_date
+        return book
+
     router = APIRouter()
 
     @router.get("/overview")
     def overview():
         latest = store.get_latest_snapshot()
+        book = _live_book(latest["date"] if latest else None)
         current_strategy_id = config["live"].get("strategy_id", "")
         active = _latest_active(current_strategy_id, "LIVE")
         lifecycle = _probe_lifecycle()
@@ -103,9 +151,13 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
             "nav": metrics["nav"],
             "sharpe": metrics["sharpe"],
             "max_drawdown": metrics["max_drawdown"],
-            "cash": recorder.get_cash(),
+            "n_returns": metrics["n_returns"],
+            "total_fees": recorder.sum_fees(),
+            "cash": book["cash"],
+            "market_value": book["market_value"],
+            "total_value": book["total_value"],
             "account_value_adjustment": recorder.get_value_adjustment(),
-            "position_count": len(recorder.get_positions()),
+            "position_count": len(book["positions"]),
             "today": today,
             "stages": stage_status,
             "recent_alerts": alerts,
@@ -176,35 +228,22 @@ def create_router(config: dict, project_root: Path) -> APIRouter:
 
     @router.get("/positions")
     def positions():
-        current = recorder.get_positions()
         latest = store.get_latest_snapshot()
-        snap_rows = {}
-        if latest:
-            snap_rows = {r["stock_code"]: r
-                         for r in store.get_position_snapshots(latest["date"])}
+        book = _live_book(latest["date"] if latest else None)
         names = _names()
         pred_date, preds = _latest_predictions()
         result = []
-        for code, p in sorted(current.items()):
-            row = snap_rows.get(code, {})
+        for row in book["positions"]:
             result.append(_attach_score({
-                "stock_code": code,
-                "name": names.get(code, ""),
-                "shares": p["shares"],
-                "avg_cost": p["avg_cost"],
-                "close_price": row.get("close_price"),
-                "market_value": row.get("market_value"),
-                "profit": row.get("profit"),
-                "weight": row.get("weight"),
-                "snapshot_date": latest["date"] if latest else None,
-            }, preds, code))
-        cash_weight = None
-        if latest and latest.get("total_value"):
-            cash_weight = latest["cash"] / latest["total_value"]
+                **row,
+                "name": names.get(row["stock_code"], ""),
+                "snapshot_date": book["snapshot_date"],
+            }, preds, row["stock_code"]))
         return {
             "positions": result,
-            "cash": recorder.get_cash(),
-            "cash_weight": cash_weight,
+            "cash": book["cash"],
+            "cash_weight": book["cash_weight"],
+            "total_value": book["total_value"],
             "prediction_date": pred_date,
         }
 

@@ -23,12 +23,6 @@ const fmtNum = v => v == null ? '—' : v.toLocaleString('zh-CN');
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function modeBadge(mode) {
-    return mode === 'LIVE'
-        ? '<span class="badge badge-live">LIVE</span>'
-        : '<span class="badge badge-sim">SIM</span>';
-}
-
 /* ---------- 概览 ---------- */
 
 async function renderDashboard(token) {
@@ -45,11 +39,12 @@ async function renderDashboard(token) {
     } else {
         html += `<div class="card-grid">
             <div class="card"><div class="card-label">总资产</div>
-                <div class="card-value">${fmtMoney(s.total_value)}</div></div>
+                <div class="card-value">${fmtMoney(ov.total_value ?? s.total_value)}</div></div>
             <div class="card"><div class="card-label">净值</div>
                 <div class="card-value ${navClass(ov.nav)}">${fmtNav(ov.nav)}</div></div>
             <div class="card"><div class="card-label">夏普</div>
-                <div class="card-value ${pctClass(ov.sharpe)}">${fmtSharpe(ov.sharpe)}</div></div>
+                <div class="card-value ${pctClass(ov.sharpe)}">${fmtSharpe(ov.sharpe)}</div>
+                <div class="card-sub">${ov.n_returns ? `${ov.n_returns} 个交易日` : '样本不足'}</div></div>
             <div class="card"><div class="card-label">最大回撤</div>
                 <div class="card-value ${pctClass(ov.max_drawdown)}">${fmtPct(ov.max_drawdown)}</div></div>
         </div>`;
@@ -57,6 +52,8 @@ async function renderDashboard(token) {
     }
 
     html += '<h3>持仓</h3>' + positionsTable(pos);
+    html += `<div class="card" style="margin-top:16px"><div class="card-label">累计交易费用</div>
+        <div class="card-value">${fmtMoney(ov.total_fees)}</div></div>`;
 
     content.innerHTML = html;
     if (s) drawNavChart(nav, ov.benchmark_name || '基准');
@@ -142,26 +139,13 @@ async function renderBatches(token) {
         content.innerHTML = html + '<div class="empty">暂无批次</div>';
         return;
     }
-    html += `<table><thead><tr>
-        <th>批次</th><th>策略</th><th>执行通道</th><th>交易日</th><th>模式</th><th>账号</th><th>状态</th>
-        <th>计划</th><th>终态</th><th>缺失</th><th>发布于</th></tr></thead><tbody>`;
+    html += `<table><thead><tr><th>批次</th></tr></thead><tbody>`;
     for (const b of batches) {
         const isSuperseded = b.lifecycle_status === 'SUPERSEDED';
-        const status = isSuperseded
-            ? `<span class="badge badge-muted">已废弃 → ${esc(b.superseded_by || '—')}</span>`
-            : '<span class="badge badge-ok">有效</span>';
-        const missing = isSuperseded ? '—' : b.missing;
-        const missCls = isSuperseded ? '' : (b.missing > 0 ? 'neg' : 'pos');
         html += `<tr class="clickable ${isSuperseded ? 'row-muted' : ''}" data-batch="${esc(b.batch_id)}">
-            <td>${esc(b.batch_id)}</td><td>${esc(b.strategy_id || '—')}</td>
-            <td>${esc(b.execution_profile || '—')}</td><td>${esc(b.trade_date)}</td>
-            <td>${modeBadge(b.mode)}</td>
-            <td>${esc(b.account_id || '—')}</td><td>${status}</td>
-            <td>${b.planned}</td><td>${b.terminal}</td>
-            <td class="${missCls}">${missing}</td>
-            <td>${esc(b.created_at || '')}</td></tr>`;
+            <td>${esc(b.batch_id)}</td></tr>`;
         html += `<tr class="fills-row" id="fills-${esc(b.batch_id)}" style="display:none">
-            <td colspan="11"></td></tr>`;
+            <td></td></tr>`;
     }
     html += '</tbody></table>';
     content.innerHTML = html;
@@ -189,7 +173,7 @@ async function toggleBatchDetail(batchId, token) {
     } else {
         html += `<table><thead><tr>
             <th>订单号</th><th>代码 / 名称</th><th>方向</th><th>数量</th>
-            <th>限价</th><th>优先级</th><th>预测分</th><th>回执</th></tr></thead><tbody>`;
+            <th>目标买入金额</th><th>优先级</th><th>预测分</th><th>回执</th></tr></thead><tbody>`;
         for (const o of orders) {
             const f = fillById[o.client_order_id];
             let fillCell = '<span class="card-sub">等待回执</span>';
@@ -201,12 +185,13 @@ async function toggleBatchDetail(batchId, token) {
                         ? ` ${fmtNum(f.filled_qty)}@${f.avg_price?.toFixed(2) ?? '—'}`
                         : '');
             }
+            const targetAmt = o.side === 'BUY' ? fmtMoney(o.target_value) : '—';
             html += `<tr>
                 <td>${esc(o.client_order_id)}</td>
                 <td style="text-align:left">${codeCell(o.stock_code, o.name)}</td>
                 <td>${esc(o.side)}</td>
                 <td>${fmtNum(o.quantity)}</td>
-                <td>${o.limit_price?.toFixed(2) ?? '—'}</td>
+                <td>${targetAmt}</td>
                 <td>${o.priority ?? '—'}</td>
                 <td>${scoreCell(o.score, o.score_rank)}</td>
                 <td style="text-align:left">${fillCell}</td></tr>`;

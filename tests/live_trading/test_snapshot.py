@@ -8,9 +8,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from live_trading.modules.snapshot import (
+    apply_benchmark_closes,
     build_snapshot,
     compute_performance_metrics,
     sum_live_fills_amount,
+    value_live_book,
 )
 
 
@@ -248,7 +250,7 @@ def test_performance_baseline_populates_first_day_returns():
 
 def test_performance_metrics_empty():
     assert compute_performance_metrics([]) == {
-        "nav": None, "sharpe": None, "max_drawdown": None,
+        "nav": None, "sharpe": None, "max_drawdown": None, "n_returns": 0,
     }
 
 
@@ -259,6 +261,47 @@ def test_performance_metrics_first_day_is_unit_nav():
     assert metrics["nav"] == pytest.approx(1.0)
     assert metrics["sharpe"] is None
     assert metrics["max_drawdown"] == pytest.approx(0.0)
+    assert metrics["n_returns"] == 0
+
+
+def test_value_live_book_marks_to_cash_plus_stock():
+    book = value_live_book(
+        {"600000.SH": {"shares": 800, "avg_cost": 10.0}},
+        cash=10_000.0,
+        prices={"600000.SH": 11.0},
+    )
+    assert book["market_value"] == pytest.approx(8_800.0)
+    assert book["total_value"] == pytest.approx(18_800.0)
+    assert book["cash_weight"] == pytest.approx(10_000.0 / 18_800.0)
+    row = book["positions"][0]
+    assert row["close_price"] == pytest.approx(11.0)
+    assert row["profit"] == pytest.approx(800.0)
+    assert row["weight"] == pytest.approx(8_800.0 / 18_800.0)
+
+
+def test_value_live_book_skips_missing_prices():
+    book = value_live_book(
+        {"600000.SH": {"shares": 800, "avg_cost": 10.0}},
+        cash=10_000.0,
+        prices={},
+    )
+    assert book["market_value"] == pytest.approx(0.0)
+    assert book["total_value"] == pytest.approx(10_000.0)
+    assert book["positions"][0]["close_price"] is None
+    assert book["positions"][0]["weight"] is None
+
+
+def test_apply_benchmark_closes_compounds_from_first_print():
+    rows = apply_benchmark_closes(
+        [{"date": "2026-08-28", "daily_return": None},
+         {"date": "2026-08-31", "daily_return": 0.0},
+         {"date": "2026-09-01", "daily_return": 0.0}],
+        {"2026-08-28": 100.0, "2026-08-31": 110.0, "2026-09-01": 99.0},
+    )
+    assert rows[0]["benchmark_cumulative_return"] == pytest.approx(0.0)
+    assert rows[1]["benchmark_daily_return"] == pytest.approx(0.10)
+    assert rows[1]["benchmark_cumulative_return"] == pytest.approx(0.10)
+    assert rows[2]["benchmark_cumulative_return"] == pytest.approx(1.10 * 0.90 - 1)
 
 
 def test_performance_metrics_nav_sharpe_and_drawdown():
@@ -273,3 +316,4 @@ def test_performance_metrics_nav_sharpe_and_drawdown():
     std = ((0.10 - mean) ** 2 + (-0.05 - mean) ** 2) ** 0.5  # ddof=1, n=2
     assert metrics["sharpe"] == pytest.approx(mean / std * (250 ** 0.5))
     assert metrics["max_drawdown"] == pytest.approx(1.045 / 1.10 - 1)
+    assert metrics["n_returns"] == 2

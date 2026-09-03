@@ -2142,6 +2142,15 @@ class LiveRecorder:
             ).fetchone()
             return float(row["s"])
 
+    def sum_fees(self) -> float:
+        """账本已入账的 LIVE 交易费用合计。"""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT COALESCE(SUM(applied_fee), 0) AS s "
+                "FROM fills WHERE mode='LIVE'",
+            ).fetchone()
+            return float(row["s"])
+
     def sum_fees_by_date(self, trade_date: str) -> float:
         """当日已扣交易费用合计（按 batches.trade_date 关联）。"""
         with self._conn() as conn:

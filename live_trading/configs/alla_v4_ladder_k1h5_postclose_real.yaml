@@ -84,8 +84,8 @@ exchange:
   freq: "day"
   deal_price: "close"
   limit_threshold: "market_cn"
-  open_cost: 0.00021
-  close_cost: 0.00071
+  open_cost: 0.000096
+  close_cost: 0.000596
   min_cost: 5.0
   trade_unit: 100
 
@@ -109,7 +109,7 @@ storage:
   log_dir: "live_trading/logs/alla_v4_ladder_k1h5_postclose_real"
 
 fees:
-  commission_rate: 0.00020
+  commission_rate: 0.000086  # 万0.86；低于最低佣金门槛时仍收 5 元
   min_commission: 5.0
   stamp_duty_rate: 0.0005
   transfer_fee_rate: 0.00001

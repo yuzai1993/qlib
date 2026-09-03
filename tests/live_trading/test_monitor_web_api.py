@@ -186,9 +186,13 @@ def test_overview(client):
     assert data["account_value_adjustment"] == pytest.approx(-681_126.98)
     assert data["position_count"] == 2
     assert len(data["recent_alerts"]) == 1
+    assert data["market_value"] == pytest.approx(15_050.0)
+    assert data["total_value"] == pytest.approx(data["cash"] + 15_050.0)
     assert data["nav"] == pytest.approx(1.0039)
     assert data["sharpe"] is None  # 只有 1 个有效日收益
+    assert data["n_returns"] == 1
     assert data["max_drawdown"] == pytest.approx(0.0)
+    assert data["total_fees"] == pytest.approx(fees)
 
 
 def test_overview_exposes_active_account_and_batch(client):
@@ -241,6 +245,49 @@ def test_positions(client):
     assert len(data["positions"]) == 2
     sh = next(p for p in data["positions"] if p["stock_code"] == "600000.SH")
     assert sh["close_price"] == 11.0 and sh["snapshot_date"] == "2026-07-13"
+    assert sh["market_value"] == pytest.approx(8_800.0)
+    assert sh["profit"] == pytest.approx(400.0)
+    assert data["total_value"] == pytest.approx(data["cash"] + 15_050.0)
+
+
+def test_positions_mark_from_fill_when_snapshot_missing(tmp_path):
+    db = tmp_path / "live.db"
+    recorder = LiveRecorder(str(db), opening_cash=100_000.0)
+    order = SignalOrder(
+        batch_id=BATCH, client_order_id="20260713001B",
+        stock_code="600000.SH", instrument_qlib="SH600000",
+        side="BUY", quantity=0, target_value=8_500.0,
+        price_type="CLOSE_AUCTION_LIMIT", limit_price=0.0, priority=20,
+        reason="topk_dropout",
+    )
+    header = BatchHeader(
+        batch_id=BATCH, strategy_id="csi300_topk10",
+        trade_date="2026-07-13", signal_date="2026-07-12",
+        account_id="88813528", account_type="STOCK",
+        account_environment="SIMULATION", mode="LIVE",
+        created_at="2026-07-12T20:00:00+08:00", order_count=1, checksum="",
+    )
+    recorder.record_publish_plan(header, [order])
+    recorder.apply_fill(_fill_event("20260713001B"))
+    store = MonitorStore(str(db))
+    store.upsert_daily_snapshot({
+        "date": "2026-07-13", "cash": 100_000.0, "market_value": 0.0,
+        "total_value": 100_000.0, "daily_return": None, "cumulative_return": 0.0,
+        "position_count": 0, "turnover": None,
+    })
+    app = create_app({
+        "live": {"bridge_root": str(tmp_path / "bridge"),
+                 "strategy_id": "csi300_topk10", "default_mode": "LIVE",
+                 "execution_session": "CLOSE_AUCTION"},
+        "monitor": {"benchmark_name": "中证全指"},
+        "storage": {"db_path": str(db)},
+    }, Path("/"))
+    data = TestClient(app).get("/api/positions").json()
+    sh = next(p for p in data["positions"] if p["stock_code"] == "600000.SH")
+    assert sh["close_price"] == pytest.approx(10.5)
+    assert sh["market_value"] == pytest.approx(8_400.0)
+    ov = TestClient(app).get("/api/overview").json()
+    assert ov["total_value"] == pytest.approx(ov["cash"] + sh["market_value"])
 
 
 def test_positions_history(client):
@@ -343,8 +390,13 @@ def test_spa_keeps_core_pages_and_hides_ops_noise():
     assert "ov.sharpe" in js
     assert "ov.max_drawdown" in js
     assert "positionsTable(pos)" in js
+    assert "ov.total_value" in js
+    assert "ov.total_fees" in js
+    assert "累计交易费用" in js
+    assert "目标买入金额" in js
+    assert "限价" not in js
+    assert "<th>批次</th></tr>" in js
     assert "lifecycle_status" in js
-    assert "已废弃" in js
 
 
 def test_web_monitor_exposes_no_marker_or_publish_controls(client):

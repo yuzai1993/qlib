@@ -80,8 +80,8 @@ backtest:
     freq: "day"
     deal_price: "close"
     limit_threshold: "market_cn"
-    open_cost: 0.00021
-    close_cost: 0.00071
+    open_cost: 0.000096
+    close_cost: 0.000596
     min_cost: 5.0
     trade_unit: 100
 

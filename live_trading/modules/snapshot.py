@@ -138,6 +138,82 @@ def build_snapshot(date, positions, cash, prices, bench_close,
     return daily_row, position_rows, missing
 
 
+def value_live_book(positions, cash, prices):
+    """按给定现价给当前账本标价。缺价的票 close/市值/盈亏为 None，不计入市值。
+
+    总资产 = 现金 + 已标价股票市值（不含应收、待上市、红利税、账户调整）。
+    """
+    rows = []
+    market_value = 0.0
+    cash = float(cash)
+    for code in sorted(positions):
+        p = positions[code]
+        shares = int(p["shares"])
+        avg_cost = float(p["avg_cost"])
+        close = prices.get(code)
+        if close is None:
+            mv = None
+            profit = None
+        else:
+            close = float(close)
+            mv = shares * close
+            profit = (close - avg_cost) * shares
+            market_value += mv
+        rows.append({
+            "stock_code": code,
+            "shares": shares,
+            "avg_cost": avg_cost,
+            "close_price": close,
+            "market_value": mv,
+            "profit": profit,
+            "weight": None,
+        })
+    total_value = cash + market_value
+    for row in rows:
+        if row["market_value"] is not None and total_value:
+            row["weight"] = row["market_value"] / total_value
+    return {
+        "positions": rows,
+        "cash": cash,
+        "market_value": market_value,
+        "total_value": total_value,
+        "cash_weight": (cash / total_value) if total_value else None,
+    }
+
+
+def apply_benchmark_closes(snapshots, closes_by_date):
+    """用指数收盘价回填快照的基准收益字段；缺价日保持 None。"""
+    out = []
+    prev_close = None
+    prev_cum = None
+    for row in sorted(snapshots, key=lambda r: r["date"]):
+        row = dict(row)
+        close = closes_by_date.get(row["date"])
+        if close is None:
+            row["benchmark_close"] = None
+            row["benchmark_daily_return"] = None
+            row["benchmark_cumulative_return"] = None
+            row["excess_return"] = None
+        else:
+            close = float(close)
+            daily = (close / prev_close - 1.0) if prev_close else None
+            if prev_cum is None or daily is None:
+                cum = 0.0
+            else:
+                cum = (1.0 + prev_cum) * (1.0 + daily) - 1.0
+            row["benchmark_close"] = close
+            row["benchmark_daily_return"] = daily
+            row["benchmark_cumulative_return"] = cum
+            dr = row.get("daily_return")
+            row["excess_return"] = (
+                dr - daily if dr is not None and daily is not None else None
+            )
+            prev_close = close
+            prev_cum = cum
+        out.append(row)
+    return out
+
+
 # 与 EXPERIMENT_STANDARD 执行层夏普一致：算术年化 / (日收益标准差 ×√250)
 _SHARPE_DAYS = 250
 
@@ -150,7 +226,8 @@ def compute_performance_metrics(snapshots):
     最大回撤：净值相对历史峰值的最大跌幅（``min(nav / peak - 1)``）。
     """
     if not snapshots:
-        return {"nav": None, "sharpe": None, "max_drawdown": None}
+        return {"nav": None, "sharpe": None, "max_drawdown": None,
+                "n_returns": 0}
 
     rows = sorted(snapshots, key=lambda r: r["date"])
     latest = rows[-1]
@@ -186,4 +263,7 @@ def compute_performance_metrics(snapshots):
                 if dd < max_dd:
                     max_dd = dd
 
-    return {"nav": nav, "sharpe": sharpe, "max_drawdown": max_dd}
+    return {
+        "nav": nav, "sharpe": sharpe, "max_drawdown": max_dd,
+        "n_returns": len(returns),
+    }

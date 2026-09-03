@@ -100,7 +100,7 @@ def _profile_roots(tmp_path, profile):
 def test_qmt_cash_reservation_fees_match_live_config(bridge):
     config_path = (
         REPO_ROOT / "live_trading" / "configs" /
-        "csi1000_b6m_b2s_postclose.yaml"
+        "alla_v4_ladder_k1h5_postclose_real.yaml"
     )
     fees = yaml.safe_load(config_path.read_text(encoding="utf-8"))["fees"]
 

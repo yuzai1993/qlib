@@ -43,6 +43,17 @@ def test_day_executions_splits_sides_and_sums_applied_qty():
     assert sold == {"SZ000001": 400.0}
 
 
+def test_day_executions_normalizes_qmt_codes_to_qlib():
+    """回执是 QMT 码，发布对账是 qlib 码；不统一就会把当日新层吸进 pending。"""
+    sold, filled = day_executions([
+        _fill(side="BUY", stock_code="003816.SZ", applied_qty=13600),
+        _fill(side="SELL", stock_code="601998.SH", applied_qty=3000),
+    ])
+
+    assert filled == {"SZ003816": 13600.0}
+    assert sold == {"SH601998": 3000.0}
+
+
 def test_day_executions_ignores_non_live_and_non_terminal_fills():
     sold, filled = day_executions([
         _fill(client_order_id="c1", mode="SIMULATE", applied_qty=100),

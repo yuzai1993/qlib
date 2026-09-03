@@ -13,8 +13,17 @@ from __future__ import annotations
 
 import logging
 
+from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.cohort_store import advanced_state
 from live_trading.modules.signal_schema import TERMINAL_FILL_STATUS
+
+
+def _ledger_instrument(stock_code: str) -> str:
+    """回执是 QMT 码，分层账本与发布对账用 qlib 码。"""
+    code = str(stock_code)
+    if "." in code:
+        return qmt_to_qlib(code)
+    return code
 
 logger = logging.getLogger("live_trading.cohort_advance")
 
@@ -38,7 +47,7 @@ def day_executions(
         if quantity <= 0:
             continue
         bucket = filled if fill.get("side") == "BUY" else sold
-        code = fill["stock_code"]
+        code = _ledger_instrument(fill["stock_code"])
         bucket[code] = bucket.get(code, 0.0) + quantity
     return sold, filled
 

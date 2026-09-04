@@ -291,6 +291,8 @@ class LiveRecorder:
                     name TEXT NOT NULL,
                     updated_at TEXT DEFAULT (datetime('now', 'localtime'))
                 );
+                CREATE INDEX IF NOT EXISTS idx_stock_names_instrument
+                    ON stock_names(instrument);
 
                 CREATE TABLE IF NOT EXISTS cash_flows (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -799,6 +801,10 @@ class LiveRecorder:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_fills_batch ON fills(batch_id)")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_orders_batch ON signal_orders(batch_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_stock_names_instrument "
+            "ON stock_names(instrument)"
         )
 
     # ---------- batches ----------

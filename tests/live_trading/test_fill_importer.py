@@ -946,6 +946,15 @@ def test_stock_names_roundtrip(env):
     assert recorder.get_stock_names()["600000.SH"] == "浦发银行"
 
 
+def test_stock_names_instrument_is_indexed(env):
+    _, recorder, _ = env
+    with sqlite3.connect(str(recorder.db_path)) as conn:
+        names = {
+            row[1] for row in conn.execute("PRAGMA index_list('stock_names')")
+        }
+    assert "idx_stock_names_instrument" in names
+
+
 def test_prediction_ranks_break_score_ties_by_instrument(env):
     _, recorder, _ = env
     recorder.save_predictions(

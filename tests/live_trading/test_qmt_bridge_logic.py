@@ -847,7 +847,7 @@ def test_missing_live_ok_marker_does_not_block_close_auction_orders(
         _TickCtx(10.0, up_stop=11.0, down_stop=9.0), bridge.g.batch,
     )
 
-    assert [args[4:6] for args in submitted] == [(11, 9.90), (11, 10.10)]
+    assert [args[4:6] for args in submitted] == [(11, 9.98), (11, 10.02)]
     assert all(f["message"] != "simulated" for f in _read_fills(bridge))
 
 
@@ -885,7 +885,7 @@ def test_buy_phase_uses_one_cash_snapshot_and_reserves_between_orders(
     assert len(cash_reads) == 1
     assert [row["quantity"] for row in submitted] == [800, 100]
     assert all(row["price_type"] == 11 for row in submitted)
-    assert all(row["price"] == 10.10 for row in submitted)
+    assert all(row["price"] == 10.02 for row in submitted)
 
 
 def test_immutable_buy_maximum_caps_submission_when_rollout_cap_increases(
@@ -1101,24 +1101,24 @@ def test_close_auction_limit_price_fails_closed(bridge, side):
         bridge._instrument_limit_price(_TickCtx(10.0), "000001.SZ", side)
 
 
-def test_auction_offset_buy_is_last_plus_one_percent_rounded_up(bridge):
+def test_auction_offset_buy_is_last_plus_offset_rounded_up(bridge):
     ctx = _TickCtx(8.86, up_stop=9.75, down_stop=8.0)
-    assert bridge._auction_offset_limit_price(ctx, "601998.SH", "BUY") == 8.95
+    assert bridge._auction_offset_limit_price(ctx, "601998.SH", "BUY") == 8.88
 
 
-def test_auction_offset_sell_is_last_minus_one_percent_rounded_down(bridge):
+def test_auction_offset_sell_is_last_minus_offset_rounded_down(bridge):
     ctx = _TickCtx(8.86, up_stop=9.75, down_stop=8.0)
-    assert bridge._auction_offset_limit_price(ctx, "601998.SH", "SELL") == 8.77
+    assert bridge._auction_offset_limit_price(ctx, "601998.SH", "SELL") == 8.84
 
 
 def test_auction_offset_buy_clips_to_up_stop(bridge):
-    ctx = _TickCtx(10.0, up_stop=10.05, down_stop=9.0)
-    assert bridge._auction_offset_limit_price(ctx, "000001.SZ", "BUY") == 10.05
+    ctx = _TickCtx(10.0, up_stop=10.01, down_stop=9.0)
+    assert bridge._auction_offset_limit_price(ctx, "000001.SZ", "BUY") == 10.01
 
 
 def test_auction_offset_sell_clips_to_down_stop(bridge):
-    ctx = _TickCtx(10.0, up_stop=11.0, down_stop=9.95)
-    assert bridge._auction_offset_limit_price(ctx, "000001.SZ", "SELL") == 9.95
+    ctx = _TickCtx(10.0, up_stop=11.0, down_stop=9.99)
+    assert bridge._auction_offset_limit_price(ctx, "000001.SZ", "SELL") == 9.99
 
 
 def test_auction_offset_missing_last_price_fails_closed(bridge):
@@ -1128,7 +1128,7 @@ def test_auction_offset_missing_last_price_fails_closed(bridge):
         )
 
 
-def test_close_auction_buy_passorder_uses_last_plus_one_percent(
+def test_close_auction_buy_passorder_uses_last_plus_offset(
     bridge, monkeypatch,
 ):
     order = _order(coid="20260714001001B", side="BUY", priority=20)
@@ -1152,10 +1152,10 @@ def test_close_auction_buy_passorder_uses_last_plus_one_percent(
 
     assert len(submitted) == 1
     assert submitted[0][4] == 11
-    assert submitted[0][5] == 8.95
+    assert submitted[0][5] == 8.88
 
 
-def test_close_auction_sell_passorder_uses_last_minus_one_percent(
+def test_close_auction_sell_passorder_uses_last_minus_offset(
     bridge, monkeypatch,
 ):
     bridge.MAX_ORDER_QUANTITY = 0
@@ -1179,14 +1179,14 @@ def test_close_auction_sell_passorder_uses_last_minus_one_percent(
 
     assert len(submitted) == 1
     assert submitted[0][4] == 11
-    assert submitted[0][5] == 8.77
+    assert submitted[0][5] == 8.84
     assert submitted[0][6] == 800
 
 
 def test_close_auction_buy_reserves_at_offset_not_daily_up_limit(
     bridge, monkeypatch,
 ):
-    """涨停预留会把仓位压小；竞价应按即将提交的 last+1% 预留。"""
+    """涨停预留会把仓位压小；竞价应按即将提交的 last+0.2% 预留。"""
     bridge.MAX_ORDER_QUANTITY = 0
     order = _order(coid="20260714001001B", side="BUY", priority=20)
     order.update(target_value=20_000.0)
@@ -1208,7 +1208,7 @@ def test_close_auction_buy_reserves_at_offset_not_daily_up_limit(
     )
 
     assert len(submitted) == 1
-    assert submitted[0][4:7] == (11, 10.10, 1000)
+    assert submitted[0][4:7] == (11, 10.02, 1000)
 
 
 def test_persistent_log_appends_text_and_jsonl(bridge):

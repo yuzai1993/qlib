@@ -5,7 +5,7 @@
 `PR49_LIVE_OK_`；bridge 会忽略这些文件。停策略 = 当天不交易；开策略且 inbox 有
 LIVE 批次 = 到点下单。
 
-`qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并在 14:57 收盘集合竞价使用指定价 `prType=11`。先取竞价前最后成交价，买单上浮 1% 向上靠档，卖单下浮 1% 向下靠档，再夹到当日涨跌停。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
+`qmt_signal_bridge.py` 是 QMT 内置 Python 3.6 策略，消费 protocol-v2 批次并在 14:57 收盘集合竞价使用指定价 `prType=11`。先取竞价前最后成交价，买单上浮 0.2% 向上靠档，卖单下浮 0.2% 向下靠档，再夹到当日涨跌停。源码保持 ASCII，文件头 `#coding:gbk` 不得删除。
 
 策略源码里写死 `ACCOUNT_ID`。启停本策略就是交易开关；批次头不再带账号、环境或 mode。
 
@@ -108,8 +108,8 @@ intent 内容与对应批次后，才允许人工隔离该 intent；不得把它
    15:05 连续撮合前由终价门控挡住尚未结算的收盘价；
 3. 用 `get_full_tick` 的 `lastPrice` 取竞价前最后成交价，并用
    `get_instrument_detail`（旧版为 `get_instrumentdetail`）读取涨跌停以便夹价；
-4. 集合竞价调用 `prType=11`：买单 `lastPrice * 1.01` 向上靠 0.01 档，卖单
-   `lastPrice * 0.99` 向下靠 0.01 档，再夹到当日涨跌停；盘后固定价格调用
+4. 集合竞价调用 `prType=11`：买单 `lastPrice * 1.002` 向上靠 0.01 档，卖单
+   `lastPrice * 0.998` 向下靠 0.01 档，再夹到当日涨跌停；盘后固定价格调用
    `prType=49`，价格传当日官方收盘价（创业板买入限价不得低于收盘价，传 0
    会被拒），同时把官方收盘参考及来源写入日志；
 5. 查询到真实 QMT 委托编号后才写 `ACCEPTED`；
@@ -178,7 +178,7 @@ QMT 桥接不再实现 `snapshot_requests` 观察协议，也不再读取 `LIVE_
 | 15:00 后停止 | QMT 日志是否显示 timer 注册；版本是否退回 `run_time` |
 | LIVE 全部 simulated | QMT 是否绑对账号、策略是否在跑、批次是否被认领拒绝 |
 | BUY `official close unavailable` / `auction last price unavailable` | `get_full_tick` 的 `lastPrice` 是否已更新为正数 |
-| 涨跌停价无效 | `get_instrument_detail` 是否返回正的 `UpStopPrice`/`DownStopPrice`；竞价夹价失败时仍会用未夹的 last±1% |
+| 涨跌停价无效 | `get_instrument_detail` 是否返回正的 `UpStopPrice`/`DownStopPrice`；竞价夹价失败时仍会用未夹的 last±0.2% |
 | 账户查询失败 | QMT UI 绑定账号、`ACCOUNT_ID`、header account ID 是否一致 |
 | 回执缺失 | 检查 `processing/`、active state 与 `D:\qmt_bridge\logs\qmt_events_YYYY-MM-DD.jsonl` |
 | 探针日志缺失 | 检查 `D:\qmt_bridge\pr49_probe\logs\qmt_bridge_YYYY-MM-DD.log` 和 `qmt_events_YYYY-MM-DD.jsonl` |

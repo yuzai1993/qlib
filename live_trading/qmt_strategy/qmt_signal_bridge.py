@@ -8,7 +8,7 @@
 # Flow per batch (selected by EXECUTION_PROFILE):
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
-#     -> CLOSE_AUCTION: 14:57 / prType=11 / lastPrice +/- 1% clipped
+#     -> CLOSE_AUCTION: 14:57 / prType=11 / lastPrice +/- 0.2% clipped
 #        to the daily limit
 #     -> AFTER_HOURS_FIXED_PRICE: 15:05 / prType=49 / official close
 #     -> poll order status by remark (client_order_id)
@@ -32,7 +32,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-09-03-commission-086"
+SOURCE_VERSION = "2026-09-04-auction-offset-02"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -1425,7 +1425,7 @@ def _instrument_limit_price(ContextInfo, stock_code, side):
     return price
 
 
-AUCTION_PRICE_OFFSET = 0.01
+AUCTION_PRICE_OFFSET = 0.002
 PRICE_TICK = 0.01
 
 
@@ -1445,7 +1445,7 @@ def _optional_daily_limit(ContextInfo, stock_code, side):
 
 
 def _auction_offset_limit_price(ContextInfo, stock_code, side):
-    """Close-auction limit: last continuous trade +/- 1%, clipped to the daily limit."""
+    """Close-auction limit: last continuous trade +/- 0.2%, clipped to the daily limit."""
     last_price = _official_close(ContextInfo, stock_code)
     if last_price <= 0.0:
         raise ValueError("auction last price unavailable for %s" % stock_code)

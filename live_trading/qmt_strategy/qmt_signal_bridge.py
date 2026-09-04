@@ -32,7 +32,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-09-04-auction-offset-02"
+SOURCE_VERSION = "2026-09-05-fee-0854-snap17"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -49,7 +49,7 @@ TRADE_START = "14:57:05"
 SUBMIT_DEADLINE = "14:57:05"
 CANCEL_AT = "15:00:05"
 FINALIZE_AT = "15:00:30"
-SNAPSHOT_REFRESH_AT = "15:01:00"
+SNAPSHOT_REFRESH_AT = "17:00:00"
 
 _EXECUTION_PROFILES = {
     "CLOSE_AUCTION": {
@@ -60,7 +60,8 @@ _EXECUTION_PROFILES = {
         "submit_deadline": "14:57:05",
         "cancel_at": "15:00:05",
         "finalize_at": "15:00:30",
-        "snapshot_after": "15:01:00",
+        # Fees often post after 15:00; rewrite cash at 17:00 and observe.
+        "snapshot_after": "17:00:00",
         # Same as submit_after: the close auction has no sell-then-buy
         # sequencing, so the BUY phase must never wait.
         "sell_deadline": "14:57:05",
@@ -89,7 +90,7 @@ _EXECUTION_PROFILES = {
 # BUY-side fee estimate used only for local cash reservation.
 # Keep in sync with the current observation account:
 # live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml fees.
-COMMISSION_RATE = 0.000086  # 0.86 per 10k; min commission still 5
+COMMISSION_RATE = 0.0000854  # 0.854 per 10k; min commission still 5
 MIN_COMMISSION = 5.0
 TRANSFER_FEE_RATE = 0.00001
 
@@ -139,6 +140,7 @@ class State(object):
         self.trading_enabled = False
         self.timer_registered = False
         self.log_write_failure = None
+        self.pending_snapshot = None
 
 
 g = State()
@@ -842,13 +844,97 @@ def _write_account_snapshot(batch):
     )
 
 
+def _pending_snapshot_path():
+    return _path("state", "pending_snapshot.json")
+
+
+def _save_pending_snapshot(payload):
+    path = _pending_snapshot_path()
+    temporary = path + ".tmp"
+    try:
+        with open(temporary, "w") as handle:
+            handle.write(json.dumps(payload, sort_keys=True))
+        os.replace(temporary, path)
+    except Exception:
+        if os.path.isfile(temporary):
+            try:
+                os.remove(temporary)
+            except Exception:
+                pass
+        _log("pending snapshot persist failed:\n" + traceback.format_exc())
+
+
+def _clear_pending_snapshot():
+    path = _pending_snapshot_path()
+    if os.path.isfile(path):
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+
+
+def _load_pending_snapshot():
+    path = _pending_snapshot_path()
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r") as handle:
+            payload = json.loads(handle.read())
+        batch_id = payload.get("batch_id")
+        account_id = payload.get("account_id")
+        if not batch_id or not account_id:
+            return None
+        return {
+            "batch_id": batch_id,
+            "trade_date": payload.get("trade_date") or "",
+            "account_id": account_id,
+        }
+    except Exception:
+        return None
+
+
+def _queue_settled_snapshot(batch):
+    if not batch.execution_live or not batch.broker_authorized:
+        return
+    payload = {
+        "batch_id": batch.batch_id(),
+        "trade_date": batch.header.get("trade_date", ""),
+        "account_id": _account_id(batch),
+    }
+    g.pending_snapshot = payload
+    _save_pending_snapshot(payload)
+
+
+def _maybe_write_settled_snapshot():
+    pending = g.pending_snapshot
+    if pending is None:
+        pending = _load_pending_snapshot()
+        g.pending_snapshot = pending
+    if not pending:
+        return
+    trade_date = pending.get("trade_date") or ""
+    if trade_date and trade_date != _today():
+        g.pending_snapshot = None
+        _clear_pending_snapshot()
+        return
+    if _now_hms() < SNAPSHOT_REFRESH_AT:
+        return
+    ok = _dump_broker_snapshot(
+        pending["batch_id"], pending["trade_date"],
+        pending["account_id"], "settled",
+    )
+    if ok:
+        g.pending_snapshot = None
+        _clear_pending_snapshot()
+
+
 def _finalize_batch(batch):
     if batch.finalized:
         return
-    # One snapshot at finalize is enough: share counts are already final.
-    # The old 15:31 rewrite existed to refresh cash/market values for
-    # cash reconcile; daily reconcile now compares shares only.
+    # Share counts are final at close. Cash/fees often post later, so
+    # keep a second rewrite queued for snapshot_after (17:00 close-auction).
     _write_account_snapshot(batch)
+    _queue_settled_snapshot(batch)
     fills_path = _fills_path(batch.batch_id())
     # Empty batches still need a jsonl companion so the Mac importer can
     # archive the terminal receipt pair without warning.
@@ -2363,6 +2449,7 @@ def _advance(ContextInfo):
         _force_finalize_if_near_close(ContextInfo, g.batch)
     if g.batch is not None:
         _process_batch(ContextInfo, g.batch)
+    _maybe_write_settled_snapshot()
 
 
 def timer_callback(ContextInfo):
@@ -2520,6 +2607,8 @@ def init(ContextInfo):
         message="QMT bridge runtime configuration",
     )
     _load_processed()
+    if g.pending_snapshot is None:
+        g.pending_snapshot = _load_pending_snapshot()
     _recover_processing_batch()
     g.loaded = True
     try:

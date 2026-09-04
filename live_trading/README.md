@@ -25,7 +25,7 @@ Mac 只发布信号；Windows 上策略在跑、inbox 有 LIVE 批次，到点�
 | 模型 | v4 五种子日截面 z-score 等权 |
 | 账本 | `live_trading/data/alla_v4_ladder_k1h5_postclose_real.db` |
 | 账户 | QMT 策略源码里的 `ACCOUNT_ID`；启停策略即开关 |
-| 执行 | 收盘集合竞价 `prType=11`，14:57:05 提交 / 15:00:05 撤单 / 15:00:30 终态 / 15:01 拍持仓快照；限价=竞价前最后成交价买卖各偏 0.2% |
+| 执行 | 收盘集合竞价 `prType=11`，14:57:05 提交 / 15:00:05 撤单 / 15:00:30 终态 / 17:00 再拍账户快照；限价=竞价前最后成交价买卖各偏 0.2% |
 | 授权 | 无 marker。QMT 启停即开关 |
 | 后续切换 | `alla_v4_ladder_k3h5_postclose_real`（100 万、top3×h5、risk 0.90） |
 
@@ -54,7 +54,7 @@ T 日 22:30 Mac  postclose（导入 → postmarket → Tushare 日更 → 股票
              → 发布下一开市日 protocol-v2 批次 → evening 完整性检查
                                   │
                                   ▼
-T+1 日 Windows QMT  14:57:05 提交 → prType=11 last±0.2% → 15:00:30 终态并拍持仓快照
+T+1 日 Windows QMT  14:57:05 提交 → prType=11 last±0.2% → 15:00:30 终态 / 17:00 再拍账户快照
 ```
 
 22:30 是为了等 Tushare 收盘数据落稳。发布只装信号日前 150 个日历日的特征表

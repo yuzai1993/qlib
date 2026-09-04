@@ -104,6 +104,8 @@ def test_qmt_cash_reservation_fees_match_live_config(bridge):
     )
     fees = yaml.safe_load(config_path.read_text(encoding="utf-8"))["fees"]
 
+    assert fees["commission_rate"] == pytest.approx(0.0000854)
+    assert fees["transfer_fee_rate"] == pytest.approx(0.00001)
     assert bridge.COMMISSION_RATE == pytest.approx(fees["commission_rate"])
     assert bridge.MIN_COMMISSION == pytest.approx(fees["min_commission"])
     assert bridge.TRANSFER_FEE_RATE == pytest.approx(fees["transfer_fee_rate"])
@@ -123,7 +125,7 @@ def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
         "submit_deadline": "14:57:05",
         "cancel_at": "15:00:05",
         "finalize_at": "15:00:30",
-        "snapshot_after": "15:01:00",
+        "snapshot_after": "17:00:00",
         "sell_deadline": "14:57:05",
         "timer_start": "14:56:55",
     }
@@ -134,7 +136,7 @@ def test_close_auction_profile_keeps_legacy_runtime_contract(bridge, tmp_path):
     assert bridge.TRADE_START == "14:57:05"
     assert bridge.CANCEL_AT == "15:00:05"
     assert bridge.FINALIZE_AT == "15:00:30"
-    assert bridge.SNAPSHOT_REFRESH_AT == "15:01:00"
+    assert bridge.SNAPSHOT_REFRESH_AT == "17:00:00"
     assert bridge.g.trading_enabled is True
     postclose = next(call for call in context.calls if call[4] == "qlib_postclose_poll")
     assert postclose[1].endswith("145655")
@@ -199,7 +201,7 @@ def test_init_registers_post_close_timer_independent_of_market_bars(bridge):
     assert bridge.TRADE_START == "14:57:05"
     assert bridge.CANCEL_AT == "15:00:05"
     assert bridge.FINALIZE_AT == "15:00:30"
-    assert bridge.SNAPSHOT_REFRESH_AT == "15:01:00"
+    assert bridge.SNAPSHOT_REFRESH_AT == "17:00:00"
     assert bridge.MAX_ORDER_QUANTITY == 100
     calls = []
 
@@ -2174,6 +2176,54 @@ def test_finalize_writes_broker_account_snapshot(bridge, monkeypatch):
     assert (Path(bridge.BRIDGE_ROOT) / "outbound" /
             ("account_%s.done" % BATCH_ID)).exists()
     assert not _marker_path(bridge).exists()
+
+
+def test_settled_snapshot_waits_until_snapshot_after(bridge, monkeypatch):
+    batch = _live_batch(bridge)
+    cash = {"value": 153960.63}
+
+    class Account:
+        m_strAccountID = "8881352838"
+        m_dBalance = 299572.63
+        m_dInstrumentValue = 145612.0
+        m_dFrozenCash = 0.0
+
+        @property
+        def m_dAvailable(self):
+            return cash["value"]
+
+    def fake_query(account_id, account_type, kind):
+        if kind == "ACCOUNT":
+            return [Account()]
+        return [_PositionRow("000007", "SZ", 4800, cost=12.42)]
+
+    monkeypatch.setattr(
+        bridge, "get_trade_detail_data", fake_query, raising=False)
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "15:00:30")
+
+    bridge._finalize_batch(batch)
+    assert _read_account_snapshot(bridge)[0]["available_cash"] == pytest.approx(
+        153960.63)
+
+    cash["value"] = 153948.53
+    bridge._maybe_write_settled_snapshot()
+    assert _read_account_snapshot(bridge)[0]["available_cash"] == pytest.approx(
+        153960.63)
+
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "17:00:00")
+    bridge._maybe_write_settled_snapshot()
+    rows = _read_account_snapshot(bridge)
+    assert rows[0]["available_cash"] == pytest.approx(153948.53)
+    settled = [
+        row for row in _read_events(bridge)
+        if row["event"] == "ACCOUNT_SNAPSHOT" and row.get("label") == "settled"
+    ]
+    assert len(settled) == 1
+
+    cash["value"] = 1.0
+    bridge._maybe_write_settled_snapshot()
+    assert _read_account_snapshot(bridge)[0]["available_cash"] == pytest.approx(
+        153948.53)
 
 
 def test_account_snapshot_event_preserves_more_than_fifty_positions(

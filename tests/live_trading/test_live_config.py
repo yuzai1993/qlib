@@ -100,7 +100,7 @@ def _strategy_config(**live_overrides):
         "submit_after": "14:57:05",
         "cancel_at": "15:00:05",
         "finalize_at": "15:00:30",
-        "snapshot_after": "15:01:00",
+        "snapshot_after": "17:00:00",
     }
     live.update(live_overrides)
     return {
@@ -193,7 +193,7 @@ def test_ladder_strategy_rejects_missing_or_bad_horizon(tmp_path, strategy):
         ("submit_after", "14:57:06"),
         ("cancel_at", "15:00:06"),
         ("finalize_at", "15:00:31"),
-        ("snapshot_after", "15:01:01"),
+        ("snapshot_after", "17:00:01"),
     ],
 )
 def test_strategy_timing_fields_are_required_and_profile_bound(
@@ -215,7 +215,7 @@ def test_strategy_timing_fields_are_required_and_profile_bound(
             "submit_after": "14:57:05",
             "cancel_at": "15:00:05",
             "finalize_at": "15:00:30",
-            "snapshot_after": "15:01:00",
+            "snapshot_after": "17:00:00",
         },
     }
     path = tmp_path / "strategy.yaml"
@@ -487,7 +487,7 @@ def test_simulation_config_safety_fields_fail_closed(tmp_path, change, message):
             "submit_after": "14:57:05",
             "cancel_at": "15:00:05",
             "finalize_at": "15:00:30",
-            "snapshot_after": "15:01:00",
+            "snapshot_after": "17:00:00",
         },
     }
     section, key, value = change
@@ -528,7 +528,7 @@ def test_simulation_account_adjustment_fails_closed(
             "submit_after": "14:57:05",
             "cancel_at": "15:00:05",
             "finalize_at": "15:00:30",
-            "snapshot_after": "15:01:00",
+            "snapshot_after": "17:00:00",
         },
     }
     path = tmp_path / "paper.yaml"
@@ -556,7 +556,7 @@ def test_simulation_account_accepts_negative_adjustment_with_positive_nav(tmp_pa
             "submit_after": "14:57:05",
             "cancel_at": "15:00:05",
             "finalize_at": "15:00:30",
-            "snapshot_after": "15:01:00",
+            "snapshot_after": "17:00:00",
         },
     }
     path = tmp_path / "paper.yaml"
@@ -640,6 +640,9 @@ def test_observation_ladder_is_k1h5_full_risk_three_hundred_thousand():
     assert config["live"]["execution_session"] == "CLOSE_AUCTION"
     assert config["live"]["close_auction_price_type"] == 11
     assert config["live"]["submit_after"] == "14:57:05"
+    assert config["live"]["snapshot_after"] == "17:00:00"
+    assert config["fees"]["commission_rate"] == pytest.approx(0.0000854)
+    assert config["fees"]["transfer_fee_rate"] == pytest.approx(0.00001)
     assert config["live"]["strategy_id"] == "alla_v4_ladder_k1h5_postclose_real"
     assert config["monitor"]["broker_reconcile"]["cash_check"] is False
     assert "broker_environment" not in config["live"]

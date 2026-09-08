@@ -22,24 +22,24 @@ from live_trading.modules.monitor_store import MonitorStore
 
 def test_buy_fee_no_stamp_duty():
     # 买入 10 万：佣金 25 + 过户费 1，无印花税
-    fee = order_total_fee("BUY", 100000.0, DEFAULT_FEES)
+    fee = order_total_fee("BUY", 100000.0, DEFAULT_FEES, "600000.SH")
     assert fee == pytest.approx(25.0 + 1.0)
 
 
 def test_sell_fee_with_stamp_duty():
     # 卖出 10 万：佣金 25 + 过户费 1 + 印花税 50
-    fee = order_total_fee("SELL", 100000.0, DEFAULT_FEES)
+    fee = order_total_fee("SELL", 100000.0, DEFAULT_FEES, "600000.SH")
     assert fee == pytest.approx(25.0 + 1.0 + 50.0)
 
 
 def test_min_commission():
     # 买入 1 万：佣金 2.5 < 5，按 5 收
-    fee = order_total_fee("BUY", 10000.0, DEFAULT_FEES)
+    fee = order_total_fee("BUY", 10000.0, DEFAULT_FEES, "600000.SH")
     assert fee == pytest.approx(5.0 + 0.1)
 
 
 def test_zero_amount_no_fee():
-    assert order_total_fee("BUY", 0.0, DEFAULT_FEES) == 0.0
+    assert order_total_fee("BUY", 0.0, DEFAULT_FEES, "600000.SH") == 0.0
 
 
 def test_fees_from_config_merges_defaults():
@@ -52,13 +52,13 @@ def test_fees_from_config_merges_defaults():
 @pytest.mark.parametrize("side", ["HOLD", "", None])
 def test_order_fee_rejects_unknown_side(side):
     with pytest.raises(ValueError, match="side"):
-        order_total_fee(side, 1000.0, DEFAULT_FEES)
+        order_total_fee(side, 1000.0, DEFAULT_FEES, "600000.SH")
 
 
 @pytest.mark.parametrize("amount", [-1.0, float("nan"), float("inf")])
 def test_order_fee_rejects_invalid_amount(amount):
     with pytest.raises(ValueError, match="cum_amount"):
-        order_total_fee("BUY", amount, DEFAULT_FEES)
+        order_total_fee("BUY", amount, DEFAULT_FEES, "600000.SH")
 
 
 def test_fees_from_config_rejects_negative_or_non_finite_rates():

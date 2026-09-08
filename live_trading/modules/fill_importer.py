@@ -1887,7 +1887,7 @@ class LiveRecorder:
         与已扣 applied_fee 的差额即本次入账额。
         """
         cum_amount = float(fill.filled_qty) * float(fill.avg_price)
-        total_fee = order_total_fee(fill.side, cum_amount, self.fees)
+        total_fee = order_total_fee(fill.side, cum_amount, self.fees, fill.stock_code)
         fee_delta = total_fee - applied_fee
         if fee_delta <= 0:
             return 0.0
@@ -2176,7 +2176,7 @@ class LiveRecorder:
         """
         with self._conn() as conn:
             rows = conn.execute(
-                """SELECT f.batch_id, f.client_order_id, f.side,
+                """SELECT f.batch_id, f.client_order_id, f.side, f.stock_code,
                           f.status, f.applied_amount, f.applied_fee,
                           b.strategy_id
                    FROM fills f JOIN batches b ON f.batch_id = b.batch_id
@@ -2192,7 +2192,7 @@ class LiveRecorder:
                 ):
                     continue
                 target = order_total_fee(
-                    row["side"], row["applied_amount"], self.fees,
+                    row["side"], row["applied_amount"], self.fees, row["stock_code"],
                 )
                 delta = target - float(row["applied_fee"])
                 if abs(delta) <= 1e-9:

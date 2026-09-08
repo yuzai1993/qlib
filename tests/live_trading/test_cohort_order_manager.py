@@ -28,6 +28,20 @@ def _scores(mapping):
     return pd.Series(mapping, dtype=float)
 
 
+@pytest.mark.parametrize("code, budget", [("SZ000001", 99930.0), ("SH600000", 99929.0)])
+def test_cash_limited_budget_uses_market_specific_sell_fees(code, budget):
+    config = {**CONFIG, "strategy": {**CONFIG["strategy"], "topk": 1}}
+    manager = CohortOrderManager(config)
+    orders = manager.generate_orders(
+        scores=_scores({"SH600519": 1.0}),
+        cohort_state=_due_layer({code: 1000}),
+        broker_positions={code: 1000}, cash=0.0,
+        close_prices={code: 100.0}, total_value=1_000_000.0,
+    )
+    buy = next(o for o in orders if o["direction"] == "BUY")
+    assert buy["target_value"] == pytest.approx(budget)
+
+
 def _due_layer(shares):
     """构造一个层数已满、最老层为 shares 的账本状态。"""
     return CohortState(

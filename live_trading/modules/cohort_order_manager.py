@@ -15,6 +15,7 @@ import math
 
 import pandas as pd
 
+from live_trading.modules.code_map import qlib_to_qmt
 from live_trading.modules.cohort_store import CohortState, state_to_ledger
 from live_trading.modules.fees import fees_from_config, order_total_fee
 from qlib.contrib.strategy.cohort_ladder import (
@@ -57,7 +58,7 @@ class CohortOrderManager:
             if price is None or not math.isfinite(float(price)) or float(price) <= 0:
                 continue
             gross = float(price) * int(quantity)
-            total += gross - order_total_fee("SELL", gross, self.fees)
+            total += gross - order_total_fee("SELL", gross, self.fees, qlib_to_qmt(code))
         return total
 
     def generate_orders(

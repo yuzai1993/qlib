@@ -180,8 +180,8 @@ def test_overview(client):
     data = r.json()
     assert data["snapshot"]["date"] == "2026-07-13"
     # 10 万 - 两笔买入(8400+6000) - 费用 + 分红 380
-    fees = (order_total_fee("BUY", 8400.0, DEFAULT_FEES)
-            + order_total_fee("BUY", 6000.0, DEFAULT_FEES))
+    fees = (order_total_fee("BUY", 8400.0, DEFAULT_FEES, "600000.SH")
+            + order_total_fee("BUY", 6000.0, DEFAULT_FEES, "000001.SZ"))
     assert data["cash"] == pytest.approx(85600.0 - fees + 380.0)
     assert data["account_value_adjustment"] == pytest.approx(-681_126.98)
     assert data["position_count"] == 2

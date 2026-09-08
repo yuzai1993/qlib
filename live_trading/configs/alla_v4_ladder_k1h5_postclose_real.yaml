@@ -130,6 +130,7 @@ monitor:
     fill_ratio_buy_hard_floor: 0.50
     fill_ratio_streak_days: 3
   broker_reconcile:
+    # 现金只由账本维护；券商快照（尤其 22:00 前）不用于现金校正。
     cash_check: false
 
 web:

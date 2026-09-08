@@ -893,7 +893,7 @@ def test_partial_fill_average_change_uses_cumulative_amount_delta(env):
     final = dict(planned, status="FILLED", filled_qty=200, avg_price=11.0)
     recorder.apply_fill(FillEvent.from_dict(final))
 
-    expected_fee = order_total_fee("BUY", 2200.0, DEFAULT_FEES)
+    expected_fee = order_total_fee("BUY", 2200.0, DEFAULT_FEES, "600000.SH")
     assert recorder.get_cash() == pytest.approx(100000.0 - 2200.0 - expected_fee)
     assert recorder.get_positions()["600000.SH"] == {
         "shares": 200,
@@ -1052,11 +1052,14 @@ def test_partial_fill_updates_by_filled_qty(env):
     assert recorder.get_positions()["600000.SH"]["shares"] == 200
 
 
-def test_cash_updated_by_live_fills_only(env):
+@pytest.mark.parametrize("stock_code, expected_fee", [
+    ("000001.SZ", 9.18), ("600000.SH", 9.2636),
+])
+def test_cash_updated_by_live_fills_only(env, stock_code, expected_fee):
     bridge_root, recorder, importer = env
     recorder.set_cash(100000.0)
-    recorder.upsert_position("000001.SZ", 800, 10.0)
-    live_fill = _fill()  # LIVE SELL 800 @10.45 -> +8360，另扣费用
+    recorder.upsert_position(stock_code, 800, 10.0)
+    live_fill = _fill(stock_code=stock_code)  # LIVE SELL 800 @10.45
     simulate_batch = "20260714_csi300_topk10_002"
     simulate_fill = _fill(
         client_order_id="20260714002001B", side="BUY", mode="SIMULATE",
@@ -1068,15 +1071,14 @@ def test_cash_updated_by_live_fills_only(env):
     _write_fills(bridge_root, [live_fill])
     _write_fills(bridge_root, [simulate_fill], batch_id=simulate_batch)
     importer.import_fills()
-    # 卖出 8360：佣金 max(8360*0.00025, 5)=5 + 过户费 0.0836 + 印花税 4.18
-    sell_fee = order_total_fee("SELL", 8360.0, DEFAULT_FEES)
-    assert sell_fee == pytest.approx(5 + 0.0836 + 4.18)
+    # 佣金 5 + 印花税 4.18；仅沪市再收过户费 0.0836。
+    sell_fee = expected_fee
     expected = 100000.0 + 800 * 10.45 - sell_fee
-    assert recorder.get_cash() == pytest.approx(expected)
+    assert recorder.get_cash() == pytest.approx(expected, abs=1e-8, rel=0)
     # 重复导入现金/费用均不重复累计
-    _write_fills(bridge_root, [_fill()])
+    _write_fills(bridge_root, [live_fill])
     importer.import_fills()
-    assert recorder.get_cash() == pytest.approx(expected)
+    assert recorder.get_cash() == pytest.approx(expected, abs=1e-8, rel=0)
     fill_row = recorder.get_fills(BATCH_ID)[0]
     assert fill_row["applied_fee"] == pytest.approx(sell_fee)
 
@@ -1091,7 +1093,7 @@ def test_partial_then_full_fee_incremental(env):
     _record_plan(recorder, [partial])
     _write_fills(bridge_root, [partial])
     importer.import_fills()
-    fee_200 = order_total_fee("BUY", 2000.0, DEFAULT_FEES)  # 佣金触发最低 5 元
+    fee_200 = order_total_fee("BUY", 2000.0, DEFAULT_FEES, "600000.SH")  # 佣金触发最低 5 元
     assert recorder.get_cash() == pytest.approx(100000.0 - 2000.0 - fee_200)
 
     _write_fills(bridge_root, [
@@ -1100,7 +1102,7 @@ def test_partial_then_full_fee_incremental(env):
               requested=500, filled=500, price=10.0),
     ])
     importer.import_fills()
-    fee_500 = order_total_fee("BUY", 5000.0, DEFAULT_FEES)
+    fee_500 = order_total_fee("BUY", 5000.0, DEFAULT_FEES, "600000.SH")
     assert recorder.get_cash() == pytest.approx(100000.0 - 5000.0 - fee_500)
     fill_row = recorder.get_fills(BATCH_ID)[0]
     assert fill_row["applied_fee"] == pytest.approx(fee_500)
@@ -1172,7 +1174,7 @@ def test_sum_fees_by_date(env):
     _record_plan(recorder, fills)
     _write_fills(bridge_root, fills)
     importer.import_fills()
-    sell_fee = order_total_fee("SELL", 8360.0, DEFAULT_FEES)
+    sell_fee = order_total_fee("SELL", 8360.0, DEFAULT_FEES, "000001.SZ")
     assert recorder.sum_fees_by_date("2026-07-14") == pytest.approx(sell_fee)
     assert recorder.sum_fees_by_date("2026-07-13") == 0.0
 
@@ -1187,9 +1189,9 @@ def test_reprice_fees_refunds_lower_rate_and_is_idempotent(env):
     _record_plan(recorder, [buy])
     recorder.apply_fill(FillEvent.from_dict(buy))
 
-    old_fee = order_total_fee("BUY", 100000.0, DEFAULT_FEES)
+    old_fee = order_total_fee("BUY", 100000.0, DEFAULT_FEES, "600000.SH")
     lower_fees = {**DEFAULT_FEES, "commission_rate": 0.00020}
-    new_fee = order_total_fee("BUY", 100000.0, lower_fees)
+    new_fee = order_total_fee("BUY", 100000.0, lower_fees, "600000.SH")
     cash_before = recorder.get_cash()
 
     repricer = LiveRecorder(recorder.db_path, fees=lower_fees)
@@ -1203,6 +1205,23 @@ def test_reprice_fees_refunds_lower_rate_and_is_idempotent(env):
     cash_after = repricer.get_cash()
     assert repricer.reprice_fees_by_date("2026-07-14") == pytest.approx(0.0)
     assert repricer.get_cash() == pytest.approx(cash_after)
+
+
+def test_reprice_shenzhen_fees_refunds_legacy_transfer_fee_once(env):
+    _, recorder, _ = env
+    recorder.set_cash(200000.0)
+    buy = _fill(side="BUY", stock_code="000001.SZ", requested=1000,
+                filled=1000, price=100.0)
+    _record_plan(recorder, [buy])
+    recorder.apply_fill(FillEvent.from_dict(buy))
+    # Simulate an old ledger that charged a 1-yuan Shenzhen transfer fee.
+    with recorder._conn() as conn:
+        conn.execute("UPDATE fills SET applied_fee=26")
+    recorder.set_cash(99974.0)
+    assert recorder.reprice_fees_by_date("2026-07-14") == pytest.approx(-1.0)
+    assert recorder.get_cash() == pytest.approx(99975.0)
+    assert recorder.reprice_fees_by_date("2026-07-14") == pytest.approx(0.0)
+    assert recorder.get_cash() == pytest.approx(99975.0)
 
 
 def _write_broker_snapshot(bridge_root: Path, rows: list, batch_id=BATCH_ID,
@@ -1252,12 +1271,17 @@ def _record_real_snapshot_batch(
     ), [])
 
 
-def test_import_broker_snapshot_stores_and_archives(env):
+@pytest.mark.parametrize("snapshot_time", ["14:57:00", "21:59:59", "22:00:00", "23:00:00"])
+def test_import_broker_snapshot_stores_and_archives(env, snapshot_time):
     bridge_root, recorder, importer = env
     recorder.record_batch(BATCH_ID, "2026-07-14", "LIVE", 1)
-    _write_broker_snapshot(bridge_root, _snapshot_rows())
+    recorder.set_cash(36125.83)
+    rows = _snapshot_rows()
+    rows[0]["ts"] = "2026-07-14T" + snapshot_time
+    _write_broker_snapshot(bridge_root, rows)
 
     assert importer.import_broker_snapshots() == 1
+    assert recorder.get_cash() == pytest.approx(36125.83)
 
     account = recorder.get_broker_account_snapshot("2026-07-14")
     assert account["available_cash"] == pytest.approx(123456.78)

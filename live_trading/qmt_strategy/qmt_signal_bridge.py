@@ -8,8 +8,8 @@
 # Flow per batch (selected by EXECUTION_PROFILE):
 #   inbox/signal_{batch}.jsonl + .done
 #     -> claim to processing/ (skip if expired / duplicate / bad checksum)
-#     -> CLOSE_AUCTION: 14:57 / prType=11 / lastPrice +/- 0.2% clipped
-#        to the daily limit
+#     -> CLOSE_AUCTION: SELL 14:55, BUY 14:57:05 / prType=11 /
+#        lastPrice +/- 0.2% clipped to the daily limit
 #     -> AFTER_HOURS_FIXED_PRICE: 15:05 / prType=49 / official close
 #     -> poll order status by remark (client_order_id)
 #     -> profile-specific cancel, finalize, and account snapshot times
@@ -32,7 +32,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-09-05-fee-0854-snap17"
+SOURCE_VERSION = "2026-09-09-early-sell"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -45,6 +45,7 @@ MAX_BATCH_BYTES = 256 * 1024
 
 POLL_SECONDS = 3           # min interval between polls (handlebar is tick-driven)
 SELL_DEADLINE = "14:57:05"
+SELL_START = "14:55:00"
 TRADE_START = "14:57:05"
 SUBMIT_DEADLINE = "14:57:05"
 CANCEL_AT = "15:00:05"
@@ -56,16 +57,17 @@ _EXECUTION_PROFILES = {
         "signal_price_type": "CLOSE_AUCTION_LIMIT",
         "qmt_price_type": 11,
         "submit_after": "14:57:05",
+        "sell_after": "14:55:00",
         # Equal to submit_after: the finality gate must never engage here.
         "submit_deadline": "14:57:05",
         "cancel_at": "15:00:05",
         "finalize_at": "15:00:30",
         # Fees often post after 15:00; rewrite cash at 17:00 and observe.
         "snapshot_after": "17:00:00",
-        # Same as submit_after: the close auction has no sell-then-buy
-        # sequencing, so the BUY phase must never wait.
+        # Give continuous-auction sells time to release cash, but never
+        # delay auction buys beyond their own start time.
         "sell_deadline": "14:57:05",
-        "timer_start": "14:56:55",
+        "timer_start": "14:54:55",
     },
     "AFTER_HOURS_FIXED_PRICE": {
         "signal_price_type": "AFTER_HOURS_CLOSE",
@@ -75,6 +77,7 @@ _EXECUTION_PROFILES = {
         # 15:05, so this still queues ahead of every 15:05 arrival while the
         # finality gate keeps us from sizing off the frozen 14:57 price.
         "submit_after": "15:00:05",
+        "sell_after": "15:00:05",
         "submit_deadline": "15:01:00",
         "cancel_at": "15:28:00",
         "finalize_at": "15:30:00",
@@ -460,6 +463,7 @@ def _activate_profile_settings():
     settings = _profile_settings()
     global LIMIT_PRICE_TYPE
     global SELL_DEADLINE
+    global SELL_START
     global TRADE_START
     global SUBMIT_DEADLINE
     global CANCEL_AT
@@ -467,6 +471,7 @@ def _activate_profile_settings():
     global SNAPSHOT_REFRESH_AT
     LIMIT_PRICE_TYPE = settings["qmt_price_type"]
     SELL_DEADLINE = settings["sell_deadline"]
+    SELL_START = settings["sell_after"]
     TRADE_START = settings["submit_after"]
     SUBMIT_DEADLINE = settings["submit_deadline"]
     CANCEL_AT = settings["cancel_at"]
@@ -1018,7 +1023,7 @@ def _archive_processing(jsonl_path, done_path):
         os.rename(p, dst)
 
 
-def _parse_and_check(jsonl_path, done_path):
+def _parse_and_check(jsonl_path, done_path, recovering=False):
     """Return Batch or None (rejected batches get a fills file + done)."""
     header = {}
     orders = []
@@ -1112,7 +1117,11 @@ def _parse_and_check(jsonl_path, done_path):
         return reject("ACCOUNT_ID is required")
     if header.get("account_type") != ACCOUNT_TYPE:
         return reject("account_type mismatch")
-    if header.get("trade_date") != _today():
+    recovering_prior = (
+        recovering and isinstance(header.get("trade_date"), str)
+        and header["trade_date"] < _today()
+    )
+    if header.get("trade_date") != _today() and not recovering_prior:
         return reject("expired: trade_date=%s today=%s"
                       % (header.get("trade_date"), _today()))
     with open(done_path, "r") as f:
@@ -1245,7 +1254,7 @@ def _recover_processing_batch():
             _archive_processing(jsonl_path, done_path)
             _remove_active_state(batch_id)
             continue
-        batch = _parse_and_check(jsonl_path, done_path)
+        batch = _parse_and_check(jsonl_path, done_path, recovering=True)
         if batch is None:
             continue
         try:
@@ -2098,6 +2107,25 @@ def _poll_status(batch, details=None):
         )
         if summary is None:
             continue
+        # A canceled query can lag a partial callback, or omit a known split
+        # child entirely. Neither proves that the parent has finished.
+        queried_volumes = {
+            str(getattr(d, "m_strOrderSysID", "") or ""):
+            int(getattr(d, "m_nVolumeTraded", 0) or 0)
+            for d in exact_details
+        }
+        callback_fills = evidence.get("callback_fills", {})
+        if any(queried_volumes.get(sysid, -1) < row["quantity"]
+               for sysid, row in callback_fills.items()):
+            continue
+        if (summary["fill_status"] != "ACCEPTED"
+                and not set(evidence.get("qmt_order_ids", [])).issubset(
+                    queried_volumes)):
+            continue
+        previous = batch.fills.get(coid)
+        if previous and summary["traded"] < previous["filled_qty"]:
+            # A query cache may lag behind a cumulative broker callback.
+            continue
         _write_fill(
             batch, order,
             summary["fill_status"],
@@ -2109,19 +2137,19 @@ def _poll_status(batch, details=None):
 
 
 def _plan_ladder_netting(ContextInfo, batch):
-    """Size every BUY once and freeze the offsetting decision into the orders.
+    """Freeze paired BUY sizing before sells; size unpaired buys at BUY start.
 
-    Runs on the first trading pass only. Freezing matters: the close is read
-    once here, and by the time the BUY phase runs the SELL leg may already be
-    submitted. A second, different B would leave the transferred share count
-    and the submitted quantity mutually inconsistent.
+    A paired decision is never recomputed: by the time BUY runs, its SELL
+    leg may already be submitted. Unpaired buys have no such dependency and
+    can use the quote at their own submission time.
 
     batch.orders is persisted by _save_active_state, so writing the decision
     into the order dicts survives a restart with no extra plumbing.
     """
     if not ENABLE_LADDER_NETTING or batch.netting_planned:
         return
-    batch.netting_planned = True
+    before_buys = _now_hms() < TRADE_START
+    batch.netting_planned = not before_buys
     due_by_code = {}
     for order in batch.orders:
         if order["side"] == "SELL":
@@ -2129,6 +2157,15 @@ def _plan_ladder_netting(ContextInfo, batch):
 
     for buy in [o for o in batch.orders if o["side"] == "BUY"]:
         code = buy["stock_code"]
+        if "net_quantity" in buy:
+            continue
+        sell = due_by_code.get(code)
+        if before_buys and sell is None:
+            continue
+        if sell is not None and sell["client_order_id"] in batch.submitted:
+            # If the initial quote was unavailable, the sell may already
+            # have gone to market without offsetting. Never net it later.
+            continue
         close_price = _official_close(ContextInfo, code)
         read_at = datetime.datetime.now().isoformat()
         if close_price <= 0.0:
@@ -2136,7 +2173,6 @@ def _plan_ladder_netting(ContextInfo, batch):
             # branch: never guess a price, never place the order.
             continue
         sized = _sized_buy_shares(code, float(buy["target_value"]), close_price)
-        sell = due_by_code.get(code)
         due_shares = int(sell["quantity"]) if sell is not None else 0
         # An odd due amount cannot be netted: B - S would not be a lot multiple
         # and buys must be whole lots. That name pays the round trip instead.
@@ -2185,13 +2221,17 @@ def _plan_ladder_netting(ContextInfo, batch):
 
 
 def _process_batch(ContextInfo, batch):
+    if batch.header.get("trade_date") != _today():
+        # Recovered older batches may only reconcile, never submit again.
+        return
     if not batch.orders:
         _finalize_batch(batch)
         return
     now = _now_hms()
-    if now < TRADE_START:
+    if now < SELL_START:
         return
-    if not batch.trading_started and now < SUBMIT_DEADLINE:
+    if (EXECUTION_PROFILE == "AFTER_HOURS_FIXED_PRICE"
+            and not batch.trading_started and now < SUBMIT_DEADLINE):
         finality = _batch_close_is_final(ContextInfo, batch)
         if finality is not True:
             _log_event(
@@ -2275,6 +2315,10 @@ def _process_batch(ContextInfo, batch):
                 _log("sell phase timeout, starting buys with actual cash")
 
     if batch.phase == "BUY":
+        # A sell callback may finish before 14:57. Keep BUY sizing and the
+        # cash snapshot at the auction, including after a process restart.
+        if _now_hms() < TRADE_START:
+            return
         if mode_live and batch.remaining_cash is None:
             cash = _get_available_cash(account_id)
             if cash is None:
@@ -2384,7 +2428,8 @@ def _process_batch(ContextInfo, batch):
 
 def _force_finalize_if_near_close(ContextInfo, batch):
     now = _now_hms()
-    if now < CANCEL_AT:
+    prior_session = batch.header.get("trade_date", _today()) < _today()
+    if now < CANCEL_AT and not prior_session:
         return
     if batch.execution_live and batch.broker_authorized:
         details = _get_orders_by_remark(_account_id(batch))
@@ -2397,7 +2442,7 @@ def _force_finalize_if_near_close(ContextInfo, batch):
                         _cancel_by_detail(d, _account_id(batch), ContextInfo)
         _poll_status(batch, details)
 
-    if now >= FINALIZE_AT:
+    if now >= FINALIZE_AT or prior_session:
         cash_unavailable = (
             batch.phase == "BUY" and batch.remaining_cash is None
         )
@@ -2406,9 +2451,24 @@ def _force_finalize_if_near_close(ContextInfo, batch):
             if not _order_is_terminal(batch, coid):
                 fill = batch.fills.get(coid)
                 evidence = _evidence_for(batch, coid)
-                observed = bool(evidence.get("order_observed", False))
                 traded = fill["filled_qty"] if fill else 0
                 price = fill["avg_price"] if fill else 0.0
+                if (batch.execution_live and batch.broker_authorized
+                        and coid in batch.submitted):
+                    # Time and a cancel attempt are not broker finality.
+                    # Keep processing/state and the callback association alive
+                    # until polling or cumulative callbacks confirm execution.
+                    if not evidence.get("finality_pending"):
+                        evidence["finality_pending"] = True
+                        _save_active_state(batch)
+                        _log_event(
+                            "ORDER_FINALITY_PENDING",
+                            batch_id=batch.batch_id(), client_order_id=coid,
+                            qmt_order_ids=evidence.get("qmt_order_ids", []),
+                            filled_quantity=traded,
+                            message="finalization deferred; awaiting broker terminal status",
+                        )
+                    continue
                 if (cash_unavailable and order["side"] == "BUY"
                         and coid not in batch.submitted):
                     _write_fill(batch, order, "ERROR", 0, 0.0, "",
@@ -2416,21 +2476,12 @@ def _force_finalize_if_near_close(ContextInfo, batch):
                 elif traded > 0:
                     _write_fill(batch, order, "PARTIAL", traded, price, "",
                                 "expired at close")
-                elif coid in batch.submitted and not observed:
-                    _write_fill(
-                        batch, order, "ERROR", 0, 0.0, "",
-                        "QMT order not observed after passorder",
-                    )
-                elif coid in batch.submitted and observed:
-                    _write_fill(
-                        batch, order, "ERROR", 0, 0.0,
-                        ",".join(evidence.get("qmt_order_ids", [])),
-                        "QMT order observed but final status unavailable at close",
-                    )
                 else:
                     _write_fill(batch, order, "EXPIRED", 0, 0.0, "",
                                 "expired at close")
-        _finalize_batch(batch)
+        if all(_order_is_terminal(batch, o["client_order_id"])
+               for o in batch.orders):
+            _finalize_batch(batch)
 
 # ======================= QMT entry points =======================
 
@@ -2598,6 +2649,7 @@ def init(ContextInfo):
         max_orders_per_batch=int(MAX_ORDERS_PER_BATCH),
         poll_seconds=int(POLL_SECONDS),
         sell_deadline=SELL_DEADLINE,
+        sell_after=SELL_START,
         submit_after=TRADE_START,
         submit_deadline=SUBMIT_DEADLINE,
         cancel_at=CANCEL_AT,
@@ -2659,7 +2711,7 @@ def _callback_remark(obj):
     return remark
 
 
-def _find_callback_order(batch, remark, code):
+def _find_callback_order(batch, remark, code, order_id=""):
     if remark:
         for order in batch.orders:
             if order["client_order_id"] == remark:
@@ -2668,7 +2720,13 @@ def _find_callback_order(batch, remark, code):
     candidates = []
     digits = "".join(ch for ch in str(code or "") if ch.isdigit())
     for order in batch.orders:
-        if digits and order["stock_code"].split(".")[0] == digits:
+        known_ids = _evidence_for(batch, order["client_order_id"]).get(
+            "qmt_order_ids", [],
+        )
+        # A stock code alone cannot bind manual or other-strategy callbacks.
+        # Anonymous callbacks need an ID previously bound by exact remark.
+        if (order_id and order_id in known_ids
+                and (not digits or order["stock_code"].split(".")[0] == digits)):
             candidates.append(order)
     return candidates[0] if len(candidates) == 1 else None
 
@@ -2712,6 +2770,42 @@ def _observe_callback_order(batch, order, order_id, source):
             )
 
 
+def _apply_cumulative_order_callback(batch, order, fields):
+    """Use cumulative per-contract volumes; duplicate callbacks never add lots.
+
+    Only a complete parent quantity proves finality from callbacks alone.
+    Partial cancellations still require the complete ORDER query (a broker may
+    split a parent into multiple contracts which have not all appeared yet).
+    """
+    coid = order["client_order_id"]
+    if (not batch.execution_live or not batch.broker_authorized
+            or coid not in batch.submitted or _order_is_terminal(batch, coid)):
+        return
+    order_id = str(fields.get("order_id") or "")
+    try:
+        quantity = int(fields.get("traded_quantity") or 0)
+        price = float(fields.get("traded_price") or 0.0)
+    except (ValueError, TypeError, OverflowError):
+        return
+    if not order_id or quantity <= 0 or not math.isfinite(price) or price <= 0:
+        return
+    evidence = _evidence_for(batch, coid)
+    children = evidence.setdefault("callback_fills", {})
+    previous = children.get(order_id, {})
+    if quantity < int(previous.get("quantity", 0)):
+        return
+    children[order_id] = {"quantity": quantity, "price": price}
+    _save_active_state(batch)
+    total = sum(row["quantity"] for row in children.values())
+    if total != int(order["quantity"]):
+        return
+    amount = sum(row["quantity"] * row["price"] for row in children.values())
+    _write_fill(
+        batch, order, "FILLED", total, amount / total,
+        ",".join(sorted(children)), "confirmed by cumulative order callback",
+    )
+
+
 def order_callback(ContextInfo, orderInfo):
     """Persist QMT order callback evidence and state transitions."""
     fields = _order_detail_evidence(
@@ -2723,7 +2817,7 @@ def order_callback(ContextInfo, orderInfo):
     order = None
     if batch is not None:
         order = _find_callback_order(
-            batch, remark, fields.get("stock_code", ""),
+            batch, remark, fields.get("stock_code", ""), order_id,
         )
     association = _callback_association_fields(batch, order, remark)
     _log_event(
@@ -2741,6 +2835,7 @@ def order_callback(ContextInfo, orderInfo):
     )
     _save_active_state(batch)
     _observe_callback_order(batch, order, order_id, "ORDER_CALLBACK")
+    _apply_cumulative_order_callback(batch, order, fields)
 
 
 def deal_callback(ContextInfo, dealInfo):
@@ -2762,7 +2857,7 @@ def deal_callback(ContextInfo, dealInfo):
     order = None
     if batch is not None:
         order = _find_callback_order(
-            batch, remark, fields.get("stock_code", ""),
+            batch, remark, fields.get("stock_code", ""), order_id,
         )
     association = _callback_association_fields(batch, order, remark)
     _log_event(
@@ -2796,7 +2891,7 @@ def orderError_callback(ContextInfo, orderArgs, errMsg):
     batch = g.batch
     order = None
     if batch is not None:
-        order = _find_callback_order(batch, remark, code)
+        order = _find_callback_order(batch, remark, code, order_id)
     association = _callback_association_fields(batch, order, remark)
     _log_event(
         "ORDER_ERROR_CALLBACK", stock_code=code,

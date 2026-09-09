@@ -10,6 +10,8 @@ class ExecutionProfile:
     name: str
     signal_price_type: str
     qmt_price_type: int
+    sell_after: str
+    # Earliest BUY submission; sells may begin in continuous trading.
     submit_after: str
     cancel_at: str
     finalize_at: str
@@ -27,6 +29,7 @@ _EXECUTION_PROFILES = {
         name="CLOSE_AUCTION",
         signal_price_type="CLOSE_AUCTION_LIMIT",
         qmt_price_type=11,
+        sell_after="14:55:00",
         submit_after="14:57:05",
         cancel_at="15:00:05",
         finalize_at="15:00:30",
@@ -39,6 +42,7 @@ _EXECUTION_PROFILES = {
         name="AFTER_HOURS_FIXED_PRICE",
         signal_price_type="AFTER_HOURS_CLOSE",
         qmt_price_type=49,
+        sell_after="15:00:05",
         submit_after="15:00:05",
         cancel_at="15:28:00",
         finalize_at="15:30:00",

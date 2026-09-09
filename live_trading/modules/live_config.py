@@ -112,6 +112,12 @@ def _validate_trading_config(config: dict) -> None:
             raise ValueError(
                 f"live.{field} must match execution profile: {expected}"
             )
+    # Older configs inherit the profile's sell start; explicit values must
+    # agree with the standalone QMT runtime, just like the buy start above.
+    if live.get("sell_after", profile.sell_after) != profile.sell_after:
+        raise ValueError(
+            f"live.sell_after must match execution profile: {profile.sell_after}"
+        )
 
     if kind == "OPERATOR_PROBE":
         if (

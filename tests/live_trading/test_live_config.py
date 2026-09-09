@@ -38,8 +38,19 @@ def test_execution_profiles_define_the_qmt_and_signal_price_contracts():
 
     assert close_auction.qmt_price_type == 11
     assert close_auction.signal_price_type == "CLOSE_AUCTION_LIMIT"
+    assert close_auction.sell_after == "14:55:00"
+    assert close_auction.submit_after == "14:57:05"
     assert fixed_price.qmt_price_type == 49
     assert fixed_price.signal_price_type == "AFTER_HOURS_CLOSE"
+    assert fixed_price.sell_after == fixed_price.submit_after == "15:00:05"
+
+
+def test_explicit_sell_start_must_match_execution_profile(tmp_path):
+    config = _strategy_config()
+    config["live"]["sell_after"] = "14:56:00"
+    path = _write_strategy_config(tmp_path, config)
+    with pytest.raises(ValueError, match="sell_after"):
+        load_live_config(path, project_root=tmp_path)
 
 
 def test_load_operator_probe_config_is_isolated_from_strategy_publishing():

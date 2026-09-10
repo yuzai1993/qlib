@@ -110,10 +110,20 @@ Windows 安装与生产渲染见 [QMT 部署说明](qmt_strategy/README_QMT.md)�
 `live_trading/scripts/render_qmt_runtime.py` 渲出：收盘集合竞价、开启阶梯抵销、
 `MAX_ORDER_QUANTITY=0`。不要直接拿仓库模板当生产脚本。
 
-Mac 的 `live.bridge_root` 必须指向已挂载的共享目录。cron 没有 Finder 会话，
-看不见桌面已经挂上的 SMB；调度/导入/发布会先跑
-`live_trading/scripts/ensure_bridge_mount.sh`。可在 `~/.qlib_live_env` 覆盖
-`QLIB_BRIDGE_SMB_URL`（默认 `//qmtshare@192.168.0.110/qmt_bridge`）。
+Mac 的 `live.bridge_root` 必须指向已挂载的共享目录。调度/导入/发布会先跑
+`live_trading/scripts/ensure_bridge_mount.sh`，复用当前用户可访问的已有 SMB 挂载；
+断开时通过系统 NetFS 服务自动重连。默认 `/Volumes/qmt_bridge` 由系统创建，
+不要求 cron 用户执行 `sudo` 或在 `/Volumes` 下自行建目录。可在 `~/.qlib_live_env`
+覆盖 `QLIB_BRIDGE_SMB_URL`（默认 `//qmtshare@192.168.0.110/qmt_bridge`，也接受 `smb://`）。
+
+自动连接使用 `NoUI`，需要当前用户已有可用的 SMB 凭据（例如首次在 Finder
+连接时保存到钥匙串）；不会弹出登录框等待输入。连接最多等 45 秒，随后复核
+配置路径确为挂载点且 `inbox` 可写；不能把本地同名目录误当成已连接的共享盘。
+网络/认证失败会打印无凭据的错误并阻止后续调度。已有挂载失效时只尝试普通卸载，
+忙碌则停止，不强制卸载。自定义的 `QLIB_BRIDGE_ROOT` 必须与 `live.bridge_root`
+一致，且指向共享卷的挂载根目录。
+`/Volumes` 下的一级挂载目录名须与 SMB 共享名一致；若要另取目录名，使用当前
+用户可创建的目录。名称不匹配会在连接前拒绝，避免挂到非预期目录。
 
 ```bash
 test -d /Volumes/qmt_bridge/inbox

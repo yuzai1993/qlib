@@ -12,7 +12,7 @@ CONFIG_ID="${1:-${LIVE_CONFIG_ID:-${QLIB_LIVE_CONFIG_ID:-alla_v4_ladder_k1h5_pos
 # shellcheck disable=SC1090
 [[ -f "$HOME/.qlib_live_env" ]] && source "$HOME/.qlib_live_env"
 
-# cron 看不见 Finder 已挂的 SMB，导入前必须自己 mount。
+# 导入前复核共享盘；未连接时通过 macOS NetFS 自动挂载。
 # 测试夹具只拷 wrapper 时跳过。
 if [[ -f "${SCRIPT_DIR}/scripts/ensure_bridge_mount.sh" ]]; then
     bash "${SCRIPT_DIR}/scripts/ensure_bridge_mount.sh"

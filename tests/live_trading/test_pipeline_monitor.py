@@ -1063,6 +1063,34 @@ def test_run_report_flags_a_stale_sizing_close(monkeypatch, tmp_path):
     assert "NETTING_CLOSE_MISMATCH" in _rules(findings)
 
 
+@pytest.mark.parametrize("price_type,current_profile,expect_mismatch", [
+    ("CLOSE_AUCTION_LIMIT", "AFTER_HOURS_FIXED_PRICE", False),
+    ("AFTER_HOURS_CLOSE", "CLOSE_AUCTION", True),
+    (None, "CLOSE_AUCTION", True),
+])
+def test_report_settled_close_check_uses_historical_order_price_type(
+    monkeypatch, tmp_path, price_type, current_profile, expect_mismatch,
+):
+    recorder, store = _report_recorder(tmp_path, [
+        _lfill(side="BUY", intended=300, applied=300, netting_close=9.80),
+    ])
+    if price_type:
+        recorder.record_orders("20260714_alla_v4_ladder_001", [{
+            "client_order_id": "coid0", "stock_code": "600000.SH",
+            "instrument_qlib": "SH600000", "side": "BUY", "quantity": 300,
+            "target_value": 3000.0, "price_type": price_type,
+            "limit_price": 0.0, "priority": 20, "reason": "cohort_layer",
+        }])
+    _stub_report_boundaries(monkeypatch, {"SH600000": 10.00})
+    monkeypatch.setattr(run_monitor, "qmt_to_qlib", lambda code: "SH600000")
+    findings = run_monitor.run_report(
+        "2026-07-14", ["2026-07-14"], recorder, store,
+        {"live": {"execution_session": current_profile},
+         "monitor": {"notify": {"daily_report": False}}}, _Notifier(),
+    )
+    assert ("NETTING_CLOSE_MISMATCH" in _rules(findings)) is expect_mismatch
+
+
 def test_run_report_does_not_reconcile_orders_without_a_frozen_close(
     monkeypatch, tmp_path,
 ):

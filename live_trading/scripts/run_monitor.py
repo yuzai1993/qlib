@@ -547,8 +547,14 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
     # 定量用价对账。只能放在 report 阶段：postclose 的顺序是 postmarket -> update
     # -> report，postmarket 跑的时候 T 日权威收盘价还没入库。取价范围限定在真正
     # 按冻结价定量过的票，不必为此多拉一遍全持仓。
+    # Auction sizing precedes the final close (and paired sells now start at
+    # 14:55). Only fixed-price/unknown historical orders require settled-close
+    # equality. Use the saved order type, not today's possibly changed config.
+    netting_fills = [
+        f for f in fills if f.get("planned_price_type") != "CLOSE_AUCTION_LIMIT"
+    ]
     netting_codes = {
-        f["stock_code"] for f in fills
+        f["stock_code"] for f in netting_fills
         if float(f.get("netting_close") or 0.0) > 0.0
     }
     if netting_codes:
@@ -556,7 +562,7 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
         netting_prices = fetch_close_prices(
             list(netting_by_qmt.values()), date,
         )
-        findings += check_netting_close(date, fills, {
+        findings += check_netting_close(date, netting_fills, {
             qmt: netting_prices[ql]
             for qmt, ql in netting_by_qmt.items()
             if netting_prices.get(ql) is not None

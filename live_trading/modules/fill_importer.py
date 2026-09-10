@@ -2379,7 +2379,10 @@ class LiveRecorder:
         marks = ",".join("?" for _ in trade_dates)
         with self._conn() as conn:
             rows = conn.execute(
-                f"""SELECT f.* FROM fills f JOIN batches b ON f.batch_id = b.batch_id
+                f"""SELECT f.*, o.price_type AS planned_price_type
+                    FROM fills f JOIN batches b ON f.batch_id = b.batch_id
+                    LEFT JOIN signal_orders o ON o.batch_id = f.batch_id
+                        AND o.client_order_id = f.client_order_id
                     WHERE b.trade_date IN ({marks}) ORDER BY f.client_order_id""",
                 trade_dates,
             ).fetchall()

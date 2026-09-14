@@ -36,7 +36,7 @@ if [[ -n "${2:-}" ]]; then
     TRADE_DATE="$2"
 else
     TRADE_DATE="$("$PYTHON" "$PROJECT_ROOT/live_trading/scripts/next_trade_date.py" \
-        --after "$(date +%Y-%m-%d)")"
+        --after "${QLIB_LIVE_BUSINESS_DATE:-$(date +%Y-%m-%d)}")"
 fi
 
 mkdir -p "${SCRIPT_DIR}/logs"

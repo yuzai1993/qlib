@@ -43,6 +43,7 @@ trap finish_job EXIT
     cd "$PROJECT_ROOT"
     status=0
     "$PYTHON" live_trading/scripts/run_monitor.py \
-        --config "$CONFIG_ID" --stage "$STAGE" || status=$?
+        --config "$CONFIG_ID" --stage "$STAGE" \
+        --date "${QLIB_LIVE_BUSINESS_DATE:-$(date +%Y-%m-%d)}" || status=$?
     exit "$status"
 } >>"$LOG_FILE" 2>&1

@@ -46,7 +46,7 @@ Mac 只发布信号；Windows 上策略在跑、inbox 有 LIVE 批次，到点�
 
 | 配置 | 状态 |
 |---|---|
-| `alla_v4_ladder_k3h5_postclose_real` | 预留切回，未装 cron |
+| `alla_v4_ladder_k3h5_postclose_real` | 预留切回，未装调度 |
 | `csi1000_b6m_b2s_postclose_real` | 已停调度，账本冻结作历史。没有 `PAUSED` 行时 CLI `--get` 会显示默认 ACTIVE，这不是停机证明 |
 | `csi300_topk10_live` | 更早的 B1 正式盘，仅留文件 |
 
@@ -58,15 +58,15 @@ CSI1000 一手 SELL / 快照 / marker 验收原文已迁到
 ## 文件与数据流
 
 ```text
-T 日 22:30 Mac  postclose（导入 → postmarket → Tushare 日更 → 股票名 → 成功才日报）
+T 日 20:00 Mac  postclose（导入 → postmarket → Tushare 日更 → 股票名 → 成功才日报）
              → 发布下一开市日 protocol-v2 批次 → evening 完整性检查
                                   │
                                   ▼
 T+1 日 Windows QMT  14:57:05 提交 → prType=11 last±0.2% → 15:00:30 终态 / 17:00 再拍账户快照
 ```
 
-22:30 是为了等 Tushare 收盘数据落稳。发布只装信号日前 150 个日历日的特征表
-（滚动窗由 Qlib 自动向前取）。不要再按 16:00 理解现网。
+现网工作日 20:00 启动，行情完整性检查通过后才发布。发布只装信号日前 150 个日历日的特征表
+（滚动窗由 Qlib 自动向前取）。旧 cron 示例中的 22:30 不是现网时间。
 
 BUY 计划只携带 `target_value`。只有查询到真实委托号才记录 `ACCEPTED`。持久日志在
 `D:\qmt_bridge\logs`。
@@ -113,11 +113,13 @@ Windows 安装与生产渲染见 [QMT 部署说明](qmt_strategy/README_QMT.md)�
 Mac 的 `live.bridge_root` 必须指向已挂载的共享目录。调度/导入/发布会先跑
 `live_trading/scripts/ensure_bridge_mount.sh`，复用当前用户可访问的已有 SMB 挂载；
 断开时通过系统 NetFS 服务自动重连。默认 `/Volumes/qmt_bridge` 由系统创建，
-不要求 cron 用户执行 `sudo` 或在 `/Volumes` 下自行建目录。可在 `~/.qlib_live_env`
+不要求普通用户执行 `sudo` 或在 `/Volumes` 下自行建目录。可在 `~/.qlib_live_env`
 覆盖 `QLIB_BRIDGE_SMB_URL`（默认 `//qmtshare@192.168.0.110/qmt_bridge`，也接受 `smb://`）。
 
-自动连接使用 `NoUI`，需要当前用户已有可用的 SMB 凭据（例如首次在 Finder
-连接时保存到钥匙串）；不会弹出登录框等待输入。连接最多等 45 秒，随后复核
+自动连接使用 `NoUI`，需要当前登录用户已有可用的 SMB 凭据（例如首次在 Finder
+连接时保存到钥匙串）；不会弹出登录框等待输入。调度必须加载到 `gui/<uid>` 用户会话：
+cron 的独立认证会话可能被钥匙串 ACL 拒绝（`NetFS status 80 / EAUTH`），即使同一用户
+在终端中连接正常。不要通过放宽钥匙串权限或把密码写入脚本解决。连接最多等 45 秒，随后复核
 配置路径确为挂载点且 `inbox` 可写；不能把本地同名目录误当成已连接的共享盘。
 网络/认证失败会打印无凭据的错误并阻止后续调度。已有挂载失效时只尝试普通卸载，
 忙碌则停止，不强制卸载。自定义的 `QLIB_BRIDGE_ROOT` 必须与 `live.bridge_root`
@@ -132,9 +134,12 @@ test -w /Volumes/qmt_bridge/inbox
 
 ## 调度
 
-[crontab.csi1000_postclose.example](crontab.csi1000_postclose.example) 是唯一的调度模板：
+[用户 LaunchAgent](launchd/com.yuxianqi.qlib-live-scheduler.plist) 是 macOS 现网调度模板：
 
-- crontab 只维护一行，每个工作日 **22:30** 启动一次；
+- 在已登录用户的 `gui/<uid>` 会话中，每个工作日 **20:00** 启动一次；
+- `RunAtLoad=false`、`KeepAlive=false`，安装、登录或任务失败时不额外启动流水线；运行期间用 `caffeinate -i` 防止空闲睡眠；
+- launchd 会在睡眠后补交定时事件，入口 `run_scheduler_launchd.sh` 只允许工作日 20:00–23:59 启动；跨日唤醒会跳过并记录日志，需按缺失业务日期人工恢复；
+- 入口固定 `QLIB_LIVE_BUSINESS_DATE`，挂载或流水线跨午夜时，阶段回执、行情截止日、日报日期和下一开市日计算仍使用入口的业务日期；不要在 `~/.qlib_live_env` 固定设置该变量；
 - 先串行运行回执导入、`postmarket`、Tushare 行情更新和股票名称缓存刷新；仅在行情更新成功后运行 `report`；
 - Tushare 日更（`run_update_to_bin.sh`）在复权巡检之后会增量刷新 ST 日频名单
   `scripts/data_collector/tushare/st_daily.csv`；发布脚本按 `signal_date` 做四重宇宙过滤，
@@ -160,12 +165,22 @@ postclose → publish → evening 的固定顺序补齐尚无回执的阶段；�
 所有 wrapper 都支持位置参数 config ID，也支持 `LIVE_CONFIG_ID` / `QLIB_LIVE_CONFIG_ID`，
 默认 `alla_v4_ladder_k1h5_postclose_real`。残留 `.locks/<config>_*.lock` 时应先确认没有任务运行，再人工删除。监控 WARN/CRIT 的退出码会原样返回。系统不自动重试失败阶段或补发。
 
-部署或迁移机器时先检查现有任务，确保旧 CSI300 / CSI1000 条目已停用且没有重复任务，再安装该单行模板：
+部署或迁移机器时先检查现有任务。确认没有旧 CSI300 / CSI1000 调度及重复任务，
+按实际生产根目录调整 plist 路径，在当前用户下安装（不要用 `sudo`）：
 
 ```bash
-crontab live_trading/crontab.csi1000_postclose.example
+mkdir -p ~/Library/LaunchAgents live_trading/logs
+cp live_trading/launchd/com.yuxianqi.qlib-live-scheduler.plist ~/Library/LaunchAgents/
+plutil -lint ~/Library/LaunchAgents/com.yuxianqi.qlib-live-scheduler.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.yuxianqi.qlib-live-scheduler.plist
+launchctl print gui/$(id -u)/com.yuxianqi.qlib-live-scheduler
 crontab -l
 ```
+
+确认 LaunchAgent 已加载后，备份 crontab 并只移除本策略的旧 `run_scheduler_cron.sh` 条目。
+保留其他任务；不要再安装 [旧 cron 示例](crontab.csi1000_postclose.example)。
+更新已加载的 plist 前先确认任务没有运行，再 `launchctl bootout gui/$(id -u)/com.yuxianqi.qlib-live-scheduler`，复制并重新 `bootstrap`。
+入口日志为 `live_trading/logs/<config>_scheduler.stdout.log` 和 `_scheduler.stderr.log`，共享盘认证失败也会落盘。
 
 ## 监控服务
 
@@ -192,7 +207,7 @@ open http://127.0.0.1:8082
 find live_trading/.scheduler/alla_v4_ladder_k1h5_postclose_real/$(date +%Y-%m-%d) \
   -maxdepth 1 -name '*.json' -print
 
-# 22:30 收盘流水线（导入 → 检查 → 更新 → 日报）
+# 当日收盘流水线（导入 → 检查 → 更新 → 日报）
 bash live_trading/run_postclose_cron.sh alla_v4_ladder_k1h5_postclose_real
 
 # 发布下一开市日
@@ -221,8 +236,8 @@ bash live_trading/run_monitor_cron.sh evening alla_v4_ladder_k1h5_postclose_real
 
 人工恢复前先查看
 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_publish_cron.log`。
-若 SMB 不可访问，先恢复挂载；若 `postclose` 锁存在，先确认 22:30 流水线是否仍在运行。
-不要和正在跑的 cron 叠在一起手工补跑。
+若 SMB 不可访问，先恢复挂载；若 `postclose` 锁存在，先确认盘后流水线是否仍在运行。
+不要和正在跑的调度任务叠在一起手工补跑。
 
 ## 失败关闭与恢复
 
@@ -232,7 +247,7 @@ bash live_trading/run_monitor_cron.sh evening alla_v4_ladder_k1h5_postclose_real
 - 活动状态损坏：保留 `.corrupt_*` 证据并把整批视为可能已提交，只查询/撤单/终结，绝不重提；
 - 畸形或超限批次：移入 archive；已有同名归档不覆盖，使用 `.repeat_*` 保留两份；
 - 14:57:05 提交竞价、15:00:05 撤未完成单，15:00:30 写终态；
-- 回滚：停用 cron、停止 QMT 策略、保留 SQLite 与 bridge archive。不要自动恢复旧 CSI300 / CSI1000 调度。
+- 回滚：卸载调度 LaunchAgent、停止 QMT 策略、保留 SQLite 与 bridge archive。不要自动恢复旧 CSI300 / CSI1000 调度。
 
 发生账本/券商持仓股数对不上时，先停 QMT 策略并停止下一日 LIVE 发布，再按委托、成交和账户快照核对。
 日常对账只比持仓股数，先不对现金和费用；账本价值调整固定为 0。任何人工账本修正都应使用有审计记录的管理入口。

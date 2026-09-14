@@ -98,6 +98,16 @@ def test_busy_stale_mount_is_not_forcibly_unmounted(tmp_path, monkeypatch):
     assert commands == [["/sbin/umount", str(tmp_path)]]
 
 
+def test_authentication_failure_identifies_user_session_requirement(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(mounting.os.path, "ismount", lambda root: False)
+    monkeypatch.setattr(mounting.subprocess, "run", lambda *a, **kw: _mount_result(80))
+    assert mounting.ensure_bridge_mount(tmp_path, "smb://user:secret@server/share") == 1
+    error = capsys.readouterr().err
+    assert "EAUTH" in error
+    assert "LaunchAgent" in error
+    assert "secret" not in error
+
+
 def test_successfully_unmounted_stale_share_is_reconnected(tmp_path, monkeypatch):
     mounted = [True]
     ready = [False]

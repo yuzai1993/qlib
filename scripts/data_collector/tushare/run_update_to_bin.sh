@@ -77,6 +77,7 @@ NORMALIZE_DIR="scripts/data_collector/tushare/normalize"
 # ---------- 1) 个股/指数日线增量 dump ----------
 log "===== update_data_to_bin ====="
 if "$PYTHON" scripts/data_collector/tushare/collector.py update_data_to_bin \
+  --end_date "${QLIB_LIVE_BUSINESS_DATE:-$(date +%Y-%m-%d)}" \
   --qlib_dir ~/.qlib/qlib_data/cn_data \
   --source_dir "$SOURCE_DIR" \
   --normalize_dir "$NORMALIZE_DIR"

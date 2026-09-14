@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the CSI1000 post-close pipeline once per date.
 
-The cron entry invokes this dispatcher once at 22:30. Each attempted stage gets
+The user LaunchAgent invokes this dispatcher on weekdays at 20:00. Each attempted stage gets
 an atomic receipt, including failures, so manual reruns never duplicate work.
 """
 
@@ -78,6 +78,7 @@ def run_pipeline(
                 ["/bin/bash", *argv],
                 cwd=project_root,
                 check=False,
+                env=dict(os.environ, QLIB_LIVE_BUSINESS_DATE=date_key),
             )
             finished_at = datetime.now().astimezone().isoformat(timespec="seconds")
             _write_receipt(receipt_path, {
@@ -102,10 +103,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True, help="live config id")
     args = parser.parse_args()
-
-    return run_pipeline(
-        args.config, PROJECT_ROOT, datetime.now().astimezone(),
-    )
+    now = datetime.now().astimezone()
+    business_date = os.environ.get("QLIB_LIVE_BUSINESS_DATE")
+    if business_date:
+        try:
+            now = datetime.strptime(business_date, "%Y-%m-%d").replace(tzinfo=now.tzinfo)
+        except ValueError:
+            parser.error("QLIB_LIVE_BUSINESS_DATE must be a valid YYYY-MM-DD date")
+    return run_pipeline(args.config, PROJECT_ROOT, now)
 
 
 if __name__ == "__main__":

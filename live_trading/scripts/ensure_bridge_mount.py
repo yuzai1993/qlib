@@ -93,6 +93,12 @@ def ensure_bridge_mount(root: Path, smb_url: str, timeout: int = 45) -> int:
         status = json.loads(result.stdout)["status"]
         if not isinstance(status, int):
             return _error("NetFS helper returned an invalid status")
+        if status == 80:
+            return _error(
+                "NetFS status 80 (EAUTH): SMB authentication or keychain access denied; "
+                "run the scheduler as a user LaunchAgent in the logged-in GUI session "
+                "and verify its saved SMB credentials"
+            )
         if status != 0:
             return _error(f"NetFS status {status}; check server reachability and saved SMB credentials")
         return _error(f"NetFS returned success but {root}/inbox is not mounted and writable")

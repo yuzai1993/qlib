@@ -155,6 +155,19 @@ def test_benchmark_missing_keeps_account_fields():
     assert daily["total_value"] == pytest.approx(25050.0)
 
 
+@pytest.mark.parametrize("previous_close,previous_cumulative,want_daily", [
+    (None, None, None), (4000.0, None, 0.01),
+])
+def test_benchmark_history_gap_does_not_restart_cumulative_return(previous_close, previous_cumulative, want_daily):
+    daily, _, _ = build_snapshot(
+        "2026-09-16", {}, 10000, {}, 4040.0,
+        {"total_value": 10000, "cumulative_return": 0.0,
+         "benchmark_close": previous_close, "benchmark_cumulative_return": previous_cumulative}, 0,
+    )
+    assert daily["benchmark_daily_return"] == (None if want_daily is None else pytest.approx(want_daily))
+    assert daily["benchmark_cumulative_return"] is None
+
+
 def test_turnover():
     daily, _, _ = build_snapshot(
         "2026-07-13", POSITIONS, 10000.0, PRICES, 4000.0, None,

@@ -200,6 +200,13 @@ open http://127.0.0.1:8082
 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.stderr.log`。
 `run_web_service.sh` 会加载 `~/.qlib_live_env`，与 cron 使用同一套环境和活动配置。
 
+指数日线会按交易日历校验日期、代码和 OHLC 价格，每个代码最多尝试 3 次；
+任一指数仍缺失时，日更返回非零并走现有失败告警，不再仅记 warning 后报成功。
+首次历史采集从接口返回的首个有效日期验证覆盖；已有本地历史时以历史起点约束回补完整性。
+日报缺少有效基准收盘价时记录 `BENCHMARK_MISSING`（WARN），保留账户估值，
+基准和超额收益显示为空。历史基准有缺口时记录 `BENCHMARK_HISTORY_MISSING`，
+累计基准收益保持为空，不能恢复取价后直接归零；须按日期补齐缺失日及后续快照的基准字段。
+
 ## 日常命令
 
 ```bash

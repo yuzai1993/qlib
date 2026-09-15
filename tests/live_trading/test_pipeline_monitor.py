@@ -1747,6 +1747,48 @@ def test_report_price_missing():
     assert _rules(f) == ["PRICE_MISSING"] and f[0].level == "WARN"
 
 
+@pytest.mark.parametrize("close", [None, float("nan"), float("inf"), 0.0, -1.0])
+def test_report_invalid_benchmark_is_an_alert_and_null_snapshot(monkeypatch, tmp_path, close):
+    recorder, store = _report_recorder(tmp_path, [])
+    _stub_report_boundaries(monkeypatch, {})
+    monkeypatch.setattr(run_monitor, "fetch_benchmark_close", lambda *args: close)
+    notifier = _Notifier()
+    findings = run_monitor.run_report(
+        "2026-07-14", ["2026-07-14"], recorder, store,
+        {"monitor": {"benchmark": "SH000985", "notify": {"daily_report": True}}}, notifier,
+    )
+    assert "BENCHMARK_MISSING" in _rules(findings)
+    assert next(f for f in findings if f.rule == "BENCHMARK_MISSING").level == "WARN"
+    snap = store.get_snapshot("2026-07-14")
+    assert snap["total_value"] == recorder.get_cash()
+    assert all(snap[key] is None for key in (
+        "benchmark_close", "benchmark_daily_return", "benchmark_cumulative_return", "excess_return",
+    ))
+    assert "BENCHMARK_MISSING" in notifier.bodies[0]
+    assert "SH000985" in notifier.bodies[0]
+
+
+@pytest.mark.parametrize("close", [float("nan"), float("inf"), 0.0, -1.0])
+def test_fetch_benchmark_close_rejects_invalid_qlib_values(monkeypatch, close):
+    import pandas as pd
+    from qlib.data import D
+    monkeypatch.setattr(D, "features", lambda *args, **kwargs: pd.DataFrame({"$close": [close]}), raising=False)
+    assert run_monitor.fetch_benchmark_close("SH000985", "2026-09-15") is None
+
+
+def test_report_recovered_quote_still_warns_about_previous_benchmark_gap(monkeypatch, tmp_path):
+    recorder, store = _report_recorder(tmp_path, [])
+    _stub_report_boundaries(monkeypatch, {})
+    prior, _, _ = run_monitor.build_snapshot("2026-07-13", {}, recorder.get_cash(), {}, None, None, 0)
+    store.upsert_daily_snapshot(prior)
+    findings = run_monitor.run_report(
+        "2026-07-14", ["2026-07-13", "2026-07-14"], recorder, store,
+        {"monitor": {"benchmark": "SH000985", "notify": {"daily_report": False}}}, _Notifier(),
+    )
+    assert "BENCHMARK_HISTORY_MISSING" in _rules(findings)
+    assert store.get_snapshot("2026-07-14")["benchmark_cumulative_return"] is None
+
+
 # ---------- account ----------
 
 def _snap(date, total, daily):

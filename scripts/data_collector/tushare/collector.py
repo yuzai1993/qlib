@@ -125,6 +125,7 @@ class TushareCollectorCN(BaseCollector):
         "pct_chg",
     }
     ADJ_BATCH_COLUMNS = {"ts_code", "trade_date", "adj_factor"}
+    INDEX_DOWNLOAD_ATTEMPTS = 3
 
     def __init__(
         self,
@@ -322,27 +323,87 @@ class TushareCollectorCN(BaseCollector):
         out["symbol"] = symbol
         return out
 
+    def _download_index_frame(self, pro, ts_code, begin, end, expected_dates, history_start=None):
+        """Retry upstream failures, validating quotes before they can replace local history."""
+        for attempt in range(1, self.INDEX_DOWNLOAD_ATTEMPTS + 1):
+            try:
+                self.sleep()
+                df = pro.index_daily(ts_code=ts_code, start_date=begin, end_date=end)
+                if df is None or df.empty:
+                    raise ValueError("empty index response")
+                self._require_batch_columns(df, self.DAILY_BATCH_COLUMNS, "index_daily")
+                if not df["ts_code"].eq(ts_code).all():
+                    raise ValueError(f"unexpected index code for {ts_code}")
+                dates = pd.to_datetime(df["trade_date"], format="%Y%m%d").dt.strftime("%Y%m%d")
+                if dates.duplicated().any():
+                    raise ValueError("duplicate index trade_date")
+                if not dates.between(begin, end).all():
+                    raise ValueError("unexpected index trade_date outside requested range")
+                if not set(dates).issubset(expected_dates):
+                    raise ValueError("unexpected index trade_date on a closed day")
+                # On a first historical download, data before the index's first
+                # available quote cannot be verified. Once local history exists,
+                # its start anchors coverage so a truncated response cannot move it.
+                first_available = min(history_start, dates.min()) if history_start else dates.min()
+                required_dates = {d for d in expected_dates if d >= first_available}
+                missing = sorted(required_dates - set(dates))
+                if missing:
+                    raise ValueError(f"index missing trading dates: {missing}")
+                prices = df[["open", "high", "low", "close"]].apply(pd.to_numeric, errors="coerce")
+                if not (np.isfinite(prices) & (prices > 0)).all().all():
+                    raise ValueError("invalid index OHLC prices")
+                return df
+            except Exception as exc:
+                logger.warning(f"index_daily {ts_code} attempt {attempt}/{self.INDEX_DOWNLOAD_ATTEMPTS}: {exc}")
+                if attempt == self.INDEX_DOWNLOAD_ATTEMPTS:
+                    raise
+
     def download_index_data(self):
-        """通过 Tushare index_daily 接口下载 CSI300/CSI100/CSI500 指数日线数据。"""
+        """Download all configured benchmarks; any unavailable trading date fails the update."""
         pro = self._get_pro()
         _format = "%Y%m%d"
         _begin = self.start_datetime.strftime(_format)
         _end = self.end_datetime.strftime(_format)
 
+        # Request closed days too: an empty response must not be mistaken for a holiday.
+        calendar = pro.trade_cal(exchange="SSE", start_date=_begin, end_date=_end)
+        if calendar is None or calendar.empty:
+            raise RuntimeError("index trading calendar is empty")
+        self._require_batch_columns(calendar, {"cal_date", "is_open"}, "trade_cal")
+        calendar_dates = pd.to_datetime(calendar["cal_date"], format=_format).dt.strftime(_format)
+        if set(calendar_dates) != set(pd.date_range(_begin, _end).strftime(_format)):
+            raise RuntimeError("index trading calendar is incomplete")
+        open_flags = pd.to_numeric(calendar["is_open"], errors="coerce")
+        if not open_flags.isin([0, 1]).all():
+            raise RuntimeError("index trading calendar has invalid is_open flags")
+        expected_dates = set(calendar_dates[open_flags == 1])
+        if not expected_dates:
+            logger.info("no trading dates in index download range")
+            return
+
+        failures = []
         for _index_name, _index_code in self.INDEX_LIST.items():
             logger.info(f"get bench data: {_index_name}({_index_code})......")
             try:
-                self.sleep()
+                symbol = f"sh{_index_code}"
+                _path = self.save_dir.joinpath(f"{symbol}.csv")
+                _old = pd.read_csv(_path) if _path.exists() else None
+                history_start = None
+                if _old is not None and not _old.empty:
+                    _old["date"] = pd.to_datetime(_old["date"])
+                    history_start = _old["date"].min().strftime(_format)
                 suffixes = ("CSI", "SH") if _index_code == "000985" else ("SH",)
                 df = None
+                errors = []
                 for suffix in suffixes:
                     ts_code = f"{_index_code}.{suffix}"
-                    df = pro.index_daily(ts_code=ts_code, start_date=_begin, end_date=_end)
-                    if df is not None and not df.empty:
+                    try:
+                        df = self._download_index_frame(pro, ts_code, _begin, _end, expected_dates, history_start)
                         break
-                if df is None or df.empty:
-                    logger.warning(f"{_index_name} returned empty data")
-                    continue
+                    except Exception as exc:
+                        errors.append(f"{ts_code}: {exc}")
+                if df is None:
+                    raise RuntimeError("; ".join(errors))
 
                 df = df.rename(columns={"trade_date": "date", "vol": "volume"})
                 df["date"] = pd.to_datetime(df["date"])
@@ -353,23 +414,21 @@ class TushareCollectorCN(BaseCollector):
                 else:
                     df["pct_chg"] = np.nan
 
-                symbol = f"sh{_index_code}"
                 out_cols = ["date", "open", "high", "low", "close", "volume", "amount", "adj_factor", "pct_chg"]
                 out = df[[c for c in out_cols if c in df.columns]].copy()
                 out["symbol"] = symbol
 
-                _path = self.save_dir.joinpath(f"{symbol}.csv")
-                if _path.exists():
-                    _old = pd.read_csv(_path)
-                    _old["date"] = pd.to_datetime(_old["date"])
+                if _old is not None:
                     out = pd.concat([_old, out], sort=False)
                 out.drop_duplicates(subset=["date"], keep="last", inplace=True)
                 out.sort_values("date", inplace=True)
                 out.to_csv(_path, index=False)
                 logger.info(f"{_index_name} saved to {_path}, rows={len(out)}")
             except Exception as e:
-                logger.warning(f"get {_index_name} error: {e}")
-                continue
+                logger.error(f"get {_index_name} error: {e}")
+                failures.append(f"{_index_name}: {e}")
+        if failures:
+            raise RuntimeError("index download failed: " + "; ".join(failures))
 
     def collector_data(self):
         """单日优先按交易日批量采集；异常或回补任务使用逐股票路径。"""

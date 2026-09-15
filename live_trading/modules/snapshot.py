@@ -105,8 +105,10 @@ def build_snapshot(date, positions, cash, prices, bench_close,
     )
     if bench_close is None:
         bench_cum = None
+    elif prev_snapshot is None:
+        bench_cum = 0.0
     elif prev_bench_cum is None or bench_daily is None:
-        bench_cum = 0.0  # 基准累计从首个有基准的快照起算
+        bench_cum = None  # 历史缺价须回填，不能将累计收益静默重置为零
     else:
         bench_cum = (1 + prev_bench_cum) * (1 + bench_daily) - 1
 

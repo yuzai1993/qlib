@@ -13,6 +13,7 @@
 import argparse
 import json
 import logging
+import math
 import re
 import sys
 from datetime import date as _date
@@ -106,7 +107,9 @@ def fetch_benchmark_close(benchmark: str, date: str):
     try:
         df = D.features([benchmark], ["$close"], start_time=date, end_time=date)
         if not df.empty:
-            return float(df.iloc[0, 0])
+            close = float(df.iloc[0, 0])
+            if math.isfinite(close) and close > 0:
+                return close
     except Exception as e:
         logger.error("fetch benchmark close failed: %s", e)
     return None
@@ -537,6 +540,8 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
 
     benchmark = config.get("monitor", {}).get("benchmark", "SH000300")
     bench_close = fetch_benchmark_close(benchmark, date)
+    if bench_close is not None and (not math.isfinite(bench_close) or bench_close <= 0):
+        bench_close = None
 
     prev_snaps = [s for s in store.get_snapshots(end=date) if s["date"] < date]
     prev_snapshot = _previous_performance_snapshot(date, prev_snaps, config)
@@ -599,7 +604,13 @@ def run_report(date, calendar, recorder, store, config, notifier) -> list:
     logger.info("snapshot %s: total=%.2f positions=%d",
                 date, daily_row["total_value"], daily_row["position_count"])
 
-    findings += check_report(date, latest_cal, missing)
+    findings += check_report(date, latest_cal, missing,
+                             benchmark=benchmark, benchmark_close=bench_close)
+    if bench_close is not None and prev_snapshot and daily_row["benchmark_cumulative_return"] is None:
+        findings.append(Finding(
+            "BENCHMARK_HISTORY_MISSING", "WARN",
+            f"{date} 基准 {benchmark} 历史快照存在缺口，累计基准收益不可用；"
+            "请按日期补齐历史基准与后续快照，避免收益链断裂"))
     findings += check_account(store.get_snapshots(end=date), _thresholds(config))
 
     if config.get("monitor", {}).get("notify", {}).get("daily_report", True):

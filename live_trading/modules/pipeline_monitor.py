@@ -735,8 +735,9 @@ def check_broker_reconcile(trade_date, broker_account, broker_positions,
     return findings
 
 
-def check_report(trade_date, latest_calendar_date, missing_price_codes) -> list:
-    """快照前置检查：数据新鲜度、缺价。"""
+def check_report(trade_date, latest_calendar_date, missing_price_codes,
+                 *, benchmark=None, benchmark_close=None) -> list:
+    """检查日历、持仓价及基准；未传 benchmark 时只执行取价前的检查。"""
     findings = []
     if latest_calendar_date is None or latest_calendar_date < trade_date:
         findings.append(Finding(
@@ -747,6 +748,13 @@ def check_report(trade_date, latest_calendar_date, missing_price_codes) -> list:
         findings.append(Finding(
             "PRICE_MISSING", WARN,
             f"{trade_date} 持仓缺收盘价（按成本估值）：{', '.join(missing_price_codes)}"))
+    if benchmark is not None and (
+        benchmark_close is None or not math.isfinite(benchmark_close) or benchmark_close <= 0
+    ):
+        findings.append(Finding(
+            "BENCHMARK_MISSING", WARN,
+            f"{trade_date} 基准 {benchmark} 缺少有效收盘价：基准收益与超额收益不可用，"
+            "请补齐指数行情并修复当日监控快照"))
     return findings
 
 

@@ -32,7 +32,7 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-09-09-early-sell"
+SOURCE_VERSION = "2026-09-24-lot-cancel-guards"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -1429,6 +1429,19 @@ def _get_available_cash(account_id):
     return available
 
 
+def _get_position_volume(account_id, stock_code):
+    """Total holding, not just T+1 sellable shares, for the odd-balance rule."""
+    symbol = stock_code.split(".")[0]
+    try:
+        positions = get_trade_detail_data(account_id, ACCOUNT_TYPE, "POSITION")
+        for position in positions or []:
+            if getattr(position, "m_strInstrumentID", "") == symbol:
+                return int(getattr(position, "m_nVolume"))
+    except Exception:
+        _log("total position query failed:\n" + traceback.format_exc())
+    return None
+
+
 def _positive_price(value):
     try:
         price = float(value)
@@ -1579,11 +1592,9 @@ def _max_affordable_quantity(cash, price, requested_qty):
 
 
 def _board_min_shares(stock_code):
-    """Minimum single-order size for after-hours fixed-price trading.
+    """Minimum buy/sell size for auction and fixed-price orders.
 
-    STAR Market (SH688*) requires at least 200 shares per buy order; the main
-    board and ChiNext take any multiple of 100. Derived from the exchange rule,
-    not from the broker, because a rejected order costs us the whole layer.
+    A sell below this minimum is legal only when selling the entire balance.
     """
     symbol = str(stock_code).split(".")[0]
     return 200 if symbol.startswith("688") else 100
@@ -2179,7 +2190,18 @@ def _plan_ladder_netting(ContextInfo, batch):
         offsetable = sell is not None and due_shares % 100 == 0
         if offsetable:
             side, quantity, transferred = _net_ladder_pair(due_shares, sized)
-        else:
+            if 0 < quantity < _board_min_shares(code):
+                # Restore both original legs instead of sending an invalid
+                # residual or changing the target. Persist the unnetted BUY
+                # too, so a restart cannot offset an already submitted SELL.
+                offsetable = False
+                _log_event(
+                    "LADDER_NET_DISABLED_MINIMUM", batch_id=batch.batch_id(),
+                    stock_code=code, net_side=side, net_quantity=quantity,
+                    minimum_quantity=_board_min_shares(code),
+                    message="net residual below minimum; preserve original legs",
+                )
+        if not offsetable:
             side, quantity, transferred = "BUY", sized, 0
 
         buy["netting_close"] = close_price
@@ -2299,6 +2321,14 @@ def _process_batch(ContextInfo, batch):
                     ) * 100
                     _log("rollout gate shrinks sell %s to %d shares"
                          % (order["stock_code"], order["quantity"]))
+            if order["quantity"] < _board_min_shares(order["stock_code"]):
+                holding = (_get_position_volume(account_id, order["stock_code"])
+                           if mode_live else None)
+                if not (0 < order["quantity"] == holding):
+                    batch.submitted[order["client_order_id"]] = True
+                    _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                                "below board minimum; retain pending sell")
+                    continue
             _submit(ContextInfo, batch, order, mode_live)
 
         _poll_status(batch)
@@ -2402,6 +2432,11 @@ def _process_batch(ContextInfo, batch):
                             % batch.remaining_cash)
                 continue
             order["quantity"] = quantity
+            if quantity < _board_min_shares(order["stock_code"]):
+                batch.submitted[order["client_order_id"]] = True
+                _write_fill(batch, order, "SKIPPED", 0, 0.0, "",
+                            "below board minimum after cash/quantity limits")
+                continue
             if mode_live:
                 reserved = _estimated_buy_cost(quantity, reservation_price)
                 batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
@@ -2763,7 +2798,7 @@ def _observe_callback_order(batch, order, order_id, source):
             source=source,
             message="real QMT order id observed by callback",
         )
-        if not _order_is_terminal(batch, coid):
+        if coid not in batch.fills:
             _write_fill(
                 batch, order, "ACCEPTED", 0, 0.0, order_id,
                 "broker order observed by callback",
@@ -2879,7 +2914,7 @@ def deal_callback(ContextInfo, dealInfo):
 
 
 def orderError_callback(ContextInfo, orderArgs, errMsg):
-    """Persist asynchronous broker rejection details across QMT restarts."""
+    """An operation error (including cancel) is not an order terminal state."""
     remark = _callback_remark(orderArgs)
     code = str(_callback_value(
         orderArgs, "orderCode", "m_strInstrumentID"))
@@ -2914,10 +2949,25 @@ def orderError_callback(ContextInfo, orderArgs, errMsg):
             999999,
         )
         batch.submitted[order["client_order_id"]] = True
+        evidence["last_error"] = message
         _save_active_state(batch)
         _observe_callback_order(
             batch, order, order_id, "ORDER_ERROR_CALLBACK",
         )
+        if _order_is_terminal(batch, order["client_order_id"]):
+            return
+        # QMT uses this callback for failed cancels as well as placements.
+        # Once any broker order/fill exists, only ORDER evidence can settle it.
+        # Unknown/cancel operation types must never invent a zero-fill reject.
+        if (op_type not in (23, 24)
+                or evidence.get("order_observed") or order_id
+                or batch.fills.get(order["client_order_id"])):
+            _log_event(
+                "ORDER_ERROR_PENDING", batch_id=batch.batch_id(),
+                client_order_id=order["client_order_id"],
+                message="operation error retained; awaiting broker order status",
+            )
+            return
         _write_fill(batch, order, "REJECTED", 0, 0.0, "", message)
 
 

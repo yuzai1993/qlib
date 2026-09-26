@@ -38,7 +38,7 @@ class CohortOrderManager:
         self.trade_unit = int(config["exchange"].get("trade_unit", 100))
         self.fees = fees_from_config(config)
 
-    def _sell_quantity(self, wanted: float, position: float) -> int:
+    def _sell_quantity(self, wanted: float, position: float, instrument: str = "") -> int:
         """不足一手只能整笔卖出；否则向下取整到一手。"""
         wanted = int(round(wanted))
         position = int(round(position))
@@ -46,6 +46,8 @@ class CohortOrderManager:
             return 0
         if wanted >= position:
             return position
+        if instrument.startswith("SH688") and wanted < 200:
+            return 0
         if wanted % self.trade_unit == 0:
             return wanted
         return (wanted // self.trade_unit) * self.trade_unit
@@ -78,12 +80,12 @@ class CohortOrderManager:
         due = ledger_sell_amounts(ledger.due(), position_amounts)
         sells: dict[str, int] = {}
         for code, wanted in due.items():
-            quantity = self._sell_quantity(wanted, position_amounts.get(code, 0.0))
+            quantity = self._sell_quantity(wanted, position_amounts.get(code, 0.0), code)
             if quantity > 0:
                 sells[code] = quantity
             else:
                 logger.warning(
-                    "due %s dropped: wanted=%.0f position=%.0f below one lot",
+                    "due %s deferred: wanted=%.0f position=%.0f below board minimum",
                     code, wanted, position_amounts.get(code, 0.0),
                 )
 

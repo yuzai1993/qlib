@@ -52,6 +52,35 @@ def _due_layer(shares):
     )
 
 
+@pytest.mark.parametrize("due,holding,expected", [
+    (100, 1200, 0), (100, 100, 100), (150, 150, 150), (200, 1200, 200),
+])
+def test_star_residual_waits_until_legal_without_inflating_sell(due, holding, expected):
+    manager = CohortOrderManager(CONFIG)
+    state = _due_layer({"SH688775": due})
+    orders = manager.generate_orders(
+        scores=_scores({"SZ000001": 1.0}), cohort_state=state,
+        broker_positions={"SH688775": holding}, cash=0.0,
+        close_prices={"SH688775": 100.0}, total_value=300_000.0,
+    )
+    sells = [o for o in orders if o["direction"] == "SELL"]
+    assert [o["target_shares"] for o in sells] == ([expected] if expected else [])
+    if not expected:
+        assert orders == []  # Deferred proceeds must not inflate the buy budget.
+    assert state.layers[0][1] == {"SH688775": due}
+
+
+def test_pending_star_residual_combines_with_next_maturing_layer():
+    manager = CohortOrderManager(CONFIG)
+    state = _due_layer({"SH688775": 600})
+    state = CohortState(layers=state.layers, pending={"SH688775": 100})
+    orders = manager.generate_orders(
+        scores=_scores({}), cohort_state=state, broker_positions={"SH688775": 1200},
+        cash=0.0, close_prices={"SH688775": 100.0}, total_value=300_000.0,
+    )
+    assert orders[0]["target_shares"] == 700
+
+
 def test_buys_top_k_without_dedup_against_existing_layers():
     # SH600000 已被两层持有，仍应再次入选（连续上榜自动加仓）
     state = CohortState(

@@ -1675,6 +1675,80 @@ def test_order_error_callback_persists_rejection(bridge):
     assert callback["error_message"] == "broker rejected"
 
 
+@pytest.mark.parametrize("filled", [0, 8945, 11700])
+def test_cancel_error_preserves_execution_and_waits_for_broker(bridge, monkeypatch, filled):
+    from types import SimpleNamespace
+
+    batch = _live_batch(bridge)
+    bridge.g.batch = batch
+    order = batch.orders[0]
+    order.update(side="BUY", stock_code="002145.SZ", quantity=11700)
+    coid = order["client_order_id"]
+    batch.submitted[coid] = True
+    bridge._write_fill(batch, order, "FILLED" if filled == 11700 else "ACCEPTED",
+                       filled, 4.83 if filled else 0.0, "15024112_1", "broker query")
+    args = SimpleNamespace(userOrderId=coid, orderCode="002145.SZ", opType=-1)
+    bridge.orderError_callback(object(), args, "委托 [15024112_1] 撤单失败, 错误号: 251020")
+
+    assert batch.fills[coid]["filled_qty"] == filled
+    assert batch.fills[coid]["status"] == ("FILLED" if filled == 11700 else "ACCEPTED")
+    if filled < 11700:
+        monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda *a: {
+            coid: [_OrderDetail("15024112_1", 53 if filled else 54, filled, 4.83)],
+        })
+        bridge._poll_status(batch)
+        assert batch.fills[coid]["status"] == ("PARTIAL" if filled else "EXPIRED")
+        assert batch.fills[coid]["filled_qty"] == filled
+
+
+def test_unknown_error_on_observed_order_cannot_invent_rejection(bridge):
+    from types import SimpleNamespace
+
+    batch = _live_batch(bridge)
+    bridge.g.batch = batch
+    order = batch.orders[0]
+    coid = order["client_order_id"]
+    batch.submitted[coid] = True
+    bridge._observe_callback_order(batch, order, "real-order", "ORDER_CALLBACK")
+    args = SimpleNamespace(userOrderId=coid, orderCode=order["stock_code"], opType=23)
+    bridge.orderError_callback(object(), args, "broker operation failed")
+    assert batch.fills[coid]["status"] == "ACCEPTED"
+
+
+@pytest.mark.parametrize("known_ids", [[], ["child-1"]])
+def test_error_callback_tracks_additional_child_id_without_erasing_fills(
+    bridge, monkeypatch, known_ids,
+):
+    from types import SimpleNamespace
+
+    _write_batch(bridge, bridge._today(), [_order()])
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.execution_live = True
+    order = batch.orders[0]
+    order["quantity"] = 300
+    coid = order["client_order_id"]
+    batch.submitted[coid] = True
+    evidence = bridge._evidence_for(batch, coid)
+    evidence["qmt_order_ids"] = known_ids[:]
+    evidence["order_observed"] = bool(known_ids)
+    bridge._write_fill(batch, order, "ACCEPTED", 100, 10.0, "child-1", "partial")
+    args = SimpleNamespace(userOrderId=coid, orderCode=order["stock_code"],
+                           orderID="child-2", opType=-1)
+    bridge.orderError_callback(object(), args, "cancel failed")
+    assert "child-2" in evidence["qmt_order_ids"]
+    assert batch.fills[coid]["filled_qty"] == 100
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    batch = bridge.g.batch
+    monkeypatch.setattr(bridge, "_get_orders_by_remark", lambda *a: {
+        coid: [_OrderDetail("child-1", 53, 100, 10.0)],
+    })
+    bridge._poll_status(batch)
+    assert batch.fills[coid]["status"] == "ACCEPTED"
+    assert not bridge._order_is_terminal(batch, coid)
+
+
 @pytest.mark.parametrize("callback_kind,event_name", [
     ("order", "ORDER_CALLBACK"),
     ("deal", "DEAL_CALLBACK"),
@@ -2586,6 +2660,67 @@ def test_netting_arithmetic(
     assert bridge._net_ladder_pair(sell_shares, buy_shares) == (
         side, quantity, transferred,
     )
+
+
+@pytest.mark.parametrize("sell_qty,buy_value", [(600, 5000.0), (500, 6000.0)])
+def test_star_net_below_minimum_restores_both_legs_across_restart(
+    bridge, monkeypatch, tmp_path, sell_qty, buy_value,
+):
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, sell_qty, buy_value, code="688775.SH")
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    ctx = _TickCtx(10.0, up_stop=12.0, down_stop=8.0)
+    bridge._process_batch(ctx, batch)
+    assert [(a[0], a[6]) for a in submitted] == [(24, sell_qty)]
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    batch = bridge.g.batch
+    bridge._write_fill(batch, batch.orders[0], "FILLED", sell_qty, 10.0, "sell", "filled")
+    bridge._process_batch(ctx, batch)
+    assert [(a[0], a[6]) for a in submitted] == [(24, sell_qty), (23, int(buy_value / 10))]
+    assert all(o.get("netted_qty", 0) == 0 for o in batch.orders)
+
+
+@pytest.mark.parametrize("quantity,holding,can_use,expected", [
+    (100, 1200, 1200, 0), (100, 100, 100, 100), (150, 150, 150, 150),
+    (100, 200, 100, 0), (600, 1200, 100, 0), (100, None, 100, 0),
+])
+def test_star_sell_minimum_uses_total_holding_not_sellable_or_cohort_balance(
+    bridge, monkeypatch, tmp_path, quantity, holding, can_use, expected,
+):
+    from types import SimpleNamespace
+
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    order = _order()
+    order.update(stock_code="688775.SH", quantity=quantity, price_type="AFTER_HOURS_CLOSE")
+    _write_batch(bridge, bridge._today(), [order], mode="LIVE")
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    monkeypatch.setattr(bridge, "_get_can_use_volume", lambda *a: can_use)
+    monkeypatch.setattr(bridge, "get_trade_detail_data", lambda *a: [] if holding is None else [
+        SimpleNamespace(m_strInstrumentID="688775", m_nVolume=holding, m_nCanUseVolume=can_use),
+    ], raising=False)
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert [a[6] for a in submitted] == ([expected] if expected else [])
+    if not expected:
+        fill = batch.fills[order["client_order_id"]]
+        assert fill["status"] == "SKIPPED"
+        assert fill["filled_qty"] == 0
+        assert "minimum" in fill["message"]
+
+
+@pytest.mark.parametrize("cash,cap", [(1500.0, 0), (10000.0, 100)])
+def test_star_buy_rechecks_minimum_after_cash_and_cap(bridge, monkeypatch, tmp_path, cash, cap):
+    submitted = _run_after_hours(bridge, monkeypatch, tmp_path)
+    _ladder_batch(bridge, 0, 5000.0, code="688775.SH")
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    bridge.MAX_ORDER_QUANTITY = cap
+    monkeypatch.setattr(bridge, "_get_available_cash", lambda *a: cash)
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert submitted == []
+    assert batch.fills[batch.orders[0]["client_order_id"]]["status"] == "SKIPPED"
 
 
 @pytest.mark.parametrize("quantity", [0, -100, 100.5, True, None])

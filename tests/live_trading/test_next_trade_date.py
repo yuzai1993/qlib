@@ -46,6 +46,21 @@ def test_next_open_date_fails_closed_when_calendar_empty():
         next_open_date("2026-07-17", pro=FakePro([]))
 
 
+@pytest.mark.parametrize("day,want", [("2026-10-01", False), ("2026-10-08", True)])
+def test_open_day_check_uses_exchange_holiday_calendar(day, want):
+    from live_trading.scripts.next_trade_date import is_open_date
+    assert is_open_date(day, pro=FakePro([
+        {"cal_date": "20261008", "is_open": 1},
+        {"cal_date": "20261001", "is_open": 0},
+    ])) is want
+
+
+def test_open_day_check_does_not_treat_calendar_outage_as_a_holiday():
+    from live_trading.scripts.next_trade_date import is_open_date
+    with pytest.raises(RuntimeError, match="no open trading day"):
+        is_open_date("2026-10-01", pro=FakePro([]))
+
+
 def test_evening_monitor_does_not_hide_failed_friday_publish(monkeypatch, tmp_path):
     from live_trading.scripts import run_monitor
 

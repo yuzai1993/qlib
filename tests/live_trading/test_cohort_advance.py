@@ -1,8 +1,11 @@
 """回执导入后推进账本：汇总口径、幂等、空层占位、卖不掉的残量挂账。"""
 
+import pytest
+
 from live_trading.modules.cohort_advance import advance_after_import, day_executions
 from live_trading.modules.cohort_store import CohortState
 from live_trading.modules.fill_importer import LiveRecorder
+from live_trading.modules.signal_schema import SchemaError
 
 
 def _fill(**kw):
@@ -26,7 +29,8 @@ def _stub_fills(monkeypatch, recorder, fills, *, has_batch=True):
     monkeypatch.setattr(
         recorder, "get_batches_by_date",
         lambda trade_date, strategy_id=None: (
-            [{"batch_id": "b1"}] if has_batch else []
+            [{"batch_id": "b1", "mode": "LIVE", "planned_orders": len(fills),
+              "superseded_by": None}] if has_batch else []
         ),
     )
     monkeypatch.setattr(recorder, "get_fills", lambda batch_id: fills)
@@ -137,7 +141,7 @@ def test_advance_after_import_parks_unsold_due_amount(tmp_path, monkeypatch):
 
 
 def test_advance_after_import_records_empty_layer_when_no_batch(tmp_path, monkeypatch):
-    """当天没有批次（停市 / 发布失败）也要占位，否则阶梯账龄提前一天。"""
+    """已确认的交易日没有批次也要占位；休市日不能调用该日推进。"""
     recorder = _recorder(
         tmp_path,
         CohortState(layers=(("2026-08-19", {"SH600000": 100}),), pending={}),
@@ -149,6 +153,49 @@ def test_advance_after_import_records_empty_layer_when_no_batch(tmp_path, monkey
     )
 
     assert state.layers[-1] == ("2026-08-20", {})
+
+
+def test_future_trade_date_cannot_roll_even_an_empty_batch(tmp_path):
+    recorder = _recorder(tmp_path, CohortState(layers=(("2026-09-30", {}),)))
+    before = recorder.load_cohort_state()
+    with pytest.raises(SchemaError, match="future"):
+        advance_after_import(recorder, trade_date="2026-10-08", as_of="2026-10-01",
+                             horizon=5, strategy_id="s")
+    assert recorder.load_cohort_state() == before
+
+
+@pytest.mark.parametrize("status", [None, "ACCEPTED"])
+def test_incomplete_receipts_do_not_record_an_empty_day(tmp_path, monkeypatch, status):
+    recorder = _recorder(tmp_path, CohortState(layers=(("2026-08-19", {}),)))
+    before = recorder.load_cohort_state()
+    _stub_fills(monkeypatch, recorder, [_fill(status=status, applied_qty=0)] if status else [])
+    monkeypatch.setattr(recorder, "get_batches_by_date", lambda *a, **k: [
+        {"batch_id": "b1", "mode": "LIVE", "planned_orders": 1, "superseded_by": None},
+    ])
+    with pytest.raises(SchemaError, match="incomplete"):
+        advance_after_import(recorder, trade_date="2026-08-20", horizon=5, strategy_id="s")
+    assert recorder.load_cohort_state() == before
+    monkeypatch.setattr(recorder, "get_fills", lambda *a: [_fill(applied_qty=200)])
+    state = advance_after_import(recorder, trade_date="2026-08-20", horizon=5, strategy_id="s")
+    assert state.layers[-1] == ("2026-08-20", {"SH600000": 200})
+
+
+def test_reimport_older_than_retained_layers_cannot_roll_backwards(tmp_path):
+    recorder = _recorder(tmp_path, CohortState(layers=(("2026-09-30", {}),)))
+    before = recorder.load_cohort_state()
+    assert advance_after_import(recorder, trade_date="2026-08-20", horizon=5, strategy_id="s") is None
+    assert recorder.load_cohort_state() == before
+
+
+def test_superseded_unclaimed_plan_does_not_block_completed_replacement(tmp_path, monkeypatch):
+    recorder = _recorder(tmp_path, CohortState())
+    monkeypatch.setattr(recorder, "get_batches_by_date", lambda *a, **k: [
+        {"batch_id": "old", "mode": "LIVE", "planned_orders": 1, "superseded_by": "new"},
+        {"batch_id": "new", "mode": "LIVE", "planned_orders": 1, "superseded_by": None},
+    ])
+    monkeypatch.setattr(recorder, "get_fills", lambda b: [] if b == "old" else [_fill(applied_qty=200)])
+    result = advance_after_import(recorder, trade_date="2026-09-30", horizon=5, strategy_id="s")
+    assert result.layers == (("2026-09-30", {"SH600000": 200}),)
 
 
 def test_netted_shares_count_as_sold_and_bought_without_any_market_fill():

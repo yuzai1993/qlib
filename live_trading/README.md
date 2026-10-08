@@ -137,6 +137,7 @@ test -w /Volumes/qmt_bridge/inbox
 [用户 LaunchAgent](launchd/com.yuxianqi.qlib-live-scheduler.plist) 是 macOS 现网调度模板：
 
 - 在已登录用户的 `gui/<uid>` 会话中，每个工作日 **20:00** 启动一次；
+- Python 调度器再按交易所日历检查业务日期：休市日不运行导入、预测和发布，记录 `calendar.json` 的 `SKIPPED_CLOSED_DAY`；日历查询失败则报错停止，不能猜测是否开市；
 - `RunAtLoad=false`、`KeepAlive=false`，安装、登录或任务失败时不额外启动流水线；运行期间用 `caffeinate -i` 防止空闲睡眠；
 - launchd 会在睡眠后补交定时事件，入口 `run_scheduler_launchd.sh` 只允许工作日 20:00–23:59 启动；跨日唤醒会跳过并记录日志，需按缺失业务日期人工恢复；
 - 入口固定 `QLIB_LIVE_BUSINESS_DATE`，挂载或流水线跨午夜时，阶段回执、行情截止日、日报日期和下一开市日计算仍使用入口的业务日期；不要在 `~/.qlib_live_env` 固定设置该变量；
@@ -150,6 +151,8 @@ test -w /Volumes/qmt_bridge/inbox
 调度器把每日阶段回执原子写到
 `live_trading/.scheduler/<config>/<YYYY-MM-DD>/<stage>.json`。每次调用都按
 postclose → publish → evening 的固定顺序补齐尚无回执的阶段；无论成功还是失败，每阶段每天都只自动尝试一次。某阶段失败会让整条流水线最终返回非零，但不会阻止后续阶段执行，失败后按告警人工恢复，不会盲目重试。
+
+分层推进以 `QLIB_LIVE_BUSINESS_DATE` 为截止日，手工导入可用 `run_import_fills.py --date YYYY-MM-DD` 指定。上海时间 15:00 前最多结算到前一天，不能提前结算当天。按交易日历顺序补齐尚未结算的开市日；不再读取最新计划批次的未来日期。未到业务日、回执缺失或仍为非终态时不推进，也不写入“零成交”空层。真正的开市日无计划时仍记空层；已过时的重复导入不再次推进。历史版本若已写入未来空层，须先备份、按实际回执重建分层，不能简单修改日期。
 
 两项依赖权威收盘价的对账只能放在 `report`，因为 `postmarket` 跑在行情更新之前：
 `NETTING_CLOSE_MISMATCH`（bridge 定量用价是否等于权威收盘价）与 `FILL_RATIO_*`

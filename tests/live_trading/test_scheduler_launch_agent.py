@@ -77,6 +77,10 @@ def test_scheduler_retains_entry_business_date_for_receipts_and_all_stages(tmp_p
     scripts = live / "scripts"
     scripts.mkdir(parents=True)
     shutil.copy2(ROOT / "live_trading/scripts/run_scheduler.py", scripts)
+    # Exercise the real scheduler CLI with only its network calendar replaced.
+    (scripts / "next_trade_date.py").write_text(
+        'def is_open_date(day):\n    return day == "2026-09-14"\n'
+    )
     trace = tmp_path / "dates"
     for name in ("run_postclose_cron.sh", "run_publish_cron.sh", "run_monitor_cron.sh"):
         (live / name).write_text('#!/bin/bash\necho "$QLIB_LIVE_BUSINESS_DATE" >> "$DATE_TRACE"\n')

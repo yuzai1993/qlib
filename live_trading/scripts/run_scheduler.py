@@ -18,6 +18,8 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from live_trading.scripts.next_trade_date import is_open_date
+
 def _stage_definitions(project_root: Path, config_id: str):
     live_dir = project_root / "live_trading"
     return [
@@ -66,6 +68,18 @@ def run_pipeline(
         date_key = now.strftime("%Y-%m-%d")
         receipt_dir = live_dir / ".scheduler" / config_id / date_key
         receipt_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            trading_day = is_open_date(date_key)
+        except Exception as exc:
+            print(f"scheduler {date_key} calendar check failed: {exc}", file=sys.stderr)
+            return 1
+        if not trading_day:
+            _write_receipt(receipt_dir / "calendar.json", {
+                "stage": "calendar", "business_date": date_key,
+                "status": "SKIPPED_CLOSED_DAY", "exit_code": 0,
+            })
+            print(f"scheduler {date_key} skipped: exchange closed")
+            return 0
         overall_status = 0
 
         for stage, argv in _stage_definitions(project_root, config_id):

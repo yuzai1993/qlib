@@ -12,10 +12,12 @@
 from __future__ import annotations
 
 import logging
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from live_trading.modules.code_map import qmt_to_qlib
 from live_trading.modules.cohort_store import advanced_state
-from live_trading.modules.signal_schema import TERMINAL_FILL_STATUS
+from live_trading.modules.signal_schema import SchemaError, TERMINAL_FILL_STATUS
 
 
 def _ledger_instrument(stock_code: str) -> str:
@@ -53,22 +55,39 @@ def day_executions(
 
 
 def advance_after_import(
-    recorder, *, trade_date: str, horizon: int, strategy_id: str,
+    recorder, *, trade_date: str, horizon: int, strategy_id: str, as_of: str | None = None,
 ):
     """按当日实际成交推进账本一天并落库。
 
     已推进过同一天则返回 ``None``——回执导入一天可能跑多次，重复推进会让阶梯
-    涨到 ``horizon + 1`` 层、后续所有到期日集体错位。当天没有批次也要记一个空层，
-    否则阶梯账龄会提前一天。
+    涨到 ``horizon + 1`` 层、后续所有到期日集体错位。调用方必须先确认交易日；
+    已确认的交易日没有批次也记空层。未来日期、缺失/非终态回执不能视作零成交。
     """
+    today = datetime.now(ZoneInfo("Asia/Shanghai")).date()
+    cutoff = min(date.fromisoformat(as_of), today) if as_of else today
+    if date.fromisoformat(trade_date) > cutoff:
+        raise SchemaError(f"cannot advance future cohort date {trade_date} beyond {cutoff}")
     state = recorder.load_cohort_state()
-    if any(date == trade_date for date, _ in state.layers):
-        logger.info("cohort layer for %s already recorded; skipping", trade_date)
+    latest = max((day for day, _ in state.layers), default="")
+    if latest > cutoff.isoformat():
+        raise SchemaError(f"future cohort layer {latest} requires audited repair")
+    if latest >= trade_date:
+        logger.info("cohort date %s already covered through %s; skipping", trade_date, latest)
         return None
 
     fills: list = []
     for batch in recorder.get_batches_by_date(trade_date, strategy_id=strategy_id):
-        fills.extend(recorder.get_fills(batch["batch_id"]))
+        if batch.get("mode") == "SIMULATE":
+            continue
+        batch_fills = recorder.get_fills(batch["batch_id"])
+        terminal = sum(f["status"] in TERMINAL_FILL_STATUS for f in batch_fills)
+        # Unclaimed superseded plans have no receipts. Keep any actual fills
+        # from older plans, but never settle while their observed orders remain open.
+        if terminal < len(batch_fills) or (
+            not batch.get("superseded_by") and terminal < batch["planned_orders"]
+        ):
+            raise SchemaError(f"cohort receipts incomplete for {batch['batch_id']}")
+        fills.extend(batch_fills)
     sold, filled = day_executions(fills)
 
     advanced = advanced_state(

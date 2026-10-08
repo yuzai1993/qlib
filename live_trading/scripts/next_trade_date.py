@@ -51,6 +51,12 @@ def next_open_date(after_date: str, pro=None) -> str:
     return min(open_dates).strftime("%Y-%m-%d")
 
 
+def is_open_date(trade_date: str, pro=None) -> bool:
+    """Use the exchange calendar, including weekday holidays; failures propagate."""
+    previous = datetime.strptime(trade_date, "%Y-%m-%d").date() - timedelta(days=1)
+    return next_open_date(previous.isoformat(), pro=pro) == trade_date
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

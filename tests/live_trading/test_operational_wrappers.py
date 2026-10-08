@@ -135,6 +135,7 @@ def test_runbooks_use_only_the_locked_marker_creator():
 
 def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):
     from live_trading.scripts.run_scheduler import run_pipeline
+    monkeypatch.setattr("live_trading.scripts.run_scheduler.is_open_date", lambda d: True, raising=False)
 
     root = tmp_path / "repo"
     live_dir = root / "live_trading"
@@ -164,6 +165,22 @@ def _scheduler_fixture(tmp_path, monkeypatch, postclose_status=0):
 def _trace_lines(path):
     return path.read_text(encoding="utf-8").splitlines() \
         if path.exists() else []
+
+
+def test_scheduler_skips_every_stage_on_exchange_holiday(tmp_path, monkeypatch):
+    root, trace, run_pipeline = _scheduler_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr("live_trading.scripts.run_scheduler.is_open_date", lambda d: False)
+    assert run_pipeline("paper", root, datetime(2026, 10, 1, 20, 0)) == 0
+    assert _trace_lines(trace) == []
+
+
+def test_scheduler_calendar_failure_runs_no_business_stage(tmp_path, monkeypatch):
+    root, trace, run_pipeline = _scheduler_fixture(tmp_path, monkeypatch)
+    def unavailable(day):
+        raise RuntimeError("calendar unavailable")
+    monkeypatch.setattr("live_trading.scripts.run_scheduler.is_open_date", unavailable)
+    assert run_pipeline("paper", root, datetime(2026, 10, 1, 20, 0)) == 1
+    assert _trace_lines(trace) == []
 
 
 def test_scheduler_runs_all_stages_once_serially(tmp_path, monkeypatch):

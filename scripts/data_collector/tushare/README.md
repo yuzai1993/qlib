@@ -69,6 +69,9 @@ python collector.py update_data_to_bin --qlib_dir ~/.qlib/qlib_data/cn_data --st
 `falling back to per-symbol collection` 表示批量接口或完整性校验失败，任务已自动切换到
 较慢但兼容的逐股票路径，应结合后续 `all steps OK` 判断当日入库是否最终成功。
 
+指数交易日历遇到接口异常、空响应或完整性校验失败时，最多尝试 3 次；每次仍检查
+请求区间和开市标志。持续失败会阻止归一化及入库，不会将空响应视为休市日。
+
 若需**手动分步**做增量：先在本目录执行 `download_data` 和 `normalize_data`，再在仓库根目录执行 `python scripts/dump_bin.py dump_update --data_path scripts/data_collector/tushare/normalize --qlib_dir <qlib_dir> ...`（参数同上面 dump_all，仅把 `dump_all` 改为 `dump_update`）。
 
 ### 5. 定时任务（工作日，日志按日期写入 logs/data）

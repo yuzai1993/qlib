@@ -57,6 +57,62 @@ def test_index_transient_failure_retries_and_preserves_history(tmp_path):
 
 
 @pytest.mark.parametrize("response", [
+    RuntimeError("temporary calendar outage"),
+    pd.DataFrame(),
+    pd.DataFrame({"cal_date": ["20260914"], "is_open": [1]}),
+    pd.DataFrame({"cal_date": ["20260915"], "is_open": [None]}),
+])
+def test_transient_calendar_failure_recovers_before_downloading_index(tmp_path, response):
+    class API(IndexAPI):
+        def trade_cal(self, **kwargs):
+            assert kwargs == {"exchange": "SSE", "start_date": "20260915", "end_date": "20260915"}
+            if self.calendar_responses:
+                result = self.calendar_responses.pop(0)
+                if isinstance(result, Exception):
+                    raise result
+                return result
+            return super().trade_cal(**kwargs)
+
+    api = API([_frame()])
+    api.calendar_responses = [response, response]
+    path = tmp_path / "sh000985.csv"
+    path.write_text("date,close,symbol\n2026-09-14,5761.8847,sh000985\n")
+
+    _collector(tmp_path, api).download_index_data()
+
+    rows = pd.read_csv(path)
+    assert rows["date"].tolist() == ["2026-09-14", "2026-09-15"]
+    assert rows["close"].tolist() == [5761.8847, 5723.6899]
+
+
+@pytest.mark.parametrize("response", [
+    RuntimeError("temporary calendar outage"),
+    pd.DataFrame(),
+    pd.DataFrame({"cal_date": ["20260914"], "is_open": [1]}),
+])
+def test_persistent_calendar_failure_preserves_source(tmp_path, response):
+    class API(IndexAPI):
+        attempts = 0
+
+        def trade_cal(self, **kwargs):
+            self.attempts += 1
+            if isinstance(response, Exception):
+                raise response
+            return response
+
+    api = API([])
+    path = tmp_path / "sh000985.csv"
+    original = "date,close,symbol\n2026-09-14,5761.8847,sh000985\n"
+    path.write_text(original)
+
+    with pytest.raises(RuntimeError, match="calendar"):
+        _collector(tmp_path, api).download_index_data()
+
+    assert api.attempts == 3
+    assert path.read_text() == original
+
+
+@pytest.mark.parametrize("response", [
     RuntimeError("upstream date range error"), pd.DataFrame(),
     _frame(date="20260914"), _frame(close=float("nan")),
     _frame(close=0.0), _frame(code="000300.SH"),

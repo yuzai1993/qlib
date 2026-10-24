@@ -358,25 +358,35 @@ class TushareCollectorCN(BaseCollector):
                 if attempt == self.INDEX_DOWNLOAD_ATTEMPTS:
                     raise
 
+    def _download_index_calendar(self, pro, begin, end):
+        """Retry temporary calendar failures without treating missing data as a holiday."""
+        # Request closed days too: an empty response must not be mistaken for a holiday.
+        for attempt in range(1, self.INDEX_DOWNLOAD_ATTEMPTS + 1):
+            try:
+                self.sleep()
+                calendar = pro.trade_cal(exchange="SSE", start_date=begin, end_date=end)
+                if calendar is None or calendar.empty:
+                    raise RuntimeError("index trading calendar is empty")
+                self._require_batch_columns(calendar, {"cal_date", "is_open"}, "trade_cal")
+                calendar_dates = pd.to_datetime(calendar["cal_date"], format="%Y%m%d").dt.strftime("%Y%m%d")
+                if set(calendar_dates) != set(pd.date_range(begin, end).strftime("%Y%m%d")):
+                    raise RuntimeError("index trading calendar is incomplete")
+                open_flags = pd.to_numeric(calendar["is_open"], errors="coerce")
+                if not open_flags.isin([0, 1]).all():
+                    raise RuntimeError("index trading calendar has invalid is_open flags")
+                return set(calendar_dates[open_flags == 1])
+            except Exception as exc:
+                logger.warning(f"index trade_cal {begin}~{end} attempt {attempt}/{self.INDEX_DOWNLOAD_ATTEMPTS}: {exc}")
+                if attempt == self.INDEX_DOWNLOAD_ATTEMPTS:
+                    raise RuntimeError(f"index trading calendar failed for {begin}~{end}: {exc}") from exc
+
     def download_index_data(self):
         """Download all configured benchmarks; any unavailable trading date fails the update."""
         pro = self._get_pro()
         _format = "%Y%m%d"
         _begin = self.start_datetime.strftime(_format)
         _end = self.end_datetime.strftime(_format)
-
-        # Request closed days too: an empty response must not be mistaken for a holiday.
-        calendar = pro.trade_cal(exchange="SSE", start_date=_begin, end_date=_end)
-        if calendar is None or calendar.empty:
-            raise RuntimeError("index trading calendar is empty")
-        self._require_batch_columns(calendar, {"cal_date", "is_open"}, "trade_cal")
-        calendar_dates = pd.to_datetime(calendar["cal_date"], format=_format).dt.strftime(_format)
-        if set(calendar_dates) != set(pd.date_range(_begin, _end).strftime(_format)):
-            raise RuntimeError("index trading calendar is incomplete")
-        open_flags = pd.to_numeric(calendar["is_open"], errors="coerce")
-        if not open_flags.isin([0, 1]).all():
-            raise RuntimeError("index trading calendar has invalid is_open flags")
-        expected_dates = set(calendar_dates[open_flags == 1])
+        expected_dates = self._download_index_calendar(pro, _begin, _end)
         if not expected_dates:
             logger.info("no trading dates in index download range")
             return

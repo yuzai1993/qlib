@@ -39,6 +39,7 @@ from . import config as cfg
 from . import crawler
 from . import parser_content, parser_excel, parser_pdf
 from .aggregator import aggregate
+from .announcement_lag import snapshot_lag_evidence
 from .builder import build_all, load_current_snapshot
 from .hybrid_history import build_hybrid_outputs
 
@@ -189,8 +190,7 @@ def _load_instruments_df(path: Path) -> pd.DataFrame:
     )
 
 
-# 公告日 → 生效日的最大预期窗口。定期调样公告一般提前约 2 周发布，
-# 窗口内快照与公告日口径在册的差异属预期滞后，超窗仍不一致才算真实漂移。
+# 缺少可核验生效信息时的回退窗口。明确日期、条件式公告及历史快照证据优先。
 SNAPSHOT_LAG_DAYS = 25
 
 
@@ -199,14 +199,13 @@ def diff_snapshot(
     snap_date: str,
     snap_set: set[str],
     lag_days: int = SNAPSHOT_LAG_DAYS,
+    announcement_evidence: dict | None = None,
 ) -> dict:
     """官网快照 vs 公告日口径在册的纯比对（不做任何 IO）。
 
     差异分两类：
-    - 预期滞后（pending_*）：公告已调入/调出但尚未生效——差异股票的
-      区间边界落在 snap_date 前 lag_days 天内，快照仍是旧名单，正常。
-    - 真实漂移（unexplained_*）：差异股票近期无任何区间边界，
-      说明漏公告或解析错，需要告警。
+    有公告证据时按生效日期/条件及历史快照判断；否则回退到 lag_days 窗口。
+    已确认到期或曾在快照中生效的变更，不能再以窗口未过为由豁免。
     """
     lag_floor = (pd.Timestamp(snap_date) - pd.Timedelta(days=lag_days)).strftime(
         "%Y-%m-%d"
@@ -220,14 +219,20 @@ def diff_snapshot(
 
     # 公告已调入未生效：活跃区间的 start 落在滞后窗口内
     recent_start = set(df.loc[active_mask & (df["start_date"] >= lag_floor), "symbol"])
-    pending_add = [s for s in only_local if s in recent_start]
-    unexplained_local = [s for s in only_local if s not in recent_start]
 
     # 公告已调出未生效：最近一段区间的 end 落在滞后窗口内
     closed = df.loc[df["end_date"] <= snap_date]
     recent_end = set(closed.loc[closed["end_date"] >= lag_floor, "symbol"])
-    pending_drop = [s for s in only_snap if s in recent_end]
-    unexplained_snap = [s for s in only_snap if s not in recent_end]
+    evidence = announcement_evidence or {}
+
+    def is_pending(symbol, recent):
+        known = evidence.get(symbol)
+        return known["status"] == "pending" if known else symbol in recent
+
+    pending_add = [s for s in only_local if is_pending(s, recent_start)]
+    unexplained_local = [s for s in only_local if s not in pending_add]
+    pending_drop = [s for s in only_snap if is_pending(s, recent_end)]
+    unexplained_snap = [s for s in only_snap if s not in pending_drop]
 
     return {
         "ok": not unexplained_local and not unexplained_snap,
@@ -238,6 +243,7 @@ def diff_snapshot(
         "pending_drop": pending_drop,
         "unexplained_local": unexplained_local,
         "unexplained_snap": unexplained_snap,
+        "announcement_evidence": evidence,
     }
 
 
@@ -257,7 +263,20 @@ def compare_snapshot(index_name: str, snap_date: str, snap_set: set[str]) -> dic
             "unexplained_snap": [],
         }
 
-    result = diff_snapshot(df, snap_date, snap_set)
+    active = df.loc[(df["start_date"] <= snap_date) & (df["end_date"] > snap_date)]
+    local_set = set(active["symbol"])
+    boundaries = {
+        symbol: ("add", active.loc[active["symbol"] == symbol, "start_date"].max())
+        for symbol in local_set - snap_set
+    }
+    closed = df.loc[df["end_date"] <= snap_date]
+    for symbol in snap_set - local_set:
+        ends = closed.loc[closed["symbol"] == symbol, "end_date"]
+        if not ends.empty:
+            boundaries[symbol] = ("remove", ends.max())
+    evidence = snapshot_lag_evidence(index_name, snap_date, boundaries)
+    result = diff_snapshot(df, snap_date, snap_set, announcement_evidence=evidence)
+    result["local_count"] = len(local_set)
     pending_add = result["pending_add"]
     pending_drop = result["pending_drop"]
     if result["ok"] and not pending_add and not pending_drop:

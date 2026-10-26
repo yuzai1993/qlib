@@ -1,0 +1,19 @@
+{
+  "3006227": [
+    {
+      "baseline_sha256": "66ff1d5b01e8258832e4e5e465d047e0d92d75ad0e6748bd5f9b880fa6625351",
+      "reviewed_sha256": "cb3c74cb1c1523bd9b05aaabfab7245a89a67bc82bf971457fbc07ff10f6ec3f",
+      "baseline_file": "reviewed_details/3006227.original.json",
+      "revision_date": "2026-10-13",
+      "source_url": "https://www.csindex.com.cn/csindex-home/announcement/queryAnnouncementById?id=3006227&lang=cn",
+      "attachment_url": "https://oss-ch.csindex.com.cn/notice/20261013171630-附件：指数样本调整名单.xlsx",
+      "attachment_sha256": "213f7d73d5715f584c0ba4b930b578d5b6303ad535afd913e66c7459a95a8383",
+      "effective_date_evidence": "Official archived snapshots: old roster on 2026-10-16; revised roster on 2026-10-19 (next trading day). Revision date is enclosure createAt and URL timestamp; original publishDate remains 2026-09-09.",
+      "corrections": [
+        {"action": "add", "index_name": "csi500", "symbol": "SH603083", "type": "add", "announce_date": "2026-10-13", "effective_date": "2026-10-19"},
+        {"action": "add", "index_name": "csi1000", "symbol": "SH603083", "type": "remove", "announce_date": "2026-10-13", "effective_date": "2026-10-19"},
+        {"action": "add", "index_name": "csi1000", "symbol": "SH603680", "type": "add", "announce_date": "2026-10-13", "effective_date": "2026-10-19"}
+      ]
+    }
+  ]
+}

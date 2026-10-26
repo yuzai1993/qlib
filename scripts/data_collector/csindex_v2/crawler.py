@@ -7,7 +7,7 @@
   4. 下载 4 个指数的当前成分快照 → snapshots/
 
 特性：
-  - 断点续传：manifest 已有的条目跳过搜索，details 已存在的跳过详情拉取
+  - 断点续传：补齐未缓存详情，并复查近期公告的同 ID 正文/附件修订
   - 慢速爬取：请求间隔 4-6 秒，总耗时约 40-60 分钟
   - 全程无浏览器依赖，纯 requests
 """
@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date, timedelta
 import re
 import time
 from pathlib import Path
@@ -24,6 +25,7 @@ import requests
 from loguru import logger
 
 from . import config as cfg
+from .detail_revisions import check_detail_revision, historical_detail
 
 
 # ── HTTP 基础 ─────────────────────────────────────────────────────────────────
@@ -164,30 +166,42 @@ def build_manifest(refresh: bool = False, incremental: bool = False) -> list[dic
 
 # ── Step 2: 拉取公告详情 ──────────────────────────────────────────────────────
 
-def fetch_details(items: list[dict] | None = None) -> None:
-    """对 manifest 中每条公告拉取详情 JSON（断点续传）。"""
+def fetch_details(items: list[dict] | None = None, refresh_days: int = 90) -> None:
+    """补齐详情并复查近 90 天公告；同 ID 修订经审核后以有日期的增量修正处理。"""
     cfg.ensure_dirs()
     if items is None:
         with cfg.MANIFEST_PATH.open() as f:
             items = json.load(f)
 
-    todo = [it for it in items if not (cfg.DETAILS_DIR / f"{it['id']}.json").exists()]
-    logger.info(f"details: 共 {len(items)} 条，待拉取 {len(todo)} 条")
+    since = (date.today() - timedelta(days=refresh_days)).isoformat()
+    todo = [
+        it for it in items
+        if not (cfg.DETAILS_DIR / f"{it['id']}.json").exists()
+        or (it.get("date") or "") >= since
+    ]
+    logger.info(f"details: 共 {len(items)} 条，待拉取/复查 {len(todo)} 条")
 
     for i, it in enumerate(todo):
         aid = it["id"]
+        dest = cfg.DETAILS_DIR / f"{aid}.json"
         url = f"{cfg.DETAIL_API}?id={aid}&lang=cn"
         resp = _get(url)
         if resp is None:
+            if dest.exists():
+                raise RuntimeError(f"公告 {aid} 复查失败，不能确认缓存仍为最新")
             logger.error(f"detail id={aid} 拉取失败，跳过")
             continue
         try:
             payload = resp.json()
         except Exception as e:
-            logger.error(f"detail id={aid} JSON 解析失败: {e}")
-            continue
-        dest = cfg.DETAILS_DIR / f"{aid}.json"
-        dest.write_text(json.dumps(payload, ensure_ascii=False, indent=1))
+            raise RuntimeError(f"公告 {aid} 详情解析/复查失败") from e
+        data = payload.get("data") or {}
+        if str(data.get("id")) != str(aid) or not data.get("publishDate"):
+            raise RuntimeError(f"公告 {aid} 详情复查失败：响应缺少匹配的公告 ID 或发布日期")
+        if dest.exists():
+            check_detail_revision(json.loads(dest.read_text()), payload)
+        else:
+            dest.write_text(json.dumps(historical_detail(payload), ensure_ascii=False, indent=1))
         if (i + 1) % 20 == 0:
             logger.info(f"details: {i + 1}/{len(todo)} 完成")
         time.sleep(cfg.SLEEP_BETWEEN_REQUESTS)

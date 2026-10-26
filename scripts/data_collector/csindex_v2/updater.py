@@ -41,6 +41,7 @@ from . import parser_content, parser_excel, parser_pdf
 from .aggregator import aggregate
 from .announcement_lag import snapshot_lag_evidence
 from .builder import build_all, load_current_snapshot
+from .detail_revisions import correction_fingerprint
 from .hybrid_history import build_hybrid_outputs
 
 QLIB_INSTRUMENTS = Path("~/.qlib/qlib_data/cn_data/instruments").expanduser().resolve()
@@ -78,7 +79,15 @@ def rebuild() -> str:
     logger.info("=== 聚合 ===")
     aggregate()
     logger.info("=== 构建 instruments ===")
-    return build_all()
+    report = build_all()
+    if "构建失败" in report:
+        raise RuntimeError(report)
+    # Only mark inputs consumed after all official outputs have been rebuilt.
+    marker = cfg.CHANGES_DIR / "correction_inputs.sha256"
+    temporary = marker.with_suffix(".tmp")
+    temporary.write_text(correction_fingerprint(), encoding="utf-8")
+    temporary.replace(marker)
+    return report
 
 
 def install_instruments(indices: tuple[str, ...] = INSTALL_INDICES) -> dict[str, Path]:
@@ -337,9 +346,12 @@ def update_daily(force_rebuild: bool = True) -> dict:
     """
     cfg.ensure_dirs()
     n_new = crawl_incremental()
+    correction_marker = cfg.CHANGES_DIR / "correction_inputs.sha256"
     need_rebuild = (
         force_rebuild
         or n_new > 0
+        or not correction_marker.exists()
+        or correction_marker.read_text() != correction_fingerprint()
         or not all(
             (cfg.CHANGES_DIR / f"{n}_instruments.txt").exists()
             for n in OFFICIAL_INDICES
@@ -349,7 +361,7 @@ def update_daily(force_rebuild: bool = True) -> dict:
         rebuild()
         rebuilt = True
     else:
-        logger.info("跳过重建（无新公告且产物已存在）")
+        logger.info("跳过重建（无新公告、修正输入未变且产物已存在）")
         rebuilt = False
 
     installed = install_instruments(OFFICIAL_INDICES)

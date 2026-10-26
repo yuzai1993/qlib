@@ -9,6 +9,7 @@ import re
 import pandas as pd
 
 from . import config as cfg
+from .detail_revisions import reviewed_correction_source
 from .parser_content import (
     EFFECTIVE_PATTERNS,
     EFFECTIVE_PATTERNS_NO_YEAR,
@@ -43,36 +44,51 @@ def snapshot_lag_evidence(index_name: str, snap_date: str, boundaries: dict) -> 
         if row["type"] != direction:
             evidence[symbol] = {"status": "expired", "reason": "newer_opposite_event", "source_id": row["source_id"]}
             continue
-        if row["source"] not in {"excel", "pdf", "content"}:
-            continue
-        path = cfg.DETAILS_DIR / f"{row['source_id']}.json"
-        if not path.exists():
-            continue
-        data = json.loads(path.read_text()).get("data") or {}
-        if str(data.get("id")) != row["source_id"] or data.get("publishDate") != row["announce_date"]:
-            continue
-        text = re.sub(r"\s+", "", html.unescape(re.sub(r"<[^>]+>", "", data.get("content") or "")))
-        # The general parser has title/first-date/month-start heuristics for old data.
-        # An exemption/deadline requires an explicit effective-date context.
-        dated_context = any(re.search(pattern, text) for pattern in EFFECTIVE_PATTERNS + EFFECTIVE_PATTERNS_NO_YEAR)
-        effective = extract_effective_date(text, row["announce_date"]) if dated_context else None
-        item = {
-            "source_id": row["source_id"],
-            "announce_date": row["announce_date"],
-            "type": direction,
-            "effective_date": effective,
-        }
-        if effective and "approx_date" not in str(row.get("method", "")):
-            stamp = pd.Timestamp(effective)
-            after_close = bool(re.search(rf"(?:{stamp.year}年)?0?{stamp.month}月0?{stamp.day}日收市后", text))
-            pending = snap_date <= effective if after_close else snap_date < effective
-            item.update(status="pending" if pending else "expired", reason="dated_notice", after_close=after_close)
-        elif effective is None and re.search(
-            r"(?:自|于)[^。；;]{0,120}(?:退市|终止上市|上市)(?:生效)?(?:之日|日)(?:起)?", text
-        ):
-            item.update(status="pending", reason="conditional_notice")
+        reviewed_source = reviewed_correction_source(row)
+        if reviewed_source:
+            # Audited revisions retain the old notice, so its publication date
+            # cannot validate this newer delta. Use the exact reviewed deadline.
+            effective = row["effective_date"]
+            item = {
+                "source_id": reviewed_source,
+                "announce_date": row["announce_date"],
+                "type": direction,
+                "effective_date": effective,
+                "status": "pending" if snap_date < effective else "expired",
+                "reason": "reviewed_revision",
+                "after_close": False,
+            }
         else:
-            continue
+            if row["source"] not in {"excel", "pdf", "content"}:
+                continue
+            path = cfg.DETAILS_DIR / f"{row['source_id']}.json"
+            if not path.exists():
+                continue
+            data = json.loads(path.read_text()).get("data") or {}
+            if str(data.get("id")) != row["source_id"] or data.get("publishDate") != row["announce_date"]:
+                continue
+            text = re.sub(r"\s+", "", html.unescape(re.sub(r"<[^>]+>", "", data.get("content") or "")))
+            # The general parser has title/first-date/month-start heuristics for old data.
+            # An exemption/deadline requires an explicit effective-date context.
+            dated_context = any(re.search(pattern, text) for pattern in EFFECTIVE_PATTERNS + EFFECTIVE_PATTERNS_NO_YEAR)
+            effective = extract_effective_date(text, row["announce_date"]) if dated_context else None
+            item = {
+                "source_id": row["source_id"],
+                "announce_date": row["announce_date"],
+                "type": direction,
+                "effective_date": effective,
+            }
+            if effective and "approx_date" not in str(row.get("method", "")):
+                stamp = pd.Timestamp(effective)
+                after_close = bool(re.search(rf"(?:{stamp.year}年)?0?{stamp.month}月0?{stamp.day}日收市后", text))
+                pending = snap_date <= effective if after_close else snap_date < effective
+                item.update(status="pending" if pending else "expired", reason="dated_notice", after_close=after_close)
+            elif effective is None and re.search(
+                r"(?:自|于)[^。；;]{0,120}(?:退市|终止上市|上市)(?:生效)?(?:之日|日)(?:起)?", text
+            ):
+                item.update(status="pending", reason="conditional_notice")
+            else:
+                continue
         # Use the current interval boundary, not the latest duplicate notice's
         # date, so a repeated same-side notice cannot reset an observed transition.
         history = changes.loc[changes["symbol"] == symbol]

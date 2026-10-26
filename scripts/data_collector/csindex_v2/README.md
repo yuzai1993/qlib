@@ -88,6 +88,14 @@ csi1000 上市初期（2014-10 ~ 2015-06）同样缺少可解析的完整官方�
    聚合为 `manifest.json`（id、日期、标题、命中关键词）。
 2. **详情 API** `csindex-home/announcement/queryAnnouncementById`
   每条公告写入 `details/{id}.json`（正文 HTML + `enclosureList`）。
+   日更会复查近 90 天的已有公告，不能因 ID 已缓存就跳过。比较正文、标题和附件 URL 的
+   语义指纹；纯 HTML 排版变化不算修订。复查失败会让日更失败。
+   发生修订时，响应存入 `detail_revisions/{id}/{sha256}.json`，原详情与旧附件保持不变。
+   未审核的修订会在重建/安装之前报错，防止新版名单被错误记到旧发布日期。
+   审核记录 `reviewed_revisions.json` 绑定原版/修订版指纹及必须存在的
+   `manual_fixes.csv` 日期修正；新缓存通过随仓库保存的原始详情恢复历史基线。
+   已审核公告的本地缓存也必须匹配原版指纹；污染缓存及官网回退均需重新核实。
+   这不是全历史重新抓取，也不检测附件 URL 不变但文件内容被直接覆盖的情况。
 3. **附件下载**
   - 正式附件（`enclosureList`）→ `files/{YYYYMMDD}_{id}_{文件名}`
   - 正文内嵌 `.xlsx/.xls/.pdf` 链接 → `files/{YYYYMMDD}_{id}_embed_...`
@@ -112,10 +120,16 @@ python -m scripts.data_collector.update_indices_daily
    “自退市/终止上市/上市日起”等条件式公告不受固定 25 天限制；历史官网快照已经观察到
    该变更后，不得再作为待生效豁免。快照日期取表内日期，不取归档目录日期。
    后续有明确日期的公告覆盖同股票旧的条件式证据；无此证据才回退 25 天窗口。
+   `reviewed_revisions.json` 精确匹配的人工增量使用已审核的生效日截止，不能被
+   通用 25 天窗口继续豁免。普通未审核人工记录不获得该例外。
    结果保留 `announcement_evidence` 和 `local_count`，无依据或到期后的差异仍失败并告警。
    多份公告重复调入同一股票时，公告日口径名单可暂少于额定数量；保留差异来源，不用快照强行补齐。
    **csi2000 按官网快照补丁当前在册**，漂移不让日更失败。
 5. 快照另存 `snapshots/daily/YYYYMMDD/` 便于回溯
+
+重建成功后保存 `changes/correction_inputs.sha256`，绑定人工修正和修订审核文件的内容。
+即使使用 `force_rebuild=False`，缺少该记录或修正内容变化也会重建，避免同 ID 公告修订
+因“没有新增公告”而继续安装旧名单。任一官方指数构建失败时，在安装前退出。
 
 ### 3.2 三路解析器
 
@@ -282,6 +296,26 @@ action,index_name,symbol,type,effective_date,announce_date,note
 
 
 修改后只需重跑 `aggregator` + `builder`。
+
+### 5.1 同 ID 公告换附件：3006227（2026-10-13 修订）
+
+公告《[关于沪深300等指数样本临时调整的公告](https://www.csindex.com.cn/csindex-home/announcement/queryAnnouncementById?id=3006227&lang=cn)》
+的 `publishDate` 保持 2026-09-09，但官网将附件改成了
+[20261013171630-附件：指数样本调整名单.xlsx](https://oss-ch.csindex.com.cn/notice/20261013171630-附件：指数样本调整名单.xlsx)。
+附件 `createAt=2026-10-13`，SHA-256 为
+`213f7d73d5715f584c0ba4b930b578d5b6303ad535afd913e66c7459a95a8383`。
+
+原缓存只读到旧方案：CSI500 纳入富乐德、CSI1000 以汽轮科技替换富乐德。
+其中一部分已由 2026-10-08 公告 3006261 再次确认；不能删除整个旧方案，或把新名单
+追溯到 9 月 9 日。保留原事件，按修订日 **2026-10-13** 增加三条官方来源的变更：
+CSI500 纳入 `SH603083`；CSI1000 调出 `SH603083`、纳入 `SH603680`。
+本地归档的 10 月 16 日官网快照仍为旧名单，下一交易日 10 月 19 日已为新名单，
+故 `effective_date=2026-10-19`；它与用于构建公告日口径的 `announce_date=2026-10-13` 分开保存。
+CSI2000 延续官网快照维护，不额外补人工事件。
+
+这次修正也消除了 CSI500 反推时将 `SH603083` 错误延伸到历史覆盖起点的现象。
+复核时必须同时比较 CSI500、CSI1000 与各自 hybrid 的区间，而非只看当前成员数。
+再次变更附件或正文会产生不同指纹，旧审核记录不会自动放行新修订。
 
 ---
 

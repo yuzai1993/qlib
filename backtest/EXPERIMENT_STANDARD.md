@@ -1,9 +1,11 @@
 # Qlib 实验规范标准（EXPERIMENT_STANDARD）
 
-版本：v2.16（2026-08-23）
+版本：v2.17（2026-10-29）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
+
+本次修订（v2.17）由用户于 2026-10-29 明确批准：将历史模型 **v2 · M0 H20 ES** 五种子合成信号 × `TopkDropoutStrategy(topk=5,n_drop=1,hold_thresh=1,force_sell_rank=100,risk_degree=0.90)` 晋升为执行层回测基线 **BT v5**。保留100万账户、原费用和原历史窗口；该窗口已经用于模型早停与策略比较，属于历史选型窗口，不是独立样本外检验。模型研究基线仍为 **v4 · M0 H20 RankIC ES**。本次仅批准隔离环境的离线实盘适配，30万当前费用与新增期间结果另作诊断；生产实盘配置、资金持仓、数据库、调度、桥接和QMT均未因本次晋升而激活或切换。
 
 本次修订（v2.16）由用户于 2026-08-23 **明确批准**：把 **v4 RankIC ES × 真阶梯 k3×h5**（`CohortLadderStrategy` topk=3 horizon=5）晋升为执行层回测基线 **BT v4**。晋升依据是组合规则对齐主格 top3×h5，不是对 BT v3 逐维占优。v2.15 由用户于 2026-08-22 **明确批准**：Phase M v1 **训练早停**改回评估窗上的 `daily_rank_ic`；把「v3 + RankIC 早停」官方合成信号晋升为模型基线 **v4 · M0 H20 RankIC ES**；总报告第 1 块增加**全局 RankIC**（官方合成信号、全宇宙日截面 Spearman，读 `ensemble.h5.rank_ic_mean`）。**评测主格不变**，仍是 top3×h5 扣费净年化/波动/夏普。v4 不是重跑 v1：v1 是 499 天次日 RankIC + `valid_frame_70.pkl`；v4 仍用 `valid_frame_t5h5es.pkl`（约 1454 天，H5 标签只作 RankIC 的 y）。v2.14 由用户于 2026-08-22 **明确批准**：Phase M v1 每个实验的主指标都是 **top3×h5**；分年、分风格只报这一格，不再叉乘 k×h。v2.13 将官方主格与早停改为 top3×h5，并按净年化晋升 **v3**。v2.12 修了前视窗截断，并把执行层回测基线提升为 **BT v3**。CSI1000 历史 Phase M / Phase S 轨道（B6-M / B4-S、IC/RankIC、邻域规则）保持不变。两套轨道禁止混比。
 
@@ -130,38 +132,43 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 
 `regime-adapt/m0-h20-label-v4`（`baseline_version: v1`）是 2026-08-16 至 2026-08-19 的 Phase M v1 模型基线，早停为冻结 499 天次日 RankIC。2026-08-22 起该行官方评估改读 `eval_regime_m0_labels/eval_m0h20_k123h2345.json`（top3×h5）：约净年化 **+29.3%**、波动 56.7%、夏普 0.52、`n_days` 1448；2026 净年化约 +11.0%。当时主格 top5×h5 约数（+29.1% / 55.5% / 0.52，2026 +3.6%）只作历史尺子对照。8/16 的静态 `st_names` 数字、8/20 超额口径约数、以及 `eval_m0h20_st_daily.seedmean.json` 的五种子均值不再作官方口径。历史实验的 `baseline_ref` 不改写。
 
-### 1.6 Phase M v1 执行层回测基线 BT v4
+### 1.6 Phase M v1 执行层回测基线 BT v5
 
-本基线只服务 **Phase M v1 的真实执行层对照**，不是 CSI1000 Phase S，也不替换第 1.5 节模型基线。当前策略是主格 top3×h5 的执行层等价物，不再是 TopkDropout。
+本基线只服务 **Phase M v1 的真实执行层对照**，不是 CSI1000 Phase S，也不替换第 1.5 节模型基线。BT v5 使用历史模型 v2 与 TopkDropout；它与模型主格 top3×h5 的组合规则不同。模型研究基线 v4 与执行层基线 BT v5 的版本号分别管理。
 
 | 项 | 值 |
 |---|---|
-| 回测基线版本 | **BT v4**（2026-08-23，用户明确要求将 v4 RankIC ES × 真阶梯 k3×h5 均值信号回测提升为当前执行层对照锚点） |
-| registry | `baseline/phase-m-v1-bt-v4` |
-| 冻结模型 | M0 H20 RankIC ES 五种子 `regimeadaptfast_m0h20_rankices_s{42,1000,2000,3000,4000}`（与第 1.5 节模型基线 v4 同一组） |
+| 回测基线版本 | **BT v5**（2026-10-29，用户批准晋升现有 top5d1/hold1/f100 官方合成信号回测） |
+| registry | `baseline/phase-m-v1-bt-v5`；来源 `regime-adapt/m0h20es-all-top5d1f100-bt` |
+| 冻结模型 | **历史模型 v2 · M0 H20 ES**：`regime-adapt/m0-h20-t5h5-es-v1`；五种子 `regimeadaptfast_m0h20_t5h5es_s{42,1000,2000,3000,4000}`；早停 `top5_h5_net_ann`，并非 v4 RankIC ES |
 | 官方信号 | 五种子 pred 先做**日截面 z-score**，再等权平均，**只回测这一次** |
 | 禁止 | 用五次回测指标的算术平均充当官方数字 |
-| 策略 | `CohortLadderStrategy`：`topk=3, horizon=5, risk_degree=0.90`（无 `force_sell_rank`） |
+| 策略 | `TopkDropoutStrategy`：`topk=5,n_drop=1,hold_thresh=1,force_sell_rank=100,risk_degree=0.90`；`only_tradable=false,forbid_all_trade_at_limit=false` |
 | 账户 | 1,000,000 |
 | 窗 | 2020-08-03 ~ 2026-07-31 |
 | 过滤 | 日频 `st_daily` + 成交额≥1000万 + 上市≥60日 + 近60交易日连续有成交 |
 | 涨跌停 | `limit_threshold: market_cn`（主板 9.5%、创业板/科创板 19.5%） |
+| 原历史费用 | 买 `0.00021`、卖 `0.00071`、最低5元、100股整手、收盘价成交；30万当前费用另列诊断，不回写本基线 |
 | 基准 | 等权全A |
 | 总报告 | `backtest/experiments/phase_m_v1_bt_report.html` |
 | 官方年化 | **CAGR**：\((1+\text{累计})^{250/n}-1\)。JSON 字段 `annualized_return` |
 | 审计年化 | 算术：日均扣费收益 ×250，字段 `annualized_return_arith` |
 | 夏普 | 算术年化 /（日收益标准差 ×√250），分子不用 CAGR |
-| 官方数字 | 读 `backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json` 的 `ensemble`；直觉约数：累乘年化 +26.3%、算术年化 +26.7%、夏普 1.04、Alpha +17.4%、回撤 −33.0%、单边年换手 44.3；2026 累乘年化 +3.8% |
+| 官方数字 | 读 `backtest/experiments/phase_m_v1_bt_metrics/all_top5d1f100_m0h20es.json` 的 `ensemble`；来源是 `backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json` 与原日收益CSV。直觉约数：CAGR +34.8%、算术年化 +34.1%、夏普 1.18、Alpha +24.7%、回撤 −33.0%、波动29.0%、单边年换手73.3；2026截至7月底CAGR +26.3%。以JSON为准，不手填报告数字 |
+| 可复核来源 | 持久化JSON保存原结果、日收益CSV、ensemble预测、元数据和风格标签的路径及SHA-256；净值曲线与风格切片由原CSV重算，报告可在无 `mlruns/` / `backtest/result/` 的checkout重建 |
+| 选型限制 | `historical_selection_window`：2020-08-03~2026-07-31参与早停与策略比较，不是独立样本外检验；新增期间冻结参数诊断不用于再调参 |
 
-**真阶梯含义**：每日买入当日 top-3；每只持满 5 个交易日到期无条件卖出；同一只票允许被多个分层同时持有（连续上榜自动加仓）。退出看持有天数，不看打分排名。实现见 `qlib/contrib/strategy/signal_strategy.py` 的 `CohortLadderStrategy`。
+**TopkDropout含义**：目标最多5只；普通轮换最多1只/日，并非每天必换。`hold_thresh=1`是普通卖出的最低持有门槛，不是满1天必卖。掉出有效评分前100或个股缺失有效分数时强卖，不占普通 `n_drop`、不受最低持有期限制，但仍须遵守可成交限制。此配置买入金额按卖出后现金的90%分配，不强制每天将总仓位调回90%。
 
-晋升依据是**组合规则对齐主格**，不是对 BT v3 逐维占优。相对 BT v3（v2 模型 × TopkDropout h5f100）：CAGR +26.3%/+30.1%、夏普 1.04/1.06、回撤 −33.0%/−34.7%、换手 44.3/58.1。k5×h5 真阶梯与后来的 f100 / 补新票变体仍只作诊断，不改写本行。
+本次晋升依据是用户在历史比较后确认收益、波动与换手的取舍，不是逐维占优：相对 BT v4，CAGR +34.8%/+26.3%、夏普1.18/1.04、回撤−33.02%/−32.96%、波动29.0%/25.7%、换手73.3/44.3。候选2021～2023收益均低于BT v4，优势较依赖2025；这些限制随报告保存。晋升不等于实盘激活。
 
-总报告必须维护：历史 BT baseline 全周期表（含带图 `report.html` 链接）、分年矩阵（一行一个 baseline 版本、一列一年、每个指标一张表）、分风格矩阵（D/F/T，同样每个指标一张表）、实验表（链接到该次实验详细报告）。实验详细报告版式与总报告相同，但「历史 baseline」换成**实验组 vs 基准组**。风格标签用 `backtest/configs/regime-adapt/monthly_regime_labels_eval_window_v1.csv`。当前行标 **BT v4**；v1、v2、v3 留在历史表。
+总报告必须维护：历史 BT baseline 全周期表（含可移植带图报告链接）、分年矩阵（一行一个 baseline 版本、一列一年、每个指标一张表）、分风格矩阵（D/F/T，同样每个指标一张表）、实验表（链接到该次实验详细报告）。实验详细报告版式与总报告相同，但「历史 baseline」换成**实验组 vs 基准组**。风格标签用 `backtest/configs/regime-adapt/monthly_regime_labels_eval_window_v1.csv`。当前行标 **BT v5**；v1、v2、v3、v4 留在历史表。重建用 `build_phase_m_v1_bt_report.py`；历史行优先读取 `portable_eval_output`，原 `eval_output` 与 `baseline_ref` 保留。
 
-#### 1.6.1 历史回测基线 BT v1 / v2 / v3
+#### 1.6.1 历史回测基线 BT v1 / v2 / v3 / v4
 
 `baseline/phase-m-v1-bt-v1` 是 2026-08-19 当日的执行层锚点：修复后的 M0 H20（RankIC 早停）× top5d1 均值信号回测。`baseline/phase-m-v1-bt-v2` 是 2026-08-19~2026-08-22 的锚点：M0 H20 ES × top5d1（`hold_thresh=1`，无强制卖出）。`baseline/phase-m-v1-bt-v3` 是 2026-08-22~2026-08-23 的锚点：M0 H20 ES × TopkDropout `topk=5, n_drop=1, hold_thresh=5, force_sell_rank=100`（对 BT v2 逐维占优：CAGR +30.1%/+23.1%、夏普 1.06/0.86、回撤 −34.7%/−39.2%）。三者晋升后均保留在历史 baseline 表，不改写数字。
+
+`baseline/phase-m-v1-bt-v4` 是 2026-08-23~2026-10-29 的执行层锚点：模型 v4 RankIC ES 五种子均值信号 × `CohortLadderStrategy(topk=3,horizon=5,risk_degree=0.90)`，100万原费用；每日买当日top3、允许同票多层、持满5个交易日到期卖。其晋升依据是规则对齐模型主格，不是对BT v3逐维占优。官方CAGR +26.3%、夏普1.04、回撤−33.0%、换手44.3；原JSON `backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json` 保留，报告使用持久化副本，不改写历史数字。2026-08-28延长窗仍是单独诊断。
 
 ---
 
@@ -332,12 +339,12 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 | 收益含义 | **绝对**（头部等权 h 日前瞻收益） | **绝对**（账户净值） |
 | 年化 | `mean × 238 / h`（算术，标签是 h 日收益） | 主数字 **CAGR**（累计净值 \(^{250/n}-1\)）；算术 `mean × 250` 只作审计 |
 | 基准 | 过滤后可成交池等权（剔 ST/小额/新股/t+1 涨停） | `bench_ew_all.csv` 全池等权（不过滤） |
-| 持有期 | 满 h 个交易日**到期必卖** | 当前 BT v4：满 `horizon=5` 天到期必卖（`CohortLadderStrategy`）；历史 BT v1–v3 是 TopkDropout 按打分卖 `n_drop` |
-| 入场只数 | 每天等权 k 只 | 当前 BT v4：每天买入当日 top-k（k=3），允许同票多层；历史 v1–v3 每天大约 `n_drop` 只 |
+| 持有期 | 满 h 个交易日**到期必卖** | 当前 BT v5：TopkDropout最低持有1日，排名退出和f100强卖，无固定到期；历史BT v4满5日到期卖 |
+| 入场只数 | 每天等权 k 只 | 当前 BT v5：目标5只、普通最多换1只/日，强卖额外腾出槽位；历史BT v4每日top3、允许同票多层 |
 
 两边都是绝对收益后，仍须对齐时间单位才能比数量级；**不得**把 Phase M 的 `×238/h` 和回测 CAGR（或算术 ×250）直接相减。JSON 里仍保留 `ann_excess` 作审计，报告不读。
 
-即便组合规则已对齐（BT v4 = 主格 top3×h5 的执行层等价物），**主格 ×238/h 净年化仍不能用来预期回测 CAGR**：年化定义、基准宇宙、费率与可成交性不同。要预期某个执行层策略，只能跑那个策略本身。
+历史BT v4虽对齐主格组合规则，**主格 ×238/h 净年化仍不能用来预期回测 CAGR**；当前BT v5的模型、退出和配置规则也不同。年化定义、基准宇宙、费率与可成交性须分别说明。要评估某个执行层策略，只能跑那个策略本身。
 
 ### 5.2 Phase S（策略迭代）
 
@@ -492,7 +499,7 @@ Phase M v1（全A / regime-adapt）checklist：
 [ ] 3. 用 eval_ic_multi_pool.py 按第 5.1.2 节口径评估（主格 top3×h5；分年/分风格只报这一格，不叉乘 k×h；日频 ST + 成交额 + 上市 + 剔 t+1 涨停；官方合成信号须带 h5 RankIC）
 [ ] 4. 登记 registry：phase_m_protocol=v1、baseline_ref、detail_report、主格主指标
 [ ] 5. 重建 phase_m_v1_report.html（四块）与该实验详细 HTML；总报告第 1 块须含当前 baseline 版本（现为 v4）与全局 RankIC
-[ ] 6. 若做执行层对照：五种子均值信号单次回测，对照当前 BT baseline（现为 BT v4），登记 report_kind=phase_m_v1_bt，重建 phase_m_v1_bt_report.html
+[ ] 6. 若做执行层对照：五种子均值信号单次回测，对照当前 BT baseline（现为 BT v5），登记 report_kind=phase_m_v1_bt，重建 phase_m_v1_bt_report.html
 ```
 
 
@@ -508,6 +515,7 @@ Phase M v1（全A / regime-adapt）checklist：
 | `backtest/scripts/patch_official_rank_ic.py` | 给已有 eval JSON 补 `ensemble.h5.rank_ic_mean`，不重跑头部网格 |
 | `backtest/scripts/promote_phase_m_v1_rankices.py` | 把 RankIC 早停官方合成信号晋升为模型基线 v4 |
 | `backtest/scripts/promote_bt_v4_ladder_k3h5.py` | 把 v4 × 真阶梯 k3×h5 晋升为执行层基线 BT v4 |
+| `backtest/scripts/promote_bt_v5_top5d1f100.py` | 重放已批准的 v2 模型 × top5d1/hold1/f100 晋升，校验原始来源、补风格并保存可移植指标；不训练、不激活实盘 |
 | `backtest/scripts/eval_protocol.py` | daily_ic / summarize_ic / pairwise_win_count / yearly_ir |
 | `backtest/scripts/run_pred_backtest.py` | 基于现成 pred 分数回测（Phase S 用） |
 | `backtest/scripts/run_strategy_sweep.py` | 策略扫参（Phase S 用） |

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from html import escape
 from pathlib import Path
 from typing import Any, Optional
 
@@ -74,6 +75,49 @@ def session_report_href(session_dir: str) -> str:
     return rel_from_exp(EXP_ROOT / session_dir / "run_01" / "report.html")
 
 
+def report_href(ensemble: dict) -> str:
+    portable = ensemble.get("portable_report")
+    return rel_from_exp(EXP_ROOT / portable) if portable else session_report_href(ensemble["session_dir"])
+
+
+def nav_svg(curve: list[list]) -> str:
+    """A self-contained chart from the persisted, after-cost daily NAV series."""
+    values = [1.0] + [float(v) for row in curve for v in row[1:3]]
+    low, high = min(values), max(values)
+    span = high - low or 1.0
+    width, height, margin = 1000, 330, 35
+    def points(column):
+        return " ".join(
+            f"{margin + i * (width - 2 * margin) / max(len(curve) - 1, 1):.2f},"
+            f"{height - margin - (float(row[column]) - low) * (height - 2 * margin) / span:.2f}"
+            for i, row in enumerate(curve)
+        )
+    return (
+        '<svg viewBox="0 0 1000 330" role="img" aria-label="扣费净值与等权全A基准" '
+        'style="width:100%;background:white;border:1px solid #e2e8f0">'
+        f'<text x="35" y="20" fill="#2563eb">扣费净值</text>'
+        '<text x="155" y="20" fill="#94a3b8">等权全A基准</text>'
+        f'<polyline points="{points(2)}" fill="none" stroke="#94a3b8" stroke-width="1.5"/>'
+        f'<polyline points="{points(1)}" fill="none" stroke="#2563eb" stroke-width="1.7"/>'
+        f'<text x="35" y="322">{escape(str(curve[0][0]))}</text>'
+        f'<text x="865" y="322">{escape(str(curve[-1][0]))}</text></svg>'
+    )
+
+
+def figure_blocks(ensemble: dict) -> list[str]:
+    if ensemble.get("nav_curve"):
+        return [nav_svg(ensemble["nav_curve"])]
+    return figure_iframes(ensemble["session_dir"], ensemble.get("figures") or {})
+
+
+def coverage_note(doc: dict) -> str:
+    coverage = doc.get("regime_coverage") or {}
+    if coverage.get("unlabeled_days"):
+        return (f"<p class='note'>规范风格标签覆盖 {coverage['labeled_days']} / {coverage['total_days']} 日；"
+                f"新增 {coverage['unlabeled_days']} 日无标签，仅进入全期及分年指标，不推断其风格。</p>")
+    return ""
+
+
 def figure_iframes(session_dir: str, figures: dict[str, Any]) -> list[str]:
     out = []
     files = figures.get("report_graph") or []
@@ -137,6 +181,8 @@ def render_hub(baselines: list[dict], experiments: list[dict]) -> str:
         "主年化是扣费净值累乘后再折年（CAGR）；算术年化（日均×250）只作审计。"
         "夏普分子仍是算术年化。</p>",
     ]
+    if cur and cur["doc"].get("selection_limitation"):
+        H.append(f"<p class='note'>{escape(cur['doc']['selection_limitation'])}</p>")
 
     H.append("<h2>1. 历史 baseline</h2>")
     H.append(
@@ -146,7 +192,7 @@ def render_hub(baselines: list[dict], experiments: list[dict]) -> str:
     )
     for item in baselines:
         ens = ensemble_of(item["doc"])
-        href = session_report_href(ens["session_dir"])
+        href = report_href(ens)
         cls = "current" if item.get("current") else "primary"
         tag = " · 当前" if item.get("current") else ""
         H.append(
@@ -213,6 +259,9 @@ def render_experiment(experiment: dict, baseline: dict) -> str:
         "夏普分子仍是算术年化。"
         " <a href='phase_m_v1_bt_report.html'>返回总报告</a></p>",
     ]
+    if experiment["doc"].get("selection_limitation"):
+        H.append(f"<p class='note'>{escape(experiment['doc']['selection_limitation'])}</p>")
+    H.append(coverage_note(experiment["doc"]))
     if experiment.get("hypothesis") or experiment.get("eval_protocol") or experiment.get("conclusion"):
         notes = ["<p class='note'>"]
         if experiment.get("eval_protocol"):
@@ -231,7 +280,7 @@ def render_experiment(experiment: dict, baseline: dict) -> str:
     ]
     for i, (name, ens) in enumerate(rows):
         cls = " class='primary'" if i == 0 else ""
-        href = session_report_href(ens["session_dir"])
+        href = report_href(ens)
         H.append(
             f"<tr{cls}><td class='l'>{name}</td>"
             + "".join(_row_metrics(ens["full_period"], FULL_COLS))
@@ -245,9 +294,9 @@ def render_experiment(experiment: dict, baseline: dict) -> str:
     for key, lab, kind in YEAR_METRICS:
         H.append(_matrix_table(f"分风格 · {lab}", rows, REGIMES, key, kind, "regimes"))
     H.append("<h2>4. 实验组图</h2>")
-    H.extend(figure_iframes(exp_ens["session_dir"], exp_ens.get("figures") or {}))
+    H.extend(figure_blocks(exp_ens))
     H.append("<h2>5. 基准组图</h2>")
-    H.extend(figure_iframes(base_ens["session_dir"], base_ens.get("figures") or {}))
+    H.extend(figure_blocks(base_ens))
     H.append("</div></body></html>")
     return "".join(H)
 
@@ -269,6 +318,29 @@ def _load_doc(rel: str) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def render_snapshot(item: dict) -> str:
+    """Portable historical NAV and metrics; original files remain in provenance JSON."""
+    doc = item["doc"]
+    ens = ensemble_of(doc)
+    parts = ["<!DOCTYPE html><html lang='zh'><meta charset='utf-8'>",
+             f"<title>{escape(item['display_name'])}</title><style>{CSS}</style><div class='wrap'>",
+             f"<h1>{escape(item['display_name'])}</h1>",
+             "<p><a href='../phase_m_v1_bt_report.html'>返回总报告</a></p>",
+             f"<p class='note'>{escape(doc.get('selection_limitation', ''))}</p>",
+             "<p class='note'>扣费净值曲线来自原始日收益CSV；来源路径与SHA-256保存在同名JSON。</p>",
+             f"<p><a href='{Path(ens['portable_report']).with_suffix('.json').name}'>指标与来源JSON</a></p>"]
+    parts.extend(figure_blocks(ens))
+    parts.append(coverage_note(doc))
+    parts.append("<table><tr>" + "".join(f"<th>{label}</th>" for _, label, _ in FULL_COLS) + "</tr><tr>")
+    parts.extend(_row_metrics(ens["full_period"], FULL_COLS))
+    parts.append("</tr></table>")
+    for key, label, kind in YEAR_METRICS:
+        parts.append(_matrix_table(f"分年 · {label}", [(item["display_name"], ens)], YEARS, key, kind, "years"))
+        parts.append(_matrix_table(f"分风格 · {label}", [(item["display_name"], ens)], REGIMES, key, kind, "regimes"))
+    parts.append("</div></html>")
+    return "".join(parts)
+
+
 def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     baselines, experiments = [], []
     names = {}
@@ -284,7 +356,7 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 "strategy": (rec.get("eval_protocol") or "").split("|")[1].strip()
                 if len((rec.get("eval_protocol") or "").split("|")) > 1
                 else None,
-                "doc": _load_doc(rec["eval_output"]),
+                "doc": _load_doc(rec.get("portable_eval_output") or rec["eval_output"]),
             }
             names[rec["exp_id"]] = f"{item['bt_version']} {item['display_name']}"
             baselines.append(item)
@@ -303,7 +375,7 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 "hypothesis": rec.get("hypothesis"),
                 "eval_protocol": rec.get("eval_protocol"),
                 "conclusion": rec.get("conclusion"),
-                "doc": _load_doc(rec["eval_output"]),
+                "doc": _load_doc(rec.get("portable_eval_output") or rec["eval_output"]),
             }
         )
     return baselines, resolved
@@ -327,6 +399,24 @@ def write_all() -> list[Path]:
             continue
         dest = EXP_ROOT / exp["detail_report"]
         dest.write_text(render_experiment(exp, base), encoding="utf-8")
+        written.append(dest)
+    for rec in load_registry():
+        if rec.get("report_kind") != "phase_m_v1_bt_baseline" or not rec.get("comparison_baseline_ref"):
+            continue
+        item = next(b for b in baselines if b["bt_version"] == rec["bt_version"])
+        base = by_id[rec["comparison_baseline_ref"]]
+        dest = EXP_ROOT / rec["detail_report"]
+        dest.write_text(render_experiment(item, base), encoding="utf-8")
+        written.append(dest)
+    seen = set()
+    for item in baselines + experiments:
+        portable = ensemble_of(item["doc"]).get("portable_report")
+        if not portable or portable in seen:
+            continue
+        seen.add(portable)
+        dest = EXP_ROOT / portable
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(render_snapshot(item), encoding="utf-8")
         written.append(dest)
     return written
 

@@ -43,7 +43,8 @@ def promotion_fixture(tmp_path):
         "source_pred": str(pred),
         "source_pred_sha256": hashlib.sha256(pred.read_bytes()).hexdigest(),
         "strategy": {"class": "TopkDropoutStrategy", "topk": 5, "n_drop": 1,
-                     "hold_thresh": 1, "force_sell_rank": 100, "risk_degree": 0.9},
+                     "hold_thresh": 1, "force_sell_rank": 100, "risk_degree": 0.9,
+                     "only_tradable": False, "forbid_all_trade_at_limit": False},
         "backtest": {"account": 1000000, "start_time": "2020-08-03", "end_time": "2026-07-31",
                      "exchange_kwargs": {"deal_price": "close", "limit_threshold": "market_cn",
                                          "open_cost": 0.00021, "close_cost": 0.00071,
@@ -109,6 +110,24 @@ def test_promotion_rejects_mismatched_provenance_before_writing(promotion_fixtur
         _write_json(p, d)
     before = {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
     with pytest.raises(ValueError):
+        promote.promote(repo_root=repo, source_root=source)
+    assert before == {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
+
+
+@pytest.mark.parametrize("flag", ["only_tradable", "forbid_all_trade_at_limit"])
+@pytest.mark.parametrize("change", ["enabled", "missing"])
+def test_promotion_rejects_changed_execution_flags_before_writing(promotion_fixture, flag, change):
+    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    repo, source, _ = promotion_fixture
+    meta_path = source / "backtest/result/candidate/meta.json"
+    meta = json.loads(meta_path.read_text())
+    if change == "enabled":
+        meta["strategy"][flag] = True
+    else:
+        del meta["strategy"][flag]
+    _write_json(meta_path, meta)
+    before = {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
+    with pytest.raises(ValueError, match="candidate strategy differs from the approved BT v5"):
         promote.promote(repo_root=repo, source_root=source)
     assert before == {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
 

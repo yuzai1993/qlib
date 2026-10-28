@@ -50,7 +50,8 @@ def validate_candidate(source_root: Path, candidate: dict) -> dict:
     meta_path = source_root / ensemble["session_dir"] / "meta.json"
     meta = json.loads(meta_path.read_text())
     expected = {"class": "TopkDropoutStrategy", "topk": 5, "n_drop": 1,
-                "hold_thresh": 1, "force_sell_rank": 100, "risk_degree": 0.9}
+                "hold_thresh": 1, "force_sell_rank": 100, "risk_degree": 0.9,
+                "only_tradable": False, "forbid_all_trade_at_limit": False}
     if any(meta.get("strategy", {}).get(k) != v for k, v in expected.items()):
         raise ValueError("candidate strategy differs from the approved BT v5")
     bt = meta["backtest"]

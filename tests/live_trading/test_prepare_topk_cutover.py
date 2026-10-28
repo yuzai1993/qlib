@@ -266,6 +266,28 @@ def test_existing_destination_sidecars_are_never_modified(ledger, tmp_path, suff
     assert not destination.exists()
 
 
+@pytest.mark.parametrize("suffix", ["-wal", "-shm", "-journal"])
+def test_failure_cleanup_preserves_preexisting_manifest_companions(
+    ledger, tmp_path, suffix
+):
+    source, conn = ledger
+    conn.execute("UPDATE positions SET shares='nonnumeric'")
+    conn.commit()
+    before = all_rows(conn)
+    destination = tmp_path / "copy.db"
+    manifest = tmp_path / "manifest.json"
+    sidecar = Path(str(manifest) + suffix)
+    sidecar.write_bytes(b"unrelated existing file")
+
+    with pytest.raises((TypeError, ValueError)):
+        prepare(source, destination, manifest_path=manifest)
+
+    assert sidecar.read_bytes() == b"unrelated existing file"
+    assert not destination.exists()
+    assert not manifest.exists()
+    assert all_rows(conn) == before
+
+
 def test_duplicate_client_order_identity_across_strategies_blocks(ledger, tmp_path):
     source, conn = ledger
     conn.execute(
@@ -281,6 +303,100 @@ def test_duplicate_client_order_identity_across_strategies_blocks(ledger, tmp_pa
     result = prepare(source, tmp_path / "copy.db")
     assert "batch_identity_requires_review" in result["blockers"]
     assert result["batch_identity"]["duplicate_client_order_id_count"] == 1
+
+
+def test_actual_client_order_sequence_is_reserved_when_batch_sequence_disagrees(
+    ledger, tmp_path
+):
+    source, conn = ledger
+    for table in ("signal_orders", "fills"):
+        conn.execute(f"UPDATE {table} SET client_order_id='20261027002001B'")
+    conn.commit()
+
+    result = prepare(source, tmp_path / "copy.db")
+
+    assert "batch_identity_requires_review" in result["blockers"]
+    assert result["batch_identity"]["by_trade_date"]["2026-10-27"] == {
+        "used_sequences": [1, 2],
+        "next_unused_sequence": 3,
+    }
+    issues = result["batch_identity"]["client_order_identity_issues"]
+    assert len(issues) == 2
+    assert all(
+        "batch_sequence_mismatch" in issue["reasons"]
+        for issue in issues
+    )
+
+
+@pytest.mark.parametrize(
+    "client_order_id,reason,next_sequence",
+    [
+        ("bad", "malformed_client_order_id", None),
+        ("20261027000001B", "batch_sequence_out_of_range", None),
+        ("20261027001000B", "order_sequence_out_of_range", None),
+        ("20261327001001B", "invalid_trade_date", None),
+        ("20261027001001S", "side_mismatch", 2),
+        ("20261028001001B", "trade_date_mismatch", 2),
+    ],
+)
+def test_client_order_format_date_sequence_and_side_are_validated(
+    ledger, tmp_path, client_order_id, reason, next_sequence
+):
+    source, conn = ledger
+    for table in ("signal_orders", "fills"):
+        conn.execute(f"UPDATE {table} SET client_order_id=?", (client_order_id,))
+    conn.commit()
+
+    result = prepare(source, tmp_path / "copy.db")
+
+    assert "batch_identity_requires_review" in result["blockers"]
+    issues = result["batch_identity"]["client_order_identity_issues"]
+    assert len(issues) == 2
+    assert all(reason in issue["reasons"] for issue in issues)
+    assert (
+        result["batch_identity"]["by_trade_date"]["2026-10-27"]["next_unused_sequence"]
+        == next_sequence
+    )
+    if reason == "trade_date_mismatch":
+        assert result["batch_identity"]["by_trade_date"]["2026-10-28"] == {
+            "used_sequences": [1],
+            "next_unused_sequence": 2,
+        }
+    if next_sequence is None:
+        assert "batch_sequence_exhausted" not in result["blockers"]
+
+
+@pytest.mark.parametrize("table", ["signal_orders", "fills"])
+def test_orphan_client_order_reserves_actual_sequence_and_blocks(
+    ledger, tmp_path, table
+):
+    source, conn = ledger
+    if table == "signal_orders":
+        conn.execute(
+            "INSERT INTO signal_orders VALUES ('orphan', '20261027003001B', '600000.SH', 'BUY', 205)"
+        )
+    else:
+        conn.execute(
+            "INSERT INTO fills VALUES ('orphan', '20261027003001B', 'LIVE', '600000.SH', 'BUY', 'FILLED', 205, 205, 205, 0)"
+        )
+    conn.commit()
+
+    result = prepare(source, tmp_path / "copy.db")
+
+    assert "batch_identity_requires_review" in result["blockers"]
+    assert "unresolved_live_orders" in result["blockers"]
+    assert result["batch_identity"]["by_trade_date"]["2026-10-27"] == {
+        "used_sequences": [1, 3],
+        "next_unused_sequence": 4,
+    }
+    assert result["batch_identity"]["client_order_identity_issues"] == [
+        {
+            "table": table,
+            "batch_id": "orphan",
+            "client_order_id": "20261027003001B",
+            "reasons": ["missing_batch"],
+        }
+    ]
 
 
 def test_source_snapshot_hash_changes_when_only_wal_data_changes(ledger, tmp_path):

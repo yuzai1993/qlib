@@ -278,6 +278,7 @@ def _audit(conn, fingerprints):
         blockers.append("cohort_pending_requires_review")
 
     used = defaultdict(set)
+    batch_sequences = {}
     malformed = []
     target_existing = []
     for batch in batches:
@@ -290,26 +291,78 @@ def _audit(conn, fingerprints):
             malformed.append(batch["batch_id"])
         else:
             used[batch["trade_date"]].add(int(match[3]))
+            batch_sequences[batch["batch_id"]] = int(match[3])
         if batch["strategy_id"] == TARGET_STRATEGY or (
             match and match[2] == TARGET_STRATEGY
         ):
             target_existing.append(batch["batch_id"])
     identities = defaultdict(set)
-    for row in orders + fills:
-        identities[row["client_order_id"]].add(row["batch_id"])
+    identity_issues = []
+    namespace_uncertain = False
+    for table, records in (("signal_orders", orders), ("fills", fills)):
+        for row in records:
+            identity = row["client_order_id"]
+            identities[identity].add(row["batch_id"])
+            match = re.fullmatch(r"([0-9]{8})([0-9]{3})([0-9]{3})([BS])", str(identity))
+            reasons = []
+            if not match:
+                reasons.append("malformed_client_order_id")
+                namespace_uncertain = True
+            else:
+                compact, sequence, order_sequence, side = match.groups()
+                sequence, order_sequence = int(sequence), int(order_sequence)
+                try:
+                    day = datetime.strptime(compact, "%Y%m%d").date().isoformat()
+                except ValueError:
+                    day = None
+                    reasons.append("invalid_trade_date")
+                    namespace_uncertain = True
+                if not 1 <= sequence <= 999:
+                    reasons.append("batch_sequence_out_of_range")
+                    namespace_uncertain = True
+                elif day is not None:
+                    # The stored COID owns this namespace even if its owning
+                    # batch is missing or disagrees with its date/sequence.
+                    used[day].add(sequence)
+                if not 1 <= order_sequence <= 999:
+                    reasons.append("order_sequence_out_of_range")
+                    namespace_uncertain = True
+                if row["side"] not in {"BUY", "SELL"} or side != row["side"][0]:
+                    reasons.append("side_mismatch")
+                batch = batch_by_id.get(row["batch_id"])
+                if batch is not None:
+                    if day != batch["trade_date"]:
+                        reasons.append("trade_date_mismatch")
+                    if sequence != batch_sequences.get(row["batch_id"]):
+                        reasons.append("batch_sequence_mismatch")
+            if row["batch_id"] not in batch_by_id:
+                reasons.append("missing_batch")
+            if reasons:
+                identity_issues.append(
+                    {
+                        "table": table,
+                        "batch_id": row["batch_id"],
+                        "client_order_id": identity,
+                        "reasons": reasons,
+                    }
+                )
     duplicate_ids = sorted(
         identity for identity, owners in identities.items() if len(owners) > 1
     )
-    if malformed or target_existing or duplicate_ids:
+    if malformed or target_existing or duplicate_ids or identity_issues:
         blockers.append("batch_identity_requires_review")
     sequences = {
         day: {
             "used_sequences": sorted(numbers),
-            "next_unused_sequence": max(numbers) + 1 if max(numbers) < 999 else None,
+            "next_unused_sequence": (
+                max(numbers) + 1
+                if max(numbers) < 999 and not namespace_uncertain
+                else None
+            ),
         }
         for day, numbers in sorted(used.items())
     }
-    if any(row["next_unused_sequence"] is None for row in sequences.values()):
+    if any(max(numbers) >= 999 for numbers in used.values()):
         blockers.append("batch_sequence_exhausted")
     return {
         "blockers": blockers,
@@ -359,6 +412,8 @@ def _audit(conn, fingerprints):
             "existing_target_batch_ids": target_existing,
             "duplicate_client_order_id_count": len(duplicate_ids),
             "duplicate_client_order_ids": duplicate_ids,
+            "client_order_identity_issues": identity_issues,
+            "sequence_recommendations_withheld": namespace_uncertain,
             "collision_risk": "Client order IDs omit strategy. Never reuse a date/sequence already used by any strategy; recheck live history at activation.",
         },
     }
@@ -469,8 +524,12 @@ def prepare_topk_cutover(source, destination, *, manifest_path=None, bridge_root
         # Remove only paths exclusively reserved by this invocation.
         for path in reversed(created):
             path.unlink(missing_ok=True)
-            for suffix in SQLITE_SIDECARS:
-                Path(str(path) + suffix).unlink(missing_ok=True)
+            if path == destination:
+                # Destination companions were verified absent before reserving
+                # this new DB. JSON manifests never create SQLite companions;
+                # unrelated files next to them are not invocation-owned.
+                for companion in companions:
+                    companion.unlink(missing_ok=True)
         raise
 
 

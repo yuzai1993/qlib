@@ -1,0 +1,16 @@
+{
+  "protocol": "qlib-clipboard-v1",
+  "type": "trade",
+  "session": "COPY_FROM_STATUS",
+  "request_id": "replace-me-001",
+  "expires_at": "2000-01-01T14:58:00+08:00",
+  "orders": [
+    {
+      "id": "replace-me-order-001",
+      "symbol": "600000.SH",
+      "side": "BUY",
+      "quantity": 100,
+      "price": 10.25
+    }
+  ]
+}

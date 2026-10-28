@@ -1,0 +1,99 @@
+run:
+  mode: pred_backtest
+  note: alla_v2_top5d1f100_parity
+  n_runs: 1
+  generate_figures: false
+  from_run: 1
+  from_session: null
+parity:
+  live_config: live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml
+  model_experiment_name: regime-adapt/m0-h20-t5h5-es-v1
+  model_members:
+  - model_path: live_trading/models/v2_t5h5es/s42/trained_model
+    sha256: ad5e9df845aac1aa1a904c91abe79e810be5a5ce188e17128980517178ef0da0
+  - model_path: live_trading/models/v2_t5h5es/s1000/trained_model
+    sha256: 676455aa793707bd2a0d668cb8ee9af77727ea9c3484f69b0523b4bfa2fdae48
+  - model_path: live_trading/models/v2_t5h5es/s2000/trained_model
+    sha256: 39065cee3f74afe99ff6c036fa0cf2bd9405bb712dc5aafd6d40ce3f73a61c99
+  - model_path: live_trading/models/v2_t5h5es/s3000/trained_model
+    sha256: 6fa11817e16b41bb7f1bd42cc87f36f639433beaa438584cd1134a5d95e3118e
+  - model_path: live_trading/models/v2_t5h5es/s4000/trained_model
+    sha256: ca466c67956890db036a81be55f8ac68c3557dc34dd6f860dc4649ae958c111c
+  execution_price_proxy: close
+  broker_environment: REAL
+  close_auction_price_type: 11
+  execution_session: CLOSE_AUCTION
+  signal_price_type: CLOSE_AUCTION_LIMIT
+  execution_policy: post_sell_cash_v1
+  max_positions: 5
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: all
+  benchmark: &id001
+    equal_weight_csv: /Users/yuxianqi/.codex/worktrees/bt-v5-top5-cutover/qlib/backtest/result/bt_v5_cutover_300k_20261029/bench_ew_all.csv
+  handler:
+    class: Alpha158Technical
+    module_path: backtest.features.technical
+    start_time: '2020-02-03'
+    end_time: '2026-10-28'
+    fit_start_time: '2020-02-03'
+    fit_end_time: '2020-08-03'
+    infer_processors:
+    - class: ProcessInf
+    feature_groups:
+    - range
+    instruments:
+      market: all
+      filter_pipe:
+      - filter_type: NameDFilter
+        name_rule_re: ^(SH60|SH68|SZ00|SZ30)
+        filter_start_time: null
+        filter_end_time: null
+    label:
+    - - Ref($close, -21)/Ref($close, -1)-1
+    - - LABEL0
+segments:
+  train:
+  - '2020-02-03'
+  - '2020-07-31'
+  valid:
+  - '2020-08-03'
+  - '2026-07-31'
+  test:
+  - '2020-08-03'
+  - '2026-10-28'
+model:
+  class: RegimeSingleLGBMModel
+  module_path: backtest.models.regime_adapt
+strategy:
+  class: TopkDropoutStrategy
+  module_path: qlib.contrib.strategy.signal_strategy
+  topk: 5
+  n_drop: 1
+  hold_thresh: 1
+  kwargs:
+    risk_degree: 0.9
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+    force_sell_rank: 100
+    initial_buy_count: null
+backtest:
+  account: 300000.0
+  exchange_kwargs:
+    freq: day
+    deal_price: close
+    limit_threshold: market_cn
+    open_cost: 9.54e-05
+    close_cost: 0.0005954
+    min_cost: 5.0
+    trade_unit: 100
+  start_time: '2020-08-03'
+  end_time: '2026-10-28'
+  benchmark: *id001
+universe_filter:
+  st_daily: /Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/st_daily.csv
+  min_amount: 10000000
+  min_listing_days: 60
+  min_recent_trading_days: 60
+  pool: all

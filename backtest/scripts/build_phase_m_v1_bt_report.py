@@ -118,6 +118,28 @@ def coverage_note(doc: dict) -> str:
     return ""
 
 
+def diagnostic_periods(doc: dict) -> str:
+    blocks = []
+    for period in doc.get("diagnostic_periods", []):
+        metrics = period["metrics"]
+        blocks.append(
+            f"<h2>{escape(period['name'])}</h2>"
+            f"<p class='note'>{escape(period['start'])} ～ {escape(period['end'])}，"
+            f"{metrics['n_days']} 个交易日。{escape(period['note'])}</p>"
+            "<table><tr><th>区间收益</th><th>基准区间收益</th><th>夏普</th><th>最大回撤</th></tr><tr>"
+            + "".join(_row_metrics(metrics, [
+                ("cumulative_return", "", "pct"),
+                ("benchmark_cumulative_return", "", "pct"),
+                ("sharpe_ratio", "", "num"),
+                ("max_drawdown", "", "pct"),
+            ]))
+            + "</tr></table>"
+        )
+        if period.get("nav_curve"):
+            blocks.append(nav_svg(period["nav_curve"]))
+    return "".join(blocks)
+
+
 def figure_iframes(session_dir: str, figures: dict[str, Any]) -> list[str]:
     out = []
     files = figures.get("report_graph") or []
@@ -262,6 +284,7 @@ def render_experiment(experiment: dict, baseline: dict) -> str:
     if experiment["doc"].get("selection_limitation"):
         H.append(f"<p class='note'>{escape(experiment['doc']['selection_limitation'])}</p>")
     H.append(coverage_note(experiment["doc"]))
+    H.append(diagnostic_periods(experiment["doc"]))
     if experiment.get("hypothesis") or experiment.get("eval_protocol") or experiment.get("conclusion"):
         notes = ["<p class='note'>"]
         if experiment.get("eval_protocol"):
@@ -331,6 +354,7 @@ def render_snapshot(item: dict) -> str:
              f"<p><a href='{Path(ens['portable_report']).with_suffix('.json').name}'>指标与来源JSON</a></p>"]
     parts.extend(figure_blocks(ens))
     parts.append(coverage_note(doc))
+    parts.append(diagnostic_periods(doc))
     parts.append("<table><tr>" + "".join(f"<th>{label}</th>" for _, label, _ in FULL_COLS) + "</tr><tr>")
     parts.extend(_row_metrics(ens["full_period"], FULL_COLS))
     parts.append("</tr></table>")

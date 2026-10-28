@@ -1,0 +1,70 @@
+{
+  "model_ref": "v2",
+  "experiment": "regime-adapt/m0-h20-t5h5-es-v1",
+  "bt_baseline": "baseline/phase-m-v1-bt-v5",
+  "es_metric": "top5_h5_net_ann",
+  "ensemble": "daily_zscore_mean",
+  "training": "frozen_no_retraining",
+  "members": [
+    {
+      "seed": 42,
+      "source": "/Users/yuxianqi/Project/qlib_exp/backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+      "source_sha256": "f9dd882f4d51bf9b22765dc3c2a12f9557eb1495c360a7cc1f4d51500df159d0",
+      "model_path": "live_trading/models/v2_t5h5es/s42/trained_model",
+      "sha256": "ad5e9df845aac1aa1a904c91abe79e810be5a5ce188e17128980517178ef0da0",
+      "source_bytes": 59420562,
+      "bytes": 666569,
+      "best_iteration": 36,
+      "num_features": 164,
+      "prediction_parity": "exact_on_128_rows_including_missing_values"
+    },
+    {
+      "seed": 1000,
+      "source": "/Users/yuxianqi/Project/qlib_exp/backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "source_sha256": "11ef36f8cc3471d63b4e20347bbccfcf88a581921be75c886b5b23bd569fdd5c",
+      "model_path": "live_trading/models/v2_t5h5es/s1000/trained_model",
+      "sha256": "676455aa793707bd2a0d668cb8ee9af77727ea9c3484f69b0523b4bfa2fdae48",
+      "source_bytes": 59858749,
+      "bytes": 1104746,
+      "best_iteration": 63,
+      "num_features": 164,
+      "prediction_parity": "exact_on_128_rows_including_missing_values"
+    },
+    {
+      "seed": 2000,
+      "source": "/Users/yuxianqi/Project/qlib_exp/backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "source_sha256": "e9dc7e206949a7586fe281e6d9dd8381ca53a1082dd808f09c1e58b9adad9a27",
+      "model_path": "live_trading/models/v2_t5h5es/s2000/trained_model",
+      "sha256": "39065cee3f74afe99ff6c036fa0cf2bd9405bb712dc5aafd6d40ce3f73a61c99",
+      "source_bytes": 59520498,
+      "bytes": 766495,
+      "best_iteration": 42,
+      "num_features": 164,
+      "prediction_parity": "exact_on_128_rows_including_missing_values"
+    },
+    {
+      "seed": 3000,
+      "source": "/Users/yuxianqi/Project/qlib_exp/backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "source_sha256": "0b99b0ea4404b94621c86e0ed63a3c42a2257ced673d37cdd3f28e97cdda7092",
+      "model_path": "live_trading/models/v2_t5h5es/s3000/trained_model",
+      "sha256": "6fa11817e16b41bb7f1bd42cc87f36f639433beaa438584cd1134a5d95e3118e",
+      "source_bytes": 59768134,
+      "bytes": 1014131,
+      "best_iteration": 57,
+      "num_features": 164,
+      "prediction_parity": "exact_on_128_rows_including_missing_values"
+    },
+    {
+      "seed": 4000,
+      "source": "/Users/yuxianqi/Project/qlib_exp/backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "source_sha256": "e0149f18d70e6c44b9023644513a563d13eafd42df49c20f62b0f9ad198ecf4c",
+      "model_path": "live_trading/models/v2_t5h5es/s4000/trained_model",
+      "sha256": "ca466c67956890db036a81be55f8ac68c3557dc34dd6f860dc4649ae958c111c",
+      "source_bytes": 59607205,
+      "bytes": 853202,
+      "best_iteration": 48,
+      "num_features": 164,
+      "prediction_parity": "exact_on_128_rows_including_missing_values"
+    }
+  ]
+}

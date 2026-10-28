@@ -1,0 +1,121 @@
+# PREPARED OFFLINE ONLY. Local isolated bridge; production scheduler is unchanged.
+# Activation requires reconciled ledger backup and guarded QMT bridge deployment; see BT v5 runbook.
+data:
+  qlib_dir: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: all
+  benchmark: SH000985
+account:
+  opening_cash: 300000.0
+  opening_value_adjustment: 0.0
+provenance:
+  repository: /Users/yuxianqi/Project/qlib
+  strategy_baseline_config: backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1f100_ensemble.yaml
+  bt_baseline: baseline/phase-m-v1-bt-v5
+model:
+  experiment_name: regime-adapt/m0-h20-t5h5-es-v1
+  baseline_ref: v2
+  model_class: backtest.models.regime_adapt.RegimeSingleLGBMModel
+  ensemble: daily_zscore_mean
+  members:
+  - seed: 42
+    model_path: live_trading/models/v2_t5h5es/s42/trained_model
+    sha256: ad5e9df845aac1aa1a904c91abe79e810be5a5ce188e17128980517178ef0da0
+  - seed: 1000
+    model_path: live_trading/models/v2_t5h5es/s1000/trained_model
+    sha256: 676455aa793707bd2a0d668cb8ee9af77727ea9c3484f69b0523b4bfa2fdae48
+  - seed: 2000
+    model_path: live_trading/models/v2_t5h5es/s2000/trained_model
+    sha256: 39065cee3f74afe99ff6c036fa0cf2bd9405bb712dc5aafd6d40ce3f73a61c99
+  - seed: 3000
+    model_path: live_trading/models/v2_t5h5es/s3000/trained_model
+    sha256: 6fa11817e16b41bb7f1bd42cc87f36f639433beaa438584cd1134a5d95e3118e
+  - seed: 4000
+    model_path: live_trading/models/v2_t5h5es/s4000/trained_model
+    sha256: ca466c67956890db036a81be55f8ac68c3557dc34dd6f860dc4649ae958c111c
+handler:
+  class: Alpha158Technical
+  module: backtest.features.technical
+  start_time: '2020-02-03'
+  inference_lookback_days: 150
+  fit_start_time: '2020-02-03'
+  fit_end_time: '2020-08-03'
+  infer_processors:
+  - class: ProcessInf
+  feature_groups:
+  - range
+  filter_pipe:
+  - filter_type: NameDFilter
+    name_rule_re: ^(SH60|SH68|SZ00|SZ30)
+    filter_start_time: null
+    filter_end_time: null
+universe_filter:
+  st_daily: scripts/data_collector/tushare/st_daily.csv
+  min_amount: 10000000
+  min_listing_days: 60
+  min_recent_trading_days: 60
+  pool: all
+stock_names:
+  source: tushare
+strategy:
+  class: TopkDropoutStrategy
+  topk: 5
+  n_drop: 1
+  hold_thresh: 1
+  initial_buy_count: null
+  force_sell_rank: 100
+  risk_degree: 0.9
+  only_tradable: false
+  forbid_all_trade_at_limit: false
+  execution_policy: post_sell_cash_v1
+  max_positions: 5
+exchange:
+  freq: day
+  deal_price: close
+  limit_threshold: market_cn
+  open_cost: 9.54e-05
+  close_cost: 0.0005954
+  min_cost: 5.0
+  trade_unit: 100
+parity:
+  backtest_config: backtest/configs/alla_v2_top5d1f100_parity.yaml
+live:
+  bridge_root: live_trading/data/bt_v5_offline_bridge
+  strategy_id: alla_v2_top5d1f100_postclose_real
+  account_type: STOCK
+  execution_session: CLOSE_AUCTION
+  close_auction_price_type: 11
+  sell_after: '14:55:00'
+  submit_after: '14:57:05'
+  cancel_at: '15:00:05'
+  finalize_at: '15:00:30'
+  snapshot_after: '17:00:00'
+  max_orders_per_day: 40
+storage:
+  db_path: live_trading/data/alla_v2_top5d1f100_postclose_real.db
+  log_dir: live_trading/logs/alla_v2_top5d1f100_postclose_real
+fees:
+  commission_rate: 8.54e-05
+  min_commission: 5.0
+  stamp_duty_rate: 0.0005
+  transfer_fee_rate: 1.0e-05
+  dividend_tax_rate: 0.2
+monitor:
+  benchmark: SH000985
+  benchmark_name: 中证全指
+  notify:
+    channel: none
+    daily_report: false
+  thresholds:
+    daily_loss: -0.03
+    consecutive_loss_days: 5
+    reject_rate: 0.5
+    cash_tolerance: 100.0
+    fill_ratio_buy_floor: 0.8
+    fill_ratio_buy_hard_floor: 0.5
+    fill_ratio_streak_days: 3
+  broker_reconcile:
+    cash_check: false
+web:
+  host: 127.0.0.1
+  port: 8083

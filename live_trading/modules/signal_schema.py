@@ -13,7 +13,8 @@ from dataclasses import dataclass, asdict, fields
 SCHEMA_VERSION = "2.0"
 
 VALID_SIDES = {"BUY", "SELL"}
-VALID_PRICE_TYPES = {"CLOSE_AUCTION_LIMIT", "AFTER_HOURS_CLOSE"}
+GUARDED_TOPK_PRICE_TYPE = "CLOSE_AUCTION_TOPK_CASH_V1"
+VALID_PRICE_TYPES = {"CLOSE_AUCTION_LIMIT", "AFTER_HOURS_CLOSE", GUARDED_TOPK_PRICE_TYPE}
 VALID_MODES = {"SIMULATE", "LIVE"}
 VALID_ACCOUNT_ENVIRONMENTS = {"SIMULATION", "REAL"}
 VALID_FILL_STATUS = {
@@ -88,6 +89,9 @@ class SignalOrder:
     # value is an immutable broker-side ceiling for explicitly authorized
     # operator orders.
     max_quantity: int = 0
+    # Opt-in contract: old executors reject the new price_type.
+    max_positions: int = 0
+    cash_risk_degree: float = 0.0
 
     def to_json_line(self) -> str:
         # Schema v2.0 predates max_quantity.  Keep bytes (and therefore
@@ -97,6 +101,9 @@ class SignalOrder:
         d.update(asdict(self))
         if d.get("max_quantity") in (0, None):
             d.pop("max_quantity")
+        if d.get("max_positions") == 0 and d.get("cash_risk_degree") == 0:
+            d.pop("max_positions")
+            d.pop("cash_risk_degree")
         return json.dumps(d, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     @classmethod
@@ -166,6 +173,14 @@ def compute_checksum(order_lines: list) -> str:
 
 
 def validate_order(order: SignalOrder) -> None:
+    guarded = order.price_type == GUARDED_TOPK_PRICE_TYPE
+    if guarded:
+        if isinstance(order.max_positions, bool) or not isinstance(order.max_positions, int) or order.max_positions <= 0:
+            raise SchemaError("guarded max_positions must be a positive integer")
+        if isinstance(order.cash_risk_degree, bool) or not isinstance(order.cash_risk_degree, (int, float)) or not 0 < order.cash_risk_degree <= 1:
+            raise SchemaError("guarded cash_risk_degree must be in (0, 1]")
+    elif order.max_positions != 0 or order.cash_risk_degree != 0:
+        raise SchemaError("cash contract requires guarded price_type")
     if order.side not in VALID_SIDES:
         raise SchemaError(f"invalid side: {order.side!r}")
     if order.price_type not in VALID_PRICE_TYPES:
@@ -192,7 +207,9 @@ def validate_order(order: SignalOrder) -> None:
     if order.side == "BUY":
         if not isinstance(order.quantity, int) or isinstance(order.quantity, bool) or order.quantity != 0:
             raise SchemaError(f"BUY quantity must be 0 for broker sizing: {order.quantity!r}")
-        if order.target_value <= 0:
+        if guarded and order.target_value != 0:
+            raise SchemaError("guarded BUY target_value must be zero until broker sizing")
+        if not guarded and order.target_value <= 0:
             raise SchemaError(f"BUY target_value must be > 0: {order.target_value!r}")
     else:
         # 不要求整手：送股与部分成交残量必然带零股，而 A 股「不足一手只能一次性
@@ -250,6 +267,14 @@ def validate_batch(header: BatchHeader, orders: list) -> None:
             f"order_count mismatch: header={header.order_count}, actual={len(orders)}"
         )
     seen = set()
+    guarded = [o for o in orders if o.price_type == GUARDED_TOPK_PRICE_TYPE]
+    if guarded:
+        policies = {(o.price_type, o.max_positions, o.cash_risk_degree) for o in orders}
+        if len(policies) != 1:
+            raise SchemaError("all orders must share one guarded cash contract")
+        symbols = [(o.side, o.stock_code) for o in orders]
+        if len(set(symbols)) != len(symbols) or set(o.stock_code for o in orders if o.side == "BUY") & set(o.stock_code for o in orders if o.side == "SELL"):
+            raise SchemaError("guarded contract forbids duplicate or paired symbols")
     for order in orders:
         if order.batch_id != header.batch_id:
             raise SchemaError(

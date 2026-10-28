@@ -565,6 +565,10 @@ class LiveRecorder:
                 )
             self._backfill_broker_snapshot_imports(conn)
             self._migrate_composite_keys(conn)
+            order_cols = {r["name"] for r in conn.execute("PRAGMA table_info(signal_orders)")}
+            for name, kind in (("max_positions", "INTEGER"), ("cash_risk_degree", "REAL")):
+                if name not in order_cols:
+                    conn.execute(f"ALTER TABLE signal_orders ADD COLUMN {name} {kind} NOT NULL DEFAULT 0")
 
     @staticmethod
     def _backfill_broker_snapshot_imports(conn) -> None:
@@ -1012,6 +1016,8 @@ class LiveRecorder:
                 float(get("limit_price")),
                 get("priority"),
                 get("reason"),
+                int(get("max_positions", 0) or 0),
+                float(get("cash_risk_degree", 0.0) or 0.0),
             ))
         with self._conn() as conn:
             durable = conn.execute(
@@ -1027,8 +1033,8 @@ class LiveRecorder:
                 """INSERT INTO signal_orders
                    (client_order_id, batch_id, stock_code, instrument_qlib,
                     side, quantity, max_quantity, target_value, price_type, limit_price,
-                    priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    priority, reason, max_positions, cash_risk_degree)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
 
@@ -1064,6 +1070,8 @@ class LiveRecorder:
                 float(get("limit_price")),
                 get("priority"),
                 get("reason"),
+                int(get("max_positions", 0) or 0),
+                float(get("cash_risk_degree", 0.0) or 0.0),
             ))
         rows.sort(key=lambda row: row[1])
         return order_checksum, rows
@@ -1092,7 +1100,8 @@ class LiveRecorder:
         existing_rows = [tuple(row) for row in conn.execute(
             """SELECT batch_id, client_order_id, stock_code,
                       instrument_qlib, side, quantity, max_quantity,
-                      target_value, price_type, limit_price, priority, reason
+                      target_value, price_type, limit_price, priority, reason,
+                      max_positions, cash_risk_degree
                FROM signal_orders WHERE batch_id=?
                ORDER BY client_order_id""",
             (header.batch_id,),
@@ -1181,8 +1190,8 @@ class LiveRecorder:
                 """INSERT INTO signal_orders
                    (batch_id, client_order_id, stock_code, instrument_qlib,
                     side, quantity, max_quantity, target_value, price_type, limit_price,
-                    priority, reason)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    priority, reason, max_positions, cash_risk_degree)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 rows,
             )
             if probe_transition is not None:

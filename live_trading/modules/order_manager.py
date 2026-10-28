@@ -4,7 +4,7 @@ import logging
 
 import pandas as pd
 
-from qlib.contrib.strategy.topk_dropout import select_topk_dropout
+from qlib.contrib.strategy.topk_dropout import select_topk_dropout, stable_rank_scores
 
 logger = logging.getLogger("live_trading.order")
 
@@ -19,6 +19,8 @@ class OrderManager:
         self.initial_buy_count = strategy.get("initial_buy_count")
         self.hold_thresh = int(strategy.get("hold_thresh", 1))
         self.risk_degree = float(strategy.get("risk_degree", 0.95))
+        self.force_sell_rank = strategy.get("force_sell_rank")
+        self.guarded_cash = strategy.get("execution_policy") == "post_sell_cash_v1"
         self.trade_unit = config["exchange"].get("trade_unit", 100)
 
     def _can_sell(
@@ -67,12 +69,20 @@ class OrderManager:
         Returns:
             SELL intents carry target_shares; BUY intents carry target_value.
         """
+        ranked = stable_rank_scores(scores)
+        forced = set()
+        if self.force_sell_rank is not None:
+            forced = set(current_positions) - set(ranked.index[:self.force_sell_rank])
+        sellable = [code for code, position in current_positions.items()
+                    if self._can_sell(position, signal_date=signal_date, trade_dates=trade_dates)]
         selection = select_topk_dropout(
             scores,
             current_positions,
             topk=self.topk,
             n_drop=self.n_drop,
             initial_buy_count=self.initial_buy_count,
+            force_sell_rank=self.force_sell_rank,
+            sellable=sellable if self.guarded_cash else None,
         )
         if scores.dropna().empty:
             logger.warning("No effective scores available; refusing to generate orders")
@@ -80,7 +90,7 @@ class OrderManager:
         sell_from_candidates = tuple(
             instrument
             for instrument in selection.sell
-            if self._can_sell(
+            if instrument in forced or self._can_sell(
                 current_positions[instrument],
                 signal_date=signal_date,
                 trade_dates=trade_dates,
@@ -108,10 +118,12 @@ class OrderManager:
                     "instrument": inst,
                     "direction": "SELL",
                     "target_shares": current_positions[inst]["shares"],
+                    **({"shares_are_final": True} if self.guarded_cash else {}),
                 })
 
         if buy_list and total_value > 0:
-            per_stock_budget = total_value * self.risk_degree / self.topk
+            # Guarded execution sizes from confirmed post-sale broker cash.
+            per_stock_budget = 0.0 if self.guarded_cash else total_value * self.risk_degree / self.topk
             for inst in buy_list:
                 orders.append({
                     "instrument": inst,

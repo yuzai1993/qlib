@@ -32,7 +32,8 @@ ACCOUNT_ID = "8890116049"
 ACCOUNT_TYPE = "STOCK"
 STRATEGY_NAME = "qlib_bridge"
 SCHEMA_VERSION = "2.0"
-SOURCE_VERSION = "2026-09-24-lot-cancel-guards"
+GUARDED_TOPK_PRICE_TYPE = "CLOSE_AUCTION_TOPK_CASH_V1"
+SOURCE_VERSION = "2026-10-29-topk-cash-v1"
 LIMIT_PRICE_TYPE = 11
 # Safety rollout gate. 100 means one-lot execution. Keep it at 100 until the
 # explicitly selected account environment has passed one-lot acceptance.
@@ -121,6 +122,7 @@ class Batch(object):
         self.submitted = {}           # client_order_id -> True
         self.fills = {}               # client_order_id -> fill dict (latest)
         self.remaining_cash = None    # one broker cash snapshot for BUY phase
+        self.cash_plan = None         # immutable guarded allocation + slot reservations
         self.netting_planned = False  # ladder offsetting decided once, then frozen
         self.order_evidence = {}      # persisted query/API/callback audit state
         self.processing_jsonl = None
@@ -534,6 +536,7 @@ def _save_active_state(batch):
         "submitted": sorted(batch.submitted.keys()),
         "fills": batch.fills,
         "remaining_cash": batch.remaining_cash,
+        "cash_plan": batch.cash_plan,
         "netting_planned": batch.netting_planned,
         "order_evidence": batch.order_evidence,
         "orders": batch.orders,
@@ -567,13 +570,32 @@ def _load_active_state(batch):
     batch.submitted = dict((coid, True) for coid in payload.get("submitted", []))
     batch.fills = payload.get("fills", {})
     batch.remaining_cash = payload.get("remaining_cash")
+    batch.cash_plan = payload.get("cash_plan")
     batch.netting_planned = bool(payload.get("netting_planned", False))
     loaded_evidence = payload.get("order_evidence", {})
     batch.order_evidence = (
         loaded_evidence if isinstance(loaded_evidence, dict) else {}
     )
+    original_orders = batch.orders
     if payload.get("orders"):
         batch.orders = payload["orders"]
+    if original_orders and original_orders[0].get("price_type") == GUARDED_TOPK_PRICE_TYPE:
+        original = dict((o["client_order_id"], o) for o in original_orders)
+        if set(original) != set(o["client_order_id"] for o in batch.orders):
+            batch.orders = original_orders
+            raise ValueError("guarded active order identities changed")
+        for order in batch.orders:
+            source = original[order["client_order_id"]]
+            for field in ("stock_code", "side", "price_type", "max_positions", "cash_risk_degree", "target_value"):
+                if order.get(field) != source.get(field):
+                    batch.orders = original_orders
+                    raise ValueError("guarded active contract changed")
+        buys_submitted = any(o["side"] == "BUY" and o["client_order_id"] in batch.submitted
+                             for o in batch.orders)
+        if batch.execution_authorized and buys_submitted and batch.cash_plan is None:
+            raise ValueError("guarded submitted BUY has no durable cash plan")
+        if batch.cash_plan is not None:
+            _validate_cash_plan(batch)
     try:
         phase_started = float(payload.get("phase_started"))
     except (TypeError, ValueError):
@@ -610,6 +632,7 @@ def _fail_safe_corrupt_active_state(batch):
     )
     batch.fills = {}
     batch.remaining_cash = None
+    batch.cash_plan = None
     batch.order_evidence = {}
     _save_active_state(batch)
 
@@ -1138,6 +1161,23 @@ def _parse_and_check(jsonl_path, done_path, recovering=False):
                       % MAX_ORDERS_PER_BATCH)
 
     seen = set()
+    guarded = any(o.get("price_type") == GUARDED_TOPK_PRICE_TYPE for o in orders)
+    if guarded:
+        if EXECUTION_PROFILE != "CLOSE_AUCTION":
+            return reject("guarded cash contract requires CLOSE_AUCTION")
+        contract = (orders[0].get("max_positions"), orders[0].get("cash_risk_degree"))
+        maximum, risk = contract
+        if (isinstance(maximum, bool) or not isinstance(maximum, int) or maximum <= 0
+                or isinstance(risk, bool) or not isinstance(risk, (int, float)) or not 0 < risk <= 1):
+            return reject("invalid guarded cash contract")
+        symbols = set()
+        for order in orders:
+            if (order.get("price_type") != GUARDED_TOPK_PRICE_TYPE
+                    or (order.get("max_positions"), order.get("cash_risk_degree")) != contract):
+                return reject("mixed guarded cash contracts")
+            if order.get("stock_code") in symbols:
+                return reject("guarded cash contract forbids duplicate or paired symbols")
+            symbols.add(order.get("stock_code"))
     for order in orders:
         coid = order.get("client_order_id", "")
         side = order.get("side")
@@ -1151,7 +1191,9 @@ def _parse_and_check(jsonl_path, done_path, recovering=False):
         seen.add(coid)
         if side not in ("BUY", "SELL"):
             return reject("invalid order side")
-        if order.get("price_type") != _expected_signal_price_type():
+        if not guarded and (order.get("max_positions", 0) != 0 or order.get("cash_risk_degree", 0) != 0):
+            return reject("cash contract requires guarded price_type")
+        if not guarded and order.get("price_type") != _expected_signal_price_type():
             return reject(
                 "price_type must match execution profile: " +
                 _expected_signal_price_type()
@@ -1165,7 +1207,7 @@ def _parse_and_check(jsonl_path, done_path, recovering=False):
                 target_value = float(target_value)
             except (TypeError, ValueError):
                 return reject("BUY target_value invalid")
-            if not math.isfinite(target_value) or target_value <= 0.0:
+            if not math.isfinite(target_value) or (target_value != 0.0 if guarded else target_value <= 0.0):
                 return reject("BUY target_value invalid")
         else:
             # Odd lots are legal on the sell side: absorb_broker_excess folds
@@ -1298,7 +1340,10 @@ def _get_orders_by_remark(account_id):
         result.query_error = _bounded_text(exc)
         _log("get_trade_detail_data ORDER failed:\n" + traceback.format_exc())
         return result
-    result.result_count = len(details or [])
+    if details is None:
+        result.query_error = "ORDER query returned no snapshot"
+        return result
+    result.result_count = len(details)
     for d in details:
         remark = getattr(d, "m_strRemark", "")
         if remark:
@@ -1852,6 +1897,12 @@ def _submit(
     )
     # Persist before passorder. On a crash, an uncertain order is never
     # submitted twice; the safer failure direction is a missed order.
+    if _is_guarded_topk(batch) and order["side"] == "BUY":
+        # Cash reservation and the submitted marker share one durable write.
+        # A crash before this point must not charge an unsubmitted BUY twice.
+        reserved = _estimated_buy_cost(int(order["quantity"]), api_price)
+        batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
+        order["cash_reserved"] = reserved
     batch.submitted[coid] = True
     evidence = _evidence_for(batch, coid)
     evidence["attempt_started"] = time.time()
@@ -2157,7 +2208,7 @@ def _plan_ladder_netting(ContextInfo, batch):
     batch.orders is persisted by _save_active_state, so writing the decision
     into the order dicts survives a restart with no extra plumbing.
     """
-    if not ENABLE_LADDER_NETTING or batch.netting_planned:
+    if _is_guarded_topk(batch) or not ENABLE_LADDER_NETTING or batch.netting_planned:
         return
     before_buys = _now_hms() < TRADE_START
     batch.netting_planned = not before_buys
@@ -2242,6 +2293,156 @@ def _plan_ladder_netting(ContextInfo, batch):
     _save_active_state(batch)
 
 
+def _is_guarded_topk(batch):
+    return bool(batch.orders and batch.orders[0].get("price_type") == GUARDED_TOPK_PRICE_TYPE)
+
+
+def _guarded_positions(account_id):
+    """Require a complete positive-volume snapshot; None is not an empty account."""
+    try:
+        rows = get_trade_detail_data(account_id, ACCOUNT_TYPE, "POSITION")
+        if rows is None:
+            return None
+        result = {}
+        for row in rows:
+            raw = getattr(row, "m_nVolume", None)
+            if isinstance(raw, bool) or raw is None or float(raw) != int(raw) or int(raw) < 0:
+                return None
+            code = _qmt_stock_code(getattr(row, "m_strInstrumentID", ""),
+                                        getattr(row, "m_strExchangeID", ""))
+            if not re.match(r"^[0-9]{6}\.(SH|SZ)$", code) or code in result:
+                return None
+            if int(raw) > 0:
+                result[code] = int(raw)
+        return result
+    except Exception:
+        _log("guarded position snapshot unavailable")
+        return None
+
+
+def _guarded_orders_clear(batch):
+    """Other working account orders can reserve names/cash not yet in positions."""
+    try:
+        details = get_trade_detail_data(_account_id(batch), ACCOUNT_TYPE, "ORDER")
+        if details is None:
+            return False
+        own = set(o["client_order_id"] for o in batch.orders)
+        for row in details:
+            if getattr(row, "m_strRemark", "") in own:
+                continue
+            if int(getattr(row, "m_nOrderStatus", -1)) not in TERMINAL_ORDER_STATUS:
+                return False
+        return True
+    except Exception:
+        return False
+
+
+def _validate_cash_plan(batch):
+    plan = batch.cash_plan
+    if not isinstance(plan, dict) or not isinstance(plan.get("held"), list) or not isinstance(plan.get("selected"), list):
+        raise ValueError("invalid guarded cash plan")
+    cash = plan.get("cash")
+    if not isinstance(cash, (int, float)) or not math.isfinite(cash) or cash < 0:
+        raise ValueError("invalid guarded cash snapshot")
+    if batch.remaining_cash is None or not math.isfinite(batch.remaining_cash) or not 0 <= batch.remaining_cash <= cash:
+        raise ValueError("invalid guarded remaining cash")
+    orders = dict((o["client_order_id"], o) for o in batch.orders)
+    candidates = plan.get("candidates")
+    if (not isinstance(candidates, list) or len(set(candidates)) != len(candidates)
+            or any(c not in orders or orders[c]["side"] != "BUY" for c in candidates)):
+        raise ValueError("invalid guarded candidate list")
+    chosen = plan["selected"]
+    if len(set(chosen)) != len(chosen) or any(c not in candidates for c in chosen):
+        raise ValueError("invalid guarded BUY reservations")
+    names = set(plan["held"]) | set(orders[c]["stock_code"] for c in candidates)
+    if candidates and len(names) > batch.orders[0]["max_positions"]:
+        raise ValueError("guarded reservations exceed position ceiling")
+    allocation = cash * batch.orders[0]["cash_risk_degree"] / len(candidates) if candidates else 0.0
+    total = 0.0
+    for coid in chosen:
+        order = orders[coid]
+        for field in ("cash_target_value", "cash_price", "cash_limit_price"):
+            value = order.get(field)
+            if not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                raise ValueError("invalid guarded frozen allocation")
+        quantity = order.get("cash_quantity")
+        if isinstance(quantity, bool) or not isinstance(quantity, int) or quantity < _board_min_shares(order["stock_code"]):
+            raise ValueError("invalid guarded frozen quantity")
+        if quantity * order["cash_price"] > order["cash_target_value"] + 1e-7:
+            raise ValueError("guarded frozen quantity exceeds allocation")
+        if abs(order["cash_target_value"] - allocation) > 1e-7:
+            raise ValueError("guarded allocation differs from fixed candidate divisor")
+        total += order["cash_target_value"]
+    if total > cash * batch.orders[0]["cash_risk_degree"] + 1e-7:
+        raise ValueError("guarded allocations exceed cash risk budget")
+
+
+def _plan_guarded_cash(ContextInfo, batch):
+    """Freeze selection, cash allocation, quotes and slots before any BUY attempt."""
+    if batch.cash_plan is not None:
+        _validate_cash_plan(batch)
+        return True
+    if any(o["side"] == "SELL" and not _order_is_terminal(batch, o["client_order_id"]) for o in batch.orders):
+        return False
+    if any(o["side"] == "BUY" and o["client_order_id"] in batch.submitted for o in batch.orders):
+        return False  # uncertain recovery must never create a new allocation
+    if not _guarded_orders_clear(batch):
+        return False
+    held = _guarded_positions(_account_id(batch))
+    cash = _get_available_cash(_account_id(batch))
+    if held is None or cash is None:
+        return False
+    maximum = batch.orders[0]["max_positions"]
+    slots = max(0, maximum - len(held))
+    candidates = [o for o in batch.orders
+                  if o["side"] == "BUY" and o["stock_code"] not in held][:slots]
+    risk = batch.orders[0]["cash_risk_degree"]
+    # Match research: cap the candidate list by post-sale slots, then freeze
+    # its divisor before any quote, board-lot or rollout-limit checks. Failed
+    # candidates leave cash idle; they never fund another candidate.
+    value = cash * risk / len(candidates) if candidates else 0.0
+    selected = []
+    for order in candidates:
+        minimum = _board_min_shares(order["stock_code"])
+        caps = (MAX_ORDER_QUANTITY, int(order.get("max_quantity", 0) or 0))
+        if any(0 < cap < minimum for cap in caps):
+            continue
+        try:
+            price = _official_close(ContextInfo, order["stock_code"])
+            limit = _auction_offset_limit_price(ContextInfo, order["stock_code"], "BUY")
+            if price <= 0 or limit <= 0 or _target_requested_quantity(price, value) < minimum:
+                continue
+        except Exception:
+            continue
+        order["cash_target_value"] = value
+        order["cash_price"] = price
+        order["cash_limit_price"] = limit
+        order["cash_quantity"] = _target_requested_quantity(price, value)
+        selected.append(order["client_order_id"])
+    batch.remaining_cash = cash
+    batch.cash_plan = {"cash": cash, "held": sorted(held), "selected": selected,
+                       "candidates": [o["client_order_id"] for o in candidates]}
+    _validate_cash_plan(batch)
+    _save_active_state(batch)
+    _log_event("TOPK_CASH_PLANNED", batch_id=batch.batch_id(), cash=cash,
+               cash_risk_degree=risk, held_names=len(held), max_positions=maximum,
+               selected=selected, message="post-sale cash and position slots frozen")
+    return True
+
+
+def _guarded_can_buy(batch, order):
+    held = _guarded_positions(_account_id(batch))
+    if held is None or not _guarded_orders_clear(batch):
+        return False
+    if order["stock_code"] in held:
+        return False
+    selected = set(batch.cash_plan["selected"])
+    # Reserve all selected names until the batch ends. Even a failed/uncertain
+    # submission cannot free a slot for a replacement during this batch.
+    reserved = set(o["stock_code"] for o in batch.orders if o["client_order_id"] in selected)
+    return len(set(held) | set(batch.cash_plan["held"]) | reserved) <= order["max_positions"]
+
+
 def _process_batch(ContextInfo, batch):
     if batch.header.get("trade_date") != _today():
         # Recovered older batches may only reconcile, never submit again.
@@ -2281,6 +2482,7 @@ def _process_batch(ContextInfo, batch):
         _save_active_state(batch)
 
     mode_live = batch.execution_authorized
+    guarded = _is_guarded_topk(batch)
 
     _plan_ladder_netting(ContextInfo, batch)
 
@@ -2304,7 +2506,12 @@ def _process_batch(ContextInfo, batch):
             if mode_live:
                 can_use = _get_can_use_volume(account_id, order["stock_code"])
                 if can_use < order["quantity"]:
-                    if can_use >= 100:
+                    if (guarded and can_use > 0
+                            and can_use == _get_position_volume(account_id, order["stock_code"])):
+                        # A complete broker holding may be smaller than the
+                        # published ledger quantity and still include odd lots.
+                        order["quantity"] = can_use
+                    elif can_use >= 100:
                         order["quantity"] = (can_use // 100) * 100
                         _log("shrink sell %s to can_use %d"
                              % (order["stock_code"], order["quantity"]))
@@ -2338,6 +2545,8 @@ def _process_batch(ContextInfo, batch):
         # the moment every sell is terminal instead of burning the full wait.
         wait_elapsed = _now_hms() >= SELL_DEADLINE
         if not sells or sells_done or wait_elapsed:
+            if guarded and not sells_done:
+                return
             batch.phase = "BUY"
             batch.phase_started = time.time()
             _save_active_state(batch)
@@ -2349,6 +2558,16 @@ def _process_batch(ContextInfo, batch):
         # cash snapshot at the auction, including after a process restart.
         if _now_hms() < TRADE_START:
             return
+        if guarded and not mode_live:
+            # No account data means no cash allocation can be simulated. Emit
+            # the existing explicit no-execution receipts without broker I/O.
+            for order in buys:
+                _submit(ContextInfo, batch, order, False)
+            if all(_order_is_terminal(batch, o["client_order_id"]) for o in batch.orders):
+                _finalize_batch(batch)
+            return
+        if guarded and not _plan_guarded_cash(ContextInfo, batch):
+            return
         if mode_live and batch.remaining_cash is None:
             cash = _get_available_cash(account_id)
             if cash is None:
@@ -2358,7 +2577,16 @@ def _process_batch(ContextInfo, batch):
         for order in buys:
             if order["client_order_id"] in batch.submitted:
                 continue
+            if guarded:
+                if order["client_order_id"] not in batch.cash_plan["selected"]:
+                    batch.submitted[order["client_order_id"]] = True
+                    _write_fill(batch, order, "SKIPPED", 0, 0.0, "", "no executable guarded position slot")
+                    continue
+                if not _guarded_can_buy(batch, order):
+                    return
             frozen = order.get("net_quantity")
+            if guarded:
+                frozen = order["cash_quantity"]
             if frozen is not None and int(frozen) <= 0:
                 # Fully covered by the internal transfer; nothing to buy.
                 order["quantity"] = int(order.get("netted_qty", 0) or 0)
@@ -2367,6 +2595,8 @@ def _process_batch(ContextInfo, batch):
                             "netted against same-day due sell")
                 continue
             close_price = order.get("netting_close")
+            if guarded:
+                close_price = order["cash_price"]
             if close_price is None:
                 close_price = _official_close(ContextInfo, order["stock_code"])
             close_price = float(close_price)
@@ -2393,8 +2623,8 @@ def _process_batch(ContextInfo, batch):
             if mode_live:
                 if EXECUTION_PROFILE == "CLOSE_AUCTION":
                     try:
-                        limit_price = _auction_offset_limit_price(
-                            ContextInfo, order["stock_code"], "BUY")
+                        limit_price = (order["cash_limit_price"] if guarded else
+                                       _auction_offset_limit_price(ContextInfo, order["stock_code"], "BUY"))
                     except Exception as exc:
                         order["quantity"] = target_requested
                         batch.submitted[order["client_order_id"]] = True
@@ -2439,8 +2669,9 @@ def _process_batch(ContextInfo, batch):
                 continue
             if mode_live:
                 reserved = _estimated_buy_cost(quantity, reservation_price)
-                batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
-                _save_active_state(batch)
+                if not guarded:
+                    batch.remaining_cash = max(0.0, batch.remaining_cash - reserved)
+                    _save_active_state(batch)
                 if EXECUTION_PROFILE == "AFTER_HOURS_FIXED_PRICE":
                     _submit(
                         ContextInfo, batch, order, True,

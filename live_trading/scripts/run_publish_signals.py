@@ -295,6 +295,9 @@ def build_order_planner(config: dict, execution_profile=None) -> OrderPlanner:
         "trade_unit": config["exchange"]["trade_unit"],
         "execution_session": profile.name,
         "signal_price_type": profile.signal_price_type,
+        "execution_policy": config.get("strategy", {}).get("execution_policy"),
+        "max_positions": config.get("strategy", {}).get("max_positions", 0),
+        "cash_risk_degree": config.get("strategy", {}).get("risk_degree", 0.0),
     })
 
 

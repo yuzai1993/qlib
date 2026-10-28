@@ -18,6 +18,7 @@ from live_trading.modules.code_map import qlib_to_qmt
 from live_trading.modules.execution_profile import get_execution_profile
 from live_trading.modules.signal_schema import (
     SignalOrder,
+    GUARDED_TOPK_PRICE_TYPE,
     make_client_order_id,
 )
 
@@ -47,6 +48,13 @@ class OrderPlanner:
                 f"{self.execution_profile.signal_price_type}"
             )
         self.signal_price_type = self.execution_profile.signal_price_type
+        self.guarded_cash = config.get("execution_policy") == "post_sell_cash_v1"
+        self.max_positions = config.get("max_positions", 0)
+        self.cash_risk_degree = config.get("cash_risk_degree", 0.0)
+        if self.guarded_cash:
+            if self.execution_profile.name != "CLOSE_AUCTION":
+                raise PlanError("guarded cash policy requires CLOSE_AUCTION")
+            self.signal_price_type = GUARDED_TOPK_PRICE_TYPE
 
     def plan(
         self,
@@ -81,7 +89,7 @@ class OrderPlanner:
             for intent in intent_list:
                 inst = intent["instrument"]
                 if side == "SELL":
-                    if intent.get("shares_are_final"):
+                    if intent.get("shares_are_final") or self.guarded_cash:
                         # The producer already sized this against the actual
                         # position; an odd lot here is a deliberate full exit,
                         # and rounding it down would strand the remainder.
@@ -101,8 +109,8 @@ class OrderPlanner:
                     target_value = 0.0
                 else:
                     quantity = 0
-                    target_value = float(intent["target_value"])
-                    if not math.isfinite(target_value) or target_value <= 0:
+                    target_value = 0.0 if self.guarded_cash else float(intent["target_value"])
+                    if not self.guarded_cash and (not math.isfinite(target_value) or target_value <= 0):
                         raise PlanError(
                             f"BUY target_value must be positive and finite: "
                             f"{target_value!r}"
@@ -122,6 +130,8 @@ class OrderPlanner:
                     priority=priority,
                     instrument_qlib=inst,
                     reason=intent.get("reason", reason),
+                    max_positions=self.max_positions if self.guarded_cash else 0,
+                    cash_risk_degree=self.cash_risk_degree if self.guarded_cash else 0.0,
                 ))
                 seq += 1
 

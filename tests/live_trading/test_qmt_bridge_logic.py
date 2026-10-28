@@ -295,6 +295,247 @@ def _read_fills(bridge, batch_id=BATCH_ID):
     return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
 
 
+def _guarded_orders(buy_count=2):
+    result = []
+    for index in range(buy_count):
+        order = _order(coid="20261029001%03dB" % (index + 1), side="BUY", priority=20)
+        order.update(stock_code="600%03d.SH" % index, target_value=0.0,
+                     price_type="CLOSE_AUCTION_TOPK_CASH_V1", max_positions=5,
+                     cash_risk_degree=.9)
+        result.append(order)
+    return result
+
+
+def _guarded_broker(bridge, monkeypatch, held_count=0, cash=100000.0):
+    from types import SimpleNamespace
+    bridge.ACCOUNT_ID = "12345678"
+    state = {"cash": cash, "held": held_count, "calls": [], "position_missing": False,
+             "orders": []}
+
+    def query(account, account_type, kind):
+        if kind == "ACCOUNT":
+            return [SimpleNamespace(m_dAvailable=state["cash"])]
+        if kind == "POSITION":
+            if state["position_missing"]:
+                return None
+            return [SimpleNamespace(m_strInstrumentID="600%03d" % (100 + i),
+                                    m_strExchangeID="SH", m_nVolume=100,
+                                    m_nCanUseVolume=100)
+                    for i in range(state["held"])]
+        return state["orders"]
+
+    monkeypatch.setattr(bridge, "get_trade_detail_data", query, raising=False)
+    monkeypatch.setattr(bridge, "passorder", lambda *args: state["calls"].append(args), raising=False)
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:06")
+    bridge.MAX_ORDER_QUANTITY = 0
+    bridge.ENABLE_LADDER_NETTING = True  # production ladder flag must not affect Topk
+    return state
+
+
+def _guarded_batch(bridge, orders):
+    _write_batch(bridge, bridge._today(), orders, mode="LIVE")
+    bridge._claim_new_batch()
+    assert bridge.g.batch is not None
+    return bridge.g.batch
+
+
+def test_guarded_protocol_accepts_cash_contract(bridge):
+    orders = _guarded_orders()
+    batch = _guarded_batch(bridge, orders)
+    assert batch.orders[0]["cash_risk_degree"] == .9
+
+
+def test_guarded_simulate_skips_without_broker_snapshots(bridge, monkeypatch):
+    monkeypatch.setattr(bridge, "_now_hms", lambda: "14:57:06")
+    monkeypatch.setattr(bridge, "get_trade_detail_data",
+                        lambda *args: pytest.fail("simulation queried broker"), raising=False)
+    _write_batch(bridge, bridge._today(), _guarded_orders())
+    bridge._claim_new_batch()
+    batch = bridge.g.batch
+    batch.trading_started = True
+    batch.execution_authorized = False
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert bridge.g.batch is None
+    assert [row["message"] for row in _read_fills(bridge)] == ["simulated", "simulated"]
+
+
+@pytest.mark.parametrize("field,value", [("max_positions", 0), ("max_positions", True),
+                                         ("cash_risk_degree", 0), ("cash_risk_degree", 1.1),
+                                         ("cash_risk_degree", float("nan")),
+                                         ("price_type", "CLOSE_AUCTION_LIMIT")])
+def test_guarded_protocol_rejects_malformed_or_mixed_contract(bridge, field, value):
+    orders = _guarded_orders()
+    orders[1][field] = value
+    _write_batch(bridge, bridge._today(), orders)
+    bridge._claim_new_batch()
+    assert bridge.g.batch is None
+    assert all(row["status"] == "SKIPPED" for row in _read_fills(bridge))
+
+
+@pytest.mark.parametrize("missing", ["cash", "orders"])
+def test_guarded_missing_cash_or_order_snapshot_cannot_buy(bridge, monkeypatch, missing):
+    state = _guarded_broker(bridge, monkeypatch)
+    state[missing] = None
+    batch = _guarded_batch(bridge, _guarded_orders())
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert state["calls"] == []
+
+
+def test_guarded_unmarked_external_working_order_blocks_buy(bridge, monkeypatch):
+    from types import SimpleNamespace
+    state = _guarded_broker(bridge, monkeypatch)
+    state["orders"] = [SimpleNamespace(m_strRemark="", m_nOrderStatus=50)]
+    batch = _guarded_batch(bridge, _guarded_orders())
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert state["calls"] == []
+
+
+def test_guarded_corrupted_recovery_cannot_downgrade_the_contract(bridge, monkeypatch):
+    _guarded_broker(bridge, monkeypatch)
+    batch = _guarded_batch(bridge, _guarded_orders())
+    path = Path(bridge._active_state_path(batch.batch_id()))
+    saved = json.loads(path.read_text())
+    saved["orders"][0]["price_type"] = "CLOSE_AUCTION_LIMIT"
+    path.write_text(json.dumps(saved))
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    assert bridge.g.batch.execution_authorized is False
+    assert len(bridge.g.batch.submitted) == 2
+
+
+@pytest.mark.parametrize("held,expected", [(5, []), (4, [9000]), (3, [4500, 4500])])
+def test_guarded_buy_budget_uses_post_sale_cash_and_actual_position_slots(bridge, monkeypatch, held, expected):
+    state = _guarded_broker(bridge, monkeypatch, held_count=held)
+    batch = _guarded_batch(bridge, _guarded_orders())
+    bridge._process_batch(_TickCtx(10.0, up_stop=11.0), batch)
+    assert [call[6] for call in state["calls"]] == expected
+
+
+def test_guarded_missing_position_snapshot_cannot_buy(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch)
+    state["position_missing"] = True
+    batch = _guarded_batch(bridge, _guarded_orders())
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert state["calls"] == []
+    assert batch.remaining_cash is None
+
+
+def test_guarded_partial_sell_retains_position_and_unconfirmed_sell_blocks_buys(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch, held_count=5)
+    sell = _guarded_orders(1)[0]
+    sell.update(client_order_id="20261029001003S", stock_code="600100.SH",
+                side="SELL", quantity=200, priority=10)
+    batch = _guarded_batch(bridge, [sell] + _guarded_orders())
+    batch.submitted[sell["client_order_id"]] = True
+    bridge._write_fill(batch, sell, "ACCEPTED", 100, 10.0, "q1", "still working")
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert state["calls"] == []
+    assert batch.remaining_cash is None
+    bridge._write_fill(batch, sell, "PARTIAL", 100, 10.0, "q1", "canceled remainder")
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert state["calls"] == []
+
+
+def test_guarded_sell_preserves_smaller_broker_full_odd_lot_holding(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch)
+    sell = _guarded_orders(1)[0]
+    sell.update(client_order_id="20261029001003S", side="SELL", quantity=200, priority=10)
+    monkeypatch.setattr(bridge, "_get_can_use_volume", lambda *args: 151)
+    monkeypatch.setattr(bridge, "_get_position_volume", lambda *args: 151)
+    batch = _guarded_batch(bridge, [sell])
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert [call[6] for call in state["calls"]] == [151]
+
+
+def test_guarded_restart_keeps_budget_and_pending_buy_slot_reservations(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch, held_count=3)
+    batch = _guarded_batch(bridge, _guarded_orders())
+
+    def interrupted(*args):
+        state["calls"].append(args)
+        raise KeyboardInterrupt("simulated crash after broker call")
+
+    monkeypatch.setattr(bridge, "passorder", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        bridge._process_batch(_TickCtx(10.0), batch)
+    assert [call[6] for call in state["calls"]] == [4500]
+    state["cash"] = 1000000.0  # must not reallocate from a fresh snapshot on resume
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    restored = bridge.g.batch
+    monkeypatch.setattr(bridge, "passorder", lambda *args: state["calls"].append(args))
+    bridge._process_batch(_TickCtx(10.0), restored)
+    assert [call[6] for call in state["calls"]] == [4500, 4500]
+
+
+def test_guarded_crash_before_submit_marker_does_not_reserve_cash_twice(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch, held_count=4)
+    batch = _guarded_batch(bridge, _guarded_orders(1))
+    log_event = bridge._log_event
+
+    def interrupted(event, **kwargs):
+        if event == "PREORDER_SNAPSHOT":
+            raise KeyboardInterrupt("before durable submitted marker")
+        return log_event(event, **kwargs)
+
+    monkeypatch.setattr(bridge, "_log_event", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        bridge._process_batch(_TickCtx(10.0), batch)
+    assert state["calls"] == []
+    monkeypatch.setattr(bridge, "_log_event", log_event)
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    assert [call[6] for call in state["calls"]] == [9000]
+
+
+def test_guarded_invalid_quote_leaves_its_cash_allocation_idle(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch)
+    batch = _guarded_batch(bridge, _guarded_orders())
+    quote = bridge._official_close
+    monkeypatch.setattr(bridge, "_official_close", lambda ctx, code: 0 if code == "600000.SH" else quote(ctx, code))
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert [(call[3], call[6]) for call in state["calls"]] == [("600001.SH", 4500)]
+
+
+def test_guarded_insufficient_board_lots_do_not_concentrate_cash(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch)
+    batch = _guarded_batch(bridge, _guarded_orders())
+    bridge._process_batch(_TickCtx(600.0, up_stop=660.0), batch)
+    assert state["calls"] == []
+    assert batch.cash_plan["candidates"] == [o["client_order_id"] for o in batch.orders]
+
+
+def test_guarded_rollout_cap_does_not_increase_other_names_allocation(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch)
+    bridge.MAX_ORDER_QUANTITY = 100
+    orders = _guarded_orders()
+    orders[0]["stock_code"] = "688001.SH"  # minimum 200 exceeds rollout cap
+    batch = _guarded_batch(bridge, orders)
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert [(call[3], call[6]) for call in state["calls"]] == [("600001.SH", 100)]
+    assert batch.orders[1]["cash_target_value"] == 45000.0
+
+
+def test_guarded_resume_blocks_new_buy_when_external_position_uses_reserved_slot(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch, held_count=3)
+    batch = _guarded_batch(bridge, _guarded_orders())
+
+    def interrupted(*args):
+        state["calls"].append(args)
+        raise KeyboardInterrupt("broker attempt")
+
+    monkeypatch.setattr(bridge, "passorder", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        bridge._process_batch(_TickCtx(10.0), batch)
+    state["held"] = 4
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    monkeypatch.setattr(bridge, "passorder", lambda *args: state["calls"].append(args))
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    assert len(state["calls"]) == 1
+
+
 def _read_events(bridge):
     path = (
         Path(bridge.BRIDGE_ROOT) / "logs" /

@@ -176,6 +176,29 @@ def _validate_trading_config(config: dict) -> None:
     if kind == "STRATEGY":
         strategy = config.get("strategy", {})
         topk = strategy.get("topk")
+        policy = strategy.get("execution_policy")
+        if policy is not None:
+            if policy != "post_sell_cash_v1":
+                raise ValueError("unsupported strategy.execution_policy")
+            if strategy.get("class") != "TopkDropoutStrategy" or profile.name != "CLOSE_AUCTION":
+                raise ValueError("post_sell_cash_v1 requires TopkDropoutStrategy and CLOSE_AUCTION")
+            if isinstance(topk, bool) or not isinstance(topk, int) or topk <= 0:
+                raise ValueError("post_sell_cash_v1 requires positive integer topk")
+            maximum = strategy.get("max_positions")
+            if isinstance(maximum, bool) or not isinstance(maximum, int) or maximum != topk:
+                raise ValueError("strategy.max_positions must equal topk")
+            risk = strategy.get("risk_degree")
+            if isinstance(risk, bool) or not isinstance(risk, (int, float)) or not 0 < risk <= 1:
+                raise ValueError("post_sell_cash_v1 risk_degree must be in (0, 1]")
+            if strategy.get("initial_buy_count") is not None:
+                raise ValueError("post_sell_cash_v1 requires initial_buy_count=None")
+            if strategy.get("only_tradable") is not False or strategy.get("forbid_all_trade_at_limit") is not False:
+                raise ValueError("post_sell_cash_v1 requires the supported top/bottom tradability policy")
+        elif strategy.get("max_positions") is not None:
+            raise ValueError("strategy.max_positions requires execution_policy")
+        force_rank = strategy.get("force_sell_rank")
+        if force_rank is not None and (isinstance(force_rank, bool) or not isinstance(force_rank, int) or force_rank <= 0):
+            raise ValueError("strategy.force_sell_rank must be a positive integer or None")
         if strategy.get("class") == "CohortLadderStrategy":
             # 阶梯每天恒定加一层、h 天后满仓，建仓爬坡是结构性的，
             # 没有 TopkDropout 那种首日限量的 initial_buy_count。
@@ -193,6 +216,8 @@ def _validate_trading_config(config: dict) -> None:
                 )
             return
         initial_buy_count = strategy.get("initial_buy_count")
+        if initial_buy_count is None:
+            return
         if (
             isinstance(initial_buy_count, bool)
             or not isinstance(initial_buy_count, int)

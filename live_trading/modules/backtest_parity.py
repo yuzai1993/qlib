@@ -137,6 +137,12 @@ def _strategy_comparisons(live: dict, backtest: dict) -> list:
             ("strategy.initial_buy_count",
              _optional(live, "strategy.initial_buy_count"),
              _optional(backtest, "strategy.kwargs.initial_buy_count")),
+            ("strategy.force_sell_rank", _optional(live, "strategy.force_sell_rank"),
+             _optional(backtest, "strategy.kwargs.force_sell_rank")),
+            ("strategy.execution_policy", _optional(live, "strategy.execution_policy"),
+             _optional(backtest, "parity.execution_policy")),
+            ("strategy.max_positions", _optional(live, "strategy.max_positions"),
+             _optional(backtest, "parity.max_positions")),
         ]
     raise ParityError(f"unknown strategy class for parity: {live_class!r}")
 

@@ -26,10 +26,12 @@ MAIN_REAL_STRATEGY_ID = "csi1000_b6m_b2s_postclose_real"
 PROBE_PROFILE = "AFTER_HOURS_FIXED_PRICE"
 
 
-def create_router(config: dict, project_root: Path) -> APIRouter:
+def create_router(
+    config: dict, project_root: Path, *, read_only: bool = False,
+) -> APIRouter:
     db_path = str(project_root / config["storage"]["db_path"])
-    recorder = LiveRecorder(db_path)
-    store = MonitorStore(db_path)
+    recorder = LiveRecorder(db_path, read_only=read_only)
+    store = MonitorStore(db_path, read_only=read_only)
     importer = FillImporter(config["live"]["bridge_root"], recorder)
 
     def _names() -> dict:

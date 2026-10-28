@@ -1,17 +1,26 @@
 """Run the independent platform with: python -m quant_platform."""
 
 import argparse
+import re
 import socket
 from pathlib import Path
 
 
-def main():
-    parser = argparse.ArgumentParser(description="量化研究平台（独立本地服务）")
+def build_parser():
+    parser = argparse.ArgumentParser(description="量化研究平台（实盘监控、离线实验、分析档案统一服务）")
+    parser.add_argument("--project-root", type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument("--live-config", default="alla_v4_ladder_k1h5_postclose_real")
     parser.add_argument("--research-root", type=Path, default=Path("/Users/yuxianqi/Project/qlib_exp"))
-    parser.add_argument("--data-root", type=Path, default=Path(__file__).parent / "data/analyses")
-    parser.add_argument("--monitor-url", default="http://127.0.0.1:8082")
+    parser.add_argument("--data-root", type=Path, default=Path.home() / ".qlib/research_platform/analyses")
     parser.add_argument("--port", type=int, default=8090)
+    return parser
+
+
+def main():
+    parser = build_parser()
     args = parser.parse_args()
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", args.live_config):
+        parser.error("实盘配置必须是 configs 目录中的配置名称")
     if not 1024 <= args.port <= 65535:
         parser.error("端口须在 1024–65535 之间")
     if not args.research_root.is_dir():
@@ -23,9 +32,16 @@ def main():
         except OSError:
             parser.error(f"127.0.0.1:{args.port} 已被占用；保留现有服务，请使用其他端口")
     import uvicorn
+    from live_trading.modules.live_config import load_live_config
     from .app import create_app
 
-    app = create_app(args.research_root, args.data_root, args.monitor_url)
+    try:
+        config = load_live_config(
+            args.project_root / "live_trading/configs" / f"{args.live_config}.yaml", args.project_root
+        )
+    except (OSError, ValueError) as exc:
+        parser.error(f"实盘配置不可读或无效：{exc}")
+    app = create_app(args.research_root, args.data_root, live_config=config, project_root=args.project_root)
     print(f"量化研究平台：http://127.0.0.1:{args.port}", flush=True)
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
 

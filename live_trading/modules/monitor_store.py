@@ -28,16 +28,31 @@ _POSITION_COLS = [
 class MonitorStore:
     """监控表 SQLite 存储。"""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, read_only: bool = False):
         self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_db()
+        self.read_only = read_only
+        if self.read_only:
+            if not self.db_path.is_file():
+                raise FileNotFoundError(
+                    f"monitor ledger unavailable for read-only access: {self.db_path}"
+                )
+        else:
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            self._init_db()
 
     @contextmanager
     def _conn(self):
-        conn = sqlite3.connect(str(self.db_path))
+        if self.read_only:
+            conn = sqlite3.connect(
+                self.db_path.resolve().as_uri() + "?mode=ro", uri=True,
+            )
+        else:
+            conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
+        if self.read_only:
+            conn.execute("PRAGMA query_only=ON")
+        else:
+            conn.execute("PRAGMA journal_mode=WAL")
         try:
             yield conn
             conn.commit()

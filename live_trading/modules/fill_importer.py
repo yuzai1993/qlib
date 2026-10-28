@@ -172,12 +172,14 @@ class LiveRecorder:
     def _conn(self):
         if self.read_only:
             conn = sqlite3.connect(
-                f"file:{self.db_path}?mode=ro", uri=True,
+                self.db_path.resolve().as_uri() + "?mode=ro", uri=True,
             )
         else:
             conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
-        if not self.read_only:
+        if self.read_only:
+            conn.execute("PRAGMA query_only=ON")
+        else:
             conn.execute("PRAGMA journal_mode=WAL")
         try:
             yield conn

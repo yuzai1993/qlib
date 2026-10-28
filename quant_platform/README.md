@@ -1,20 +1,21 @@
 # 量化研究平台
 
-独立的本地研究与档案入口，包含实盘监控、离线实验和分析档案。现有实盘监控和交易程序保持运行；平台仅对 `127.0.0.1:8082` 发出白名单 GET 请求。
+统一的本地服务，包含实盘监控、离线实验和分析档案，监听 `127.0.0.1:8090`。实盘查询直接使用 SQLite 只读连接，不再依赖旧 8082 Web 服务；交易执行、调度和每日快照/日报任务仍独立运行。
 
 ## 启动
 
-从本平台的独立 checkout 运行：
+在原 qlib 工作区手动运行（常驻服务已启动时无需重复运行）：
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python -m quant_platform
+cd /Users/yuxianqi/Project/qlib
+PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform
 ```
 
 打开 <http://127.0.0.1:8090>。启动默认值：
 
 - 研究源：`/Users/yuxianqi/Project/qlib_exp`
-- 实盘监控：`http://127.0.0.1:8082`
-- 分析存储：本 checkout 的 `quant_platform/data/analyses/`（忽略 Git）
+- 实盘配置：`live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml`（只读加载）
+- 分析存储：`/Users/yuxianqi/.qlib/research_platform/analyses/`
 - 监听：`127.0.0.1:8090`
 
 源目录、归档目录和端口可显式指定，例如：
@@ -23,25 +24,31 @@
 /opt/anaconda3/envs/qlib/bin/python -m quant_platform \
   --research-root /Users/yuxianqi/Project/qlib_exp \
   --data-root /Users/yuxianqi/.qlib/research_platform/analyses \
-  --monitor-url http://127.0.0.1:8082 \
+  --project-root /Users/yuxianqi/Project/qlib \
+  --live-config alla_v4_ladder_k1h5_postclose_real \
   --port 8090
 ```
 
-端口被占用时启动会退出，不会关闭已有服务。停止本平台终端中的进程即可退出；原 8082 监控、交易调度和 QMT 都不需要重启。此模块不安装常驻调度，不读取交易环境密钥，不初始化生产 SQLite。
+端口被占用时启动会退出，不会关闭已有服务。平台不读取交易环境密钥、不初始化或迁移生产 SQLite。`mode=ro` 与 `query_only=ON` 禁止业务数据和 schema 写入；正常读取正在更新的 WAL，不使用可能漏数据的 immutable 模式。
 
-本次交付保留在分支 `codex/quant-research-platform` 的独立工作区；正在运行的实例使用工作区外的持久分析目录。关闭平台后，可使用以下命令重新启动：
+## 常驻服务
+
+复用原 Web 监控的 LaunchAgent `com.yuxianqi.qlib-live-monitor`，登录后启动、异常退出后重启。仓库模板位于 `live_trading/launchd/com.yuxianqi.qlib-live-monitor.plist`，安装路径为 `~/Library/LaunchAgents/`。原 8082 不再单独运行。
 
 ```bash
-cd /Users/yuxianqi/.codex/worktrees/quant-research-platform/qlib
-PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform \
-  --data-root /Users/yuxianqi/.qlib/research_platform/analyses
+launchctl print gui/$(id -u)/com.yuxianqi.qlib-live-monitor
+curl --noproxy '*' --fail http://127.0.0.1:8090/api/health
+# 仅重启统一 Web 平台，不操作交易 scheduler
+launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 ```
 
-临时验收档案与上述持久目录分开，正式实例不会带入测试分析。此工作区不合并到当前生产 checkout。
+日志沿用 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.{stdout,stderr}.log`。代码位于原 `/Users/yuxianqi/Project/qlib`，当前分支 `codex/qmt-clipboard-auto`，平台改动已迁回。分析档案位于工作区外，不随 Git 切换删除。
+
+切换前的 plist 已保存在 `~/.qlib/research_platform/service_backups/20261028-single-service/com.yuxianqi.qlib-live-monitor.plist`。如需回退，先 bootout 上述 Web label，等待旧服务卸载完成，恢复备份 plist 再 bootstrap，可恢复原 8082；旧 `run_web_service.sh` / `scripts/run_web.py` 保留为回退入口。不要操作 `com.yuxianqi.qlib-live-scheduler`，也不要将 `run_monitor_cron.sh` 误当 Web 服务启动脚本。
 
 ## 使用
 
-**实盘监控**保留概览、批次与成交、预测信号。浏览器刷新获取新数据；图表库不可用时使用本地曲线降级。上游离线时仅实盘模块显示连接状态，研究与分析仍可使用。
+**实盘监控**保留概览、批次与成交、预测信号。浏览器刷新获取新数据；图表库不可用时使用本地曲线降级。账本缺失或 schema 查询异常时返回 503，研究与分析仍可使用。启动时账本缺失的实例需在数据源恢复后重启；平台不会尝试建表或修复实盘账本。
 
 **离线实验**从研究根中的 `backtest/experiments/registry.jsonl` 索引记录，指标来自登记的 JSON，原 HTML 作为证据链接。模型和执行策略分别显示版本、年度、风格与实验记录。勾选 2–12 条合格同口径记录进行对比；可筛选、排序和导出 CSV。模型固定 top3×h5（算术净年化/HAC 波动/夏普），执行策略使用 CAGR，禁止跨轨道、池、窗口、费用与过滤口径混比。单种子和扩展窗口等诊断单独标识，不能加入正式比较。
 
@@ -66,4 +73,4 @@ PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m pytest \
   tests/live_trading/test_operational_wrappers.py -q -p no:cacheprovider
 ```
 
-Python 测试使用临时档案和模拟监控响应，不启动或写入生产交易系统。分析存储会拒绝研究根、`~/Project/qlib` 生产根、`/Volumes/qmt_bridge` 及其大小写别名或父目录。
+Python 测试使用临时档案和临时 SQLite 账本，不启动或写入生产交易系统。只读验证另见 `tests/live_trading/test_monitor_read_only.py`。分析存储会拒绝研究根、`~/Project/qlib` 生产根、`/Volumes/qmt_bridge` 及其大小写别名或父目录。

@@ -141,7 +141,7 @@
                         const wrapper=document.createElement('div');wrapper.className='page-head';heading.before(wrapper);
                         const intro=document.createElement('div'),eyebrow=document.createElement('div');
                         eyebrow.className='eyebrow';eyebrow.textContent='LIVE / MONITOR';intro.append(eyebrow,heading);
-                        const subtitle=document.createElement('div');subtitle.className='subtitle';subtitle.textContent='实盘监控 · '+titles[page]+' · 数据来自本地监控服务';intro.append(subtitle);wrapper.append(intro);
+                        const subtitle=document.createElement('div');subtitle.className='subtitle';subtitle.textContent='实盘监控 · '+titles[page]+' · 实盘账本只读查询';intro.append(subtitle);wrapper.append(intro);
                     }
                     content.querySelectorAll('table').forEach(table=>{
                         if(table.classList.contains('mini-table')||table.parentElement.classList.contains('table-wrap'))return;
@@ -152,7 +152,7 @@
             else await renderAnalyses(token);
         }catch(error){
             if(!current(token))return;window.PlatformMonitor.clear();
-            content.innerHTML=pageHead(isMonitor?'LIVE / MONITOR':'WORKSPACE',isMonitor?'实盘服务暂不可用':'数据读取失败',isMonitor?'实盘模块依赖本地监控服务；其他模块仍可继续使用。':'请检查数据源与服务状态后重试。')+`<div class="notice error">${esc(error.message)}</div><div class="panel"><h3 style="margin-top:0">${isMonitor?'监控连接未就绪':'请求未完成'}</h3><p class="subtitle">${isMonitor?'确认原监控服务在 127.0.0.1:8082 运行，然后使用浏览器刷新。':'平台保留了模块导航，请尝试刷新数据。'}</p>${isMonitor?'':'<button id="retry-page" class="primary">重新读取</button>'}</div>`;
+            content.innerHTML=pageHead(isMonitor?'LIVE / MONITOR':'WORKSPACE',isMonitor?'实盘服务暂不可用':'数据读取失败',isMonitor?'实盘账本暂不可读；其他模块仍可继续使用。':'请检查数据源与服务状态后重试。')+`<div class="notice error">${esc(error.message)}</div><div class="panel"><h3 style="margin-top:0">${isMonitor?'实盘数据源未就绪':'请求未完成'}</h3><p class="subtitle">${isMonitor?'请检查实盘数据源；启动时缺失账本的实例需在账本恢复后重启平台。':'平台保留了模块导航，请尝试刷新数据。'}</p>${isMonitor?'':'<button id="retry-page" class="primary">重新读取</button>'}</div>`;
             const retry=document.getElementById('retry-page');if(retry)retry.onclick=()=>navigate(page);
         }
     }

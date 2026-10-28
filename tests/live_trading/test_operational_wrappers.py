@@ -424,9 +424,13 @@ def test_monitor_launch_agent_owns_loopback_service():
     assert plist["ProcessType"] == "Background"
     assert plist["WorkingDirectory"] == "/Users/yuxianqi/Project/qlib"
     assert plist["ProgramArguments"] == [
-        "/bin/bash",
-        "/Users/yuxianqi/Project/qlib/live_trading/run_web_service.sh",
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "-m", "quant_platform",
+        "--project-root", "/Users/yuxianqi/Project/qlib",
+        "--live-config",
         "alla_v4_ladder_k1h5_postclose_real",
+        "--data-root", "/Users/yuxianqi/.qlib/research_platform/analyses",
+        "--port", "8090",
     ]
     assert plist["StandardOutPath"].endswith(
         "alla_v4_ladder_k1h5_postclose_real_web_service.stdout.log"

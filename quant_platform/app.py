@@ -1,4 +1,4 @@
-"""Local-only platform service. Live data is fetched over an explicit GET proxy."""
+"""Local platform service with live monitor queries on read-only SQLite connections."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ import hmac
 import mimetypes
 import re
 import secrets
+import sqlite3
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import httpx
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -36,36 +36,63 @@ MONITOR_PATHS = {
     "predictions/instruments",
 }
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
-MAX_PROXY_BYTES = 8 * 1024 * 1024
+MAX_MONITOR_BYTES = 8 * 1024 * 1024
+MONITOR_UNAVAILABLE = "实盘账本暂不可读，研究与分析仍可使用；请检查数据源，不要在平台中初始化账本"
 
 
-def _monitor_origin(value: str) -> str:
-    parsed = urlsplit(value)
-    if (
-        parsed.scheme != "http"
-        or parsed.hostname not in {"127.0.0.1", "::1"}
-        or parsed.username
-        or parsed.password
-        or parsed.path not in {"", "/"}
-        or parsed.query
-        or parsed.fragment
-    ):
-        raise ValueError("监控上游必须是固定的本机 HTTP 地址")
-    if not parsed.port:
-        raise ValueError("监控上游必须明确指定端口")
-    return value.rstrip("/")
+def _monitor_path(path: str) -> bool:
+    return bool(path in MONITOR_PATHS or re.fullmatch(r"batches/[A-Za-z0-9_.-]{1,160}(?:/fills)?", path)) and not any(
+        part in {".", ".."} for part in path.split("/")
+    )
 
 
 def create_app(
-    research_root: Path, data_root: Path, monitor_url: str = "http://127.0.0.1:8082", *, transport=None
+    research_root: Path, data_root: Path, *, live_config: dict | None = None, project_root: Path | None = None
 ) -> FastAPI:
-    upstream = _monitor_origin(monitor_url)
     research_root = Path(research_root).resolve()
     store = AnalysisStore(data_root, research_root)
     catalog = ResearchCatalog(research_root)
     csrf_token = secrets.token_urlsafe(32)
-    proxy_slots = asyncio.Semaphore(6)
-    app = FastAPI(title="量化研究平台", version="1.0.0", docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="量化研究平台", version="1.1.0", docs_url=None, redoc_url=None, openapi_url=None)
+    monitor_probe = None
+    monitor_slots = asyncio.Semaphore(6)
+    if live_config is not None:
+        from live_trading.modules.signal_schema import SchemaError
+        from live_trading.web.api import create_router
+
+        try:
+            router = create_router(
+                live_config, Path(project_root or Path(__file__).resolve().parents[1]), read_only=True
+            )
+        except (OSError, SchemaError, sqlite3.Error):
+            # A missing ledger must never be created or migrated by the UI.
+            pass
+        else:
+            app.include_router(router, prefix="/api")
+            monitor_probe = next(route.endpoint for route in router.routes if route.path == "/overview")
+
+    async def bounded_monitor(request, call_next):
+        if len(request.url.query) > 4096:
+            return JSONResponse({"detail": "查询参数过长"}, status_code=400)
+        try:
+            await asyncio.wait_for(monitor_slots.acquire(), timeout=0.1)
+        except TimeoutError:
+            return JSONResponse({"detail": "监控查询繁忙，请稍后重试"}, status_code=503)
+        try:
+            response = await call_next(request)
+            oversized = JSONResponse({"detail": "监控响应过大，请缩小查询范围"}, status_code=503)
+            if int(response.headers.get("content-length", "0")) > MAX_MONITOR_BYTES:
+                await response.body_iterator.aclose()
+                return oversized
+            body = bytearray()
+            async for chunk in response.body_iterator:
+                body.extend(chunk)
+                if len(body) > MAX_MONITOR_BYTES:
+                    await response.body_iterator.aclose()
+                    return oversized
+            return Response(bytes(body), status_code=response.status_code, headers=dict(response.headers))
+        finally:
+            monitor_slots.release()
 
     @app.middleware("http")
     async def local_boundary(request: Request, call_next):
@@ -100,7 +127,13 @@ def create_app(
                 if len(body) > MAX_REQUEST_BYTES:
                     return JSONResponse({"detail": "请求超过 2 MiB"}, status_code=413)
             request._body = bytes(body)
-        response = await call_next(request)
+        path = request.url.path.removeprefix("/api/")
+        if request.url.path.startswith("/api/batches/") and not _monitor_path(path):
+            return JSONResponse({"detail": "接口不存在"}, status_code=404)
+        if request.url.path.startswith("/api/") and (_monitor_path(path) or path == "health"):
+            response = await bounded_monitor(request, call_next)
+        else:
+            response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Cache-Control"] = "no-store" if request.url.path.startswith("/api") else "no-cache"
@@ -119,16 +152,29 @@ def create_app(
     async def missing_handler(request, exc):
         return JSONResponse({"detail": "记录或原始文件不存在"}, status_code=404)
 
+    @app.exception_handler(sqlite3.Error)
+    async def ledger_error_handler(request, exc):
+        return JSONResponse({"detail": MONITOR_UNAVAILABLE}, status_code=503)
+
     @app.get("/api/session")
     def session():
         return {"csrf_token": csrf_token}
 
     @app.get("/api/health")
     def health():
+        monitor_ready = False
+        if monitor_probe is not None:
+            try:
+                monitor_probe()
+            except (OSError, sqlite3.Error, ValueError):
+                pass
+            else:
+                monitor_ready = True
         return {
             "status": "ok",
             "research_root": str(research_root),
-            "monitor_url": upstream,
+            "monitor_mode": "direct-read-only",
+            "monitor_status": "ready" if monitor_ready else "unavailable",
             "analysis_storage": str(store.root),
         }
 
@@ -180,34 +226,10 @@ def create_app(
         )
 
     @app.get("/api/{monitor_path:path}")
-    async def monitor(monitor_path: str, request: Request):
-        allowed = monitor_path in MONITOR_PATHS or re.fullmatch(
-            r"batches/[A-Za-z0-9_.-]{1,160}(?:/fills)?", monitor_path
-        )
-        if not allowed or any(part in {".", ".."} for part in monitor_path.split("/")):
+    async def unavailable_monitor(monitor_path: str):
+        if not _monitor_path(monitor_path):
             return JSONResponse({"detail": "接口不存在"}, status_code=404)
-        if len(request.url.query) > 4096:
-            raise ValueError("查询参数过长")
-        try:
-            async with proxy_slots:
-                async with httpx.AsyncClient(
-                    timeout=5, follow_redirects=False, trust_env=False, transport=transport
-                ) as client:
-                    async with client.stream(
-                        "GET", upstream + "/api/" + monitor_path, params=request.query_params.multi_items()
-                    ) as response:
-                        if response.status_code != 200:
-                            return JSONResponse({"detail": "实盘监控暂不可用，研究与分析仍可使用"}, status_code=503)
-                        if "application/json" not in response.headers.get("content-type", ""):
-                            return JSONResponse({"detail": "实盘监控返回格式异常"}, status_code=503)
-                        content = bytearray()
-                        async for chunk in response.aiter_bytes():
-                            content.extend(chunk)
-                            if len(content) > MAX_PROXY_BYTES:
-                                return JSONResponse({"detail": "监控响应过大，请缩小查询范围"}, status_code=503)
-                        return Response(bytes(content), media_type="application/json")
-        except httpx.HTTPError:
-            return JSONResponse({"detail": "实盘监控连接失败，研究与分析仍可使用"}, status_code=503)
+        return JSONResponse({"detail": MONITOR_UNAVAILABLE}, status_code=503)
 
     static = Path(__file__).parent / "static"
     if static.is_dir():

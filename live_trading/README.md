@@ -187,21 +187,21 @@ crontab -l
 
 ## 监控服务
 
-只读 Web 监控由 macOS `launchd` 常驻托管，登录后自动启动，异常退出后自动拉起。服务只监听本机
-`127.0.0.1:8082`，不会直接暴露给局域网。仓库模板是
+实盘监控已整合到[量化研究平台](../quant_platform/README.md)，由 macOS `launchd` 常驻托管，登录后自动启动，异常退出后自动拉起。服务只监听本机
+`127.0.0.1:8090`，旧 8082 不再单独运行，不会直接暴露给局域网。仓库模板是
 `live_trading/launchd/com.yuxianqi.qlib-live-monitor.plist`，部署到
 `~/Library/LaunchAgents/` 后由 `launchctl` 加载。
 
 ```bash
 launchctl print gui/$(id -u)/com.yuxianqi.qlib-live-monitor
-curl --noproxy 127.0.0.1 --fail http://127.0.0.1:8082/api/overview
-open http://127.0.0.1:8082
+curl --noproxy 127.0.0.1 --fail http://127.0.0.1:8090/api/overview
+open http://127.0.0.1:8090
 ```
 
 标准输出与错误日志分别写入
 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.stdout.log` 和
 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.stderr.log`。
-`run_web_service.sh` 会加载 `~/.qlib_live_env`，与 cron 使用同一套环境和活动配置。
+统一入口直接运行 `python -m quant_platform`，只读加载活动配置和账本，不加载交易密钥。旧 `run_web_service.sh` 保留为回退入口。`run_monitor_cron.sh` 仍负责快照、告警与日报，不受 Web 服务整合影响。
 
 指数日线会按交易日历校验日期、代码和 OHLC 价格，每个代码最多尝试 3 次；
 任一指数仍缺失时，日更返回非零并走现有失败告警，不再仅记 warning 后报成功。

@@ -6,9 +6,17 @@
     <string>com.yuxianqi.qlib-live-monitor</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/bash</string>
-        <string>/Users/yuxianqi/Project/qlib/live_trading/run_web_service.sh</string>
+        <string>/opt/anaconda3/envs/qlib/bin/python</string>
+        <string>-m</string>
+        <string>quant_platform</string>
+        <string>--project-root</string>
+        <string>/Users/yuxianqi/Project/qlib</string>
+        <string>--live-config</string>
         <string>alla_v4_ladder_k1h5_postclose_real</string>
+        <string>--data-root</string>
+        <string>/Users/yuxianqi/.qlib/research_platform/analyses</string>
+        <string>--port</string>
+        <string>8090</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/yuxianqi/Project/qlib</string>
@@ -17,6 +25,8 @@
         <key>PATH</key>
         <string>/opt/anaconda3/envs/qlib/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
         <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+        <key>PYTHONDONTWRITEBYTECODE</key>
         <string>1</string>
     </dict>
     <key>RunAtLoad</key>

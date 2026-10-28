@@ -322,10 +322,7 @@ def test_actual_client_order_sequence_is_reserved_when_batch_sequence_disagrees(
     }
     issues = result["batch_identity"]["client_order_identity_issues"]
     assert len(issues) == 2
-    assert all(
-        "batch_sequence_mismatch" in issue["reasons"]
-        for issue in issues
-    )
+    assert all("batch_sequence_mismatch" in issue["reasons"] for issue in issues)
 
 
 @pytest.mark.parametrize(

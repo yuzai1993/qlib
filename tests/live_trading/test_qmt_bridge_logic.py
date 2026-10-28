@@ -447,6 +447,95 @@ def test_guarded_sell_preserves_smaller_broker_full_odd_lot_holding(bridge, monk
     assert [call[6] for call in state["calls"]] == [151]
 
 
+@pytest.mark.parametrize("visible", [False, True])
+def test_guarded_sell_api_exception_waits_for_broker_finality_after_restart(bridge, monkeypatch, visible):
+    from types import SimpleNamespace
+
+    state = _guarded_broker(bridge, monkeypatch, held_count=4)
+    sell = _guarded_orders(1)[0]
+    sell.update(client_order_id="20261029001003S", stock_code="600100.SH",
+                side="SELL", quantity=100, priority=10)
+    detail = SimpleNamespace(m_strRemark=sell["client_order_id"], m_nOrderStatus=50,
+                             m_strOrderSysID="broker-sell", m_nVolumeTraded=0)
+
+    def uncertain_submit(*args):
+        state["calls"].append(args)
+        if args[0] == 24:
+            state["orders"] = [detail] if visible else []
+            raise RuntimeError("transport failed after broker accepted")
+
+    monkeypatch.setattr(bridge, "passorder", uncertain_submit)
+    batch = _guarded_batch(bridge, [sell] + _guarded_orders(1))
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert [call[0] for call in state["calls"]] == [24]
+    assert not bridge._order_is_terminal(batch, sell["client_order_id"])
+    assert batch.cash_plan is None
+
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    recovered = bridge.g.batch
+    bridge._process_batch(_TickCtx(10.0), recovered)
+    assert [call[0] for call in state["calls"]] == [24]
+    assert recovered.phase == "SELL"
+    state["orders"] = [detail]
+    detail.m_nOrderStatus = bridge.STATUS_CANCELED
+    bridge._process_batch(_TickCtx(10.0), recovered)
+    assert [call[0] for call in state["calls"]] == [24, 23]
+    assert recovered.fills[sell["client_order_id"]]["status"] == "EXPIRED"
+
+
+def test_guarded_working_sell_snapshot_blocks_even_if_cached_fill_is_terminal(bridge, monkeypatch):
+    from types import SimpleNamespace
+
+    state = _guarded_broker(bridge, monkeypatch, held_count=4)
+    sell = _guarded_orders(1)[0]
+    sell.update(client_order_id="20261029001003S", stock_code="600100.SH",
+                side="SELL", quantity=100, priority=10)
+    batch = _guarded_batch(bridge, [sell] + _guarded_orders(1))
+    batch.submitted[sell["client_order_id"]] = True
+    bridge._write_fill(batch, sell, "ERROR", 0, 0.0, "", "cached ambiguous error")
+    state["orders"] = [SimpleNamespace(m_strRemark=sell["client_order_id"], m_nOrderStatus=50)]
+    bridge._process_batch(_TickCtx(10.0), batch)
+    assert state["calls"] == []
+    assert batch.cash_plan is None
+
+
+def test_guarded_price_error_before_api_is_terminal(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch)
+    sell = _guarded_orders(1)[0]
+    sell.update(client_order_id="20261029001003S", side="SELL", quantity=100, priority=10)
+    batch = _guarded_batch(bridge, [sell])
+
+    def unavailable(*args):
+        raise ValueError("price unavailable before submission")
+
+    monkeypatch.setattr(bridge, "_auction_offset_limit_price", unavailable)
+    assert bridge._submit(_TickCtx(10.0), batch, batch.orders[0], True) is False
+    assert state["calls"] == []
+    assert bridge._order_is_terminal(batch, sell["client_order_id"])
+    assert batch.fills[sell["client_order_id"]]["status"] == "ERROR"
+
+
+def test_guarded_buy_api_exception_keeps_reservation_and_never_resubmits(bridge, monkeypatch):
+    state = _guarded_broker(bridge, monkeypatch, held_count=4)
+    batch = _guarded_batch(bridge, _guarded_orders(1))
+
+    def uncertain_submit(*args):
+        state["calls"].append(args)
+        raise RuntimeError("broker outcome unknown")
+
+    monkeypatch.setattr(bridge, "passorder", uncertain_submit)
+    bridge._process_batch(_TickCtx(10.0), batch)
+    remaining = batch.remaining_cash
+    assert not bridge._order_is_terminal(batch, batch.orders[0]["client_order_id"])
+    assert remaining < 100000
+    bridge.g.batch = None
+    bridge._recover_processing_batch()
+    bridge._process_batch(_TickCtx(10.0), bridge.g.batch)
+    assert len(state["calls"]) == 1
+    assert bridge.g.batch.remaining_cash == remaining
+
+
 def test_guarded_restart_keeps_budget_and_pending_buy_slot_reservations(bridge, monkeypatch):
     state = _guarded_broker(bridge, monkeypatch, held_count=3)
     batch = _guarded_batch(bridge, _guarded_orders())

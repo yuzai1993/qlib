@@ -1995,9 +1995,20 @@ def _submit(
                 traceback.format_exc(), 512, (account_id,)),
             message="passorder raised an exception",
         )
-        _write_fill(batch, order, "ERROR", 0, 0.0, "",
-                    "passorder exception: "
-                    + _bounded_text(exc, 200, (account_id,)))
+        if _is_guarded_topk(batch):
+            # The broker may have accepted before the transport raised. Keep
+            # the durable submitted marker, but do not invent terminality.
+            # Polling/callbacks must resolve it; restart must not resubmit it.
+            _log_event(
+                "SUBMITTED_UNCONFIRMED", batch_id=batch.batch_id(),
+                client_order_id=coid, side=order["side"],
+                stock_code=order["stock_code"], quantity=int(order["quantity"]),
+                message="passorder raised; awaiting broker terminal evidence",
+            )
+        else:
+            _write_fill(batch, order, "ERROR", 0, 0.0, "",
+                        "passorder exception: "
+                        + _bounded_text(exc, 200, (account_id,)))
         return False
 
 
@@ -2326,12 +2337,14 @@ def _guarded_orders_clear(batch):
         details = get_trade_detail_data(_account_id(batch), ACCOUNT_TYPE, "ORDER")
         if details is None:
             return False
-        own = set(o["client_order_id"] for o in batch.orders)
+        own = dict((o["client_order_id"], o) for o in batch.orders)
         for row in details:
-            if getattr(row, "m_strRemark", "") in own:
+            if int(getattr(row, "m_nOrderStatus", -1)) in TERMINAL_ORDER_STATUS:
                 continue
-            if int(getattr(row, "m_nOrderStatus", -1)) not in TERMINAL_ORDER_STATUS:
-                return False
+            coid = getattr(row, "m_strRemark", "")
+            if coid in batch.submitted and coid in own and own[coid]["side"] == "BUY":
+                continue  # its frozen cash/name reservation remains occupied
+            return False  # foreign order or any still-working SELL
         return True
     except Exception:
         return False

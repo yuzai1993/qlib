@@ -42,7 +42,7 @@ curl --noproxy '*' --fail http://127.0.0.1:8090/api/health
 launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 ```
 
-日志沿用 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.{stdout,stderr}.log`。代码位于原 `/Users/yuxianqi/Project/qlib`，当前分支 `codex/qmt-clipboard-auto`，平台改动已迁回。分析档案位于工作区外，不随 Git 切换删除。
+日志沿用 `live_trading/logs/alla_v4_ladder_k1h5_postclose_real_web_service.{stdout,stderr}.log`。代码位于原 `/Users/yuxianqi/Project/qlib`，平台与 QMT 剪贴板改动已合入 `main`，工作目录也使用 `main`。分析档案位于工作区外，不随 Git 切换删除。
 
 切换前的 plist 已保存在 `~/.qlib/research_platform/service_backups/20261028-single-service/com.yuxianqi.qlib-live-monitor.plist`。如需回退，先 bootout 上述 Web label，等待旧服务卸载完成，恢复备份 plist 再 bootstrap，可恢复原 8082；旧 `run_web_service.sh` / `scripts/run_web.py` 保留为回退入口。不要操作 `com.yuxianqi.qlib-live-scheduler`，也不要将 `run_monitor_cron.sh` 误当 Web 服务启动脚本。
 

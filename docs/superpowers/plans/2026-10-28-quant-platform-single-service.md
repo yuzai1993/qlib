@@ -8,7 +8,7 @@
 
 ## Constraints / rulings
 
-- Work in `/Users/yuxianqi/Project/qlib`, branch `codex/qmt-clipboard-auto`; user explicitly requested the original checkout. No new worktree.
+- Work in `/Users/yuxianqi/Project/qlib`; implementation initially used its checked-out `codex/qmt-clipboard-auto` branch. The user subsequently clarified `main` as the destination, so all changes were fast-forwarded to `main` and the original checkout now uses `main`. No new worktree.
 - Preserve unrelated QMT changes. Fingerprints and original draft saved in `/private/tmp/quant-platform-original-worktree-20261028`.
 - Do not change trading configs, scheduler, snapshot/report jobs, bridge contents or production database schema/data.
 - Use `/opt/anaconda3/envs/qlib/bin/python`; tests use temporary DB fixtures and `PYTHONDONTWRITEBYTECODE=1`.
@@ -52,4 +52,4 @@ Files: `quant_platform/app.py`, `__main__.py`, README, live monitor LaunchAgent 
 - macOS initially rejected immediate bootstrap while the previous service was unloading. The old service was restored, then cutover succeeded after waiting for label removal and bounded retries. Trading scheduler was never stopped or reloaded.
 - Original installed Web plist retained at /Users/yuxianqi/.qlib/research_platform/service_backups/20261028-single-service/com.yuxianqi.qlib-live-monitor.plist.
 - Trading scheduler plist fingerprint and runtime state remained unchanged. All 14 unrelated working-file fingerprints remained unchanged.
-- Browser smoke confirmed live data and navigation on the unified 8090 service. Platform code is on the original codex/qmt-clipboard-auto branch; the previous implementation commit 7f1487d2 was fast-forwarded before this consolidation.
+- Browser smoke confirmed live data and navigation on the unified 8090 service. The previous implementation commit 7f1487d2 was fast-forwarded before this consolidation. The platform and QMT commits were subsequently fast-forwarded from codex/qmt-clipboard-auto into main per the user's clarification, without changing the running service code.

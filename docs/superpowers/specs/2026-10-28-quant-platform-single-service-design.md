@@ -4,7 +4,7 @@
 
 ## 决定与约束
 
-- 实际原分支是 `codex/qmt-clipboard-auto`；开始时与 `main` 同为 `defa538d`。按“原来的分支”继续，不擅自切换或重命名。已将平台提交 `7f1487d2` 快进合入，原 QMT 未提交文件保持原样。
+- 实施开始时实际检出分支是 `codex/qmt-clipboard-auto`，当时与 `main` 同为 `defa538d`；平台提交 `7f1487d2` 先快进合入该分支。用户后续明确以 `main` 为准，全部平台与 QMT 剪贴板提交已快进合入 `main`，原工作目录也已切回 `main`。
 - 统一入口保留 `http://127.0.0.1:8090`，从 `/Users/yuxianqi/Project/qlib` 运行。原 `8082` Web 服务在验证后停用。
 - 复用现有 `com.yuxianqi.qlib-live-monitor` LaunchAgent 身份，改为启动统一平台。保持登录启动/异常重启，不新增第二个常驻服务。
 - 分析持久目录保持 `/Users/yuxianqi/.qlib/research_platform/analyses`；研究源仍为 `/Users/yuxianqi/Project/qlib_exp`。

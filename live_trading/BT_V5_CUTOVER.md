@@ -1,8 +1,52 @@
 # BT v5 离线交付与实盘切换说明
 
-2026-10-29更新：用户要求拟实盘risk改为1.0，并从当前账户开始，首日可先卖出现有持仓。状态：**隔离分支准备，生产尚未切换**。本交付包含离线配置、验证和人工操作清单；助手不执行真实买卖或启用账户自动交易。
+2026-10-30更新：用户确认10月30日为目标交易日，实际可用现金244,607元、持仓为0、无活动委托，Windows旧QMT已停用。状态：**代码已合入生产目录main；实盘新调度和发布尚未启用**。本交付包含离线配置、验证和人工操作清单；助手不执行真实买卖或启用账户自动交易。
 
-工作分支为 `codex/bt-v5-top5-cutover`，工作区为 `/Users/yuxianqi/.codex/worktrees/bt-v5-top5-cutover/qlib`。生产根 `/Users/yuxianqi/Project/qlib` 的实盘配置、账本、launchd 调度、QMT 和已发布订单均未修改。不要将本工作区或其账本副本当成已经接管实盘的系统。
+准备分支 `codex/bt-v5-top5-cutover` 的12个提交已快进合入 `/Users/yuxianqi/Project/qlib` 的 `main`（集成提交为 `5e3fe6ad`）。原工作区 `/Users/yuxianqi/.codex/worktrees/bt-v5-top5-cutover/qlib` 暂保留审计资料。新配置仍使用本地离线桥，实际账本未改写，不能把代码合入视为已接管实盘。
+
+Mac旧策略LaunchAgent `com.yuxianqi.qlib-live-scheduler` 已禁用并卸载。旧10月30日批次 `20261030_alla_v4_ladder_k1h5_postclose_real_001` 的 `.done` 与 `.jsonl` 已从共享 `inbox` 移入 `/Volumes/qmt_bridge/quarantine/20261030T002153+0800_old_1030_disabled/`，逐文件SHA校验一致；本地记录为 `live_trading/logs/old_1030_withdrawal_20261030.json`。这只证明共享入口已撤下，不撤销Windows本地journal、已有剪贴板请求或券商委托；旧QMT继续保持停止，Windows任务与手动中转进程还须停用。
+
+按用户确认状态生成的离线核对文件为 `backtest/result/bt_v5_operator_preview_20261030/offline_review.json`：信号日2026-10-29、目标日2026-10-30、现金假设244,607元、空仓、risk=1.0。文件包含5个模型候选和预算参考，`publishable=false`、`ready_for_activation=false`，不含可提交批次、委托ID、价格或数量；未把旧账本持仓直接记为已卖出，也未重置账户历史。原始资金300,000元与当前可用现金244,607元是不同口径。
+
+## 停止Windows旧中转
+
+`QlibClipboardRelay` 是Windows任务计划程序中的启动规则，安装脚本默认在工作日14:54启动 `clipboard_relay.py auto`。中转程序是实际运行的Python进程：读取共享信号，通过剪贴板与QMT通信并回传成交和账户快照。定时任务可以启动它，手动终端也可以启动它。
+
+在Windows PowerShell查看任务动作，确认它指向本项目的 `clipboard_relay.py`：
+
+```powershell
+$relayTask = Get-ScheduledTask -TaskPath '\' -TaskName 'QlibClipboardRelay'
+$relayTask.Actions | Format-List Execute,Arguments,WorkingDirectory
+```
+
+然后禁用未来启动，并结束当前任务实例：
+
+```powershell
+Disable-ScheduledTask -InputObject $relayTask
+Stop-ScheduledTask -InputObject $relayTask
+Get-ScheduledTask -TaskPath '\' -TaskName 'QlibClipboardRelay' |
+    Select-Object TaskName,State
+```
+
+预期State为 `Disabled`。若不存在该任务，仍需检查手动进程。手动终端优先在原窗口按 `Ctrl+C`。找不到窗口时精确列出本项目中转进程，不要结束所有Python：
+
+```powershell
+$relayProcesses = @(Get-CimInstance Win32_Process | Where-Object {
+    $_.Name -match '^(python|pythonw|py)[0-9.]*\.exe$' -and
+    $_.CommandLine -match '(?i)(^|[\\/\s"])clipboard_relay\.py(?=["\s]|$)'
+})
+$relayProcesses | Select-Object ProcessId,Name,CommandLine | Format-List
+```
+
+确认列出的路径均为旧策略中转程序后，停止这些PID：
+
+```powershell
+$relayProcesses | ForEach-Object {
+    Stop-Process -Id $_.ProcessId -ErrorAction SilentlyContinue
+}
+```
+
+再次执行查询，结果应为空。禁用任务防止下一次启动，结束任务停止该任务当前实例；手动启动的进程须另行停止。旧QMT保持停用，不删除 `output/state`、`processed_batches.txt` 或 `active_*.json` 来尝试重置；这些状态可能包含旧批次恢复和去重证据。
 
 ## 冻结方案
 
@@ -42,21 +86,23 @@ risk=1.0复算结果：历史1454日CAGR37.23%、夏普1.209、最大回撤−33
 
 QMT源版本须为 `2026-10-29-topk-cash-v1` 或经验证的后续版。模板保留 `MAX_ORDER_QUANTITY=100` 的保守缺省，不能直接当正式部署件使用，否则整仓卖出和买入会被截为100股。部署渲染应使用现有 `render_main_source` 的 `max_order_quantity=0`（移除固定股数上限，仍受新现金预算与5只持仓上限约束）、`execution_profile=CLOSE_AUCTION`，并关闭阶梯净额抵销。账户绑定在操作者本地完成；本次没有读取账户密钥或生成已绑定真实账户的运行件。
 
-## 账本和首日预览
+## 清仓前账本审计（10月29日历史）
+
+本节保留清仓前证据，不代表用户10月30日确认的当前账户状态。最新空仓/现金假设见开头的离线核对文件；原账本没有据口头余额回填或伪造成交。审计目录已按逐文件哈希复制到生产根，原工作区副本保留。
 
 只读来源：生产 `live_trading/data/alla_v4_ladder_k1h5_postclose_real.db`。最新隔离快照位于 `backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_snapshot.db`，同目录`source_audit.json`保留审计，`source_file_evidence.json`记录读取前后文件哈希。
 
 快照生成于上海时间2026-10-29 23:48:40，SHA-256：`2fd8d1b07c95d904a46b7bf2e1396c86a6084677d4017b891f963abb116da1eb`。23张表、现金51,839.06711849991、4只持仓合计13,400股和历史记录均一致；读取前后生产主数据库、WAL和SHM字节哈希一致。这是账本观察，不等于已核对实时券商状态。原有分层记录完整保留为历史；新策略不应继续运行阶梯到期逻辑。
 
-本次检查发现的启用前事项：
+清仓前检查记录的事项：
 
-1. 最新快照中，2026-10-30旧策略已有两笔计划订单，尚无对应成交回报。先核对是否已经发布、被QMT读取或向券商提交，不能假定已成交、已取消，也不能直接覆盖。
+1. 快照中，2026-10-30旧策略有两笔计划订单，尚无对应成交回报。共享inbox原件现已隔离（见开头）；Windows本地日志与实际券商状态仍需保留核对，不能把共享入口撤下视为撤单回报。
 2. 2026-09-02、09-24有历史部分成交回报，另有5笔历史卖出失败回报。它们不代表当前一定有活动委托，但切换前应确认剩余持仓已反映到账本，不能自动重放。
 3. 新旧策略的client order ID不包含策略名。10月30日序号001已经使用；本快照中下一个未用序号是002。启用当时必须重新核对，不从新策略的001重新开始。
 
 上次`hypothetical_20261029_intents.json`的1卖2买预览已经过时，不用于本次切换。新预览使用`preview_bt_v5_cutover.py --mode manual_liquidation`，列出全部正持仓的账面股数，包括零股；券商可卖数量保持未知，卖出所得不提前计入可用现金。输出始终`publishable=false`、`ready_for_activation=false`，没有可提交订单或批次身份。清仓后候选允许包含原持仓中的股票，实际启用前必须按最新信号重算。
 
-最新清单在`backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/manual_liquidation_preview.json`：4只原持仓全部列入人工核对清单。采用2026-10-29当天v2五种子评分（5216只，过滤后4934只），没有使用过期日期替代；评分文件及来源哈希位于同目录`v2_scores_20261029.pkl/.json`。这份清单不代表已清仓或已下单。
+清仓前清单在`backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/manual_liquidation_preview.json`：4只原持仓全部列入人工核对清单。采用2026-10-29当天v2五种子评分（5216只，过滤后4934只），没有使用过期日期替代；评分文件及来源哈希位于同目录`v2_scores_20261029.pkl/.json`。这份历史清单不再作为当前持仓状态；用户已确认的空仓状态用于新的离线预览。
 
 ## 人工启用与回退顺序
 

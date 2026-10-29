@@ -256,6 +256,45 @@ def test_buy_fill_is_broker_sized_and_cannot_exceed_target_value(tmp_path):
         recorder.apply_fill(FillEvent.from_dict(over))
 
 
+def test_guarded_deferred_buy_imports_actual_fills_and_fees_idempotently(tmp_path):
+    recorder = LiveRecorder(str(tmp_path / "guarded.db"), opening_cash=244607.0)
+    fill = _fill(batch_id="guarded", client_order_id="guarded-buy", side="BUY",
+                 stock_code="600000.SH", requested=1000, filled=1000, price=10.0)
+    _record_plan(recorder, [fill], batch_id="guarded")
+    plan = recorder.get_orders("guarded")[0]
+    plan.update(price_type="CLOSE_AUCTION_TOPK_CASH_V1", target_value=0.0,
+                max_positions=5, cash_risk_degree=1.0)
+    recorder.record_orders("guarded", [plan])
+    event = FillEvent.from_dict(fill)
+    recorder.apply_fill(event)
+    expected = 244607 - 10000 - order_total_fee("BUY", 10000, recorder.fees, "600000.SH")
+    assert recorder.get_cash() == pytest.approx(expected)
+    assert recorder.get_positions()["600000.SH"]["shares"] == 1000
+    recorder.apply_fill(event)
+    assert recorder.get_cash() == pytest.approx(expected)
+    assert recorder.get_positions()["600000.SH"]["shares"] == 1000
+
+
+@pytest.mark.parametrize("changed", [
+    {"max_positions": 0}, {"cash_risk_degree": 0.0},
+    {"cash_risk_degree": 1.1}, {"target_value": 1000.0}, {"quantity": 100},
+])
+def test_guarded_buy_import_rejects_incomplete_persisted_contract(tmp_path, changed):
+    recorder = LiveRecorder(str(tmp_path / "invalid-guarded.db"), opening_cash=244607.0)
+    fill = _fill(batch_id="guarded", client_order_id="guarded-buy", side="BUY",
+                 stock_code="600000.SH", requested=100, filled=100, price=10.0)
+    _record_plan(recorder, [fill], batch_id="guarded")
+    plan = recorder.get_orders("guarded")[0]
+    plan.update(price_type="CLOSE_AUCTION_TOPK_CASH_V1", target_value=0.0,
+                max_positions=5, cash_risk_degree=1.0)
+    plan.update(changed)
+    recorder.record_orders("guarded", [plan])
+    with pytest.raises(SchemaError):
+        recorder.apply_fill(FillEvent.from_dict(fill))
+    assert recorder.get_cash() == 244607.0
+    assert not recorder.get_positions()
+
+
 def test_sell_fill_remains_bounded_by_planned_quantity(tmp_path):
     recorder = LiveRecorder(str(tmp_path / "sell-plan.db"))
     fill = _fill(requested=800, filled=800)

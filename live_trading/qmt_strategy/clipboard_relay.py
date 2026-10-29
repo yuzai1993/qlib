@@ -13,11 +13,13 @@ from pathlib import Path
 from qmt_clipboard import Clipboard, MAX_REQUEST_CHARS, PROTOCOL, SHANGHAI, TERMINAL, _identifier, dumps
 
 
-def exchange(clipboard, request, timeout=10, interval=1, clock=time.monotonic, sleep=time.sleep):
+def exchange(clipboard, request, timeout=10, interval=1, clock=time.monotonic, sleep=time.sleep,
+             pending_requests=()):
     """Retry the identical request, never a regenerated trade or session."""
     if timeout <= 0 or interval <= 0:
         raise ValueError("timeout and interval must be positive")
     wire = dumps(request)
+    authorized_pending = {dumps(item) for item in pending_requests if item.get("type") == "trade"}
     if len(wire) > MAX_REQUEST_CHARS:
         raise ValueError("request exceeds clipboard limit")
     deadline = clock() + timeout
@@ -43,6 +45,12 @@ def exchange(clipboard, request, timeout=10, interval=1, clock=time.monotonic, s
                     if published and message.get("request_id") == request["request_id"]:
                         return message
                 elif message.get("type") == "trade" and message != request:
+                    if request.get("type") in ("poll", "snapshot") and dumps(message) in authorized_pending:
+                        # This exact request was durably exposed before a lost
+                        # response. Do not overwrite or resubmit it: let QMT
+                        # finish handling it before sending our read-only poll.
+                        sleep(min(interval, max(0, deadline - clock())))
+                        continue
                     raise RuntimeError("another request is pending; do not run multiple relays")
                 # Abandoned poll/snapshot requests have no financial side effects.
                 # The process mutex permits safely replacing these read-only requests.
@@ -134,6 +142,10 @@ def _show(response, output_dir):
         or "no orders"
     )
     print("session=%s %s -> %s" % (response["session"], statuses, path))
+    print("source_version=%s capabilities=%s" % (
+        response.get("source_version", "unknown"),
+        ",".join(response.get("capabilities", [])),
+    ))
     if response.get("query_error"):
         print("broker query error: " + response["query_error"], file=sys.stderr)
     if not response.get("ok"):
@@ -157,7 +169,8 @@ def run_automatic(args, clipboard, now=None, sleep=time.sleep):
                 file=sys.stderr,
                 flush=True,
             )
-        response = exchange(clipboard, request, args.timeout, args.interval)
+        response = exchange(clipboard, request, args.timeout, args.interval,
+                            pending_requests=pending_trade_requests(runner.journal))
         if args.check:
             print(
                 "[check] received %s response; ok=%s" % (request["type"], response.get("ok")),
@@ -206,6 +219,17 @@ def run_automatic(args, clipboard, now=None, sleep=time.sleep):
         if fatal or ended:
             return 1 if error else 0 if runner.complete() else 2
         sleep(args.interval)
+
+
+def pending_trade_requests(journal):
+    """Return exact persisted requests; observing them never authorizes a new send."""
+    result = []
+    for phase in (journal or {}).get("phases", {}).values():
+        if phase.get("request"):
+            result.append(phase["request"])
+        result.extend(child["request"] for child in phase.get("requests", [])
+                      if child.get("attempted") and child.get("request"))
+    return result
 
 
 def main(argv=None):

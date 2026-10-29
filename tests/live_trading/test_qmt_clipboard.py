@@ -90,6 +90,7 @@ def test_snapshot_roundtrip_is_read_only_and_advertised(mod):
     reply = json.loads(clip.text)
     assert reply["ok"]
     assert "snapshot-v1" in reply["capabilities"]
+    assert "topk-cash-v1" not in reply["capabilities"]
     assert reply["snapshot"]["account"]["available_cash"] == 9812.65
     assert reply["snapshot"]["quotes"]["301165.SZ"]["last"] == 77
     assert not broker.submissions
@@ -137,7 +138,10 @@ def test_snapshot_normalizes_qmt_fields(mod, monkeypatch):
         m_dMarketValue=46200,
     )
     monkeypatch.setattr(
-        mod, "get_trade_detail_data", lambda *args: [account] if args[-1] == "ACCOUNT" else [position], raising=False
+        mod,
+        "get_trade_detail_data",
+        lambda *args: {"ACCOUNT": [account], "POSITION": [position], "ORDER": []}[args[-1]],
+        raising=False,
     )
     context = SimpleNamespace(
         get_full_tick=lambda codes: {codes[0]: {"lastPrice": 77, "timetag": "20261027 14:55:00"}},
@@ -148,6 +152,172 @@ def test_snapshot_normalizes_qmt_fields(mod, monkeypatch):
     assert data["positions"][0]["stock_code"] == "301165.SZ"
     assert data["positions"][0]["can_use_volume"] == 600
     assert data["quotes"]["301165.SZ"] == {"last": 77.0, "timetag": "20261027 14:55:00", "upper": 92.4, "lower": 61.6}
+
+
+def broker_snapshot_source(mod, monkeypatch, positions=(), orders=()):
+    records = {
+        "ACCOUNT": [SimpleNamespace(m_strAccountID="local", m_dAvailable=1000)],
+        "POSITION": list(positions),
+        "ORDER": orders,
+    }
+    monkeypatch.setattr(mod, "get_trade_detail_data", lambda *args: records[args[-1]], raising=False)
+    return mod.QmtBroker(SimpleNamespace(), "local")
+
+
+def qmt_position(**changes):
+    value = dict(
+        m_strInstrumentID="600000", m_strExchangeID="SH", m_nVolume=100,
+        m_nCanUseVolume=100, m_nFrozenVolume=0,
+    )
+    value.update(changes)
+    return SimpleNamespace(**value)
+
+
+def qmt_order(**changes):
+    value = dict(
+        m_strInstrumentID="600000", m_strExchangeID="SH", m_nOrderStatus=50,
+        m_strRemark="foreign", m_strOrderSysID="broker-1", m_nOffsetFlag=48,
+        m_nVolumeTotalOriginal=100, m_nVolumeTraded=0,
+    )
+    value.update(changes)
+    return SimpleNamespace(**value)
+
+
+def test_guarded_snapshot_keeps_all_account_working_orders_and_maps_offset_side(mod, monkeypatch):
+    broker = broker_snapshot_source(
+        mod, monkeypatch,
+        orders=[
+            qmt_order(m_nDirection=48),
+            qmt_order(m_strOrderSysID="broker-2", m_nOffsetFlag=49, m_nDirection=48,
+                      m_nOrderStatus=55, m_nVolumeTraded=40),
+        ] + [qmt_order(m_nOrderStatus=status) for status in (53, 54, 56, 57)],
+    )
+    data = broker.snapshot([])
+    assert data["working_orders"] == [
+        {"remark": "foreign", "broker_order_id": "broker-1", "status": 50, "quantity": 100,
+         "filled_quantity": 0, "side": "BUY", "stock_code": "600000.SH"},
+        {"remark": "foreign", "broker_order_id": "broker-2", "status": 55, "quantity": 100,
+         "filled_quantity": 40, "side": "SELL", "stock_code": "600000.SH"},
+    ]
+
+
+@pytest.mark.parametrize("orders", [None, {}, "not-a-list", [SimpleNamespace()]])
+def test_guarded_snapshot_rejects_missing_or_malformed_order_query(mod, monkeypatch, orders):
+    broker = broker_snapshot_source(mod, monkeypatch, orders=orders)
+    with pytest.raises(ValueError, match="ORDER|order"):
+        broker.snapshot([])
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"m_nOrderStatus": True}, {"m_nOrderStatus": 50.5}, {"m_nOrderStatus": -1},
+        {"m_nVolumeTotalOriginal": 100.5}, {"m_nVolumeTotalOriginal": True},
+        {"m_nVolumeTotalOriginal": 0}, {"m_nVolumeTraded": -1}, {"m_nVolumeTraded": 101},
+        {"m_nOffsetFlag": None}, {"m_nOffsetFlag": 50}, {"m_nOffsetFlag": True},
+        {"m_strInstrumentID": "bad"}, {"m_strExchangeID": "SHjunk"},
+        {"m_strRemark": None}, {"m_strOrderSysID": None},
+    ],
+)
+def test_guarded_snapshot_rejects_invalid_working_order_evidence(mod, monkeypatch, changes):
+    broker = broker_snapshot_source(mod, monkeypatch, orders=[qmt_order(**changes)])
+    with pytest.raises(ValueError, match="ORDER|order|symbol"):
+        broker.snapshot([])
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["m_nOrderStatus", "m_nVolumeTotalOriginal", "m_nVolumeTraded", "m_nOffsetFlag",
+     "m_strInstrumentID", "m_strExchangeID", "m_strRemark", "m_strOrderSysID"],
+)
+def test_guarded_snapshot_rejects_missing_working_order_fields(mod, monkeypatch, field):
+    order = qmt_order()
+    delattr(order, field)
+    broker = broker_snapshot_source(mod, monkeypatch, orders=[order])
+    with pytest.raises(ValueError, match="ORDER|order|symbol"):
+        broker.snapshot([])
+
+
+def test_guarded_snapshot_preserves_valid_quote_when_another_symbol_has_no_tick(mod, monkeypatch):
+    broker = broker_snapshot_source(mod, monkeypatch)
+    broker.context = SimpleNamespace(
+        get_full_tick=lambda symbols: {"000001.SZ": {"lastPrice": 10, "timetag": "20261027 14:57:05"}},
+        get_instrument_detail=lambda symbol: {"UpStopPrice": 11, "DownStopPrice": 9},
+    )
+    executor = mod.Engine(broker.submit, broker.query, session="session-a", now=lambda: NOW,
+                          snapshot=broker.snapshot, capabilities=["topk-cash-v1"])
+    result = executor.handle(request(type="snapshot", symbols=["600000.SH", "000001.SZ"]))
+    assert result["ok"]
+    assert result["snapshot"]["account"]["available_cash"] == 1000
+    assert result["snapshot"]["working_orders"] == []
+    assert result["snapshot"]["quotes"] == {
+        "000001.SZ": {"last": 10.0, "timetag": "20261027 14:57:05", "upper": 11.0, "lower": 9.0},
+    }
+
+
+def test_guarded_snapshot_preserves_other_quote_when_one_security_detail_fails(mod, monkeypatch):
+    broker = broker_snapshot_source(mod, monkeypatch)
+
+    def detail(symbol):
+        if symbol == "600000.SH":
+            raise RuntimeError("security detail unavailable")
+        return {"UpStopPrice": 11, "DownStopPrice": 9}
+
+    broker.context = SimpleNamespace(
+        get_full_tick=lambda symbols: {
+            symbol: {"lastPrice": 10, "timetag": "20261027 14:57:05"} for symbol in symbols
+        },
+        get_instrument_detail=detail,
+    )
+    data = broker.snapshot(["600000.SH", "000001.SZ"])
+    assert set(data["quotes"]) == {"000001.SZ"}
+
+
+def test_guarded_snapshot_preserves_account_evidence_when_tick_query_raises(mod, monkeypatch):
+    broker = broker_snapshot_source(mod, monkeypatch)
+
+    def unavailable(symbols):
+        raise RuntimeError("tick feed unavailable")
+
+    broker.context = SimpleNamespace(get_full_tick=unavailable)
+    data = broker.snapshot(["600000.SH"])
+    assert data["account"]["available_cash"] == 1000
+    assert data["positions"] == []
+    assert data["working_orders"] == []
+    assert data["quotes"] == {}
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"m_nVolume": 100.5}, {"m_nVolume": True}, {"m_nVolume": -1},
+        {"m_nCanUseVolume": 100.5}, {"m_nCanUseVolume": True}, {"m_nCanUseVolume": -1},
+        {"m_nCanUseVolume": 101}, {"m_nFrozenVolume": 0.5}, {"m_nFrozenVolume": -1},
+        {"m_nFrozenVolume": 101}, {"m_strInstrumentID": "600000\n"},
+        {"m_strExchangeID": "SHjunk"},
+    ],
+)
+def test_guarded_snapshot_rejects_malformed_positions(mod, monkeypatch, changes):
+    broker = broker_snapshot_source(mod, monkeypatch, positions=[qmt_position(**changes)])
+    with pytest.raises(ValueError, match="position|symbol"):
+        broker.snapshot([])
+
+
+def test_guarded_snapshot_rejects_duplicate_position_symbols(mod, monkeypatch):
+    broker = broker_snapshot_source(mod, monkeypatch, positions=[qmt_position(), qmt_position()])
+    with pytest.raises(ValueError, match="duplicate"):
+        broker.snapshot([])
+
+
+def test_explicit_snapshot_provider_advertises_guarded_capability_and_source(mod, monkeypatch):
+    broker = broker_snapshot_source(mod, monkeypatch)
+    executor = mod.Engine(broker.submit, broker.query, session="session-a", now=lambda: NOW,
+                          snapshot=broker.snapshot, capabilities=["topk-cash-v1"])
+    result = executor.handle(request(type="snapshot", symbols=[]))
+    assert result["ok"]
+    assert result["snapshot"]["working_orders"] == []
+    assert set(result["capabilities"]) == {"snapshot-v1", "topk-cash-v1"}
+    assert result["source_version"] == "2026-10-30-topk-cash-clipboard-v1"
 
 
 @pytest.mark.parametrize("status,filled,expected", [(57, 0, "REJECTED"), (54, 0, "CANCELED"), (53, 40, "CANCELED")])
@@ -450,7 +620,10 @@ def test_qmt_init_and_timer_work_without_any_file_access(mod, monkeypatch):
     assert context.interval == dt.timedelta(seconds=1)
     clip.text = json.dumps(dict(protocol="qlib-clipboard-v1", type="poll", request_id="hello"))
     context.callback(context)
-    assert json.loads(clip.text)["session"] == mod._runtime.engine.session
+    reply = json.loads(clip.text)
+    assert reply["session"] == mod._runtime.engine.session
+    assert set(reply["capabilities"]) == {"snapshot-v1", "topk-cash-v1"}
+    assert reply["source_version"] == "2026-10-30-topk-cash-clipboard-v1"
     # QMT also expects a handlebar entry point; it must not create a second engine.
     mod.handlebar(context)
 

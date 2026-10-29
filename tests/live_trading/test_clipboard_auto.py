@@ -386,7 +386,7 @@ def test_check_reports_the_waiting_phase_before_a_timeout(auto, tmp_path, monkey
         check=True,
     )
 
-    def communicate(clipboard, request, timeout, interval):
+    def communicate(clipboard, request, timeout, interval, pending_requests=()):
         if request["type"] == stalled:
             raise TimeoutError("simulated missing response")
         return w.exchange(request)
@@ -426,11 +426,12 @@ def test_scheduled_command_writes_shared_logs_and_reports_completion(auto, tmp_p
 
     original_exchange = clipboard_relay.exchange
 
-    def roundtrip(clip, request, timeout, interval):
+    def roundtrip(clip, request, timeout, interval, pending_requests=()):
         from test_clipboard_relay import Clock
 
         clock = Clock(runtime.step)
-        return original_exchange(clip, request, timeout, 0.001, clock=clock.now, sleep=clock.sleep)
+        return original_exchange(clip, request, timeout, 0.001, clock=clock.now, sleep=clock.sleep,
+                                 pending_requests=pending_requests)
 
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(clipboard_relay, "exchange", roundtrip)

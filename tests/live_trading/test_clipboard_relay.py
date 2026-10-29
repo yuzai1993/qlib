@@ -77,6 +77,37 @@ def test_other_inflight_request_is_not_overwritten(relay):
     assert clip.text == original
 
 
+def test_readonly_recovery_waits_for_exact_durable_trade_without_overwriting(relay):
+    from qmt_clipboard import Engine, Runtime, dumps
+
+    broker = Broker()
+    original = request()
+    clip = MemoryClipboard(dumps(original))
+    runtime = Runtime(clip, Engine(broker.submit, broker.query, session="session-a", now=lambda: NOW))
+    observed = []
+
+    def tick():
+        observed.append(clip.text)
+        runtime.step()
+
+    clock = Clock(tick)
+    poll = request(type="poll", request_id="recovery-poll")
+    reply = relay.exchange(clip, poll, timeout=5, interval=1, clock=clock.now, sleep=clock.sleep,
+                           pending_requests=[original])
+    assert observed[0] == dumps(original)
+    assert reply["request_id"] == "recovery-poll"
+    assert len(broker.submissions) == 1
+
+
+def test_readonly_recovery_never_accepts_changed_pending_trade(relay):
+    original = request()
+    changed = request()
+    changed["orders"][0]["quantity"] += 100
+    clip = MemoryClipboard(json.dumps(changed))
+    with pytest.raises(RuntimeError, match="another request"):
+        relay.exchange(clip, request(type="poll"), pending_requests=[original])
+
+
 @pytest.mark.parametrize("kind", ["poll", "snapshot"])
 def test_abandoned_readonly_request_can_be_replaced(relay, kind):
     from qmt_clipboard import Engine, Runtime
@@ -222,3 +253,15 @@ def test_watch_empty_session_completes_without_waiting(relay, tmp_path, monkeypa
     monkeypatch.setattr(relay, "exchange", lambda *args: response)
     monkeypatch.setattr(relay.time, "sleep", lambda _: pytest.fail("empty watch must finish immediately"))
     assert relay.main(["watch", "--session", "session-a", "--output-dir", str(tmp_path)]) == 0
+
+
+def test_status_exposes_executor_version_and_capabilities(relay, tmp_path, capsys):
+    response = dict(
+        session="session-a", ok=True, orders=[], logs=[], query_error="",
+        source_version="2026-10-30-topk-cash-clipboard-v1",
+        capabilities=["snapshot-v1", "topk-cash-v1"],
+    )
+    relay._show(response, tmp_path)
+    output = capsys.readouterr().out
+    assert "source_version=2026-10-30-topk-cash-clipboard-v1" in output
+    assert "capabilities=snapshot-v1,topk-cash-v1" in output

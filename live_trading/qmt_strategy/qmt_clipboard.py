@@ -20,6 +20,7 @@ from collections import OrderedDict, deque
 ACCOUNT_ID = ""
 STRATEGY_NAME = "qlib_clipboard"
 PROTOCOL = "qlib-clipboard-v1"
+SOURCE_VERSION = "2026-10-30-topk-cash-clipboard-v1"
 MAX_REQUEST_CHARS = 262144
 MAX_TEXT_CHARS = 1024 * 1024  # Responses include the whole 200-order session.
 MAX_ORDERS = 40
@@ -178,12 +179,18 @@ def _order(value):
 class Engine:
     """Memory-only order state. A submit exception is uncertain, never retryable."""
 
-    def __init__(self, submit, query, session=None, now=None, snapshot=None):
+    def __init__(self, submit, query, session=None, now=None, snapshot=None, capabilities=None):
         self.submit = submit
         self.query = query
         self.session = session or uuid.uuid4().hex
         self.now = now or (lambda: datetime.datetime.now(datetime.timezone.utc))
         self.snapshot = snapshot
+        self.capabilities = ["snapshot-v1"] if snapshot is not None else []
+        if capabilities and snapshot is None:
+            raise ValueError("snapshot capabilities require a snapshot provider")
+        for capability in capabilities or ():
+            if capability not in self.capabilities:
+                self.capabilities.append(capability)
         self.day = self.now().astimezone(SHANGHAI).date().isoformat()
         self.orders = OrderedDict()
         self.requests = {}
@@ -371,7 +378,8 @@ class Engine:
             type="response",
             session=self.session,
             day=self.day,
-            capabilities=["snapshot-v1"] if self.snapshot is not None else [],
+            capabilities=list(self.capabilities),
+            source_version=SOURCE_VERSION,
             snapshot=observation,
             request_id=request.get("request_id"),
             ok=not error,
@@ -426,6 +434,21 @@ class QmtBroker:
     def snapshot(self, symbols):
         """Read broker facts and tick data; never infer cash from a strategy ledger."""
 
+        def integer(obj, name, label, minimum=0, default=None):
+            raw = getattr(obj, name, default)
+            if (type(raw) not in (int, float) or not math.isfinite(raw)
+                    or raw != int(raw) or raw < minimum):
+                raise ValueError("invalid " + label)
+            return int(raw)
+
+        def symbol(obj):
+            code = getattr(obj, "m_strInstrumentID", None)
+            exchange = getattr(obj, "m_strExchangeID", None)
+            if (not isinstance(code, str) or not re.fullmatch(r"[0-9]{6}", code)
+                    or exchange not in ("SH", "SZ", "BJ")):
+                raise ValueError("invalid broker symbol")
+            return code + "." + exchange
+
         def number(obj, *names):
             for name in names:
                 raw = obj.get(name) if isinstance(obj, dict) else getattr(obj, name, None)
@@ -448,46 +471,82 @@ class QmtBroker:
         if cash is None or cash < 0:
             raise ValueError("invalid available cash")
         raw_positions = get_trade_detail_data(self.account, "STOCK", "POSITION")  # noqa: F821
-        if raw_positions is None:
-            raise ValueError("POSITION query returned None")
+        if not isinstance(raw_positions, (list, tuple)):
+            raise ValueError("POSITION query returned no usable list")
         positions = []
+        seen = set()
         for item in raw_positions:
-            shares = int(getattr(item, "m_nVolume"))
-            available = int(getattr(item, "m_nCanUseVolume"))
-            if shares < 0 or not 0 <= available <= shares:
+            shares = integer(item, "m_nVolume", "position volume")
+            available = integer(item, "m_nCanUseVolume", "position available volume")
+            frozen = integer(item, "m_nFrozenVolume", "position frozen volume", default=0)
+            if available > shares or frozen > shares:
                 raise ValueError("invalid position volumes")
+            code = symbol(item)
+            if code in seen:
+                raise ValueError("duplicate position symbol")
+            seen.add(code)
             if not shares:
                 continue
-            code = str(getattr(item, "m_strInstrumentID"))
-            exchange = str(getattr(item, "m_strExchangeID", "")).upper()[:2]
-            if exchange not in ("SH", "SZ", "BJ"):
-                raise ValueError("unrecognized position exchange")
             positions.append(
                 dict(
-                    stock_code=code + "." + exchange,
+                    stock_code=code,
                     shares=shares,
                     can_use_volume=available,
-                    frozen_shares=int(getattr(item, "m_nFrozenVolume", 0) or 0),
+                    frozen_shares=frozen,
                     avg_cost=number(item, "m_dOpenPrice", "m_dPositionCost"),
                     market_value=number(item, "m_dMarketValue"),
                 )
             )
+        # Query the whole account, including manual and other-strategy orders.
+        raw_orders = get_trade_detail_data(self.account, "STOCK", "ORDER")  # noqa: F821
+        if not isinstance(raw_orders, (list, tuple)):
+            raise ValueError("ORDER query returned no usable list")
+        working_orders = []
+        for item in raw_orders:
+            status = getattr(item, "m_nOrderStatus", None)
+            if type(status) is not int or status not in range(48, 58):
+                raise ValueError("invalid ORDER status")
+            if status in (53, 54, 56, 57):
+                continue
+            quantity = integer(item, "m_nVolumeTotalOriginal", "order quantity", minimum=1)
+            filled = integer(item, "m_nVolumeTraded", "order filled quantity")
+            offset = getattr(item, "m_nOffsetFlag", None)
+            remark = getattr(item, "m_strRemark", None)
+            broker_id = getattr(item, "m_strOrderSysID", None)
+            if (filled > quantity or type(offset) is not int or offset not in (48, 49)
+                    or not isinstance(remark, str) or not isinstance(broker_id, str)):
+                raise ValueError("invalid working order evidence")
+            working_orders.append(dict(
+                remark=remark, broker_order_id=broker_id, status=status,
+                quantity=quantity, filled_quantity=filled,
+                side="BUY" if offset == 48 else "SELL", stock_code=symbol(item),
+            ))
         quotes = {}
-        ticks = self.context.get_full_tick(symbols) if symbols else {}
+        try:
+            ticks = self.context.get_full_tick(symbols) if symbols else {}
+        except Exception:
+            ticks = {}
+        if not isinstance(ticks, dict):
+            ticks = {}
         getter = getattr(self.context, "get_instrument_detail", None)
         getter = getter or getattr(self.context, "get_instrumentdetail", None)
         for code in symbols:
-            tick = (ticks or {}).get(code)
+            tick = ticks.get(code)
             if tick is None:
-                raise ValueError("tick missing for " + code)
-            detail = getter(code) if getter else {}
-            tag = tick.get("timetag") if isinstance(tick, dict) else getattr(tick, "timetag", None)
-            quotes[code] = dict(
-                last=number(tick, "lastPrice"),
-                timetag=tag,
-                upper=number(detail, "UpStopPrice"),
-                lower=number(detail, "DownStopPrice"),
-            )
+                continue
+            try:
+                detail = getter(code) if getter else {}
+                tag = tick.get("timetag") if isinstance(tick, dict) else getattr(tick, "timetag", None)
+                quotes[code] = dict(
+                    last=number(tick, "lastPrice"),
+                    timetag=tag,
+                    upper=number(detail, "UpStopPrice"),
+                    lower=number(detail, "DownStopPrice"),
+                )
+            except Exception:
+                # An unavailable candidate keeps its allocation idle; account,
+                # positions and working orders above still require full evidence.
+                continue
         return dict(
             account=dict(
                 account_id=identity,
@@ -497,6 +556,7 @@ class QmtBroker:
                 frozen_cash=number(account, "m_dFrozenCash"),
             ),
             positions=positions,
+            working_orders=working_orders,
             quotes=quotes,
         )
 
@@ -563,7 +623,9 @@ def init(ContextInfo):
         raise ValueError("set ACCOUNT_ID locally and bind the same account in QMT")
     ContextInfo.set_account(ACCOUNT_ID)
     broker = QmtBroker(ContextInfo, ACCOUNT_ID)
-    runtime = Runtime(Clipboard(), Engine(broker.submit, broker.query, snapshot=broker.snapshot))
+    runtime = Runtime(Clipboard(), Engine(
+        broker.submit, broker.query, snapshot=broker.snapshot, capabilities=["topk-cash-v1"],
+    ))
     first = datetime.datetime.now() + datetime.timedelta(seconds=1)
     # Install before registration, since some QMT versions call overdue timers inline.
     _runtime = runtime
@@ -577,7 +639,8 @@ def init(ContextInfo):
     except Exception:
         _runtime = None
         raise
-    print("[qlib_clipboard] ready session=" + runtime.engine.session + " capabilities=snapshot-v1 diagnostics=1")
+    print("[qlib_clipboard] ready session=" + runtime.engine.session
+          + " capabilities=snapshot-v1,topk-cash-v1 diagnostics=1 source_version=" + SOURCE_VERSION)
 
 
 def timer_callback(ContextInfo):

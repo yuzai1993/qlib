@@ -1,5 +1,7 @@
 # QMT 剪贴板最小交易器
 
+2026-10-30新版Top5（`CLOSE_AUCTION_TOPK_CASH_V1`）请使用[新版完整部署步骤](README_TOPK_CLIPBOARD.md)。下文旧阶梯策略示例的默认名称不适用于新版；新版必须同时更新QMT源码、relay和automation，安装时显式指定策略。
+
 正常日流程自动运行：Mac 定时发布信号文件 → Windows 中转定时读取 → 剪贴板 → QMT 查询/下单 → 剪贴板 → Windows 保存日志、成交和账户文件 → Mac 原有盘后调度导入。Windows 只需普通 Python，无第三方依赖或 Qlib；QMT 完全不读写文件。
 
 自动模式复用现有 protocol-v2 文件，Windows 自动发现 session、取行情、计算限价与股数。QMT 继续只接受明确股数的限价单，收到即提交。没有同名抵销、自动撤单、改价补单。原有 `qmt_signal_bridge.py` 保留；切换时先停止旧交易策略，避免同时运行两套执行器。

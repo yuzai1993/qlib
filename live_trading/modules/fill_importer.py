@@ -25,6 +25,7 @@ from live_trading.modules.execution_state import (
 )
 from live_trading.modules.signal_schema import (
     FillEvent,
+    GUARDED_TOPK_PRICE_TYPE,
     SchemaError,
     TERMINAL_FILL_STATUS,
     VALID_ACCOUNT_ENVIRONMENTS,
@@ -1654,7 +1655,18 @@ class LiveRecorder:
                     f"planned {order['quantity']!r}"
                 )
             if fill.side == "BUY":
-                if order["quantity"] != 0 or order["target_value"] <= 0:
+                guarded = order["price_type"] == GUARDED_TOPK_PRICE_TYPE
+                if guarded:
+                    maximum = order["max_positions"]
+                    risk = order["cash_risk_degree"]
+                    if (
+                        order["quantity"] != 0 or order["target_value"] != 0
+                        or type(maximum) is not int or maximum <= 0
+                        or type(risk) not in (int, float)
+                        or not math.isfinite(risk) or not 0 < risk <= 1
+                    ):
+                        raise SchemaError("invalid persisted guarded BUY cash contract")
+                elif order["quantity"] != 0 or order["target_value"] <= 0:
                     raise SchemaError("BUY plan must use a positive target_value")
                 if (
                     order["max_quantity"] > 0
@@ -1669,7 +1681,10 @@ class LiveRecorder:
                 # 所以 B*C 可以比 target_value 多出至多 0.1 股的钱。容差写死 1e-6
                 # 会让落在那个窗口里的单子在导入时硬失败。
                 allowance = 0.1 * float(fill.avg_price) + 1e-6
-                if fill_gross > float(order["target_value"]) + allowance:
+                # Guarded plans intentionally defer their monetary allocation to
+                # the broker's post-sale cash. Its immutable allocation is in the
+                # execution journal, not the zero target_value in this plan.
+                if not guarded and fill_gross > float(order["target_value"]) + allowance:
                     raise SchemaError(
                         f"BUY fill gross {fill_gross:.6f} exceeds target_value "
                         f"{order['target_value']:.6f}"

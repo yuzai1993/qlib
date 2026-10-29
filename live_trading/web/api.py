@@ -28,10 +28,11 @@ PROBE_PROFILE = "AFTER_HOURS_FIXED_PRICE"
 
 def create_router(
     config: dict, project_root: Path, *, read_only: bool = False,
+    monitor_store: Optional[MonitorStore] = None,
 ) -> APIRouter:
     db_path = str(project_root / config["storage"]["db_path"])
     recorder = LiveRecorder(db_path, read_only=read_only)
-    store = MonitorStore(db_path, read_only=read_only)
+    store = monitor_store if monitor_store is not None else MonitorStore(db_path, read_only=read_only)
     importer = FillImporter(config["live"]["bridge_root"], recorder)
 
     def _names() -> dict:

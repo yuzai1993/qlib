@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const H = require('../../quant_platform/static/js/helpers.js');
+const Research = require('../../quant_platform/static/js/research.js');
 const R = require('../../quant_platform/static/js/monitor_runtime.js');
 
 test('missing and non-finite metrics remain missing, percentages are explicit', () => {
@@ -86,7 +87,7 @@ test('historical Markdown never activates HTML, scripts, event handlers or remot
     assert.ok(rendered.includes('![remote](https://example.test/pixel.png)'));
 });
 test('all browser entrypoints parse before deployment', () => {
-    for (const name of ['helpers.js','monitor_runtime.js','monitor.js','platform.js']) {
+    for (const name of ['helpers.js','research.js','monitor_runtime.js','monitor.js','platform.js']) {
         new vm.Script(fs.readFileSync(path.join(__dirname,'../../quant_platform/static/js',name),'utf8'),{filename:name});
     }
 });
@@ -121,7 +122,7 @@ async function analysisPageWithDelayedArchive(status) {
     let release;
     const context={
         document:{getElementById:element,querySelectorAll:()=>[]},
-        window:{PlatformHelpers:H,PlatformNavigation:R.createNavigationTracker(),PlatformMonitor:{clear(){}},addEventListener(){}},
+        window:{PlatformHelpers:H,PlatformResearch:Research,PlatformNavigation:R.createNavigationTracker(),PlatformMonitor:{clear(){}},addEventListener(){}},
         location:{hash:'#analyses'},setTimeout(){},clearTimeout(){},
         fetch:async (url,options)=>{
             if(url==='/api/session')return {ok:true,json:async()=>({csrf_token:'token'})};

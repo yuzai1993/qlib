@@ -1,0 +1,37 @@
+.metric-section{margin:22px 0 28px}
+.metric-section h3{margin:0 0 10px;font-size:13px}
+.metric-section .record-column{position:sticky;left:0;background:white;min-width:200px;max-width:290px;white-space:normal;text-align:left;z-index:1}
+.metric-section th.record-column{background:#f8fafc}
+.metric-section .current-row .record-column{background:#f5fbfb}
+.metric-section .record-name{line-height:1.6}
+.benchmark-core{--benchmark-selector-width:34px}
+.metric-section .benchmark-core .benchmark-selection{position:sticky;left:0;z-index:2;background:white;width:var(--benchmark-selector-width);min-width:var(--benchmark-selector-width);max-width:var(--benchmark-selector-width);padding:8px 5px;text-align:center;white-space:nowrap}
+.metric-section .benchmark-core th.benchmark-selection{background:#f8fafc}
+.metric-section .benchmark-core .current-row .benchmark-selection{background:#f5fbfb}
+.metric-section .benchmark-core .record-column{left:var(--benchmark-selector-width)}
+.benchmark-selection input{display:block;margin:0 auto;cursor:pointer}
+.benchmark-compact{table-layout:fixed;min-width:680px;font-size:11px}
+.metric-section .benchmark-compact th,.metric-section .benchmark-compact td{padding:8px 6px}
+.metric-section .benchmark-compact th{font-size:10px;white-space:normal;overflow-wrap:anywhere;line-height:1.5;vertical-align:middle}
+.metric-section .benchmark-compact .record-column{width:150px;min-width:150px;max-width:150px}
+.benchmark-compact .record-name{font-size:11px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.benchmark-compact .badge{font-size:9px;padding:2px 5px;vertical-align:middle}
+.benchmark-compact .text-button{font-size:inherit;padding:0;white-space:normal;line-height:inherit}
+.experiment-history .history-content{min-width:260px;max-width:380px;text-align:left;white-space:normal}
+.history-description{color:#62748a;font-size:11px;line-height:1.8;margin:8px 0;max-height:100px;overflow:auto}
+.experiment-history .history-conclusion{min-width:230px;max-width:350px;text-align:left;white-space:normal;vertical-align:top}
+.history-note{color:#74869b;font-size:11px;line-height:1.8;margin-top:7px;max-height:130px;overflow:auto}
+.experiment-history .history-reports{min-width:170px;max-width:240px;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.experiment-history td{vertical-align:top}
+.report-link{display:inline-block;font-size:11px;margin-bottom:7px;overflow-wrap:anywhere}
+.resource-actions{flex-wrap:wrap;overflow-wrap:anywhere}
+@media(max-width:1100px){
+    .benchmark-compact{--benchmark-selector-width:28px;min-width:560px;font-size:10px}
+    .metric-section .benchmark-compact th,.metric-section .benchmark-compact td{padding:6px 4px}
+    .metric-section .benchmark-compact .record-column{width:100px;min-width:100px;max-width:100px}
+    .benchmark-compact .record-name{font-size:10px}
+}
+@media(max-width:720px){
+    .metric-section .record-column{min-width:145px;max-width:170px}
+    .metric-section .record-id{max-width:140px}
+}

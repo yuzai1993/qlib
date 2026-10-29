@@ -4,11 +4,78 @@
 const content = document.getElementById('content');
 const chartManager = MonitorRuntime.createChartManager(window);
 const navigationTracker = window.PlatformNavigation;
+const monitorPages = ['dashboard', 'batches', 'predictions'];
+const ledgerStorageKey = 'qlib.monitor.ledger';
+const ledgerSelect = document.getElementById('monitor-ledger');
+const ledgerControl = document.getElementById('monitor-ledger-control');
+let ledgerCatalogPromise = null;
+let ledgerCatalog = [];
+let selectedLedger = null;
+let ledgerGeneration = 0;
 
-async function api(path) {
-    const resp = await fetch('/api' + path);
-    if (!resp.ok) throw new Error(`${path}: HTTP ${resp.status}`);
-    return resp.json();
+async function api(path, ledger = selectedLedger) {
+    const generation = ledgerGeneration;
+    const scope = ledger ? `${path.includes('?') ? '&' : '?'}ledger=${encodeURIComponent(ledger)}` : '';
+    try {
+        const resp = await fetch('/api' + path + scope);
+        if (generation !== ledgerGeneration) return null;
+        if (!resp.ok) throw new Error(`${path}: HTTP ${resp.status}`);
+        return await resp.json();
+    } catch (error) {
+        if (generation !== ledgerGeneration) return null;
+        throw error;
+    }
+}
+
+function rememberLedger() {
+    try { window.localStorage.setItem(ledgerStorageKey, selectedLedger); } catch (_) { /* Storage may be disabled. */ }
+}
+
+async function loadLedgerCatalog() {
+    if (!ledgerCatalogPromise) ledgerCatalogPromise = (async () => {
+        const response = await fetch('/api/ledgers');
+        if (!response.ok) throw new Error(`账本目录: HTTP ${response.status}`);
+        const catalog = await response.json();
+        ledgerCatalog = catalog.ledgers || [];
+        const available = id => ledgerCatalog.some(ledger => ledger.id === id);
+        const requested = new URLSearchParams(window.location.search).get('ledger');
+        let remembered;
+        try { remembered = window.localStorage.getItem(ledgerStorageKey); } catch (_) { /* Storage may be disabled. */ }
+        selectedLedger = [requested, remembered, catalog.default_ledger].find(available) || null;
+        ledgerSelect.innerHTML = ledgerCatalog.map(ledger =>
+            `<option value="${esc(ledger.id)}">${esc(ledger.label || ledger.strategy_id)}</option>`).join('');
+        ledgerSelect.value = selectedLedger || '';
+        ledgerSelect.disabled = !selectedLedger;
+        if (selectedLedger) rememberLedger();
+    })().catch(error => { ledgerCatalogPromise = null; throw error; });
+    await ledgerCatalogPromise;
+}
+
+ledgerSelect.onchange = () => {
+    const ledger = ledgerSelect.value;
+    if (ledger === selectedLedger || !ledgerCatalog.some(row => row.id === ledger)) return;
+    selectedLedger = ledger;
+    ledgerGeneration++;
+    rememberLedger();
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('ledger')) {
+        url.searchParams.set('ledger', selectedLedger);
+        window.history.replaceState(window.history.state, '', url);
+    }
+    resetPredictions();
+    chartManager.clear();
+    navigationTracker.begin(navigationTracker.currentPage());
+    const dialog = document.getElementById('detail-dialog');
+    if (dialog.open) dialog.close();
+    document.getElementById('dialog-body').innerHTML = '';
+    window.dispatchEvent(new Event('hashchange'));
+};
+
+function monitorPage(renderer) {
+    return async token => {
+        await loadLedgerCatalog();
+        if (navigationTracker.isCurrent(token)) await renderer(token);
+    };
 }
 
 /* ---------- 格式化 ---------- */
@@ -37,7 +104,7 @@ async function renderDashboard(token) {
     let html = `<h2>概览 <span class="card-sub">快照日 ${s ? esc(s.date) : '—'}</span></h2>`;
 
     if (!s) {
-        html += '<div class="empty">暂无快照数据。首次运行：run_monitor.py --stage report</div>';
+        html += '<div class="empty">当前账本暂无快照数据，持仓与现金以账本记录为准。</div>';
     } else {
         html += `<div class="card-grid">
             <div class="card"><div class="card-label">总资产</div>
@@ -195,12 +262,14 @@ async function toggleBatchDetail(batchId, token) {
                         ? ` ${fmtNum(f.filled_qty)}@${f.avg_price?.toFixed(2) ?? '—'}`
                         : '');
             }
-            const targetAmt = o.side === 'BUY' ? fmtMoney(o.target_value) : '—';
+            const deferredBuy = o.side === 'BUY' && o.price_type === 'CLOSE_AUCTION_TOPK_CASH_V1';
+            const targetAmt = deferredBuy ? '按可用现金分配' : (o.side === 'BUY' ? fmtMoney(o.target_value) : '—');
+            const quantity = deferredBuy ? '执行时计算' : fmtNum(o.quantity);
             html += `<tr>
                 <td>${esc(o.client_order_id)}</td>
                 <td style="text-align:left">${codeCell(o.stock_code, o.name)}</td>
                 <td>${esc(o.side)}</td>
-                <td>${fmtNum(o.quantity)}</td>
+                <td>${quantity}</td>
                 <td>${targetAmt}</td>
                 <td>${esc(o.priority ?? '—')}</td>
                 <td>${scoreCell(o.score, o.score_rank)}</td>
@@ -236,8 +305,7 @@ async function toggleBatchDetail(batchId, token) {
 /* ---------- 预测信号 ---------- */
 
 let predInstruments = [];
-const predInstrumentResource = MonitorRuntime.createLazyResource(
-    () => api('/predictions/instruments'));
+let predInstrumentResource = null;
 let predPage = 0;
 let predSortBy = 'rank';
 let predSortOrder = 'asc';
@@ -247,11 +315,28 @@ let predChartGeneration = 0;
 let predSearchGeneration = 0;
 const PRED_PAGE_SIZE = 50;
 
+function resetPredictions() {
+    predInstruments = [];
+    predInstrumentResource = null;
+    predPage = 0;
+    predSortBy = 'rank';
+    predSortOrder = 'asc';
+    predToken = null;
+    predSummaryGeneration++;
+    predChartGeneration++;
+    predSearchGeneration++;
+}
+
 function predDisplayCode(s) {
     return s.stock_code || s.instrument || '';
 }
 
 async function renderPredictions(token) {
+    if (!predInstrumentResource) {
+        const ledger = selectedLedger;
+        predInstrumentResource = MonitorRuntime.createLazyResource(
+            () => api('/predictions/instruments', ledger));
+    }
     return MonitorRuntime.loadPredictionPage({
         loadDates: () => api('/predictions/dates'),
         isCurrent: () => navigationTracker.isCurrent(token),
@@ -563,5 +648,11 @@ window.predSearch = async function (page, token = predToken) {
 };
 
 
-window.PlatformMonitor={pages:{dashboard:renderDashboard,batches:renderBatches,predictions:renderPredictions},clear:()=>chartManager.clear()};
+window.PlatformMonitor = {
+    pages: {dashboard: monitorPage(renderDashboard), batches: monitorPage(renderBatches), predictions: monitorPage(renderPredictions)},
+    clear() {
+        chartManager.clear();
+        ledgerControl.hidden = !monitorPages.includes(navigationTracker.currentPage());
+    },
+};
 })();

@@ -343,3 +343,67 @@ def test_resource_does_not_expose_unregistered_or_cross_directory_symlink(tmp_pa
 def test_nonfinite_registry_metadata_does_not_escape_json_response(tmp_path):
     snapshot = catalog(tmp_path, [row(baseline_ref=float("nan"))]).snapshot()
     json.dumps(snapshot, allow_nan=False)
+
+
+@pytest.mark.parametrize("note", ["实验备注", None])
+def test_experiment_conclusion_remains_distinct_from_note(tmp_path, note):
+    record = catalog(tmp_path, [row(conclusion="未达预期", note=note)]).snapshot()["records"][0]
+    assert record["conclusion"] == "未达预期"
+    assert record["note"] == (note or "未达预期")
+
+
+@pytest.mark.parametrize("kind", ["model", "strategy"])
+def test_promoted_versions_resolve_baseline_explicit_and_reverse_links(tmp_path, kind):
+    trial_fields = (
+        {"baseline_version": None} if kind == "model" else {"report_kind": "phase_m_v1_bt", "bt_version": None}
+    )
+    version_field = "baseline_version" if kind == "model" else "bt_version"
+    rows = [
+        row("trial/explicit", kind, promoted_to="baseline/v2", **trial_fields),
+        row("baseline/v2", kind, **{version_field: "v2"}),
+        row("trial/reverse", kind, **trial_fields),
+        row("baseline/v3", kind, promoted_from="trial/reverse", **{version_field: "v3"}),
+        row("trial/unpromoted", kind, note="看起来更好，晋升为 v99", **trial_fields),
+    ]
+    doc = model_doc if kind == "model" else strategy_doc
+    records = {r["id"]: r for r in catalog(tmp_path, rows, [doc() for _ in rows]).snapshot()["records"]}
+    assert records["baseline/v2"]["promoted_version"] == "v2"
+    assert records["baseline/v3"]["promoted_version"] == "v3"
+    assert records["trial/explicit"]["promoted_version"] == "v2"
+    assert records["trial/explicit"]["promoted_to"] == "baseline/v2"
+    assert records["trial/reverse"]["promoted_version"] == "v3"
+    assert records["trial/reverse"]["promoted_to"] == "baseline/v3"
+    assert records["baseline/v3"]["promoted_from"] == "trial/reverse"
+    assert records["trial/unpromoted"]["promoted_version"] == ""
+
+
+def test_promotion_links_reject_unknown_cross_kind_and_nonbaseline_targets(tmp_path):
+    rows = [
+        row("model/trial", baseline_version=None, promoted_to="strategy/v4"),
+        row("model/missing", baseline_version=None, promoted_to="missing/v9"),
+        row("model/notbaseline", baseline_version=None, promoted_to="model/trial"),
+        row("strategy/v4", "strategy", promoted_from="model/trial"),
+        row("model/v4", promoted_from="missing/trial"),
+    ]
+    docs = [model_doc(), model_doc(), model_doc(), strategy_doc(), model_doc()]
+    records = {r["id"]: r for r in catalog(tmp_path, rows, docs).snapshot()["records"]}
+    for eid in ["model/trial", "model/missing", "model/notbaseline"]:
+        assert records[eid]["promoted_version"] == ""
+        assert records[eid]["promoted_to"] == ""
+    assert records["strategy/v4"]["promoted_from"] == ""
+    assert records["model/v4"]["promoted_from"] == ""
+
+
+def test_strategy_benchmark_return_uses_same_full_and_dimensional_sources(tmp_path):
+    doc = strategy_doc()
+    doc["ensemble"]["full_period"]["benchmark_cumulative_return"] = 0.42
+    doc["ensemble"]["years"]["2026"]["benchmark_cumulative_return"] = -0.07
+    doc["ensemble"]["regimes"]["D"]["benchmark_cumulative_return"] = 0.11
+    snapshot = catalog(tmp_path, [row("bt/v4", "strategy")], [doc]).snapshot()
+    record = snapshot["records"][0]
+    assert record["metrics"]["benchmark_cumulative_return"] == 0.42
+    assert record["years"]["2026"]["benchmark_cumulative_return"] == -0.07
+    assert record["regimes"]["D"]["benchmark_cumulative_return"] == 0.11
+    assert {"key": "benchmark_cumulative_return", "label": "基准涨幅", "format": "pct"} in snapshot["metric_definitions"][
+        "strategy"
+    ]

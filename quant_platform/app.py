@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .analyses import AnalysisStore, ConflictError
 from .research import ResearchCatalog
+from .ledgers import LedgerCatalog, UNAVAILABLE as MONITOR_UNAVAILABLE
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 MONITOR_PATHS = {
@@ -37,7 +38,6 @@ MONITOR_PATHS = {
 }
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
 MAX_MONITOR_BYTES = 8 * 1024 * 1024
-MONITOR_UNAVAILABLE = "实盘账本暂不可读，研究与分析仍可使用；请检查数据源，不要在平台中初始化账本"
 
 
 def _monitor_path(path: str) -> bool:
@@ -54,22 +54,9 @@ def create_app(
     catalog = ResearchCatalog(research_root)
     csrf_token = secrets.token_urlsafe(32)
     app = FastAPI(title="量化研究平台", version="1.1.0", docs_url=None, redoc_url=None, openapi_url=None)
-    monitor_probe = None
     monitor_slots = asyncio.Semaphore(6)
-    if live_config is not None:
-        from live_trading.modules.signal_schema import SchemaError
-        from live_trading.web.api import create_router
-
-        try:
-            router = create_router(
-                live_config, Path(project_root or Path(__file__).resolve().parents[1]), read_only=True
-            )
-        except (OSError, SchemaError, sqlite3.Error):
-            # A missing ledger must never be created or migrated by the UI.
-            pass
-        else:
-            app.include_router(router, prefix="/api")
-            monitor_probe = next(route.endpoint for route in router.routes if route.path == "/overview")
+    ledgers = LedgerCatalog(Path(project_root or Path(__file__).resolve().parents[1]), live_config)
+    ledgers.install_routes(app)
 
     async def bounded_monitor(request, call_next):
         if len(request.url.query) > 4096:
@@ -130,7 +117,7 @@ def create_app(
         path = request.url.path.removeprefix("/api/")
         if request.url.path.startswith("/api/batches/") and not _monitor_path(path):
             return JSONResponse({"detail": "接口不存在"}, status_code=404)
-        if request.url.path.startswith("/api/") and (_monitor_path(path) or path == "health"):
+        if request.url.path.startswith("/api/") and (_monitor_path(path) or path in {"health", "ledgers"}):
             response = await bounded_monitor(request, call_next)
         else:
             response = await call_next(request)
@@ -162,14 +149,7 @@ def create_app(
 
     @app.get("/api/health")
     def health():
-        monitor_ready = False
-        if monitor_probe is not None:
-            try:
-                monitor_probe()
-            except (OSError, sqlite3.Error, ValueError):
-                pass
-            else:
-                monitor_ready = True
+        monitor_ready = bool(ledgers.available())
         return {
             "status": "ok",
             "research_root": str(research_root),
@@ -177,6 +157,10 @@ def create_app(
             "monitor_status": "ready" if monitor_ready else "unavailable",
             "analysis_storage": str(store.root),
         }
+
+    @app.get("/api/ledgers")
+    def monitor_ledgers():
+        return ledgers.snapshot()
 
     @app.get("/api/research")
     def research():

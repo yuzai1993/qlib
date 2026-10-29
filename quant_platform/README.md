@@ -8,13 +8,14 @@
 
 ```bash
 cd /Users/yuxianqi/Project/qlib
-PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform
+PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform \
+  --live-config alla_v2_top5d1f100_postclose_real_active
 ```
 
-打开 <http://127.0.0.1:8090>。启动默认值：
+打开 <http://127.0.0.1:8090>。当前常驻服务配置：
 
 - 研究源：`/Users/yuxianqi/Project/qlib_exp`
-- 实盘配置：`live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml`（只读加载）
+- 实盘配置：`live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`（显式指定、只读加载；命令行省略参数时仍保留旧默认）
 - 分析存储：`/Users/yuxianqi/.qlib/research_platform/analyses/`
 - 监听：`127.0.0.1:8090`
 
@@ -25,7 +26,7 @@ PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform
   --research-root /Users/yuxianqi/Project/qlib_exp \
   --data-root /Users/yuxianqi/.qlib/research_platform/analyses \
   --project-root /Users/yuxianqi/Project/qlib \
-  --live-config alla_v4_ladder_k1h5_postclose_real \
+  --live-config alla_v2_top5d1f100_postclose_real_active \
   --port 8090
 ```
 
@@ -50,7 +51,12 @@ launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 
 **实盘监控**保留概览、批次与成交、预测信号。浏览器刷新获取新数据；图表库不可用时使用本地曲线降级。账本缺失或 schema 查询异常时返回 503，研究与分析仍可使用。启动时账本缺失的实例需在数据源恢复后重启；平台不会尝试建表或修复实盘账本。
 
-**离线实验**从研究根中的 `backtest/experiments/registry.jsonl` 索引记录，指标来自登记的 JSON，原 HTML 作为证据链接。模型和执行策略分别显示版本、年度、风格与实验记录。勾选 2–12 条合格同口径记录进行对比；可筛选、排序和导出 CSV。模型固定 top3×h5（算术净年化/HAC 波动/夏普），执行策略使用 CAGR，禁止跨轨道、池、窗口、费用与过滤口径混比。单种子和扩展窗口等诊断单独标识，不能加入正式比较。
+左侧的**模型实验、策略实验**各含「Benchmark」「实验记录」。数据从研究根中的 `backtest/experiments/registry.jsonl` 及登记的 JSON 读取，原 HTML 作为证据链接。旧 `#research` 链接仍可打开模型实验。
+
+- **Benchmark** 核心表始终展示全部已晋升 baseline，按版本从新到旧排列；首列勾选控制下方分维度表，表头可全选或清空。模型与策略分别记住当前会话的选择。核心表下方可切换分风格、分年；每个指标一张表，行是版本，列是年度或风格。单次实验详情使用同一套展示方式。CSV 导出当前已选版本的分维度指标。
+- **实验记录**展示日期、实验内容、结论、报告链接和晋升版本。晋升仅来自明确的版本登记或 `promoted_to` / `promoted_from` 关系，不从指标表现推测。可搜索筛选、查看详情、导出，并勾选 2–12 条合格同口径记录正式对比。
+
+模型固定 top3×h5（算术净年化/HAC 波动/夏普），策略使用 CAGR，包含基准涨幅，页面不再展示策略算术年化；全局 RankIC 仅在模型核心指标展示。禁止跨轨道、池、窗口、费用与过滤口径混比。单种子和扩展窗口等诊断单独标识，不能加入正式比较。
 
 历史源元数据不完整时保留来源说明；BT v3 的种子声明来自 registry。指标不从清理过的结果目录臆造补齐，缺失值显示为 `—`。研究源可持续更新，刷新页面即可重新读取；本平台不会运行报告生成器、训练、回测、pickle 反序列化或清理任务，也不修改实验 registry。
 
@@ -65,7 +71,7 @@ launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 ```bash
 PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m pytest \
   tests/quant_platform -q -p no:cacheprovider
-node --test tests/quant_platform/test_frontend.cjs
+node --test tests/quant_platform/*.cjs
 PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m pytest \
   tests/live_trading/test_monitor_web_api.py \
   tests/live_trading/test_monitor_web_frontend.py \

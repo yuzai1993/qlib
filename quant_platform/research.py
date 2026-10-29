@@ -31,6 +31,7 @@ STRATEGY_METRICS = [
     ("sharpe_ratio", "扣费夏普", "number"),
     ("alpha", "Alpha", "pct"),
     ("beta", "Beta", "number"),
+    ("benchmark_cumulative_return", "基准涨幅", "pct"),
     ("max_drawdown", "最大回撤", "pct"),
     ("calmar_ratio", "Calmar", "number"),
     ("annualized_volatility", "年化波动", "pct"),
@@ -218,6 +219,27 @@ class ResearchCatalog:
                     warnings.append(f"重复 exp_id，采用最后记录：{row['exp_id']}")
                 by_id[row["exp_id"]] = self._record(row, kind)
         records = list(by_id.values())
+        promotions: dict[str, list[dict]] = {}
+        for record in records:
+            target = by_id.get(record["promoted_to"])
+            if not (
+                target and target["kind"] == record["kind"] and target["is_baseline"] and target["version"]
+            ):
+                record["promoted_to"] = ""
+            source = by_id.get(record["promoted_from"])
+            if record["is_baseline"] and record["version"] and source and source["kind"] == record["kind"]:
+                promotions.setdefault(source["id"], []).append(record)
+            else:
+                record["promoted_from"] = ""
+        for record in records:
+            target = by_id.get(record["promoted_to"])
+            if target is None:
+                target = max(promotions.get(record["id"], []), key=lambda r: _version(r["version"]), default=None)
+            record["promoted_version"] = record["version"] if record["is_baseline"] else ""
+            if target:
+                record["promoted_to"] = target["id"]
+                if not record["is_baseline"]:
+                    record["promoted_version"] = target["version"]
         for kind in ("model", "strategy"):
             baseline = [r for r in records if r["kind"] == kind and r["is_baseline"]]
             explicit = [r for r in baseline if r.pop("_explicit_current", False)]
@@ -409,7 +431,10 @@ class ResearchCatalog:
                 else row.get("eval_protocol") or "Phase M v1 · 执行层 CAGR"
             ),
             "hypothesis": str(row.get("hypothesis") or ""),
+            "conclusion": str(row.get("conclusion") or ""),
             "note": str(row.get("note") or row.get("conclusion") or ""),
+            "promoted_to": row["promoted_to"] if isinstance(row.get("promoted_to"), str) else "",
+            "promoted_from": row["promoted_from"] if isinstance(row.get("promoted_from"), str) else "",
             "warnings": warnings,
             "resources": resources,
             "source": str(row.get("eval_output") or ""),

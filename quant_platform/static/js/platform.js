@@ -1,10 +1,11 @@
 (function () {
     'use strict';
-    const H=window.PlatformHelpers, esc=H.escape, tracker=window.PlatformNavigation;
+    const H=window.PlatformHelpers, R=window.PlatformResearch, esc=H.escape, tracker=window.PlatformNavigation;
+    const benchmarkSelection=R.createBenchmarkSelection();
     const content=document.getElementById('content'), dialog=document.getElementById('detail-dialog');
     const dialogBody=document.getElementById('dialog-body');
     let csrf=null, toastTimer=null, dialogGeneration=0;
-    const state={page:'dashboard',catalog:null,analyses:[],kind:'model',view:'baseline',slice:'2026',query:'',status:'',direction:'',sort:'',order:'desc',selected:new Set(),analysisQuery:'',analysisStatus:'active',analysisDate:''};
+    const state={page:'dashboard',catalog:null,analyses:[],kind:'model',module:'benchmark',view:'regime',query:'',status:'',direction:'',selected:new Set(),analysisQuery:'',analysisStatus:'active',analysisDate:''};
     const statusName=H.statusLabel;
     const statusBadge=r=>`<span class="badge ${['failed','invalid','error'].includes(r.status)?'badge-crit':r.status==='running'?'badge-warn':'badge-neutral'}">${esc(statusName(r.status))}</span>`;
     const date=H.formatDate;
@@ -23,76 +24,113 @@
     dialog.addEventListener('click',event=>{if(event.target===dialog){const b=dialog.getBoundingClientRect();if(event.clientX<b.left||event.clientX>b.right||event.clientY<b.top||event.clientY>b.bottom)dialog.close();}});
     function download(name,text,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
     const pageHead=(eyebrow,title,subtitle,actions='')=>`<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2><div class="subtitle">${subtitle}</div></div><div class="page-actions">${actions}</div></div>`;
-    function metricDefinitions(all=false){return H.metricColumns(state.catalog?.metric_definitions?.[state.kind]||[],state.view,all?'':state.metricFocus);}
-    const metricView=()=>state.view==='year'?'year':state.view==='regime'?'regime':'full';
+    function metricDefinitions(view=state.view){return R.metricDefinitions(state.catalog?.metric_definitions?.[state.kind]||[],state.kind,view);}
     const selectedRecords=()=>[...state.selected].map(id=>state.catalog.records.find(r=>r.id===id)).filter(Boolean);
-    function visibleRecords(){let rows=H.filterRecords(state.catalog.records,{kind:state.kind,query:state.query,status:state.status,direction:state.direction,baseline:state.view!=='records'});if(state.sort&&state.view!=='records')rows=H.sortRecords(rows,state.sort,state.order,metricView(),state.slice);return rows;}
-    async function renderResearch(token){const catalog=await request('/api/research');if(!current(token))return;state.catalog=catalog;renderResearchShell(token);}
+    const baselines=()=>R.orderVersions(state.catalog.records.filter(r=>r.kind===state.kind&&r.is_baseline));
+    function visibleRecords(){
+        if(state.module==='records')return H.filterRecords(state.catalog.records,{kind:state.kind,query:state.query,status:state.status,direction:state.direction});
+        const ids=benchmarkSelection.ids(state.kind);
+        return baselines().filter(r=>ids.has(r.id));
+    }
+    function currentMetricTables(){return R.metricTables(visibleRecords(),H.metricColumns(metricDefinitions(),state.view,state.metricFocus),state.view,baselines());}
+    async function renderResearch(token){
+        const catalog=await request('/api/research');if(!current(token))return;
+        state.catalog=catalog;benchmarkSelection.sync(catalog.records||[]);renderResearchShell(token);
+    }
     function renderResearchShell(token){
-        const all=state.catalog.records||[], baseline=all.filter(r=>r.kind===state.kind&&r.is_baseline), official=all.filter(r=>r.kind===state.kind&&r.comparable);
-        const currentRow=baseline.find(r=>r.current);
-        content.innerHTML=pageHead('RESEARCH / EXPERIMENTS','离线实验','从研究源读取真实指标，追溯每一次模型与执行策略迭代。','<button id="export-csv">↓ 导出 CSV</button>')+
-        `<div class="tabs"><button data-kind="model" class="${state.kind==='model'?'active':''}">模型评估</button><button data-kind="strategy" class="${state.kind==='strategy'?'active':''}">执行策略</button></div>
-        <div class="card-grid"><div class="card"><div class="card-label">当前研究基线</div><div class="card-value stat-accent">${esc(currentRow?.version||'—')}</div><div class="card-sub">${esc(currentRow?.name||'来源未标注当前版本')}</div></div><div class="card"><div class="card-label">历史基线版本</div><div class="stat-row"><div class="card-value">${baseline.length.toString().padStart(2,'0')}</div><span class="stat-icon">◷</span></div><div class="card-sub">保留来源与晋升记录</div></div><div class="card"><div class="card-label">${state.kind==='model'?'模型':'执行策略'}实验记录</div><div class="stat-row"><div class="card-value">${all.filter(r=>r.kind===state.kind).length}</div><span class="stat-icon">▥</span></div><div class="card-sub">含诊断、失败与归档记录</div></div><div class="card"><div class="card-label">同口径可比较结果</div><div class="stat-row"><div class="card-value">${official.length}</div><span class="stat-icon">⇌</span></div><div class="card-sub">按协议、窗口与种子校验</div></div></div>
-        <div class="research-intro"><div class="segmented">${[['baseline','历史 baseline'],['year','分年表现'],['regime','分风格表现'],['records','实验记录']].map(([key,label])=>`<button data-view="${key}" class="${state.view===key?'active':''}">${label}</button>`).join('')}</div><span class="card-sub">${state.kind==='model'?'固定 top3 × h5 · 算术年化':'执行层复合收益 · CAGR'}</span></div>
-        <div class="notice">${state.kind==='model'?'模型评估固定读取 top3 × h5 合成信号；主指标为扣费净年化、HAC 波动与扣费夏普，全局 RankIC 仅作补充。':'执行策略以扣费收益、夏普、回撤及 Alpha / Beta 评估；CAGR 与模型算术年化独立比较。'} 缺失指标以「—」显示。</div>
-        <div id="research-warnings"></div><div class="filters"><input type="search" id="research-search" aria-label="搜索实验" placeholder="搜索版本、实验名称或 ID" value="${esc(state.query)}"><select id="research-status" aria-label="实验状态"><option value="">全部状态</option>${[...new Set(all.filter(r=>r.kind===state.kind).map(r=>r.status).filter(Boolean))].sort().map(s=>`<option value="${esc(s)}" ${s===state.status?'selected':''}>${esc(statusName(s))}</option>`).join('')}</select><select id="research-direction" aria-label="实验方向"><option value="">全部方向</option>${[...new Set(all.filter(r=>r.kind===state.kind).map(r=>r.direction).filter(Boolean))].sort().map(s=>`<option value="${esc(s)}" ${s===state.direction?'selected':''}>${esc(s)}</option>`).join('')}</select><span id="slice-filter"></span><span id="metric-filter"></span></div>
-        <div id="research-table"></div><div class="source-line">研究源：${esc(state.catalog.sources?.root||'未提供')}<br>Registry：${esc(state.catalog.sources?.registry||'—')} · 源更新时间 ${esc(H.formatDate(state.catalog.sources?.modified_at,true))}</div><div id="compare-bar"></div>`;
-        document.getElementById('research-warnings').innerHTML=(state.catalog.warnings||[]).map(w=>`<div class="notice warning">${esc(w)}</div>`).join('');
-        content.querySelectorAll('[data-kind]').forEach(button=>button.onclick=()=>{state.kind=button.dataset.kind;state.metricFocus='';state.sort='';state.status='';state.direction='';state.selected.clear();renderResearchShell(token);});
-        content.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>{state.view=button.dataset.view;state.slice=state.view==='regime'?'D':'2026';renderResearchShell(token);});
-        if(['year','regime'].includes(state.view)){document.getElementById('slice-filter').innerHTML=`<select id="research-slice" aria-label="${state.view==='year'?'评估年度':'市场风格'}">${(state.view==='year'?['2020','2021','2022','2023','2024','2025','2026']:['D','F','T']).map(s=>`<option value="${s}" ${s===state.slice?'selected':''}>${state.view==='year'?s+' 年':{D:'D · 防御/震荡',F:'F · 高波博弈',T:'T · 大盘趋势'}[s]}</option>`).join('')}</select>`;document.getElementById('research-slice').onchange=event=>{state.slice=event.target.value;renderResearchTable(token);};}
-        document.getElementById('research-search').oninput=event=>{state.query=event.target.value;renderResearchTable(token);};
-        document.getElementById('research-status').onchange=event=>{state.status=event.target.value;renderResearchTable(token);};
-        document.getElementById('research-direction').onchange=event=>{state.direction=event.target.value;renderResearchTable(token);};
-        document.getElementById('export-csv').onclick=()=>{const defs=metricDefinitions(),rows=visibleRecords();if(state.view==='records'){download('qlib-'+state.kind+'-experiment-history.csv',H.csv([['日期','实验 ID','名称','假设','对照基线','状态','评估范围','来源状态'],...rows.map(r=>{const s=H.experimentSummary(r);return [s.date,r.id,s.name,s.hypothesis,s.baseline,s.status,s.scope,s.source];})]));toast('已导出 '+rows.length+' 条实验记录');return;}download(`qlib-${state.kind}-${state.view}-${state.slice}.csv`,H.csv([['实验 ID','名称','版本','当前基线','状态','官方','可比较','评估池','起始日期','结束日期','视图','切片',...defs.map(d=>d.label)],...rows.map(r=>[r.id,r.name,r.version,r.current?'是':'否',r.status,r.official?'是':'否',r.comparable?'是':'否',r.pool,r.window?.start,r.window?.end,state.view,state.slice,...defs.map(d=>H.metricsFor(r,metricView(),state.slice)[d.key]??'')])]));toast(`已导出 ${rows.length} 条记录（指标为原始数值）`);};
-        if(state.view!=='records')document.getElementById('metric-filter').innerHTML='<select id="research-metric" aria-label="展示指标"><option value="">全部指标</option>'+metricDefinitions(true).map(d=>'<option value="'+esc(d.key)+'" '+(state.metricFocus===d.key?'selected':'')+'>'+esc(d.label)+'</option>').join('')+'</select>';
-        const metricSelect=document.getElementById('research-metric');if(metricSelect)metricSelect.onchange=event=>{state.metricFocus=event.target.value;renderResearchTable(token);};
+        const all=state.catalog.records||[],history=state.module==='records',isModel=state.kind==='model';
+        content.innerHTML=pageHead(isModel?'RESEARCH / MODELS':'RESEARCH / STRATEGIES',isModel?'模型实验':'策略实验','查看基线版本表现与实验记录。','<button id="export-csv">↓ 导出 CSV</button>')+
+        `
+        <div class="research-intro"><div class="segmented" aria-label="实验子模块">${[['benchmark','Benchmark'],['records','实验记录']].map(([key,label])=>`<button data-module="${key}" class="${state.module===key?'active':''}" aria-pressed="${state.module===key}">${label}</button>`).join('')}</div><span class="card-sub">${state.kind==='model'?'固定 top3 × h5 · 算术年化':'执行层复合收益 · CAGR'}</span></div>
+        <div id="research-warnings">${(state.catalog.warnings||[]).map(w=>`<div class="notice warning">${esc(w)}</div>`).join('')}</div>
+        ${history?`<div class="filters"><input type="search" id="research-search" aria-label="搜索实验" placeholder="搜索版本、实验名称或 ID" value="${esc(state.query)}"><select id="research-status" aria-label="实验状态"><option value="">全部状态</option>${[...new Set(all.filter(r=>r.kind===state.kind).map(r=>r.status).filter(Boolean))].sort().map(s=>`<option value="${esc(s)}" ${s===state.status?'selected':''}>${esc(statusName(s))}</option>`).join('')}</select><select id="research-direction" aria-label="实验方向"><option value="">全部方向</option>${[...new Set(all.filter(r=>r.kind===state.kind).map(r=>r.direction).filter(Boolean))].sort().map(s=>`<option value="${esc(s)}" ${s===state.direction?'selected':''}>${esc(s)}</option>`).join('')}</select></div>`:'<div id="research-core"></div><div id="research-controls"></div>'}
+        <div id="research-table"></div><div id="compare-bar"></div><div class="source-line">研究源：${esc(state.catalog.sources?.root||'未提供')}<br>Registry：${esc(state.catalog.sources?.registry||'—')} · 源更新时间 ${esc(H.formatDate(state.catalog.sources?.modified_at,true))}</div>`;
+        content.querySelectorAll('[data-module]').forEach(button=>button.onclick=()=>{state.module=button.dataset.module;renderResearchShell(token);});
+        if(history){
+            document.getElementById('research-search').oninput=event=>{state.query=event.target.value;renderResearchTable(token);};
+            document.getElementById('research-status').onchange=event=>{state.status=event.target.value;renderResearchTable(token);};
+            document.getElementById('research-direction').onchange=event=>{state.direction=event.target.value;renderResearchTable(token);};
+        }else renderResearchControls(token);
+        document.getElementById('export-csv').onclick=exportResearch;
         renderResearchTable(token);
+    }
+    function renderResearchControls(token){
+        const definitions=metricDefinitions();
+        if(state.metricFocus&&!definitions.some(d=>d.key===state.metricFocus))state.metricFocus='';
+        document.getElementById('research-controls').innerHTML=`<div class="toolbar"><div class="segmented" aria-label="分维度指标">${[['regime','分风格指标'],['year','分年指标']].map(([key,label])=>`<button data-view="${key}" class="${state.view===key?'active':''}" aria-pressed="${state.view===key}">${label}</button>`).join('')}</div><select id="research-metric" aria-label="展示分维度指标"><option value="">全部指标</option>${definitions.map(d=>`<option value="${esc(d.key)}" ${state.metricFocus===d.key?'selected':''}>${esc(d.label)}</option>`).join('')}</select></div>`;
+        content.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>{state.view=button.dataset.view;renderResearchControls(token);renderResearchTable(token);});
+        document.getElementById('research-metric').onchange=event=>{state.metricFocus=event.target.value;renderResearchTable(token);};
+    }
+    function exportResearch(){
+        const rows=visibleRecords();
+        const data=state.module==='records'?[['日期','实验 ID','实验内容','实验假设','结论','备注','报告链接','晋升版本','状态'],...rows.map(r=>{
+            const s=R.historySummary(r),links=(r.resources||[]).filter(resource=>resource.kind==='report'&&resource.available).map(resource=>'/api/resources/'+encodeURIComponent(resource.id)).join('\n');
+            return [s.date,r.id,s.name,r.hypothesis||'',r.conclusion?s.conclusion:'',s.note,links,s.promotion,s.status];
+        })]:R.metricCsvRows(currentMetricTables());
+        download(`qlib-${state.kind}-${state.module}-${state.view}.csv`,H.csv(data));toast(`已导出 ${rows.length} 条记录（指标为原始数值）`);
+    }
+    function bindResources(container){
+        container.querySelectorAll('[data-resource]').forEach(button=>button.onclick=event=>{
+            event?.preventDefault();const src='/api/resources/'+encodeURIComponent(button.dataset.resource);
+            openDialog(button.dataset.resourceName,`<div class="notice">原始报告以隔离预览呈现。</div><iframe class="report-frame" sandbox="" referrerpolicy="no-referrer" title="原始研究报告" src="${src}"></iframe><a class="button-link" href="${src}?download=1">下载原始文件</a>`);
+        });
     }
     function renderExperimentTable(token){
         const rows=visibleRecords();
-        let html='<div class="notice">实验记录按日期、假设、对照与来源独立留档。诊断数值在详情内查看；只有合格的同口径实验可以加入正式比较。</div>';
-        if(!rows.length)html+='<div class="empty">没有匹配的实验记录。</div>';
-        else html+='<div class="table-wrap"><table class="experiment-history"><thead><tr><th>对比</th><th>日期</th><th>实验名称</th><th>假设</th><th>对照 baseline</th><th>状态</th><th>评估范围</th><th>来源与详情</th></tr></thead><tbody>'+rows.map(r=>{
-            const s=H.experimentSummary(r);
-            return `<tr><td><input type="checkbox" aria-label="比较 ${esc(s.name)}" data-select="${esc(r.id)}" ${state.selected.has(r.id)?'checked':''} ${!r.comparable?'disabled title="不满足正式比较条件"':''}></td><td>${esc(s.date)}</td><td class="history-name"><button class="record-name" data-detail="${esc(r.id)}">${esc(s.name)}</button><div class="record-id" title="${esc(r.id)}">${esc(r.id)}</div></td><td class="history-hypothesis"><div>${esc(s.hypothesis)}</div></td><td class="history-baseline"><div>${esc(s.baseline)}</div></td><td>${statusBadge(r)}</td><td><span class="badge ${r.comparable?'badge-teal':'badge-warn'}">${esc(s.scope)}</span><div class="card-sub">${esc(r.pool||'—')} · ${Array.isArray(r.seeds)?r.seeds.length:0} 种子</div></td><td><button class="text-button" data-detail="${esc(r.id)}">查看来源与详情 →</button><div class="card-sub">${esc(s.source)}</div></td></tr>`;
-        }).join('')+'</tbody></table></div>';
-        html+=`<div class="table-meta"><span>共 ${rows.length} 条实验记录 · 独立元数据视图</span><span>原始指标保留在各实验详情</span></div>`;
+        let html=rows.length?'<div class="table-wrap"><table class="experiment-history"><thead><tr><th>对比</th><th>日期</th><th>实验内容</th><th>结论</th><th>报告链接</th><th>晋升版本</th></tr></thead><tbody>'+rows.map(r=>{
+            const s=R.historySummary(r);
+            return `<tr><td><input type="checkbox" aria-label="比较 ${esc(s.name)}" data-select="${esc(r.id)}" ${state.selected.has(r.id)?'checked':''} ${!r.comparable?'disabled title="不满足正式比较条件"':''}></td><td>${esc(s.date)}<div>${statusBadge(r)}</div></td><td class="history-content"><button class="record-name" data-detail="${esc(r.id)}">${esc(s.name)}</button><div class="history-description">${esc(s.hypothesis)}</div><div class="card-sub">对照：${esc(s.baseline)} · ${esc(s.scope)}</div><div class="record-id" title="${esc(r.id)}">${esc(r.id)}</div></td><td class="history-conclusion"><div>${esc(s.conclusion)}</div>${s.note?`<div class="history-note">${esc(s.note)}</div>`:''}</td><td class="history-reports">${R.reportLinks(r)}<div><button class="text-button" data-detail="${esc(r.id)}">查看实验详情 →</button></div></td><td>${s.promotion?`<span class="badge badge-baseline">晋升 ${esc(s.promotion)}</span>`:'—'}${r.current?' <span class="badge badge-current">当前</span>':''}</td></tr>`;
+        }).join('')+'</tbody></table></div>':'<div class="empty">没有匹配的实验记录。</div>';
+        html+=`<div class="table-meta"><span>共 ${rows.length} 条实验记录</span><span>指标在实验详情中查看</span></div>`;
         document.getElementById('research-table').innerHTML=html;
         content.querySelectorAll('[data-select]').forEach(box=>box.onchange=()=>{if(box.checked)state.selected.add(box.dataset.select);else state.selected.delete(box.dataset.select);renderCompareBar(token);});
         content.querySelectorAll('[data-detail]').forEach(button=>button.onclick=()=>researchDetail(button.dataset.detail,token));
-        renderCompareBar(token);
+        bindResources(content);renderCompareBar(token);
     }
     function renderResearchTable(token){
-        if(state.view==='records'){renderExperimentTable(token);return;}
-        const rows=visibleRecords(),defs=metricDefinitions();
-        let html=rows.length?`<div class="table-wrap"><table><thead><tr><th style="width:36px">对比</th><th>版本 / 实验</th><th>状态</th>${defs.map(d=>`<th><button class="text-button" data-sort="${esc(d.key)}">${esc(d.label)}${state.sort===d.key?(state.order==='desc'?' ↓':' ↑'):' ↕'}</button></th>`).join('')}<th>评估范围</th><th>完整性</th></tr></thead><tbody>`:'';
-        for(const r of rows){const metrics=H.metricsFor(r,metricView(),state.slice);html+=`<tr class="${r.current?'current-row':''}"><td><input type="checkbox" aria-label="比较 ${esc(r.name||r.id)}" data-select="${esc(r.id)}" ${state.selected.has(r.id)?'checked':''} ${!r.comparable?'disabled title="不满足正式比较条件"':''}></td><td style="text-align:left"><button class="record-name" data-detail="${esc(r.id)}">${r.version?esc(r.version)+' · ':''}${esc(r.name||r.id)}</button> ${r.current?'<span class="badge badge-current">当前</span>':''}<div class="record-id" title="${esc(r.id)}">${esc(r.id)}</div></td><td>${statusBadge(r)}</td>${defs.map(d=>`<td class="${r.current&&metrics[d.key]!=null?'metric-positive':''}">${H.formatMetric(metrics[d.key],d.format)}</td>`).join('')}<td><span class="badge ${r.official?'badge-teal':'badge-warn'}">${esc(H.scopeLabel(r.scope||r.pool))}</span><div class="card-sub">${esc(r.pool||'—')} · ${esc(r.window?.start||'—')} ~ ${esc(r.window?.end||'—')}</div></td><td><span class="badge ${r.comparable?'badge-ok':'badge-warn'}">${r.comparable?'可比较':'独立展示'}</span><div class="card-sub">${Array.isArray(r.seeds)?r.seeds.length:0} 种子</div></td></tr>`;}
-        document.getElementById('research-table').innerHTML=rows.length?html+'</tbody></table></div>'+`<div class="table-meta"><span>显示 ${rows.length} 条${state.view==='records'?'实验记录':'历史基线'} · 点击指标排序</span><span>${state.sort?'已按 '+esc(defs.find(d=>d.key===state.sort)?.label||state.sort)+(state.order==='desc'?' 降序':' 升序'):'按来源顺序'}</span></div>`:'<div class="empty">没有匹配的记录。调整搜索或筛选条件后重试。</div>';
-        content.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{state.order=state.sort===b.dataset.sort&&state.order==='desc'?'asc':'desc';state.sort=b.dataset.sort;renderResearchTable(token);});
-        content.querySelectorAll('[data-select]').forEach(b=>b.onchange=()=>{if(b.checked)state.selected.add(b.dataset.select);else state.selected.delete(b.dataset.select);renderCompareBar(token);});
-        content.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>researchDetail(b.dataset.detail,token));renderCompareBar(token);
+        if(state.module==='records'){renderExperimentTable(token);return;}
+        const rows=visibleRecords(),all=baselines(),ids=benchmarkSelection.ids(state.kind),issue=rows.length>1?H.comparisonIssue(rows):'';
+        document.getElementById('research-core').innerHTML=all.length?
+            R.renderMetricTables(R.metricTables(all,metricDefinitions('full'),'full'),{interactive:true,selection:ids,compact:state.kind==='strategy'}):
+            '<div class="empty">暂无已晋升版本。</div>';
+        document.getElementById('research-table').innerHTML=(issue?`<div class="notice warning">${esc(issue)}。以下仅展示各版本原始指标。</div>`:'')+
+            (all.length?R.renderMetricTables(currentMetricTables(),{interactive:true}):'')+
+            `<div class="table-meta"><span>分维度已选 ${rows.length} / ${all.length} 个版本</span><span>在核心指标首列勾选版本 · 缺失值为「—」</span></div>`;
+        content.querySelectorAll('[data-benchmark]').forEach(box=>box.onchange=()=>{
+            benchmarkSelection.set(state.kind,box.dataset.benchmark,box.checked);renderResearchTable(token);
+        });
+        const toggle=document.getElementById('benchmark-toggle-all');
+        if(toggle){
+            toggle.indeterminate=ids.size>0&&ids.size<all.length;
+            toggle.onchange=()=>{benchmarkSelection.all(state.kind,toggle.checked);renderResearchTable(token);};
+        }
+        content.querySelectorAll('[data-detail]').forEach(button=>button.onclick=()=>researchDetail(button.dataset.detail,token));
+        document.getElementById('compare-bar').innerHTML='';
     }
     function renderCompareBar(token){
         const box=document.getElementById('compare-bar');if(!state.selected.size){box.innerHTML='';return;}
-        const issue=H.comparisonIssue(selectedRecords());
+        const issue=state.selected.size>12?'最多选择 12 条记录':H.comparisonIssue(selectedRecords());
         box.innerHTML=`<div class="compare-bar"><span>已选择 <strong>${state.selected.size}</strong> 条记录</span><span class="card-sub">${esc(issue||'已通过前端口径检查')}</span><button id="compare-now" class="primary" ${issue?'disabled':''}>同口径对比 →</button><button id="compare-clear">清空</button></div>`;
         document.getElementById('compare-clear').onclick=()=>{state.selected.clear();renderResearchTable(token);};
         document.getElementById('compare-now').onclick=handle(async()=>{
-            const view=metricView(),slice=state.slice,kind=state.kind,defs=metricDefinitions();
-            const caption=view==='year'?slice+' 年度':view==='regime'?({D:'D · 防御/震荡',F:'F · 高波博弈',T:'T · 大盘趋势'}[slice]||slice)+' 风格':'全期';
-            const params=new URLSearchParams();state.selected.forEach(id=>params.append('id',id));
+            const kind=state.kind,module=state.module,params=new URLSearchParams();state.selected.forEach(id=>params.append('id',id));
             const data=await request('/api/research/compare?'+params);
-            if(!current(token)||state.kind!==kind||metricView()!==view||state.slice!==slice)return;
-            const records=data.records||[];
-            openDialog('同口径版本对比 · '+caption,`<div class="notice">服务端已校验：研究轨道、评估池、时间窗、信号聚合与评估协议一致。当前显示 ${esc(caption)}${kind==='model'?' top3 × h5':''} 指标。${view==='full'?'':'缺失切片显示「—」，不回退到全期值。'}</div><div class="table-wrap"><table><thead><tr><th>评估指标</th>${records.map(r=>`<th>${esc(r.version||r.name)}<div class="card-sub">${esc(r.id)}</div></th>`).join('')}</tr></thead><tbody>${defs.map(d=>`<tr><td>${esc(d.label)}</td>${records.map(r=>`<td>${H.formatMetric(H.metricsFor(r,view,slice)[d.key],d.format)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="source-line">比较协议：${esc(typeof data.comparison_key==='object'?JSON.stringify(data.comparison_key):data.comparison_key)}</div>`);
+            if(!current(token)||state.kind!==kind||state.module!==module)return;
+            openDialog('同口径实验对比','<div class="notice">服务端已校验研究轨道、评估池、时间窗与评估协议一致。</div><div id="detail-metrics"></div>');
+            renderDetailMetrics(data.records||[],kind);
         });
     }
-    function researchDetail(id,token){const r=state.catalog.records.find(row=>row.id===id);if(!r)return;const fields=[['实验 ID',r.id],['研究版本',r.version],['记录状态',statusName(r.status)],['评估范围',H.scopeLabel(r.scope)],['评估池',r.pool],['日期范围',(r.window?.start||'—')+' ~ '+(r.window?.end||'—')],['种子',Array.isArray(r.seeds)?r.seeds.join(' / '):'未提供'],['基线引用',r.baseline_ref],['评估协议',typeof r.protocol==='object'?JSON.stringify(r.protocol):r.protocol]];
-        openDialog(r.name||r.id,`<div class="detail-grid">${fields.map(([label,value])=>`<div class="detail-item"><small>${label}</small>${esc(value||'—')}</div>`).join('')}</div>${(r.warnings||[]).map(w=>`<div class="notice warning">${esc(w)}</div>`).join('')}<h3>实验假设</h3><div class="prose">${esc(r.hypothesis||'来源未提供实验假设。')}</div><h3>全期评估指标</h3>${!r.comparable?'<div class="notice warning">以下为该实验独立评估结果，不能与正式 baseline 混合计算差值。</div>':''}<div class="table-wrap"><table><thead><tr>${(state.catalog.metric_definitions?.[r.kind]||[]).map(d=>'<th>'+esc(d.label)+'</th>').join('')}</tr></thead><tbody><tr>${(state.catalog.metric_definitions?.[r.kind]||[]).map(d=>'<td>'+H.formatMetric(r.metrics?.[d.key],d.format)+'</td>').join('')}</tr></tbody></table></div><h3>记录备注</h3><div class="prose">${esc(r.note||'—')}</div><h3>原始报告与产物</h3><div class="page-actions">${(r.resources||[]).map(resource=>resource.available?`<button data-resource="${esc(resource.id)}" data-resource-name="${esc(resource.name)}">预览 ${esc(resource.name)}</button><a class="button-link" href="/api/resources/${encodeURIComponent(resource.id)}?download=1">下载</a>`:`<span class="badge badge-warn">${esc(resource.name)} · 原产物已清理或缺失</span>`).join('')||'<span class="card-sub">未登记可访问资源</span>'}</div>${r.comparable?'<div class="form-actions"><button class="primary" id="detail-compare">加入同口径对比</button></div>':'<div class="notice warning">该记录独立展示，不纳入正式 baseline 对比。</div>'}`);
-        dialogBody.querySelectorAll('[data-resource]').forEach(button=>button.onclick=()=>{const src='/api/resources/'+encodeURIComponent(button.dataset.resource);openDialog(button.dataset.resourceName,`<div class="notice">原始报告以隔离预览呈现。</div><iframe class="report-frame" sandbox="" referrerpolicy="no-referrer" title="原始研究报告" src="${src}"></iframe><a class="button-link" href="${src}?download=1">下载原始文件</a>`);});
-        const add=document.getElementById('detail-compare');if(add)add.onclick=()=>{state.selected.add(id);dialog.close();if(current(token))renderResearchTable(token);};
+    function renderDetailMetrics(records,kind,view='full'){
+        document.getElementById('detail-metrics').innerHTML=`<div class="segmented" aria-label="实验指标视图">${[['full','核心指标'],['year','分年指标'],['regime','分风格指标']].map(([key,label])=>`<button data-detail-view="${key}" class="${view===key?'active':''}" aria-pressed="${view===key}">${label}</button>`).join('')}</div>`+
+            R.renderMetricTables(R.metricTables(records,R.metricDefinitions(state.catalog.metric_definitions?.[kind]||[],kind,view),view));
+        dialogBody.querySelectorAll('[data-detail-view]').forEach(button=>button.onclick=()=>renderDetailMetrics(records,kind,button.dataset.detailView));
+    }
+    function researchDetail(id,token){
+        const r=state.catalog.records.find(row=>row.id===id);if(!r)return;
+        const summary=R.historySummary(r),fields=[['实验 ID',r.id],['晋升版本',summary.promotion],['记录状态',statusName(r.status)],['评估范围',H.scopeLabel(r.scope)],['评估池',r.pool],['日期范围',(r.window?.start||'—')+' ~ '+(r.window?.end||'—')],['种子',Array.isArray(r.seeds)?r.seeds.join(' / '):'未提供'],['基线引用',r.baseline_ref],['评估协议',typeof r.protocol==='object'?JSON.stringify(r.protocol):r.protocol]];
+        openDialog(r.name||r.id,`<div class="detail-grid">${fields.map(([label,value])=>`<div class="detail-item"><small>${label}</small>${esc(value||'—')}</div>`).join('')}</div>${(r.warnings||[]).map(w=>`<div class="notice warning">${esc(w)}</div>`).join('')}<h3>实验内容</h3><div class="prose">${esc(r.hypothesis||'来源未提供实验假设。')}</div><h3>实验结论</h3><div class="prose">${esc(summary.conclusion)}</div>${summary.note?`<h3>记录备注</h3><div class="prose">${esc(summary.note)}</div>`:''}<h3>评估指标</h3>${!r.comparable?'<div class="notice warning">该实验独立展示，不纳入正式同口径比较。</div>':''}<div id="detail-metrics"></div><h3>原始报告与产物</h3><div class="page-actions resource-actions">${(r.resources||[]).map(resource=>resource.available?`<button data-resource="${esc(resource.id)}" data-resource-name="${esc(resource.name)}">预览 ${esc(resource.name)}</button><a class="button-link" href="/api/resources/${encodeURIComponent(resource.id)}?download=1">下载</a>`:`<span class="badge badge-warn">${esc(resource.name)} · 原产物已清理或缺失</span>`).join('')||'<span class="card-sub">未登记可访问资源</span>'}</div>${r.comparable?'<div class="form-actions"><button class="primary" id="detail-compare">加入同口径对比</button></div>':''}`);
+        renderDetailMetrics([r],r.kind);bindResources(dialogBody);
+        const add=document.getElementById('detail-compare');if(add)add.onclick=()=>{state.selected.add(id);dialog.close();if(current(token)){state.module='records';renderResearchShell(token);}};
     }
     async function renderAnalyses(token){const data=await request('/api/analyses');if(!current(token))return;state.analyses=data.records||[];renderAnalysisShell(token);}
     function renderAnalysisShell(token){const rows=state.analyses;content.innerHTML=pageHead('KNOWLEDGE / ARCHIVE','分析档案','让研究结论、方法与代码留在一起，沉淀可追溯的研究记录。','<button class="primary" id="new-analysis">＋ 新建分析</button>')+`<div class="card-grid"><div class="card"><div class="card-label">全部分析</div><div class="card-value">${rows.length.toString().padStart(2,'0')}</div><div class="card-sub">独立存储 · 版本留存</div></div><div class="card"><div class="card-label">平台分析</div><div class="card-value">${rows.filter(r=>!r.historical&&r.status!=='archived').length}</div><div class="card-sub">可以继续编辑与补充</div></div><div class="card"><div class="card-label">历史报告</div><div class="card-value">${rows.filter(r=>r.historical).length}</div><div class="card-sub">保留原文 · 只读归档</div></div><div class="card"><div class="card-label">已归档</div><div class="card-value">${rows.filter(r=>r.status==='archived'&&!r.historical).length}</div><div class="card-sub">支持随时恢复</div></div></div><div class="toolbar"><div class="segmented">${[['active','当前记录'],['all','全部'],['historical','历史报告'],['archived','已归档']].map(([key,label])=>`<button data-analysis-status="${key}" class="${key===state.analysisStatus?'active':''}">${label}</button>`).join('')}</div><span class="card-sub">报告 · 代码 · 关联实验</span></div><div class="filters"><input type="search" id="analysis-search" placeholder="搜索分析标题或标签" aria-label="搜索分析标题或标签" value="${esc(state.analysisQuery)}"><label for="analysis-date">更新日期</label><input type="date" id="analysis-date" value="${esc(state.analysisDate)}"><button id="analysis-reset">重置筛选</button></div><div id="analysis-list"></div>`;
@@ -123,14 +161,20 @@
         document.getElementById('analysis-form').onsubmit=async event=>{event.preventDefault();captureCodes();const form=event.currentTarget,errorBox=document.getElementById('analysis-form-error'),button=document.getElementById('save-analysis');const values=new FormData(form);const split=value=>String(value||'').split(/[,，\n]/).map(x=>x.trim()).filter(Boolean);const payload={...draft,title:String(values.get('title')).trim(),background:String(values.get('background')).trim(),method:String(values.get('method')).trim(),conclusion:String(values.get('conclusion')).trim(),usage:String(values.get('usage')).trim(),tags:split(values.get('tags')),related_experiments:split(values.get('related'))};errorBox.textContent='';if(!payload.codes.length){errorBox.textContent='请至少添加一份代码。';return;}button.disabled=true;button.textContent='正在保存…';try{const saved=await mutate(record?'/api/analyses/'+encodeURIComponent(record.id):'/api/analyses',record?'PUT':'POST',record?{...payload,version:record.version}:payload);if(!current(token))return;state.analyses=record?state.analyses.map(row=>row.id===saved.id?saved:row):[saved,...state.analyses];if(formGeneration!==dialogGeneration){toast('分析已保存。');return;}state.analysisStatus=saved.status==='archived'?'archived':'active';state.analysisQuery='';state.analysisDate='';renderAnalysisShell(token);analysisDetail(saved.id,token);toast('分析已保存，报告与代码已归档。');}catch(error){errorBox.textContent=error.status===409?'记录已被其他窗口更新。当前编辑内容已保留，请复制内容后关闭并刷新，再合并到最新版本。':error.message;button.disabled=false;button.textContent='保存分析';}};
     }
     async function navigate(page){
-        if(!['dashboard','batches','predictions','research','analyses'].includes(page))page='dashboard';
+        if(page==='research')page='model-experiments';
+        if(!['dashboard','batches','predictions','model-experiments','strategy-experiments','analyses'].includes(page))page='dashboard';
+        const isResearch=['model-experiments','strategy-experiments'].includes(page);
+        if(isResearch){
+            const kind=page==='strategy-experiments'?'strategy':'model';
+            if(kind!==state.kind){state.kind=kind;state.metricFocus='';state.status='';state.direction='';state.query='';state.selected.clear();}
+        }
         state.page=page;const token=tracker.begin(page);window.PlatformMonitor.clear();if(dialog.open)dialog.close();
         const isMonitor=['dashboard','batches','predictions'].includes(page);
         document.getElementById('refresh').hidden=isMonitor;
-        document.getElementById('module-name').textContent=isMonitor?'实盘监控':page==='research'?'离线实验':'分析档案';
+        document.getElementById('module-name').textContent=isMonitor?'实盘监控':isResearch?(state.kind==='model'?'模型实验':'策略实验'):'分析档案';
         document.querySelectorAll('nav [data-page]').forEach(a=>a.classList.toggle('active',a.dataset.page===page||(a.parentElement.tagName==='NAV'&&a.dataset.page==='dashboard'&&isMonitor)));
         document.getElementById('monitor-nav').style.display=isMonitor?'block':'none';document.getElementById('monitor-nav').hidden=!isMonitor;
-        content.innerHTML='<div class="loading">正在读取'+(isMonitor?'实盘快照':page==='research'?'研究目录':'分析档案')+'…</div>';
+        content.innerHTML='<div class="loading">正在读取'+(isMonitor?'实盘快照':isResearch?'研究目录':'分析档案')+'…</div>';
         try{
             if(isMonitor){
                 await window.PlatformMonitor.pages[page](token);
@@ -148,7 +192,7 @@
                         const wrap=document.createElement('div');wrap.className='table-wrap';table.before(wrap);wrap.append(table);
                     });
                 }
-            }else if(page==='research')await renderResearch(token);
+            }else if(isResearch)await renderResearch(token);
             else await renderAnalyses(token);
         }catch(error){
             if(!current(token))return;window.PlatformMonitor.clear();

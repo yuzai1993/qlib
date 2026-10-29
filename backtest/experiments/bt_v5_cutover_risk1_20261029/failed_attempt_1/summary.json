@@ -1,0 +1,24 @@
+{
+  "status": "failed",
+  "model": "v2",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "account": 300000,
+  "risk_degree": 1.0,
+  "hypothesis": "固定v2五种子与top5/drop1/hold1/f100，仅以risk=1.0复算30万元当前费率；不训练、不调参、不晋升。",
+  "selection_cutoff": "2026-07-31",
+  "requested_end": "2026-10-28",
+  "evaluation_mode": "frozen_parameter_diagnostic_not_selection",
+  "live_activation": false,
+  "source_pred": "/Users/yuxianqi/Project/qlib_exp/backtest/result/phase_s_regime/all_top5d1/m0h20es_ensemble_pred.pkl",
+  "source_pred_sha256": "3d6f768930a4b9ac63622ee039ded617b68addfac56f44d77002a0188572021e",
+  "st_daily_sha256": "13233a7da7addd8b374076f0e88feff3681ea4080ac5eaa4721747ab4ca8b6ac",
+  "model_manifest_sha256": "75bd134226683ad94b394ecf4bd158efaa05ad20d8a328a1df26d71f72075e4e",
+  "error": "cached benchmark differs from authenticated daily report",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/yuxianqi/.codex/worktrees/bt-v5-top5-cutover/qlib/backtest/scripts/run_bt_v5_cutover_diagnostics.py\", line 169, in run\n    forward, cached_bench = load_frozen_reuse(args.reuse_frozen_result, audit)\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/yuxianqi/.codex/worktrees/bt-v5-top5-cutover/qlib/backtest/scripts/run_bt_v5_cutover_diagnostics.py\", line 77, in load_frozen_reuse\n    raise ValueError(\"cached benchmark differs from authenticated daily report\")\nValueError: cached benchmark differs from authenticated daily report\n"
+}

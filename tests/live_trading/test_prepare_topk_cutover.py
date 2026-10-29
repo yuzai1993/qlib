@@ -114,6 +114,55 @@ def test_wal_snapshot_preserves_every_table_cash_cohort_history_and_source(
     assert "00ff04" not in manifest_path.read_text()
 
 
+def test_risk1_metadata_preserves_real_cash_and_every_table(ledger, tmp_path):
+    source, conn = ledger
+    before = all_rows(conn)
+    manifest = tmp_path / "risk1.json"
+    result = prepare(
+        source, tmp_path / "risk1.db", manifest_path=manifest, target_risk_degree=1.0
+    )
+    assert result["target"]["risk_degree"] == 1.0
+    assert result["account"]["cash"] == 87654.321
+    assert result["ready_for_activation"] is False
+    assert result["activation_authorized"] is False
+    assert all_rows(conn) == before
+    assert json.loads(manifest.read_text())["target"]["risk_degree"] == 1.0
+
+
+@pytest.mark.parametrize("risk", [0, -0.1, 1.01, float("nan"), float("inf"), True, "1.0", None])
+def test_invalid_target_risk_creates_no_outputs(ledger, tmp_path, risk):
+    source, conn = ledger
+    before = all_rows(conn)
+    output_dir = tmp_path / "invalid-risk"
+    with pytest.raises(ValueError, match="risk"):
+        prepare(
+            source,
+            output_dir / "snapshot.db",
+            manifest_path=output_dir / "audit.json",
+            target_risk_degree=risk,
+        )
+    assert not output_dir.exists()
+    assert all_rows(conn) == before
+
+
+def test_cli_risk1_is_recorded_without_activating(ledger, tmp_path):
+    source, _ = ledger
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).resolve().parents[2] / "live_trading/scripts/prepare_topk_cutover.py"),
+            "--source", str(source), "--destination", str(tmp_path / "cli-risk1.db"),
+            "--risk-degree", "1.0",
+        ],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 2
+    audit = json.loads(result.stdout)
+    assert audit["target"]["risk_degree"] == 1.0
+    assert audit["activation_authorized"] is False
+    assert audit["account"]["cash"] == 87654.321
+
+
 @pytest.mark.parametrize(
     "kind", ["same_path", "existing", "symlink", "bridge", "production"]
 )

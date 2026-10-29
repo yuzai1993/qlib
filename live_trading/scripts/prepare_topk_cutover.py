@@ -419,13 +419,22 @@ def _audit(conn, fingerprints):
     }
 
 
-def prepare_topk_cutover(source, destination, *, manifest_path=None, bridge_roots=()):
+def prepare_topk_cutover(
+    source, destination, *, manifest_path=None, bridge_roots=(), target_risk_degree=0.90
+):
     """Copy the complete ledger, preserving all history, and return its audit.
 
     Existing outputs (including aliases) are refused. Snapshot equality is
     checked against the pinned source transaction, not the moving live DB file.
     Configured nonstandard bridge roots must be passed via ``bridge_roots``.
     """
+    if (
+        isinstance(target_risk_degree, bool)
+        or not isinstance(target_risk_degree, (int, float))
+        or not math.isfinite(target_risk_degree)
+        or not 0 < target_risk_degree <= 1
+    ):
+        raise ValueError("target risk degree must be finite and in (0, 1]")
     source = Path(source).expanduser().resolve(strict=True)
     if not source.is_file():
         raise ValueError("source must be an existing regular SQLite file")
@@ -490,7 +499,7 @@ def prepare_topk_cutover(source, destination, *, manifest_path=None, bridge_root
                 "n_drop": 1,
                 "hold_thresh": 1,
                 "force_sell_rank": 100,
-                "risk_degree": 0.90,
+                "risk_degree": target_risk_degree,
                 "opening_cash": 300000,
                 "opening_cash_is_metadata_only": True,
             },
@@ -539,6 +548,10 @@ def main(argv=None):
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument(
+        "--risk-degree", type=float, default=0.90,
+        help="inactive target risk metadata only (default: 0.90)",
+    )
+    parser.add_argument(
         "--bridge-root",
         type=Path,
         action="append",
@@ -552,6 +565,7 @@ def main(argv=None):
             args.destination,
             manifest_path=args.manifest,
             bridge_roots=args.bridge_root,
+            target_risk_degree=args.risk_degree,
         )
     except (OSError, ValueError, sqlite3.Error) as exc:
         print(f"offline cutover audit refused: {exc}", file=sys.stderr)

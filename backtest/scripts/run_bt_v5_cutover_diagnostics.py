@@ -27,7 +27,9 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def validate_frozen_config(cfg):
+def validate_frozen_config(cfg, *, risk_degree):
+    if risk_degree not in (0.9, 1.0):
+        raise ValueError("diagnostic risk_degree must be explicitly 0.9 or 1.0")
     strategy = {**cfg["strategy"], **cfg["strategy"].get("kwargs", {})}
     expected = {
         "class": "TopkDropoutStrategy",
@@ -35,7 +37,7 @@ def validate_frozen_config(cfg):
         "n_drop": 1,
         "hold_thresh": 1,
         "force_sell_rank": 100,
-        "risk_degree": 0.9,
+        "risk_degree": risk_degree,
         "initial_buy_count": None,
         "only_tradable": False,
         "forbid_all_trade_at_limit": False,
@@ -55,6 +57,41 @@ def validate_frozen_config(cfg):
         exchange.get(key) != value for key, value in fees.items()
     ):
         raise ValueError("diagnostic account/fees differ from frozen 300k contract")
+
+
+def load_frozen_reuse(directory, audit):
+    """Reuse saved scores and the benchmark authenticated by the prior daily report."""
+    directory = Path(directory)
+    prior = json.loads((directory / "summary.json").read_text())
+    if prior["status"] != "completed" or any(
+        prior[key] != audit[key]
+        for key in (
+            "requested_end",
+            "source_pred_sha256",
+            "st_daily_sha256",
+            "model_manifest_sha256",
+        )
+    ):
+        raise ValueError("cached diagnostic provenance mismatch")
+    for filename, field in (
+        ("forward_pred.pkl", "forward_pred_sha256"),
+        ("portfolio_daily.csv", "report_sha256"),
+    ):
+        if sha(directory / filename) != prior[field]:
+            raise ValueError(f"cached {filename} SHA mismatch")
+    benchmark = pd.read_csv(
+        directory / "bench_ew_all.csv", index_col=0, parse_dates=True
+    ).iloc[:, 0]
+    report = pd.read_csv(
+        directory / "portfolio_daily.csv", index_col=0, parse_dates=True
+    )
+    if (
+        benchmark.index.has_duplicates
+        or not report.index.isin(benchmark.index).all()
+        or not ((benchmark.reindex(report.index) - report["bench"]).abs() < 1e-12).all()
+    ):
+        raise ValueError("cached benchmark differs from authenticated daily report")
+    return pd.read_pickle(directory / "forward_pred.pkl"), benchmark
 
 
 def combine_frozen_scores(history, forward):
@@ -97,6 +134,8 @@ def run(args):
         "model": "v2",
         "seeds": [42, 1000, 2000, 3000, 4000],
         "account": 300000,
+        "risk_degree": args.risk_degree,
+        "hypothesis": f"固定v2五种子与top5/drop1/hold1/f100，仅以risk={args.risk_degree}复算30万元当前费率；不训练、不调参、不晋升。",
         "selection_cutoff": "2026-07-31",
         "requested_end": args.end,
         "evaluation_mode": "frozen_parameter_diagnostic_not_selection",
@@ -120,8 +159,17 @@ def run(args):
             raise ValueError("frozen official prediction SHA mismatch")
         live_path = ROOT / "live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml"
         live = yaml.safe_load(live_path.read_text())
-        cfg = load_config(str(ROOT / live["parity"]["backtest_config"]))
-        validate_frozen_config(cfg)
+        config_path = args.config or ROOT / live["parity"]["backtest_config"]
+        cfg = load_config(str(config_path))
+        validate_frozen_config(cfg, risk_degree=args.risk_degree)
+        manifest = json.loads(
+            (ROOT / "live_trading/models/v2_t5h5es/manifest.json").read_text()
+        )
+        if [member["seed"] for member in manifest["members"]] != audit["seeds"]:
+            raise ValueError("frozen five-seed manifest mismatch")
+        for member in manifest["members"]:
+            if sha(ROOT / member["model_path"]) != member["sha256"]:
+                raise ValueError("frozen model SHA mismatch")
         cfg["data"]["handler"]["end_time"] = args.end
         cfg["segments"]["test"] = ["2020-08-03", args.end]
         cfg["backtest"]["start_time"] = "2020-08-03"
@@ -134,19 +182,27 @@ def run(args):
             expression_cache=None,
             dataset_cache=None,
         )
-        generator = SignalGenerator(live, ROOT)
-        generator.prepare_for_dates(args.end)
-        features = generator._features
-        features = features.loc[
-            features.index.get_level_values("datetime") >= BOUNDARY
-        ].dropna(how="all")
-        model_scores = [
-            model.predict(_InferenceDataset(features)).rename("score")
-            for model in generator._models
-        ]
-        if any(not s.index.equals(features.index) for s in model_scores):
-            raise ValueError("ensemble member index mismatch")
-        forward = blend_score_series(model_scores).to_frame("score")
+        cached_bench = None
+        if args.reuse_frozen_result:
+            forward, cached_bench = load_frozen_reuse(args.reuse_frozen_result, audit)
+            audit["reused_frozen_result"] = str(args.reuse_frozen_result.resolve())
+            audit["reused_summary_sha256"] = sha(
+                args.reuse_frozen_result / "summary.json"
+            )
+        else:
+            generator = SignalGenerator(live, ROOT)
+            generator.prepare_for_dates(args.end)
+            features = generator._features
+            features = features.loc[
+                features.index.get_level_values("datetime") >= BOUNDARY
+            ].dropna(how="all")
+            model_scores = [
+                model.predict(_InferenceDataset(features)).rename("score")
+                for model in generator._models
+            ]
+            if any(not s.index.equals(features.index) for s in model_scores):
+                raise ValueError("ensemble member index mismatch")
+            forward = blend_score_series(model_scores).to_frame("score")
         forward.to_pickle(out / "forward_pred.pkl")
         audit["forward_pred_sha256"] = sha(out / "forward_pred.pkl")
         history = pd.read_pickle(args.pred)
@@ -167,21 +223,35 @@ def run(args):
             index_col=0,
             parse_dates=True,
         ).iloc[:, 0]
-        instruments = D.instruments("all", filter_pipe=live["handler"]["filter_pipe"])
-        codes = D.list_instruments(
-            instruments, start_time="2026-08-03", end_time=args.end, as_list=True
-        )
-        returns = D.features(
-            codes,
-            ["$close/Ref($close,1)-1"],
-            start_time="2026-08-03",
-            end_time=args.end,
-        )
-        forward_bench = returns.iloc[:, 0].groupby(level="datetime").mean().fillna(0)
-        bench = pd.concat([old_bench.loc[:BOUNDARY], forward_bench]).sort_index()
+        if cached_bench is not None:
+            bench = cached_bench
+            if not (
+                (bench.loc[:BOUNDARY] - old_bench.loc[:BOUNDARY]).abs() < 1e-12
+            ).all():
+                raise ValueError(
+                    "cached historical benchmark differs from frozen source"
+                )
+        else:
+            instruments = D.instruments(
+                "all", filter_pipe=live["handler"]["filter_pipe"]
+            )
+            codes = D.list_instruments(
+                instruments, start_time="2026-08-03", end_time=args.end, as_list=True
+            )
+            returns = D.features(
+                codes,
+                ["$close/Ref($close,1)-1"],
+                start_time="2026-08-03",
+                end_time=args.end,
+            )
+            forward_bench = (
+                returns.iloc[:, 0].groupby(level="datetime").mean().fillna(0)
+            )
+            bench = pd.concat([old_bench.loc[:BOUNDARY], forward_bench]).sort_index()
         if not expected.isin(bench.index).all():
             raise ValueError("equal-weight benchmark coverage missing")
         bench.rename("bench").to_csv(out / "bench_ew_all.csv", index_label="datetime")
+        audit["benchmark_sha256"] = sha(out / "bench_ew_all.csv")
         cfg["data"]["benchmark"] = {"equal_weight_csv": str(out / "bench_ew_all.csv")}
         cfg["backtest"]["benchmark"] = cfg["data"]["benchmark"]
         cfg.pop("_config_path", None)
@@ -244,6 +314,15 @@ def main():
     parser.add_argument("--st-daily", required=True, type=Path)
     parser.add_argument("--end", required=True)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--risk-degree", required=True, type=float, choices=(0.9, 1.0))
+    parser.add_argument(
+        "--config", type=Path, help="Explicit saved config for a legacy risk0.9 replay"
+    )
+    parser.add_argument(
+        "--reuse-frozen-result",
+        type=Path,
+        help="Completed result with authenticated scores and benchmark",
+    )
     run(parser.parse_args())
 
 

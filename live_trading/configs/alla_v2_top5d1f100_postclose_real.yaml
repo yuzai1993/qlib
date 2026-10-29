@@ -64,7 +64,7 @@ strategy:
   hold_thresh: 1
   initial_buy_count: null
   force_sell_rank: 100
-  risk_degree: 0.9
+  risk_degree: 1.0
   only_tradable: false
   forbid_all_trade_at_limit: false
   execution_policy: post_sell_cash_v1

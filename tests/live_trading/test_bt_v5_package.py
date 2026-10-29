@@ -23,6 +23,7 @@ LIVE = ROOT / "live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml"
 def test_deployment_package_passes_parity_and_is_offline_by_default():
     config = load_live_config(LIVE)
     validate_configured_backtest(config, ROOT)
+    assert config["strategy"]["risk_degree"] == 1.0
     assert config["live"]["bridge_root"] == "live_trading/data/bt_v5_offline_bridge"
     assert config["monitor"]["notify"]["channel"] == "none"
     assert (
@@ -33,7 +34,7 @@ def test_deployment_package_passes_parity_and_is_offline_by_default():
 
 @pytest.mark.parametrize(
     "field,value",
-    [("force_sell_rank", None), ("risk_degree", 1.0), ("initial_buy_count", 1)],
+    [("force_sell_rank", None), ("risk_degree", 0.9), ("initial_buy_count", 1)],
 )
 def test_execution_critical_drift_rejected(field, value):
     config = load_live_config(LIVE)

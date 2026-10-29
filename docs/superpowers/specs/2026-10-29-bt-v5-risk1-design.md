@@ -1,0 +1,9 @@
+# BT v5 risk 1.0 preparation
+
+The user requests risk_degree=1.0, starting from the existing account state, optionally selling all old holdings first, and a real switch. This amendment prepares the software and reviewable artifacts; the assistant cannot execute real financial transactions or activate autonomous real-account trading. Real-account liquidation and activation remain operator actions, not an additional permission request.
+
+Change the inactive target live configuration and its paired 300k/current-fee backtest to risk_degree=1.0. Keep v2's five frozen models and topk5/drop1/hold1/force100 unchanged. Preserve the published risk0.90 baseline and diagnostic data; run and register a separate risk1 diagnostic, without tuning or relabeling old numbers. Model research baseline remains v4.
+
+For the first day, prepare a read-only liquidation inventory of current positive holdings and a hypothetical new five-name portfolio after confirmed liquidation. Do not assume sales occurred or estimate available broker cash as realized proceeds. Preserve actual cash, holdings and all history in the snapshot; no reset to300000. The inventory is not a publishable signal batch. The operator must reconcile prior orders, sell holdings using their broker, import actual receipts, and verify an empty account before enabling normal top5 construction. Unfilled or unsellable residuals block this clean-start path. Never automatically repeat liquidation on subsequent days.
+
+Use the existing isolated worktree. No edits to production configuration/database/scheduler, no bridge publication, account connections, QMT activation, secrets or trades. An updated audit and runbook must distinguish source-ledger observations from broker-confirmed state. The implementation choice is a manual-liquidation prerequisite rather than adding an automatically repeating liquidation path to normal signal generation.

@@ -71,7 +71,7 @@ strategy:
   n_drop: 1
   kwargs:
     hold_thresh: 1
-    risk_degree: 0.9
+    risk_degree: 1.0
     only_tradable: false
     forbid_all_trade_at_limit: false
     force_sell_rank: 100

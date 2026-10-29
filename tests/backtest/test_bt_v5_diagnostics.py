@@ -137,6 +137,9 @@ def test_failed_attempt_registration_preserves_existing_rows(tmp_path, monkeypat
     record = json.loads(registry.read_text().splitlines()[-1])
     assert record["exp_id"] == "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1"
     assert record["state"] == "failed" and record["metrics"] == {}
+    assert record["detail_report"] == (
+        "backtest/experiments/phase_m_v1_bt_v5_cutover_risk1_failed_1.html"
+    )
     assert (
         json.loads((tmp_path / record["eval_output"]).read_text())["ensemble"][
             "full_period"

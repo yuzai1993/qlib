@@ -101,7 +101,9 @@ def register_failure(result, summary, *, attempt):
         "risk_degree": summary["risk_degree"],
         "data_version": summary["requested_end"],
         "eval_output": relative_output,
-        "detail_report": str(output.with_suffix(".html").relative_to(ROOT)),
+        "detail_report": identity["detail_report"].replace(
+            "_diagnostic.html", f"_failed_{attempt}.html"
+        ),
         "source_summary": str((dest / "summary.json").relative_to(ROOT)),
         "config_path": "backtest/configs/alla_v2_top5d1f100_parity.yaml",
         "result_dirs": [str(result.relative_to(ROOT))],

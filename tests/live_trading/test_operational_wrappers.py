@@ -428,7 +428,7 @@ def test_monitor_launch_agent_owns_loopback_service():
         "-m", "quant_platform",
         "--project-root", "/Users/yuxianqi/Project/qlib",
         "--live-config",
-        "alla_v4_ladder_k1h5_postclose_real",
+        "alla_v2_top5d1f100_postclose_real_active",
         "--data-root", "/Users/yuxianqi/.qlib/research_platform/analyses",
         "--port", "8090",
     ]
@@ -891,12 +891,14 @@ def test_publish_wrappers_preserve_explicit_confirmation_across_env_unset(
 
 
 def test_wrappers_are_configurable_and_default_to_real_system():
-    for name in WRAPPERS:
+    for name in WRAPPERS + ["run_scheduler_cron.sh", "run_web_service.sh"]:
         text = (REPO_ROOT / "live_trading" / name).read_text(encoding="utf-8")
-        assert "alla_v4_ladder_k1h5_postclose_real" in text
+        assert "alla_v2_top5d1f100_postclose_real_active" in text
+        assert ":-alla_v4_ladder_k1h5_postclose_real" not in text
         assert "LIVE_CONFIG_ID" in text
         assert "QLIB_LIVE_CONFIG_ID" in text
-        assert "LOCK_DIR" in text
+        if name in WRAPPERS:
+            assert "LOCK_DIR" in text
         assert 'CONFIG_ID="csi300_topk10_live"' not in text
 
 
@@ -932,7 +934,7 @@ def test_crontab_uses_one_durable_scheduler_entry():
 
     assert commands == [
         "30 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/"
-        "run_scheduler_cron.sh alla_v4_ladder_k1h5_postclose_real"
+        "run_scheduler_cron.sh alla_v2_top5d1f100_postclose_real_active"
     ]
     assert "run_publish_catchup_cron.sh" not in text
 

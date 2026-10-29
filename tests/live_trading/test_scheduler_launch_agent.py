@@ -31,10 +31,12 @@ def test_launch_agent_runs_existing_pipeline_in_gui_session_at_production_time()
     assert agent["ProgramArguments"] == [
         "/usr/bin/caffeinate", "-i", "/bin/bash",
         "/Users/yuxianqi/Project/qlib/live_trading/run_scheduler_launchd.sh",
-        "alla_v4_ladder_k1h5_postclose_real",
+        "alla_v2_top5d1f100_postclose_real_active",
     ]
     assert agent["StandardOutPath"].endswith("_scheduler.stdout.log")
     assert agent["StandardErrorPath"].endswith("_scheduler.stderr.log")
+    assert "alla_v2_top5d1f100_postclose_real_active" in agent["StandardOutPath"]
+    assert "alla_v2_top5d1f100_postclose_real_active" in agent["StandardErrorPath"]
 
 
 @pytest.mark.parametrize("stamp,should_run", [

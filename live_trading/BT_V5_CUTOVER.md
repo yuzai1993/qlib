@@ -1,12 +1,18 @@
-# BT v5 离线交付与实盘切换说明
+# BT v5 交付与实盘切换记录
 
-2026-10-30更新：用户确认10月30日为目标交易日，实际可用现金244,607元、持仓为0、无活动委托，Windows旧QMT已停用。状态：**代码已合入生产目录main；实盘新调度和发布尚未启用**。本交付包含离线配置、验证和人工操作清单；助手不执行真实买卖或启用账户自动交易。
+2026-10-30更新：用户确认10月30日为目标交易日，实际可用现金244,607元、持仓为0、无活动委托，Windows旧QMT已停用。00:48按用户要求**重新生成10月29日信号并一次性发布10月30日新版批次** `20261030_alla_v2_top5d1f100_postclose_real_002`，5买0卖，原子写入共享 `inbox` 并逐字节校验。审计为 `live_trading/logs/bt_v5_published_20261030.json`。**后续已按用户要求启用Mac工作日20:00生产调度，Windows执行器与任务仍由操作者配置启动。**
 
-准备分支 `codex/bt-v5-top5-cutover` 的12个提交已快进合入 `/Users/yuxianqi/Project/qlib` 的 `main`（集成提交为 `5e3fe6ad`）。原工作区 `/Users/yuxianqi/.codex/worktrees/bt-v5-top5-cutover/qlib` 暂保留审计资料。新配置仍使用本地离线桥，实际账本未改写，不能把代码合入视为已接管实盘。
+01:12调度及监控验证记录为 `live_trading/logs/bt_v5_services_enabled_20261030.json`。LaunchAgent显式使用 `_active` 配置，`RunAtLoad=false`、`KeepAlive=false`，注册后运行次数0；第一场定时触发为10月30日20:00，生成11月2日信号。日报与告警沿用Server酱通道。监控默认读取新版账本，右上角可切换历史账本；已验证新002批次5笔计划、现金244607元、切换隔离及数据库/WAL未被监控改写。
+
+同日修复执行计划缺少股票名称：一次性发布时新账本尚未刷新名称缓存，现已通过现有Tushare刷新脚本补齐5919条名称，并在浏览器确认5笔计划的代码与名称。刷新前后其余18张表的数据哈希完全一致，未重发批次或修改现金及委托。审计为 `live_trading/logs/top5_names_repair_20261030.json`，页面截图为同名PNG；日常调度已有名称刷新步骤。
+
+用户选择继续剪贴板通信，已补齐 `topk-cash-v1` 能力、卖单终态门禁、卖后现金与持仓名额冻结、重启去重和Mac回执导入。部署包位于共享 `strategy/bt_v5_clipboard_20261030`（Windows `D:\qmt_bridge\strategy\bt_v5_clipboard_20261030`）；完整安装、只读验收与任务配置见 [新版Top5剪贴板部署](qmt_strategy/README_TOPK_CLIPBOARD.md)。最终本地实盘回归1424通过；15项旧v4原始模型导出测试因本机缺少训练产物单独排除，完整首轮的失败原因已保存。真实Windows往返与券商字段仍须现场验收。
+
+准备分支 `codex/bt-v5-top5-cutover` 的12个提交已快进合入 `/Users/yuxianqi/Project/qlib` 的 `main`（集成提交为 `5e3fe6ad`）。原工作区 `/Users/yuxianqi/.codex/worktrees/bt-v5-top5-cutover/qlib` 暂保留审计资料。原准备配置仍指向本地暂存桥；新增操作配置 `configs/alla_v2_top5d1f100_postclose_real_active.yaml` 指向 `/Volumes/qmt_bridge`，与准备配置共享新策略ID及独立账本。新账本保留原始资本30万元参考，通过明确记录的交接现金校正-55393元得到244607元，未伪造成交或改动旧账本；审计为 `live_trading/logs/bt_v5_1030_handoff.json`。收益基点按新策略交接余额设置，旧收益历史保留在旧库。
 
 Mac旧策略LaunchAgent `com.yuxianqi.qlib-live-scheduler` 已禁用并卸载。旧10月30日批次 `20261030_alla_v4_ladder_k1h5_postclose_real_001` 的 `.done` 与 `.jsonl` 已从共享 `inbox` 移入 `/Volumes/qmt_bridge/quarantine/20261030T002153+0800_old_1030_disabled/`，逐文件SHA校验一致；本地记录为 `live_trading/logs/old_1030_withdrawal_20261030.json`。这只证明共享入口已撤下，不撤销Windows本地journal、已有剪贴板请求或券商委托；旧QMT继续保持停止，Windows任务与手动中转进程还须停用。
 
-按用户确认状态生成的离线核对文件为 `backtest/result/bt_v5_operator_preview_20261030/offline_review.json`：信号日2026-10-29、目标日2026-10-30、现金假设244,607元、空仓、risk=1.0。文件包含5个模型候选和预算参考，`publishable=false`、`ready_for_activation=false`，不含可提交批次、委托ID、价格或数量；未把旧账本持仓直接记为已卖出，也未重置账户历史。原始资金300,000元与当前可用现金244,607元是不同口径。
+此前的离线核对文件 `backtest/result/bt_v5_operator_preview_20261030/offline_review.json` 保留为历史预览，仍为 `publishable=false`。本次正式批次使用新跑的五模型评分，5216只、过滤后4934只，5个买入候选与原预览一致；执行价格与股数由新版relay在窗口内查询真实账户后确定。原始资金300,000元与当前可用现金244,607元是不同口径。
 
 ## 停止Windows旧中转
 
@@ -86,6 +92,8 @@ risk=1.0复算结果：历史1454日CAGR37.23%、夏普1.209、最大回撤−33
 
 QMT源版本须为 `2026-10-29-topk-cash-v1` 或经验证的后续版。模板保留 `MAX_ORDER_QUANTITY=100` 的保守缺省，不能直接当正式部署件使用，否则整仓卖出和买入会被截为100股。部署渲染应使用现有 `render_main_source` 的 `max_order_quantity=0`（移除固定股数上限，仍受新现金预算与5只持仓上限约束）、`execution_profile=CLOSE_AUCTION`，并关闭阶梯净额抵销。账户绑定在操作者本地完成；本次没有读取账户密钥或生成已绑定真实账户的运行件。
 
+上段版本与渲染参数只适用于文件桥。本次用户选定的剪贴板执行器使用 `qmt_clipboard.py`，版本为 `2026-10-30-topk-cash-clipboard-v1`，配合新版relay/automation；无需运行上述文件桥渲染命令。共享包的 `ACCOUNT_ID` 保持为空，由操作者在QMT本地填写。
+
 ## 清仓前账本审计（10月29日历史）
 
 本节保留清仓前证据，不代表用户10月30日确认的当前账户状态。最新空仓/现金假设见开头的离线核对文件；原账本没有据口头余额回填或伪造成交。审计目录已按逐文件哈希复制到生产根，原工作区副本保留。
@@ -106,7 +114,7 @@ QMT源版本须为 `2026-10-29-topk-cash-v1` 或经验证的后续版。模板�
 
 ## 人工启用与回退顺序
 
-本次交付停留在离线准备。真实交易和调度切换由操作者完成，顺序如下：
+以下为最初交付的切换检查顺序；当前一次性发布状态以本文开头记录为准。Windows真实交易启用和后续自动调度切换由操作者完成：
 
 1. 停止旧策略继续生成和执行订单，核对旧策略已发布批次与券商活动委托。停止Mac调度不等于撤销已经发布或提交的订单；须确认旧批次不会随后被执行。
 2. 在券商端确认实际持仓与可卖数量，再按本次清仓选择处理全部旧持仓。停牌、不可卖或部分成交留下的任何正持仓都阻断“清仓后重建”路径，不能在账本中先记为已卖出。

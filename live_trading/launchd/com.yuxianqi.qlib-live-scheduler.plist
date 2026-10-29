@@ -12,7 +12,7 @@
         <string>-i</string>
         <string>/bin/bash</string>
         <string>/Users/yuxianqi/Project/qlib/live_trading/run_scheduler_launchd.sh</string>
-        <string>alla_v4_ladder_k1h5_postclose_real</string>
+        <string>alla_v2_top5d1f100_postclose_real_active</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/yuxianqi/Project/qlib</string>
@@ -56,8 +56,8 @@
     <key>KeepAlive</key>
     <false/>
     <key>StandardOutPath</key>
-    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/alla_v4_ladder_k1h5_postclose_real_scheduler.stdout.log</string>
+    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/alla_v2_top5d1f100_postclose_real_active_scheduler.stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/alla_v4_ladder_k1h5_postclose_real_scheduler.stderr.log</string>
+    <string>/Users/yuxianqi/Project/qlib/live_trading/logs/alla_v2_top5d1f100_postclose_real_active_scheduler.stderr.log</string>
 </dict>
 </plist>

@@ -7,4 +7,4 @@ PATH=/opt/anaconda3/envs/qlib/bin:/usr/local/bin:/usr/bin:/bin
 
 # One 22:30 trigger runs postclose -> publish -> evening serially and records
 # one atomic attempt receipt per stage. Failed stages remain manual recovery.
-30 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_scheduler_cron.sh alla_v4_ladder_k1h5_postclose_real
+30 22 * * 1-5 /Users/yuxianqi/Project/qlib/live_trading/run_scheduler_cron.sh alla_v2_top5d1f100_postclose_real_active

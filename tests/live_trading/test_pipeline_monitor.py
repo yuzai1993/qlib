@@ -980,6 +980,29 @@ def test_future_dates_do_not_leak_into_the_streak_window():
     assert "FILL_RATIO_STREAK" not in _rules(findings)
 
 
+def test_evening_recovery_uses_active_config_but_queries_strategy_id(monkeypatch, tmp_path):
+    strategy = "alla_v2_top5d1f100_postclose_real"
+    active = strategy + "_active"
+    queried = []
+
+    class Recorder:
+        def get_execution_state(self, strategy_id):
+            queried.append(("state", strategy_id))
+            return {"state": "ACTIVE"}
+
+        def get_active_batches_by_date(self, date, *, strategy_id):
+            queried.append(("batches", strategy_id))
+            return []
+
+    monkeypatch.setattr(run_monitor, "next_open_date", lambda date: "2026-11-02")
+    findings = run_monitor.run_evening("2026-10-30", Recorder(), {
+        "_config_id": active,
+        "live": {"strategy_id": strategy, "bridge_root": str(tmp_path)},
+    })
+    assert queried == [("state", strategy), ("batches", strategy)]
+    assert any("run_publish_catchup_cron.sh " + active in row.message for row in findings)
+
+
 def _report_recorder(tmp_path, fills):
     """一个只够 run_report 跑通的账本：一个 LIVE 批次 + 直接落库的回执。
 

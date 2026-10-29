@@ -120,14 +120,15 @@ def fetch_benchmark_close(benchmark: str, date: str):
 def run_evening(date, recorder, config) -> list:
     """检查今晚是否已为 Tushare 解析出的下一开市日发布批次。"""
     next_day = next_open_date(date)
-    config_id = validate_identifier(config["live"]["strategy_id"], "strategy_id")
+    strategy_id = validate_identifier(config["live"]["strategy_id"], "strategy_id")
+    config_id = validate_identifier(config.get("_config_id", strategy_id), "config")
     get_state = getattr(recorder, "get_execution_state", None)
     execution_state = (
-        get_state(config_id) if get_state is not None else {"state": "ACTIVE"}
+        get_state(strategy_id) if get_state is not None else {"state": "ACTIVE"}
     )
-    audit_preview = _load_audit_preview(config_id, next_day)
+    audit_preview = _load_audit_preview(strategy_id, next_day)
     candidates = recorder.get_active_batches_by_date(
-        next_day, strategy_id=config_id,
+        next_day, strategy_id=strategy_id,
     )
     if not candidates:
         return check_evening(

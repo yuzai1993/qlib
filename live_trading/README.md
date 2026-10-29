@@ -1,6 +1,30 @@
-# 全A v4 观察实盘（top1 × h5）
+# 全A Top5 生产实盘
 
-当前活动系统是 `alla_v4_ladder_k1h5_postclose_real`。模型是 v4 五种子 RankIC ES
+2026-10-30已切换Mac生产调度到 `alla_v2_top5d1f100_postclose_real_active`：历史v2五种子模型、Topk5/drop1/hold1/跌出前100强卖、risk=1.0。实际策略ID为 `alla_v2_top5d1f100_postclose_real`，独立账本为 `live_trading/data/alla_v2_top5d1f100_postclose_real.db`，共享根为 `/Volumes/qmt_bridge`。交接现金244607元、空仓，原30万元资本与旧账本历史保留。
+
+现网复用 `com.yuxianqi.qlib-live-scheduler`，工作日20:00运行原有 postclose→publish→evening 流程，含回执导入、行情更新、日报及Server酱告警。安装不会立即运行。首次定时触发为10月30日20:00，生成下一开市日11月2日的信号；已经发布的1030新版002批次不重复生成。
+
+监控在 `http://127.0.0.1:8090`，右上角“账本”默认选择“全A Top5 · 新版”，可切换旧阶梯和CSI1000历史账本；全部账本查询只读。新账本没有首份盘后快照时仍显示现金和待执行计划，净值待首次日报生成。Windows继续使用[新版剪贴板QMT与relay](qmt_strategy/README_TOPK_CLIPBOARD.md)。
+
+股票名称缓存在各自账本的 `stock_names` 表。新建账本后首次手工发布前，应加载 `~/.qlib_live_env`，运行 `/opt/anaconda3/envs/qlib/bin/python live_trading/scripts/refresh_stock_names.py --config alla_v2_top5d1f100_postclose_real_active`；日常盘后流水线已有名称刷新步骤。10月30日已补齐新账本5919条名称，执行计划的5只股票均已在页面核验，其他18张表的数据未改变。
+
+Top5买单的“按可用现金分配”表示：卖单全部终态后，由Windows读取券商快照，一次冻结每只预算为“券商可用现金 × risk / 实际候选数”，再按报价、手续费和整手计算股数；不会在每笔成交后重新平分余额。Mac账本用于展示和核算，未必包含执行时的冻结款、转账及未同步成交。此次空仓、5只候选、risk=1，若券商现金仍为244607元，每只预算为48921.40元；该数值是当前条件下的预算，最终以执行时快照为准。
+
+当前人工命令均使用显式操作配置：
+
+```bash
+launchctl print gui/$(id -u)/com.yuxianqi.qlib-live-scheduler
+bash live_trading/run_import_cron.sh alla_v2_top5d1f100_postclose_real_active
+bash live_trading/run_monitor_cron.sh report alla_v2_top5d1f100_postclose_real_active
+# 仅在查明阶段缺失、确认没有并发任务后人工恢复：
+bash live_trading/run_scheduler_cron.sh alla_v2_top5d1f100_postclose_real_active
+```
+
+部署与验证记录：`live_trading/logs/bt_v5_services_enabled_20261030.json`。原plist和本机环境文件的私有备份路径记录在其中。新版调度日志为 `live_trading/logs/alla_v2_top5d1f100_postclose_real_active_scheduler.{stdout,stderr}.log`。详细交接见 [BT v5切换记录](BT_V5_CUTOVER.md)。
+
+## 旧阶梯运行说明（历史留档，当前生产以上文为准）
+
+此前活动系统是 `alla_v4_ladder_k1h5_postclose_real`。模型是 v4 五种子 RankIC ES
 日截面 z-score 等权，执行是收盘集合竞价 `prType=11`：竞价前提交，买单按最后成交价
 上浮 0.2%，卖单按下浮 0.2%，再夹到当日涨跌停。策略先用 **top1 × horizon=5、
 仓位 100%、期初 30 万** 观察；稳定后再切回 100 万的

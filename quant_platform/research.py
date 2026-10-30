@@ -15,6 +15,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from backtest.scripts.experiment_registry import decode_registry_line
+from backtest.scripts.research_layout import research_path_identity
+
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
 WINDOW = ["2020-08-03", "2026-07-31"]
@@ -128,6 +131,7 @@ class ResearchCatalog:
         self.root = Path(root).expanduser().resolve()
         self.registry = self.root / "backtest/experiments/registry.jsonl"
         self._resources: dict[str, str] = {}
+        self._registry_detail_checks: dict[str, str] = {}
 
     def _safe_path(self, rel: Any) -> Path | None:
         if not isinstance(rel, str) or not rel or "\\" in rel or "\x00" in rel:
@@ -163,6 +167,12 @@ class ResearchCatalog:
         if rel is None:
             return None
         path = self._safe_path(rel)
+        detail_index = self._registry_detail_checks.get(resource_id)
+        if detail_index is not None:
+            try:
+                decode_registry_line(detail_index, self.registry)
+            except (OSError, ValueError, TypeError, UnicodeError):
+                return None
         return path if path and path.is_file() else None
 
     def _load(self, rel: Any, warnings: list[str]) -> tuple[dict, str]:
@@ -188,6 +198,10 @@ class ResearchCatalog:
         warnings: list[str] = []
         rows = []
         self._resources = {}
+        self._registry_detail_checks = {}
+        detail_rows: dict[int, tuple[str, str]] = {}
+        invalid_ids: set[str] = set()
+        details_valid = True
         registry = self._safe_path("backtest/experiments/registry.jsonl")
         try:
             if registry is None or not registry.is_file():
@@ -197,18 +211,35 @@ class ResearchCatalog:
             for line_no, line in enumerate(registry.read_text(encoding="utf-8").splitlines(), 1):
                 if not line.strip():
                     continue
+                index = None
                 try:
-                    row = json.loads(line)
-                    if not isinstance(row, dict) or not isinstance(row.get("exp_id"), str):
+                    index = json.loads(line)
+                    if not isinstance(index, dict) or not isinstance(index.get("exp_id"), str):
                         raise ValueError("实验记录必须有字符串 exp_id")
+                    row = decode_registry_line(line, registry)
+                    if "_registry_schema" in index:
+                        rel = (registry.relative_to(self.root).parent / index["detail_path"]).as_posix()
+                        if self._safe_path(rel) is None:
+                            raise ValueError("登记详情路径不在允许范围内")
+                        detail_rows[id(row)] = (rel, line)
                     rows.append(row)
-                except (ValueError, TypeError) as exc:
+                    invalid_ids.discard(row["exp_id"])
+                except (OSError, ValueError, TypeError, UnicodeError) as exc:
+                    if isinstance(index, dict) and any(
+                        key in index for key in ("_registry_schema", "detail_path", "detail_sha256")
+                    ):
+                        details_valid = False
+                        if isinstance(index.get("exp_id"), str):
+                            invalid_ids.add(index["exp_id"])
                     warnings.append(f"registry 第 {line_no} 行无效：{exc}")
         except (OSError, ValueError, UnicodeError) as exc:
             warnings.append(f"研究索引不可读：{exc}")
 
         by_id = {}
         for row in rows:
+            # A broken newer event must never make an older event look current.
+            if row["exp_id"] in invalid_ids:
+                continue
             kind = (
                 "model"
                 if row.get("phase_m_protocol") == "v1"
@@ -217,7 +248,15 @@ class ResearchCatalog:
             if kind:
                 if row["exp_id"] in by_id:
                     warnings.append(f"重复 exp_id，采用最后记录：{row['exp_id']}")
-                by_id[row["exp_id"]] = self._record(row, kind)
+                record = self._record(row, kind)
+                detail = detail_rows.get(id(row))
+                if detail:
+                    rel, line = detail
+                    resource = self._resource(rel, "registry_record")
+                    if resource:
+                        record["resources"].append(resource)
+                        self._registry_detail_checks[resource["id"]] = line
+                by_id[row["exp_id"]] = record
         records = list(by_id.values())
         promotions: dict[str, list[dict]] = {}
         for record in records:
@@ -244,8 +283,10 @@ class ResearchCatalog:
             baseline = [r for r in records if r["kind"] == kind and r["is_baseline"]]
             explicit = [r for r in baseline if r.pop("_explicit_current", False)]
             current = max(explicit or baseline, key=lambda r: _version(r["version"]), default=None)
-            if current:
+            if current and details_valid:
                 current["current"] = True
+        if not details_valid:
+            warnings.append("研究登记详情校验失败，暂停当前基线标识；修复详情后自动恢复")
         for record in records:
             record.pop("_explicit_current", None)
         records.sort(
@@ -552,6 +593,18 @@ class ResearchCatalog:
                 protocol[key] = number
             else:
                 protocol["fees"][key] = number
+        if kind == "strategy":
+            def benchmark_identity(value: Any) -> Any:
+                if isinstance(value, dict):
+                    return {key: benchmark_identity(child) for key, child in value.items()}
+                if isinstance(value, list):
+                    return [benchmark_identity(child) for child in value]
+                return research_path_identity(value, self.root) if isinstance(value, str) else value
+
+            # Relocating an explicitly registered benchmark file must not
+            # create a different evaluation protocol. Keep original source
+            # documents and resource paths unchanged outside this hash input.
+            protocol["benchmark"] = benchmark_identity(protocol["benchmark"])
         # Stringifying preserves a stable, inspectable key without emitting
         # non-finite numeric values in the public JSON response.
         encoded = json.dumps(_canonical(protocol), sort_keys=True, ensure_ascii=False, allow_nan=False)

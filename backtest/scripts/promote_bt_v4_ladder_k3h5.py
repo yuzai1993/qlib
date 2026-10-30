@@ -13,6 +13,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "backtest" / "experiments" / "registry.jsonl"
 SOURCE = ROOT / "backtest" / "result" / "phase_s_regime" / "all_ladder_k3h5" / "m0h20rankices.json"
@@ -35,7 +53,7 @@ METRIC_KEYS = (
 
 
 def main() -> None:
-    doc = json.loads(SOURCE.read_text())["ensemble"]
+    doc = json.loads(_resolve_research_path(SOURCE, _RESEARCH_ROOT).read_text())["ensemble"]
     fp = doc["full_period"]
     metrics = {k: fp[k] for k in METRIC_KEYS if k in fp}
     y2026 = (doc.get("years") or {}).get("2026") or {}
@@ -66,7 +84,7 @@ def main() -> None:
             "日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31"
         ),
         "eval_output": "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json",
-        "detail_report": "backtest/experiments/phase_m_v1_bt_report.html",
+        "detail_report": "backtest/experiments/reports/phase_m_v1_bt_report.html",
         "metrics_source": "ensemble",
         "metrics": metrics,
         "ensemble_session": doc.get("session_dir"),
@@ -79,7 +97,7 @@ def main() -> None:
         ),
     }
 
-    rows = [json.loads(line) for line in REGISTRY.read_text().splitlines() if line.strip()]
+    rows = _load_registry_rows(REGISTRY)
     out = []
     demoted = False
     marked = False
@@ -103,9 +121,7 @@ def main() -> None:
             marked = True
         out.append(rec)
     out.append(entry)
-    REGISTRY.write_text(
-        "\n".join(json.dumps(r, ensure_ascii=False) for r in out) + "\n", encoding="utf-8"
-    )
+    _write_registry_rows(REGISTRY, out)
     print(
         f"已登记 {NEW_ID}（current_bt=True）；"
         f"{'已' if demoted else '未找到需'}摘除 {PREV_ID} 的 current_bt 标记；"

@@ -13,10 +13,18 @@ import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
+
 from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
 QLIB_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -263,7 +271,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         n_drop=args.n_drop,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
+    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )

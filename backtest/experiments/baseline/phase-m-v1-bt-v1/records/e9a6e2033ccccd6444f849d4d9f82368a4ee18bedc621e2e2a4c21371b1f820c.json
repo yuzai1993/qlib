@@ -1,0 +1,41 @@
+{
+  "exp_id": "baseline/phase-m-v1-bt-v1",
+  "direction": "phase-m-v1-bt",
+  "phase": "M",
+  "date": "2026-08-19",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt_baseline",
+  "bt_version": "v1",
+  "display_name": "M0 H20 top5d1",
+  "arm": "m0h20",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "修复后的 M0 H20 × top5d1 五种子均值信号单次回测，作为 Phase M v1 执行层对照锚点 BT v1",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5d1 account=1e6 | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top5d1/m0h20.json",
+  "detail_report": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+  "metrics_source": "ensemble",
+  "metrics": {
+    "annualized_return": 0.2247618555706936,
+    "sharpe_ratio": 0.8388149199056628,
+    "alpha": 0.1470704866423557,
+    "beta": 0.923734012339162,
+    "max_drawdown": -0.381931281425104,
+    "calmar_ratio": 0.5884876848317777,
+    "annualized_volatility": 0.2929042460649895,
+    "annualized_one_way_turnover": 49.20295527089292,
+    "n_days": 1454,
+    "annualized_return_arith": 0.24569245170303272,
+    "y2026_annualized_return": -0.16061765616432833
+  },
+  "ensemble_session": "backtest/result/20260821_210815_phase_s_m0h20_all_top5d1_ensemble_market_cn",
+  "baseline_ref": "self",
+  "note": "官方数字来自 ensemble，不是五种子算术平均；含执行层修复与日频 ST；ensemble 已按 market_cn 重跑",
+  "portable_eval_output": "backtest/experiments/baseline/phase-m-v1-bt-v1/metrics/all_top5d1_m0h20.json",
+  "current_bt": false
+}

@@ -1,18 +1,26 @@
 """生成 regime-adapt 阶段1（快筛）独立 HTML 报告。
 
 数据源：backtest/result/eval_regime_fast/eval_{m0fast,m3fast,b6m_ref}.json
-输出：backtest/experiments/regime_adapt_stage1_report.html
+输出：backtest/experiments/_shared/reports/regime_adapt_stage1_report.html
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
+
 import numpy as np
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_fast"
-OUT = EXP_ROOT / "backtest" / "experiments" / "regime_adapt_stage1_report.html"
+OUT = EXP_ROOT / "backtest" / "experiments" / "_shared" / "reports" / "regime_adapt_stage1_report.html"
 
 ARMS = [
     ("b6m_ref", "B6-M 参考行", "DoubleEnsemble lr=0.10（现役冻结产物），csi1000 池 2016-2020 窗，直接在新协议窗推理"),
@@ -44,7 +52,7 @@ def seed_mean(rec_list, path):
 
 
 def main():
-    data = {k: json.loads((EVAL_DIR / f"eval_{k}.json").read_text()) for k, _, _ in ARMS}
+    data = {k: json.loads((_resolve_research_path(EVAL_DIR / f"eval_{k}.json", _RESEARCH_ROOT)).read_text()) for k, _, _ in ARMS}
 
     # ---- 各臂全A seeds 记录 ----
     all_seeds = {k: data[k]["pools"]["all"]["seeds"] for k, _, _ in ARMS}
@@ -98,7 +106,7 @@ def main():
     H = []
     H.append(f"<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'><title>regime-adapt 阶段1 快筛报告</title><style>{css}</style></head><body><div class='wrap'>")
     H.append("<h1>regime-adapt 阶段1（快筛）实验报告</h1>")
-    H.append("<p class='meta'>生成 2026-08-13 ｜ 计划 <code>backtest/experiments/plans/20260809_regime_adaptation_plan.md</code>（12.1/12.2 节）｜ "
+    H.append("<p class='meta'>生成 2026-08-13 ｜ 计划 <code>backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md</code>（12.1/12.2 节）｜ "
              "registry：<code>regime-adapt/m0-fast-anchor</code>、<code>regime-adapt/m3-fast-feat-sample</code>、<code>regime-adapt/b6m-reference</code></p>")
 
     # 协议
@@ -201,7 +209,7 @@ def main():
     H.append("</ul></div>")
 
     H.append("</div></body></html>")
-    OUT.write_text("\n".join(H), encoding="utf-8")
+    _resolve_research_path(OUT, _RESEARCH_ROOT).write_text("\n".join(H), encoding="utf-8")
     print("written:", OUT)
 
 

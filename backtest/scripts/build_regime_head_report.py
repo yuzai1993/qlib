@@ -12,6 +12,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_head_v3"
 PREV_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_head_v2"
@@ -20,7 +27,7 @@ PREV_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_head_v2"
 IR_METRIC = "appraisal_ir"
 ANN_METRIC = "ann_alpha"
 NET_METRIC = "net_ann_alpha"
-OUT = EXP_ROOT / "backtest" / "experiments" / "regime_adapt_head_eval_report.html"
+OUT = EXP_ROOT / "backtest" / "experiments" / "regime-adapt" / "head-eval-audit" / "reports" / "regime_adapt_head_eval_report.html"
 
 # (key, 显示名, 说明, 训练标签期限)
 ARMS = [
@@ -40,7 +47,7 @@ REGS = ["D", "F", "T"]
 
 def load_arm(key: str, root: Path = EVAL_DIR):
     path = root / f"eval_{key}.json"
-    return json.loads(path.read_text()) if path.exists() else None
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text()) if _resolve_research_path(path, _RESEARCH_ROOT).exists() else None
 
 
 def seed_mean(rec):
@@ -461,7 +468,7 @@ def main():
     H.append("<li>早停轮数在评估窗上选择（用户 2026-08-09 批准的 valid=test），各臂口径一致但绝对 IR 偏乐观。</li>")
     H.append(f"<li>JSON：<code>{EVAL_DIR.relative_to(EXP_ROOT)}/eval_*.json</code>（v1 对比：<code>{PREV_DIR.relative_to(EXP_ROOT)}/</code>）</li>")
     H.append("</ul></div></div></body></html>")
-    OUT.write_text("\n".join(H), encoding="utf-8")
+    _resolve_research_path(OUT, _RESEARCH_ROOT).write_text("\n".join(H), encoding="utf-8")
     print("written:", OUT)
 
 

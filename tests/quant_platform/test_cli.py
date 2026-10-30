@@ -9,11 +9,11 @@ from fastapi.testclient import TestClient
 from quant_platform import __main__ as cli
 
 
-def test_cli_defaults_to_original_project_and_external_persistent_archive():
+def test_cli_defaults_to_original_project_and_research_diagnostics_archive():
     args = cli.build_parser().parse_args([])
     assert args.project_root == Path(__file__).resolve().parents[2]
     assert args.live_config == "alla_v2_top5d1f100_postclose_real_active"
-    assert args.data_root == Path.home() / ".qlib/research_platform/analyses"
+    assert args.data_root is None
     assert args.port == 8090
     assert not hasattr(args, "monitor_url")
 
@@ -29,8 +29,9 @@ def test_cli_accepts_an_explicit_historical_live_configuration():
     ("custom_project", "explicit_research"),
     [(False, False), (True, False), (True, True)],
 )
+@pytest.mark.parametrize("custom_data", [False, True])
 def test_main_uses_project_root_for_research_unless_explicitly_overridden(
-    tmp_path, monkeypatch, custom_project, explicit_research
+    tmp_path, monkeypatch, custom_project, explicit_research, custom_data
 ):
     default_project = tmp_path / "default-project"
     project = tmp_path / "custom-project" if custom_project else default_project
@@ -41,7 +42,9 @@ def test_main_uses_project_root_for_research_unless_explicitly_overridden(
     )
     research = tmp_path / "research" if explicit_research else project
     research.mkdir(exist_ok=True)
-    arguments = ["quant_platform", "--data-root", str(tmp_path / "archive")]
+    arguments = ["quant_platform"]
+    if custom_data:
+        arguments.extend(["--data-root", str(tmp_path / "archive")])
     if custom_project:
         arguments.extend(["--project-root", str(project)])
     if explicit_research:
@@ -63,3 +66,4 @@ def test_main_uses_project_root_for_research_unless_explicitly_overridden(
 
     assert len(health_responses) == 1
     assert health_responses[0]["research_root"] == str(research)
+    assert health_responses[0]["analysis_storage"] == str(tmp_path / "archive" if custom_data else research / "backtest/diagnostics")

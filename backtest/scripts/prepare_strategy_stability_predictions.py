@@ -11,6 +11,11 @@ from typing import Any, Optional, Sequence
 
 import pandas as pd
 
+if __package__:
+    from .research_layout import resolve_research_path
+else:
+    from research_layout import resolve_research_path
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -23,7 +28,7 @@ FULL_END = "2026-07-31"
 
 
 def _load_frame(path: Path) -> pd.DataFrame:
-    frame = pd.read_pickle(path)
+    frame = pd.read_pickle(resolve_research_path(path, REPO_ROOT))
     if isinstance(frame, pd.Series):
         frame = frame.rename("score").to_frame()
     if not isinstance(frame, pd.DataFrame) or frame.shape[1] != 1:
@@ -40,8 +45,9 @@ def _load_frame(path: Path) -> pd.DataFrame:
 
 
 def _validate_source(path: Path, entry: dict[str, Any], frame: pd.DataFrame) -> None:
-    declared = Path(str(entry.get("path") or "")).expanduser()
-    if declared.resolve() != path.resolve():
+    declared = resolve_research_path(Path(str(entry.get("path") or "")).expanduser(), REPO_ROOT)
+    path = resolve_research_path(path, REPO_ROOT)
+    if declared != path:
         raise ValueError("prediction source path differs from manifest")
     if sha256_file(path) != entry.get("prediction_sha256"):
         raise ValueError(f"prediction source SHA mismatch: {path}")
@@ -132,8 +138,7 @@ def compose_prediction(
 
 
 def _source_path(entry: dict[str, Any]) -> Path:
-    path = Path(entry["path"]).expanduser()
-    return path if path.is_absolute() else REPO_ROOT / path
+    return resolve_research_path(Path(entry["path"]).expanduser(), REPO_ROOT)
 
 
 def prepare_bundles(
@@ -141,6 +146,7 @@ def prepare_bundles(
     output_root: Path,
     model_refs: Sequence[str],
 ) -> dict[str, Any]:
+    source_manifest_path = resolve_research_path(source_manifest_path, REPO_ROOT)
     source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
     entries = source_manifest.get("predictions") or []
     composed_entries = []
@@ -194,7 +200,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=REPO_ROOT / "backtest/experiments/strategy-stability/20260801_full_period",
+        default=REPO_ROOT / "backtest/experiments/_shared/phase-s",
     )
     parser.add_argument(
         "--model-ref",

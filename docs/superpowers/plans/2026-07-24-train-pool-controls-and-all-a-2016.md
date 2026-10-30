@@ -22,7 +22,7 @@
 ### Task 1: Add CSI300 2016 control configs
 
 **Files:**
-- Create: `backtest/configs/train-data/csi300-start2016/td_csi300_start2016_lgbm_s42.yaml`
+- Create: `backtest/experiments/train-data/csi300-start2016/configs/td_csi300_start2016_lgbm_s42.yaml`
 - Create the equivalent files for seeds `1000`, `2000`, `3000`, and `4000`.
 
 **Interfaces:**
@@ -56,7 +56,7 @@ Expected: all configs load, seeds match filenames, and only allowed fields diffe
 ### Task 2: Add all-A 2016 configs and collect pre-run evidence
 
 **Files:**
-- Create: `backtest/configs/train-data/all-start2016/td_all_start2016_lgbm_s42.yaml`
+- Create: `backtest/experiments/train-data/all-start2016/configs/td_all_start2016_lgbm_s42.yaml`
 - Create the equivalent files for seeds `1000`, `2000`, `3000`, and `4000`.
 - Create if required: `backtest/experiments/diagnostics/all_start2016_memory.md`
 
@@ -154,7 +154,7 @@ Expected: each pool has five seeds, `n_days > 0`, finite four main metrics, and 
 
 **Files:**
 - Modify: `backtest/experiments/registry.jsonl`
-- Modify: `backtest/experiments/report.html`
+- Modify: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Consumes: Task 4/5 outcomes.

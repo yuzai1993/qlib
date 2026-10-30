@@ -1,0 +1,137 @@
+{
+  "exp_id": "feature-b2/combined-l1low",
+  "direction": "feature-b2",
+  "phase": "M",
+  "date": "2026-07-26",
+  "hypothesis": "与combined同一组17特征，仅将lambda_l1由205.7降至51.4；检验\"基线强L1按158维调参、压制边际新特征\"假说——若明显优于combined(原L1)，说明正则不匹配是此前新特征失效的原因之一",
+  "baseline_ref": "B2 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "ratio",
+    "mastruct",
+    "range"
+  ],
+  "feature_count": 17,
+  "model_overrides": {
+    "lambda_l1": 51.425
+  },
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s42.yaml",
+    "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s1000.yaml",
+    "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s2000.yaml",
+    "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s3000.yaml",
+    "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260726_165520_fb2_combined_l1low_lgbm_s42",
+    "backtest/result/20260726_165651_fb2_combined_l1low_lgbm_s1000",
+    "backtest/result/20260726_165824_fb2_combined_l1low_lgbm_s2000",
+    "backtest/result/20260726_165956_fb2_combined_l1low_lgbm_s3000",
+    "backtest/result/20260726_170127_fb2_combined_l1low_lgbm_s4000",
+    "backtest/experiments/feature-b2/combined-l1low/metrics/fb2_combined_l1low_test_1d.json",
+    "backtest/experiments/feature-b2/combined-l1low/metrics/fb2_combined_l1low_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.01823943460545875,
+      "icir": 0.09521823741185818,
+      "rank_ic_mean": 0.03461719843821463,
+      "rank_icir": 0.17619362380767098,
+      "rank_ic_mean_std": 0.0010992105291494504
+    },
+    "csi500": {
+      "ic_mean": 0.014283194773257324,
+      "icir": 0.09073368775975825,
+      "rank_ic_mean": 0.034545751179134186,
+      "rank_icir": 0.22251463210224226,
+      "rank_ic_mean_std": 0.0012341832428451596
+    },
+    "csi1000": {
+      "ic_mean": 0.021025005379841005,
+      "icir": 0.15424508844084756,
+      "rank_ic_mean": 0.04171009847053272,
+      "rank_icir": 0.3082705094127464,
+      "rank_ic_mean_std": 0.0004677993265547976
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.01823943460545875,
+        "icir": 0.09521823741185818,
+        "rank_ic_mean": 0.03461719843821463,
+        "rank_icir": 0.17619362380767098,
+        "rank_ic_mean_std": 0.0010992105291494504
+      },
+      "csi500": {
+        "ic_mean": 0.014283194773257324,
+        "icir": 0.09073368775975825,
+        "rank_ic_mean": 0.034545751179134186,
+        "rank_icir": 0.22251463210224226,
+        "rank_ic_mean_std": 0.0012341832428451596
+      },
+      "csi1000": {
+        "ic_mean": 0.021025005379841005,
+        "icir": 0.15424508844084756,
+        "rank_ic_mean": 0.04171009847053272,
+        "rank_icir": 0.3082705094127464,
+        "rank_ic_mean_std": 0.0004677993265547976
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.0566184754353939,
+        "icir": 0.3045239500202598,
+        "rank_ic_mean": 0.07936469128404897,
+        "rank_icir": 0.4102323371168263,
+        "rank_ic_mean_std": 0.0019357996936027
+      },
+      "csi500": {
+        "ic_mean": 0.04109161869115954,
+        "icir": 0.28124391433828694,
+        "rank_ic_mean": 0.06979055204441477,
+        "rank_icir": 0.4638828153597842,
+        "rank_ic_mean_std": 0.0014147071018002478
+      },
+      "csi1000": {
+        "ic_mean": 0.06376993971664117,
+        "icir": 0.49518849180578217,
+        "rank_ic_mean": 0.09027915990110948,
+        "rank_icir": 0.6953743350884222,
+        "rank_ic_mean_std": 0.0016475386810928824
+      }
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b2": {
+    "n": 5,
+    "wins": 3,
+    "diff_mean": 4.199652499563972e-05,
+    "diffs": [
+      0.00010680843321454053,
+      -0.0005011308188980976,
+      -4.3703955988343146e-05,
+      0.0006217844335415501,
+      2.6224533108548664e-05
+    ]
+  },
+  "conclusion": "improve",
+  "note": "特征+lambda_l1联合变化，结论仅作正则敏感性参考，不单独归因于特征"
+}

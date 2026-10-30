@@ -49,7 +49,7 @@
 - Create: `tests/backtest/test_finalize_strategy_neighborhood.py`
 - Create during execution: `backtest/experiments/strategy_neighborhood_report.html`
 - Modify during execution: `backtest/experiments/registry.jsonl`
-- Modify during execution: `backtest/experiments/report.html`
+- Modify during execution: `backtest/experiments/reports/report.html`
 
 - [x] Write failing tests for the baseline-first HTML, B2-S baseline reference, frozen-winner identity, and immutable JSONL upsert.
 - [x] Run the focused tests and confirm RED.

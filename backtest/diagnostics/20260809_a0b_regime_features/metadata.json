@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "history-675f9799e21d255d496d",
+  "title": "A0b 阶段报告：Tier-1 regime 信号构造与领先性事件研究",
+  "status": "active",
+  "version": 0,
+  "created_at": "2026-08-09",
+  "updated_at": "2026-08-09",
+  "historical": true,
+  "tags": [
+    "历史分析"
+  ],
+  "related_experiments": [],
+  "report_path": "REPORT.md",
+  "report_sha256": "43f311d87f0ad07bac32a9ddb5f6bc3bb4b476e1d99b174928e62dd3628dee91",
+  "code_files": [
+    {
+      "name": "regime.py",
+      "path": "code/regime.py",
+      "sha256": "9e479dc1d5d5d1ca38a34b35d4b65d6416e4cd82518890c18fbb38c770bc564b",
+      "source": "backtest/features/regime.py"
+    },
+    {
+      "name": "build_regime_features.py",
+      "path": "code/build_regime_features.py",
+      "sha256": "dec155a15e4bfd61413c566adfb00a5321e83129a437d6623a5f5227f9dba018",
+      "source": "backtest/scripts/build_regime_features.py"
+    }
+  ],
+  "attachments_missing": [
+    "_tmp_a0b_event_study.py",
+    "backtest/scripts/_tmp_a0b_build_signals.py"
+  ]
+}

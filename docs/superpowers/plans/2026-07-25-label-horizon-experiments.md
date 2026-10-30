@@ -328,7 +328,7 @@ Do not change labels or hypotheses. Repair only implementation/runtime defects.
 **Files:**
 - Create: `backtest/experiments/ic/<variant>_test_{1d,self}.json`
 - Modify: `backtest/experiments/registry.jsonl`
-- Regenerate: `backtest/experiments/report.html`
+- Regenerate: `backtest/experiments/reports/report.html`
 
 - [ ] **Step 1: Evaluate every candidate on fixed one-day test labels**
 
@@ -370,6 +370,6 @@ then diagnostic rows.
 - [ ] **Step 8: Commit tracked results**
 
 ```bash
-git add backtest/experiments/registry.jsonl backtest/experiments/report.html backtest/experiments/ic
+git add backtest/experiments/registry.jsonl backtest/experiments/reports/report.html backtest/experiments/ic
 git commit -m "exp(backtest): evaluate label horizons"
 ```

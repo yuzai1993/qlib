@@ -1,0 +1,41 @@
+{
+  "exp_id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-21",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "M0 H20 ES top25 drop5 hold5（主格阶梯等价）",
+  "arm": "m0h20es",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "评估口径 ann = mean(p)×238/h 等价于「k·h 个等额仓位、每日 k 进 k 出、每只持满 h 天」的阶梯组合算术年化，k=5/h=5 即 25 槽、每日 5 进 5 出。 因此把执行层从 top5d1 换成 25 槽阶梯，应当在结构上对齐主格 top5×h5，把 2025/2026 的评估-回测缺口压下去（尤其 2026 的单票 20% 重仓风险摊薄到 4%）。",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top25d5h5/m0h20es.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v2",
+  "note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+  "metrics": {
+    "annualized_return": 0.24617713037402922,
+    "sharpe_ratio": 0.9927614111453632,
+    "alpha": 0.15370950426073215,
+    "beta": 0.9268252068053455,
+    "max_drawdown": -0.34097919402058063,
+    "calmar_ratio": 0.7219711193263323,
+    "annualized_volatility": 0.2545037470228683,
+    "annualized_one_way_turnover": 44.409088297205415,
+    "n_days": 1454,
+    "annualized_return_arith": 0.2526614990362053,
+    "y2026_annualized_return": -0.014998520378614377,
+    "y2026_annualized_return_arith": 0.01972275340783262
+  },
+  "ensemble_session": "backtest/result/20260821_234251_phase_s_m0h20es_all_top25d5h5_ensemble",
+  "conclusion": "假设不成立。全期 +24.6%/夏普 0.99/回撤 −34.1%，比 BT v2（+23.1%/0.86/−39.2%）稳，但 2026 从 +13.6% 掉到 −1.5%；算术口径 2026 只有 +2.0%，对主格 k5h5 的 +37.9% 差 36pp，是四个执行方案里最大的。直接原因（diag_entry_rank 实测）：25 槽占满后「未持有的最高分」在 2025/2026 中位名次 6~7、最差 18，入场篮子实际是 top20 而不是 top5；评估 head-k 阶梯显示 k=5→15 在 2026 本身就要付 7.6pp（+37.9%→+30.3%），剩余约 28pp 仍未归因。集中度不是 2026 缺口的主因，已排除。未晋升。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5-bt/metrics/all_top25d5h5_m0h20es.json"
+}

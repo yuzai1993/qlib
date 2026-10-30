@@ -1,8 +1,11 @@
 """Read-only catalog contracts, including deliberately misleading source metadata."""
 
 import json
+import os
+from datetime import datetime, timezone
 import pytest
 
+from backtest.scripts.experiment_registry import write_registry
 from quant_platform.research import ResearchCatalog
 
 
@@ -88,6 +91,45 @@ def catalog(tmp_path, rows, docs=None):
     return ResearchCatalog(tmp_path)
 
 
+def test_registered_benchmark_relocation_keeps_original_comparison_key(tmp_path):
+    old = "backtest/experiments/old-analysis/bench_ew_all.csv"
+    middle = "backtest/experiments/intermediate/bench_ew_all.csv"
+    current = "backtest/experiments/model/x/data/bench_ew_all.csv"
+    old_doc, new_doc = strategy_doc(), strategy_doc()
+    old_doc["benchmark"] = {"equal_weight_csv": old, "nested": {"audit_inputs": [old, "unregistered.csv"]}}
+    new_doc["benchmark"] = {"equal_weight_csv": current, "nested": {"audit_inputs": [middle, "unregistered.csv"]}}
+    rows = [row("bt/old", "strategy"), row("bt/new", "strategy", bt_version="v5")]
+    c = catalog(tmp_path, rows, [old_doc, new_doc])
+    before = {record["id"]: record for record in c.snapshot()["records"]}
+    original_key = before["bt/old"]["comparison_key"]
+    assert original_key != before["bt/new"]["comparison_key"]
+    write_json(tmp_path, "backtest/experiments/_catalog/path_map.json",
+               {"schema_version": 1, "paths": {old: middle, middle: current}})
+
+    comparison = c.compare(["bt/old", "bt/new"])
+
+    assert comparison["comparison_key"] == original_key
+    assert all(record["comparison_key"] == original_key for record in comparison["records"])
+    assert [record["source"] for record in comparison["records"]] == [r["eval_output"] for r in rows]
+    assert json.loads((tmp_path / rows[1]["eval_output"]).read_text())["benchmark"] == new_doc["benchmark"]
+
+
+def test_unregistered_benchmark_files_are_not_merged_by_equal_content(tmp_path):
+    first, second = "backtest/experiments/bench-a.csv", "backtest/experiments/bench-b.csv"
+    rows = [row("bt/first", "strategy"), row("bt/second", "strategy")]
+    docs = [strategy_doc(), strategy_doc()]
+    docs[0]["benchmark"] = {"equal_weight_csv": first}
+    docs[1]["benchmark"] = {"equal_weight_csv": second}
+    c = catalog(tmp_path, rows, docs)
+    for name in (first, second):
+        (tmp_path / name).write_text("date,return\n2026-01-01,0.01\n")
+    write_json(tmp_path, "backtest/experiments/_catalog/path_map.json", {
+        "schema_version": 1, "paths": {"backtest/experiments/old-bench-a.csv": first}
+    })
+    with pytest.raises(ValueError, match="协议"):
+        c.compare([r["exp_id"] for r in rows])
+
+
 def test_model_fixed_primary_and_official_slices(tmp_path):
     c = catalog(tmp_path, [row()])
     record = c.snapshot()["records"][0]
@@ -97,6 +139,77 @@ def test_model_fixed_primary_and_official_slices(tmp_path):
     assert record["regimes"]["D"]["net_ann"] == 0.12
     assert record["official"] and record["comparable"]
     assert record["window"] == {"start": WINDOW[0], "end": WINDOW[1]}
+
+
+def test_indexed_registry_preserves_catalog_values_and_exposes_verified_detail(tmp_path):
+    rows = [row(), row("bt/v4", "strategy")]
+    c = catalog(tmp_path, rows, [model_doc(), strategy_doc()])
+    before = c.snapshot()
+    write_registry(c.registry, rows, indexed=True)
+
+    after = c.snapshot()
+
+    assert after["warnings"] == before["warnings"]
+    assert after["sources"]["registry_rows"] == before["sources"]["registry_rows"]
+    for original, migrated in zip(before["records"], after["records"]):
+        detail = [r for r in migrated["resources"] if r["kind"] == "registry_record"]
+        assert len(detail) == 1 and detail[0]["available"]
+        detail_path = c.resource(detail[0]["id"])
+        assert json.loads(detail_path.read_text()) == next(r for r in rows if r["exp_id"] == migrated["id"])
+        assert {**migrated, "resources": [r for r in migrated["resources"] if r["kind"] != "registry_record"]} == original
+
+
+def test_registry_detail_mtime_participates_in_catalog_refresh(tmp_path):
+    c = catalog(tmp_path, [row()])
+    write_registry(c.registry, [row()], indexed=True)
+    index = json.loads(c.registry.read_text().splitlines()[0])
+    detail = c.registry.parent / index["detail_path"]
+    modified = 2_000_000_000
+    os.utime(detail, (modified, modified))
+
+    assert c.snapshot()["sources"]["modified_at"] == datetime.fromtimestamp(modified, timezone.utc).isoformat()
+
+
+@pytest.mark.parametrize("failure", ["missing", "hash", "unsafe", "invalid", "schema"])
+def test_invalid_indexed_event_never_restores_previous_event_or_current_baseline(tmp_path, failure):
+    old = row("model/v4", date="2026-10-27")
+    latest = row("model/v4", date="2026-10-28", note="latest event")
+    other = row("model/v3", baseline_version="v3")
+    c = catalog(tmp_path, [old, latest, other])
+    write_registry(c.registry, [old, latest, other], indexed=True)
+    lines = c.registry.read_text().splitlines()
+    index = json.loads(lines[1])
+    detail = c.registry.parent / index["detail_path"]
+    if failure == "missing":
+        detail.unlink()
+    elif failure == "hash":
+        detail.write_text(json.dumps({**latest, "note": "corrupted"}))
+    elif failure == "invalid":
+        detail.write_text("{broken")
+    else:
+        if failure == "schema":
+            index.pop("_registry_schema")
+        else:
+            index["detail_path"] = "../outside.json"
+        lines[1] = json.dumps(index)
+        c.registry.write_text("\n".join(lines))
+
+    snapshot = c.snapshot()
+
+    assert [r["id"] for r in snapshot["records"]] == ["model/v3"]
+    assert not any(r["current"] for r in snapshot["records"])
+    assert any("第 2 行" in w for w in snapshot["warnings"])
+
+
+def test_verified_registry_resource_rechecks_detail_hash_on_download(tmp_path):
+    c = catalog(tmp_path, [row()])
+    write_registry(c.registry, [row()], indexed=True)
+    resource = next(r for r in c.snapshot()["records"][0]["resources"] if r["kind"] == "registry_record")
+    path = c.resource(resource["id"])
+    assert path is not None
+    path.write_text(json.dumps({**row(), "note": "changed after snapshot"}))
+
+    assert c.resource(resource["id"]) is None
 
 
 def test_strategy_source_predictions_prove_five_seeds(tmp_path):

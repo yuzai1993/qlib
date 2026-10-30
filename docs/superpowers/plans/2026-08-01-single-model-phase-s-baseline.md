@@ -56,7 +56,7 @@
 ### Task 3: Verify and integrate
 
 **Files:**
-- Regenerate: `backtest/experiments/report.html` only if registry rendering changes.
+- Regenerate: `backtest/experiments/reports/report.html` only if registry rendering changes.
 
 **Interfaces:**
 - Consumes: completed baseline artifact migration.

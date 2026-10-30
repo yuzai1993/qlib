@@ -1,0 +1,41 @@
+{
+  "exp_id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-21",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "M0 H20 ES top25 drop5 hold5 + 掉出前100必卖",
+  "arm": "m0h20es",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "评估口径 ann = mean(p)×238/h 等价于「k·h 个等额仓位、每日 k 进 k 出、每只持满 h 天」的阶梯组合算术年化，k=5/h=5 即 25 槽、每日 5 进 5 出。 在 25 槽阶梯上再叠加「掉出前 100 必卖」，用于排除「阶梯里仍有票靠打分赖着不走」这一条对 2026 缺口的贡献。",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top25d5h5f100/m0h20es.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v2",
+  "note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+  "metrics": {
+    "annualized_return": 0.22941704468493196,
+    "sharpe_ratio": 0.9556400035645664,
+    "alpha": 0.1428946198700412,
+    "beta": 0.8874227729571048,
+    "max_drawdown": -0.3300805963051119,
+    "calmar_ratio": 0.6950334168472873,
+    "annualized_volatility": 0.24867087407306948,
+    "annualized_one_way_turnover": 65.41891162562753,
+    "n_days": 1454,
+    "annualized_return_arith": 0.23763983498559196,
+    "y2026_annualized_return": 0.03746409342934065,
+    "y2026_annualized_return_arith": 0.06986105186170427
+  },
+  "ensemble_session": "backtest/result/20260821_234327_phase_s_m0h20es_all_top25d5h5f100_ensemble",
+  "conclusion": "假设不成立。强制卖出把 2026 从 −1.5% 拉到 +3.7%，说明阶梯里确有靠打分赖着的票，但代价是全期退到 +22.9%/夏普 0.96（低于同期 top25d5h5 的 +24.6%/0.99），2022 算术年化转负（−1.1%），日换手升到 52.3%。对主格仍差 31pp。未晋升。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5f100-bt/metrics/all_top25d5h5f100_m0h20es.json"
+}

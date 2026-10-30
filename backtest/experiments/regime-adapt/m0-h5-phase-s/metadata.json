@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "exp_id": "regime-adapt/m0-h5-phase-s",
+  "event_numbers": [
+    89
+  ],
+  "phase": "S",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/regime-adapt/m0-h5-phase-s/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/_shared/reports/regime_adapt_phase_s_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [],
+  "shared_assets": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/_shared/reports/regime_adapt_phase_s_report.html"
+  ],
+  "records": [
+    "backtest/experiments/regime-adapt/m0-h5-phase-s/records/29bf6182a43cb760fd6ace9d647633f83c73f483554eed384f06e6db2ad10cf2.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

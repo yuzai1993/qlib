@@ -11,10 +11,29 @@ import json
 import sys
 from datetime import date
 from pathlib import Path
+
 from statistics import mean, stdev
 from typing import Any, Optional
 
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        append_registry as _append_registry_row,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        append_registry as _append_registry_row,
+    )
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -130,7 +149,7 @@ def sub_period_metrics(recs: list[dict]) -> dict[str, dict]:
     per_seg: dict[str, list[dict]] = {name: [] for name in SUB_PERIODS}
     for rec in recs:
         csv = EXP_ROOT / rec["session_dir"] / "run_01" / "report_normal.csv"
-        if not csv.is_file():
+        if not _resolve_research_path(csv, _RESEARCH_ROOT).is_file():
             continue
         df = pd.read_csv(csv, index_col=0, parse_dates=True)
         for name, (start, end) in SUB_PERIODS.items():
@@ -155,13 +174,7 @@ def sub_period_metrics(recs: list[dict]) -> dict[str, dict]:
 
 
 def existing_exp_ids() -> set[str]:
-    if not REG.exists():
-        return set()
-    out = set()
-    for line in REG.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            out.add(json.loads(line).get("exp_id"))
-    return out
+    return {row.get("exp_id") for row in _load_registry_rows(REG)} if _resolve_research_path(REG, _RESEARCH_ROOT).is_file() else set()
 
 
 def main() -> None:
@@ -170,13 +183,13 @@ def main() -> None:
     for (subdir, arm), (exp_id, baseline_ref, note) in ARMS.items():
         path = RES_DIR / subdir / f"{arm}.json" if subdir else RES_DIR / f"{arm}.json"
         rel = f"backtest/result/phase_s_regime/{subdir}/{arm}.json" if subdir else f"backtest/result/phase_s_regime/{arm}.json"
-        if not path.exists():
+        if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
             print("skip missing", rel)
             continue
         if exp_id in already:
             print("skip already registered", exp_id)
             continue
-        doc = json.loads(path.read_text())
+        doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
         seeds = doc.get("seeds") or {}
         if not seeds:
             print("skip empty", arm)
@@ -224,14 +237,13 @@ def main() -> None:
                 + "；回测窗自 2020-08-03 起（regime 臂训练集截至 2020-07-31）",
                 "baseline_ref": baseline_ref,
                 "eval_output": rel,
-                "report": "backtest/experiments/regime_adapt_phase_s_report.html",
-                "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
+                "report": "backtest/experiments/_shared/reports/regime_adapt_phase_s_report.html",
+                "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
             }
         )
     if rows:
-        with REG.open("a", encoding="utf-8") as fh:
-            for row in rows:
-                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        for row in rows:
+            _append_registry_row(REG, row)
     print("appended", len(rows), "phase-s registry rows")
 
 

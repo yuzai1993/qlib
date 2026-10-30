@@ -6,7 +6,26 @@ import argparse
 import json
 from datetime import date
 from pathlib import Path
+
 from typing import Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
 
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = BACKTEST_ROOT / "experiments" / "registry.jsonl"
@@ -73,13 +92,7 @@ EXPERIMENTS = {
 
 
 def upsert_registry_row(path: Path, row: dict) -> None:
-    rows = []
-    if path.is_file():
-        rows = [
-            json.loads(line)
-            for line in path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
+    rows = _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
     replaced = False
     for index, existing in enumerate(rows):
         if existing.get("exp_id") == row["exp_id"]:
@@ -88,11 +101,7 @@ def upsert_registry_row(path: Path, row: dict) -> None:
             break
     if not replaced:
         rows.append(row)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in rows),
-        encoding="utf-8",
-    )
+    _write_registry_rows(path, rows)
 
 
 def _common_pending(spec: dict, today: str) -> dict:
@@ -176,7 +185,7 @@ def pending_rows(today: str | None = None) -> list[dict]:
 
 
 def _load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
 
 
 def _metrics(doc: dict) -> dict:
@@ -293,7 +302,7 @@ def finalize_row(pending: dict, spec: dict) -> dict:
     if spec.get("rolling"):
         row["rolling_folds"] = candidate["rolling"]["folds"]
         row["rolling_fold_count"] = candidate["rolling"]["fold_count"]
-        if BASELINE_YEARLY_IC.is_file():
+        if _resolve_research_path(BASELINE_YEARLY_IC, _RESEARCH_ROOT).is_file():
             yearly_delta = _yearly_rank_ic_delta(
                 candidate,
                 _load_json(BASELINE_YEARLY_IC),

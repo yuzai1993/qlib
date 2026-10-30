@@ -227,7 +227,7 @@ backtest/experiments/diagnostics/20260809_a_share_style_regimes/
 - 固定数据版本、股票池、六个特征族、`K=2..5`、`λ` 网格、时间分工和 C/W/S/P 门；
 - 失败的 K 和数据门也必须写入 metrics 与最终报告。
 
-本诊断不产生训练模型、MLflow recorder 或 Phase S 回测目录，不改变 `backtest/experiments/report.html` 和 `strategy_stability_report.html` 的活动 baseline 表。若 registry 构建器不能表达 diagnostic phase，则保留独立 protocol/metrics 并先补充兼容 schema，不能伪装成 Phase M 或 Phase S 候选。
+本诊断不产生训练模型、MLflow recorder 或 Phase S 回测目录，不改变 `backtest/experiments/reports/report.html` 和 `strategy_stability_report.html` 的活动 baseline 表。若 registry 构建器不能表达 diagnostic phase，则保留独立 protocol/metrics 并先补充兼容 schema，不能伪装成 Phase M 或 Phase S 候选。
 
 ## 10. 验证要求
 

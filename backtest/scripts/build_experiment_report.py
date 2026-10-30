@@ -8,7 +8,7 @@ registry 是唯一数据源（backtest/EXPERIMENT_STANDARD.md 第 6/7 节）：
 用法：
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_experiment_report.py \
         [--registry backtest/experiments/registry.jsonl] \
-        [--output backtest/experiments/report.html]
+        [--output backtest/experiments/reports/report.html]
 """
 
 from __future__ import annotations
@@ -18,11 +18,28 @@ import html
 import json
 from datetime import datetime
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
 
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = BACKTEST_ROOT / "experiments" / "registry.jsonl"
-DEFAULT_OUTPUT = BACKTEST_ROOT / "experiments" / "report.html"
+DEFAULT_OUTPUT = BACKTEST_ROOT / "experiments" / "reports" / "report.html"
 
 # Phase M：4 指标 × 3 指数（默认不含全A）；表头两行：指标 / 指数
 PHASE_M_METRIC_KEYS = ("rank_ic_mean", "rank_icir", "ic_mean", "icir")
@@ -121,18 +138,7 @@ PHASE_M_LEGEND_HTML = """
 
 
 def load_registry(path: Path) -> list[dict]:
-    rows: list[dict] = []
-    if not path.is_file():
-        return rows
-    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            rows.append(json.loads(line))
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"registry 第 {i} 行不是合法 JSON: {exc}") from exc
-    return rows
+    return _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
 
 
 def _esc(v: Any) -> str:
@@ -591,7 +597,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
     rows = load_registry(args.registry)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(build_html(rows), encoding="utf-8")
+    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(build_html(rows), encoding="utf-8")
     print(f"{len(rows)} 条记录 → {args.output}")
 
 

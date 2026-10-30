@@ -1,0 +1,289 @@
+{
+  "exp_id": "train-recency/rankic-winner-post2020",
+  "direction": "train-recency",
+  "phase": "M",
+  "date": "2026-07-31",
+  "hypothesis": "固定 rankic-es-lr010 winner 的全部模型、特征、标签和早停超参，只把训练截止从 2020-01-10 延长到 2022-12-30；更多且更近期的训练样本若能缓解分布漂移，应使共同 forward test 上三池固定次日 RankIC 同时严格提高。",
+  "baseline_ref": "B5 v1.0",
+  "group_role": "treatment",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "train_segment": [
+    "2016-01-02",
+    "2022-12-30"
+  ],
+  "effective_h40_train_end": "2022-11-03",
+  "valid_segment": [
+    "2023-01-03",
+    "2024-06-28"
+  ],
+  "effective_h1_valid_segment": [
+    "2023-01-03",
+    "2024-06-26"
+  ],
+  "test_segment": [
+    "2024-07-01",
+    "2026-07-16"
+  ],
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-31",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "model": "RankICEarlyStoppingDEnsembleModel",
+  "training_objective": "H40 CSRankNorm MSE",
+  "early_stopping_metric": "fixed_next_day_valid_daily_rank_ic",
+  "early_stopping_rounds": 20,
+  "eval_label": "Ref($close, -2)/Ref($close, -1) - 1",
+  "eval_label_role": "fixed_1d",
+  "eval_min_count": 20,
+  "evaluation_comparable_to_baseline": false,
+  "cleanup_retention_eligible": false,
+  "configs": [
+    "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s42.yaml",
+    "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s1000.yaml",
+    "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s2000.yaml",
+    "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s3000.yaml",
+    "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s4000.yaml"
+  ],
+  "config_hashes": [
+    {
+      "seed": 42,
+      "path": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s42.yaml",
+      "sha256": "f21136c3ecb4f38ff4f8223d2975f247ca60cfd664167102bcd227c9b23a8fa5"
+    },
+    {
+      "seed": 1000,
+      "path": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s1000.yaml",
+      "sha256": "8b31efd8cfe3a0deea717c295225d051166022f1b7bb3968ddb6a69ccc652320"
+    },
+    {
+      "seed": 2000,
+      "path": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s2000.yaml",
+      "sha256": "bd1cfd1d648a53d78ef19732d2b8a9c04932803283039cc90f362e37683bee51"
+    },
+    {
+      "seed": 3000,
+      "path": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s3000.yaml",
+      "sha256": "1d95833857d083d7fcc19979eb654e2af8d423dd43dcf3750f52516aaa0eedfd"
+    },
+    {
+      "seed": 4000,
+      "path": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s4000.yaml",
+      "sha256": "d003da3307d8e1ad8638b5a4a4013ea2a88f7931899cac20cd8587a0f1fde461"
+    }
+  ],
+  "session_dirs": [
+    "backtest/result/20260731_214410_tr_rankic_winner_post2020_s42",
+    "backtest/result/20260731_220444_tr_rankic_winner_post2020_s1000",
+    "backtest/result/20260731_215101_tr_rankic_winner_post2020_s2000",
+    "backtest/result/20260731_221008_tr_rankic_winner_post2020_s3000",
+    "backtest/result/20260731_222739_tr_rankic_winner_post2020_s4000"
+  ],
+  "session_audit": [
+    {
+      "seed": 42,
+      "session": "backtest/result/20260731_214410_tr_rankic_winner_post2020_s42",
+      "meta_path": "backtest/result/20260731_214410_tr_rankic_winner_post2020_s42/meta.json",
+      "meta_sha256": "5b0e231ede378fce976fc10c949b6245ec4a544f597b64d7567789da3005cae2",
+      "config": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s42.yaml",
+      "config_sha256": "f21136c3ecb4f38ff4f8223d2975f247ca60cfd664167102bcd227c9b23a8fa5",
+      "train_experiment_name": "train_20260731_214410_tr_rankic_winner_post2020_s42_run01",
+      "train_experiment_id": "913589234265042532",
+      "train_recorder_id": "84fe7473719849598382202981f54f6d"
+    },
+    {
+      "seed": 1000,
+      "session": "backtest/result/20260731_220444_tr_rankic_winner_post2020_s1000",
+      "meta_path": "backtest/result/20260731_220444_tr_rankic_winner_post2020_s1000/meta.json",
+      "meta_sha256": "e2b771fc100d947d552755831233974257f80889293151f611f64edbe1752cd8",
+      "config": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s1000.yaml",
+      "config_sha256": "8b31efd8cfe3a0deea717c295225d051166022f1b7bb3968ddb6a69ccc652320",
+      "train_experiment_name": "train_20260731_220444_tr_rankic_winner_post2020_s1000_run01",
+      "train_experiment_id": "974458184412713491",
+      "train_recorder_id": "59f1f8a41c4b42e0820ae8c1e4db3005"
+    },
+    {
+      "seed": 2000,
+      "session": "backtest/result/20260731_215101_tr_rankic_winner_post2020_s2000",
+      "meta_path": "backtest/result/20260731_215101_tr_rankic_winner_post2020_s2000/meta.json",
+      "meta_sha256": "2c79d742397c885c9464eca6f7b9d9e12c4bde67abd3b16682c72e0c331ca187",
+      "config": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s2000.yaml",
+      "config_sha256": "bd1cfd1d648a53d78ef19732d2b8a9c04932803283039cc90f362e37683bee51",
+      "train_experiment_name": "train_20260731_215101_tr_rankic_winner_post2020_s2000_run01",
+      "train_experiment_id": "135160425217105798",
+      "train_recorder_id": "5aa84da234114756ad655c8a999bdecf"
+    },
+    {
+      "seed": 3000,
+      "session": "backtest/result/20260731_221008_tr_rankic_winner_post2020_s3000",
+      "meta_path": "backtest/result/20260731_221008_tr_rankic_winner_post2020_s3000/meta.json",
+      "meta_sha256": "302cd17dcecc9aa62b330b6ea288d0724e95e6373d3c25f524e8235e351bb412",
+      "config": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s3000.yaml",
+      "config_sha256": "1d95833857d083d7fcc19979eb654e2af8d423dd43dcf3750f52516aaa0eedfd",
+      "train_experiment_name": "train_20260731_221008_tr_rankic_winner_post2020_s3000_run01",
+      "train_experiment_id": "945348232821473281",
+      "train_recorder_id": "17345585d87745c09551b97d85313534"
+    },
+    {
+      "seed": 4000,
+      "session": "backtest/result/20260731_222739_tr_rankic_winner_post2020_s4000",
+      "meta_path": "backtest/result/20260731_222739_tr_rankic_winner_post2020_s4000/meta.json",
+      "meta_sha256": "d0218757192b58026e3e9018c8a2fa97bb9ff4aaf2b561fce2f47a5afbc4f04f",
+      "config": "backtest/experiments/train-recency/rankic-winner-post2020/configs/tr_rankic_winner_post2020_s4000.yaml",
+      "config_sha256": "d003da3307d8e1ad8638b5a4a4013ea2a88f7931899cac20cd8587a0f1fde461",
+      "train_experiment_name": "train_20260731_222739_tr_rankic_winner_post2020_s4000_run01",
+      "train_experiment_id": "538773909307340979",
+      "train_recorder_id": "84491d2e076b48a8b50acfb4fa67aa8c"
+    }
+  ],
+  "comparison": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_comparison.json",
+  "comparison_sha256": "4ca11c9d28340beb60a0579404421382a0f74d79271872765c2803e33830b47d",
+  "comparison_sources": {
+    "control": {
+      "path": "backtest/experiments/_shared/metrics/tr_rankic_winner_stale_forward_test_1d.json",
+      "sha256": "d690ab0c6331ef6be08705f1992f52af557fcc4116684d7867c133ac58dbaa6b"
+    },
+    "expanded": {
+      "path": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_test_1d.json",
+      "sha256": "c2cb2405a272abb00f7f2d3b36691b9f6983e9c0afa5f753e7a77f6480da11dc"
+    }
+  },
+  "eval_result": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_test_1d.json",
+  "eval_result_sha256": "c2cb2405a272abb00f7f2d3b36691b9f6983e9c0afa5f753e7a77f6480da11dc",
+  "result_dirs": [
+    "backtest/result/20260731_214410_tr_rankic_winner_post2020_s42",
+    "backtest/result/20260731_220444_tr_rankic_winner_post2020_s1000",
+    "backtest/result/20260731_215101_tr_rankic_winner_post2020_s2000",
+    "backtest/result/20260731_221008_tr_rankic_winner_post2020_s3000",
+    "backtest/result/20260731_222739_tr_rankic_winner_post2020_s4000",
+    "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_test_1d.json",
+    "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_comparison.json"
+  ],
+  "metrics_summary": {
+    "csi1000": {
+      "ic_mean": 0.005773821843239645,
+      "icir": 0.02924533887979396,
+      "rank_ic_mean": 0.04757195614459801,
+      "rank_icir": 0.218251541349541,
+      "rank_ic_mean_std": 0.0004442961723107276
+    },
+    "csi300": {
+      "ic_mean": 0.0071235114206514415,
+      "icir": 0.026079756335489396,
+      "rank_ic_mean": 0.032789711910734945,
+      "rank_icir": 0.11619750942882771,
+      "rank_ic_mean_std": 0.0006794510512363814
+    },
+    "csi500": {
+      "ic_mean": -0.0007458711593323811,
+      "icir": -0.0032906054045880435,
+      "rank_ic_mean": 0.03452977211566905,
+      "rank_icir": 0.1444978025989645,
+      "rank_ic_mean_std": 0.0006318805514022071
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi1000": {
+        "ic_mean": 0.005773821843239645,
+        "icir": 0.02924533887979396,
+        "rank_ic_mean": 0.04757195614459801,
+        "rank_icir": 0.218251541349541,
+        "rank_ic_mean_std": 0.0004442961723107276
+      },
+      "csi300": {
+        "ic_mean": 0.0071235114206514415,
+        "icir": 0.026079756335489396,
+        "rank_ic_mean": 0.032789711910734945,
+        "rank_icir": 0.11619750942882771,
+        "rank_ic_mean_std": 0.0006794510512363814
+      },
+      "csi500": {
+        "ic_mean": -0.0007458711593323811,
+        "icir": -0.0032906054045880435,
+        "rank_ic_mean": 0.03452977211566905,
+        "rank_icir": 0.1444978025989645,
+        "rank_ic_mean_std": 0.0006318805514022071
+      }
+    }
+  },
+  "direct_control_ref": "train-recency/rankic-winner-stale",
+  "metric_deltas": {
+    "csi1000": {
+      "ic_mean": -0.0015396370714815125,
+      "icir": -0.01156291405067671,
+      "rank_ic_mean": 5.000715722530691e-05,
+      "rank_icir": -0.023409407340239857
+    },
+    "csi300": {
+      "ic_mean": -0.0017713848782306817,
+      "icir": -0.008239692244841383,
+      "rank_ic_mean": -0.0008449123293836902,
+      "rank_icir": -0.007855617470262186
+    },
+    "csi500": {
+      "ic_mean": -0.001350023182325178,
+      "icir": -0.0061963569101011985,
+      "rank_ic_mean": 0.0004087153770045218,
+      "rank_icir": -0.009347045522833969
+    }
+  },
+  "pairwise_csi1000_rankic_vs_control": {
+    "n": 5,
+    "wins": 3,
+    "diff_mean": 5.00071572253083e-05,
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "diffs": [
+      0.00042858656997483285,
+      0.0002389557463415501,
+      -0.00017313064332346445,
+      0.0003547110372578918,
+      -0.0005990869241242688
+    ]
+  },
+  "yearly_rank_ic_delta_vs_control": {
+    "2024": {
+      "csi1000": 0.0014466431207256006,
+      "csi300": 0.004653355470221693,
+      "csi500": 0.0051052879127410355
+    },
+    "2025": {
+      "csi1000": -0.0018207670471135362,
+      "csi300": -0.0036091248832699208,
+      "csi500": -0.004137421141942502
+    },
+    "2026": {
+      "csi1000": 0.0022376527526690865,
+      "csi300": -0.0009666297071674601,
+      "csi500": 0.004452774807762815
+    }
+  },
+  "conclusion_policy": {
+    "improve": "expanded 在 csi1000/csi300/csi500 共同 forward test 的五种子平均 RankIC 均严格高于 stale control",
+    "regress": "expanded 的 csi1000 RankIC 不高于 stale control",
+    "inconclusive": "expanded 的 csi1000 RankIC 提高但至少一个迁移池不提高"
+  },
+  "conclusion": "inconclusive",
+  "note": "预登记 forward 成对结论=inconclusive；只对照 train-recency/rankic-winner-stale，不得与 B5 原测试窗口直接判优。"
+}

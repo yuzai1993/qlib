@@ -22,7 +22,7 @@
 **Files:**
 - Modify: `tests/backtest/test_build_experiment_report.py`
 - Modify: `backtest/scripts/build_experiment_report.py`
-- Regenerate: `backtest/experiments/report.html`
+- Regenerate: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Consumes: registry rows sorted by date and registry position.
@@ -38,8 +38,8 @@
 **Files:**
 - Modify: `backtest/experiments/registry.jsonl`
 - Modify: `backtest/experiments/b6_model_freeze.json`
-- Modify: `backtest/experiments/ic/mh_valid_rankic_selected_test_1d.json`
-- Modify: `backtest/experiments/ic/tr_rankic_winner_post2020_forward_comparison.json`
+- Modify: `backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json`
+- Modify: `backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_comparison.json`
 - Delete: `backtest/experiments/SAMPLE_EXPERIMENT_SUMMARY.md`
 - Delete: `backtest/experiments/b5_post2020_forward_protocol.json`
 - Delete: `backtest/experiments/b5_rankic_hyperparam_selection.json`

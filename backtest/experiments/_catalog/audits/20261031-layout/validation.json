@@ -1,0 +1,109 @@
+{
+  "equal": true,
+  "events": 150,
+  "unique_experiments": 147,
+  "only_declared_path_changes": true,
+  "numeric_leaves": 33935,
+  "numeric_sha256": "04b5e0d914c643b5eabcc3ab64f432d29ae379783d3ffc61bad8b88ee30e7205",
+  "assets": {
+    "files": 473,
+    "yaml_configs": 219,
+    "frozen_json": 19,
+    "numeric_json": 171,
+    "html": 53,
+    "checked_existing_links": 134
+  },
+  "catalog_records": 36,
+  "catalog_sources": {
+    "available": 35,
+    "missing": 1
+  },
+  "catalog_metrics_and_status_unchanged": true,
+  "cleanup_plan_unchanged": true,
+  "keep_results": 30,
+  "keep_mlruns": 7,
+  "cleanup_errors": [],
+  "diagnostic_report_sha256": {
+    "backtest/diagnostics/20260809_a0b_regime_features/REPORT.md": "43f311d87f0ad07bac32a9ddb5f6bc3bb4b476e1d99b174928e62dd3628dee91",
+    "backtest/diagnostics/20260809_alpha_decay_202409/REPORT.md": "04aea0df2a668c7c7f8e157cb8af5ff84b739301d3a8a559af4d5c16978a5edf",
+    "backtest/diagnostics/20260809_style_regimes/REPORT.md": "2da44f5623ea38dd39d1c3ff40c3df401ca5ea4847b2dd8eb5e55b80f595dee7"
+  },
+  "models_and_runtime_artifacts_moved": false,
+  "cleanup_applied": false,
+  "temporary_repository_files_removed": [
+    "backtest/scripts/migrate_registry_index.py",
+    "backtest/scripts/verify_registry_index_migration.py",
+    "tests/backtest/test_migrate_registry_index.py",
+    "tests/backtest/test_verify_registry_index_migration.py",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/verify_catalog_migration.py",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/rebase_b4_active_manifest.py",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/migration_script.py",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/verify_migration.py",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/fix_legacy_catalog_portable.py"
+  ],
+  "live_platform": {
+    "health": {
+      "status": "ok",
+      "research_root": "/Users/yuxianqi/Project/qlib",
+      "monitor_mode": "direct-read-only",
+      "monitor_status": "ready",
+      "analysis_storage": "/Users/yuxianqi/Project/qlib/backtest/diagnostics"
+    },
+    "analysis_count": 3,
+    "catalog_matches_validated_snapshot": true,
+    "historical_analysis_ids": [
+      "history-675f9799e21d255d496d",
+      "history-5c9bac1e1595b43fbcfe",
+      "history-701fcbbd9e4bc79816d5"
+    ]
+  },
+  "regression": {
+    "backtest_passed": 387,
+    "platform_layout_operational_passed": 233,
+    "python_passed_total": 620,
+    "javascript_passed": 45,
+    "preexisting_failures_deselected": 5,
+    "preexisting_failures_reproduced_before_change": true,
+    "diff_check_passed": true,
+    "compile_check_passed": true
+  },
+  "task_tool_cleanup": {
+    "completed": true,
+    "temporary_scripts_removed": [
+      "/private/tmp/qlib_registry_schema_audit_20261031.py",
+      "/private/tmp/qlib_registry_verify_after_20261031.py",
+      "/private/tmp/qlib_experiment_layout_audit_20261031.py",
+      "/private/tmp/qlib_copy_layout_assets_20261031.py",
+      "/private/tmp/qlib_add_recipe_metadata_20261031.py",
+      "/private/tmp/qlib_relocate_report_scripts_20261031.py",
+      "/private/tmp/qlib-layout-task-20261031/cleanup_task_tools.py",
+      "/private/tmp/qlib-layout-task-20261031/update_monitor_plist.py",
+      "/private/tmp/qlib-layout-task-20261031/validate_layout.py",
+      "/private/tmp/qlib-layout-task-20261031/layout_task.py"
+    ],
+    "temporary_paths_removed": [
+      "/private/tmp/qlib_registry_schema_audit_20261031.py",
+      "/private/tmp/qlib_registry_verify_after_20261031.py",
+      "/private/tmp/qlib_experiment_layout_audit_20261031.py",
+      "/private/tmp/qlib_copy_layout_assets_20261031.py",
+      "/private/tmp/qlib_add_recipe_metadata_20261031.py",
+      "/private/tmp/qlib_relocate_report_scripts_20261031.py",
+      "/private/tmp/qlib-registry-baseline-TfyJYCOk",
+      "/private/tmp/qlib-registry-schema-audit-20261031",
+      "/private/tmp/qlib-registry-schema-audit-20261031.json",
+      "/private/tmp/qlib-layout-copy-plan-20261031.json",
+      "/private/tmp/qlib-experiment-layout-map-20261031.json",
+      "/private/tmp/qlib-diagnostics-layout-audit-20261031.json",
+      "/private/tmp/qlib-task-tools-cleanup-20261031.json",
+      "/private/tmp/qlib-registry-consumers-20261031.json",
+      "/private/tmp/registry-consumers.before-20261031.json",
+      "/private/tmp/registry-pre-migration-reader-validation-20261031.json",
+      "/private/tmp/registry-catalog-live-before-20261031.json",
+      "/private/tmp/registry-catalog-live-after-20261031.json",
+      "/private/tmp/qlib-analysis-js-tests-20261031.log",
+      "/private/tmp/qlib-layout-task-20261031"
+    ],
+    "permanent_runtime_tools_tests_and_audit_evidence_retained": true,
+    "rule": "AGENTS.md#任务收尾强制"
+  }
+}

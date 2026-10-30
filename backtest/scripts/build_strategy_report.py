@@ -4,24 +4,36 @@ from __future__ import annotations
 
 import argparse
 import html
-import json
 import math
 from datetime import datetime
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = ROOT / "backtest/experiments/registry.jsonl"
-UNIFIED_REPORT = ROOT / "backtest/experiments/strategy_stability_report.html"
+UNIFIED_REPORT = ROOT / "backtest/experiments/reports/strategy_stability_report.html"
 BASELINE_ID = "topk-t10-d2-h1"
 
 
 def load_registry(path: Path) -> list[dict]:
-    return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    return _load_registry_rows(path)
 
 
 def _esc(value: Any) -> str:
@@ -194,7 +206,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
     UNIFIED_REPORT.parent.mkdir(parents=True, exist_ok=True)
     rows = load_registry(args.registry)
-    UNIFIED_REPORT.write_text(build_unified_html(rows), encoding="utf-8")
+    _resolve_research_path(UNIFIED_REPORT, _RESEARCH_ROOT).write_text(build_unified_html(rows), encoding="utf-8")
     print(
         f"{sum(row.get('phase') == 'S' for row in rows)} Phase S rows -> "
         f"{UNIFIED_REPORT}"

@@ -10,7 +10,7 @@
 
 ## 1. 目标与边界
 
-将现有监控能力整合到统一的中文研究平台，提供清晰的模型/策略版本历史、指标查询对比及可追溯的分析报告与代码。首期离线实验以用户指定的 `qlib_exp/backtest/experiments/phase_m_v1_report.html` 和 `phase_m_v1_bt_report.html` 为入口；数值从对应 registry 与 JSON 摘要读取，不抄写 HTML 数字。
+将现有监控能力整合到统一的中文研究平台，提供清晰的模型/策略版本历史、指标查询对比及可追溯的分析报告与代码。首期离线实验以用户指定的 `qlib_exp/backtest/experiments/reports/phase_m_v1_report.html` 和 `phase_m_v1_bt_report.html` 为入口；数值从对应 registry 与 JSON 摘要读取，不抄写 HTML 数字。
 
 本次属于展示与档案管理工程，不进行训练、回测、策略调参、baseline 晋升、产物清理或交易切换。实验规范以 `backtest/EXPERIMENT_STANDARD.md` 为准。研究 baseline 与实际交易配置分别标识。
 

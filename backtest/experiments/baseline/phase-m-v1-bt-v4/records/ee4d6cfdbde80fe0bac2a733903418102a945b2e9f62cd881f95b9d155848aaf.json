@@ -1,0 +1,42 @@
+{
+  "exp_id": "baseline/phase-m-v1-bt-v4",
+  "direction": "phase-m-v1-bt",
+  "phase": "M",
+  "date": "2026-08-23",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt_baseline",
+  "bt_version": "v4",
+  "current_bt": false,
+  "display_name": "v4 RankIC ES 真阶梯 k3×h5",
+  "arm": "m0h20rankices",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "用户于 2026-08-23 明确要求将 v4 RankIC ES × CohortLadderStrategy topk=3 horizon=5 五种子均值信号单次回测提升为 Phase M v1 执行层对照锚点 BT v4。该行是主格 top3×h5 的执行层等价物：每日买当日 top3，持满 5 天到期无条件卖，允许同一票多层持有。晋升依据是组合规则对齐主格，不是对 BT v3 逐维占优。",
+  "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json",
+  "detail_report": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+  "metrics_source": "ensemble",
+  "metrics": {
+    "annualized_return": 0.2634041974432082,
+    "sharpe_ratio": 1.0384087313597832,
+    "alpha": 0.17403166896830952,
+    "beta": 0.8707829727525177,
+    "max_drawdown": -0.32955049506103196,
+    "calmar_ratio": 0.7992832703662799,
+    "annualized_volatility": 0.25712451821736354,
+    "annualized_one_way_turnover": 44.25754382759521,
+    "n_days": 1454,
+    "annualized_return_arith": 0.2670003447635879,
+    "y2026_annualized_return": 0.03840853864367366
+  },
+  "ensemble_session": "backtest/result/20260822_233132_phase_s_m0h20rankices_all_ladder_k3h5_ensemble",
+  "baseline_ref": "self",
+  "promoted_from": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+  "note": "官方数字来自 ensemble，不是五种子算术平均；相对 BT v3：CAGR +26.3/30.1、夏普 1.04/1.06、回撤 −33.0/−34.7、换手 44.3/58.1。冻结模型切到 v4，策略切到真阶梯。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metrics/all_ladder_k3h5_m0h20rankices.json"
+}

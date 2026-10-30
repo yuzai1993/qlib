@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "exp_id": "regime-adapt/m0h20es-all-top5d1-bt",
+  "event_numbers": [
+    119
+  ],
+  "phase": "M",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/reports/all_top5d1_m0h20es.html",
+    "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/reports/phase_m_v1_bt_m0h20es.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/metrics/all_top5d1_m0h20es.json",
+    "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/records/317a896eb33f0730b61fe0034cabc069759ab4b5c006a9a1ea42c167588a7682.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

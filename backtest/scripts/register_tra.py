@@ -6,6 +6,22 @@ import json
 from datetime import date
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        append_registry as _append_registry_row,
+    )
+else:
+    from experiment_registry import (
+        append_registry as _append_registry_row,
+    )
+
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 IC_DIR = BACKTEST_ROOT / "experiments" / "ic"
 REGISTRY = BACKTEST_ROOT / "experiments" / "registry.jsonl"
@@ -35,7 +51,7 @@ NOTE_DEVIATIONS = (
 
 
 def load_ic(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
 
 
 def seed_mean_block(doc: dict) -> dict:
@@ -127,8 +143,7 @@ def main() -> None:
         "note": note,
     }
 
-    with REGISTRY.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    _append_registry_row(REGISTRY, row)
     print(
         f"registered {row['exp_id']}: conclusion={row['conclusion']}, "
         f"csi1000 rank_ic={metrics_1d['csi1000']['rank_ic_mean']:.5f}, "

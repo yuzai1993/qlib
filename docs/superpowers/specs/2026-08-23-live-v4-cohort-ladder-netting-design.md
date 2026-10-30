@@ -626,7 +626,7 @@ bridge 侧单测（加入 `tests/live_trading/test_qmt_bridge_logic.py`，沿用
 - `live_trading/qmt_strategy/PR49_PROBE_CHECKLIST.md`：标注探针已退役及其结论适用范围
 - `AGENTS.md` 第 1 条：补记全A 实盘配置切到 BT v4
 - `backtest/EXPERIMENT_STANDARD.md` 第 1.4 节：记录本次实盘切换已获用户批准
-- `backtest/experiments/LESSONS.md`：切换完成后补一条实盘条目（含抵销实测省费）
+- `backtest/experiments/_shared/docs/LESSONS.md`：切换完成后补一条实盘条目（含抵销实测省费）
 
 ## 8. 风险
 

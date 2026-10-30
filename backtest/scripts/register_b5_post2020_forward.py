@@ -12,7 +12,26 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
+
 from typing import Any, Mapping, Optional, Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
 
 QLIB_ROOT = Path(__file__).resolve().parents[2]
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +41,7 @@ from backtest.scripts import build_experiment_report  # noqa: E402
 
 
 DEFAULT_REGISTRY = BACKTEST_ROOT / "experiments" / "registry.jsonl"
-DEFAULT_REPORT = BACKTEST_ROOT / "experiments" / "report.html"
+DEFAULT_REPORT = BACKTEST_ROOT / "experiments" / "reports" / "report.html"
 
 PROTOCOL_ID = "post2020-forward-v1"
 SEEDS = (42, 1000, 2000, 3000, 4000)
@@ -71,7 +90,7 @@ def _fail(message: str) -> None:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return hashlib.sha256(_resolve_research_path(Path(path), _RESEARCH_ROOT).read_bytes()).hexdigest()
 
 
 def _reject_nonfinite(value: str) -> None:
@@ -82,7 +101,7 @@ def _load_json(path: Path, label: str) -> dict[str, Any]:
     path = Path(path)
     try:
         value = json.loads(
-            path.read_text(encoding="utf-8"),
+            _resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"),
             parse_constant=_reject_nonfinite,
         )
     except (OSError, json.JSONDecodeError) as exc:
@@ -267,7 +286,7 @@ def _validate_manifest(
         normalized_hashes[group] = {}
         for seed in SEEDS:
             path = _expected_config_path(repo_root, group, seed)
-            if not path.is_file():
+            if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
                 _fail(f"frozen config missing: {path}")
             actual = _sha256(path)
             expected = by_seed[str(seed)]
@@ -719,7 +738,7 @@ def _validate_sessions(
     return [audits[seed] for seed in SEEDS]
 
 
-def _decode_registry(raw: bytes) -> list[dict[str, Any]]:
+def _decode_registry(raw: bytes, registry_path: Path) -> list[dict[str, Any]]:
     rows = []
     for line_number, raw_line in enumerate(raw.splitlines(), 1):
         if not raw_line.strip():
@@ -732,7 +751,7 @@ def _decode_registry(raw: bytes) -> list[dict[str, Any]]:
             _fail(f"registry line {line_number} is not valid UTF-8 JSON: {exc}")
         if not isinstance(value, dict):
             _fail(f"registry line {line_number} must be a JSON object")
-        rows.append(value)
+        rows.append(_decode_registry_line(raw_line.decode("utf-8"), registry_path))
     return rows
 
 
@@ -750,13 +769,10 @@ def _validate_baseline_anchor(rows: Sequence[Mapping[str, Any]]) -> None:
         _fail("B5 registry anchor protocol drift")
 
 
-def _encode_row(row: Mapping[str, Any]) -> bytes:
+def _encode_row(row: Mapping[str, Any], registry_path: Path) -> bytes:
     try:
-        return json.dumps(
-            row,
-            ensure_ascii=False,
-            allow_nan=False,
-        ).encode("utf-8")
+        json.dumps(row, ensure_ascii=False, allow_nan=False)
+        return _encode_registry_row(registry_path, dict(row)).encode("utf-8")
     except (TypeError, ValueError) as exc:
         _fail(f"registry row is not finite JSON: {exc}")
 
@@ -935,8 +951,8 @@ def register_results(
 
     repo_root = Path(repo_root).expanduser().resolve()
     registry_path = Path(registry_path)
-    raw_registry = registry_path.read_bytes() if registry_path.exists() else b""
-    existing_rows = _decode_registry(raw_registry)
+    raw_registry = _resolve_research_path(registry_path, _RESEARCH_ROOT).read_bytes() if _resolve_research_path(registry_path, _RESEARCH_ROOT).exists() else b""
+    existing_rows = _decode_registry(raw_registry, registry_path)
     existing_ids = {row.get("exp_id") for row in existing_rows}
     duplicates = [
         exp_id for exp_id in (CONTROL_EXP_ID, EXPANDED_EXP_ID) if exp_id in existing_ids
@@ -1022,9 +1038,9 @@ def register_results(
     registry_payload = (
         raw_registry
         + separator
-        + _encode_row(control_row)
+        + _encode_row(control_row, registry_path)
         + b"\n"
-        + _encode_row(expanded_row)
+        + _encode_row(expanded_row, registry_path)
         + b"\n"
     )
     _atomic_replace(registry_path, registry_payload)

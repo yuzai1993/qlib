@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "exp_id": "model-arch/catboost",
+  "event_numbers": [
+    34
+  ],
+  "phase": "M",
+  "direction": "model-arch",
+  "records_directory": "backtest/experiments/model-arch/catboost/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/model-arch/catboost/configs/ma_catboost_s1000.yaml",
+      "shared": false,
+      "sha256": "54f39aa2456e204359d829e2a67de05ef5567c04addbc9fee41af257bc390bfb"
+    },
+    {
+      "path": "backtest/experiments/model-arch/catboost/configs/ma_catboost_s2000.yaml",
+      "shared": false,
+      "sha256": "67f8a88441f9675fd62d221976cdde0b573b0147e8d2918628383657126e53b5"
+    },
+    {
+      "path": "backtest/experiments/model-arch/catboost/configs/ma_catboost_s3000.yaml",
+      "shared": false,
+      "sha256": "c39be7cd7cca678ff0fd8a1e4a18c32b171030e8e3ef282fe1012b5bb0470fad"
+    },
+    {
+      "path": "backtest/experiments/model-arch/catboost/configs/ma_catboost_s4000.yaml",
+      "shared": false,
+      "sha256": "85572e8ae024b71d47c27f7df5b6372038598d42533304d291d633faad2a754c"
+    },
+    {
+      "path": "backtest/experiments/model-arch/catboost/configs/ma_catboost_s42.yaml",
+      "shared": false,
+      "sha256": "a293bba60e314b8790ac94708189b3d1ffb6f8a816ae8f9f5e0c0849c2c57827"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/model-arch/catboost/metrics/ma_catboost_test_1d.json",
+    "backtest/experiments/model-arch/catboost/metrics/ma_catboost_test_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/model-arch/catboost/records/936f22fa9b2b2ce6b9027e2fc6d16db21d21b70ed356020fb90cfbdf20d3d871.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

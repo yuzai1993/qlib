@@ -6,6 +6,24 @@ import json
 from datetime import date
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+
 EXP_ROOT = Path(__file__).resolve().parents[2]
 REG = EXP_ROOT / "backtest" / "experiments" / "registry.jsonl"
 BASELINE_ID = "regime-adapt/m0-h20-t5h5-es-v1"
@@ -16,7 +34,7 @@ SPECS = [
         "display_name": "M0 H20 + regime 特征",
         "arm": "m0-h20-feat",
         "eval": "backtest/result/eval_regime_ablation/eval_feat.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_feat_report.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0-h20-regime-feat-v1/reports/regime_adapt_m0h20_feat_report.html",
         "hypothesis": (
             "只加 11 列 regime 特征（Alpha158RegimeTechnical），标签仍 H20、"
             "日权重仍用 M0 自然分布；预期主格 top5×h5 扣费夏普相对 M0 H20 上升"
@@ -28,7 +46,7 @@ SPECS = [
         "display_name": "M0 H20 + 样本采样",
         "arm": "m0-h20-sample",
         "eval": "backtest/result/eval_regime_ablation/eval_sample.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_sample_report.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0-h20-sample-v1/reports/regime_adapt_m0h20_sample_report.html",
         "hypothesis": (
             "特征仍是 M0，只把训练日权换成 M3 的 55/30/15 + 48m 半衰期；"
             "预期主格 top5×h5 扣费夏普相对 M0 H20 上升，尤其 F 态"
@@ -74,7 +92,7 @@ SPECS = [
         "display_name": "M0 H20 ES",
         "arm": "m0-h20-t5h5es",
         "eval": "backtest/result/eval_regime_m0_t5h5es/eval_m0h20.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_t5h5es_report.html",
+        "detail_report": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
         "hypothesis": (
             "训练配方仍是 M0 H20，早停改为全A 1454 天 top5×h5 扣费净年化"
             "（上市>=60 + 日频 ST + 成交额>=1000万 + 剔t+1涨停）；"
@@ -92,7 +110,7 @@ SPECS = [
         "display_name": "M0 H20（日频 ST 重评）",
         "arm": "m0-h20-st-daily",
         "eval": "backtest/result/eval_regime_m0_labels/eval_m0h20_st_daily.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_t5h5es_report.html",
+        "detail_report": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
         "hypothesis": (
             "同一组 regimeadaptfast_m0h20_s*，仅把评估 ST 从静态 st_names 换成日频 st_daily；"
             "官方数字已并入 regime-adapt/m0-h20-label-v4"
@@ -105,7 +123,7 @@ SPECS = [
         "display_name": "v3 + DoubleEnsemble s42",
         "arm": "m0-h20-t3h5es-densemble",
         "eval": "backtest/result/eval_regime_ablation/eval_densemble_s42_vs_v3.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
         "hypothesis": (
             "相对当前基线 v3（M0 H20 t3h5es），只把单 LGBM 换成 B6-M 冻结超参"
             "DoubleEnsemble（num_models=3, SR/FS, lr=0.1）；"
@@ -129,7 +147,7 @@ SPECS = [
         "display_name": "v3 + DoubleEnsemble",
         "arm": "m0-h20-t3h5es-densemble",
         "eval": "backtest/result/eval_regime_ablation/eval_densemble_vs_v3.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_t3h5es_densemble_report.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
         "hypothesis": (
             "相对当前基线 v3（M0 H20 t3h5es），只把单 LGBM 换成 B6-M 冻结超参"
             "DoubleEnsemble（num_models=3, SR/FS, lr=0.1）；"
@@ -157,7 +175,7 @@ SPECS = [
         "display_name": "M0 H20 RankIC ES",
         "arm": "m0-h20-rankices",
         "eval": "backtest/result/eval_regime_ablation/eval_m0h20_rankices.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_rankices_report.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
         "hypothesis": (
             "相对当前基线 v3，训练配方不变（全A + H20 + M0 日权 + 单 LGBM B3-M），"
             "valid 仍用评估窗 valid_frame_t5h5es.pkl（约 1454 天、H5 标签），"
@@ -187,7 +205,7 @@ SPECS = [
         "display_name": "v4 + DoubleEnsemble s42",
         "arm": "m0-h20-rankices-densemble",
         "eval": "backtest/result/eval_regime_ablation/eval_densemble_s42_vs_v4.json",
-        "detail_report": "backtest/experiments/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
         "hypothesis": (
             "相对当前基线 v4（M0 H20 RankIC ES），只把单 LGBM 换成 B6-M 冻结超参"
             "DoubleEnsemble（num_models=3, SR/FS, lr=0.1）；"
@@ -249,9 +267,9 @@ def daily_turnover(prim: dict, h: int = 5):
 
 def snap(rel: str) -> dict | None:
     path = EXP_ROOT / rel
-    if not path.exists():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
         return None
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     pool = doc["pools"]["all"]
     sm = pool.get("ensemble") or pool.get("seed_mean") or {}
     prim = (sm.get("head") or {}).get("3", {}).get("5", {})
@@ -274,16 +292,11 @@ def snap(rel: str) -> dict | None:
 
 
 def load_registry() -> list[dict]:
-    if not REG.exists():
-        return []
-    return [json.loads(line) for line in REG.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return _load_registry_rows(REG) if _resolve_research_path(REG, _RESEARCH_ROOT).is_file() else []
 
 
 def write_registry(rows: list[dict]) -> None:
-    REG.write_text(
-        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
-        encoding="utf-8",
-    )
+    _write_registry_rows(REG, rows)
 
 
 def build_row(spec: dict, *, state: str, metrics: dict | None) -> dict:
@@ -311,7 +324,7 @@ def build_row(spec: dict, *, state: str, metrics: dict | None) -> dict:
             "baseline_ref",
             "self" if spec["exp_id"] == BASELINE_ID else BASELINE_ID,
         ),
-        "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
+        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
     }
     if spec.get("result_dirs"):
         row["result_dirs"] = list(spec["result_dirs"])

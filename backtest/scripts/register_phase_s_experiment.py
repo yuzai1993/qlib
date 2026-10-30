@@ -7,6 +7,7 @@ import json
 import math
 from datetime import date
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
 
 from phase_s_protocol import (
@@ -24,6 +25,24 @@ from phase_s_protocol import (
     sha256_file,
     strategy_grid,
 )
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
@@ -62,7 +81,7 @@ def _prediction_artifacts(manifest: dict, model_ref: str) -> list[dict]:
         path = Path(str(entry.get("path") or "")).expanduser()
         if not path.is_absolute():
             path = REPO_ROOT / path
-        if not path.is_file():
+        if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
             raise ValueError(f"prediction artifact missing: {path}")
         if sha256_file(path) != entry["prediction_sha256"]:
             raise ValueError(f"prediction artifact SHA mismatch: {path}")
@@ -127,13 +146,7 @@ def build_preregistered_row(
 
 
 def load_registry(path: Path) -> list[dict]:
-    if not path.is_file():
-        return []
-    return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    return _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
 
 
 def upsert_registry_row(
@@ -171,19 +184,13 @@ def upsert_registry_row(
         if row.get("state") != "preregistered":
             raise ValueError("new Phase S row must start at preregistered")
         rows.append(row)
-    registry.parent.mkdir(parents=True, exist_ok=True)
-    temporary = registry.with_name(registry.name + ".tmp")
-    temporary.write_text(
-        "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in rows),
-        encoding="utf-8",
-    )
-    temporary.replace(registry)
+    _write_registry_rows(registry, rows)
 
 
 def bind_valid_results(row: dict, result_path: Path) -> dict:
     if row.get("state") != "preregistered":
         raise ValueError("valid results require preregistered state")
-    payload = json.loads(Path(result_path).read_text(encoding="utf-8"))
+    payload = json.loads(_resolve_research_path(Path(result_path), _RESEARCH_ROOT).read_text(encoding="utf-8"))
     if (
         payload.get("model_ref") != row.get("model_ref")
         or payload.get("pool") != "csi1000"
@@ -241,7 +248,7 @@ def bind_valid_results(row: dict, result_path: Path) -> dict:
 def bind_test_results(row: dict, result_path: Path) -> dict:
     if row.get("state") != "valid_complete":
         raise ValueError("test results require valid_complete state")
-    payload = json.loads(Path(result_path).read_text(encoding="utf-8"))
+    payload = json.loads(_resolve_research_path(Path(result_path), _RESEARCH_ROOT).read_text(encoding="utf-8"))
     if payload.get("model_ref") != row.get("model_ref"):
         raise ValueError("test result model_ref mismatch")
     pools = payload.get("pools") or {}
@@ -541,13 +548,7 @@ def upsert_baseline_anchor_row(registry: Path, row: dict) -> None:
         return
     else:
         rows.append(row)
-    registry.parent.mkdir(parents=True, exist_ok=True)
-    temporary = registry.with_name(registry.name + ".tmp")
-    temporary.write_text(
-        "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in rows),
-        encoding="utf-8",
-    )
-    temporary.replace(registry)
+    _write_registry_rows(registry, rows)
 
 
 def write_protocol(path: Path) -> None:
@@ -575,7 +576,7 @@ def write_protocol(path: Path) -> None:
         "fees": dict(EXCHANGE_KWARGS),
     }
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _resolve_research_path(path, _RESEARCH_ROOT).write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -610,7 +611,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     if args.command == "preregister":
         frozen = load_frozen_model(REPO_ROOT, args.model_ref)
         prediction_manifest = json.loads(
-            args.prediction_manifest.read_text(encoding="utf-8")
+            _resolve_research_path(args.prediction_manifest, _RESEARCH_ROOT).read_text(encoding="utf-8")
         )
         row = build_preregistered_row(
             frozen,

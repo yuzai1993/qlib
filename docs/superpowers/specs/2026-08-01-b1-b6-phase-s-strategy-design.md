@@ -135,7 +135,7 @@ registry 是唯一结构化数据源。新增独立报告：
 6. test 分年度扣费超额 IR；
 7. test 不用于选型的声明。
 
-原 `backtest/experiments/report.html` 也必须由同一 registry 重新生成，不得手工编辑任何 HTML。
+原 `backtest/experiments/reports/report.html` 也必须由同一 registry 重新生成，不得手工编辑任何 HTML。
 
 ## 8. 预登记与产物保留
 

@@ -47,7 +47,7 @@ def _monitor_path(path: str) -> bool:
 
 
 def create_app(
-    research_root: Path, data_root: Path, *, live_config: dict | None = None, project_root: Path | None = None
+    research_root: Path, data_root: Path | None = None, *, live_config: dict | None = None, project_root: Path | None = None
 ) -> FastAPI:
     research_root = Path(research_root).resolve()
     store = AnalysisStore(data_root, research_root)

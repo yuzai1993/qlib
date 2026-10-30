@@ -9,7 +9,30 @@ import math
 import sys
 from datetime import date
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        append_registry as _append_registry_row,
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        append_registry as _append_registry_row,
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
@@ -80,7 +103,7 @@ def _path_text(path: Path | str) -> str:
 
 
 def _read_json(path: Path | str) -> dict[str, Any]:
-    return json.loads(_resolve_path(path).read_text(encoding="utf-8"))
+    return json.loads(_resolve_research_path(_resolve_path(path), _RESEARCH_ROOT).read_text(encoding="utf-8"))
 
 
 def _validate_protocol(protocol: dict[str, Any]) -> list[dict[str, Any]]:
@@ -117,7 +140,7 @@ def _validate_protocol(protocol: dict[str, Any]) -> list[dict[str, Any]]:
     if not base_path or not base_sha:
         raise ValueError("full-period protocol lacks base config identity")
     resolved_base = _resolve_path(str(base_path))
-    if not resolved_base.is_file() or sha256_file(resolved_base) != base_sha:
+    if not _resolve_research_path(resolved_base, _RESEARCH_ROOT).is_file() or sha256_file(resolved_base) != base_sha:
         raise ValueError("base config SHA differs from full-period protocol")
     return copy.deepcopy(grid)
 
@@ -134,7 +157,7 @@ def _portable_prediction_artifact(entry: dict[str, Any]) -> dict[str, Any]:
 
 def _verify_json_input(payload: dict[str, Any], path: Path, *, label: str) -> str:
     resolved = _resolve_path(path)
-    if not resolved.is_file():
+    if not _resolve_research_path(resolved, _RESEARCH_ROOT).is_file():
         raise FileNotFoundError(f"{label} missing: {resolved}")
     if _read_json(resolved) != payload:
         raise ValueError(f"{label} payload differs from file")
@@ -222,7 +245,7 @@ def _verify_preregistered_artifacts(
     protocol_path = _resolve_path(str(preregistered.get("protocol_path") or ""))
     expected_protocol_sha = preregistered.get("protocol_sha256")
     if (
-        not protocol_path.is_file()
+        not _resolve_research_path(protocol_path, _RESEARCH_ROOT).is_file()
         or sha256_file(protocol_path) != expected_protocol_sha
     ):
         raise ValueError("protocol SHA differs from preregistration")
@@ -236,7 +259,7 @@ def _verify_preregistered_artifacts(
         raise ValueError("prediction manifest path differs from preregistration")
     expected_manifest_sha = preregistered.get("prediction_manifest_sha256")
     if (
-        not declared_manifest_path.is_file()
+        not _resolve_research_path(declared_manifest_path, _RESEARCH_ROOT).is_file()
         or sha256_file(declared_manifest_path) != expected_manifest_sha
     ):
         raise ValueError("prediction manifest SHA differs from preregistration")
@@ -249,7 +272,7 @@ def _verify_preregistered_artifacts(
 
     base_path = _resolve_path(str(protocol.get("base_config") or ""))
     base_sha = protocol.get("base_config_sha256")
-    if not base_path.is_file() or sha256_file(base_path) != base_sha:
+    if not _resolve_research_path(base_path, _RESEARCH_ROOT).is_file() or sha256_file(base_path) != base_sha:
         raise ValueError("base config SHA differs from preregistration")
     if preregistered.get("base_config_sha256") != base_sha:
         raise ValueError("base config SHA differs from preregistered row")
@@ -385,7 +408,7 @@ def build_complete_row(
         raise ValueError("stored winner differs from recomputed full-period winner")
 
     result_file = _resolve_path(results_path)
-    if not result_file.is_file():
+    if not _resolve_research_path(result_file, _RESEARCH_ROOT).is_file():
         raise FileNotFoundError(f"full results missing: {result_file}")
     if _read_json(result_file) != results:
         raise ValueError("full results payload differs from checkpoint file")
@@ -445,7 +468,7 @@ def build_full_baseline_comparison_correction(
     ):
         raise ValueError("correction requires the completed full-period experiment")
     result_file = _resolve_path(results_path)
-    if not result_file.is_file() or _read_json(result_file) != results:
+    if not _resolve_research_path(result_file, _RESEARCH_ROOT).is_file() or _read_json(result_file) != results:
         raise ValueError("correction requires the exact stored full results")
     if completed.get("full_result_sha256") != sha256_file(result_file):
         raise ValueError("correction full-result SHA differs from completed row")
@@ -502,20 +525,11 @@ def append_registry_correction(registry: Path, correction: dict[str, Any]) -> No
         return
     if len([row for row in rows if row.get("exp_id") == parent_id]) != 1:
         raise ValueError("correction requires exactly one original experiment row")
-    with registry.open("a", encoding="utf-8") as handle:
-        handle.write(
-            json.dumps(correction, ensure_ascii=False, separators=(",", ":")) + "\n"
-        )
+    _append_registry_row(registry, correction)
 
 
 def load_registry(path: Path) -> list[dict[str, Any]]:
-    if not path.is_file():
-        return []
-    return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    return _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
 
 
 def upsert_registry_transition(
@@ -526,19 +540,18 @@ def upsert_registry_transition(
     if not exp_id.startswith(NEIGHBORHOOD_EXP_PREFIX):
         raise ValueError(f"registry transition only supports full neighborhood: {exp_id}")
     lines = (
-        registry.read_text(encoding="utf-8").splitlines(keepends=True)
-        if registry.is_file()
+        _resolve_research_path(registry, _RESEARCH_ROOT).read_bytes().decode("utf-8").splitlines(keepends=True)
+        if _resolve_research_path(registry, _RESEARCH_ROOT).is_file()
         else []
     )
     parsed = [
-        (index, json.loads(line)) for index, line in enumerate(lines) if line.strip()
+        (index, _decode_registry_line(line, registry)) for index, line in enumerate(lines) if line.strip()
     ]
     matches = [
         (index, current) for index, current in parsed if current.get("exp_id") == exp_id
     ]
     if len(matches) > 1:
         raise ValueError(f"duplicate registry exp_id: {exp_id}")
-    serialized = json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
     if matches:
         index, previous = matches[0]
         if previous.get("state") == "complete":
@@ -548,7 +561,7 @@ def upsert_registry_transition(
                 "registry transition must be preregistered -> complete; "
                 f"found {previous.get('state')!r} -> {row.get('state')!r}"
             )
-        lines[index] = serialized
+        lines[index] = _encode_registry_row(registry, row) + "\n"
     else:
         if row.get("state") != "preregistered":
             raise ValueError(
@@ -557,10 +570,10 @@ def upsert_registry_transition(
             )
         if lines and not lines[-1].endswith(("\n", "\r")):
             lines[-1] += "\n"
-        lines.append(serialized)
+        lines.append(_encode_registry_row(registry, row) + "\n")
     registry.parent.mkdir(parents=True, exist_ok=True)
     temporary = registry.with_name(registry.name + ".tmp")
-    temporary.write_text("".join(lines), encoding="utf-8")
+    _resolve_research_path(temporary, _RESEARCH_ROOT).write_bytes("".join(lines).encode("utf-8"))
     temporary.replace(registry)
 
 
@@ -596,11 +609,11 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             completed, results, results_path=args.results
         )
         correction_path = _resolve_path(args.correction)
-        if correction_path.exists() and _read_json(correction_path) != correction:
+        if _resolve_research_path(correction_path, _RESEARCH_ROOT).exists() and _read_json(correction_path) != correction:
             raise ValueError("existing correction artifact is immutable")
         correction_path.parent.mkdir(parents=True, exist_ok=True)
-        if not correction_path.exists():
-            correction_path.write_text(
+        if not _resolve_research_path(correction_path, _RESEARCH_ROOT).exists():
+            _resolve_research_path(correction_path, _RESEARCH_ROOT).write_text(
                 json.dumps(correction, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )

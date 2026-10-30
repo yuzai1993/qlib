@@ -1,0 +1,40 @@
+{
+  "exp_id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-21",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "M0 H20 ES hold5 + 掉出前100必卖",
+  "arm": "m0h20es",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "在冻结的 BT v2 均值信号上，把最短持仓改成 5 天，减少 2026 那种卖早赢家、扛久输家；同时对当日排名掉出前 100 的持仓放开 n_drop=1 和持仓天数，避免死扛已经掉出信号头部的票。预期 2026 年化好于 BT v2，全期夏普不显著变差。",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=5 force_sell_rank=100 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top5d1h5f100/m0h20es.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v2",
+  "note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+  "metrics": {
+    "annualized_return": 0.30083257960449616,
+    "sharpe_ratio": 1.063632414322577,
+    "alpha": 0.20995392163959622,
+    "beta": 0.8805258880135014,
+    "max_drawdown": -0.346694968870247,
+    "calmar_ratio": 0.8677154461883319,
+    "annualized_volatility": 0.28577804742510626,
+    "annualized_one_way_turnover": 58.14329410295107,
+    "n_days": 1454,
+    "y2026_annualized_return": 0.04588005005492524,
+    "annualized_return_arith": 0.30396279454315767
+  },
+  "ensemble_session": "backtest/result/20260821_210439_phase_s_m0h20es_all_top5d1h5f100_ensemble",
+  "conclusion": "对照 market_cn + CAGR 后的 BT v2（累乘年化 +23.1%/夏普 0.86）：本实验全期 +30.1%/1.06，但 2026 从 +13.6% 掉到 +4.6%，假设不成立。未晋升。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5f100-bt/metrics/all_top5d1h5f100_m0h20es.json"
+}

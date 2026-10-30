@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-import json
+import sys
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from backtest.scripts.experiment_registry import load_registry  # noqa: E402
+
 REGISTRY = ROOT / "backtest" / "experiments" / "registry.jsonl"
 
 
 def test_all_registered_phase_m_configs_are_train_only():
-    rows = [
-        json.loads(line)
-        for line in REGISTRY.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    rows = load_registry(REGISTRY)
     paths = {
         ROOT / config
         for row in rows

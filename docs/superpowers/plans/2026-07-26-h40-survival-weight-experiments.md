@@ -216,7 +216,7 @@ Stop if it differs from Task 3.
 - Create: `backtest/experiments/ic/ld_survival_p*_h40_test_1d.json`
 - Create: `backtest/experiments/ic/ld_survival_p*_h40_test_self.json`
 - Modify: `backtest/experiments/registry.jsonl`
-- Regenerate: `backtest/experiments/report.html`
+- Regenerate: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Produces: three registry rows with `metrics_by_eval_label`.

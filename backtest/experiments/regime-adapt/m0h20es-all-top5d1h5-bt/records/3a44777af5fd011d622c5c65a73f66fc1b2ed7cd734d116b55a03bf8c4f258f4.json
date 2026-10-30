@@ -1,0 +1,41 @@
+{
+  "exp_id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-22",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "M0 H20 ES top5d1 hold5（无强制卖出）",
+  "arm": "m0h20es",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "BT v3（hold5 + 掉出前100必卖）相对 BT v2（top5d1）多出约 7pp CAGR。本臂只开 hold_thresh=5、不开 force_sell_rank，检验最短持仓本身是否就是收益来源。若 hold5 单独接近组合，则强制卖出只是配角；若 hold5 单独接近 top5d1，则收益来自强制卖出。",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top5d1h5/m0h20es.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v3",
+  "note": "2×2 消融；信号与 BT v2/v3 同一条 ensemble pred；只改 hold_thresh / force_sell_rank",
+  "metrics": {
+    "annualized_return": 0.3129497107556747,
+    "sharpe_ratio": 1.053793810959309,
+    "alpha": 0.2194371916511586,
+    "beta": 0.9236992743891491,
+    "max_drawdown": -0.33395789816211907,
+    "calmar_ratio": 0.9370933057069187,
+    "annualized_volatility": 0.30181943054281735,
+    "annualized_one_way_turnover": 45.77203565122022,
+    "n_days": 1454,
+    "annualized_return_arith": 0.31805544793328394,
+    "y2026_annualized_return": 0.19059138618077154,
+    "y2026_annualized_return_arith": 0.21917498162301832
+  },
+  "ensemble_session": "backtest/result/20260822_091251_phase_s_m0h20es_all_top5d1h5_ensemble",
+  "conclusion": "hold5 单独已经够用，甚至优于组合。CAGR +31.3%/夏普 1.05/回撤 −33.4%/换手 45.8，对 top5d1（+23.1%/0.86/−39.2%/49.3）+8.2pp，对组合 h5f100（+30.1%/1.06/−34.7%/58.1）还高 1.2pp。2022 算术 +40.3% 是四格里最好的一年，但 2020 翻负（算术 −4.9%、CAGR −8.0%），说明最短持仓会把早期衰退票锁满 5 天。未晋升。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5-bt/metrics/all_top5d1h5_m0h20es.json"
+}

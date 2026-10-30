@@ -17,6 +17,7 @@ sys.path.insert(0, str(SCRIPTS))
 import build_experiment_report as report  # noqa: E402
 import cleanup_experiment_artifacts as cleanup  # noqa: E402
 import register_b5_rankic_hyperparams as register  # noqa: E402
+from experiment_registry import load_registry, write_registry  # noqa: E402
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
@@ -68,7 +69,7 @@ def _baseline_row(values: dict[str, float] | None = None) -> dict:
         "data_version": "2026-07-30",
         "result_dirs": [
             *(f"backtest/result/baseline-s{seed}" for seed in SEEDS),
-            "backtest/experiments/ic/ls_rank_norm_test_1d.json",
+            "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json",
         ],
         "metrics_summary": {
             pool: _pool(value)["seed_mean"] for pool, value in values.items()
@@ -213,15 +214,12 @@ def _write_session(path: Path, experiment_id: int) -> None:
 def _prepare_preregistered_artifacts(repo_root: Path) -> Path:
     config_root = repo_root / "backtest" / "configs" / "model-hyperparam"
     for candidate in register.CANDIDATES:
-        source = ROOT / "backtest" / "configs" / "model-hyperparam" / candidate
-        shutil.copytree(source, config_root / candidate)
-    baseline_path = (
-        repo_root
-        / "backtest"
-        / "experiments"
-        / "ic"
-        / "ls_rank_norm_test_1d.json"
-    )
+        destination = config_root / candidate
+        destination.mkdir(parents=True, exist_ok=True)
+        for seed in SEEDS:
+            source = register._config_path(ROOT, candidate, seed)
+            shutil.copy2(source, destination / source.name)
+    baseline_path = repo_root / register.BASELINE_RESULT_REL
     _write_json(baseline_path, _baseline_result())
     for index, seed in enumerate(SEEDS, start=1):
         _write_session(
@@ -304,7 +302,7 @@ def test_pending_row_freezes_the_complete_valid_only_search_protocol():
         "rankic-es-leaves128": {"num_leaves": 128},
     }
     assert row["baseline_result"] == (
-        "backtest/experiments/ic/ls_rank_norm_test_1d.json"
+        "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json"
     )
     assert row["baseline_result_sha256"] == hashlib.sha256(
         (ROOT / row["baseline_result"]).read_bytes()
@@ -642,3 +640,16 @@ def test_cli_requires_data_version_only_for_pending():
     assert args.data_version == "2026-07-30"
     args = register.parse_args(["--stage", "final"])
     assert args.data_version is None
+
+
+def test_finalization_hydrates_index_and_preserves_untouched_event_bytes(tmp_path, monkeypatch):
+    registry, baseline, manifest, result = _setup_final_files(tmp_path, monkeypatch)
+    rows = load_registry(registry)
+    write_registry(registry, rows, indexed=True)
+    pending_id = register.EXP_ID
+    before = registry.read_bytes().splitlines(keepends=True)
+    bystanders = [line for line in before if json.loads(line)["exp_id"] != pending_id]
+    completed = _finalize(registry, baseline, manifest, result)
+    assert next(row for row in load_registry(registry) if row["exp_id"] == pending_id) == completed
+    assert [line for line in registry.read_bytes().splitlines(keepends=True) if json.loads(line)["exp_id"] != pending_id] == bystanders
+    assert all("metrics_summary" not in json.loads(line) for line in registry.read_text().splitlines())

@@ -1,0 +1,121 @@
+{
+  "exp_id": "baseline/b3-m",
+  "direction": "baseline",
+  "phase": "M",
+  "date": "2026-07-26",
+  "hypothesis": "用户确认将 feature-b2/range（Alpha158+密集区间/事件频率特征）记录为新的 B3-M 研究基线",
+  "baseline_ref": "B3 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 6,
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/configs/feature-b2/range/fb2_range_lgbm_s42.yaml",
+    "backtest/configs/feature-b2/range/fb2_range_lgbm_s1000.yaml",
+    "backtest/configs/feature-b2/range/fb2_range_lgbm_s2000.yaml",
+    "backtest/configs/feature-b2/range/fb2_range_lgbm_s3000.yaml",
+    "backtest/configs/feature-b2/range/fb2_range_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260726_164015_fb2_range_lgbm_s42",
+    "backtest/result/20260726_164144_fb2_range_lgbm_s1000",
+    "backtest/result/20260726_164314_fb2_range_lgbm_s2000",
+    "backtest/result/20260726_164443_fb2_range_lgbm_s3000",
+    "backtest/result/20260726_164611_fb2_range_lgbm_s4000",
+    "backtest/experiments/feature-b2/range/metrics/fb2_range_test_1d.json",
+    "backtest/experiments/feature-b2/range/metrics/fb2_range_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.018311731605864554,
+      "icir": 0.09356756631283128,
+      "rank_ic_mean": 0.03487284893708191,
+      "rank_icir": 0.17331847044517323,
+      "rank_ic_mean_std": 0.0008166962924616094
+    },
+    "csi500": {
+      "ic_mean": 0.013310813497278858,
+      "icir": 0.08347443695636872,
+      "rank_ic_mean": 0.03472404243179853,
+      "rank_icir": 0.21844856207429797,
+      "rank_ic_mean_std": 0.0004239792994916172
+    },
+    "csi1000": {
+      "ic_mean": 0.019945274879773895,
+      "icir": 0.1443800684608339,
+      "rank_ic_mean": 0.04203471232220627,
+      "rank_icir": 0.30295796989133583,
+      "rank_ic_mean_std": 0.0005756917939322821
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.018311731605864554,
+        "icir": 0.09356756631283128,
+        "rank_ic_mean": 0.03487284893708191,
+        "rank_icir": 0.17331847044517323,
+        "rank_ic_mean_std": 0.0008166962924616094
+      },
+      "csi500": {
+        "ic_mean": 0.013310813497278858,
+        "icir": 0.08347443695636872,
+        "rank_ic_mean": 0.03472404243179853,
+        "rank_icir": 0.21844856207429797,
+        "rank_ic_mean_std": 0.0004239792994916172
+      },
+      "csi1000": {
+        "ic_mean": 0.019945274879773895,
+        "icir": 0.1443800684608339,
+        "rank_ic_mean": 0.04203471232220627,
+        "rank_icir": 0.30295796989133583,
+        "rank_ic_mean_std": 0.0005756917939322821
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.05613141255682189,
+        "icir": 0.2970356218403126,
+        "rank_ic_mean": 0.08000448855591308,
+        "rank_icir": 0.4073278812698618,
+        "rank_ic_mean_std": 0.001021905289231812
+      },
+      "csi500": {
+        "ic_mean": 0.04049962556118268,
+        "icir": 0.27158296933924053,
+        "rank_ic_mean": 0.0716469326896452,
+        "rank_icir": 0.46765206984282254,
+        "rank_ic_mean_std": 0.0008001986329643317
+      },
+      "csi1000": {
+        "ic_mean": 0.06352298230955084,
+        "icir": 0.48960059811151674,
+        "rank_ic_mean": 0.09112917899839007,
+        "rank_icir": 0.6884786944131701,
+        "rank_ic_mean_std": 0.0013305183174966556
+      }
+    }
+  },
+  "conclusion": "baseline",
+  "note": "B3-M（B3 v1.0）；由 feature-b2/range 经用户确认提升。B2-M 与实盘 B1 保留，不自动部署。",
+  "promoted_from": "feature-b2/range"
+}

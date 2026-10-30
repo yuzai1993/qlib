@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "exp_id": "strategy-neighborhood/b3-s-local-full-v1-correction-v1",
+  "event_numbers": [
+    61
+  ],
+  "phase": "S",
+  "direction": null,
+  "records_directory": "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1-correction-v1/records",
+  "configs": [],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1-correction-v1/data/full_baseline_comparison_correction_v1.json",
+    "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data/full_results.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1-correction-v1/records/3fac704af72fb8fef482bc8fbf309ff8e133d6164a46f9ae721d28eaa6d03cc5.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

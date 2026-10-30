@@ -16,9 +16,9 @@
 用法：
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/analyze_b2s_style_regime.py \
         --report backtest/result/<session>/run_01/report_normal.csv \
-        --pred backtest/experiments/strategy-stability/20260801_full_period/predictions/b6-m/csi1000_full.pkl \
+        --pred backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl \
         --config strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml \
-        --output backtest/experiments/ic/b2s_style_regime.json
+        --output backtest/experiments/signal-style-diagnostic/b2s-on-b6-m/metrics/b2s_style_regime.json
 """
 
 from __future__ import annotations
@@ -27,10 +27,29 @@ import argparse
 import json
 import sys
 from pathlib import Path
+
 from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
 
 QLIB_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -285,7 +304,7 @@ def sha256_of(path: Path) -> str:
     import hashlib
 
     digest = hashlib.sha256()
-    digest.update(Path(path).read_bytes())
+    digest.update(_resolve_research_path(Path(path), _RESEARCH_ROOT).read_bytes())
     return digest.hexdigest()
 
 
@@ -298,8 +317,8 @@ def build_registry_row(
     """诊断行：不选型、不占清理额度、不给可比策略指标。"""
     manifest_path = QLIB_ROOT / BASELINE_MANIFEST
     manifest = (
-        json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest_path.is_file()
+        json.loads(_resolve_research_path(manifest_path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
+        if _resolve_research_path(manifest_path, _RESEARCH_ROOT).is_file()
         else {}
     )
     findings = {}
@@ -367,16 +386,16 @@ def build_registry_row(
 
 
 def upsert_registry(registry: Path, row: dict) -> None:
-    lines = registry.read_text(encoding="utf-8").splitlines(keepends=True) if registry.is_file() else []
+    lines = _resolve_research_path(registry, _RESEARCH_ROOT).read_bytes().decode("utf-8").splitlines(keepends=True) if _resolve_research_path(registry, _RESEARCH_ROOT).is_file() else []
     parsed = [
-        (i, json.loads(line))
+        (i, _decode_registry_line(line, registry))
         for i, line in enumerate(lines)
         if line.strip()
     ]
     matches = [i for i, item in parsed if item.get("exp_id") == row["exp_id"]]
     if len(matches) > 1:
         raise ValueError(f"duplicate registry exp_id: {row['exp_id']}")
-    serialized = json.dumps(row, ensure_ascii=False) + "\n"
+    serialized = _encode_registry_row(registry, row) + "\n"
     if matches:
         lines[matches[0]] = serialized
     else:
@@ -385,7 +404,7 @@ def upsert_registry(registry: Path, row: dict) -> None:
         lines.append(serialized)
     registry.parent.mkdir(parents=True, exist_ok=True)
     temporary = registry.with_name(registry.name + ".tmp")
-    temporary.write_text("".join(lines), encoding="utf-8")
+    _resolve_research_path(temporary, _RESEARCH_ROOT).write_bytes("".join(lines).encode("utf-8"))
     temporary.replace(registry)
 
 
@@ -458,7 +477,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
+    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(
         json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print(f"written: {args.output}")

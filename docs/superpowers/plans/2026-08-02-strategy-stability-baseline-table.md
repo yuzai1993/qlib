@@ -23,7 +23,7 @@
 **Files:**
 - Modify: `tests/backtest/test_build_strategy_stability_report.py`
 - Modify: `backtest/scripts/build_strategy_stability_report.py`
-- Modify: `backtest/experiments/strategy_stability_report.html`
+- Modify: `backtest/experiments/reports/strategy_stability_report.html`
 
 **Interfaces:**
 - Consumes: registry rows passed to `build_html(rows: Sequence[dict]) -> str`.
@@ -65,7 +65,7 @@ Run:
 /opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_strategy_stability_report.py
 ```
 
-Confirm `backtest/experiments/strategy_stability_report.html` has `#current-baseline` and its first table has class `baseline`.
+Confirm `backtest/experiments/reports/strategy_stability_report.html` has `#current-baseline` and its first table has class `baseline`.
 
 - [x] **Step 6: Run full verification**
 
@@ -83,7 +83,7 @@ Expected: the full backtest suite passes and the diff has no whitespace errors.
 ```bash
 git add backtest/scripts/build_strategy_stability_report.py \
   tests/backtest/test_build_strategy_stability_report.py \
-  backtest/experiments/strategy_stability_report.html \
+  backtest/experiments/reports/strategy_stability_report.html \
   docs/superpowers/plans/2026-08-02-strategy-stability-baseline-table.md
 git commit -m "feat(backtest): add strategy baseline summary table"
 ```

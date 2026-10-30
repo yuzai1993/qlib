@@ -10,7 +10,28 @@ import math
 import sys
 from datetime import date, datetime
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
@@ -24,7 +45,7 @@ from strategy_neighborhood_protocol import score_valid_candidates  # noqa: E402
 EXP_ID = "strategy-neighborhood/b2-s-local-v1"
 DEFAULT_ROOT = REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260802_b2s_local"
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
-UNIFIED_REPORT = REPO_ROOT / "backtest/experiments/strategy_stability_report.html"
+UNIFIED_REPORT = REPO_ROOT / "backtest/experiments/reports/strategy_stability_report.html"
 DEFAULT_CONFIGS = REPO_ROOT / "backtest/configs/strategy-neighborhood/b2-s-local"
 METRICS = (
     ("excess_with_cost_information_ratio", "扣费超额IR", False),
@@ -46,7 +67,7 @@ def _path_text(path: Path) -> str:
 
 
 def _hash_if_file(path: Path) -> str | None:
-    return sha256_file(path) if Path(path).is_file() else None
+    return sha256_file(path) if _resolve_research_path(Path(path), _RESEARCH_ROOT).is_file() else None
 
 
 _PORTABLE_PATH_KEYS = {
@@ -195,7 +216,7 @@ def build_complete_row(
     base_config_path = Path(str(base_config_text)).expanduser()
     if not base_config_path.is_absolute():
         base_config_path = REPO_ROOT / base_config_path
-    if not base_config_path.is_file() or sha256_file(base_config_path) != base_config_sha:
+    if not _resolve_research_path(base_config_path, _RESEARCH_ROOT).is_file() or sha256_file(base_config_path) != base_config_sha:
         raise ValueError("frozen base config SHA differs from protocol")
     base_config = load_config(str(base_config_path))
     artifacts = preregistered.get("prediction_artifacts") or []
@@ -296,19 +317,15 @@ def build_complete_row(
 
 
 def load_registry(path: Path) -> list[dict[str, Any]]:
-    return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ] if path.is_file() else []
+    return _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
 
 
 def upsert_registry_transition(
     registry: Path,
     row: dict[str, Any],
 ) -> None:
-    lines = registry.read_text(encoding="utf-8").splitlines(keepends=True) if registry.is_file() else []
-    parsed = [(index, json.loads(line)) for index, line in enumerate(lines) if line.strip()]
+    lines = _resolve_research_path(registry, _RESEARCH_ROOT).read_bytes().decode("utf-8").splitlines(keepends=True) if _resolve_research_path(registry, _RESEARCH_ROOT).is_file() else []
+    parsed = [(index, _decode_registry_line(line, registry)) for index, line in enumerate(lines) if line.strip()]
     matches = [
         (index, current)
         for index, current in parsed
@@ -316,7 +333,6 @@ def upsert_registry_transition(
     ]
     if len(matches) > 1:
         raise ValueError(f"duplicate registry exp_id: {row.get('exp_id')}")
-    serialized = json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
     if matches:
         index, previous = matches[0]
         if previous.get("state") == "test_complete":
@@ -329,7 +345,7 @@ def upsert_registry_transition(
                 "registry transition must be preregistered -> test_complete; "
                 f"found {previous.get('state')!r} -> {row.get('state')!r}"
             )
-        lines[index] = serialized
+        lines[index] = _encode_registry_row(registry, row) + "\n"
     else:
         if row.get("state") != "preregistered":
             raise ValueError(
@@ -338,10 +354,10 @@ def upsert_registry_transition(
             )
         if lines and not lines[-1].endswith(("\n", "\r")):
             lines[-1] += "\n"
-        lines.append(serialized)
+        lines.append(_encode_registry_row(registry, row) + "\n")
     registry.parent.mkdir(parents=True, exist_ok=True)
     temporary = registry.with_name(registry.name + ".tmp")
-    temporary.write_text("".join(lines), encoding="utf-8")
+    _resolve_research_path(temporary, _RESEARCH_ROOT).write_bytes("".join(lines).encode("utf-8"))
     temporary.replace(registry)
 
 
@@ -456,8 +472,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
-    protocol = json.loads(args.protocol.read_text(encoding="utf-8"))
-    manifest = json.loads(args.prediction_manifest.read_text(encoding="utf-8"))
+    protocol = json.loads(_resolve_research_path(args.protocol, _RESEARCH_ROOT).read_text(encoding="utf-8"))
+    manifest = json.loads(_resolve_research_path(args.prediction_manifest, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     if args.mode == "preregister":
         row = build_preregistered_row(
             protocol,
@@ -471,8 +487,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         return
     rows = load_registry(args.registry)
     preregistered = _unique_row(rows, EXP_ID)
-    valid = json.loads(args.valid_results.read_text(encoding="utf-8"))
-    test = json.loads(args.test_results.read_text(encoding="utf-8"))
+    valid = json.loads(_resolve_research_path(args.valid_results, _RESEARCH_ROOT).read_text(encoding="utf-8"))
+    test = json.loads(_resolve_research_path(args.test_results, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     complete = build_complete_row(
         preregistered,
         protocol,

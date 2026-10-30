@@ -9,6 +9,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "backtest" / "experiments" / "registry.jsonl"
 EXP_ID = "diag/eval-window-edge-lookahead"
@@ -75,12 +86,10 @@ ENTRY = {
 
 
 def main() -> None:
-    rows = [json.loads(line) for line in REGISTRY.read_text().splitlines() if line.strip()]
+    rows = _load_registry_rows(REGISTRY)
     kept = [r for r in rows if r.get("exp_id") != EXP_ID]
     kept.append(ENTRY)
-    REGISTRY.write_text(
-        "\n".join(json.dumps(r, ensure_ascii=False) for r in kept) + "\n", encoding="utf-8"
-    )
+    _write_registry_rows(REGISTRY, kept)
     print(f"registry 条目 {len(rows)} -> {len(kept)}；已写入 {EXP_ID}")
 
 

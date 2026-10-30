@@ -6,12 +6,31 @@ import html
 import json
 from datetime import datetime
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _report_href
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _report_href
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
 
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 EXP_ROOT = BACKTEST_ROOT.parent
 DEFAULT_REGISTRY = BACKTEST_ROOT / "experiments" / "registry.jsonl"
-DEFAULT_OUTPUT = BACKTEST_ROOT / "experiments" / "phase_m_v1_report.html"
+DEFAULT_OUTPUT = BACKTEST_ROOT / "experiments" / "reports" / "phase_m_v1_report.html"
 
 YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"]
 REGIMES = ["D", "F", "T"]
@@ -82,27 +101,16 @@ def fmt(v: Optional[float], kind: str) -> str:
 
 
 def load_registry(path: Path) -> list[dict]:
-    rows: list[dict] = []
-    if not path.is_file():
-        return rows
-    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            rows.append(json.loads(line))
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"registry 第 {i} 行不是合法 JSON: {exc}") from exc
-    return rows
+    return _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
 
 
 def load_eval_doc(rel: str) -> Optional[dict]:
     if not rel:
         return None
     path = EXP_ROOT / rel
-    if not path.is_file():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
 
 
 def _official(doc: Optional[dict]) -> dict:
@@ -161,7 +169,7 @@ def _matrix_table(
     return "".join(parts)
 
 
-def render_hub(baselines: Sequence[dict], experiments: Sequence[dict]) -> str:
+def render_hub(baselines: Sequence[dict], experiments: Sequence[dict], *, output_path: Path = DEFAULT_OUTPUT) -> str:
     named = [(f"{b['version']} {b['name']}", b.get("doc")) for b in baselines]
     H = [
         "<!DOCTYPE html><html lang='zh-CN'><head><meta charset='utf-8'>",
@@ -184,7 +192,7 @@ def render_hub(baselines: Sequence[dict], experiments: Sequence[dict]) -> str:
     ]
     for item in baselines:
         cell = primary_cell(item.get("doc"))
-        detail = Path(str(item.get("detail_report") or "")).name
+        detail = _report_href(item["detail_report"], output_path, EXP_ROOT) if item.get("detail_report") else ""
         cls = " class='current'" if item.get("current") else " class='primary'"
         tag = " · 当前" if item.get("current") else ""
         H.append(
@@ -198,7 +206,7 @@ def render_hub(baselines: Sequence[dict], experiments: Sequence[dict]) -> str:
                 for _, _, kind in GLOBAL_KEYS
             )
             + (
-                f"<td><a href='{_esc(detail)}'>{_esc(detail)}</a></td></tr>"
+                f"<td><a href='{_esc(detail)}'>{_esc(Path(str(item['detail_report'])).name)}</a></td></tr>"
                 if detail
                 else "<td><span class='empty'>—</span></td></tr>"
             )
@@ -220,9 +228,9 @@ def render_hub(baselines: Sequence[dict], experiments: Sequence[dict]) -> str:
     )
     if experiments:
         for exp in experiments:
-            detail = Path(str(exp.get("detail_report") or "")).name
+            detail = _report_href(exp["detail_report"], output_path, EXP_ROOT) if exp.get("detail_report") else ""
             link = (
-                f"<a href='{_esc(detail)}'>{_esc(detail)}</a>"
+                f"<a href='{_esc(detail)}'>{_esc(Path(str(exp['detail_report'])).name)}</a>"
                 if detail
                 else "<span class='empty'>—</span>"
             )
@@ -330,7 +338,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     rows = load_registry(args.registry)
     baselines, experiments = collect(rows)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(render_hub(baselines, experiments), encoding="utf-8")
+    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(render_hub(baselines, experiments, output_path=args.output), encoding="utf-8")
     print(
         f"{len(baselines)} 个 baseline / {len(experiments)} 条实验记录 → {args.output}"
     )

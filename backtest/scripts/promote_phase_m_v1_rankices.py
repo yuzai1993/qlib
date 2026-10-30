@@ -6,6 +6,13 @@ import sys
 from datetime import date
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_phase_m_v1_report import PRIMARY_H, PRIMARY_K
 from register_regime_m0_labels import load_registry, write_registry
@@ -30,7 +37,7 @@ def _promotion_note(prev: str) -> str:
 
 
 def official_metrics(rel: str) -> dict:
-    doc = json.loads((EXP_ROOT / rel).read_text())
+    doc = json.loads((_resolve_research_path(EXP_ROOT / rel, _RESEARCH_ROOT)).read_text())
     sm = (doc.get("pools") or {}).get("all", {})
     ens = sm.get("ensemble") or sm.get("seed_mean") or {}
     prim = ((ens.get("head") or {}).get(PRIMARY_K) or {}).get(PRIMARY_H) or {}

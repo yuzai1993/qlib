@@ -1,0 +1,50 @@
+{
+  "exp_id": "regime-adapt/m3-fast-feat-sample",
+  "direction": "regime-adapt",
+  "phase": "M",
+  "date": "2026-08-12",
+  "state": "completed",
+  "result": "fail_gate1f",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "arm": "m3-fast",
+  "sessions_tag": "regimeadaptfast_m3",
+  "train_minutes_total": 10,
+  "metrics": {
+    "north_star_allA_mean5h_rankic": 0.1046,
+    "allA_mean5h_rankic_std": 0.00171,
+    "allA_h1_rankic": 0.0561,
+    "mean5h_rankic": {
+      "csi300": 0.0768,
+      "csi500": 0.068,
+      "csi1000": 0.0894,
+      "all": 0.1046
+    },
+    "allA_regime_mean5h_rankic": {
+      "D": 0.1062,
+      "F": 0.1051,
+      "T": 0.0943
+    },
+    "allA_tail_top22_ann_excess": 0.215,
+    "allA_tail_top22_by_regime": {
+      "D": 0.315,
+      "F": -0.339,
+      "T": 0.535
+    },
+    "vs_m0fast": {
+      "north_star_delta": -0.0023,
+      "pairwise_ge": "1/5",
+      "F_mean5h_delta": 0.0089
+    }
+  },
+  "eval_output": "backtest/result/eval_regime_fast/eval_m3fast.json",
+  "gate": "Gate 1f 未通过：北极星 -0.0023（需 +0.005，pairwise 1/5）；F态五期限均值 +0.0089（需 +0.010，差 0.0011）。",
+  "note": "特征+平衡权重把 IC 从 D 态挪到 F 态（F +0.0089 / D -0.0049），整体北极星微降；tail top22 整体 +0.215 优于 m0 +0.169（T态 +0.535），但 F 态尾部仍深负（-0.339 vs m0 -0.317），未解决 2024-09 式 F 态尾部崩塌。按闸门规则登记失败并回报设计。",
+  "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+  "baseline_ref": "regime-adapt/m0-fast-anchor"
+}

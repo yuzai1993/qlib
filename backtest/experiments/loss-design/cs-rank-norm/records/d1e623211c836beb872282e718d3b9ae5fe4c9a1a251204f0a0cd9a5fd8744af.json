@@ -1,0 +1,133 @@
+{
+  "exp_id": "loss-design/cs-rank-norm",
+  "direction": "loss-design",
+  "phase": "M",
+  "date": "2026-07-27",
+  "hypothesis": "仅将训练标签的截面处理由CSZScoreNorm改为CSRankNorm（DropnaLabel保留），模型/特征/H40标签表达式与B4完全相同；MSE回归秩归一化标签≈直接对秩回归，训练目标从对齐Pearson IC变为对齐RankIC，且秩有界消除z-score厚尾对梯度的主导；预期CSI1000 RankIC提升、RankICIR不降",
+  "baseline_ref": "B4 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 6,
+  "model": "DEnsembleModel",
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s42.yaml",
+    "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s1000.yaml",
+    "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s2000.yaml",
+    "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s3000.yaml",
+    "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260727_000819_ls_rank_norm_s42",
+    "backtest/result/20260727_003316_ls_rank_norm_s1000",
+    "backtest/result/20260727_004009_ls_rank_norm_s2000",
+    "backtest/result/20260727_004636_ls_rank_norm_s3000",
+    "backtest/result/20260727_005312_ls_rank_norm_s4000",
+    "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json",
+    "backtest/experiments/loss-design/cs-rank-norm/metrics/ls_rank_norm_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.021298195030335344,
+      "icir": 0.10076788749294115,
+      "rank_ic_mean": 0.043067337494268394,
+      "rank_icir": 0.19869076896385662,
+      "rank_ic_mean_std": 0.0003776384541957225
+    },
+    "csi500": {
+      "ic_mean": 0.015389422238895029,
+      "icir": 0.0881149343148504,
+      "rank_ic_mean": 0.04290214221070511,
+      "rank_icir": 0.24267545110550132,
+      "rank_ic_mean_std": 0.0006798484693808346
+    },
+    "csi1000": {
+      "ic_mean": 0.019459823357249738,
+      "icir": 0.1278362497708705,
+      "rank_ic_mean": 0.04962797177161042,
+      "rank_icir": 0.313215702762399,
+      "rank_ic_mean_std": 0.0005441732407938657
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.021298195030335344,
+        "icir": 0.10076788749294115,
+        "rank_ic_mean": 0.043067337494268394,
+        "rank_icir": 0.19869076896385662,
+        "rank_ic_mean_std": 0.0003776384541957225
+      },
+      "csi500": {
+        "ic_mean": 0.015389422238895029,
+        "icir": 0.0881149343148504,
+        "rank_ic_mean": 0.04290214221070511,
+        "rank_icir": 0.24267545110550132,
+        "rank_ic_mean_std": 0.0006798484693808346
+      },
+      "csi1000": {
+        "ic_mean": 0.019459823357249738,
+        "icir": 0.1278362497708705,
+        "rank_ic_mean": 0.04962797177161042,
+        "rank_icir": 0.313215702762399,
+        "rank_ic_mean_std": 0.0005441732407938657
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.0726152400683788,
+        "icir": 0.366949429151158,
+        "rank_ic_mean": 0.101181591548105,
+        "rank_icir": 0.49370759106766177,
+        "rank_ic_mean_std": 0.0017795406895602826
+      },
+      "csi500": {
+        "ic_mean": 0.047921354154123415,
+        "icir": 0.3022990107486071,
+        "rank_ic_mean": 0.08737905759796682,
+        "rank_icir": 0.5336866718636307,
+        "rank_ic_mean_std": 0.0008709031281058576
+      },
+      "csi1000": {
+        "ic_mean": 0.07303928655894576,
+        "icir": 0.5101538576776428,
+        "rank_ic_mean": 0.11049468875884619,
+        "rank_icir": 0.7465730683164195,
+        "rank_ic_mean_std": 0.0009718271690632776
+      }
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b4": {
+    "n": 5,
+    "wins": 5,
+    "diff_mean": 0.005648076631940864,
+    "diffs": [
+      0.005906223859270164,
+      0.004989079344851974,
+      0.0045372627363111165,
+      0.006660183438661246,
+      0.006147633780609819
+    ]
+  },
+  "conclusion": "improve",
+  "note": "用户确认提升为当前 B5-M（B5 v1.0）；实盘 B1 不自动切换。三池RankIC均超B4；CSI1000 RankIC 0.04963（B4 0.04398），RankICIR 0.3132（B4 0.3142），逐种子pairwise 5/5"
+}

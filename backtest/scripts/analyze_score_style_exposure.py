@@ -11,7 +11,7 @@
 
 用法：
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/analyze_score_style_exposure.py \
-        --output backtest/experiments/ic/b5_style_exposure.json
+        --output backtest/experiments/signal-style-diagnostic/b2s-on-b6-m/metrics/b5_style_exposure.json
 """
 
 from __future__ import annotations
@@ -21,8 +21,16 @@ import json
 import sys
 from pathlib import Path
 
+
 import numpy as np
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
 QLIB_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -179,7 +187,7 @@ def main() -> None:
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"written: {args.output}")
     print(json.dumps(result["seed_mean"], ensure_ascii=False, indent=2))
 

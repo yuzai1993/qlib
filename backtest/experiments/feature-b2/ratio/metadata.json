@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "exp_id": "feature-b2/ratio",
+  "event_numbers": [
+    27
+  ],
+  "phase": "M",
+  "direction": "feature-b2",
+  "records_directory": "backtest/experiments/feature-b2/ratio/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/feature-b2/ratio/configs/fb2_ratio_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "8e4e70951d6b948eb73a5a62ee01170c648a7290ee14eb6ac1a8e253fd63db02"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/ratio/configs/fb2_ratio_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "a90cfdfccabefb4e02a9cc5d34af45287398e63c03eeccbb8fdab5f1d1d42047"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/ratio/configs/fb2_ratio_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "66b461c53c9e17bce807e35beea4ad27c25f59b9af9f0badbdefd9b8bb5ffd36"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/ratio/configs/fb2_ratio_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "ee5de3f69e9b8f55c191f4cd883608327787da7fcb3f304628a33e2297a23146"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/ratio/configs/fb2_ratio_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "f2f701699dd60478e5af4048b0686b2188cf0dbb32ba268efea6aca3301daf76"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/feature-b2/ratio/metrics/fb2_ratio_test_1d.json",
+    "backtest/experiments/feature-b2/ratio/metrics/fb2_ratio_test_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/feature-b2/ratio/records/4b8ffa312e4b3264f3aefe47551cf8ad930d1008e09f3ec15d95be01b881962d.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

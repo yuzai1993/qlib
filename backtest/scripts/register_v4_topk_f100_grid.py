@@ -4,6 +4,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+
 ROOT = Path(__file__).resolve().parents[2]
 REG = ROOT / "backtest" / "experiments" / "registry.jsonl"
 BT_V4 = "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json"
@@ -13,21 +31,21 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
         "display_name": "v4 RankIC ES top15d3 + f100",
         "eval": "backtest/result/phase_s_regime/all_top15d3f100/m0h20rankices.json",
-        "detail": "backtest/experiments/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+        "detail": "backtest/experiments/regime-adapt/m0h20rankices-all-top15d3f100-bt/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
         "config": "TopkDropout topk=15 n_drop=3 hold_thresh=1 force_sell_rank=100",
     },
     {
         "exp_id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
         "display_name": "v4 RankIC ES top5d1 + f100",
         "eval": "backtest/result/phase_s_regime/all_top5d1f100/m0h20rankices.json",
-        "detail": "backtest/experiments/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+        "detail": "backtest/experiments/regime-adapt/m0h20rankices-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
         "config": "TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100",
     },
     {
         "exp_id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
         "display_name": "v4 RankIC ES top3d1 + f100",
         "eval": "backtest/result/phase_s_regime/all_top3d1f100/m0h20rankices.json",
-        "detail": "backtest/experiments/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+        "detail": "backtest/experiments/regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
         "config": "TopkDropout topk=3 n_drop=1 hold_thresh=1 force_sell_rank=100",
     },
 ]
@@ -56,9 +74,9 @@ def pick(summary: dict) -> dict:
 
 def load_ensemble(rel: str) -> dict:
     path = ROOT / rel
-    if not path.is_file():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
         raise SystemExit(f"missing {path}")
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     ens = doc.get("ensemble")
     if not ens:
         raise SystemExit(f"{rel} missing ensemble")
@@ -75,7 +93,7 @@ def fmt(metrics: dict) -> str:
 
 def main() -> None:
     base = pick(load_ensemble(BT_V4))
-    rows = [json.loads(line) for line in REG.read_text().splitlines() if line.strip()]
+    rows = _load_registry_rows(REG)
     drop = {spec["exp_id"] for spec in SPECS}
     kept = [row for row in rows if row.get("exp_id") not in drop]
     for spec in SPECS:
@@ -118,10 +136,7 @@ def main() -> None:
             }
         )
         print(f"{spec['exp_id']}: {fmt(metrics)}")
-    REG.write_text(
-        "\n".join(json.dumps(row, ensure_ascii=False) for row in kept) + "\n",
-        encoding="utf-8",
-    )
+    _write_registry_rows(REG, kept)
 
 
 if __name__ == "__main__":

@@ -177,6 +177,27 @@ def test_no_production_database_created_on_startup(tmp_path):
     assert list(tmp_path.rglob("*.db")) == []
 
 
+def test_default_analysis_api_discovers_new_diagnostics_directories(tmp_path):
+    research = tmp_path / "research"
+    app = create_app(research, project_root=tmp_path)
+    directory = research / "backtest/diagnostics/new-analysis"
+    with TestClient(app, base_url="http://127.0.0.1:8090") as client:
+        assert client.get("/api/health").json()["analysis_storage"] == str(directory.parent)
+        assert client.get("/api/analyses").json() == {"records": []}
+        directory.mkdir()
+        (directory / "REPORT.md").write_text("# 新分析\n\n自动加载。", encoding="utf-8")
+        (directory / "metadata.json").write_text(json.dumps({
+            "schema_version": 1, "id": "new-analysis", "title": "新分析", "historical": True,
+            "report_path": "REPORT.md", "code_files": [],
+        }))
+        response = client.get("/api/analyses")
+        assert response.status_code == 200
+        assert response.json()["records"][0]["id"] == "new-analysis"
+        (directory / "metadata.json").write_text("broken metadata")
+        assert client.get("/api/analyses").status_code == 400
+        assert client.get("/api/research").status_code == 200
+
+
 def test_registered_html_is_sandboxed_and_arbitrary_file_is_unavailable(tmp_path):
     root = tmp_path / "research/backtest/experiments"
     root.mkdir(parents=True)

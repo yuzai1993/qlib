@@ -1,0 +1,132 @@
+{
+  "exp_id": "label-design/survival-p20-h40",
+  "direction": "label-design",
+  "phase": "M",
+  "date": "2026-07-26",
+  "hypothesis": "Top30/Drop1 valid 生存率平方形成更前置的 H40 衰减，降低远期收益噪声，预期提高 CSI1000 固定一日 RankICIR",
+  "baseline_ref": "B1 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "survival_power_weighted",
+  "label_horizon": 40,
+  "label_power": 2.0,
+  "purge_trading_days": 41,
+  "adaptive_followup": true,
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "manifest_sha256": "adff91347f309a9925d72144c29b2e3be42d900c80c37a7067ffb397f2bbc3d7",
+  "configs": [
+    "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s42.yaml",
+    "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s1000.yaml",
+    "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s2000.yaml",
+    "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s3000.yaml",
+    "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260726_121347_ld_survival_p20_h40_lgbm_s42",
+    "backtest/result/20260726_121515_ld_survival_p20_h40_lgbm_s1000",
+    "backtest/result/20260726_121645_ld_survival_p20_h40_lgbm_s2000",
+    "backtest/result/20260726_121813_ld_survival_p20_h40_lgbm_s3000",
+    "backtest/result/20260726_121942_ld_survival_p20_h40_lgbm_s4000",
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_valid_1d.json",
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_valid_self.json",
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_test_1d.json",
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi1000": {
+      "ic_mean": 0.02425086911124933,
+      "icir": 0.18796412303449736,
+      "rank_ic_mean": 0.04009891217667898,
+      "rank_icir": 0.3256046721035251,
+      "rank_ic_mean_std": 0.0009864109682669415
+    },
+    "csi300": {
+      "ic_mean": 0.020672512839742686,
+      "icir": 0.12206350315383652,
+      "rank_ic_mean": 0.03007569822591833,
+      "rank_icir": 0.1804903519728166,
+      "rank_ic_mean_std": 0.001437119255845343
+    },
+    "csi500": {
+      "ic_mean": 0.01619938234157218,
+      "icir": 0.11277983593133914,
+      "rank_ic_mean": 0.03041839136942141,
+      "rank_icir": 0.22688486078221595,
+      "rank_ic_mean_std": 0.0010116841102249085
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi1000": {
+        "ic_mean": 0.02425086911124933,
+        "icir": 0.18796412303449736,
+        "rank_ic_mean": 0.04009891217667898,
+        "rank_icir": 0.3256046721035251
+      },
+      "csi300": {
+        "ic_mean": 0.020672512839742686,
+        "icir": 0.12206350315383652,
+        "rank_ic_mean": 0.03007569822591833,
+        "rank_icir": 0.1804903519728166
+      },
+      "csi500": {
+        "ic_mean": 0.01619938234157218,
+        "icir": 0.11277983593133914,
+        "rank_ic_mean": 0.03041839136942141,
+        "rank_icir": 0.22688486078221595
+      }
+    },
+    "eval_self": {
+      "csi1000": {
+        "ic_mean": 0.06002635226995985,
+        "icir": 0.49950587557228615,
+        "rank_ic_mean": 0.06944617115805267,
+        "rank_icir": 0.615377179582229
+      },
+      "csi300": {
+        "ic_mean": 0.05238000860770481,
+        "icir": 0.3225766826989429,
+        "rank_ic_mean": 0.06127995137978235,
+        "rank_icir": 0.39118688813282887
+      },
+      "csi500": {
+        "ic_mean": 0.03623832610408687,
+        "icir": 0.2707259941936234,
+        "rank_ic_mean": 0.05181741409093967,
+        "rank_icir": 0.40733417690969154
+      }
+    }
+  },
+  "valid_selection_metrics": {
+    "csi1000": {
+      "rank_ic_mean": 0.041287064328240156,
+      "rank_icir": 0.41326622015693015
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b1": {
+    "n": 5,
+    "wins": 5,
+    "diff_mean": 0.011251638744065966,
+    "diffs": [
+      0.012806496238647307,
+      0.011626702226513207,
+      0.01054001352370337,
+      0.009467309956910822,
+      0.011817671774555134
+    ]
+  },
+  "conclusion": "improve",
+  "note": "CSI1000 RankICIR 为新三档最高，但 RankIC 最低；valid 的 RankIC 优势未在 test 复现，说明过度前置损失排序均值。自适应后续实验，test 证据非独立首次验证。"
+}

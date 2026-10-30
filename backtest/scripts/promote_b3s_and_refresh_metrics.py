@@ -8,7 +8,26 @@ import sys
 from datetime import date
 from pathlib import Path
 
+
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
@@ -20,7 +39,7 @@ from strategy_stability_metrics import summarize_stability  # noqa: E402
 REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 A10M_RESULTS = (
     REPO_ROOT
-    / "backtest/experiments/strategy-stability/20260806_full_period_a10m/b6-m/full_results.json"
+    / "backtest/experiments/strategy-stability-full-period/b6-m-a10m/data/full_results.json"
 )
 BASELINE_CONFIG = (
     REPO_ROOT
@@ -32,22 +51,12 @@ B2_EXP_ID = "baseline/b2-s-on-b6-m"
 
 
 def _load_registry() -> list[dict]:
-    return [
-        json.loads(line)
-        for line in REGISTRY.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    return _load_registry_rows(REGISTRY)
 
 
 def _write_registry(rows: list[dict]) -> None:
-    temporary = REGISTRY.with_name(REGISTRY.name + ".tmp")
-    temporary.write_text(
-        "".join(
-            json.dumps(item, ensure_ascii=False, allow_nan=False) + "\n" for item in rows
-        ),
-        encoding="utf-8",
-    )
-    temporary.replace(REGISTRY)
+    json.dumps(rows, allow_nan=False)
+    _write_registry_rows(REGISTRY, rows)
 
 
 def _load_report(result_dir: Path) -> pd.DataFrame:
@@ -58,7 +67,7 @@ def _load_report(result_dir: Path) -> pd.DataFrame:
 
 
 def refresh_a10m() -> dict:
-    payload = json.loads(A10M_RESULTS.read_text(encoding="utf-8"))
+    payload = json.loads(_resolve_research_path(A10M_RESULTS, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     refreshed = []
     for row in payload["all_rows"]:
         result_dir = Path(str(row["result_dir"]))
@@ -71,7 +80,7 @@ def refresh_a10m() -> dict:
         refreshed.append(updated)
     payload["all_rows"] = refreshed
     payload["metrics_include"] = ["alpha", "beta", "benchmark_cumulative_return"]
-    A10M_RESULTS.write_text(
+    _resolve_research_path(A10M_RESULTS, _RESEARCH_ROOT).write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )

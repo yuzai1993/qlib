@@ -9,6 +9,11 @@ from typing import Any, Optional
 
 import yaml
 
+if __package__:
+    from .research_layout import relocate_path, resolve_research_path
+else:
+    from research_layout import relocate_path, resolve_research_path
+
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 CONFIGS_DIR = BACKTEST_ROOT / "configs"
 RESULT_ROOT = BACKTEST_ROOT / "result"
@@ -24,38 +29,51 @@ class ConfigError(ValueError):
 def resolve_config_path(config: Optional[str] = None) -> Path:
     """解析 --config：绝对/相对路径，或相对 backtest/configs/ 的路径/文件名。
 
-    支持实验规范布局：`backtest/configs/<exp_id>/<name>.yaml`
-    （如 `baseline/b0-m/b0_csi300_lgbm_s42.yaml`）。若只给文件名，
-    则在 configs/ 下递归查找唯一匹配；多个匹配时报错要求写全路径。
+    支持 `backtest/experiments/<exp_id>/configs/<name>.yaml` 及历史配置路径。
+    若只给文件名，在共享 configs/ 与实验配置目录中查找唯一匹配。
     """
     if not config:
-        path = CONFIGS_DIR / DEFAULT_CONFIG_NAME
+        path = resolve_research_path(CONFIGS_DIR / DEFAULT_CONFIG_NAME, BACKTEST_ROOT.parent)
     else:
         p = Path(config).expanduser()
         candidates: list[Path] = []
         if p.is_file():
-            candidates.append(p.resolve())
+            explicit = resolve_research_path(p.resolve(), BACKTEST_ROOT.parent)
+            if explicit.is_file():
+                candidates.append(explicit)
         for cand in (
+            resolve_research_path(p, BACKTEST_ROOT.parent),
             CONFIGS_DIR / config,
             CONFIGS_DIR / f"{config}.yaml",
             CONFIGS_DIR / f"{config}.yml",
         ):
+            cand = resolve_research_path(cand, BACKTEST_ROOT.parent)
             if cand.is_file():
                 candidates.append(cand.resolve())
         if not candidates:
             # 仅文件名：递归查找
             name = p.name if p.suffix else f"{p.name}.yaml"
             alt = name if name.endswith((".yaml", ".yml")) else f"{name}.yaml"
-            matches = sorted(CONFIGS_DIR.rglob(alt))
+            def find_matches(filename: str) -> list[Path]:
+                candidates = list(CONFIGS_DIR.rglob(filename))
+                experiments = BACKTEST_ROOT / "experiments"
+                candidates.extend(
+                    item for item in experiments.rglob(filename)
+                    if "configs" in item.relative_to(experiments).parts
+                    and not any(part.startswith("_") for part in item.relative_to(experiments).parts)
+                )
+                return sorted({resolve_research_path(item, BACKTEST_ROOT.parent) for item in candidates})
+
+            matches = find_matches(alt)
             # 也试 .yml
             if not matches and not alt.endswith(".yml"):
-                matches = sorted(CONFIGS_DIR.rglob(alt[:-5] + ".yml"))
+                matches = find_matches(alt[:-5] + ".yml")
             if len(matches) == 1:
                 candidates.append(matches[0].resolve())
             elif len(matches) > 1:
-                shown = ", ".join(str(m.relative_to(CONFIGS_DIR)) for m in matches[:5])
+                shown = ", ".join(str(m.relative_to(BACKTEST_ROOT)) for m in matches[:5])
                 raise ConfigError(
-                    f"配置名 {config!r} 在 configs/ 下有多份匹配，请写相对路径："
+                    f"配置名 {config!r} 在共享或实验 configs/ 下有多份匹配，请写相对路径："
                     f" {shown}"
                 )
         if not candidates:
@@ -171,6 +189,17 @@ def load_config(config: Optional[str] = None) -> dict:
         raw = yaml.safe_load(f)
     if not isinstance(raw, dict):
         raise ConfigError(f"配置必须是 mapping: {path}")
+
+    def relocated(value):
+        if isinstance(value, dict):
+            return {key: relocated(child) for key, child in value.items()}
+        if isinstance(value, list):
+            return [relocated(child) for child in value]
+        return relocate_path(value, BACKTEST_ROOT.parent) if isinstance(value, str) else value
+
+    # Frozen YAML bytes and their hashes stay intact; only the loaded view uses
+    # active paths for assets relocated by the explicit repository map.
+    raw = relocated(raw)
     cfg = validate_run_section(raw)
     cfg = align_dates_from_segments(cfg)
     cfg["_config_path"] = str(path)

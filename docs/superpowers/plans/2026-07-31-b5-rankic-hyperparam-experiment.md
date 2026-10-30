@@ -358,7 +358,7 @@ Task 4 pytest command.
 - Create: `backtest/scripts/register_b5_rankic_hyperparams.py`
 - Create: `tests/backtest/test_register_b5_rankic_hyperparams.py`
 - Modify: `backtest/experiments/registry.jsonl`
-- Modify: `backtest/experiments/report.html`
+- Modify: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Produces pending/final registry row `model-hyperparam/valid-rankic-search-v1`
@@ -474,9 +474,9 @@ seeds, finite valid RankIC/RankICIR, and hashes matching disk.
 ### Task 7: One-Shot Test Evaluation and Final Registration
 
 **Files:**
-- Create: `backtest/experiments/ic/mh_valid_rankic_selected_test_1d.json`
+- Create: `backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json`
 - Modify: `backtest/experiments/registry.jsonl`
-- Modify: `backtest/experiments/report.html`
+- Modify: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Consumes frozen selection manifest
@@ -488,7 +488,7 @@ seeds, finite valid RankIC/RankICIR, and hashes matching disk.
 MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python \
   backtest/scripts/eval_frozen_b5_rankic.py \
   --manifest backtest/experiments/b5_rankic_hyperparam_selection.json \
-  --output backtest/experiments/ic/mh_valid_rankic_selected_test_1d.json
+  --output backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json
 ```
 
 - [ ] **Step 2: Finalize registry and rebuild HTML**

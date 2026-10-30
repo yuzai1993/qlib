@@ -1,0 +1,133 @@
+{
+  "exp_id": "loss-design/huber",
+  "direction": "loss-design",
+  "phase": "M",
+  "date": "2026-07-27",
+  "hypothesis": "仅将B4 DoubleEnsemble子模型LGBM的objective由mse改为huber（alpha=0.9，z-score标签下约0.9σ内二次/外线性），标签处理与其余超参不变；SR模块只消费逐样本损失的秩（huber与mse同序、行为一致），FS用huber量值；预期抑制厚尾极端样本主导梯度，RankICIR提升、RankIC持平或小升",
+  "baseline_ref": "B4 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 6,
+  "model": "DEnsembleModel",
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/loss-design/huber/configs/ls_huber_s42.yaml",
+    "backtest/experiments/loss-design/huber/configs/ls_huber_s1000.yaml",
+    "backtest/experiments/loss-design/huber/configs/ls_huber_s2000.yaml",
+    "backtest/experiments/loss-design/huber/configs/ls_huber_s3000.yaml",
+    "backtest/experiments/loss-design/huber/configs/ls_huber_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260727_001446_ls_huber_s42",
+    "backtest/result/20260727_010030_ls_huber_s1000",
+    "backtest/result/20260727_010707_ls_huber_s2000",
+    "backtest/result/20260727_011347_ls_huber_s3000",
+    "backtest/result/20260727_012027_ls_huber_s4000",
+    "backtest/experiments/loss-design/huber/metrics/ls_huber_test_1d.json",
+    "backtest/experiments/loss-design/huber/metrics/ls_huber_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.020105725442338518,
+      "icir": 0.0940764071226189,
+      "rank_ic_mean": 0.04098585902480515,
+      "rank_icir": 0.18730245128711678,
+      "rank_ic_mean_std": 0.001010974234770704
+    },
+    "csi500": {
+      "ic_mean": 0.01381781548754909,
+      "icir": 0.07779040781107391,
+      "rank_ic_mean": 0.04038226163773027,
+      "rank_icir": 0.22534596595065165,
+      "rank_ic_mean_std": 0.0006019850977509512
+    },
+    "csi1000": {
+      "ic_mean": 0.018836675846833528,
+      "icir": 0.12078148045759977,
+      "rank_ic_mean": 0.048403760842197066,
+      "rank_icir": 0.2998689003306884,
+      "rank_ic_mean_std": 0.0007261370095542343
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.020105725442338518,
+        "icir": 0.0940764071226189,
+        "rank_ic_mean": 0.04098585902480515,
+        "rank_icir": 0.18730245128711678,
+        "rank_ic_mean_std": 0.001010974234770704
+      },
+      "csi500": {
+        "ic_mean": 0.01381781548754909,
+        "icir": 0.07779040781107391,
+        "rank_ic_mean": 0.04038226163773027,
+        "rank_icir": 0.22534596595065165,
+        "rank_ic_mean_std": 0.0006019850977509512
+      },
+      "csi1000": {
+        "ic_mean": 0.018836675846833528,
+        "icir": 0.12078148045759977,
+        "rank_ic_mean": 0.048403760842197066,
+        "rank_icir": 0.2998689003306884,
+        "rank_ic_mean_std": 0.0007261370095542343
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.06862880067822619,
+        "icir": 0.3410194732397821,
+        "rank_ic_mean": 0.09891440938660705,
+        "rank_icir": 0.4719600977773017,
+        "rank_ic_mean_std": 0.002114777622853183
+      },
+      "csi500": {
+        "ic_mean": 0.044888090148316954,
+        "icir": 0.2759416817617443,
+        "rank_ic_mean": 0.08446764157145749,
+        "rank_icir": 0.5023476690275477,
+        "rank_ic_mean_std": 0.0009223978572342414
+      },
+      "csi1000": {
+        "ic_mean": 0.06965779863408109,
+        "icir": 0.4746976808528588,
+        "rank_ic_mean": 0.10711025530940108,
+        "rank_icir": 0.7081902175217877,
+        "rank_ic_mean_std": 0.0012575871775593681
+      }
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b4": {
+    "n": 5,
+    "wins": 5,
+    "diff_mean": 0.004423865702527509,
+    "diffs": [
+      0.004111928813239581,
+      0.004124883769696962,
+      0.00342332531828779,
+      0.00628852577817262,
+      0.004170664833240592
+    ]
+  },
+  "conclusion": "improve",
+  "note": "三池RankIC均超B4；CSI1000 RankIC 0.04840（B4 0.04398），RankICIR 0.2999（B4 0.3142），逐种子pairwise 5/5"
+}

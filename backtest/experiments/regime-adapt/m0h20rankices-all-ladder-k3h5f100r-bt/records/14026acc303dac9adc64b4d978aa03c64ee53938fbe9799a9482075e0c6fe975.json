@@ -1,0 +1,41 @@
+{
+  "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-23",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "v4 RankIC ES 真阶梯 k3×h5 + f100 补新票",
+  "arm": "m0h20rankices",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "在 v4 × 真阶梯 k3h5 + 掉出前 100 必卖上，按 TopkDropout 的方式补新票：强平几只就从当日 top3 之后顺延补几只还没拿着的票，用强平所得资金买入，并进当天分层、持满 5 天到期。对照无 f100 真阶梯、只强平不补人的 f100、以及执行层基线 BT v3；不晋升。",
+  "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 refill_force_sell=true risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_ladder_k3h5f100r/m0h20rankices.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v3",
+  "note": "只改策略（真阶梯 + f100 + 补新票）+ 复用 v4 合成 pred；官方只跑均值信号一次；不晋升",
+  "metrics": {
+    "annualized_return": 0.254839415670407,
+    "sharpe_ratio": 0.971028711545241,
+    "alpha": 0.16520748715894115,
+    "beta": 0.9268290733737494,
+    "max_drawdown": -0.3468664477032761,
+    "calmar_ratio": 0.7346903033077652,
+    "annualized_volatility": 0.2720412811750347,
+    "annualized_one_way_turnover": 65.66900981163909,
+    "n_days": 1454,
+    "annualized_return_arith": 0.2641598947465105,
+    "y2026_annualized_return": 0.06972218735180857,
+    "y2026_annualized_return_arith": 0.10670908954515367
+  },
+  "ensemble_session": "backtest/result/20260823_001929_phase_s_m0h20rankices_all_ladder_k3h5f100r_ensemble",
+  "conclusion": "实现按预期生效，未晋升。全期累乘年化 +25.5%/夏普 0.97/回撤 -34.7%/换手 65.7x，2026 +7.0%。对照真阶梯 +26.3%/1.04/44.3x；对照只强平不补人 +18.2%/0.93/44.2x；对照 BT v3 +30.1%/1.06/58.1x。这是执行层回测，不能和主格 ×238/h 净年化直接相减。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/metrics/all_ladder_k3h5f100r_m0h20rankices.json"
+}

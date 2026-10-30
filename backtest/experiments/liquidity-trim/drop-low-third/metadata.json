@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "exp_id": "liquidity-trim/drop-low-third",
+  "event_numbers": [
+    14
+  ],
+  "phase": "M",
+  "direction": "liquidity-trim",
+  "records_directory": "backtest/experiments/liquidity-trim/drop-low-third/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/liquidity-trim/drop-low-third/configs/lt_drop_low_third_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "2e329e119eb6982031ee448b4569fc49cf8b82949bb00545c80874bb528eac8f"
+    },
+    {
+      "path": "backtest/experiments/liquidity-trim/drop-low-third/configs/lt_drop_low_third_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "128167a3c52f9e4b5056bf3bfaa036e95ceb2b7ebb69cac5e27da96ec4115b3e"
+    },
+    {
+      "path": "backtest/experiments/liquidity-trim/drop-low-third/configs/lt_drop_low_third_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "fa3b7413593b175f85dac541be9f7f0feef71a7a7ab2d9488cb90e219354b0e7"
+    },
+    {
+      "path": "backtest/experiments/liquidity-trim/drop-low-third/configs/lt_drop_low_third_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "d3c59918baa56a234f2db897b21c9681943f7ae5a19d60d58d6e23787c315cb2"
+    },
+    {
+      "path": "backtest/experiments/liquidity-trim/drop-low-third/configs/lt_drop_low_third_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "ae7c6892db092a5d48f7f854c473ebb321567683ec07c43690a2143c3721d5aa"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/liquidity-trim/drop-low-third/metrics/lt_drop_low_third_lgbm_csi1000.json",
+    "backtest/experiments/liquidity-trim/drop-low-third/metrics/lt_drop_low_third_lgbm_csi300.json",
+    "backtest/experiments/liquidity-trim/drop-low-third/metrics/lt_drop_low_third_lgbm_csi500.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/liquidity-trim/drop-low-third/records/eb0842dac3f880fc6afbe6d258b42e3ddd5c95a9d3651b268f0f46ad35a1323d.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

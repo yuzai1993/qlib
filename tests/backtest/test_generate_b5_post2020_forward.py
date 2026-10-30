@@ -20,6 +20,7 @@ from backtest.scripts.generate_b5_post2020_forward import (  # noqa: E402
     VALID_SEGMENT,
     generate_configs,
 )
+from backtest.scripts.experiment_registry import load_registry  # noqa: E402
 
 
 WINNER_TEMPLATE = (
@@ -158,7 +159,7 @@ def test_generation_is_deterministic_and_refuses_changed_existing_file(tmp_path)
 
 
 def test_registry_retains_post2020_configs_and_metrics_without_protocol_manifest():
-    rows = [json.loads(line) for line in REGISTRY.read_text(encoding="utf-8").splitlines()]
+    rows = load_registry(REGISTRY)
     by_id = {row["exp_id"]: row for row in rows}
 
     for group in GROUPS:

@@ -5,6 +5,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+
 ROOT = Path(__file__).resolve().parents[2]
 REG = ROOT / "backtest" / "experiments" / "registry.jsonl"
 RES = ROOT / "backtest" / "result" / "phase_s_regime"
@@ -19,7 +37,7 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20es-all-top5d1h5-bt",
         "display_name": "M0 H20 ES top5d1 hold5（无强制卖出）",
         "result": "all_top5d1h5",
-        "detail_report": "backtest/experiments/phase_m_v1_bt_m0h20es_h5.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
         "session": "backtest/result/20260822_091251_phase_s_m0h20es_all_top5d1h5_ensemble",
         "config": "TopkDropout topk=5 n_drop=1 hold_thresh=5",
         "hypothesis": (
@@ -38,7 +56,7 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
         "display_name": "M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
         "result": "all_top5d1f100",
-        "detail_report": "backtest/experiments/phase_m_v1_bt_m0h20es_f100.html",
+        "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
         "session": "backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble",
         "config": "TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100",
         "hypothesis": (
@@ -81,10 +99,10 @@ def pick(summary: dict) -> dict:
 
 def main() -> None:
     ids = {s["exp_id"] for s in SPECS}
-    rows = [json.loads(line) for line in REG.read_text().splitlines() if line.strip()]
+    rows = _load_registry_rows(REG)
     kept = [r for r in rows if r.get("exp_id") not in ids]
     for spec in SPECS:
-        summary = json.loads((RES / spec["result"] / "m0h20es.json").read_text())["ensemble"]
+        summary = json.loads((_resolve_research_path(RES / spec["result"] / "m0h20es.json", _RESEARCH_ROOT)).read_text())["ensemble"]
         kept.append(
             {
                 "exp_id": spec["exp_id"],
@@ -108,12 +126,10 @@ def main() -> None:
                 "conclusion": spec["conclusion"],
             }
         )
-    REG.write_text(
-        "\n".join(json.dumps(r, ensure_ascii=False) for r in kept) + "\n", encoding="utf-8"
-    )
+    _write_registry_rows(REG, kept)
     print(f"registry 共 {len(kept)} 条")
     for spec in SPECS:
-        m = pick(json.loads((RES / spec["result"] / "m0h20es.json").read_text())["ensemble"])
+        m = pick(json.loads((_resolve_research_path(RES / spec["result"] / "m0h20es.json", _RESEARCH_ROOT)).read_text())["ensemble"])
         print(
             f"{spec['exp_id']}: 累乘年化 {m['annualized_return']:+.1%} "
             f"夏普 {m['sharpe_ratio']:.2f} 回撤 {m['max_drawdown']:+.1%} "

@@ -1,0 +1,82 @@
+{
+  "exp_id": "train-data/csi1000-liquidity-low",
+  "direction": "train-data",
+  "phase": "M",
+  "date": "2026-07-25",
+  "hypothesis": "只保留历史20日滞后一日成交额代理最低三分之一；若 IC 较高但 RankICIR 下降，说明低流动性样本信号强但不稳定",
+  "baseline_ref": "B0 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "train_start": "2016-01-02",
+  "sample_filter": {
+    "type": "liquidity-low",
+    "expression": "Ref(Mean($vwap*$volume, 20), 1)",
+    "train_only": true
+  },
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s42.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s1000.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s2000.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s3000.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260725_012325_td_csi1000_liquidity_low_lgbm_s42",
+    "backtest/result/20260725_011617_td_csi1000_liquidity_low_lgbm_s1000",
+    "backtest/result/20260725_011803_td_csi1000_liquidity_low_lgbm_s2000",
+    "backtest/result/20260725_011950_td_csi1000_liquidity_low_lgbm_s3000",
+    "backtest/result/20260725_012137_td_csi1000_liquidity_low_lgbm_s4000",
+    "backtest/experiments/train-data/csi1000-liquidity-low/metrics/td_csi1000_liquidity_low_lgbm_csi300.json",
+    "backtest/experiments/train-data/csi1000-liquidity-low/metrics/td_csi1000_liquidity_low_lgbm_csi500.json",
+    "backtest/experiments/train-data/csi1000-liquidity-low/metrics/td_csi1000_liquidity_low_lgbm_csi1000.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.00779,
+      "icir": 0.06012,
+      "rank_ic_mean": 0.0004,
+      "rank_icir": 0.00289,
+      "rank_ic_mean_std": 0.0014
+    },
+    "csi500": {
+      "ic_mean": 0.01026,
+      "icir": 0.09186,
+      "rank_ic_mean": 0.00105,
+      "rank_icir": 0.00844,
+      "rank_ic_mean_std": 0.00104
+    },
+    "csi1000": {
+      "ic_mean": 0.01763,
+      "icir": 0.17991,
+      "rank_ic_mean": 0.00988,
+      "rank_icir": 0.08549,
+      "rank_ic_mean_std": 0.00148
+    }
+  },
+  "pairwise_csi300_rankic_vs_b0": {
+    "n": 5,
+    "wins": 0,
+    "diff_mean": -0.00964591883452154,
+    "diffs": [
+      -0.010613026980966972,
+      -0.007355345024253946,
+      -0.014376963996530647,
+      -0.008795067797897696,
+      -0.007089190372958437
+    ]
+  },
+  "conclusion": "regress",
+  "note": "CSI300/500 RankIC 接近零且低于 B0，CSI1000 也远低于 random/full；低流动性单层训练不可取；本轮数据版本2026-07-24，对照B0为2026-07-23"
+}

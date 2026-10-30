@@ -1,0 +1,82 @@
+{
+  "exp_id": "train-data/csi1000-random-third",
+  "direction": "train-data",
+  "phase": "M",
+  "date": "2026-07-25",
+  "hypothesis": "每日确定性随机保留约三分之一 CSI1000 样本；若 RankIC 仍接近 full，说明 CSI1000 优势主要来自跨流动性样本结构而非绝对截面数量",
+  "baseline_ref": "B0 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "train_start": "2016-01-02",
+  "sample_filter": {
+    "type": "random-third",
+    "expression": "Ref(Mean($vwap*$volume, 20), 1)",
+    "train_only": true
+  },
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/train-data/csi1000-random-third/configs/td_csi1000_random_third_lgbm_s42.yaml",
+    "backtest/experiments/train-data/csi1000-random-third/configs/td_csi1000_random_third_lgbm_s1000.yaml",
+    "backtest/experiments/train-data/csi1000-random-third/configs/td_csi1000_random_third_lgbm_s2000.yaml",
+    "backtest/experiments/train-data/csi1000-random-third/configs/td_csi1000_random_third_lgbm_s3000.yaml",
+    "backtest/experiments/train-data/csi1000-random-third/configs/td_csi1000_random_third_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260725_003752_td_csi1000_random_third_lgbm_s42",
+    "backtest/result/20260725_005114_td_csi1000_random_third_lgbm_s1000",
+    "backtest/result/20260725_005303_td_csi1000_random_third_lgbm_s2000",
+    "backtest/result/20260725_005450_td_csi1000_random_third_lgbm_s3000",
+    "backtest/result/20260725_005635_td_csi1000_random_third_lgbm_s4000",
+    "backtest/experiments/train-data/csi1000-random-third/metrics/td_csi1000_random_third_lgbm_csi300.json",
+    "backtest/experiments/train-data/csi1000-random-third/metrics/td_csi1000_random_third_lgbm_csi500.json",
+    "backtest/experiments/train-data/csi1000-random-third/metrics/td_csi1000_random_third_lgbm_csi1000.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.01525,
+      "icir": 0.11514,
+      "rank_ic_mean": 0.0195,
+      "rank_icir": 0.14884,
+      "rank_ic_mean_std": 0.00047
+    },
+    "csi500": {
+      "ic_mean": 0.01778,
+      "icir": 0.15089,
+      "rank_ic_mean": 0.02013,
+      "rank_icir": 0.17738,
+      "rank_ic_mean_std": 0.00104
+    },
+    "csi1000": {
+      "ic_mean": 0.02548,
+      "icir": 0.23765,
+      "rank_ic_mean": 0.02814,
+      "rank_icir": 0.25595,
+      "rank_ic_mean_std": 0.00119
+    }
+  },
+  "pairwise_csi300_rankic_vs_b0": {
+    "n": 5,
+    "wins": 5,
+    "diff_mean": 0.00945725040266915,
+    "diffs": [
+      0.010071369025934461,
+      0.010206086972490801,
+      0.0059296616921433384,
+      0.009072847934928869,
+      0.01200628638784828
+    ]
+  },
+  "conclusion": "improve",
+  "note": "仅约三分之一训练样本仍接近 full：CSI300/500/1000 RankIC 分别保留约93%/100%/98%，样本结构是主要贡献，截面数量有次要增益；本轮数据版本2026-07-24，对照B0为2026-07-23"
+}

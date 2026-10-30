@@ -1,0 +1,41 @@
+{
+  "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-22",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "v4 RankIC ES 真阶梯 k3×h5 + f100",
+  "arm": "m0h20rankices",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "在刚跑完的 v4 × 真阶梯 k3h5 上再加掉出前 100 必卖：持仓当日名次 > 100 或没有有限分数时，立刻清掉该票全部层，不等到期。对照当前执行层基线 BT v3，并对照无 f100 的同信号真阶梯；本行只作诊断，不晋升。",
+  "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_ladder_k3h5f100/m0h20rankices.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v3",
+  "note": "只改策略（真阶梯 + f100）+ 复用 v4 合成 pred；官方只跑均值信号一次；不晋升执行层基线",
+  "metrics": {
+    "annualized_return": 0.18243897871401904,
+    "sharpe_ratio": 0.9263012409579879,
+    "alpha": 0.12005965863769756,
+    "beta": 0.6397060761160608,
+    "max_drawdown": -0.29750409691871416,
+    "calmar_ratio": 0.6132318196742887,
+    "annualized_volatility": 0.20334371315056923,
+    "annualized_one_way_turnover": 44.20959166482156,
+    "n_days": 1454,
+    "annualized_return_arith": 0.1883575338323774,
+    "y2026_annualized_return": 0.06913731548579904,
+    "y2026_annualized_return_arith": 0.08987956871258898
+  },
+  "ensemble_session": "backtest/result/20260822_235732_phase_s_m0h20rankices_all_ladder_k3h5f100_ensemble",
+  "conclusion": "实现按预期生效，未晋升。全期累乘年化 +18.2%/夏普 0.93/回撤 -29.8%/换手 44.2x，2026 +6.9%。对照无 f100 真阶梯（+26.3%/1.04/-33.0%/44.3x，2026 +3.8%）；对照 BT v3（+30.1%/1.06/-34.7%/58.1x，2026 +4.6%）。这是执行层回测，不能和主格 ×238/h 净年化直接相减。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/metrics/all_ladder_k3h5f100_m0h20rankices.json"
+}

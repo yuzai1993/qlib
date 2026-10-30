@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "exp_id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+  "event_numbers": [
+    141
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [
+    "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/metrics/eval_densemble_s42_vs_v4.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "records": [
+    "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/records/50615f6e0c075baa892b1d5be7e569acec91298b741274fc3a5625e285158386.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

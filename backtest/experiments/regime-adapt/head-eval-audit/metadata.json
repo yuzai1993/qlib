@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "exp_id": "regime-adapt/head-eval-audit",
+  "event_numbers": [
+    81
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/regime-adapt/head-eval-audit/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/regime-adapt/head-eval-audit/reports/regime_adapt_head_eval_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [],
+  "shared_assets": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "records": [
+    "backtest/experiments/regime-adapt/head-eval-audit/records/234371a14654653a9290d06ace52c550698994a9e17a3598d0b22b22237be613.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

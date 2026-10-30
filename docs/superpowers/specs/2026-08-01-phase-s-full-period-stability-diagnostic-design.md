@@ -108,7 +108,7 @@ backtest/experiments/strategy-stability/20260801_full_period/
 新增独立报告：
 
 ```text
-backtest/experiments/strategy_stability_report.html
+backtest/experiments/reports/strategy_stability_report.html
 ```
 
 现有 `strategy_report.html` 和原 Phase S registry 结论保持不变。

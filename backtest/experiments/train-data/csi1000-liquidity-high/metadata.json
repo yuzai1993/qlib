@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "exp_id": "train-data/csi1000-liquidity-high",
+  "event_numbers": [
+    8
+  ],
+  "phase": "M",
+  "direction": "train-data",
+  "records_directory": "backtest/experiments/train-data/csi1000-liquidity-high/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "c578c5b1065b2d79dba69bf9e1e247bdf864dd29ca3b5505e668cb65d4a1f5a2"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "a7e7fdec2fe3ef37fb27985da926a5f9112bc42eaf7c14b77346b0099d54953c"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "74be2fee23fe3bc48e0313ab5484f489d54329420a7aae0b1bac9ad05bfb8a6b"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "e8102a07e07daa41ef49f41da99ff1304e3aaef6b2110def6e7d4bd8e360b570"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "1e2ac43c6154dbd6c868661afc7550c806c652d9db6a336f07d19c9a413789c4"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/train-data/csi1000-liquidity-high/metrics/td_csi1000_liquidity_high_lgbm_csi1000.json",
+    "backtest/experiments/train-data/csi1000-liquidity-high/metrics/td_csi1000_liquidity_high_lgbm_csi300.json",
+    "backtest/experiments/train-data/csi1000-liquidity-high/metrics/td_csi1000_liquidity_high_lgbm_csi500.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/train-data/csi1000-liquidity-high/records/a2071c9a8f1b15b9a131ceb3d3f004a51cf7fa9f16a45b60e3d78c7cc22e2814.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

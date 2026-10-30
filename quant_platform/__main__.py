@@ -11,7 +11,7 @@ def build_parser():
     parser.add_argument("--project-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--live-config", default="alla_v2_top5d1f100_postclose_real_active")
     parser.add_argument("--research-root", type=Path, help="研究源目录，默认使用 --project-root")
-    parser.add_argument("--data-root", type=Path, default=Path.home() / ".qlib/research_platform/analyses")
+    parser.add_argument("--data-root", type=Path, help="分析目录集合，默认使用研究源的 backtest/diagnostics")
     parser.add_argument("--port", type=int, default=8090)
     return parser
 
@@ -21,6 +21,8 @@ def main():
     args = parser.parse_args()
     if args.research_root is None:
         args.research_root = args.project_root
+    if args.data_root is None:
+        args.data_root = args.research_root / "backtest/diagnostics"
     if not re.fullmatch(r"[A-Za-z0-9_-]+", args.live_config):
         parser.error("实盘配置必须是 configs 目录中的配置名称")
     if not 1024 <= args.port <= 65535:

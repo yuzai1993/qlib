@@ -1,0 +1,118 @@
+{
+  "exp_id": "baseline/b2-m",
+  "direction": "baseline",
+  "phase": "M",
+  "date": "2026-07-26",
+  "hypothesis": "用户确认将累计 H40 模型记录为新的 B2-M 研究基线",
+  "baseline_ref": "B2 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 61,
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/configs/label-design/cum-h40/ld_cum_h40_lgbm_s42.yaml",
+    "backtest/configs/label-design/cum-h40/ld_cum_h40_lgbm_s1000.yaml",
+    "backtest/configs/label-design/cum-h40/ld_cum_h40_lgbm_s2000.yaml",
+    "backtest/configs/label-design/cum-h40/ld_cum_h40_lgbm_s3000.yaml",
+    "backtest/configs/label-design/cum-h40/ld_cum_h40_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260726_002755_ld_cum_h40_lgbm_s42",
+    "backtest/result/20260726_002916_ld_cum_h40_lgbm_s1000",
+    "backtest/result/20260726_003038_ld_cum_h40_lgbm_s2000",
+    "backtest/result/20260726_003200_ld_cum_h40_lgbm_s3000",
+    "backtest/result/20260726_003320_ld_cum_h40_lgbm_s4000",
+    "backtest/experiments/_shared/metrics/ld_cum_h40_valid_1d.json",
+    "backtest/experiments/_shared/metrics/ld_cum_h40_valid_self.json",
+    "backtest/experiments/_shared/metrics/ld_cum_h40_test_1d.json",
+    "backtest/experiments/_shared/metrics/ld_cum_h40_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.017164004969595578,
+      "icir": 0.0900205532875398,
+      "rank_ic_mean": 0.03180926343360018,
+      "rank_icir": 0.16678109422121395,
+      "rank_ic_mean_std": 0.0016443867381516406
+    },
+    "csi500": {
+      "ic_mean": 0.013195956664436109,
+      "icir": 0.0828943105418021,
+      "rank_ic_mean": 0.03276066212736263,
+      "rank_icir": 0.21604419571761424,
+      "rank_ic_mean_std": 0.000738017785113018
+    },
+    "csi1000": {
+      "ic_mean": 0.019548632579273792,
+      "icir": 0.139650132225679,
+      "rank_ic_mean": 0.041668101945537085,
+      "rank_icir": 0.3037486158180857,
+      "rank_ic_mean_std": 0.0005339084065333428
+    }
+  },
+  "conclusion": "baseline",
+  "note": "B2-M；由 label-design/cum-h40 经用户确认提升。B1-M 与实盘 B1-S 保留，不自动部署。",
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.017164004969595578,
+        "icir": 0.0900205532875398,
+        "rank_ic_mean": 0.03180926343360018,
+        "rank_icir": 0.16678109422121395,
+        "rank_ic_mean_std": 0.0016443867381516406
+      },
+      "csi500": {
+        "ic_mean": 0.013195956664436109,
+        "icir": 0.0828943105418021,
+        "rank_ic_mean": 0.03276066212736263,
+        "rank_icir": 0.21604419571761424,
+        "rank_ic_mean_std": 0.000738017785113018
+      },
+      "csi1000": {
+        "ic_mean": 0.019548632579273792,
+        "icir": 0.139650132225679,
+        "rank_ic_mean": 0.041668101945537085,
+        "rank_icir": 0.3037486158180857,
+        "rank_ic_mean_std": 0.0005339084065333428
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.04859983766278559,
+        "icir": 0.27113728741257387,
+        "rank_ic_mean": 0.06773296431362905,
+        "rank_icir": 0.37153627746532136,
+        "rank_ic_mean_std": 0.003709694102621816
+      },
+      "csi500": {
+        "ic_mean": 0.03757499326796432,
+        "icir": 0.2636091490433448,
+        "rank_ic_mean": 0.06599795306904016,
+        "rank_icir": 0.46689361091602316,
+        "rank_ic_mean_std": 0.0016356635608720295
+      },
+      "csi1000": {
+        "ic_mean": 0.06010971778268387,
+        "icir": 0.47197455343468525,
+        "rank_ic_mean": 0.08447834969870299,
+        "rank_icir": 0.6517148871769232,
+        "rank_ic_mean_std": 0.0015782375862419247
+      }
+    }
+  }
+}

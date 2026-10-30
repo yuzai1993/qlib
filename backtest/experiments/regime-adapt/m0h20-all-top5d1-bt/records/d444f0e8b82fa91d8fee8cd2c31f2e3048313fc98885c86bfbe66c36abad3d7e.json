@@ -1,0 +1,53 @@
+{
+  "exp_id": "regime-adapt/m0h20-all-top5d1-bt",
+  "direction": "regime-adapt",
+  "phase": "M",
+  "date": "2026-08-16",
+  "state": "superseded",
+  "arm": "m0-h20",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "M0 H20 真实 TopkDropout top5d1 对照回测（账户100万、三过滤、等权全A），不是 CSI1000 B4-S 晋升",
+  "eval_protocol": "TopkDropout topk=5 n_drop=1 hold_thresh=1 account=1e6 | 全A三过滤 ST+成交额>=1000万+上市>=60 | 等权全A基准 | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top5d1/m0h20_before_fix.json",
+  "detail_report": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report.html",
+  "metrics": {
+    "annualized_return": 0.3159442112352572,
+    "sharpe_ratio": 0.9972869794189894,
+    "alpha": 0.2138331609582949,
+    "beta": 0.9564142239355284,
+    "max_drawdown": -0.4691508310489944,
+    "n_days": 1454,
+    "account": 1000000,
+    "seed42_session": "backtest/result/20260816_151647_phase_s_m0h20_all_top5d1_s42"
+  },
+  "note": "Phase M v1 对照回测；未改 CSI1000 B4-S 基线；另含五种子截面 z-score 等权均值信号回测；已被 m0h20-all-top5d1-st-daily-v2 替代，本行保留修复前数字",
+  "baseline_ref": "regime-adapt/m0-h20-label-v4",
+  "report_kind": "phase_m_v1_backtest",
+  "ensemble": {
+    "method": "daily_zscore_mean",
+    "session_dir": "backtest/result/20260816_223211_phase_s_m0h20_all_top5d1_ensemble",
+    "pred_path": "backtest/result/phase_s_regime/all_top5d1/m0h20_ensemble_pred.pkl",
+    "full_period": {
+      "n_days": 1454,
+      "annualized_return": 0.2750882697303039,
+      "sharpe_ratio": 0.8831326546553041,
+      "alpha": 0.17260500311187502,
+      "beta": 0.9599005557516678,
+      "calmar_ratio": 0.6211088812928643,
+      "annualized_volatility": 0.31149144840270204,
+      "max_drawdown": -0.44289862537095925,
+      "annualized_one_way_turnover": 45.762439905595215,
+      "cumulative_return": 2.7201022034512254,
+      "benchmark_annualized_return": 0.10676446221887799,
+      "benchmark_cumulative_return": 0.5861751718482147
+    }
+  },
+  "superseded_by": "regime-adapt/m0h20-all-top5d1-st-daily-v2",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20-all-top5d1-bt/metrics/m0h20_before_fix.json"
+}

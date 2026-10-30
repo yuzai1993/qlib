@@ -1,0 +1,53 @@
+{
+  "exp_id": "regime-adapt/b6m-reference",
+  "direction": "regime-adapt",
+  "phase": "M",
+  "date": "2026-08-09",
+  "state": "preregistered",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "train_window": [
+    "2004-01-02",
+    "2020-07-31"
+  ],
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000",
+    "all"
+  ],
+  "eval_extension": {
+    "horizons": [
+      1,
+      5,
+      10,
+      20,
+      40
+    ],
+    "north_star": "allA_overall_mean5h_rankic",
+    "test_dates": "backtest/configs/regime-adapt/test_dates_stratified_70.csv",
+    "reserved_dates": "backtest/configs/regime-adapt/test_dates_reserved_30.csv",
+    "regime_breakdown": "allA_only",
+    "valid_equals_test": true,
+    "approved_by_user": "2026-08-09"
+  },
+  "frozen_files": {
+    "train_dates": "backtest/configs/regime-adapt/train_dates_v1.csv",
+    "day_weights_m0": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+    "day_weights_m3": "backtest/configs/regime-adapt/day_weights_m3_v1.csv",
+    "regime_features": "backtest/configs/regime-adapt/regime_features_v1.csv",
+    "regime_labels": "backtest/diagnostics/20260809_style_regimes/monthly_regime_3style.csv"
+  },
+  "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+  "note": "2026-08-12 因工作区被误清理（git clean 类操作）而重新登记；原登记 2026-08-09，内容一致",
+  "hypothesis": "现役 B6-M 五种子产物在新评估协议（多期限×四池×全A分风格×冻结70%日集）上的纯推理参考行，回答'新方案是否胜过现役模型'（Gate 2）；不重训。",
+  "baseline_ref": "B6 v1.0",
+  "arm": "b6m-ref",
+  "evaluation_mode": "inference_only"
+}

@@ -12,6 +12,7 @@ import pytest
 
 from backtest.scripts import compare_b5_post2020_forward as comparator
 from backtest.scripts import register_b5_post2020_forward as register
+from backtest.scripts.experiment_registry import load_registry, write_registry
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
@@ -722,3 +723,15 @@ def test_cli_entrypoint_can_load_from_outside_the_repository(tmp_path):
 
     assert completed.returncode == 0, completed.stderr
     assert "--control-sessions" in completed.stdout
+
+
+def test_registration_hydrates_index_and_keeps_existing_event_bytes(tmp_path):
+    bundle = _setup(tmp_path)
+    registry = bundle["registry_path"]
+    original = load_registry(registry)
+    write_registry(registry, original, indexed=True)
+    prefix = registry.read_bytes()
+    control, expanded = _register(bundle)
+    assert registry.read_bytes().startswith(prefix)
+    assert load_registry(registry) == [*original, control, expanded]
+    assert all("metrics_summary" not in json.loads(line) for line in registry.read_text().splitlines())

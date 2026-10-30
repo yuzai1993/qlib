@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "exp_id": "strategy-stability-full-period/b6-m-a10m",
+  "event_numbers": [
+    58
+  ],
+  "phase": "S",
+  "direction": "strategy-stability-full-period",
+  "records_directory": "backtest/experiments/strategy-stability-full-period/b6-m-a10m/records",
+  "configs": [
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "shared": true,
+      "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl",
+    "backtest/experiments/strategy-stability-full-period/b6-m-a10m/data/full_results.json",
+    "backtest/experiments/strategy-stability-full-period/b6-m-a10m/data/protocol.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl"
+  ],
+  "records": [
+    "backtest/experiments/strategy-stability-full-period/b6-m-a10m/records/057c6d456794827cdb1c2fc8950c0836d2c75ab5843d39800c5a074c98359d02.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

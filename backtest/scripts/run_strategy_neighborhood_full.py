@@ -18,6 +18,11 @@ from typing import Any, Callable, Optional, Sequence
 import pandas as pd
 import yaml
 
+if __package__:
+    from .research_layout import resolve_research_path
+else:
+    from research_layout import resolve_research_path
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -64,7 +69,7 @@ FULL_PREDICTION_COVERAGE = copy.deepcopy(
     full_prediction_validation.FULL_PREDICTION_COVERAGE
 )
 DEFAULT_OUTPUT_ROOT = (
-    REPO_ROOT / "backtest/experiments/strategy-neighborhood/20260807_b3s_local_full"
+    REPO_ROOT / "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data"
 )
 DEFAULT_CONFIGS_DIR = (
     REPO_ROOT / "backtest/configs/strategy-neighborhood/b3-s-local-full"
@@ -75,7 +80,7 @@ DEFAULT_BASE_CONFIG = (
 )
 DEFAULT_PREDICTION_MANIFEST = (
     REPO_ROOT
-    / "backtest/experiments/strategy-stability/20260801_full_period"
+    / "backtest/experiments/_shared/phase-s"
     / "prediction_manifest.json"
 )
 SELECTION_RULE = [
@@ -150,7 +155,7 @@ def _prediction_frame(path: Path) -> pd.DataFrame:
 
 def _authoritative_full_prediction_entry() -> dict[str, Any]:
     """Load coverage identity from the tracked full-period stability manifest."""
-    manifest_path = DEFAULT_PREDICTION_MANIFEST.expanduser().resolve()
+    manifest_path = resolve_research_path(DEFAULT_PREDICTION_MANIFEST.expanduser(), REPO_ROOT)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     return full_prediction_entry(manifest)
 
@@ -534,7 +539,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
     output_root = args.output_root.expanduser().resolve()
     configs_dir = args.configs_dir.expanduser().resolve()
-    manifest_path = args.prediction_manifest.expanduser().resolve()
+    manifest_path = resolve_research_path(args.prediction_manifest.expanduser(), REPO_ROOT)
     base_config_path = args.base_config.expanduser().resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     verified_entry, coverage = validate_full_prediction_manifest(

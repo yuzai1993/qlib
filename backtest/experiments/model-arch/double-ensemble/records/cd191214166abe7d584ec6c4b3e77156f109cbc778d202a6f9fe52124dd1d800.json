@@ -1,0 +1,132 @@
+{
+  "exp_id": "model-arch/double-ensemble",
+  "direction": "model-arch",
+  "phase": "M",
+  "date": "2026-07-26",
+  "hypothesis": "将B3-M的LGBM包进DoubleEnsemble（3子模型、样本重加权SR+特征选择FS、官方epochs=28、decay=0.5，LGB超参与B3完全相同）；官方Alpha158 benchmark中DoubleEnsemble IC最高（0.0521）、RankIC 0.0502>LGBM，预期集成降方差使RankIC/RankICIR同步提升",
+  "baseline_ref": "B3 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 6,
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s42.yaml",
+    "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s1000.yaml",
+    "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s2000.yaml",
+    "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s3000.yaml",
+    "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260726_204443_ma_double_ensemble_s42",
+    "backtest/result/20260726_205049_ma_double_ensemble_s1000",
+    "backtest/result/20260726_205711_ma_double_ensemble_s2000",
+    "backtest/result/20260726_210326_ma_double_ensemble_s3000",
+    "backtest/result/20260726_210949_ma_double_ensemble_s4000",
+    "backtest/experiments/model-arch/double-ensemble/metrics/ma_double_ensemble_test_1d.json",
+    "backtest/experiments/model-arch/double-ensemble/metrics/ma_double_ensemble_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.020846299650528838,
+      "icir": 0.10765045920466007,
+      "rank_ic_mean": 0.03686230537174923,
+      "rank_icir": 0.18588170448922803,
+      "rank_ic_mean_std": 0.0003310082396259062
+    },
+    "csi500": {
+      "ic_mean": 0.01631042274257098,
+      "icir": 0.1028668359845661,
+      "rank_ic_mean": 0.03669640432695784,
+      "rank_icir": 0.23298833803303953,
+      "rank_ic_mean_std": 0.00032041528679054173
+    },
+    "csi1000": {
+      "ic_mean": 0.021543581100900232,
+      "icir": 0.1543602800824439,
+      "rank_ic_mean": 0.04397989513966955,
+      "rank_icir": 0.3142299265461901,
+      "rank_ic_mean_std": 0.0004207030424701053
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.020846299650528838,
+        "icir": 0.10765045920466007,
+        "rank_ic_mean": 0.03686230537174923,
+        "rank_icir": 0.18588170448922803,
+        "rank_ic_mean_std": 0.0003310082396259062
+      },
+      "csi500": {
+        "ic_mean": 0.01631042274257098,
+        "icir": 0.1028668359845661,
+        "rank_ic_mean": 0.03669640432695784,
+        "rank_icir": 0.23298833803303953,
+        "rank_ic_mean_std": 0.00032041528679054173
+      },
+      "csi1000": {
+        "ic_mean": 0.021543581100900232,
+        "icir": 0.1543602800824439,
+        "rank_ic_mean": 0.04397989513966955,
+        "rank_icir": 0.3142299265461901,
+        "rank_ic_mean_std": 0.0004207030424701053
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.06165961240280984,
+        "icir": 0.34114462746935287,
+        "rank_ic_mean": 0.08258856369101844,
+        "rank_icir": 0.43887345151840085,
+        "rank_ic_mean_std": 0.0011883965065391296
+      },
+      "csi500": {
+        "ic_mean": 0.04457178240244629,
+        "icir": 0.3110085755548964,
+        "rank_ic_mean": 0.07403394423123319,
+        "rank_icir": 0.5082844335665879,
+        "rank_ic_mean_std": 0.00020473526709944675
+      },
+      "csi1000": {
+        "ic_mean": 0.06950187147764753,
+        "icir": 0.5395167045194799,
+        "rank_ic_mean": 0.09822139336495925,
+        "rank_icir": 0.7535891361784178,
+        "rank_ic_mean_std": 0.001069943175221864
+      }
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b3": {
+    "n": 5,
+    "wins": 5,
+    "diff_mean": 0.0019451828174632813,
+    "diffs": [
+      0.001667046848193486,
+      0.0024547589925736635,
+      0.0023994060054533944,
+      0.0020013711558195812,
+      0.001203331085276281
+    ]
+  },
+  "conclusion": "improve",
+  "note": "用户确认提升为当前 B4-M（B4 v1.0）；实盘 B1 不自动切换。三池RankIC均超B3；CSI1000 RankIC 0.04398（B3 0.04203），RankICIR 0.3142（B3 0.3030），逐种子pairwise 5/5"
+}

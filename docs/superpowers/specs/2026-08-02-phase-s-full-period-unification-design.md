@@ -2,7 +2,7 @@
 
 ## Goal
 
-Replace the short Phase S valid-only selection window with one continuous CSI1000 full-history comparison from 2020-01-13 through 2026-07-31, and make `backtest/experiments/strategy_stability_report.html` the single Phase S report.
+Replace the short Phase S valid-only selection window with one continuous CSI1000 full-history comparison from 2020-01-13 through 2026-07-31, and make `backtest/experiments/reports/strategy_stability_report.html` the single Phase S report.
 
 ## Scope and interpretation
 

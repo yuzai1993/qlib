@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "exp_id": "feature-technical/bollinger",
+  "event_numbers": [
+    15
+  ],
+  "phase": "M",
+  "direction": "feature-technical",
+  "records_directory": "backtest/experiments/feature-technical/bollinger/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/feature-technical/bollinger/configs/ft_bollinger_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "81aa698af6469c48a152a6f09d30a84dfa6bbccaa0c8a8a478f8a8a464823f9a"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/bollinger/configs/ft_bollinger_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "642f21bca457df2c4083c6545adba43fa696c777e2fc92a68ab43c8e4707b46b"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/bollinger/configs/ft_bollinger_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "ba4afbfcd18312745d3a5e1232528df5915891f20dd58cf9fb0051edb3f1d3f4"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/bollinger/configs/ft_bollinger_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "9d65a92ccc790c90015bc2b68f02d88b0933167c58bacea1fb6fd22ab2ee9bd2"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/bollinger/configs/ft_bollinger_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "4165fd6fbf13969ba4fbea3e8e94bfd1f8ef3d8822257009eace204657e1c5f5"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/feature-technical/bollinger/metrics/ft_bollinger_lgbm_multi_pool.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/feature-technical/bollinger/records/e061c2a7004ef0ff5cda2b7c29f64c499aefa230e6ebba21a97efeeacc32d60f.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

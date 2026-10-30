@@ -124,7 +124,7 @@ and fixed test segment present.
 
 **Files:**
 - Modify: `backtest/experiments/registry.jsonl`
-- Regenerate: `backtest/experiments/report.html`
+- Regenerate: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Consumes: three evaluator JSONs and B1 IC JSON

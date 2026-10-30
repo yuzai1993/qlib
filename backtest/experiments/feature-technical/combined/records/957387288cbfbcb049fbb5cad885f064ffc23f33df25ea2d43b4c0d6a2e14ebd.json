@@ -1,0 +1,81 @@
+{
+  "exp_id": "feature-technical/combined",
+  "direction": "feature-technical",
+  "phase": "M",
+  "date": "2026-07-25",
+  "hypothesis": "一次性固定合并布林线、动量和趋势三组共28个特征，不依据test筛选；预期三组信息互补，使三池RankIC与RankICIR优于任一单组和B1",
+  "baseline_ref": "B1 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "train_start": "2016-01-02",
+  "feature_groups": [
+    "bollinger",
+    "momentum",
+    "trend"
+  ],
+  "feature_count": 28,
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s42.yaml",
+    "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s1000.yaml",
+    "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s2000.yaml",
+    "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s3000.yaml",
+    "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260725_223838_ft_combined_lgbm_s42",
+    "backtest/result/20260725_224035_ft_combined_lgbm_s1000",
+    "backtest/result/20260725_224241_ft_combined_lgbm_s2000",
+    "backtest/result/20260725_224450_ft_combined_lgbm_s3000",
+    "backtest/result/20260725_224701_ft_combined_lgbm_s4000",
+    "backtest/experiments/feature-technical/combined/metrics/ft_combined_lgbm_multi_pool.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.017280964063092114,
+      "icir": 0.12882303661406178,
+      "rank_ic_mean": 0.01920452451620202,
+      "rank_icir": 0.14604918300202557,
+      "rank_ic_mean_std": 0.0008596452760267662
+    },
+    "csi500": {
+      "ic_mean": 0.020799094932909778,
+      "icir": 0.17574218653242327,
+      "rank_ic_mean": 0.019332590321292552,
+      "rank_icir": 0.17300868152790957,
+      "rank_ic_mean_std": 0.0006208473792907764
+    },
+    "csi1000": {
+      "ic_mean": 0.029655605094231634,
+      "icir": 0.2709483924344487,
+      "rank_ic_mean": 0.028392823901297777,
+      "rank_icir": 0.2641322339280164,
+      "rank_ic_mean_std": 0.0005273576761225467
+    }
+  },
+  "pairwise_csi300_rankic_vs_b1": {
+    "n": 5,
+    "wins": 1,
+    "diff_mean": -0.001691165481451616,
+    "diffs": [
+      0.00019198770787232783,
+      -0.003438415690134051,
+      -0.0024172126421104015,
+      -0.0012820977675621036,
+      -0.0015100890153238525
+    ]
+  },
+  "conclusion": "regress",
+  "note": "三池RankIC均低于B1，CSI300逐种子仅1胜4负；虽然CSI500/CSI1000 IC略升且种子离散度收窄，但主指标未改善，三组简单合并存在信号稀释，预注册互补假设不成立"
+}

@@ -1,0 +1,339 @@
+{
+  "exp_id": "regime-adapt/b6m-phase-s-all-daily-topk",
+  "direction": "regime-adapt",
+  "phase": "S",
+  "date": "2026-08-15",
+  "state": "completed",
+  "arm": "b6m",
+  "pool": "all",
+  "strategy_id": "daily_topk",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "strategy": "每日换仓 topk=22 hold_thresh=1（无 n_drop 缓冲）",
+  "backtest_window": [
+    "2020-08-03",
+    "2026-07-31"
+  ],
+  "fees": {
+    "open_cost": 0.00021,
+    "close_cost": 0.00071,
+    "min_cost": 5.0,
+    "trade_unit": 100,
+    "note": "QMT 2026-07-16 校准：买 0.021% + 卖 0.071%，往返 0.092%，最低 5 元"
+  },
+  "eval_protocol": "每日换仓 topk=22 hold_thresh=1（无 n_drop 缓冲） | pool=all | benchmark=SH000300 | 扣费绝对收益 | CAPM alpha/beta（rf=0, 250 交易日）| 逐年 + 2024-09 断点前后分段回归 | 判据段 post_202409",
+  "metrics": {
+    "full_period": {
+      "annualized_return": {
+        "mean": 0.15016279650513867,
+        "std": 0.018831706131760335
+      },
+      "sharpe_ratio": {
+        "mean": 0.9154522347713084,
+        "std": 0.12061078374577243
+      },
+      "alpha": {
+        "mean": 0.14452812037372195,
+        "std": 0.018822857638127816
+      },
+      "beta": {
+        "mean": 0.45458377173789,
+        "std": 0.0064051280883476724
+      },
+      "max_drawdown": {
+        "mean": -0.2507805414076613,
+        "std": 0.025580349112707845
+      },
+      "calmar_ratio": {
+        "mean": 0.607308299187115,
+        "std": 0.11738057722195877
+      },
+      "annualized_volatility": {
+        "mean": 0.16418753883351236,
+        "std": 0.0030766051337796233
+      },
+      "annualized_one_way_turnover": {
+        "mean": 110.67660815260349,
+        "std": 2.8349337252112634
+      },
+      "cumulative_return": {
+        "mean": 1.224389943004555,
+        "std": 0.241998868884184
+      },
+      "benchmark_annualized_return": {
+        "mean": 0.012395242597145806,
+        "std": 0.0
+      },
+      "benchmark_cumulative_return": {
+        "mean": -0.022757931897094186,
+        "std": 0.0
+      },
+      "n_days": {
+        "mean": 1454.0,
+        "std": 0.0
+      }
+    },
+    "pre_202409": {
+      "annualized_return": {
+        "mean": 0.14543564154737532,
+        "std": 0.009699124923982668
+      },
+      "sharpe_ratio": {
+        "mean": 0.8959600424221444,
+        "std": 0.07989060227238562
+      },
+      "alpha": {
+        "mean": 0.17594159951519267,
+        "std": 0.009578502517655211
+      },
+      "beta": {
+        "mean": 0.41874575193634556,
+        "std": 0.008593943393725715
+      },
+      "max_drawdown": {
+        "mean": -0.2507805414076613,
+        "std": 0.025580349112707845
+      },
+      "calmar_ratio": {
+        "mean": 0.5855365321528985,
+        "std": 0.07534227998795802
+      },
+      "benchmark_annualized_return": {
+        "mean": -0.07285078792263106,
+        "std": 0.0
+      },
+      "n_days": {
+        "mean": 992.0,
+        "std": 0.0
+      }
+    },
+    "post_202409": {
+      "annualized_return": {
+        "mean": 0.16031287814605044,
+        "std": 0.04533383921064275
+      },
+      "sharpe_ratio": {
+        "mean": 0.9558630323259323,
+        "std": 0.26587121481094095
+      },
+      "alpha": {
+        "mean": 0.06060630278534874,
+        "std": 0.046049331278412715
+      },
+      "beta": {
+        "mean": 0.5101794094157441,
+        "std": 0.007417918074469881
+      },
+      "max_drawdown": {
+        "mean": -0.2012931028883189,
+        "std": 0.026811644264098083
+      },
+      "calmar_ratio": {
+        "mean": 0.8228443646236184,
+        "std": 0.3073242981792938
+      },
+      "benchmark_annualized_return": {
+        "mean": 0.19543433843181823,
+        "std": 0.0
+      },
+      "n_days": {
+        "mean": 462.0,
+        "std": 0.0
+      }
+    },
+    "years": {
+      "2020": {
+        "annualized_return": {
+          "mean": 0.06805372991285905,
+          "std": 0.02117859220876928
+        },
+        "sharpe_ratio": {
+          "mean": 0.5644862970470694,
+          "std": 0.17845237473011033
+        },
+        "alpha": {
+          "mean": -0.055748417330351574,
+          "std": 0.02538307116627014
+        },
+        "beta": {
+          "mean": 0.46393785279176747,
+          "std": 0.022956584954551544
+        },
+        "max_drawdown": {
+          "mean": -0.06635885966398017,
+          "std": 0.006435884504401789
+        },
+        "benchmark_annualized_return": {
+          "mean": 0.2668507139441748,
+          "std": 0.0
+        }
+      },
+      "2021": {
+        "annualized_return": {
+          "mean": 0.3569073125663607,
+          "std": 0.016685637554854405
+        },
+        "sharpe_ratio": {
+          "mean": 2.1156890980347316,
+          "std": 0.14075413027422928
+        },
+        "alpha": {
+          "mean": 0.3637380194335751,
+          "std": 0.016357534068609306
+        },
+        "beta": {
+          "mean": 0.18069326271349245,
+          "std": 0.01416546386057831
+        },
+        "max_drawdown": {
+          "mean": -0.08837658951704996,
+          "std": 0.0010131833736074186
+        },
+        "benchmark_annualized_return": {
+          "mean": -0.037802775624485564,
+          "std": 0.0
+        }
+      },
+      "2022": {
+        "annualized_return": {
+          "mean": 0.14011379572540167,
+          "std": 0.02654497077526394
+        },
+        "sharpe_ratio": {
+          "mean": 0.8014644535836922,
+          "std": 0.14728138393619575
+        },
+        "alpha": {
+          "mean": 0.27352193133031816,
+          "std": 0.02603443184849777
+        },
+        "beta": {
+          "mean": 0.5772881342094551,
+          "std": 0.012390969017954638
+        },
+        "max_drawdown": {
+          "mean": -0.10840673813947002,
+          "std": 0.007853761792522704
+        },
+        "benchmark_annualized_return": {
+          "mean": -0.23109453962293386,
+          "std": 0.0
+        }
+      },
+      "2023": {
+        "annualized_return": {
+          "mean": 0.07896740469592362,
+          "std": 0.04426812466649378
+        },
+        "sharpe_ratio": {
+          "mean": 0.7713178924697539,
+          "std": 0.4185325856970688
+        },
+        "alpha": {
+          "mean": 0.11997428701029582,
+          "std": 0.04529215891638784
+        },
+        "beta": {
+          "mean": 0.3542273941222523,
+          "std": 0.01271984060856563
+        },
+        "max_drawdown": {
+          "mean": -0.09622231092750133,
+          "std": 0.01080532984804653
+        },
+        "benchmark_annualized_return": {
+          "mean": -0.11576428868801648,
+          "std": 0.0
+        }
+      },
+      "2024": {
+        "annualized_return": {
+          "mean": 0.21569911886839346,
+          "std": 0.07341070828138224
+        },
+        "sharpe_ratio": {
+          "mean": 0.9752957736270488,
+          "std": 0.37446499185616355
+        },
+        "alpha": {
+          "mean": 0.11721710012969142,
+          "std": 0.07155499208740015
+        },
+        "beta": {
+          "mean": 0.6007224349161292,
+          "std": 0.019054165330849415
+        },
+        "max_drawdown": {
+          "mean": -0.1981100814419329,
+          "std": 0.030981589117285303
+        },
+        "benchmark_annualized_return": {
+          "mean": 0.16393930543388438,
+          "std": 0.0
+        }
+      },
+      "2025": {
+        "annualized_return": {
+          "mean": 0.18201105380290025,
+          "std": 0.055174944141148145
+        },
+        "sharpe_ratio": {
+          "mean": 1.3285581207087693,
+          "std": 0.41424346499982995
+        },
+        "alpha": {
+          "mean": 0.08685506382043659,
+          "std": 0.05708690302614742
+        },
+        "beta": {
+          "mean": 0.531504171608669,
+          "std": 0.020858105144670697
+        },
+        "max_drawdown": {
+          "mean": -0.07986619224394412,
+          "std": 0.009186136366087937
+        },
+        "benchmark_annualized_return": {
+          "mean": 0.17903150166152268,
+          "std": 0.0
+        }
+      },
+      "2026": {
+        "annualized_return": {
+          "mean": -0.17875416085176432,
+          "std": 0.10026371402745846
+        },
+        "sharpe_ratio": {
+          "mean": -1.0141058185233378,
+          "std": 0.5457388757612524
+        },
+        "alpha": {
+          "mean": -0.1800178490939607,
+          "std": 0.10033058104866084
+        },
+        "beta": {
+          "mean": 0.36216797352770264,
+          "std": 0.032929307967058105
+        },
+        "max_drawdown": {
+          "mean": -0.19605001744278294,
+          "std": 0.032334453806711044
+        },
+        "benchmark_annualized_return": {
+          "mean": 0.003489232440647462,
+          "std": 0.0
+        }
+      }
+    }
+  },
+  "note": "B6-M + 每日Topk · 全A；回测窗自 2020-08-03 起（regime 臂训练集截至 2020-07-31）",
+  "baseline_ref": "regime-adapt/b6m-phase-s-all-b4s",
+  "eval_output": "backtest/result/phase_s_regime/all_daily_topk/b6m.json",
+  "report": "backtest/experiments/_shared/reports/regime_adapt_phase_s_report.html",
+  "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+}

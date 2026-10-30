@@ -5,8 +5,18 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+
 from statistics import mean, stdev
 from typing import Any, Optional
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _layout_href
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _layout_href
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -23,7 +33,7 @@ EXEC_FIX_JSON = (
     / "all_top5d1"
     / "m0h20_exec_fix_old_st.json"
 )
-OUT = EXP_ROOT / "backtest" / "experiments" / "regime_adapt_m0h20_top5d1_bt_report.html"
+OUT = EXP_ROOT / "backtest" / "experiments" / "_shared" / "reports" / "regime_adapt_m0h20_top5d1_bt_report.html"
 EXP_DIR = EXP_ROOT / "backtest" / "experiments"
 
 FULL_COLS = [
@@ -61,7 +71,7 @@ def agg(recs: list[dict], block: str, key: str) -> tuple[Optional[float], Option
 
 
 def rel_from_exp(path: Path) -> str:
-    return Path(os_relpath(path, EXP_DIR)).as_posix()
+    return _layout_href(path, OUT, EXP_ROOT)
 
 
 def os_relpath(path: Path, start: Path) -> str:
@@ -250,7 +260,7 @@ def render_html(
     )
     H.append(
         "<li><b>池</b>：全A NameDFilter <code>^(SH60|SH68|SZ00|SZ30)</code>；"
-        "基准 <code>backtest/configs/regime-adapt/bench_ew_all.csv</code>。</li>"
+        "基准 <code>backtest/experiments/baseline/phase-m-v1-bt-v5/configs/bench_ew_all.csv</code>。</li>"
     )
     H.extend(_filter_bullets(uf, filter_stats))
     H.append(
@@ -433,9 +443,9 @@ def render_html(
 
 
 def _load_json(path: Path) -> Optional[dict]:
-    if not path.is_file():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
 
 
 def default_compare_runs() -> list[tuple[str, dict]]:
@@ -452,11 +462,11 @@ def default_compare_runs() -> list[tuple[str, dict]]:
 
 
 def main() -> None:
-    if not RES_JSON.is_file():
+    if not _resolve_research_path(RES_JSON, _RESEARCH_ROOT).is_file():
         raise SystemExit(f"missing {RES_JSON}")
-    doc = json.loads(RES_JSON.read_text(encoding="utf-8"))
+    doc = json.loads(_resolve_research_path(RES_JSON, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     html = render_html(doc, compare_runs=default_compare_runs())
-    OUT.write_text(html, encoding="utf-8")
+    _resolve_research_path(OUT, _RESEARCH_ROOT).write_text(html, encoding="utf-8")
     print(f"written: {OUT}")
 
 

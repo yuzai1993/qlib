@@ -34,7 +34,7 @@
 
 ## 1. 基线定义（B6-M / B4-S）
 
-研究基线与实盘配置分离维护。当前 Mac 生产配置是 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，对应 `backtest/configs/alla_v2_top5d1f100_parity.yaml`；旧全A阶梯对应 `backtest/configs/alla_v4_ladder_k1h5_parity.yaml`。`live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略为历史正式盘；CSI1000 研究配置随 B4-S 同步。这两套历史配置的实盘对照分别使用 `backtest/configs/csi300_live_parity.yaml`（CSI300）与 `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml`（CSI1000 研究），不得混用。
+研究基线与实盘配置分离维护。当前 Mac 生产配置是 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，对应 `backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/configs/alla_v2_top5d1f100_parity.yaml`；旧全A阶梯对应 `backtest/configs/alla_v4_ladder_k1h5_parity.yaml`。`live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略为历史正式盘；CSI1000 研究配置随 B4-S 同步。这两套历史配置的实盘对照分别使用 `backtest/configs/csi300_live_parity.yaml`（CSI300）与 `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml`（CSI1000 研究），不得混用。
 
 ### 1.1 模型基线 B6-M
 
@@ -152,11 +152,11 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 | 涨跌停 | `limit_threshold: market_cn`（主板 9.5%、创业板/科创板 19.5%） |
 | 原历史费用 | 买 `0.00021`、卖 `0.00071`、最低5元、100股整手、收盘价成交；30万当前费用另列诊断，不回写本基线 |
 | 基准 | 等权全A |
-| 总报告 | `backtest/experiments/phase_m_v1_bt_report.html` |
+| 总报告 | `backtest/experiments/reports/phase_m_v1_bt_report.html` |
 | 官方年化 | **CAGR**：\((1+\text{累计})^{250/n}-1\)。JSON 字段 `annualized_return` |
 | 审计年化 | 算术：日均扣费收益 ×250，字段 `annualized_return_arith` |
 | 夏普 | 算术年化 /（日收益标准差 ×√250），分子不用 CAGR |
-| 官方数字 | 读 `backtest/experiments/phase_m_v1_bt_metrics/all_top5d1f100_m0h20es.json` 的 `ensemble`；来源是 `backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json` 与原日收益CSV。直觉约数：CAGR +34.8%、算术年化 +34.1%、夏普 1.18、Alpha +24.7%、回撤 −33.0%、波动29.0%、单边年换手73.3；2026截至7月底CAGR +26.3%。以JSON为准，不手填报告数字 |
+| 官方数字 | 读 `backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json` 的 `ensemble`；来源是 `backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json` 与原日收益CSV。直觉约数：CAGR +34.8%、算术年化 +34.1%、夏普 1.18、Alpha +24.7%、回撤 −33.0%、波动29.0%、单边年换手73.3；2026截至7月底CAGR +26.3%。以JSON为准，不手填报告数字 |
 | 可复核来源 | 持久化JSON保存原结果、日收益CSV、ensemble预测、元数据和风格标签的路径及SHA-256；净值曲线与风格切片由原CSV重算，报告可在无 `mlruns/` / `backtest/result/` 的checkout重建 |
 | 选型限制 | `historical_selection_window`：2020-08-03~2026-07-31参与早停与策略比较，不是独立样本外检验；新增期间冻结参数诊断不用于再调参 |
 
@@ -164,7 +164,7 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 
 本次晋升依据是用户在历史比较后确认收益、波动与换手的取舍，不是逐维占优：相对 BT v4，CAGR +34.8%/+26.3%、夏普1.18/1.04、回撤−33.02%/−32.96%、波动29.0%/25.7%、换手73.3/44.3。候选2021～2023收益均低于BT v4，优势较依赖2025；这些限制随报告保存。晋升不等于实盘激活。
 
-总报告必须维护：历史 BT baseline 全周期表（含可移植带图报告链接）、分年矩阵（一行一个 baseline 版本、一列一年、每个指标一张表）、分风格矩阵（D/F/T，同样每个指标一张表）、实验表（链接到该次实验详细报告）。实验详细报告版式与总报告相同，但「历史 baseline」换成**实验组 vs 基准组**。风格标签用 `backtest/configs/regime-adapt/monthly_regime_labels_eval_window_v1.csv`。当前行标 **BT v5**；v1、v2、v3、v4 留在历史表。重建用 `build_phase_m_v1_bt_report.py`；历史行优先读取 `portable_eval_output`，原 `eval_output` 与 `baseline_ref` 保留。
+总报告必须维护：历史 BT baseline 全周期表（含可移植带图报告链接）、分年矩阵（一行一个 baseline 版本、一列一年、每个指标一张表）、分风格矩阵（D/F/T，同样每个指标一张表）、实验表（链接到该次实验详细报告）。实验详细报告版式与总报告相同，但「历史 baseline」换成**实验组 vs 基准组**。风格标签用 `backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv`。当前行标 **BT v5**；v1、v2、v3、v4 留在历史表。重建用 `build_phase_m_v1_bt_report.py`；历史行优先读取 `portable_eval_output`，原 `eval_output` 与 `baseline_ref` 保留。
 
 #### 1.6.1 历史回测基线 BT v1 / v2 / v3 / v4
 
@@ -384,15 +384,19 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 
 - 实验方向（direction）：短横线小写，如 `label-design`、`feature-ablation`、`model-arch`、`strategy-sweep`、`train-data`。
 - 实验 ID（exp_id）：`<direction>/<变体名>`，如 `label-design/cum_h10`、`baseline/b0-m`、`train-data/csi1000`。
-- 配置文件：**按 exp_id 建目录**，放在 `backtest/configs/<exp_id>/` 下，例如：
-  - `backtest/configs/baseline/b0-m/b0_csi300_lgbm_s42.yaml`
-  - `backtest/configs/train-data/csi1000/td_csi1000_lgbm_s42.yaml`
-  文件名含变体与种子；配置头部注释写明 exp_id 与运行命令（`--config baseline/b0-m/b0_csi300_lgbm_s42.yaml`）。`config_loader` 支持相对 `configs/` 的子路径，也支持仅文件名（唯一匹配时）。
+- 实验档案：**按 exp_id 建目录**，放在 `backtest/experiments/<exp_id>/`，用 `metadata.json` 管理配置、报告、文档、指标摘要与完整登记事件。
+- 实验独有配置放在 `backtest/experiments/<exp_id>/configs/`，文件名含变体与种子，保持冻结配置原字节及 SHA。共享基线、实盘和通用模板继续保留权威配置，通过实验元数据显式引用。
+- `config_loader` 支持新完整路径、唯一文件名以及 `_catalog/path_map.json` 中明确登记的旧路径别名；不通过文件名猜测已清理的产物。
 - 结果目录：`backtest/result/<时间戳>_<变体名>/`（run_backtest.py 默认行为，note 字段填变体名）。
 
 ### 6.2 registry（必填）
 
-每个实验（含判负的）完成后，向 `backtest/experiments/registry.jsonl` 追加一行 JSON：
+每个实验（含判负的）完成后，向 `backtest/experiments/registry.jsonl` 追加一个实验事件。
+登记入口统一使用 `backtest/scripts/experiment_registry.py`：当前 JSONL 为轻量事件索引，
+完整 JSON 保存在对应实验目录的 `<exp_id>/records/<SHA-256>.json`，v2 索引按文件字节校验 SHA-256。
+旧完整内联行及 v1 索引仍兼容；统一读取器返回完整事件，不去重、不改变历史顺序。
+索引、详情均为长期登记记录，不参与运行产物清理；详情缺失、哈希或元字段不一致时必须报错。
+存储格式与迁移校验说明见 `backtest/experiments/README.md`。以下为完整逻辑事件示例，字段要求不变：
 
 ```json
 {
@@ -443,7 +447,7 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
   --registry /Users/yuxianqi/Project/qlib/backtest/experiments/registry.jsonl
 ```
 
-以上仍是 dry-run；任何根缺失必要训练原件时报错是保护行为。迁移清单与元数据重定址见 `backtest/experiments/repository_migration_20261030/`，历史来源字符串保持审计语义。Phase M v1 按第 1.5 节保留版本化历史模型基线的完整五种子，执行层另保护当前 BT 的模型依赖和官方 ensemble；不能套用 CSI1000 的候选排名删除。旧 `plan_artifact_cleanup.py` 入口使用同一计划，有保留错误时拒绝导出删除脚本，实际执行时仍重新验证。
+以上仍是 dry-run；任何根缺失必要训练原件时报错是保护行为。迁移清单与元数据重定址见 `backtest/experiments/_catalog/audits/repository_migration_20261030/`，历史来源字符串保持审计语义。Phase M v1 按第 1.5 节保留版本化历史模型基线的完整五种子，执行层另保护当前 BT 的模型依赖和官方 ensemble；不能套用 CSI1000 的候选排名删除。旧 `plan_artifact_cleanup.py` 入口使用同一计划，有保留错误时拒绝导出删除脚本，实际执行时仍重新验证。
 
 **长期保留组**：
 
@@ -472,7 +476,7 @@ Phase S 的预测与回测 bundle 使用独立 retention schema：只长期保�
 - 当前 baseline 与最佳候选 registry 行引用的五种子 session；
 - 删除其他所有 session，包括判负、未超过 baseline、中途失败和已被更优候选替代的目录。
 
-registry 中的历史 `result_dirs` 字符串允许指向已清理目录，它们是审计记录而非永久文件承诺。以下 Git 跟踪摘要永不参与清理：`registry.jsonl`、配置文件、`backtest/experiments/ic/*.json` 和自动生成的 HTML 报告。
+registry 中的历史 `result_dirs` 字符串允许指向已清理目录，它们是审计记录而非永久文件承诺。以下 Git 跟踪摘要永不参与清理：`registry.jsonl`、各实验的 `records/*.json` 与 `metadata.json`、配置、指标摘要、文档和 HTML 报告，以及 `_shared/`、`_catalog/audits/` 中的长期证据。
 
 清理脚本默认 dry-run，只有显式 `--apply` 才删除；删除目标必须是 `mlruns/` 或 `backtest/result/` 的直接子目录。保留组必须具有规范中的完整五种子列表、五个现存 result session，且每个 session 能唯一解析到成功的 train experiment；任一条件不满足时脚本必须阻止全部删除。提升 baseline 后，旧 baseline 仅在仍是最佳候选时保留，否则由下一次清理删除。
 
@@ -480,11 +484,11 @@ registry 中的历史 `result_dirs` 字符串允许指向已清理目录，它�
 
 ## 7. HTML 报告规范
 
-- `backtest/experiments/report.html` 由 `backtest/scripts/build_experiment_report.py` 从 `registry.jsonl` 自动生成，是 **CSI1000 历史 Phase M（IC/RankIC）** 的规范入口；**不是 Phase S 的活动报告，也不是 Phase M v1 入口**。registry 仍是唯一数据源，禁止手工编辑 HTML。
+- `backtest/experiments/reports/report.html` 由 `backtest/scripts/build_experiment_report.py` 从 `registry.jsonl` 自动生成，是 **CSI1000 历史 Phase M（IC/RankIC）** 的规范入口；**不是 Phase S 的活动报告，也不是 Phase M v1 入口**。registry 仍是唯一数据源，禁止手工编辑 HTML。
 - CSI1000 Phase M 报告顶部自动生成目录与指标说明；每个方向一张表，表格第一行固定为对应 baseline，指标为 4 项（RankIC / RankICIR / IC / ICIR）× 3 指数。带 `phase_m_protocol=v1` 的行不进入此报告。
-- `backtest/experiments/phase_m_v1_report.html` 由 `backtest/scripts/build_phase_m_v1_report.py` 从 registry 生成，是 **Phase M v1 模型评估总报告入口**。固定四块：历史 baseline 版本表、分年表、分风格表、历史实验记录。禁止按 direction 分表，禁止手工编辑 HTML。每个实验另有详细 HTML。
-- `backtest/experiments/phase_m_v1_bt_report.html` 由 `backtest/scripts/build_phase_m_v1_bt_report.py` 从 registry 生成，是 **Phase M v1 执行层回测总报告**。官方数字必须来自五种子均值信号单次回测（`report_kind=phase_m_v1_bt_baseline` / `phase_m_v1_bt`）。禁止与 CSI1000 `strategy_stability_report.html` 混排。
-- `backtest/experiments/strategy_stability_report.html` 是**唯一活动的 Phase S 报告**，由 `backtest/scripts/build_strategy_stability_report.py` 从 registry 生成。每次 Phase S full-period 登记后必须重建它，并显著展示 `evaluation_mode: full_history_in_sample` 与非样本外声明。
+- `backtest/experiments/reports/phase_m_v1_report.html` 由 `backtest/scripts/build_phase_m_v1_report.py` 从 registry 生成，是 **Phase M v1 模型评估总报告入口**。固定四块：历史 baseline 版本表、分年表、分风格表、历史实验记录。禁止按 direction 分表，禁止手工编辑 HTML。每个实验另有详细 HTML。
+- `backtest/experiments/reports/phase_m_v1_bt_report.html` 由 `backtest/scripts/build_phase_m_v1_bt_report.py` 从 registry 生成，是 **Phase M v1 执行层回测总报告**。官方数字必须来自五种子均值信号单次回测（`report_kind=phase_m_v1_bt_baseline` / `phase_m_v1_bt`）。禁止与 CSI1000 `strategy_stability_report.html` 混排。
+- `backtest/experiments/reports/strategy_stability_report.html` 是**唯一活动的 Phase S 报告**，由 `backtest/scripts/build_strategy_stability_report.py` 从 registry 生成。每次 Phase S full-period 登记后必须重建它，并显著展示 `evaluation_mode: full_history_in_sample` 与非样本外声明。
 - 无效实验也要登记并保留在相应报告中，避免重复试错。
 - 历史报告 `build_benchmark_html.py` 仅作为规范生效前旧实验的存档，不再新增内容。
 

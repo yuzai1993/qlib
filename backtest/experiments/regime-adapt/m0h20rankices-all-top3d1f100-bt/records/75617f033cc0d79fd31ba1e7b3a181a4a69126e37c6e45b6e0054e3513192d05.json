@@ -1,0 +1,41 @@
+{
+  "exp_id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-23",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "v4 RankIC ES top3d1 + f100",
+  "arm": "m0h20rankices",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "用当前模型基线 v4 的官方合成信号，跑 TopkDropout TopkDropout topk=3 n_drop=1 hold_thresh=1 force_sell_rank=100。对照当前执行层基线 BT v4（同信号真阶梯 k3h5）；本行只作诊断，不晋升。",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=3 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top3d1f100/m0h20rankices.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v4",
+  "note": "只改策略 + 复用 v4 合成 pred；官方只跑均值信号一次；不晋升执行层基线",
+  "metrics": {
+    "annualized_return": 0.14794609957558302,
+    "sharpe_ratio": 0.5964389522256313,
+    "alpha": 0.09056044161527957,
+    "beta": 0.9041559795008658,
+    "max_drawdown": -0.42280311069232024,
+    "calmar_ratio": 0.3499172447745908,
+    "annualized_volatility": 0.31368200857863476,
+    "annualized_one_way_turnover": 97.71251703388266,
+    "n_days": 1454,
+    "annualized_return_arith": 0.1870921685286724,
+    "y2026_annualized_return": -0.24079036217608352,
+    "y2026_annualized_return_arith": -0.219921837209055
+  },
+  "ensemble_session": "backtest/result/20260823_131457_phase_s_m0h20rankices_all_top3d1f100_ensemble",
+  "conclusion": "实现按预期生效，未晋升。全期 +14.8%/0.60/-42.3%/97.7x，2026 -24.1%。对照 BT v4 +26.3%/1.04/-33.0%/44.3x，2026 +3.8%。这是执行层回测，不能和主格 ×238/h 净年化直接相减。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20rankices-all-top3d1f100-bt/metrics/all_top3d1f100_m0h20rankices.json"
+}

@@ -10,7 +10,26 @@ import sys
 import tempfile
 from datetime import date, datetime
 from pathlib import Path
+
 from typing import Any, Mapping, Optional, Sequence
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
 
 QLIB_ROOT = Path(__file__).resolve().parents[2]
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +64,7 @@ IC_DIR = BACKTEST_ROOT / "experiments" / "ic"
 MANIFEST = BACKTEST_ROOT / "experiments" / "b5_rankic_hyperparam_selection.json"
 TEST_RESULT = IC_DIR / "mh_valid_rankic_selected_test_1d.json"
 BASELINE_RESULT = IC_DIR / "ls_rank_norm_test_1d.json"
-BASELINE_RESULT_REL = "backtest/experiments/ic/ls_rank_norm_test_1d.json"
+BASELINE_RESULT_REL = "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json"
 METRIC_KEYS = ("ic_mean", "icir", "rank_ic_mean", "rank_icir")
 
 HYPOTHESIS = (
@@ -79,13 +98,13 @@ def _canonical_date(value: Any, label: str = "data_version") -> str:
 
 
 def _config_path(repo_root: Path, candidate: str, seed: int) -> Path:
-    return (
+    return _resolve_research_path(
         Path(repo_root)
         / "backtest"
         / "configs"
         / "model-hyperparam"
         / candidate
-        / f"mh_{candidate.replace('-', '_')}_s{seed}.yaml"
+        / f"mh_{candidate.replace('-', '_')}_s{seed}.yaml", repo_root
     )
 
 
@@ -123,7 +142,7 @@ def build_pending_row(
     repo_root = Path(repo_root).expanduser().resolve()
     config_hashes = _preregister_config_hashes(repo_root)
     baseline_result = (repo_root / BASELINE_RESULT_REL).resolve()
-    if not baseline_result.is_file():
+    if not _resolve_research_path(baseline_result, _RESEARCH_ROOT).is_file():
         raise FileNotFoundError(f"canonical B5 result missing: {baseline_result}")
     return {
         "exp_id": EXP_ID,
@@ -176,12 +195,12 @@ def build_pending_row(
     }
 
 
-def _decode_json_line(raw_line: bytes, line_number: int) -> Optional[dict]:
+def _decode_json_line(raw_line: bytes, line_number: int, registry_path: Path) -> Optional[dict]:
     body = raw_line.rstrip(b"\r\n")
     if not body.strip():
         return None
     try:
-        value = json.loads(body.decode("utf-8"))
+        value = _decode_registry_line(body.decode("utf-8"), registry_path)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         _fail(f"registry line {line_number} is not valid UTF-8 JSON: {exc}")
     if not isinstance(value, dict):
@@ -189,10 +208,10 @@ def _decode_json_line(raw_line: bytes, line_number: int) -> Optional[dict]:
     return value
 
 
-def _registry_entries(raw: bytes) -> list[tuple[int, dict]]:
+def _registry_entries(raw: bytes, registry_path: Path) -> list[tuple[int, dict]]:
     entries = []
     for index, raw_line in enumerate(raw.splitlines(keepends=True)):
-        value = _decode_json_line(raw_line, index + 1)
+        value = _decode_json_line(raw_line, index + 1, registry_path)
         if value is not None:
             entries.append((index, value))
     return entries
@@ -221,13 +240,10 @@ def _atomic_replace(path: Path, payload: bytes) -> None:
             Path(temp_name).unlink(missing_ok=True)
 
 
-def _encode_row(row: Mapping[str, Any]) -> bytes:
+def _encode_row(row: Mapping[str, Any], registry_path: Path) -> bytes:
     try:
-        return json.dumps(
-            row,
-            ensure_ascii=False,
-            allow_nan=False,
-        ).encode("utf-8")
+        json.dumps(row, ensure_ascii=False, allow_nan=False)
+        return _encode_registry_row(registry_path, dict(row)).encode("utf-8")
     except (TypeError, ValueError) as exc:
         _fail(f"registry row is not finite JSON: {exc}")
 
@@ -241,19 +257,19 @@ def register_pending(
     """Atomically append one pending row without altering existing bytes."""
 
     registry_path = Path(registry_path)
-    raw = registry_path.read_bytes() if registry_path.exists() else b""
-    entries = _registry_entries(raw)
+    raw = _resolve_research_path(registry_path, _RESEARCH_ROOT).read_bytes() if _resolve_research_path(registry_path, _RESEARCH_ROOT).exists() else b""
+    entries = _registry_entries(raw, registry_path)
     if any(row.get("exp_id") == EXP_ID for _, row in entries):
         _fail(f"experiment {EXP_ID} already exists")
     row = build_pending_row(data_version, repo_root=repo_root)
     separator = b"" if not raw or raw.endswith((b"\n", b"\r")) else b"\n"
-    _atomic_replace(registry_path, raw + separator + _encode_row(row) + b"\n")
+    _atomic_replace(registry_path, raw + separator + _encode_row(row, registry_path) + b"\n")
     return row
 
 
 def _load_json(path: Path, label: str) -> dict:
     try:
-        value = json.loads(Path(path).read_text(encoding="utf-8"))
+        value = json.loads(_resolve_research_path(Path(path), _RESEARCH_ROOT).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         _fail(f"{label} cannot be loaded: {path}: {exc}")
     if not isinstance(value, dict):
@@ -684,9 +700,9 @@ def finalize_registry(
 
     registry_path = Path(registry_path)
     repo_root = Path(repo_root).expanduser().resolve()
-    raw = registry_path.read_bytes()
+    raw = _resolve_research_path(registry_path, _RESEARCH_ROOT).read_bytes()
     raw_lines = raw.splitlines(keepends=True)
-    entries = _registry_entries(raw)
+    entries = _registry_entries(raw, registry_path)
     target_rows = [
         (line_index, row)
         for line_index, row in entries
@@ -751,7 +767,7 @@ def finalize_registry(
         ending = b"\r"
     else:
         ending = b""
-    raw_lines[target_index] = _encode_row(final) + ending
+    raw_lines[target_index] = _encode_row(final, registry_path) + ending
     _atomic_replace(registry_path, b"".join(raw_lines))
     return final
 

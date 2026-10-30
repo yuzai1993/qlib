@@ -1,0 +1,79 @@
+{
+  "exp_id": "feature-technical/trend",
+  "direction": "feature-technical",
+  "phase": "M",
+  "date": "2026-07-25",
+  "hypothesis": "在Alpha158上增加5/20/60均线排列状态、20/60日方向、趋势效率和斜率强度；预期显式上行/下行/震荡代理补充独立MA/BETA/RSQR，使三池RankIC及稳定性改善",
+  "baseline_ref": "B1 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "train_start": "2016-01-02",
+  "feature_groups": [
+    "trend"
+  ],
+  "feature_count": 7,
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s42.yaml",
+    "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s1000.yaml",
+    "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s2000.yaml",
+    "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s3000.yaml",
+    "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260725_222923_ft_trend_lgbm_s42",
+    "backtest/result/20260725_223113_ft_trend_lgbm_s1000",
+    "backtest/result/20260725_223304_ft_trend_lgbm_s2000",
+    "backtest/result/20260725_223456_ft_trend_lgbm_s3000",
+    "backtest/result/20260725_223647_ft_trend_lgbm_s4000",
+    "backtest/experiments/feature-technical/trend/metrics/ft_trend_lgbm_multi_pool.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.017933732449896177,
+      "icir": 0.13292945521017024,
+      "rank_ic_mean": 0.021040766778294594,
+      "rank_icir": 0.1594722308595359,
+      "rank_ic_mean_std": 0.0011056345889726682
+    },
+    "csi500": {
+      "ic_mean": 0.020520255590046405,
+      "icir": 0.174489196351112,
+      "rank_ic_mean": 0.020172411255406156,
+      "rank_icir": 0.1822463563137253,
+      "rank_ic_mean_std": 0.0011278196432544607
+    },
+    "csi1000": {
+      "ic_mean": 0.029633271997329208,
+      "icir": 0.27231773936265313,
+      "rank_ic_mean": 0.029032729392955814,
+      "rank_icir": 0.27124271971405645,
+      "rank_ic_mean_std": 0.0011704240344435778
+    }
+  },
+  "pairwise_csi300_rankic_vs_b1": {
+    "n": 5,
+    "wins": 2,
+    "diff_mean": 0.00014507678064096114,
+    "diffs": [
+      0.0011731444452035208,
+      -0.0008757515907415192,
+      -0.0004220299507505139,
+      0.0010858622911084914,
+      -0.0002358412916151735
+    ]
+  },
+  "conclusion": "inconclusive",
+  "note": "三池RankIC分别高于B1约0.00015/0.00005/0.00018且RankICIR均升，但CSI300逐种子仅2胜3负，IC与ICIR在CSI300下降；均值改善过小且缺少种子稳健性，保留为后续候选但不足以建议提升基线"
+}

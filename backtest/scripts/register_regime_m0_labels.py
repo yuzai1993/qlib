@@ -10,6 +10,24 @@ import json
 from datetime import date
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_m0_labels"
 REG = EXP_ROOT / "backtest" / "experiments" / "registry.jsonl"
@@ -17,7 +35,7 @@ REG = EXP_ROOT / "backtest" / "experiments" / "registry.jsonl"
 BASELINE_ID = "regime-adapt/m0-h20-t5h5-es-v1"
 H20_ID = "regime-adapt/m0-h20-label-v4"
 EVAL_FILES = {"m0h20": "eval_m0h20_st_daily.json"}
-DETAIL_REPORT = "backtest/experiments/regime_adapt_m0_label_report.html"
+DETAIL_REPORT = "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
 HYPOTHESIS = "不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普"
 GRID_ID = "regime-adapt/m0-label-k123-h2345"
 GRID_FILES = {
@@ -54,9 +72,9 @@ def eval_filename(key: str) -> str:
 
 def snap(key: str) -> dict | None:
     path = EVAL_DIR / eval_filename(key)
-    if not path.exists():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
         return None
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     pool = doc["pools"]["all"]
     sm = pool.get("ensemble") or pool.get("seed_mean") or {}
     prim = (sm.get("head") or {}).get("3", {}).get("5", {})
@@ -120,33 +138,25 @@ def build_row(exp_id: str, key: str, hh: int, note: str, metrics: dict) -> dict:
             f"backtest/result/regimeadaptfast_m0h20_s{s}"
             for s in (42, 1000, 2000, 3000, 4000)
         ],
-        "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
+        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
     }
 
 
 def load_registry() -> list[dict]:
-    if not REG.exists():
-        return []
-    rows = []
-    for line in REG.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        rows.append(json.loads(line))
-    return rows
+    return _load_registry_rows(REG) if _resolve_research_path(REG, _RESEARCH_ROOT).is_file() else []
 
 
 def write_registry(rows: list[dict]) -> None:
-    text = "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
-    REG.write_text(text, encoding="utf-8")
+    _write_registry_rows(REG, rows)
 
 
 def snap_k123_grid() -> dict | None:
     arms: dict[str, dict] = {}
     for key, fname in GRID_FILES.items():
         path = EVAL_DIR / fname
-        if not path.exists():
+        if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
             return None
-        doc = json.loads(path.read_text())
+        doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
         pool = doc["pools"]["all"]
         sm = pool.get("ensemble") or pool.get("seed_mean") or {}
         arms[key] = {
@@ -198,7 +208,7 @@ def build_grid_row(metrics: dict) -> dict:
             f"backtest/result/regimeadaptfast_m0h20_s{s}"
             for s in (42, 1000, 2000, 3000, 4000)
         ],
-        "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
+        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
     }
 
 

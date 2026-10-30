@@ -8,9 +8,17 @@ import json
 import math
 import sys
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
 
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
@@ -63,8 +71,8 @@ def refresh_comparison(
         row = copy.deepcopy(row)
         result_dir = Path(str(row.get("result_dir") or ""))
         meta_path = result_dir / "meta.json"
-        if meta_path.is_file():
-            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        if _resolve_research_path(meta_path, _RESEARCH_ROOT).is_file():
+            meta = json.loads(_resolve_research_path(meta_path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
             if meta.get("source_pred_sha256") != prediction_entry["prediction_sha256"]:
                 raise ValueError(f"session prediction SHA mismatch: {result_dir}")
             row["provenance_verification"] = "session_meta_verified"
@@ -95,14 +103,14 @@ def refresh_comparison(
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(
+    _resolve_research_path(path, _RESEARCH_ROOT).write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
 
 
 def refresh_prediction_manifest(path: Path) -> dict[str, Any]:
-    manifest = json.loads(path.read_text(encoding="utf-8"))
+    manifest = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     for entry in manifest.get("predictions") or []:
         pred_path = Path(entry["path"])
         if not pred_path.is_absolute():

@@ -15,9 +15,18 @@
 5. 每个实验（含失败的）登记 `backtest/experiments/registry.jsonl` 并更新 HTML 报告。CSI1000 每个方向一张表；Phase M v1 按第 5.1.2 节四块重建 `phase_m_v1_report.html`。
 6. 实验结束后清理 `mlruns/` 与 `backtest/result/`：只保留当前 baseline 与最佳合格候选五种子产物，避免磁盘打爆（详见规范 6.3）。
 
+## 任务收尾（强制）
+
+- 一次性迁移、修复和核验脚本优先放在仓库外的任务临时目录，并记录其路径；正式运行工具才放入仓库。
+- 完成必要验证后，删除本任务创建且已无后续用途的临时脚本、专用 fixture、工作副本和临时备份；不得把这些材料作为任务结果遗留。
+- 保留正式运行脚本、可复用测试、审计 JSON、必要文档及实际研究配置、报告、数据和模型；临时工具清理不得替代实验产物保留规则。
+- 删除前先检查引用，同步修正文档和测试；可复用逻辑需要保留时，先归入正式模块再删除一次性入口。
+- 只清理来源和用途已确认的任务材料，不按宽泛名称或目录批量删除用户原件、其它任务材料或大模型。
+- 收尾检查 `git status`、`git diff --check` 和任务临时目录，确认引用有效、必要证据已保存且无临时工具残留。
+
 ## 环境注意事项
 
-- 平台研究源与必要研究原件统一在 `/Users/yuxianqi/Project/qlib`；旧 `qlib_exp` 工作区已移除。历史元数据中的旧路径只保留作来源审计，活动路径以 `backtest/experiments/repository_migration_20261030/manifest.json` 与实际配置为准。
+- 平台研究源与必要研究原件统一在 `/Users/yuxianqi/Project/qlib`；旧 `qlib_exp` 工作区已移除。历史元数据中的旧路径只保留作来源审计，活动路径以 `backtest/experiments/_catalog/audits/repository_migration_20261030/manifest.json` 与实际配置为准。
 - macOS 下禁止用 heredoc/stdin 运行会触发 Qlib 并行取数的代码（详见 `docs/developer/qlib-shell-multiprocessing.md`）。
 - Python 解释器：`/opt/anaconda3/envs/qlib/bin/python`。
 

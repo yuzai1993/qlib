@@ -79,7 +79,7 @@
 **Files:**
 - Create: `backtest/experiments/ic/<arm>_<pool>.json`
 - Modify: `backtest/experiments/registry.jsonl`
-- Regenerate: `backtest/experiments/report.html`
+- Regenerate: `backtest/experiments/reports/report.html`
 
 - [ ] Run all 25 configs strictly serially and verify every summary has one success and zero failures.
 - [ ] Evaluate every arm on the three default pools with the unified evaluator.

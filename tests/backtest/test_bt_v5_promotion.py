@@ -3,12 +3,16 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from backtest.scripts.strategy_stability_metrics import summarize_stability
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from backtest.scripts.strategy_stability_metrics import summarize_stability  # noqa: E402
+from backtest.scripts.experiment_registry import append_registry, load_registry, write_registry  # noqa: E402
 
 
 def _write_json(path, data):
@@ -16,12 +20,12 @@ def _write_json(path, data):
     path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
 
 
-@pytest.fixture
-def promotion_fixture(tmp_path):
+@pytest.fixture(params=[False, True], ids=["inline-registry", "indexed-registry"])
+def promotion_fixture(tmp_path, request):
     repo, source = tmp_path / "repo", tmp_path / "source"
     exp = repo / "backtest/experiments"
     exp.mkdir(parents=True)
-    labels = repo / "backtest/configs/regime-adapt/monthly_regime_labels_eval_window_v1.csv"
+    labels = repo / "backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv"
     labels.parent.mkdir(parents=True)
     labels.write_text("datetime,regime3\n2020-08-01,D\n2024-02-01,F\n2026-07-01,T\n")
     returns = pd.DataFrame(
@@ -63,7 +67,7 @@ def promotion_fixture(tmp_path):
          "metrics": summary["full_period"]},
     ]
     registry = exp / "registry.jsonl"
-    registry.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    write_registry(registry, rows, indexed=request.param)
     return repo, source, rows
 
 
@@ -72,7 +76,7 @@ def test_promotion_preserves_history_and_model_baseline_and_is_idempotent(promot
     repo, source, before = promotion_fixture
     source_hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in source.rglob("*") if p.is_file()}
     result = promote.promote(repo_root=repo, source_root=source)
-    rows = [json.loads(line) for line in (repo / "backtest/experiments/registry.jsonl").read_text().splitlines()]
+    rows = load_registry(repo / "backtest/experiments/registry.jsonl")
     assert rows[0] == before[0]
     assert rows[1]["metrics"] == before[1]["metrics"]
     assert rows[2]["baseline_ref"] == before[2]["baseline_ref"]
@@ -108,6 +112,20 @@ def test_promotion_rejects_mismatched_provenance_before_writing(promotion_fixtur
         d = json.loads(p.read_text())
         d["ensemble"]["full_period"]["annualized_return"] = 0.99
         _write_json(p, d)
+    before = {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
+    with pytest.raises(ValueError):
+        promote.promote(repo_root=repo, source_root=source)
+    assert before == {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
+def test_promotion_rejects_nonfinite_history_before_writing(promotion_fixture, invalid):
+    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    repo, source, _ = promotion_fixture
+    registry = repo / "backtest/experiments/registry.jsonl"
+    rows = load_registry(registry)
+    rows[0]["metrics"]["keep"] = invalid
+    write_registry(registry, rows)
     before = {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
     with pytest.raises(ValueError):
         promote.promote(repo_root=repo, source_root=source)
@@ -157,10 +175,9 @@ def test_promotion_preserves_unrelated_legacy_registry_duplicates(promotion_fixt
     promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
     repo, source, before = promotion_fixture
     registry = repo / "backtest/experiments/registry.jsonl"
-    with registry.open("a") as stream:
-        stream.write(json.dumps(before[0]) + "\n")
+    append_registry(registry, before[0])
     promote.promote(repo_root=repo, source_root=source)
-    rows = [json.loads(line) for line in registry.read_text().splitlines()]
+    rows = load_registry(registry)
     assert [r for r in rows if r["exp_id"] == "model-v4"] == [before[0], before[0]]
 
 

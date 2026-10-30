@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -178,4 +179,4 @@ def test_upsert_registry_preserves_unrelated_lines_verbatim(tmp_path: Path):
 
     lines = registry.read_text(encoding="utf-8").splitlines(keepends=True)
     assert lines[0] == original
-    assert lines[1] == '{"exp_id": "new/b", "value": 2}\n'
+    assert json.loads(lines[1]) == {"exp_id": "new/b", "value": 2}

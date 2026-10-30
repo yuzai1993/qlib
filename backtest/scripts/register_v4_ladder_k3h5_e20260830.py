@@ -4,11 +4,29 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+
 ROOT = Path(__file__).resolve().parents[2]
 REG = ROOT / "backtest" / "experiments" / "registry.jsonl"
 EVAL = "backtest/result/phase_s_regime/all_ladder_k3h5_e20260830/m0h20rankices.json"
 OFFICIAL = "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json"
-DETAIL = "backtest/experiments/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html"
+DETAIL = "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html"
 EXP_ID = "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt"
 
 
@@ -37,14 +55,14 @@ def pick(summary: dict) -> dict:
 
 def main() -> None:
     path = ROOT / EVAL
-    if not path.is_file():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
         raise SystemExit(f"missing {path}")
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     ens = doc.get("ensemble")
     if not ens:
         raise SystemExit(f"{EVAL} missing ensemble")
     metrics = pick(ens)
-    official = json.loads((ROOT / OFFICIAL).read_text())
+    official = json.loads((_resolve_research_path(ROOT / OFFICIAL, _RESEARCH_ROOT)).read_text())
     off_m = pick(official["ensemble"])
     row = {
         "exp_id": EXP_ID,
@@ -88,10 +106,10 @@ def main() -> None:
             "这是延长窗诊断，不能和官方窗数字直接当同一口径，也不能和主格 ×238/h 净年化相减。"
         ),
     }
-    lines = [line for line in REG.read_text().splitlines() if line.strip()]
-    kept = [line for line in lines if json.loads(line)["exp_id"] != EXP_ID]
-    kept.append(json.dumps(row, ensure_ascii=False))
-    REG.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    lines = [line for line in _resolve_research_path(REG, _RESEARCH_ROOT).read_text().splitlines() if line.strip()]
+    kept = [line for line in lines if _decode_registry_line(line, REG)["exp_id"] != EXP_ID]
+    kept.append(_encode_registry_row(REG, row))
+    _resolve_research_path(REG, _RESEARCH_ROOT).write_text("\n".join(kept) + "\n", encoding="utf-8")
     print(
         f"{EXP_ID}: 累乘年化 {metrics['annualized_return']:+.1%} "
         f"夏普 {metrics['sharpe_ratio']:.2f} "

@@ -57,4 +57,4 @@
 - [x] CLI与LaunchAgent显式使用主根；重载平台并由运行API确认研究根与实际指标，再以git worktree remove移除旧目录，保留dev分支。
 - [x] 删除后重新运行catalog校验与主根cleanup dry-run，零退化、零保留校验错误；268项Python相关回归与45项前端测试通过。
 
-服务初次自动重载中，bootout返回后旧服务尚在SIGTERMed阶段，紧接的bootstrap返回I/O错误。直接注册恢复服务后，使用分步卸载/注册完成切源；最终接口正常，交易scheduler的plist哈希未改变。稳定证据为 `backtest/experiments/repository_migration_20261030/service_cutover.json`。
+服务初次自动重载中，bootout返回后旧服务尚在SIGTERMed阶段，紧接的bootstrap返回I/O错误。直接注册恢复服务后，使用分步卸载/注册完成切源；最终接口正常，交易scheduler的plist哈希未改变。稳定证据为 `backtest/experiments/_catalog/audits/repository_migration_20261030/service_cutover.json`。

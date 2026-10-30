@@ -4,13 +4,31 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+
 ROOT = Path(__file__).resolve().parents[2]
 REG = ROOT / "backtest" / "experiments" / "registry.jsonl"
 EVAL = "backtest/result/phase_s_regime/all_ladder_k3h5f100r/m0h20rankices.json"
 PLAIN = "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json"
 F100 = "backtest/result/phase_s_regime/all_ladder_k3h5f100/m0h20rankices.json"
 BT_V3 = "backtest/result/phase_s_regime/all_top5d1h5f100/m0h20es.json"
-DETAIL = "backtest/experiments/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html"
+DETAIL = "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html"
 EXP_ID = "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt"
 
 
@@ -37,9 +55,9 @@ def pick(summary: dict) -> dict:
 
 def load_ensemble(rel: str) -> dict:
     path = ROOT / rel
-    if not path.is_file():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
         raise SystemExit(f"missing {path}")
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     ens = doc.get("ensemble")
     if not ens:
         raise SystemExit(f"{rel} missing ensemble")
@@ -95,10 +113,10 @@ def main() -> None:
             "这是执行层回测，不能和主格 ×238/h 净年化直接相减。"
         ),
     }
-    lines = [line for line in REG.read_text().splitlines() if line.strip()]
-    kept = [line for line in lines if json.loads(line)["exp_id"] != EXP_ID]
-    kept.append(json.dumps(row, ensure_ascii=False))
-    REG.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    lines = [line for line in _resolve_research_path(REG, _RESEARCH_ROOT).read_text().splitlines() if line.strip()]
+    kept = [line for line in lines if _decode_registry_line(line, REG)["exp_id"] != EXP_ID]
+    kept.append(_encode_registry_row(REG, row))
+    _resolve_research_path(REG, _RESEARCH_ROOT).write_text("\n".join(kept) + "\n", encoding="utf-8")
     print(
         f"{EXP_ID}: 累乘年化 {metrics['annualized_return']:+.1%} "
         f"夏普 {metrics['sharpe_ratio']:.2f} "

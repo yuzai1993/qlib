@@ -9,8 +9,27 @@ import shutil
 import sys
 from pathlib import Path
 
+
 import pandas as pd
 import yaml
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
+else:
+    from experiment_registry import (
+        decode_registry_line as _decode_registry_line,
+        encode_registry_row as _encode_registry_row,
+    )
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -43,19 +62,21 @@ def nav(report):
 
 def save_record(record):
     registry = ROOT / "backtest/experiments/registry.jsonl"
-    lines = registry.read_text().splitlines(keepends=True)
+    lines = _resolve_research_path(registry, _RESEARCH_ROOT).read_bytes().decode("utf-8").splitlines(keepends=True)
     matches = [
         i
         for i, line in enumerate(lines)
-        if line.strip() and json.loads(line).get("exp_id") == record["exp_id"]
+        if line.strip() and _decode_registry_line(line, registry).get("exp_id") == record["exp_id"]
     ]
     if len(matches) > 1:
         raise ValueError("duplicate diagnostic identity")
     if matches:
-        lines[matches[0]] = json.dumps(record, ensure_ascii=False) + "\n"
+        lines[matches[0]] = _encode_registry_row(registry, record) + "\n"
     else:
-        lines.append(json.dumps(record, ensure_ascii=False) + "\n")
-    registry.write_text("".join(lines))
+        if lines and not lines[-1].endswith(("\n", "\r")):
+            lines[-1] += "\n"
+        lines.append(_encode_registry_row(registry, record) + "\n")
+    _resolve_research_path(registry, _RESEARCH_ROOT).write_bytes("".join(lines).encode("utf-8"))
 
 
 def register_failure(result, summary, *, attempt):
@@ -84,7 +105,7 @@ def register_failure(result, summary, *, attempt):
         "selection_limitation": limitation,
         "provenance": summary,
     }
-    output.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n")
+    _resolve_research_path(output, _RESEARCH_ROOT).write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n")
     record = {
         "exp_id": identity["exp_id"] + f"-failed-{attempt}",
         "direction": "phase-m-v1-bt",
@@ -105,7 +126,7 @@ def register_failure(result, summary, *, attempt):
             "_diagnostic.html", f"_failed_{attempt}.html"
         ),
         "source_summary": str((dest / "summary.json").relative_to(ROOT)),
-        "config_path": "backtest/configs/alla_v2_top5d1f100_parity.yaml",
+        "config_path": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/configs/alla_v2_top5d1f100_parity.yaml",
         "result_dirs": [str(result.relative_to(ROOT))],
         "metrics": {},
         "hypothesis": summary["hypothesis"],
@@ -122,7 +143,7 @@ def main():
     parser.add_argument("--failure-attempt", type=int)
     args = parser.parse_args()
     result = args.result.resolve()
-    summary = json.loads((result / "summary.json").read_text())
+    summary = json.loads((_resolve_research_path(result / "summary.json", _RESEARCH_ROOT)).read_text())
     if args.failure_attempt is not None:
         register_failure(result, summary, attempt=args.failure_attempt)
         return
@@ -133,17 +154,17 @@ def main():
     risk = summary["risk_degree"]
     if summary["status"] != "completed":
         raise ValueError("diagnostic is not complete")
-    cfg = yaml.safe_load((result / "config.yaml").read_text())
+    cfg = yaml.safe_load((_resolve_research_path(result / "config.yaml", _RESEARCH_ROOT)).read_text())
     from run_bt_v5_cutover_diagnostics import validate_frozen_config
 
     validate_frozen_config(cfg, risk_degree=risk)
     if (
-        hashlib.sha256((result / "config.yaml").read_bytes()).hexdigest()
+        hashlib.sha256((_resolve_research_path(result / "config.yaml", _RESEARCH_ROOT)).read_bytes()).hexdigest()
         != summary["config_sha256"]
     ):
         raise ValueError("diagnostic config SHA mismatch")
     report_path = result / "portfolio_daily.csv"
-    if hashlib.sha256(report_path.read_bytes()).hexdigest() != summary["report_sha256"]:
+    if hashlib.sha256(_resolve_research_path(report_path, _RESEARCH_ROOT).read_bytes()).hexdigest() != summary["report_sha256"]:
         raise ValueError("daily returns SHA mismatch")
     report = pd.read_csv(report_path, index_col=0, parse_dates=True)
     historical, forward = report.loc[:"2026-07-31"], report.loc["2026-08-03":]
@@ -177,7 +198,7 @@ def main():
             }
         ],
     }
-    eval_output.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n")
+    _resolve_research_path(eval_output, _RESEARCH_ROOT).write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n")
     record = {
         "exp_id": exp_id,
         "direction": "phase-m-v1-bt",

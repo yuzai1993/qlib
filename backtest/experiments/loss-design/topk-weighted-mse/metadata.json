@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "exp_id": "loss-design/topk-weighted-mse",
+  "event_numbers": [
+    39
+  ],
+  "phase": "M",
+  "direction": "loss-design",
+  "records_directory": "backtest/experiments/loss-design/topk-weighted-mse/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s1000.yaml",
+      "shared": false,
+      "sha256": "2887c6cf9aaa8cc8c6cfae88ea8c331fba4d29add7e4d350a3d0e22fdfe5e732"
+    },
+    {
+      "path": "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s2000.yaml",
+      "shared": false,
+      "sha256": "479a9859a735a5049c1665e037bed142b8e893cc85b32791f20367f0f2ca67f5"
+    },
+    {
+      "path": "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s3000.yaml",
+      "shared": false,
+      "sha256": "f7cfebc264a59ddb34b0cedbf6cec2d2f9a2b1a68091cfb1c9223556afb8823a"
+    },
+    {
+      "path": "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s4000.yaml",
+      "shared": false,
+      "sha256": "f84e82704b677eab5ed016b5080dec215d9b99e6a40a8e213fb58961012906df"
+    },
+    {
+      "path": "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s42.yaml",
+      "shared": false,
+      "sha256": "7b2d77cd10783e6a4aa035efb9ec58b3aef5357ce1c77ef7c522bd789ebd3b5c"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/loss-design/topk-weighted-mse/metrics/ls_topk_weighted_test_1d.json",
+    "backtest/experiments/loss-design/topk-weighted-mse/metrics/ls_topk_weighted_test_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/loss-design/topk-weighted-mse/records/d0a69581cd29f4acab0bffec8e47b1001d3d66b181ae5af714b5464db4e65302.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

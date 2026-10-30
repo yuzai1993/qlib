@@ -1,0 +1,80 @@
+{
+  "exp_id": "train-data/all-start2016",
+  "direction": "train-data",
+  "phase": "M",
+  "date": "2026-07-24",
+  "hypothesis": "将全 A 训练起点从 2006 提至 2016，可显著减少股票日样本和 Alpha158 矩阵内存；预期 seed 42 能在 16GB M1 上完成 model.fit；若成功，补齐五种子并检验更宽训练池是否继续提高三测试池 RankIC",
+  "baseline_ref": "B0 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "train_start": "2016-01-02",
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/train-data/all-start2016/configs/td_all_start2016_lgbm_s42.yaml",
+    "backtest/experiments/train-data/all-start2016/configs/td_all_start2016_lgbm_s1000.yaml",
+    "backtest/experiments/train-data/all-start2016/configs/td_all_start2016_lgbm_s2000.yaml",
+    "backtest/experiments/train-data/all-start2016/configs/td_all_start2016_lgbm_s3000.yaml",
+    "backtest/experiments/train-data/all-start2016/configs/td_all_start2016_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260724_231515_td_all_start2016_lgbm_s42",
+    "backtest/result/20260724_232858_td_all_start2016_lgbm_s1000",
+    "backtest/result/20260724_234044_td_all_start2016_lgbm_s2000",
+    "backtest/result/20260724_235141_td_all_start2016_lgbm_s3000",
+    "backtest/result/20260725_000231_td_all_start2016_lgbm_s4000",
+    "backtest/experiments/train-data/all-start2016/metrics/td_all_start2016_lgbm_csi300.json",
+    "backtest/experiments/train-data/all-start2016/metrics/td_all_start2016_lgbm_csi500.json",
+    "backtest/experiments/train-data/all-start2016/metrics/td_all_start2016_lgbm_csi1000.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.01338,
+      "icir": 0.09527,
+      "rank_ic_mean": 0.01039,
+      "rank_icir": 0.07672,
+      "rank_ic_mean_std": 0.00139,
+      "rankic_delta_vs_b0": 0.00035
+    },
+    "csi500": {
+      "ic_mean": 0.02011,
+      "icir": 0.16195,
+      "rank_ic_mean": 0.01222,
+      "rank_icir": 0.1018,
+      "rank_ic_mean_std": 0.0012,
+      "rankic_delta_vs_b0": 0.01011
+    },
+    "csi1000": {
+      "ic_mean": 0.03112,
+      "icir": 0.27594,
+      "rank_ic_mean": 0.02354,
+      "rank_icir": 0.2018,
+      "rank_ic_mean_std": 0.00124,
+      "rankic_delta_vs_b0": 0.01592
+    }
+  },
+  "conclusion": "inconclusive",
+  "note": "五种子均在 16GB M1 串行成功；恢复运行 seed42 观测最大 RSS 6.33GB、0 swap，2016训练行数293万，证明本地 all universe 从2016起点的内存可运行性。性能上3/3测试池 RankIC 超 B0、CSI300逐种子3胜2负，但三池均低于 CSI1000；本地 all 是幸存者式当前池，缺少183个2016~2020曾有数据的SH/SZ代码且含4个指数，故模型结论不确定，不作为真实历史全A证据或基线候选。本实验数据版本2026-07-24，对照B0为2026-07-23",
+  "pairwise_csi300_rankic_vs_b0": {
+    "n": 5,
+    "wins": 3,
+    "diff_mean": 0.0003434762747418104,
+    "diffs": [
+      -0.0003569841186232,
+      0.0014696726783990591,
+      -0.0038673470798094,
+      0.0017160985610963544,
+      0.0027559413326462504
+    ]
+  }
+}

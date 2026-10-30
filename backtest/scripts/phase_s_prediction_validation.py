@@ -9,6 +9,11 @@ from typing import Any, Mapping
 
 import pandas as pd
 
+if __package__:
+    from .research_layout import resolve_research_path
+else:
+    from research_layout import resolve_research_path
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
 
@@ -21,7 +26,7 @@ FULL_SEGMENT_NAME = "full"
 FULL_DATA_VERSION = "2026-07-31"
 DEFAULT_FULL_PREDICTION_MANIFEST = (
     REPO_ROOT
-    / "backtest/experiments/strategy-stability/20260801_full_period"
+    / "backtest/experiments/_shared/phase-s"
     / "prediction_manifest.json"
 )
 FULL_PREDICTION_COVERAGE = {
@@ -37,8 +42,7 @@ def prediction_path(entry: Mapping[str, Any], repo_root: Path = REPO_ROOT) -> Pa
     raw = entry.get("path")
     if not isinstance(raw, str) or not raw.strip():
         raise ValueError("full prediction path is required")
-    path = Path(raw).expanduser()
-    return path.resolve() if path.is_absolute() else (Path(repo_root) / path).resolve()
+    return resolve_research_path(Path(raw).expanduser(), repo_root)
 
 
 def full_prediction_entry(manifest: Mapping[str, Any]) -> dict[str, Any]:
@@ -91,7 +95,7 @@ def validate_prediction_artifact(
     repo_root: Path = REPO_ROOT,
     expected_coverage: Mapping[str, Any] = FULL_PREDICTION_COVERAGE,
 ) -> dict[str, Any]:
-    resolved = Path(path).expanduser().resolve()
+    resolved = resolve_research_path(Path(path).expanduser(), repo_root)
     if not resolved.is_file():
         raise FileNotFoundError(f"full prediction file missing: {resolved}")
     if prediction_path(entry, repo_root) != resolved:
@@ -118,8 +122,8 @@ def validate_full_prediction_manifest(
     expected_coverage: Mapping[str, Any] = FULL_PREDICTION_COVERAGE,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Validate the canonical manifest, model binding, and actual DataFrame."""
-    declared_path = Path(manifest_path).expanduser().resolve()
-    authoritative_path = Path(authoritative_manifest_path).expanduser().resolve()
+    declared_path = resolve_research_path(Path(manifest_path).expanduser(), repo_root)
+    authoritative_path = resolve_research_path(Path(authoritative_manifest_path).expanduser(), repo_root)
     if declared_path != authoritative_path:
         raise ValueError(
             "full prediction manifest differs from authoritative manifest path"

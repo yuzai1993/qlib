@@ -1,0 +1,133 @@
+{
+  "exp_id": "loss-design/lambdarank",
+  "direction": "loss-design",
+  "phase": "M",
+  "date": "2026-07-27",
+  "hypothesis": "单LGBM上以lambdarank替代mse回归（按交易日分组、日内标签5档分位等级、NDCG@100早停），直接优化头部排序；架构对照为B3-M（单LGBM，CSI1000 RankIC 0.04203），registry基线仍为B4，超B4才有采纳意义；树参数沿用B3，若正则与ranking梯度尺度失配则按valid调整并在note记录",
+  "baseline_ref": "B4 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 6,
+  "model": "LGBRanker",
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s42.yaml",
+    "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s1000.yaml",
+    "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s2000.yaml",
+    "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s3000.yaml",
+    "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260727_003056_ls_lambdarank_s42",
+    "backtest/result/20260727_015148_ls_lambdarank_s1000",
+    "backtest/result/20260727_015336_ls_lambdarank_s2000",
+    "backtest/result/20260727_015522_ls_lambdarank_s3000",
+    "backtest/result/20260727_015704_ls_lambdarank_s4000",
+    "backtest/experiments/loss-design/lambdarank/metrics/ls_lambdarank_test_1d.json",
+    "backtest/experiments/loss-design/lambdarank/metrics/ls_lambdarank_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.013245777192450903,
+      "icir": 0.09002438112031226,
+      "rank_ic_mean": 0.020844280343824906,
+      "rank_icir": 0.12183366382480672,
+      "rank_ic_mean_std": 0.0013452385133887253
+    },
+    "csi500": {
+      "ic_mean": 0.006633205960514771,
+      "icir": 0.060778644985290856,
+      "rank_ic_mean": 0.016814988561499662,
+      "rank_icir": 0.13178904959142895,
+      "rank_ic_mean_std": 0.000766075946778802
+    },
+    "csi1000": {
+      "ic_mean": 0.008893802652516483,
+      "icir": 0.09865944924823034,
+      "rank_ic_mean": 0.0205576814647565,
+      "rank_icir": 0.19401268964899882,
+      "rank_ic_mean_std": 0.0006234035000733203
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.013245777192450903,
+        "icir": 0.09002438112031226,
+        "rank_ic_mean": 0.020844280343824906,
+        "rank_icir": 0.12183366382480672,
+        "rank_ic_mean_std": 0.0013452385133887253
+      },
+      "csi500": {
+        "ic_mean": 0.006633205960514771,
+        "icir": 0.060778644985290856,
+        "rank_ic_mean": 0.016814988561499662,
+        "rank_icir": 0.13178904959142895,
+        "rank_ic_mean_std": 0.000766075946778802
+      },
+      "csi1000": {
+        "ic_mean": 0.008893802652516483,
+        "icir": 0.09865944924823034,
+        "rank_ic_mean": 0.0205576814647565,
+        "rank_icir": 0.19401268964899882,
+        "rank_ic_mean_std": 0.0006234035000733203
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.03747059998670448,
+        "icir": 0.2523759601713428,
+        "rank_ic_mean": 0.04999316218520329,
+        "rank_icir": 0.2972368677840423,
+        "rank_ic_mean_std": 0.0018054638221344412
+      },
+      "csi500": {
+        "ic_mean": 0.01025963826697624,
+        "icir": 0.09550723452412467,
+        "rank_ic_mean": 0.03139433214922645,
+        "rank_icir": 0.2574180085265828,
+        "rank_ic_mean_std": 0.0034549575109242506
+      },
+      "csi1000": {
+        "ic_mean": 0.02747304864149392,
+        "icir": 0.2982696090221794,
+        "rank_ic_mean": 0.047288857959279694,
+        "rank_icir": 0.4624048793763621,
+        "rank_ic_mean_std": 0.0028650067559358484
+      }
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b4": {
+    "n": 5,
+    "wins": 0,
+    "diff_mean": -0.023422213674913057,
+    "diffs": [
+      -0.02362027037781512,
+      -0.023247916056418926,
+      -0.02299863702135322,
+      -0.023017215184009857,
+      -0.02422702973496816
+    ]
+  },
+  "conclusion": "regress",
+  "note": "未全面超过B4；CSI1000 RankIC 0.02056（B4 0.04398），RankICIR 0.1940（B4 0.3142），逐种子pairwise 0/5；架构对照B3-M CSI1000 RankIC 0.04203。预注册回退已触发：B3的mse尺度正则(l1=205.7/l2=581.0)使lambdarank全部分裂被抑制（冒烟s42退化为1树1叶、NDCG冻结），按valid将lambda_l1/l2归零后正常学习；其余树参数与B3一致"
+}

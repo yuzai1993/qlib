@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "exp_id": "feature-technical/combined",
+  "event_numbers": [
+    18
+  ],
+  "phase": "M",
+  "direction": "feature-technical",
+  "records_directory": "backtest/experiments/feature-technical/combined/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "e13a5709ec7b286103b6d6ca021d71e47c3590208b56e2795ef3f5f825181d6a"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "c332d15d8521e8ec360f3ff603e066f4b0937f222bf9bca2c856cff52b8544ac"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "d0c8eb1a8d526fbc9e0928160cf89ee6527ecb8de31b59656155be9a6b986fc3"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "94002a275b1eb95b9f1145edb67f2fa0ec76ae1c3082a74b4a05e724537d6563"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/combined/configs/ft_combined_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "f88b7c85d5daa81ce852e7b78c597795de4e972dc7d1686c26d974fdfcd81455"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/feature-technical/combined/metrics/ft_combined_lgbm_multi_pool.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/feature-technical/combined/records/957387288cbfbcb049fbb5cad885f064ffc23f33df25ea2d43b4c0d6a2e14ebd.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

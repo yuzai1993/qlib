@@ -15,6 +15,10 @@ from typing import Any, Mapping, Optional, Sequence
 
 import yaml
 
+from backtest.scripts.research_layout import resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
 from backtest.scripts.config_loader import (
     RESULT_ROOT,
     ConfigError,
@@ -77,7 +81,7 @@ _TEST_KEY = re.compile(r"(^|[_-])test($|[_-])", re.IGNORECASE)
 
 
 def sha256_file(path: Path) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return hashlib.sha256(resolve_research_path(path, _RESEARCH_ROOT).read_bytes()).hexdigest()
 
 
 def write_json_exclusive_atomic(path: Path, payload: Mapping[str, Any]) -> None:
@@ -125,7 +129,7 @@ def _exact_segment(value: Any, expected: tuple[str, str], label: str) -> None:
 
 def _load_yaml_mapping(path: Path) -> dict:
     try:
-        value = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+        value = yaml.safe_load(resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError) as exc:
         _fail(f"config cannot be loaded: {path}: {exc}")
     if not isinstance(value, dict):
@@ -216,11 +220,15 @@ def _expected_candidate_config(candidate: str, seed: int) -> dict:
 def validate_candidate_config(path: Path, candidate: str, seed: int) -> dict:
     """Validate one generated YAML against the frozen B5 candidate contract."""
 
-    path = Path(path).resolve()
+    path = resolve_research_path(path, _RESEARCH_ROOT)
     expected_name = f"mh_{candidate.replace('-', '_')}_s{seed}.yaml"
     if candidate not in CANDIDATES:
         _fail(f"config candidate is not declared: {candidate}")
-    if path.parent.name != candidate or path.name != expected_name:
+    canonical = resolve_research_path(
+        _RESEARCH_ROOT / "backtest/configs/model-hyperparam" / candidate / expected_name,
+        _RESEARCH_ROOT,
+    )
+    if path.name != expected_name or (path.parent.name != candidate and path != canonical):
         _fail(
             f"config path is not bound to candidate/seed: {path} "
             f"(expected .../{candidate}/{expected_name})"
@@ -239,7 +247,7 @@ def validate_config_set(
         _fail(f"config set for {candidate} must contain exactly five configs")
     by_seed: dict[int, Path] = {}
     for raw_path in config_paths:
-        path = Path(raw_path).resolve()
+        path = resolve_research_path(raw_path, _RESEARCH_ROOT)
         cfg = _load_yaml_mapping(path)
         raw_seed = (cfg.get("model") or {}).get("kwargs", {}).get("seed")
         try:

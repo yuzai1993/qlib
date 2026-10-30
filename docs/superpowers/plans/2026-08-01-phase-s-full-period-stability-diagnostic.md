@@ -18,7 +18,7 @@
 - Run the existing 18 B1-M and 22 B6-M candidates; B1-S `topk-t10-d2-h1` is first.
 - Do not compute or display IR; use after-cost absolute portfolio returns.
 - Do not create `selected_candidate_id`, alter the existing Phase S winners, or modify live trading configuration.
-- Write a new `backtest/experiments/strategy_stability_report.html`; do not overwrite `strategy_report.html`.
+- Write a new `backtest/experiments/reports/strategy_stability_report.html`; do not overwrite `strategy_report.html`.
 - Registry conclusion is `diagnostic_no_selection` and cleanup retention eligibility is false.
 
 ---
@@ -168,7 +168,7 @@ Commit: `feat(backtest): run continuous strategy stability diagnostics`
 
 **Interfaces:**
 - Consumes: composed prediction manifest and two `full_results.json` files.
-- Produces: registry rows `strategy-stability-full-period/b1-m` and `/b6-m`, plus `backtest/experiments/strategy_stability_report.html`.
+- Produces: registry rows `strategy-stability-full-period/b1-m` and `/b6-m`, plus `backtest/experiments/reports/strategy_stability_report.html`.
 
 - [ ] **Step 1: Write failing preregistration/finalization tests**
 
@@ -223,8 +223,8 @@ Commit: `fix(backtest): clean non-selecting strategy diagnostics safely`
 ### Task 6: Freeze Protocol and Generate Full Predictions
 
 **Files:**
-- Create: `backtest/experiments/strategy-stability/20260801_full_period/protocol.json`
-- Create: `backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json`
+- Create: `backtest/experiments/_shared/phase-s/protocol.json`
+- Create: `backtest/experiments/_shared/phase-s/prediction_manifest.json`
 - Modify: `backtest/experiments/registry.jsonl`
 
 **Interfaces:**
@@ -251,7 +251,7 @@ Commit: `exp(backtest): preregister full-period stability diagnostic`
 - Create: `backtest/configs/strategy-stability/b1-m/*.yaml`
 - Create: `backtest/configs/strategy-stability/b6-m/*.yaml`
 - Create: `backtest/experiments/strategy-stability/20260801_full_period/b1-m/full_results.json`
-- Create: `backtest/experiments/strategy-stability/20260801_full_period/b6-m/full_results.json`
+- Create: `backtest/experiments/strategy-stability-full-period/b6-m/data/full_results.json`
 
 **Interfaces:**
 - Consumes: Task 3 runner and Task 6 prediction bundle.
@@ -275,8 +275,8 @@ Use the same frozen bundle and `--resume-summary`; preserve all prior attempts.
 
 **Files:**
 - Modify: `backtest/experiments/registry.jsonl`
-- Create: `backtest/experiments/strategy_stability_report.html`
-- Modify: `backtest/experiments/report.html`
+- Create: `backtest/experiments/reports/strategy_stability_report.html`
+- Modify: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Consumes: Tasks 4, 5 and 7 outputs.

@@ -875,7 +875,7 @@ Expected: 全部 PASS；标准实验报告忽略 diagnostic phase；registry JSO
 提交时只加入协议、manifest、机器可读摘要、CSV、报告、小图和 registry；大 parquet 不进 Git：
 
 ```bash
-git add backtest/experiments/diagnostics/20260809_a_share_style_regimes backtest/experiments/registry.jsonl backtest/experiments/report.html
+git add backtest/experiments/diagnostics/20260809_a_share_style_regimes backtest/experiments/registry.jsonl backtest/experiments/reports/report.html
 git commit -m "research: classify A-share style regimes"
 ```
 

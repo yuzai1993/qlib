@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "exp_id": "train-data/csi1000-liquidity-low",
+  "event_numbers": [
+    10
+  ],
+  "phase": "M",
+  "direction": "train-data",
+  "records_directory": "backtest/experiments/train-data/csi1000-liquidity-low/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "1135cb7e3f3fc674f73f4b9ec2e3e7ffddb847430ba1cdd0bfb699a04526ebca"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "b16630e803db7d64d333d9b00e9fe7f60604c0ece5e73caf96c6e397cf17644e"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "ab124492cc6333c19fb76c239510617d6797caca3c9b49e0a27e6d7f559cc828"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "e15eb0f0ad227d62dff68fa0da53dcb700b8169d220a593d4ffe5161cd8026b9"
+    },
+    {
+      "path": "backtest/experiments/train-data/csi1000-liquidity-low/configs/td_csi1000_liquidity_low_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "ccd0345c8f7388dda24c959a7b492beeebfc7c322edfcf2ddc0cc9fb3c097146"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/train-data/csi1000-liquidity-low/metrics/td_csi1000_liquidity_low_lgbm_csi1000.json",
+    "backtest/experiments/train-data/csi1000-liquidity-low/metrics/td_csi1000_liquidity_low_lgbm_csi300.json",
+    "backtest/experiments/train-data/csi1000-liquidity-low/metrics/td_csi1000_liquidity_low_lgbm_csi500.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/train-data/csi1000-liquidity-low/records/c7dbcafb2089233effba89f0d29523053356e3286618b12835957e9441c4c935.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

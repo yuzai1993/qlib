@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "exp_id": "model-arch/double-ensemble",
+  "event_numbers": [
+    35
+  ],
+  "phase": "M",
+  "direction": "model-arch",
+  "records_directory": "backtest/experiments/model-arch/double-ensemble/records",
+  "configs": [
+    {
+      "path": "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s1000.yaml",
+      "shared": true,
+      "sha256": "6ab062c392ca55f1c9bd55b952454d5967bc3fae1b03f732acc1afbe2e3b865b"
+    },
+    {
+      "path": "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s2000.yaml",
+      "shared": true,
+      "sha256": "937d686ae86283aed30601113711ada5bfddb8f6231f0175df02559dcf1d96fc"
+    },
+    {
+      "path": "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s3000.yaml",
+      "shared": true,
+      "sha256": "5b7557f738dd04dbe9f747b6ec2c2f4ba399f03f942e1deb62c35d552a1e41c0"
+    },
+    {
+      "path": "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s4000.yaml",
+      "shared": true,
+      "sha256": "8c38448227b143911c31a35ddd6e8e0fdd2295c33ab7eed0eb0a80ae0e55d0fe"
+    },
+    {
+      "path": "backtest/configs/model-arch/double-ensemble/ma_double_ensemble_s42.yaml",
+      "shared": true,
+      "sha256": "2ec1a29dd135b8baa43ac41baf50cee7f42bfa1aa69bcdcdff6c9ae0dea906ca"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/model-arch/double-ensemble/metrics/ma_double_ensemble_test_1d.json",
+    "backtest/experiments/model-arch/double-ensemble/metrics/ma_double_ensemble_test_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/model-arch/double-ensemble/records/cd191214166abe7d584ec6c4b3e77156f109cbc778d202a6f9fe52124dd1d800.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

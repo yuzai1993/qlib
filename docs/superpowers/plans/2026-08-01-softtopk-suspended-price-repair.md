@@ -58,7 +58,7 @@
 
 **Files:**
 - Modify: `backtest/experiments/strategy-stability/20260801_full_period/b1-m/full_results.json`
-- Modify: `backtest/experiments/strategy-stability/20260801_full_period/b6-m/full_results.json`
+- Modify: `backtest/experiments/strategy-stability-full-period/b6-m/data/full_results.json`
 - Regenerate configs in: `backtest/configs/strategy-stability/{b1-m,b6-m}/`
 
 **Interfaces:**
@@ -73,7 +73,7 @@
 
 **Files:**
 - Modify: `backtest/experiments/registry.jsonl`
-- Modify: `backtest/experiments/strategy_stability_report.html`
+- Modify: `backtest/experiments/reports/strategy_stability_report.html`
 
 **Interfaces:**
 - Consumes repaired full result JSON.

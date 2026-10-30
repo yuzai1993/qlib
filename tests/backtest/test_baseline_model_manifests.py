@@ -5,8 +5,11 @@ import json
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from backtest.scripts.experiment_registry import load_registry  # noqa: E402
+
 B6_MANIFEST = ROOT / "backtest/models/baselines/b6-m/manifest.json"
 REGISTRY = ROOT / "backtest/experiments/registry.jsonl"
 STANDARD = ROOT / "backtest/EXPERIMENT_STANDARD.md"
@@ -47,7 +50,7 @@ def test_phase_s_references_canonical_single_model_manifest_only():
     sys.path.insert(0, str(ROOT / "backtest/scripts"))
     from phase_s_protocol import load_frozen_model
 
-    rows = [json.loads(line) for line in REGISTRY.read_text(encoding="utf-8").splitlines()]
+    rows = load_registry(REGISTRY)
     b6 = next(row for row in rows if row["exp_id"] == "baseline/b6-m")
 
     assert b6["model_manifest"] == "backtest/models/baselines/b6-m/manifest.json"

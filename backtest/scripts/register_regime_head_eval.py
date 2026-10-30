@@ -10,6 +10,24 @@ import json
 from datetime import date
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        append_registry as _append_registry_row,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        append_registry as _append_registry_row,
+    )
+
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_head_v3"
 IR_METRIC = "appraisal_ir"
@@ -69,9 +87,9 @@ def cell_baseline(grids: list[dict]) -> dict:
 
 def snap(key: str, home_h: int, base: dict | None = None) -> dict | None:
     path = EVAL_DIR / f"eval_{key}.json"
-    if not path.exists():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
         return None
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     sm = doc["pools"]["all"]["seed_mean"]
     grid = sm.get("head") or {}
     home_hs = tuple(h for h in HS if int(h) == home_h)
@@ -109,13 +127,7 @@ def snap(key: str, home_h: int, base: dict | None = None) -> dict | None:
 
 
 def existing_exp_ids() -> set[str]:
-    if not REG.exists():
-        return set()
-    out = set()
-    for line in REG.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            out.add(json.loads(line).get("exp_id"))
-    return out
+    return {row.get("exp_id") for row in _load_registry_rows(REG)} if _resolve_research_path(REG, _RESEARCH_ROOT).is_file() else set()
 
 
 def main() -> None:
@@ -158,12 +170,11 @@ def main() -> None:
                 "baseline_ref": BASELINE_REF.get(
                     key, "regime-adapt/m0-fast-head-eval-v3" if key != "m0fast" else "self"
                 ),
-                "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
+                "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
             }
         )
-    with REG.open("a", encoding="utf-8") as fh:
-        for row in rows:
-            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    for row in rows:
+        _append_registry_row(REG, row)
     print("appended", len(rows), "registry rows")
 
 

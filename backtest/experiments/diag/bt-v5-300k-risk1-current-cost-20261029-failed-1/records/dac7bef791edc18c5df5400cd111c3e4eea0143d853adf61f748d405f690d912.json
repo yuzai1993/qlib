@@ -1,0 +1,32 @@
+{
+  "exp_id": "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-10-29",
+  "state": "failed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "BT v5 · risk=1.00 · 诊断失败尝试1",
+  "baseline_ref": "baseline/phase-m-v1-bt-v5",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "metrics_source": "ensemble",
+  "evaluation_mode": "frozen_parameter_diagnostic_not_selection",
+  "risk_degree": 1.0,
+  "data_version": "2026-10-28",
+  "eval_output": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/metrics/bt_v5_300k_risk1_current_cost_failed_1.json",
+  "detail_report": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/reports/phase_m_v1_bt_v5_cutover_risk1_failed_1.html",
+  "source_summary": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/data/summary.json",
+  "config_path": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/configs/alla_v2_top5d1f100_parity.yaml",
+  "result_dirs": [
+    "backtest/result/bt_v5_cutover_300k_risk1_20261029"
+  ],
+  "metrics": {},
+  "hypothesis": "固定v2五种子与top5/drop1/hold1/f100，仅以risk=1.0复算30万元当前费率；不训练、不调参、不晋升。",
+  "conclusion": "失败尝试1；尚无回测指标，不参与比较。原因：cached benchmark differs from authenticated daily report"
+}

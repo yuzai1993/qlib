@@ -6,12 +6,31 @@ import json
 import os
 from html import escape
 from pathlib import Path
+
 from typing import Any, Optional
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _layout_href
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _layout_href
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EXP_DIR = EXP_ROOT / "backtest" / "experiments"
 REGISTRY = EXP_DIR / "registry.jsonl"
-HUB_OUT = EXP_DIR / "phase_m_v1_bt_report.html"
+HUB_OUT = EXP_DIR / "reports" / "phase_m_v1_bt_report.html"
 
 YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"]
 REGIMES = ["D", "F", "T"]
@@ -67,17 +86,17 @@ def ensemble_of(doc: dict[str, Any]) -> dict[str, Any]:
     return ens
 
 
-def rel_from_exp(path: Path) -> str:
-    return Path(os.path.relpath(path, EXP_DIR)).as_posix()
+def rel_from_exp(path: Path, output_path: Path | None = None) -> str:
+    return _layout_href(path, output_path or HUB_OUT, EXP_ROOT)
 
 
-def session_report_href(session_dir: str) -> str:
-    return rel_from_exp(EXP_ROOT / session_dir / "run_01" / "report.html")
+def session_report_href(session_dir: str, output_path: Path | None = None) -> str:
+    return rel_from_exp(EXP_ROOT / session_dir / "run_01" / "report.html", output_path)
 
 
-def report_href(ensemble: dict) -> str:
+def report_href(ensemble: dict, output_path: Path | None = None) -> str:
     portable = ensemble.get("portable_report")
-    return rel_from_exp(EXP_ROOT / portable) if portable else session_report_href(ensemble["session_dir"])
+    return rel_from_exp(EXP_ROOT / portable, output_path) if portable else session_report_href(ensemble["session_dir"], output_path)
 
 
 def nav_svg(curve: list[list]) -> str:
@@ -104,10 +123,10 @@ def nav_svg(curve: list[list]) -> str:
     )
 
 
-def figure_blocks(ensemble: dict) -> list[str]:
+def figure_blocks(ensemble: dict, output_path: Path | None = None) -> list[str]:
     if ensemble.get("nav_curve"):
         return [nav_svg(ensemble["nav_curve"])]
-    return figure_iframes(ensemble["session_dir"], ensemble.get("figures") or {})
+    return figure_iframes(ensemble["session_dir"], ensemble.get("figures") or {}, output_path)
 
 
 def coverage_note(doc: dict) -> str:
@@ -140,14 +159,14 @@ def diagnostic_periods(doc: dict) -> str:
     return "".join(blocks)
 
 
-def figure_iframes(session_dir: str, figures: dict[str, Any]) -> list[str]:
+def figure_iframes(session_dir: str, figures: dict[str, Any], output_path: Path | None = None) -> list[str]:
     out = []
     files = figures.get("report_graph") or []
     if not files:
         return ["<p class='note'>无净值图</p>"]
     root = EXP_ROOT / session_dir / "run_01" / "figures"
     for name in files:
-        href = rel_from_exp(root / name)
+        href = rel_from_exp(root / name, output_path)
         out.append(
             f'<iframe src="{href}" title="{name}" loading="lazy" '
             'style="width:100%;height:420px;border:1px solid #e2e8f0;border-radius:6px;"></iframe>'
@@ -183,7 +202,8 @@ def _matrix_table(
     return "".join(parts)
 
 
-def render_hub(baselines: list[dict], experiments: list[dict]) -> str:
+def render_hub(baselines: list[dict], experiments: list[dict], *, output_path: Path | None = None) -> str:
+    output_path = output_path or HUB_OUT
     # 锚点与策略参数一律由 current baseline 派生，避免晋升后页头留着旧版本
     cur = next((b for b in baselines if b.get("current")), None)
     anchor = (
@@ -214,7 +234,7 @@ def render_hub(baselines: list[dict], experiments: list[dict]) -> str:
     )
     for item in baselines:
         ens = ensemble_of(item["doc"])
-        href = report_href(ens)
+        href = report_href(ens, output_path)
         cls = "current" if item.get("current") else "primary"
         tag = " · 当前" if item.get("current") else ""
         H.append(
@@ -246,7 +266,7 @@ def render_hub(baselines: list[dict], experiments: list[dict]) -> str:
         ens = ensemble_of(exp["doc"])
         fp = ens["full_period"]
         detail = exp.get("detail_report") or ""
-        link = Path(detail).name if detail else ""
+        link = _layout_href(detail, output_path, EXP_ROOT) if detail else ""
         H.append(
             f"<tr><td class='l'>{exp['display_name']}</td>"
             f"<td class='l'>{exp.get('baseline_name', '')}</td>"
@@ -254,7 +274,7 @@ def render_hub(baselines: list[dict], experiments: list[dict]) -> str:
             f"<td>{fmt(fp.get('sharpe_ratio'), 'num')}</td>"
             f"<td>{fmt(fp.get('alpha'), 'pct')}</td>"
             f"<td>{fmt(fp.get('max_drawdown'), 'pct')}</td>"
-            f"<td><a href='{link}'>{link or '—'}</a></td></tr>"
+            f"<td><a href='{link}'>{Path(detail).name if detail else '—'}</a></td></tr>"
         )
     if not experiments:
         H.append("<tr><td class='l' colspan='7'>暂无实验</td></tr>")
@@ -263,7 +283,8 @@ def render_hub(baselines: list[dict], experiments: list[dict]) -> str:
     return "".join(H)
 
 
-def render_experiment(experiment: dict, baseline: dict) -> str:
+def render_experiment(experiment: dict, baseline: dict, *, output_path: Path | None = None) -> str:
+    output_path = output_path or experiment.get("detail_report") or HUB_OUT
     exp_ens = ensemble_of(experiment["doc"])
     base_ens = ensemble_of(baseline["doc"])
     rows = [
@@ -279,7 +300,7 @@ def render_experiment(experiment: dict, baseline: dict) -> str:
         f"对照 <b>{baseline['display_name']}</b>（{baseline['bt_version']}）。"
         "主年化是扣费净值累乘后再折年（CAGR）；算术年化（日均×250）只作审计。"
         "夏普分子仍是算术年化。"
-        " <a href='phase_m_v1_bt_report.html'>返回总报告</a></p>",
+        f" <a href='{_layout_href(HUB_OUT, output_path, EXP_ROOT)}'>返回总报告</a></p>",
     ]
     if experiment["doc"].get("selection_limitation"):
         H.append(f"<p class='note'>{escape(experiment['doc']['selection_limitation'])}</p>")
@@ -303,7 +324,7 @@ def render_experiment(experiment: dict, baseline: dict) -> str:
     ]
     for i, (name, ens) in enumerate(rows):
         cls = " class='primary'" if i == 0 else ""
-        href = report_href(ens)
+        href = report_href(ens, output_path)
         H.append(
             f"<tr{cls}><td class='l'>{name}</td>"
             + "".join(_row_metrics(ens["full_period"], FULL_COLS))
@@ -317,42 +338,38 @@ def render_experiment(experiment: dict, baseline: dict) -> str:
     for key, lab, kind in YEAR_METRICS:
         H.append(_matrix_table(f"分风格 · {lab}", rows, REGIMES, key, kind, "regimes"))
     H.append("<h2>4. 实验组图</h2>")
-    H.extend(figure_blocks(exp_ens))
+    H.extend(figure_blocks(exp_ens, output_path))
     H.append("<h2>5. 基准组图</h2>")
-    H.extend(figure_blocks(base_ens))
+    H.extend(figure_blocks(base_ens, output_path))
     H.append("</div></body></html>")
     return "".join(H)
 
 
 def load_registry(path: Path = REGISTRY) -> list[dict]:
-    rows = []
-    if not path.is_file():
-        return rows
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            rows.append(json.loads(line))
-    return rows
+    return _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
 
 
 def _load_doc(rel: str) -> dict:
     path = EXP_ROOT / rel
-    if not path.is_file():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).is_file():
         raise FileNotFoundError(rel)
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
 
 
-def render_snapshot(item: dict) -> str:
+def render_snapshot(item: dict, *, output_path: Path | None = None) -> str:
     """Portable historical NAV and metrics; original files remain in provenance JSON."""
     doc = item["doc"]
     ens = ensemble_of(doc)
+    output_path = output_path or ens["portable_report"]
+    metrics_path = item.get("portable_eval_output") or Path(ens["portable_report"]).with_suffix(".json")
     parts = ["<!DOCTYPE html><html lang='zh'><meta charset='utf-8'>",
              f"<title>{escape(item['display_name'])}</title><style>{CSS}</style><div class='wrap'>",
              f"<h1>{escape(item['display_name'])}</h1>",
-             "<p><a href='../phase_m_v1_bt_report.html'>返回总报告</a></p>",
+             f"<p><a href='{_layout_href(HUB_OUT, output_path, EXP_ROOT)}'>返回总报告</a></p>",
              f"<p class='note'>{escape(doc.get('selection_limitation', ''))}</p>",
              "<p class='note'>扣费净值曲线来自原始日收益CSV；来源路径与SHA-256保存在同名JSON。</p>",
-             f"<p><a href='{Path(ens['portable_report']).with_suffix('.json').name}'>指标与来源JSON</a></p>"]
-    parts.extend(figure_blocks(ens))
+             f"<p><a href='{_layout_href(metrics_path, output_path, EXP_ROOT)}'>指标与来源JSON</a></p>"]
+    parts.extend(figure_blocks(ens, output_path))
     parts.append(coverage_note(doc))
     parts.append(diagnostic_periods(doc))
     parts.append("<table><tr>" + "".join(f"<th>{label}</th>" for _, label, _ in FULL_COLS) + "</tr><tr>")
@@ -375,6 +392,8 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 "bt_version": rec["bt_version"],
                 "display_name": rec.get("display_name") or rec["exp_id"],
                 "eval_output": rec["eval_output"],
+                "portable_eval_output": rec.get("portable_eval_output"),
+                "detail_report": rec.get("detail_report"),
                 "current": bool(rec.get("current_bt")),
                 # eval_protocol 的第 2 段是策略参数（signal | strategy | 涨跌停 | 过滤 | …）
                 "strategy": (rec.get("eval_protocol") or "").split("|")[1].strip()
@@ -396,6 +415,7 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 "baseline_name": names.get(rec.get("baseline_ref"), rec.get("baseline_ref") or ""),
                 "detail_report": rec.get("detail_report"),
                 "eval_output": rec["eval_output"],
+                "portable_eval_output": rec.get("portable_eval_output"),
                 "hypothesis": rec.get("hypothesis"),
                 "eval_protocol": rec.get("eval_protocol"),
                 "conclusion": rec.get("conclusion"),
@@ -408,7 +428,8 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
 def write_all() -> list[Path]:
     baselines, experiments = catalog_from_registry(load_registry())
     written = [HUB_OUT]
-    HUB_OUT.write_text(render_hub(baselines, experiments), encoding="utf-8")
+    HUB_OUT.parent.mkdir(parents=True, exist_ok=True)
+    _resolve_research_path(HUB_OUT, _RESEARCH_ROOT).write_text(render_hub(baselines, experiments), encoding="utf-8")
     by_id = {f"{b['bt_version']}": b for b in baselines}
     # also index by registry exp later via baseline_ref matching display
     base_by_ref = {item["display_name"]: item for item in baselines}
@@ -421,16 +442,18 @@ def write_all() -> list[Path]:
         base = by_id.get(exp.get("baseline_ref") or "")
         if base is None or not exp.get("detail_report"):
             continue
-        dest = EXP_ROOT / exp["detail_report"]
-        dest.write_text(render_experiment(exp, base), encoding="utf-8")
+        dest = _resolve_research_path(EXP_ROOT / exp["detail_report"], EXP_ROOT)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(render_experiment(exp, base, output_path=dest), encoding="utf-8")
         written.append(dest)
     for rec in load_registry():
         if rec.get("report_kind") != "phase_m_v1_bt_baseline" or not rec.get("comparison_baseline_ref"):
             continue
         item = next(b for b in baselines if b["bt_version"] == rec["bt_version"])
         base = by_id[rec["comparison_baseline_ref"]]
-        dest = EXP_ROOT / rec["detail_report"]
-        dest.write_text(render_experiment(item, base), encoding="utf-8")
+        dest = _resolve_research_path(EXP_ROOT / rec["detail_report"], EXP_ROOT)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(render_experiment(item, base, output_path=dest), encoding="utf-8")
         written.append(dest)
     seen = set()
     for item in baselines + experiments:
@@ -438,9 +461,9 @@ def write_all() -> list[Path]:
         if not portable or portable in seen:
             continue
         seen.add(portable)
-        dest = EXP_ROOT / portable
+        dest = _resolve_research_path(EXP_ROOT / portable, EXP_ROOT)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(render_snapshot(item), encoding="utf-8")
+        dest.write_text(render_snapshot(item, output_path=dest), encoding="utf-8")
         written.append(dest)
     return written
 

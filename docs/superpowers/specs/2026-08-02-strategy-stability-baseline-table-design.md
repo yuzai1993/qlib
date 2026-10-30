@@ -3,7 +3,7 @@
 ## Goal
 
 Add a standalone current-baseline table at the beginning of
-`backtest/experiments/strategy_stability_report.html`, before all stability
+`backtest/experiments/reports/strategy_stability_report.html`, before all stability
 experiment tables. The rest of the B6-M full-period, yearly, and Top30
 neighborhood sections remain unchanged.
 
@@ -43,5 +43,5 @@ Extend `tests/backtest/test_build_strategy_stability_report.py` to verify that:
 3. missing or duplicate current-baseline registry rows are rejected;
 4. all existing full-period, yearly, and neighborhood assertions still pass.
 
-Regenerate `backtest/experiments/strategy_stability_report.html` from the
+Regenerate `backtest/experiments/reports/strategy_stability_report.html` from the
 registry after the tests pass.

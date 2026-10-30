@@ -7,6 +7,7 @@ import html
 import json
 from datetime import datetime
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
 
 from phase_s_protocol import CURRENT_STRATEGY_BASELINE_ID, strategy_grid
@@ -15,9 +16,27 @@ from strategy_neighborhood_protocol import (  # noqa: E402
     strategy_neighborhood_grid,
 )
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _layout_href
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _layout_href
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
-DEFAULT_OUTPUT = REPO_ROOT / "backtest/experiments/strategy_stability_report.html"
+DEFAULT_OUTPUT = REPO_ROOT / "backtest/experiments/reports/strategy_stability_report.html"
 CURRENT_STRATEGY_BASELINE_EXP_ID = "baseline/b4-s-on-b6-m"
 LEGACY_STRATEGY_BASELINE_EXP_ID = "baseline/b3-s-on-b6-m"
 FALLBACK_STRATEGY_BASELINE_EXP_ID = "baseline/b3-s-on-b6-m"
@@ -26,7 +45,7 @@ STABILITY_B6_EXP_ID_A10M = f"{STABILITY_B6_EXP_ID}-a10m"
 FULL_NEIGHBORHOOD_EXP_ID = "strategy-neighborhood/b3-s-local-full-v1"
 DEFAULT_NEIGHBORHOOD_RESULTS = (
     REPO_ROOT
-    / "backtest/experiments/strategy-neighborhood/20260807_b3s_local_full/full_results.json"
+    / "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data/full_results.json"
 )
 BETA_OVERLAY_PREFIX = "strategy-beta-overlay/"
 METRICS = (
@@ -187,11 +206,11 @@ def _load_neighborhood_by_id(
             path = Path(str(raw))
             if not path.is_absolute():
                 path = REPO_ROOT / path
-    if path is None or not path.exists():
+    if path is None or not _resolve_research_path(path, _RESEARCH_ROOT).exists():
         path = DEFAULT_NEIGHBORHOOD_RESULTS
-    if not path.exists():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
         return {}
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     scored, _ = score_valid_candidates(
         payload.get("all_rows") or [], strategy_neighborhood_grid()
     )
@@ -458,7 +477,7 @@ def _extended_history_section(rows: Sequence[dict[str, Any]]) -> str:
         segment = row.get("test_segment") or row.get("selection_segment") or ["—", "—"]
         report = row.get("report_html") or ""
         link = (
-            f'<a href="{_esc(report)}">report</a>' if report else "—"
+            f'<a href="{_esc(_layout_href(report, DEFAULT_OUTPUT, REPO_ROOT))}">report</a>' if report else "—"
         )
         body.append(
             "<tr>"
@@ -605,13 +624,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
-    rows = [
-        json.loads(line)
-        for line in args.registry.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    rows = _load_registry_rows(args.registry)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(build_html(rows), encoding="utf-8")
+    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(build_html(rows), encoding="utf-8")
     print(args.output)
 
 

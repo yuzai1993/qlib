@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "exp_id": "strategy-stability-full-period/b1-m",
+  "event_numbers": [
+    54
+  ],
+  "phase": "S",
+  "direction": "strategy-stability-full-period",
+  "records_directory": "backtest/experiments/strategy-stability-full-period/b1-m/records",
+  "configs": [
+    {
+      "path": "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml",
+      "shared": true,
+      "sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/_shared/phase-s/protocol.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/phase-s/protocol.json"
+  ],
+  "records": [
+    "backtest/experiments/strategy-stability-full-period/b1-m/records/daf79bed50eaad3916b615bc4b1dd27f50991b9dd921bb666f605eeaf84995d5.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

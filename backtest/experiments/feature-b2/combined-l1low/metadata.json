@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "exp_id": "feature-b2/combined-l1low",
+  "event_numbers": [
+    31
+  ],
+  "phase": "M",
+  "direction": "feature-b2",
+  "records_directory": "backtest/experiments/feature-b2/combined-l1low/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "6ced09835ce177cc446c3e99e84724693b08738de787fc32f8cc76012b691602"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "333c6df450dcabab531b02a224bf87125ab4b8c2b8fe9d143a959cf78fdfb64e"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "dc52c78aaeac09cc3d042bf61a03f06e1988d305c1867f729d8f5bda77a77f56"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "ee85c37969349aee45b37a4582b89c646658dfe6e719464883279d0a8ad6a6a4"
+    },
+    {
+      "path": "backtest/experiments/feature-b2/combined-l1low/configs/fb2_combined_l1low_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "8d05e215751c5412aa6104de88a2dcdaca06c6c062746e52a73c5740e246c05a"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/feature-b2/combined-l1low/metrics/fb2_combined_l1low_test_1d.json",
+    "backtest/experiments/feature-b2/combined-l1low/metrics/fb2_combined_l1low_test_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/feature-b2/combined-l1low/records/aff989b4daaad10b132dd825b93807eac9eaa3929b92845799cd9b3a1470a009.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "exp_id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+  "event_numbers": [
+    125
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/all_ladder_k5h5_m0h20es.html",
+    "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/metrics/all_ladder_k5h5_m0h20es.json",
+    "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/records/17aaf731af99b5ae63f33981c4e3c667e8a7af62221ae9e6cdf0d862fe222f8d.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

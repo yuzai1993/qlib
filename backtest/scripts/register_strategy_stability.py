@@ -8,6 +8,7 @@ import json
 import math
 from datetime import date
 from pathlib import Path
+
 from typing import Any, Optional, Sequence
 
 from phase_s_protocol import (
@@ -24,6 +25,24 @@ from phase_s_protocol import (
     sha256_file,
     strategy_grid,
 )
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
@@ -49,9 +68,7 @@ def _relative_or_absolute(path: Path) -> str:
 
 
 def load_registry(path: Path) -> list[dict]:
-    if not path.is_file():
-        return []
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return _load_registry_rows(path) if _resolve_research_path(path, _RESEARCH_ROOT).is_file() else []
 
 
 def _full_prediction(manifest: dict, model_ref: str) -> dict:
@@ -72,7 +89,7 @@ def _full_prediction(manifest: dict, model_ref: str) -> dict:
     path = Path(str(entry.get("path") or "")).expanduser()
     if not path.is_absolute():
         path = REPO_ROOT / path
-    if not path.is_file() or sha256_file(path) != entry.get("prediction_sha256"):
+    if not _resolve_research_path(path, _RESEARCH_ROOT).is_file() or sha256_file(path) != entry.get("prediction_sha256"):
         raise ValueError(f"full prediction artifact mismatch: {path}")
     return entry
 
@@ -146,7 +163,7 @@ def bind_results(
         )
     if state == "preregistered" and repair_reason:
         raise ValueError("repair reason is only valid for a completed diagnostic")
-    payload = json.loads(result_path.read_text(encoding="utf-8"))
+    payload = json.loads(_resolve_research_path(result_path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     identity = (payload.get("model_ref"), payload.get("pool"), payload.get("segment"))
     if identity != (row.get("model_ref"), "csi1000", "full") or payload.get("period") != list(FULL_SEGMENT):
         raise ValueError("diagnostic result identity mismatch")
@@ -236,10 +253,8 @@ def upsert_diagnostic_row(
         if expected_previous_state is not None or row.get("state") != "preregistered":
             raise ValueError("new diagnostic row must be preregistered")
         rows.append(row)
-    registry.parent.mkdir(parents=True, exist_ok=True)
-    temporary = registry.with_name(registry.name + ".tmp")
-    temporary.write_text("".join(json.dumps(item, ensure_ascii=False, allow_nan=False) + "\n" for item in rows), encoding="utf-8")
-    temporary.replace(registry)
+    json.dumps(rows, allow_nan=False)
+    _write_registry_rows(registry, rows)
 
 
 def write_protocol(path: Path, *, account: float = ACCOUNT) -> None:
@@ -268,7 +283,7 @@ def write_protocol(path: Path, *, account: float = ACCOUNT) -> None:
         "selection": None,
     }
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    _resolve_research_path(path, _RESEARCH_ROOT).write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -301,7 +316,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     exp_id = f"strategy-stability-full-period/{args.model_ref}{args.exp_id_suffix}"
     if args.command == "preregister":
         frozen = load_frozen_model(REPO_ROOT, args.model_ref)
-        manifest = json.loads(args.prediction_manifest.read_text(encoding="utf-8"))
+        manifest = json.loads(_resolve_research_path(args.prediction_manifest, _RESEARCH_ROOT).read_text(encoding="utf-8"))
         row = build_preregistered_row(
             frozen,
             manifest,

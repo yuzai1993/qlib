@@ -64,7 +64,7 @@ def test_historical_reports_are_read_only_and_keep_missing_evidence(tmp_path):
     report = tmp_path / "research/backtest/diagnostics/20260809_test/REPORT.md"
     report.parent.mkdir(parents=True)
     report.write_text("# 历史报告\n\n背景和方法\n![图](missing.png)\n脚本 `missing.py` 已丢失。", encoding="utf-8")
-    store = AnalysisStore(tmp_path / "archive", tmp_path / "research")
+    store = AnalysisStore(None, tmp_path / "research")
     history = store.list()[0]
     assert history["historical"] is True
     assert history["attachments_missing"]
@@ -77,7 +77,7 @@ def test_historical_reports_are_read_only_and_keep_missing_evidence(tmp_path):
 def test_record_symlink_and_path_escape_are_rejected(tmp_path):
     store = AnalysisStore(tmp_path / "archive", tmp_path / "research")
     row = store.create(payload())
-    path = tmp_path / "archive" / (row["id"] + ".json")
+    path = tmp_path / "archive" / row["id"] / "metadata.json"
     outside = tmp_path / "outside.json"
     outside.write_text(json.dumps(row))
     path.unlink()

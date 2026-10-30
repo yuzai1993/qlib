@@ -1,0 +1,82 @@
+{
+  "exp_id": "train-data/csi1000-liquidity-high",
+  "direction": "train-data",
+  "phase": "M",
+  "date": "2026-07-25",
+  "hypothesis": "只保留历史20日滞后一日成交额代理最高三分之一；若优于随机三分之一，说明高流动性样本信息质量更高",
+  "baseline_ref": "B0 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "train_start": "2016-01-02",
+  "sample_filter": {
+    "type": "liquidity-high",
+    "expression": "Ref(Mean($vwap*$volume, 20), 1)",
+    "train_only": true
+  },
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s42.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s1000.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s2000.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s3000.yaml",
+    "backtest/experiments/train-data/csi1000-liquidity-high/configs/td_csi1000_liquidity_high_lgbm_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260725_010531_td_csi1000_liquidity_high_lgbm_s42",
+    "backtest/result/20260725_005820_td_csi1000_liquidity_high_lgbm_s1000",
+    "backtest/result/20260725_010008_td_csi1000_liquidity_high_lgbm_s2000",
+    "backtest/result/20260725_010156_td_csi1000_liquidity_high_lgbm_s3000",
+    "backtest/result/20260725_010343_td_csi1000_liquidity_high_lgbm_s4000",
+    "backtest/experiments/train-data/csi1000-liquidity-high/metrics/td_csi1000_liquidity_high_lgbm_csi300.json",
+    "backtest/experiments/train-data/csi1000-liquidity-high/metrics/td_csi1000_liquidity_high_lgbm_csi500.json",
+    "backtest/experiments/train-data/csi1000-liquidity-high/metrics/td_csi1000_liquidity_high_lgbm_csi1000.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.01507,
+      "icir": 0.11499,
+      "rank_ic_mean": 0.01625,
+      "rank_icir": 0.13062,
+      "rank_ic_mean_std": 0.00082
+    },
+    "csi500": {
+      "ic_mean": 0.01449,
+      "icir": 0.12598,
+      "rank_ic_mean": 0.01454,
+      "rank_icir": 0.13084,
+      "rank_ic_mean_std": 0.00202
+    },
+    "csi1000": {
+      "ic_mean": 0.01995,
+      "icir": 0.19108,
+      "rank_ic_mean": 0.02082,
+      "rank_icir": 0.19714,
+      "rank_ic_mean_std": 0.00164
+    }
+  },
+  "pairwise_csi300_rankic_vs_b0": {
+    "n": 5,
+    "wins": 5,
+    "diff_mean": 0.006204047732028336,
+    "diffs": [
+      0.006593216284318889,
+      0.007956220031395804,
+      0.0017324744402546916,
+      0.006573194279524505,
+      0.008165133624647793
+    ]
+  },
+  "conclusion": "improve",
+  "note": "三池均高于 B0 但明显低于随机三分之一和 full；高流动性单层不是 CSI1000 优势主因；本轮数据版本2026-07-24，对照B0为2026-07-23"
+}

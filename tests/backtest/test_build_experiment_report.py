@@ -115,7 +115,7 @@ def test_forward_holdout_rows_are_diagnostic_and_not_best_highlighted():
 
 def test_current_b6_baseline_has_complete_phase_m_metrics():
     registry = ROOT / "backtest" / "experiments" / "registry.jsonl"
-    rows = [json.loads(line) for line in registry.read_text().splitlines()]
+    rows = report.load_registry(registry)
     baseline = [
         row
         for row in rows

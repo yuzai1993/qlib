@@ -142,7 +142,7 @@ Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest/test_cleanup_
 **Files:**
 - Create: `backtest/configs/label-risk-adjustment/vol20-scaled/lra_vol20_scaled_s{seed}.yaml` for all five seeds
 - Modify: `backtest/experiments/registry.jsonl`
-- Create: `backtest/experiments/ic/lra_vol20_scaled_test_1d.json`
+- Create: `backtest/experiments/label-risk-adjustment/vol20-scaled/metrics/lra_vol20_scaled_test_1d.json`
 
 **Interfaces:**
 - Consumes: B5 configs and ordinary train-only/evaluator scripts.
@@ -179,7 +179,7 @@ Add five-seed mean/std metrics, CSI1000 seed-paired comparison versus B5, data v
 **Files:**
 - Create: `backtest/configs/train-schedule/expanding-annual/ts_expanding_annual_s{seed}.yaml` for all five seeds
 - Modify: `backtest/experiments/registry.jsonl`
-- Create: `backtest/experiments/ic/ts_expanding_annual_test_1d.json`
+- Create: `backtest/experiments/train-schedule/expanding-annual/metrics/ts_expanding_annual_test_1d.json`
 
 **Interfaces:**
 - Consumes: Task 1 runner and Task 2 evaluator.
@@ -204,7 +204,7 @@ Record full metrics, CSI1000 seed-paired comparison, fold/year diagnostics, resu
 ### Task 6: Report, cleanup, and final verification
 
 **Files:**
-- Modify: `backtest/experiments/report.html` through its generator only
+- Modify: `backtest/experiments/reports/report.html` through its generator only
 
 **Interfaces:**
 - Consumes: finalized registry.

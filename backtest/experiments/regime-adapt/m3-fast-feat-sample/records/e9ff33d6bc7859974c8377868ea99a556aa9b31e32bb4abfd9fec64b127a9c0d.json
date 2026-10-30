@@ -1,0 +1,45 @@
+{
+  "exp_id": "regime-adapt/m3-fast-feat-sample",
+  "direction": "regime-adapt",
+  "phase": "M",
+  "date": "2026-08-12",
+  "state": "preregistered",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "train_window": [
+    "2004-01-02",
+    "2020-07-31"
+  ],
+  "test_pools": [
+    "csi300",
+    "csi500",
+    "csi1000",
+    "all"
+  ],
+  "model": "LGBModel(single, B3-M frozen hyperparams, lr=0.2) + CSRankNorm(H40) label + RankIC early stop on frozen 70% dates",
+  "eval_extension": {
+    "horizons": [
+      1,
+      5,
+      10,
+      20,
+      40
+    ],
+    "north_star": "allA_overall_mean5h_rankic",
+    "test_dates": "backtest/configs/regime-adapt/test_dates_stratified_70.csv",
+    "regime_breakdown": "allA_only",
+    "valid_equals_test": true,
+    "approved_by_user": "2026-08-09"
+  },
+  "note": "阶段化修订（用户 2026-08-12 指示）：先用 B3-M 单模型 + cs-rank-norm 标签快速筛方向（DoubleEnsemble 全A单跑~7h 不可行），方向确认后再回 DoubleEnsemble 臂并做超参选择（原 m0-anchor/m3-feat-sample 预登记转为阶段2，其 DE seed42 两跑产物保留）。数据/权重/采样清单/评估协议与阶段2完全一致。",
+  "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+  "hypothesis": "阶段1主臂：+regime特征 +风格平衡权重（55/30/15+48m半衰期）。Gate 1f（方向闸门）：北极星（全A五期限均值RankIC）较 m0-fast 提升≥0.005 且 pairwise≥4/5，或 F 态五期限均值提升≥0.01；通过则进阶段2（DoubleEnsemble+超参选择），不通过则登记并回报设计。",
+  "baseline_ref": "m0-fast（阶段1归因对照）",
+  "arm": "m3-fast"
+}

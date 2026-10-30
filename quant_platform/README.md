@@ -16,7 +16,7 @@ PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform 
 
 - 项目根和研究源：`/Users/yuxianqi/Project/qlib`
 - 实盘配置：`live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`（命令行默认值与当前生产一致，仍建议显式指定；只读加载）
-- 分析存储：`/Users/yuxianqi/.qlib/research_platform/analyses/`
+- 分析存储：`/Users/yuxianqi/Project/qlib/backtest/diagnostics/`，每个子目录是一份分析
 - 监听：`127.0.0.1:8090`
 
 源目录、归档目录和端口可显式指定，例如：
@@ -24,15 +24,15 @@ PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python -m quant_platform \
   --research-root /Users/yuxianqi/Project/qlib \
-  --data-root /Users/yuxianqi/.qlib/research_platform/analyses \
+  --data-root /Users/yuxianqi/Project/qlib/backtest/diagnostics \
   --project-root /Users/yuxianqi/Project/qlib \
   --live-config alla_v2_top5d1f100_postclose_real_active \
   --port 8090
 ```
 
-省略 `--research-root` 时使用 `--project-root`；自定义项目根后，研究源也随之切换。显式 `--research-root` 优先。活动配置从 `qlib` 读取研究资料；归档历史工作区前仍须保存唯一产物并核验报告与平台读取。修改仓库模板不会自动切换正在运行的服务，实际研究根可由 `/api/health` 的 `research_root` 核验。
+省略 `--research-root` 时使用 `--project-root`；省略 `--data-root` 时使用研究源中的 `backtest/diagnostics`。显式指定的 `--data-root` 表示一套完整的分析目录集合，适合仓库外的测试或独立档案，不再混入另一处历史目录。活动配置从 `qlib` 读取研究资料；修改仓库模板不会自动切换正在运行的服务，实际研究根和分析目录可由 `/api/health` 的 `research_root`、`analysis_storage` 核验。
 
-2026-10-30 已把必要基线训练原件、正式回测记录和持久化评估 JSON 迁入 `qlib`，更新已安装的 LaunchAgent 并重载平台；运行接口已确认研究根为 `/Users/yuxianqi/Project/qlib`，随后移除了旧 `qlib_exp` 工作区。旧源31条可用记录与2,623个既有指标值均保留，主根现有36条记录、35条指标源可用，1条历史缺失保持标注。迁移清单及切换验收见 `backtest/experiments/repository_migration_20261030/`；实盘交易调度器未改动。
+2026-10-30 已把必要基线训练原件、正式回测记录和持久化评估 JSON 迁入 `qlib`，更新已安装的 LaunchAgent 并重载平台；运行接口已确认研究根为 `/Users/yuxianqi/Project/qlib`，随后移除了旧 `qlib_exp` 工作区。旧源31条可用记录与2,623个既有指标值均保留，主根现有36条记录、35条指标源可用，1条历史缺失保持标注。迁移清单及切换验收见 `backtest/experiments/_catalog/audits/repository_migration_20261030/`；实盘交易调度器未改动。
 
 端口被占用时启动会退出，不会关闭已有服务。平台不读取交易环境密钥、不初始化或迁移生产 SQLite。`mode=ro` 与 `query_only=ON` 禁止业务数据和 schema 写入；正常读取正在更新的 WAL，不使用可能漏数据的 immutable 模式。
 
@@ -66,9 +66,11 @@ launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 
 登记 `portable_eval_output` 的实验优先读取这份持久化 JSON，指标资源链接与来源显示同步指向它；原 `eval_output` 作为来源证据保留。明确登记的持久化源缺失、无效或越界时如实报告，不自动改读旧结果掩盖问题。这使正式摘要能够独立于可清理的原始运行目录保留。
 
-**分析档案**支持新建、编辑、归档与恢复、搜索及日期筛选。每篇包括背景、方法、结论、代码使用说明和至少一份代码；可粘贴或上传多份文本。单份代码限 256 KiB，最多 20 份，最终完整记录限 2 MiB。代码只保存、展示和下载，不执行。保存使用原子替换、跨进程锁及版本号，冲突时页面保留未提交内容。
+**分析档案**直接扫描 `backtest/diagnostics` 的各个子目录，元数据保存在各目录的 `metadata.json`，正文、报告与代码分别保存。新建一个符合[目录协议](../backtest/diagnostics/README.md)的分析目录，刷新页面即可加载，无需重启平台。元数据损坏、路径越界或内容校验失败会明确报错，不根据报告标题猜测替代记录。
 
-现有 `backtest/diagnostics/*/REPORT.md` 以只读历史记录呈现。缺失图片或代码会如实显示。导出 ZIP 包含 `REPORT.md`、`metadata.json` 与 `code/`；可用这些导出包留存分析，归档或移除工作区前也应保存独立分析目录。
+页面支持新建、编辑、归档与恢复、搜索及日期筛选。每篇可编辑分析包括背景、方法、结论、代码使用说明和至少一份代码；单份代码限 256 KiB，最多 20 份，完整记录限 2 MiB。代码仅按文本保存和下载。编辑使用不可变版本目录，最后原子更新元数据指针；跨进程锁与版本号防止旧编辑覆盖新版本，冲突时页面保留未提交内容。
+
+现有三份历史报告保留原始字节、稳定 ID、只读标识与缺失附件说明，现存的两份永久代码已归档到对应分析目录。导出 ZIP 包含 `REPORT.md`、`metadata.json`、`code/`，可编辑记录另含 `document.json`；解压到分析根的一个子目录后可直接重新加载。没有元数据的旧 `REPORT.md` 仍可兼容读取为只读历史资料，新分析应提供独立元数据。
 
 原始 HTML 在沙箱中展示，不执行脚本；依赖脚本的旧报告图形可能不显示，可下载原文件在本机自行查看。平台仅向注册资源发放读取入口，不提供任意本地路径读取或代码执行接口。
 
@@ -85,4 +87,4 @@ PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m pytest \
   tests/live_trading/test_operational_wrappers.py -q -p no:cacheprovider
 ```
 
-Python 测试使用临时档案和临时 SQLite 账本，不启动或写入生产交易系统。只读验证另见 `tests/live_trading/test_monitor_read_only.py`。分析存储会拒绝研究根、`~/Project/qlib` 生产根、`/Volumes/qmt_bridge` 及其大小写别名或父目录。
+Python 测试使用临时档案和临时 SQLite 账本，不启动或写入生产交易系统。研究源内仅允许写入其 `backtest/diagnostics` 专属子树，其它研究、生产和实盘路径仍被拒绝；交易共享目录及其父目录始终禁止作为分析根。只读验证另见 `tests/live_trading/test_monitor_read_only.py`。

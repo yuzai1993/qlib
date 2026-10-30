@@ -1,0 +1,378 @@
+{
+  "exp_id": "train-schedule/expanding-annual-es5",
+  "direction": "train-schedule",
+  "phase": "M",
+  "date": "2026-07-29",
+  "hypothesis": "在年度expanding滚动重训方案上仅加入early_stopping_rounds=5，最大boosting轮数仍为28并由每折valid L2选择best_iteration；若更新样本增多后固定28轮造成过拟合，则早停应提高相对无早停滚动对照的CSI1000五种子平均RankIC且逐种子至少3/5胜出；参数在test评估前锁定",
+  "baseline_ref": "B5 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_horizon": 40,
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 6,
+  "model": "DEnsembleModel",
+  "learn_processors": [
+    "DropnaLabel",
+    "CSRankNorm(label)"
+  ],
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-28",
+  "configs": [
+    "backtest/experiments/train-schedule/expanding-annual-es5/configs/ts_expanding_annual_es5_s42.yaml",
+    "backtest/experiments/train-schedule/expanding-annual-es5/configs/ts_expanding_annual_es5_s1000.yaml",
+    "backtest/experiments/train-schedule/expanding-annual-es5/configs/ts_expanding_annual_es5_s2000.yaml",
+    "backtest/experiments/train-schedule/expanding-annual-es5/configs/ts_expanding_annual_es5_s3000.yaml",
+    "backtest/experiments/train-schedule/expanding-annual-es5/configs/ts_expanding_annual_es5_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260728_232001_ts_expanding_annual_es5_s42",
+    "backtest/result/20260728_234923_ts_expanding_annual_es5_s1000",
+    "backtest/result/20260728_235005_ts_expanding_annual_es5_s2000",
+    "backtest/result/20260729_004141_ts_expanding_annual_es5_s3000",
+    "backtest/result/20260729_004225_ts_expanding_annual_es5_s4000",
+    "backtest/experiments/train-schedule/expanding-annual-es5/metrics/ts_expanding_annual_es5_test_1d.json"
+  ],
+  "metrics_summary": {
+    "csi1000": {
+      "ic_mean": 0.015621763571282305,
+      "icir": 0.09409439277648222,
+      "rank_ic_mean": 0.04591684292648237,
+      "rank_icir": 0.2633498217100859,
+      "rank_ic_mean_std": 0.00029022844146330836
+    },
+    "csi300": {
+      "ic_mean": 0.015582223479953689,
+      "icir": 0.070232246645808,
+      "rank_ic_mean": 0.039571883710383025,
+      "rank_icir": 0.1732431126280842,
+      "rank_ic_mean_std": 0.0008202726397762655
+    },
+    "csi500": {
+      "ic_mean": 0.01105117894624224,
+      "icir": 0.05872777564849148,
+      "rank_ic_mean": 0.038912542032656726,
+      "rank_icir": 0.2035952095110658,
+      "rank_ic_mean_std": 0.0007546826368316526
+    }
+  },
+  "conclusion": "regress",
+  "label_kind": "cumulative_return",
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "rolling_type": "expanding",
+  "rolling_step_trading_days": 252,
+  "max_boosting_rounds": 28,
+  "early_stopping_rounds": 5,
+  "control_ref": "train-schedule/expanding-annual",
+  "note": "未全面超过B5；CSI1000 RankIC 0.04592（B5 0.04963），RankICIR 0.2633（B5 0.3132），逐种子pairwise 0/5。 年度切片三池同时改善：2024；三池同时退化：2022,2023,2025。 相对无早停年度滚动：CSI1000 RankIC -0.00254，逐种子 0/5，早停触发 74/75，判定 not_beneficial。",
+  "pairwise_csi1000_rankic_vs_b5": {
+    "n": 5,
+    "wins": 0,
+    "diff_mean": -0.0037111288451280545,
+    "diffs": [
+      -0.003700452052304584,
+      -0.00298708827061598,
+      -0.0028647692438361835,
+      -0.004231845205972938,
+      -0.004771489452910588
+    ]
+  },
+  "rolling_folds": [
+    {
+      "fold": 1,
+      "segments": {
+        "train": [
+          "2016-01-02",
+          "2020-01-10"
+        ],
+        "valid": [
+          "2020-01-13",
+          "2021-07-15"
+        ],
+        "test": [
+          "2021-07-16",
+          "2022-07-29"
+        ]
+      }
+    },
+    {
+      "fold": 2,
+      "segments": {
+        "train": [
+          "2016-01-02",
+          "2021-01-25"
+        ],
+        "valid": [
+          "2021-01-26",
+          "2022-07-29"
+        ],
+        "test": [
+          "2022-08-01",
+          "2023-08-11"
+        ]
+      }
+    },
+    {
+      "fold": 3,
+      "segments": {
+        "train": [
+          "2016-01-02",
+          "2022-02-14"
+        ],
+        "valid": [
+          "2022-02-15",
+          "2023-08-11"
+        ],
+        "test": [
+          "2023-08-14",
+          "2024-08-26"
+        ]
+      }
+    },
+    {
+      "fold": 4,
+      "segments": {
+        "train": [
+          "2016-01-02",
+          "2023-02-27"
+        ],
+        "valid": [
+          "2023-02-28",
+          "2024-08-26"
+        ],
+        "test": [
+          "2024-08-27",
+          "2025-09-09"
+        ]
+      }
+    },
+    {
+      "fold": 5,
+      "segments": {
+        "train": [
+          "2016-01-02",
+          "2024-03-12"
+        ],
+        "valid": [
+          "2024-03-13",
+          "2025-09-09"
+        ],
+        "test": [
+          "2025-09-10",
+          "2026-07-16"
+        ]
+      }
+    }
+  ],
+  "rolling_fold_count": 5,
+  "yearly_rank_ic_delta_vs_b5": {
+    "2021": {
+      "csi1000": -9.201669654290701e-07,
+      "csi300": 0.002574972253144566,
+      "csi500": 0.0014542072903380408
+    },
+    "2022": {
+      "csi1000": -0.010086458630215657,
+      "csi300": -0.010788340379326092,
+      "csi500": -0.012663242988876826
+    },
+    "2023": {
+      "csi1000": -0.007729748664587505,
+      "csi300": -0.005295878419562999,
+      "csi500": -0.0064282801095097986
+    },
+    "2024": {
+      "csi1000": 0.0015041422603889743,
+      "csi300": 0.0032286335711048456,
+      "csi500": 0.002682412263475778
+    },
+    "2025": {
+      "csi1000": -0.0015592793556246376,
+      "csi300": -0.004086697091048006,
+      "csi500": -0.0045248267066355895
+    },
+    "2026": {
+      "csi1000": -0.0013096726386558066,
+      "csi300": -0.0033006456535433076,
+      "csi500": 0.0005726113210146808
+    }
+  },
+  "model_diagnostics": {
+    "max_rounds": 28,
+    "early_stopping_rounds": 5,
+    "best_iterations": {
+      "42": {
+        "1": [
+          9,
+          3,
+          4
+        ],
+        "2": [
+          9,
+          2,
+          2
+        ],
+        "3": [
+          24,
+          4,
+          5
+        ],
+        "4": [
+          14,
+          4,
+          4
+        ],
+        "5": [
+          4,
+          1,
+          4
+        ]
+      },
+      "1000": {
+        "1": [
+          9,
+          3,
+          4
+        ],
+        "2": [
+          9,
+          2,
+          2
+        ],
+        "3": [
+          27,
+          5,
+          4
+        ],
+        "4": [
+          12,
+          4,
+          4
+        ],
+        "5": [
+          4,
+          1,
+          3
+        ]
+      },
+      "2000": {
+        "1": [
+          11,
+          4,
+          4
+        ],
+        "2": [
+          8,
+          3,
+          2
+        ],
+        "3": [
+          24,
+          5,
+          5
+        ],
+        "4": [
+          15,
+          4,
+          5
+        ],
+        "5": [
+          4,
+          1,
+          4
+        ]
+      },
+      "3000": {
+        "1": [
+          9,
+          3,
+          4
+        ],
+        "2": [
+          6,
+          3,
+          3
+        ],
+        "3": [
+          27,
+          5,
+          5
+        ],
+        "4": [
+          15,
+          5,
+          4
+        ],
+        "5": [
+          4,
+          1,
+          3
+        ]
+      },
+      "4000": {
+        "1": [
+          10,
+          3,
+          4
+        ],
+        "2": [
+          9,
+          3,
+          2
+        ],
+        "3": [
+          28,
+          5,
+          5
+        ],
+        "4": [
+          15,
+          4,
+          5
+        ],
+        "5": [
+          3,
+          1,
+          4
+        ]
+      }
+    },
+    "booster_count": 75,
+    "triggered_count": 74,
+    "trigger_rate": 0.9866666666666667,
+    "mean_best_iteration": 6.44,
+    "min_best_iteration": 1,
+    "max_best_iteration": 28
+  },
+  "early_stopping_assessment": {
+    "verdict": "not_beneficial",
+    "csi1000_rank_ic_delta": -0.002542496574642804,
+    "pairwise_csi1000_rankic_vs_no_es": {
+      "n": 5,
+      "wins": 0,
+      "diff_mean": -0.0025424965746428095,
+      "diffs": [
+        -0.0028605098594302325,
+        -0.0026324184751633575,
+        -0.0026440482324063957,
+        -0.002753633512078843,
+        -0.001821872794135218
+      ]
+    },
+    "triggered_count": 74,
+    "booster_count": 75
+  }
+}

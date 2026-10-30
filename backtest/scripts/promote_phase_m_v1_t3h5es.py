@@ -6,13 +6,20 @@ import sys
 from datetime import date
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_phase_m_v1_report import PRIMARY_H, PRIMARY_K
 from register_regime_m0_labels import load_registry, write_registry
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_m0_t3h5es"
-DETAIL_REPORT = "backtest/experiments/regime_adapt_m0_label_report.html"
+DETAIL_REPORT = "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
 V1_ID = "regime-adapt/m0-h20-label-v4"
 V2_ID = "regime-adapt/m0-h20-t5h5-es-v1"
 HORIZONS = (1, 5, 10, 20)
@@ -20,14 +27,14 @@ SEEDS = (42, 1000, 2000, 3000, 4000)
 
 
 def _official(path: Path) -> dict:
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     pool = doc["pools"]["all"]
     return pool.get("ensemble") or pool.get("seed_mean") or {}
 
 
 def snap_arm(hh: int) -> dict:
     path = EVAL_DIR / f"eval_m0h{hh}.json"
-    if not path.exists():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
         raise SystemExit(f"missing {path}")
     sm = _official(path)
     prim = ((sm.get("head") or {}).get(PRIMARY_K) or {}).get(PRIMARY_H) or {}
@@ -89,7 +96,7 @@ def build_row(hh: int, metrics: dict, *, winner: bool) -> dict:
         "baseline_ref": "self" if winner else f"regime-adapt/m0-h{winner_horizon()}-t3h5es-v1",
         "baseline_version": "v3" if winner else None,
         "result_dirs": sessions,
-        "plan": "backtest/experiments/plans/20260809_regime_adaptation_plan.md",
+        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
     }
 
 
@@ -190,7 +197,7 @@ def main() -> None:
 
     winner_id = f"regime-adapt/m0-h{_WINNER_H}-t3h5es-v1"
     winner_path = EVAL_DIR / "v3_winner.json"
-    winner_path.write_text(
+    _resolve_research_path(winner_path, _RESEARCH_ROOT).write_text(
         json.dumps(
             {
                 "exp_id": winner_id,

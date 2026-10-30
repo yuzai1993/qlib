@@ -814,7 +814,7 @@ git commit -m "chore: point live wrappers and launchd at the ladder config"
 - Modify: `AGENTS.md` 第 1 条：补「全A 实盘配置为 `alla_v4_ladder_k3h5_postclose_real`」
 - Modify: `backtest/EXPERIMENT_STANDARD.md` 第 1.4 节：补一句「2026-08-XX 用户批准将该
   基线切到实盘」，**不要**改 CSI1000 研究基线定义
-- Modify: `backtest/experiments/LESSONS.md`：先记切换事实与「成交率 / 抵销省费待建仓期
+- Modify: `backtest/experiments/_shared/docs/LESSONS.md`：先记切换事实与「成交率 / 抵销省费待建仓期
   满 5 日 / 满月后再补数字」。禁止编数字。
 
 固定契约表必须改成：

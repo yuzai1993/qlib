@@ -87,7 +87,7 @@
 | baseline_ref | `regime-adapt/m0-h20-label-v4` |
 | phase | `M`，`phase_m_protocol: "v1"` |
 | 评估 JSON | `backtest/result/eval_regime_m0_t5h5es/eval_m0h20.json` |
-| 详细报告 | `backtest/experiments/regime_adapt_m0h20_t5h5es_report.html`：第一行固定现基线 M0 H20，第二行本实验。总报告 `phase_m_v1_report.html` 该方向表第一行仍是 M0 H20，本实验另占一行 |
+| 详细报告 | `backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html`：第一行固定现基线 M0 H20，第二行本实验。总报告 `phase_m_v1_report.html` 该方向表第一行仍是 M0 H20，本实验另占一行 |
 | train_summary | 必须含 `es_metric`、`best_iteration`、`best_score`（早停净年化）、`valid_days` |
 
 训完用现脚本评估五种子，登记 registry，更新 HTML。数字从 JSON 读，禁止手写死数字。不晋升基线。磁盘清理按规范 6.3：本候选未超过对照主格夏普则训练产物可清；对照基线产物保留。

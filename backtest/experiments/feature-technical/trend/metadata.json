@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "exp_id": "feature-technical/trend",
+  "event_numbers": [
+    17
+  ],
+  "phase": "M",
+  "direction": "feature-technical",
+  "records_directory": "backtest/experiments/feature-technical/trend/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "e8186648a0001518904b69490a241703235bd5d538bf97fe576f2d8badbc911c"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "ad0c958a6ae2cfdd5ac218b4e4cda0b6711cd2affe880b249225182e11041208"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "160f1f3ab0c06c34ceff9d22b788d13ec15abf824eff7c32c956d63265c6e8a7"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "25e78517b953ff8c4cbb68b4c5c87128ba1250bddc4e1f6b17b2fcaa9a5fcd57"
+    },
+    {
+      "path": "backtest/experiments/feature-technical/trend/configs/ft_trend_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "fcfcc8132ed1df50b1975d83f7717647cc78a76f875d5114562779c127da86ec"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/feature-technical/trend/metrics/ft_trend_lgbm_multi_pool.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/feature-technical/trend/records/ad8478046c7d025d4ff7e10f65b0675aecf1ff5ec8f4f0d4165d42eda2ebf278.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

@@ -1,0 +1,41 @@
+{
+  "exp_id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-08-21",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "M0 H20 ES 真阶梯 k5×h5（按持有天数到期退出）",
+  "arm": "m0h20es",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "评估口径 ann = mean(p)×238/h 等价于「k·h 个等额仓位、每日 k 进 k 出、每只持满 h 天」的阶梯组合算术年化，k=5/h=5 即 25 槽、每日 5 进 5 出。 但 top25d5h5 实测失败，原因是 TopkDropout 按打分退出、槽位被前排常驻票占住，入场中位名次掉到 6~7。改用新策略类 CohortLadderStrategy：按**持有天数**到期退出（第 5 天无条件卖），并允许同一只票被多个分层同时持有（连续上榜自动加仓）。这样入场应恒为当日 top5，预期分年偏差显著收窄，尤其修好 2026。",
+  "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=5 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_ladder_k5h5/m0h20es.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v2",
+  "note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+  "metrics": {
+    "annualized_return": 0.23449630189369053,
+    "sharpe_ratio": 0.983221126875794,
+    "alpha": 0.15056781579044562,
+    "beta": 0.844720705688597,
+    "max_drawdown": -0.33354125841193905,
+    "calmar_ratio": 0.7030503602767986,
+    "annualized_volatility": 0.24486248421394344,
+    "annualized_one_way_turnover": 43.72911437733879,
+    "n_days": 1454,
+    "annualized_return_arith": 0.2407539676584398,
+    "y2026_annualized_return": -0.005538733950945174,
+    "y2026_annualized_return_arith": 0.027960133819731014
+  },
+  "ensemble_session": "backtest/result/20260822_001249_phase_s_m0h20es_all_ladder_k5h5_ensemble",
+  "conclusion": "实现按预期生效但假设只成立一半。入场校验通过：中位名次 4、98.6%/99.1% 落在 top5、最差第 7 名（对比 top25d5h5 的中位 6~7、最差 18）；cohort 账龄严格 5 天，日换手 35.0%，现金 12.3%。分年偏差均值降到 9.7pp，是五个执行方案里最好的（top5d1 11.8 / h5f100 12.2 / t25d5h5 11.3 / t25f100 14.4）；2023 +18.3% 对 +17.8%、2024 +32.4% 对 +36.1%、2020 +7.7% 对 +5.2% 都很接近。但 2026 只有 +2.8%，对主格 +37.9% 仍差 35pp；2025 反而低到 +36.0%（主格 +43.7%）。结论：**2026 缺口不是组合构造问题**——入场只数、入场名次、退出规则、重复持有、有效槽位数全部对齐并逐项验证后缺口依旧，残差只能出在评估自身的收益计算与可成交性之间（标签删失 / t+1 买不进 / 停牌复牌路径），需另开诊断。绝对指标 +23.4%/夏普 0.98/回撤 −33.4%，与 BT v2（+23.1%/0.86/−39.2%）同量级但回撤更浅。未晋升。",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/metrics/all_ladder_k5h5_m0h20es.json"
+}

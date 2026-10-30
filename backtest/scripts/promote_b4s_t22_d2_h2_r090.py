@@ -7,7 +7,26 @@ import sys
 from datetime import date
 from pathlib import Path
 
+
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
@@ -26,7 +45,7 @@ BASELINE_CONFIG = (
 )
 NEIGHBORHOOD_RESULTS = (
     REPO_ROOT
-    / "backtest/experiments/strategy-neighborhood/20260807_b3s_local_full/full_results.json"
+    / "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data/full_results.json"
 )
 CANDIDATE_ID = "topk-t22-d2-h2"
 NEIGHBORHOOD_ID = "topk-t22-d2-h2-r090"
@@ -36,22 +55,12 @@ MIN_P25 = 0.0  # gate is presence + user review; value must be finite and logged
 
 
 def _load_registry() -> list[dict]:
-    return [
-        json.loads(line)
-        for line in REGISTRY.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    return _load_registry_rows(REGISTRY)
 
 
 def _write_registry(rows: list[dict]) -> None:
-    temporary = REGISTRY.with_name(REGISTRY.name + ".tmp")
-    temporary.write_text(
-        "".join(
-            json.dumps(item, ensure_ascii=False, allow_nan=False) + "\n" for item in rows
-        ),
-        encoding="utf-8",
-    )
-    temporary.replace(REGISTRY)
+    json.dumps(rows, allow_nan=False)
+    _write_registry_rows(REGISTRY, rows)
 
 
 def _load_report(result_dir: Path) -> pd.DataFrame:
@@ -62,7 +71,7 @@ def _load_report(result_dir: Path) -> pd.DataFrame:
 
 
 def _neighborhood_row() -> dict:
-    payload = json.loads(NEIGHBORHOOD_RESULTS.read_text(encoding="utf-8"))
+    payload = json.loads(_resolve_research_path(NEIGHBORHOOD_RESULTS, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     scored, _ = score_valid_candidates(payload["all_rows"], strategy_neighborhood_grid())
     row = next(item for item in scored if item["candidate_id"] == NEIGHBORHOOD_ID)
     p25 = float(row["neighbor_ir_p25"])
@@ -170,7 +179,7 @@ def main() -> None:
             "usage: promote_b4s_t22_d2_h2_r090.py <figured_result_dir>"
         )
     figured = Path(sys.argv[1]).resolve()
-    if not (figured / "run_01" / "report_normal.csv").exists():
+    if not (_resolve_research_path(figured / "run_01" / "report_normal.csv", _RESEARCH_ROOT)).exists():
         raise FileNotFoundError(figured)
     neighborhood = _neighborhood_row()
     print(

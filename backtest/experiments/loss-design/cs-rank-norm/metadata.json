@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "exp_id": "loss-design/cs-rank-norm",
+  "event_numbers": [
+    37
+  ],
+  "phase": "M",
+  "direction": "loss-design",
+  "records_directory": "backtest/experiments/loss-design/cs-rank-norm/records",
+  "configs": [
+    {
+      "path": "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s1000.yaml",
+      "shared": true,
+      "sha256": "d931d5e48b1948f5281780bfd5e46e9f778f8ccfe0d43d23cc917c9770a99985"
+    },
+    {
+      "path": "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s2000.yaml",
+      "shared": true,
+      "sha256": "85517d1260c6c09ba9b673e1718de094f0822f6af2cce3598c10d77911b66038"
+    },
+    {
+      "path": "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s3000.yaml",
+      "shared": true,
+      "sha256": "f6f89dd389075e9a4ea7384c52155add2185dceb1f1ede144fb695fa6c258e91"
+    },
+    {
+      "path": "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s4000.yaml",
+      "shared": true,
+      "sha256": "55b182190ddb66cf32be098e8e3f1d346c5020a25f57d2c88b555eed11321fd9"
+    },
+    {
+      "path": "backtest/configs/loss-design/cs-rank-norm/ls_rank_norm_s42.yaml",
+      "shared": true,
+      "sha256": "2b60d47a69363c83668f39ad9d1579f4372dc502fb97ed5e3b9b6f510cbcba0c"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json",
+    "backtest/experiments/loss-design/cs-rank-norm/metrics/ls_rank_norm_test_1d_yearly.json",
+    "backtest/experiments/loss-design/cs-rank-norm/metrics/ls_rank_norm_test_self.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json"
+  ],
+  "records": [
+    "backtest/experiments/loss-design/cs-rank-norm/records/d1e623211c836beb872282e718d3b9ae5fe4c9a1a251204f0a0cd9a5fd8744af.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "exp_id": "baseline/b6-m",
+  "event_numbers": [
+    49
+  ],
+  "phase": "M",
+  "direction": "baseline",
+  "records_directory": "backtest/experiments/baseline/b6-m/records",
+  "configs": [
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s1000.yaml",
+      "shared": true,
+      "sha256": "51daac302c584caa1c61a166a3ab8a2ec1ea0a765bccb8e9573974325855e772"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s2000.yaml",
+      "shared": true,
+      "sha256": "10cb2a34bcf851ff6f25d610a604b21bc0c8b9e0b6918611760059570f33e020"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s3000.yaml",
+      "shared": true,
+      "sha256": "bcd3827a6e14fdaad8e0277a2953f2badf5e0db2738d128e0021592151016546"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "shared": true,
+      "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s42.yaml",
+      "shared": true,
+      "sha256": "d1abdb4693c776fb2f64d9dbe8cdd9f2ed18e6182f5cefc186eb77013d99f461"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json",
+    "backtest/experiments/baseline/b6-m/metrics/mh_valid_rankic_selected_test_self.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json"
+  ],
+  "recipe_sources": [
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s42.yaml",
+      "shared": true,
+      "sha256": "d1abdb4693c776fb2f64d9dbe8cdd9f2ed18e6182f5cefc186eb77013d99f461"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s1000.yaml",
+      "shared": true,
+      "sha256": "51daac302c584caa1c61a166a3ab8a2ec1ea0a765bccb8e9573974325855e772"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s2000.yaml",
+      "shared": true,
+      "sha256": "10cb2a34bcf851ff6f25d610a604b21bc0c8b9e0b6918611760059570f33e020"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s3000.yaml",
+      "shared": true,
+      "sha256": "bcd3827a6e14fdaad8e0277a2953f2badf5e0db2738d128e0021592151016546"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "shared": true,
+      "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    }
+  ],
+  "recipe_session_metadata": [
+    "backtest/result/20260731_030732_mh_rankic_es_lr010_s42/meta.json",
+    "backtest/result/20260731_032149_mh_rankic_es_lr010_s1000/meta.json",
+    "backtest/result/20260731_033541_mh_rankic_es_lr010_s2000/meta.json",
+    "backtest/result/20260731_034838_mh_rankic_es_lr010_s3000/meta.json",
+    "backtest/result/20260731_040103_mh_rankic_es_lr010_s4000/meta.json"
+  ],
+  "records": [
+    "backtest/experiments/baseline/b6-m/records/051696e78aba2531ccf7979637a47e9386e8cf855559a443e679b9a0c2b730f2.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "exp_id": "model-hyperparam/valid-rankic-search-v1",
+  "event_numbers": [
+    46
+  ],
+  "phase": "M",
+  "direction": "model-hyperparam",
+  "records_directory": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s1000.yaml",
+      "shared": false,
+      "sha256": "72ff6d25d9f2649440a77ed77f4bd58808b339663df2a070a4d6a5da49056b84"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s2000.yaml",
+      "shared": false,
+      "sha256": "abe15852c2bb64489007fa410710774b004b5c3d63d075d4253f1c3d73829b9e"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s3000.yaml",
+      "shared": false,
+      "sha256": "2392f851be1f76138d38510ba89779288672e5dba255d20910714f68782f3d79"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s4000.yaml",
+      "shared": false,
+      "sha256": "9c78c97698c07d85e1ddecf03cf3b67da60cbd837da0e5ab13b28440ba0f5c2a"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s42.yaml",
+      "shared": false,
+      "sha256": "5dfd162cd47717464c59d2dae26b1d4e333a72e6cff70a4378d338474776ab19"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s1000.yaml",
+      "shared": false,
+      "sha256": "618446b702602045b2f81c0ad165185475587d82205ec8929ee2dbd285366153"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s2000.yaml",
+      "shared": false,
+      "sha256": "658d705c402cd46916e232062f00033db35f54a99d63f1cb0e5a162d7828feb2"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s3000.yaml",
+      "shared": false,
+      "sha256": "327479d215fb044b29c5df4fed8dc132f9b45132f7ea6a9687019dcf8b890290"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s4000.yaml",
+      "shared": false,
+      "sha256": "d6438dad92a5f1696de401c459769ee08c18aebaabbab593034aa64850a04eee"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s42.yaml",
+      "shared": false,
+      "sha256": "577fbc515af3f146ca352f8f2a2de61ea7cad6b9f20dfc6d3d278e9a962bd763"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s1000.yaml",
+      "shared": false,
+      "sha256": "48c2d566f4ae6018d041ee67a393123abaaf3d8373b01a20a9b33977dc137db0"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s2000.yaml",
+      "shared": false,
+      "sha256": "6834d30cb5e57658ef6b1d4eb62a3737002686c265a275da545dec2f4d5ce223"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s3000.yaml",
+      "shared": false,
+      "sha256": "b846be54f68d10b738b7decde5e2cd0de94ba203017af22d6916c8096e89d4a9"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s4000.yaml",
+      "shared": false,
+      "sha256": "acecf16a6e574df55bf4b5e7288c6c8dfbacccd2c4b8e01ca46ee14c3e0aa34c"
+    },
+    {
+      "path": "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s42.yaml",
+      "shared": false,
+      "sha256": "bf76a31610bef96920855ad982162d5aee8185e190391a87c4d4471b33c608c4"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s1000.yaml",
+      "shared": true,
+      "sha256": "51daac302c584caa1c61a166a3ab8a2ec1ea0a765bccb8e9573974325855e772"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s2000.yaml",
+      "shared": true,
+      "sha256": "10cb2a34bcf851ff6f25d610a604b21bc0c8b9e0b6918611760059570f33e020"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s3000.yaml",
+      "shared": true,
+      "sha256": "bcd3827a6e14fdaad8e0277a2953f2badf5e0db2738d128e0021592151016546"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "shared": true,
+      "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    },
+    {
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s42.yaml",
+      "shared": true,
+      "sha256": "d1abdb4693c776fb2f64d9dbe8cdd9f2ed18e6182f5cefc186eb77013d99f461"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json",
+    "backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json",
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/metrics/mh_rankic_es_base_valid_1d.json",
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/metrics/mh_rankic_es_l1low_valid_1d.json",
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/metrics/mh_rankic_es_leaves128_valid_1d.json",
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/metrics/mh_rankic_es_lr010_valid_1d.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json",
+    "backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json"
+  ],
+  "recipe_sources": [
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s42.yaml",
+      "shared": true,
+      "sha256": "d1abdb4693c776fb2f64d9dbe8cdd9f2ed18e6182f5cefc186eb77013d99f461"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s1000.yaml",
+      "shared": true,
+      "sha256": "51daac302c584caa1c61a166a3ab8a2ec1ea0a765bccb8e9573974325855e772"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s2000.yaml",
+      "shared": true,
+      "sha256": "10cb2a34bcf851ff6f25d610a604b21bc0c8b9e0b6918611760059570f33e020"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s3000.yaml",
+      "shared": true,
+      "sha256": "bcd3827a6e14fdaad8e0277a2953f2badf5e0db2738d128e0021592151016546"
+    },
+    {
+      "role": "configuration",
+      "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+      "shared": true,
+      "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    }
+  ],
+  "recipe_session_metadata": [
+    "backtest/result/20260731_030732_mh_rankic_es_lr010_s42/meta.json",
+    "backtest/result/20260731_032149_mh_rankic_es_lr010_s1000/meta.json",
+    "backtest/result/20260731_033541_mh_rankic_es_lr010_s2000/meta.json",
+    "backtest/result/20260731_034838_mh_rankic_es_lr010_s3000/meta.json",
+    "backtest/result/20260731_040103_mh_rankic_es_lr010_s4000/meta.json"
+  ],
+  "records": [
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/records/ca7878a278b0c7410bd4d529025e6965218c17cf7a19b3d2d61da19226f724fe.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

@@ -430,7 +430,7 @@ def test_monitor_launch_agent_owns_loopback_service():
         "--research-root", "/Users/yuxianqi/Project/qlib",
         "--live-config",
         "alla_v2_top5d1f100_postclose_real_active",
-        "--data-root", "/Users/yuxianqi/.qlib/research_platform/analyses",
+        "--data-root", "/Users/yuxianqi/Project/qlib/backtest/diagnostics",
         "--port", "8090",
     ]
     assert plist["StandardOutPath"].endswith(

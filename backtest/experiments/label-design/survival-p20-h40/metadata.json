@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "exp_id": "label-design/survival-p20-h40",
+  "event_numbers": [
+    25
+  ],
+  "phase": "M",
+  "direction": "label-design",
+  "records_directory": "backtest/experiments/label-design/survival-p20-h40/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "122e5c1a282d5aeb1a0ee049b65e47e918a11193922ec0462830b7d914efdb81"
+    },
+    {
+      "path": "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "fda8e08d60058c742d6bef306060a262b2e1d319ad2cc41d2ba99e532ac4fd08"
+    },
+    {
+      "path": "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "5fa1530b0cde9cd3902a8be041bf0dc64f6cbfc27b9b16247f7df701f2bb8c69"
+    },
+    {
+      "path": "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "4addabb705246d39e62d0ce8e817d8d233affaef5ea7fcb510ec8364f1fe0821"
+    },
+    {
+      "path": "backtest/experiments/label-design/survival-p20-h40/configs/ld_survival_p20_h40_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "b968ce6df6e813ae8ee0022da12e049172c6518d2786b80742915843ec2a20f9"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_test_1d.json",
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_test_self.json",
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_valid_1d.json",
+    "backtest/experiments/label-design/survival-p20-h40/metrics/ld_survival_p20_h40_valid_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/label-design/survival-p20-h40/records/cdcbf9f81095eb31eaa1dc2448aa23288f2fdbe9ed4b7a00c9b4902649d2dd5e.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

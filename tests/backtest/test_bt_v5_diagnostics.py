@@ -1,6 +1,8 @@
 import pandas as pd
 import pytest
 
+from backtest.scripts.research_layout import resolve_research_path
+
 from backtest.scripts.run_bt_v5_cutover_diagnostics import (
     combine_frozen_scores,
     validate_frozen_config,
@@ -36,7 +38,7 @@ def test_diagnostic_rejects_tuned_strategy_before_running():
 
     root = Path(__file__).resolve().parents[2]
     config = yaml.safe_load(
-        (root / "backtest/configs/alla_v2_top5d1f100_parity.yaml").read_text()
+        resolve_research_path("backtest/configs/alla_v2_top5d1f100_parity.yaml", root).read_text()
     )
     validate_frozen_config(config, risk_degree=1.0)
     config["strategy"]["kwargs"]["force_sell_rank"] = 50
@@ -49,7 +51,7 @@ def test_explicit_risk_contract_preserves_legacy_replay():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2]
-    original = root / "backtest/experiments/bt_v5_cutover_20261029/config.yaml"
+    original = resolve_research_path("backtest/experiments/bt_v5_cutover_20261029/config.yaml", root)
     before = original.read_bytes()
     legacy = yaml.safe_load(before)
     validate_frozen_config(legacy, risk_degree=0.9)
@@ -165,8 +167,8 @@ def test_registered_metrics_recompute_from_durable_daily_returns(directory_name,
 
     root = Path(__file__).resolve().parents[2]
     directory = root / "backtest/experiments" / directory_name
-    summary = json.loads((directory / "summary.json").read_text())
-    cfg = yaml.safe_load((directory / "config.yaml").read_text())
+    summary = json.loads(resolve_research_path(directory / "summary.json", root).read_text())
+    cfg = yaml.safe_load(resolve_research_path(directory / "config.yaml", root).read_text())
     assert cfg["strategy"]["kwargs"]["risk_degree"] == risk
     if risk == 1.0:
         assert summary["risk_degree"] == risk
@@ -175,7 +177,7 @@ def test_registered_metrics_recompute_from_durable_daily_returns(directory_name,
             summary["source_pred_sha256"]
             == "3d6f768930a4b9ac63622ee039ded617b68addfac56f44d77002a0188572021e"
         )
-    daily = directory / "portfolio_daily.csv"
+    daily = resolve_research_path(directory / "portfolio_daily.csv", root)
     assert hashlib.sha256(daily.read_bytes()).hexdigest() == summary["report_sha256"]
     report = pd.read_csv(daily, index_col=0, parse_dates=True)
     for frame, expected in (

@@ -5,10 +5,20 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+
 from statistics import mean, stdev
 from typing import Any, Optional
 
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _layout_href
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _layout_href
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -16,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from strategy_stability_metrics import summarize_period  # noqa: E402
 
 RES_DIR = EXP_ROOT / "backtest" / "result" / "phase_s_regime"
-OUT = EXP_ROOT / "backtest" / "experiments" / "regime_adapt_phase_s_report.html"
+OUT = EXP_ROOT / "backtest" / "experiments" / "_shared" / "reports" / "regime_adapt_phase_s_report.html"
 
 # (目录名, 展示名, 是否主表)
 COMBOS = [
@@ -93,11 +103,11 @@ def agg_year(recs: list[dict], year: str, key: str) -> tuple[Optional[float], Op
 
 def load(combo: str, arm: str) -> Optional[dict]:
     path = RES_DIR / combo / f"{arm}.json"
-    if not path.exists() and combo == "csi1000_b4s":
+    if not _resolve_research_path(path, _RESEARCH_ROOT).exists() and combo == "csi1000_b4s":
         path = RES_DIR / f"{arm}.json"
-    if not path.exists():
+    if not _resolve_research_path(path, _RESEARCH_ROOT).exists():
         return None
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     if not doc.get("seeds"):
         return None
     for rec in doc["seeds"].values():
@@ -108,7 +118,7 @@ def load(combo: str, arm: str) -> Optional[dict]:
 def sub_periods(rec: dict) -> dict[str, dict]:
     """从 session 的 report_normal.csv 现算子区间指标（不改已落盘的 JSON）。"""
     csv = EXP_ROOT / rec["session_dir"] / "run_01" / "report_normal.csv"
-    if not csv.is_file():
+    if not _resolve_research_path(csv, _RESEARCH_ROOT).is_file():
         return {}
     df = pd.read_csv(csv, index_col=0, parse_dates=True)
     out = {}
@@ -350,7 +360,7 @@ def main() -> None:
             for cat, files in figs.items():
                 for f in files:
                     links.append(
-                        f"<a href='../../{r['session_dir']}/run_01/figures/{f}'>{cat}</a>"
+                        f"<a href='{_layout_href(EXP_ROOT / r['session_dir'] / 'run_01/figures' / f, OUT, EXP_ROOT)}'>{cat}</a>"
                     )
             H.append(
                 f"<tr><td class='l'>{seed}</td>"
@@ -379,9 +389,9 @@ def main() -> None:
         recs = list(data[arm]["seeds"].values())
         ns = None
         hp = HEAD_DIR / f"{HEAD_EVAL.get(arm, '')}.json"
-        if hp.is_file():
+        if _resolve_research_path(hp, _RESEARCH_ROOT).is_file():
             ns = (
-                json.loads(hp.read_text())["pools"]["all"]["seed_mean"].get("north_star_ir")
+                json.loads(_resolve_research_path(hp, _RESEARCH_ROOT).read_text())["pools"]["all"]["seed_mean"].get("north_star_ir")
             )
         sharpe = agg(recs, "full_period", "sharpe_ratio")[0]
         alpha = agg(recs, "full_period", "alpha")[0]
@@ -518,7 +528,7 @@ def main() -> None:
              "与 registry 中 B4-S 诊断同口径（250 交易日年化）。</li>")
     H.append("<li>换手为 qlib report 的 turnover 列年化后除 2（单边）。</li>")
     H.append("</ul></div></div></body></html>")
-    OUT.write_text("\n".join(H), encoding="utf-8")
+    _resolve_research_path(OUT, _RESEARCH_ROOT).write_text("\n".join(H), encoding="utf-8")
     print("written:", OUT)
 
 

@@ -10,6 +10,17 @@ from pathlib import Path
 
 import pandas as pd
 
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -21,22 +32,12 @@ REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 
 
 def _load() -> list[dict]:
-    return [
-        json.loads(line)
-        for line in REGISTRY.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    return _load_registry_rows(REGISTRY)
 
 
 def _write(rows: list[dict]) -> None:
-    temporary = REGISTRY.with_name(REGISTRY.name + ".tmp")
-    temporary.write_text(
-        "".join(
-            json.dumps(item, ensure_ascii=False, allow_nan=False) + "\n" for item in rows
-        ),
-        encoding="utf-8",
-    )
-    temporary.replace(REGISTRY)
+    json.dumps(rows, allow_nan=False)
+    _write_registry_rows(REGISTRY, rows)
 
 
 def _upsert(rows: list[dict], row: dict) -> list[dict]:

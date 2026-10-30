@@ -1643,5 +1643,5 @@ git commit -m "feat: quantify how often the ladder's backtest defers an unbuyabl
 - `README_QMT.md` 里「主策略本地副本 / 探针本地副本」两段示例的更新，以及
   `BRIDGE_ROOT` / `OTHER_BRIDGE_ROOT` 在探针退役后的取值——都描述部署状态，随装机一起改
 - `AGENTS.md` 第 1 条、`backtest/EXPERIMENT_STANDARD.md` 第 1.4 节、
-  `backtest/experiments/LESSONS.md` 的补记
+  `backtest/experiments/_shared/docs/LESSONS.md` 的补记
 - 建仓期前 5 个交易日的人工核对

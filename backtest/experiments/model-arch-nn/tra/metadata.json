@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "exp_id": "model-arch-nn/tra",
+  "event_numbers": [
+    42
+  ],
+  "phase": "M",
+  "direction": "model-arch-nn",
+  "records_directory": "backtest/experiments/model-arch-nn/tra/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s1000.yaml",
+      "shared": false,
+      "sha256": "f482bb7d1169ea969de14b90a5265042915de65305e87598c22ea79d5d332bac"
+    },
+    {
+      "path": "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s2000.yaml",
+      "shared": false,
+      "sha256": "519b8b6c449b8abbd8b0c2ef77af73d8662d423926aa0434d294ce4c4133afb8"
+    },
+    {
+      "path": "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s3000.yaml",
+      "shared": false,
+      "sha256": "ad87c81a523f40e60295db1e19c0278adcb546b487430bc8290ffa83b94c11ea"
+    },
+    {
+      "path": "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s4000.yaml",
+      "shared": false,
+      "sha256": "64b5af9e1a22e51b511ff278d63cd913c13ebdb0277a155eab01d267f3e5dc8e"
+    },
+    {
+      "path": "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s42.yaml",
+      "shared": false,
+      "sha256": "a9eda93c22befd8184a8faa68472b86bc838f495ac7e22b74298a50496d5760b"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/model-arch-nn/tra/metrics/ma_tra_test_1d.json",
+    "backtest/experiments/model-arch-nn/tra/metrics/ma_tra_test_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/model-arch-nn/tra/records/a5e539433efdf8bf6582dcb0db67b42b43ae95eaf8eac86284a94645ebca2ae3.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

@@ -1,0 +1,133 @@
+{
+  "exp_id": "model-arch-nn/tra",
+  "direction": "model-arch-nn",
+  "phase": "M",
+  "date": "2026-07-27",
+  "hypothesis": "在与B5完全相同的数据/特征/标签口径下（CSI1000、Alpha158+range 164特征、H40累计收益标签、DropnaLabel+CSRankNorm标签处理、41交易日purge），用TRA（LSTM 256x2+attention骨干、num_states=3、OT router、LR_TPE记忆）替换DoubleEnsemble：时序骨干可利用60日序列上下文而非单日截面快照，TRA的多预测头按记忆状态路由可自适应不同市场状态（趋势/震荡）下的因子失效，预期CSI1000 RankIC超过B5",
+  "baseline_ref": "B5 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 164,
+  "model": "TRAModel(LSTM256x2+attn, num_states=3, router, LR_TPE)",
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-27",
+  "configs": [
+    "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s42.yaml",
+    "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s1000.yaml",
+    "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s2000.yaml",
+    "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s3000.yaml",
+    "backtest/experiments/model-arch-nn/tra/configs/ma_tra_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260727_100557_ma_tra_s42",
+    "backtest/result/20260727_113800_ma_tra_s1000",
+    "backtest/result/20260727_132136_ma_tra_s2000",
+    "backtest/result/20260727_145658_ma_tra_s3000",
+    "backtest/result/20260727_163211_ma_tra_s4000",
+    "backtest/experiments/model-arch-nn/tra/metrics/ma_tra_test_1d.json",
+    "backtest/experiments/model-arch-nn/tra/metrics/ma_tra_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.01842192047981,
+      "icir": 0.09844711381808242,
+      "rank_ic_mean": 0.040669401594189615,
+      "rank_icir": 0.21984379185827266,
+      "rank_ic_mean_std": 0.006431235208035726
+    },
+    "csi500": {
+      "ic_mean": 0.012502023684380548,
+      "icir": 0.08042155094528707,
+      "rank_ic_mean": 0.04109908334559092,
+      "rank_icir": 0.26317931033731295,
+      "rank_ic_mean_std": 0.004790595729738803
+    },
+    "csi1000": {
+      "ic_mean": 0.017639766591079666,
+      "icir": 0.13154068953623704,
+      "rank_ic_mean": 0.04753974738682487,
+      "rank_icir": 0.33341545260956884,
+      "rank_ic_mean_std": 0.0031567391617715514
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.01842192047981,
+        "icir": 0.09844711381808242,
+        "rank_ic_mean": 0.040669401594189615,
+        "rank_icir": 0.21984379185827266,
+        "rank_ic_mean_std": 0.006431235208035726
+      },
+      "csi500": {
+        "ic_mean": 0.012502023684380548,
+        "icir": 0.08042155094528707,
+        "rank_ic_mean": 0.04109908334559092,
+        "rank_icir": 0.26317931033731295,
+        "rank_ic_mean_std": 0.004790595729738803
+      },
+      "csi1000": {
+        "ic_mean": 0.017639766591079666,
+        "icir": 0.13154068953623704,
+        "rank_ic_mean": 0.04753974738682487,
+        "rank_icir": 0.33341545260956884,
+        "rank_ic_mean_std": 0.0031567391617715514
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.07500618463531968,
+        "icir": 0.4259953061866937,
+        "rank_ic_mean": 0.10252812010751829,
+        "rank_icir": 0.5864559317232247,
+        "rank_ic_mean_std": 0.016693581773097255
+      },
+      "csi500": {
+        "ic_mean": 0.04561959919416603,
+        "icir": 0.3243813134533201,
+        "rank_ic_mean": 0.08643469442869897,
+        "rank_icir": 0.607759335797122,
+        "rank_ic_mean_std": 0.008942848003056881
+      },
+      "csi1000": {
+        "ic_mean": 0.07227602275531013,
+        "icir": 0.5455826347313493,
+        "rank_ic_mean": 0.10902324092191829,
+        "rank_icir": 0.800273012848017,
+        "rank_ic_mean_std": 0.007651238602917739
+      }
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b5": {
+    "n": 5,
+    "wins": 1,
+    "diff_mean": -0.0020882243847855477,
+    "diffs": [
+      0.0001154181990833808,
+      -0.007014487320998089,
+      -0.001782168791034107,
+      -0.00034280991959155516,
+      -0.0014170740913873672
+    ]
+  },
+  "conclusion": "regress",
+  "note": "未全面超过B5；CSI1000 RankIC 0.04754（B5 0.04963），RankICIR 0.3334（B5 0.3132），逐种子pairwise 1/5。实现口径：特征加RobustZScoreNorm+Fillna（NN必需，统计量拟合于训练期2016-2020，无泄漏）；handler起点2014-01-02（因果窗口下2016起特征值与2003起点完全一致，内存减半）；训练在MPS上（CPU LSTM因lightgbm/torch的libomp冲突段错误），LeanMTSDatasetH+empty_cache补丁控制内存；epochs预算化（n_epochs 40、early_stop 10、max_steps_per_epoch 150，官方骨干超参不变）；评估为冷启动记忆单遍推理，DropnaLabel使test末41交易日无预测（三池一致，约3%天数）"
+}

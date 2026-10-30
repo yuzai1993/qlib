@@ -13,6 +13,20 @@ from typing import Any, Sequence
 
 import yaml
 
+if __package__:
+    from .research_layout import resolve_research_path
+else:
+    from research_layout import resolve_research_path
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
+
 DEFAULT_POOLS = ("csi300", "csi500", "csi1000")
 PRIMARY_TEST_POOL = "csi1000"
 FIXED_SEEDS = (42, 1000, 2000, 3000, 4000)
@@ -33,11 +47,7 @@ def _current_phase_s_baseline(rows: Sequence[dict]) -> dict | None:
 
 
 def load_registry(path: Path) -> list[dict]:
-    return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    return _load_registry_rows(path)
 
 
 def _metric(row: dict, pool: str, key: str) -> float | None:
@@ -391,8 +401,7 @@ def _retained_phase_s_dirs(
 def _repo_resolved(repo_root: Path, raw: Any) -> Path | None:
     if not isinstance(raw, str) or not raw:
         return None
-    path = Path(raw)
-    return path.resolve() if path.is_absolute() else (repo_root / path).resolve()
+    return resolve_research_path(raw, repo_root)
 
 
 def _validate_phase_s_baseline_sessions(
@@ -494,9 +503,9 @@ def _validate_full_period_baseline_session(
             raise ValueError("full-period config SHA mismatch")
         config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         meta = json.loads((session / "meta.json").read_text(encoding="utf-8"))
-        manifest_path = (
-            repo_root
-            / "backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json"
+        manifest_path = resolve_research_path(
+            "backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json",
+            repo_root,
         )
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         entry, _ = validate_full_prediction_manifest(

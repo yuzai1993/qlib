@@ -16,7 +16,7 @@
 - Every Phase S selection result is labeled `evaluation_mode: full_history_in_sample`; it is not an out-of-sample estimate.
 - B2-S remains the research strategy baseline and B1/B1-S remains live until the user explicitly promotes a replacement.
 - The v1 valid/test neighborhood registry row remains immutable; the full-period rerun uses `strategy-neighborhood/b2-s-local-full-v2`.
-- The only active Phase S HTML report is `backtest/experiments/strategy_stability_report.html`.
+- The only active Phase S HTML report is `backtest/experiments/reports/strategy_stability_report.html`.
 - Account is CNY 500,000 with the current Phase S fee and benchmark contract.
 
 ---
@@ -243,18 +243,18 @@ git commit -m "feat(backtest): unify Phase S stability reporting"
 - `backtest/experiments/strategy-neighborhood/20260802_b2s_local_full/protocol.json`
 - `backtest/experiments/strategy-neighborhood/20260802_b2s_local_full/full_results.json`
 - Modified: `backtest/experiments/registry.jsonl`
-- Modified: `backtest/experiments/strategy_stability_report.html`
-- Modified: `backtest/experiments/report.html`
+- Modified: `backtest/experiments/reports/strategy_stability_report.html`
+- Modified: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
-- Consumes: `backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json` and the tracked B6-M full-period prediction artifact.
+- Consumes: `backtest/experiments/_shared/phase-s/prediction_manifest.json` and the tracked B6-M full-period prediction artifact.
 - Produces: a complete, auditable 540-row full-period result and one non-promoted winner.
 
 - [ ] **Step 1: Verify and freeze input artifacts**
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_strategy_neighborhood_full.py \
-  --prediction-manifest backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json \
+  --prediction-manifest backtest/experiments/_shared/phase-s/prediction_manifest.json \
   --prepare-only
 ```
 
@@ -272,7 +272,7 @@ Verify exact coverage, model SHA, prediction SHA, protocol SHA, and 540 candidat
 ```bash
 MLFLOW_ALLOW_FILE_STORE=true MPLCONFIGDIR=/private/tmp/qlib_mpl_cache \
 /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_strategy_neighborhood_full.py \
-  --prediction-manifest backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json \
+  --prediction-manifest backtest/experiments/_shared/phase-s/prediction_manifest.json \
   --workers 3 --max-runtime-hours 5
 ```
 
@@ -299,8 +299,8 @@ Run the standard cleaner in dry-run mode. If it refuses because an isolated work
 git add backtest/configs/strategy-neighborhood/b2-s-local-full \
   backtest/experiments/strategy-neighborhood/20260802_b2s_local_full \
   backtest/experiments/registry.jsonl \
-  backtest/experiments/strategy_stability_report.html \
-  backtest/experiments/report.html
+  backtest/experiments/reports/strategy_stability_report.html \
+  backtest/experiments/reports/report.html
 git commit -m "feat(backtest): record full-period B2-S neighborhood"
 ```
 

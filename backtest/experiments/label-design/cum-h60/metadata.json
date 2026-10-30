@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "exp_id": "label-design/cum-h60",
+  "event_numbers": [
+    21
+  ],
+  "phase": "M",
+  "direction": "label-design",
+  "records_directory": "backtest/experiments/label-design/cum-h60/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/label-design/cum-h60/configs/ld_cum_h60_lgbm_s1000.yaml",
+      "shared": false,
+      "sha256": "a570723899ff2a752174cc1b14123da20336a5e54adc72e64f8fb9dbb03c78d1"
+    },
+    {
+      "path": "backtest/experiments/label-design/cum-h60/configs/ld_cum_h60_lgbm_s2000.yaml",
+      "shared": false,
+      "sha256": "f5f34ab899992bcb897c0ad3ff9b386f3c0834dd168c95afd747dc1c29d67e73"
+    },
+    {
+      "path": "backtest/experiments/label-design/cum-h60/configs/ld_cum_h60_lgbm_s3000.yaml",
+      "shared": false,
+      "sha256": "88425f8b455ac299db26c3829c875c6161c9cffe5dff7e04a40c0f921402723b"
+    },
+    {
+      "path": "backtest/experiments/label-design/cum-h60/configs/ld_cum_h60_lgbm_s4000.yaml",
+      "shared": false,
+      "sha256": "4100ff6a89d444368255ae3b511bbdd30022a18c26191aebf2e3bba238024ecf"
+    },
+    {
+      "path": "backtest/experiments/label-design/cum-h60/configs/ld_cum_h60_lgbm_s42.yaml",
+      "shared": false,
+      "sha256": "3f3df082d1252b91de3e38d97a33a4986282f9bb345af9505a4a234077de6b57"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/label-design/cum-h60/metrics/ld_cum_h60_test_1d.json",
+    "backtest/experiments/label-design/cum-h60/metrics/ld_cum_h60_test_self.json",
+    "backtest/experiments/label-design/cum-h60/metrics/ld_cum_h60_valid_1d.json",
+    "backtest/experiments/label-design/cum-h60/metrics/ld_cum_h60_valid_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/label-design/cum-h60/records/fb4791fd21ef00524e533fa30f4915af7513b7bafff6fcf156f65dafb77d6bc8.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

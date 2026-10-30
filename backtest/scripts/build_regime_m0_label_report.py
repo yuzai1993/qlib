@@ -9,9 +9,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _layout_href
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _layout_href
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_m0_t3h5es"
-OUT = EXP_ROOT / "backtest" / "experiments" / "regime_adapt_m0_label_report.html"
+OUT = EXP_ROOT / "backtest" / "experiments" / "_shared" / "reports" / "regime_adapt_m0_label_report.html"
 
 ARMS = [
     ("m0h1", "M0 H1 t3h5es", 1),
@@ -29,7 +38,7 @@ EVAL_FILES = {key: f"eval_{key}.json" for key, _, _ in ARMS}
 
 def load_arm(key: str):
     path = EVAL_DIR / EVAL_FILES.get(key, f"eval_{key}.json")
-    return json.loads(path.read_text()) if path.exists() else None
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text()) if _resolve_research_path(path, _RESEARCH_ROOT).exists() else None
 
 
 def seed_mean(rec):
@@ -171,7 +180,7 @@ def render(data: dict) -> str:
         "<title>Phase M v1 · M0 训练标签期限</title>",
         f"<style>{css}</style></head><body><div class='wrap'>",
         "<h1>Phase M v1 详细报告 · M0 训练标签期限</h1>",
-        f"<p class='meta'>总报告入口 <a href='phase_m_v1_report.html'>phase_m_v1_report.html</a> · "
+        f"<p class='meta'>总报告入口 <a href='{_layout_href('backtest/experiments/reports/phase_m_v1_report.html', OUT, EXP_ROOT)}'>phase_m_v1_report.html</a> · "
         "当前轨道 baseline 见总报告当前行；本页是 H1/H5/H10/H20 × top3×h5 早停对照 · "
         f"全A · 2020-08-03~2026-07-31 · h=5 约 {n_days or '—'} 个交易日 "
         "（更短 h 末端截断更少） · "
@@ -248,7 +257,7 @@ def main() -> None:
     data = {k: load_arm(k) for k, _, _ in ARMS}
     if not any(v is not None for v in data.values()):
         raise SystemExit(f"no eval json in {EVAL_DIR}")
-    OUT.write_text(render(data), encoding="utf-8")
+    _resolve_research_path(OUT, _RESEARCH_ROOT).write_text(render(data), encoding="utf-8")
     print("written:", OUT)
 
 

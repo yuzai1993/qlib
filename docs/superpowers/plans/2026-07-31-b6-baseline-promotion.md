@@ -27,7 +27,7 @@
 - Modify: `tests/backtest/test_register_b5_post2020_forward.py`
 - Modify: `tests/backtest/test_register_b5_rankic_hyperparams.py`
 - Modify: `backtest/experiments/registry.jsonl`
-- Regenerate: `backtest/experiments/report.html`
+- Regenerate: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Consumes: existing five-seed evaluator JSON with `seed_mean.rank_ic_mean_std`.
@@ -64,7 +64,7 @@
 - Create: `tests/backtest/test_promote_b6_baseline.py`
 - Create: `backtest/experiments/b6_model_freeze.json`
 - Modify: `backtest/experiments/registry.jsonl`
-- Regenerate: `backtest/experiments/report.html`
+- Regenerate: `backtest/experiments/reports/report.html`
 
 **Interfaces:**
 - Consumes: `model-hyperparam/valid-rankic-search-v1`, `b5_rankic_hyperparam_selection.json`, `mh_valid_rankic_selected_test_1d.json`, `mh_valid_rankic_selected_test_self.json`, and five retained winner sessions.
@@ -96,7 +96,7 @@
 ### Task 3: Complete the H40 self-evaluation
 
 **Files:**
-- Create: `backtest/experiments/ic/mh_valid_rankic_selected_test_self.json`
+- Create: `backtest/experiments/baseline/b6-m/metrics/mh_valid_rankic_selected_test_self.json`
 
 **Interfaces:**
 - Consumes: the same five frozen winner sessions used by the formal one-day artifact.

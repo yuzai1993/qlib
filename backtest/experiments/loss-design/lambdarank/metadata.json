@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "exp_id": "loss-design/lambdarank",
+  "event_numbers": [
+    40
+  ],
+  "phase": "M",
+  "direction": "loss-design",
+  "records_directory": "backtest/experiments/loss-design/lambdarank/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s1000.yaml",
+      "shared": false,
+      "sha256": "926a4a9f78b8db02c356e4c01df6ec1531c6fc84e7ad7e8c8b968f466b07b900"
+    },
+    {
+      "path": "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s2000.yaml",
+      "shared": false,
+      "sha256": "13f4e7bda8dc759506534b44570ade545888870c0893241e4a70b591353efd9d"
+    },
+    {
+      "path": "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s3000.yaml",
+      "shared": false,
+      "sha256": "1a66c1467eb4144ec57b409fafb9784dfc40ee1ad91be5b21173cd6f02eb2a6c"
+    },
+    {
+      "path": "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s4000.yaml",
+      "shared": false,
+      "sha256": "4691d7674521f9b6bc6121f05895c3a58b681afd98b84dd6e1f5ea7d160f3657"
+    },
+    {
+      "path": "backtest/experiments/loss-design/lambdarank/configs/ls_lambdarank_s42.yaml",
+      "shared": false,
+      "sha256": "6ff31837395fe21215b3c3453fb863c1800bf984a9932e599d37ee906511ad19"
+    }
+  ],
+  "reports": [],
+  "docs": [],
+  "data": [
+    "backtest/experiments/loss-design/lambdarank/metrics/ls_lambdarank_test_1d.json",
+    "backtest/experiments/loss-design/lambdarank/metrics/ls_lambdarank_test_self.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/loss-design/lambdarank/records/fd13e377da4d6c7eef3de5313ac3719c3dad81e7d77fc6c403c632c46c50f66f.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl"
+}

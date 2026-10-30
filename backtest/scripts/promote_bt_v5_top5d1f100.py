@@ -11,9 +11,28 @@ import hashlib
 import json
 import math
 from pathlib import Path
+
 import sys
 
 import pandas as pd
+
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
+if __package__:
+    from .experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
+else:
+    from experiment_registry import (
+        load_registry as _load_registry_rows,
+        write_registry as _write_registry_rows,
+    )
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -24,7 +43,7 @@ BASELINE = "baseline/phase-m-v1-bt-v5"
 MODEL = "regime-adapt/m0-h20-t5h5-es-v1"
 SEEDS = [42, 1000, 2000, 3000, 4000]
 SUMMARY_DIR = Path("backtest/experiments/phase_m_v1_bt_metrics")
-LABELS = Path("backtest/configs/regime-adapt/monthly_regime_labels_eval_window_v1.csv")
+LABELS = Path("backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv")
 LIMITATION = (
     "历史选型窗口：2020-08-03~2026-07-31 已用于模型早停及策略比较，"
     "不是独立样本外检验。100万历史成本口径；30万当前费用与新增期间结果另作诊断，"
@@ -34,7 +53,7 @@ LIMITATION = (
 
 def fingerprint(path: Path) -> dict:
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
+    with _resolve_research_path(path, _RESEARCH_ROOT).open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return {"path": str(path), "sha256": digest.hexdigest(), "bytes": path.stat().st_size}
@@ -43,12 +62,12 @@ def fingerprint(path: Path) -> dict:
 def validate_candidate(source_root: Path, candidate: dict) -> dict:
     if candidate.get("seeds") != SEEDS:
         raise ValueError("BT v5 requires the five approved seeds")
-    source_doc = json.loads((source_root / candidate["eval_output"]).read_text())
+    source_doc = json.loads((_resolve_research_path(source_root / candidate["eval_output"], _RESEARCH_ROOT)).read_text())
     ensemble = source_doc.get("ensemble")
     if not ensemble:
         raise ValueError("official metrics must come from ensemble")
     meta_path = source_root / ensemble["session_dir"] / "meta.json"
-    meta = json.loads(meta_path.read_text())
+    meta = json.loads(_resolve_research_path(meta_path, _RESEARCH_ROOT).read_text())
     expected = {"class": "TopkDropoutStrategy", "topk": 5, "n_drop": 1,
                 "hold_thresh": 1, "force_sell_rank": 100, "risk_degree": 0.9,
                 "only_tradable": False, "forbid_all_trade_at_limit": False}
@@ -76,7 +95,7 @@ def validate_candidate(source_root: Path, candidate: dict) -> dict:
 def snapshot_document(source_root: Path, rec: dict, labels: pd.Series, labels_info: dict) -> tuple[Path, dict]:
     rel = Path(rec["eval_output"])
     path = source_root / rel
-    doc = json.loads(path.read_text())
+    doc = json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text())
     ensemble = doc.get("ensemble")
     if not ensemble:
         raise ValueError(f"missing official ensemble: {path}")
@@ -119,7 +138,7 @@ def promote(*, repo_root: Path = ROOT, source_root: Path) -> dict:
     if repo_root == source_root:
         raise ValueError("source-root must remain read-only and separate from repo-root")
     registry = repo_root / "backtest/experiments/registry.jsonl"
-    rows = [json.loads(line) for line in registry.read_text().splitlines() if line.strip()]
+    rows = _load_registry_rows(registry)
     ids = [r["exp_id"] for r in rows]
     if ids.count(CANDIDATE) != 1 or ids.count(BASELINE) > 1:
         raise ValueError("candidate and promoted baseline IDs must be unambiguous")
@@ -133,7 +152,7 @@ def promote(*, repo_root: Path = ROOT, source_root: Path) -> dict:
         if row.get("report_kind") not in {"phase_m_v1_bt", "phase_m_v1_bt_baseline"} or row["exp_id"] == BASELINE:
             continue
         # Newly added offline diagnostics can already point to their own durable outputs.
-        if str(row["eval_output"]).startswith("backtest/experiments/") and (repo_root / row["eval_output"]).is_file():
+        if str(row["eval_output"]).startswith("backtest/experiments/") and (_resolve_research_path(repo_root / row["eval_output"], _RESEARCH_ROOT)).is_file():
             continue
         destination, doc = snapshot_document(source_root, row, labels, labels_info)
         snapshots[str(destination)] = doc
@@ -160,7 +179,7 @@ def promote(*, repo_root: Path = ROOT, source_root: Path) -> dict:
         "metrics": copy.deepcopy(official["ensemble"]["full_period"]),
         "ensemble_session": official["ensemble"]["session_dir"],
         "evaluation_mode": "historical_selection_window", "note": LIMITATION,
-        "detail_report": "backtest/experiments/phase_m_v1_bt_v5.html",
+        "detail_report": "backtest/experiments/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
         "comparison_baseline_ref": "baseline/phase-m-v1-bt-v4",
         "provenance": copy.deepcopy(official["provenance"]),
     }
@@ -170,11 +189,12 @@ def promote(*, repo_root: Path = ROOT, source_root: Path) -> dict:
     else:
         rows[existing] = baseline
     # Do not rewrite historical conclusions or baseline references.
+    json.dumps(rows, allow_nan=False)
     for destination, doc in snapshots.items():
         output = repo_root / destination
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(doc, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    registry.write_text("".join(json.dumps(r, ensure_ascii=False, allow_nan=False) + "\n" for r in rows), encoding="utf-8")
+        _resolve_research_path(output, _RESEARCH_ROOT).write_text(json.dumps(doc, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    _write_registry_rows(registry, rows)
     return {"baseline": BASELINE, "eval_output": official_path, "portable_documents": len(snapshots)}
 
 

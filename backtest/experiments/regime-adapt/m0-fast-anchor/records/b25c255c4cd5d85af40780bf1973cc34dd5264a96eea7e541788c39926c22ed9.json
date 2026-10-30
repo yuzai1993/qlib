@@ -1,0 +1,44 @@
+{
+  "exp_id": "regime-adapt/m0-fast-anchor",
+  "direction": "regime-adapt",
+  "phase": "M",
+  "date": "2026-08-12",
+  "state": "completed",
+  "result": "anchor",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "arm": "m0-fast",
+  "sessions_tag": "regimeadaptfast_m0",
+  "train_minutes_total": 12,
+  "metrics": {
+    "north_star_allA_mean5h_rankic": 0.1069,
+    "allA_mean5h_rankic_std": 0.00055,
+    "allA_h1_rankic": 0.0593,
+    "mean5h_rankic": {
+      "csi300": 0.0854,
+      "csi500": 0.0736,
+      "csi1000": 0.0916,
+      "all": 0.1069
+    },
+    "allA_regime_mean5h_rankic": {
+      "D": 0.1111,
+      "F": 0.0962,
+      "T": 0.0997
+    },
+    "allA_tail_top22_ann_excess": 0.169,
+    "allA_tail_top22_by_regime": {
+      "D": 0.271,
+      "F": -0.317,
+      "T": 0.357
+    }
+  },
+  "eval_output": "backtest/result/eval_regime_fast/eval_m0fast.json",
+  "note": "阶段1锚点。数据变更（全A池+2004-2020长窗+D态下采样）单独已达 B6-M 北极星水平（0.1069 vs 0.1048），tail top22 年化超额 +0.169 vs B6-M +0.161，T态尾部 +0.357 vs B6-M -0.027。",
+  "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+  "baseline_ref": "regime-adapt/b6m-reference（参考行，池/窗不同不作归因）"
+}

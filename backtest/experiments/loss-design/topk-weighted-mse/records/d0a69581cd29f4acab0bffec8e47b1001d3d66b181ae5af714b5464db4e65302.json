@@ -1,0 +1,133 @@
+{
+  "exp_id": "loss-design/topk-weighted-mse",
+  "direction": "loss-design",
+  "phase": "M",
+  "date": "2026-07-27",
+  "hypothesis": "在B4 DoubleEnsemble上对日内标签rank pct>0.8的样本静态线性加权至最高3×（w=1+2*max(0,(r-0.8)/0.2)，与SR动态权重相乘），其余不变；损失容量偏向Topk策略实际消费的截面头部，预期CSI1000 RankIC小幅提升；若RankICIR明显下降说明头部过拟合，判负",
+  "baseline_ref": "B4 v1.0",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "csi1000",
+  "label_kind": "cumulative_return",
+  "label_horizon": 40,
+  "label": "Ref($close,-41)/Ref($close,-1)-1",
+  "purge_trading_days": 41,
+  "feature_groups": [
+    "range"
+  ],
+  "feature_count": 6,
+  "model": "DEnsembleModel",
+  "primary_test_pool": "csi1000",
+  "test_pools": [
+    "csi1000",
+    "csi300",
+    "csi500"
+  ],
+  "data_version": "2026-07-24",
+  "configs": [
+    "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s42.yaml",
+    "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s1000.yaml",
+    "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s2000.yaml",
+    "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s3000.yaml",
+    "backtest/experiments/loss-design/topk-weighted-mse/configs/ls_topk_weighted_s4000.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20260727_002106_ls_topk_weighted_s42",
+    "backtest/result/20260727_012642_ls_topk_weighted_s1000",
+    "backtest/result/20260727_013309_ls_topk_weighted_s2000",
+    "backtest/result/20260727_013924_ls_topk_weighted_s3000",
+    "backtest/result/20260727_014537_ls_topk_weighted_s4000",
+    "backtest/experiments/loss-design/topk-weighted-mse/metrics/ls_topk_weighted_test_1d.json",
+    "backtest/experiments/loss-design/topk-weighted-mse/metrics/ls_topk_weighted_test_self.json"
+  ],
+  "metrics_summary": {
+    "csi300": {
+      "ic_mean": 0.015881420599280566,
+      "icir": 0.1028899011711063,
+      "rank_ic_mean": 0.020080405468480337,
+      "rank_icir": 0.11912553497688669,
+      "rank_ic_mean_std": 0.0010921174803049385
+    },
+    "csi500": {
+      "ic_mean": 0.01318185625110362,
+      "icir": 0.11115524876339478,
+      "rank_ic_mean": 0.019238813522764065,
+      "rank_icir": 0.15496492141645385,
+      "rank_ic_mean_std": 0.0007313283557618058
+    },
+    "csi1000": {
+      "ic_mean": 0.01791528082316553,
+      "icir": 0.17036150675315195,
+      "rank_ic_mean": 0.026424791583873192,
+      "rank_icir": 0.24519940016919475,
+      "rank_ic_mean_std": 0.0005956917499570956
+    }
+  },
+  "metrics_by_eval_label": {
+    "eval_1d": {
+      "csi300": {
+        "ic_mean": 0.015881420599280566,
+        "icir": 0.1028899011711063,
+        "rank_ic_mean": 0.020080405468480337,
+        "rank_icir": 0.11912553497688669,
+        "rank_ic_mean_std": 0.0010921174803049385
+      },
+      "csi500": {
+        "ic_mean": 0.01318185625110362,
+        "icir": 0.11115524876339478,
+        "rank_ic_mean": 0.019238813522764065,
+        "rank_icir": 0.15496492141645385,
+        "rank_ic_mean_std": 0.0007313283557618058
+      },
+      "csi1000": {
+        "ic_mean": 0.01791528082316553,
+        "icir": 0.17036150675315195,
+        "rank_ic_mean": 0.026424791583873192,
+        "rank_icir": 0.24519940016919475,
+        "rank_ic_mean_std": 0.0005956917499570956
+      }
+    },
+    "eval_self": {
+      "csi300": {
+        "ic_mean": 0.037954580048844846,
+        "icir": 0.25648112017288793,
+        "rank_ic_mean": 0.03736409577700124,
+        "rank_icir": 0.23238254022833305,
+        "rank_ic_mean_std": 0.0035292160159518344
+      },
+      "csi500": {
+        "ic_mean": 0.029271056649930478,
+        "icir": 0.2537947811992351,
+        "rank_ic_mean": 0.03659428810817321,
+        "rank_icir": 0.2959404432174934,
+        "rank_ic_mean_std": 0.0017817467574860041
+      },
+      "csi1000": {
+        "ic_mean": 0.053064393560691814,
+        "icir": 0.551081848245764,
+        "rank_ic_mean": 0.05967535127294112,
+        "rank_icir": 0.5732357048968425,
+        "rank_ic_mean_std": 0.0018704057652494488
+      }
+    }
+  },
+  "pairwise_csi1000_rankic_vs_b4": {
+    "n": 5,
+    "wins": 0,
+    "diff_mean": -0.017555103555796363,
+    "diffs": [
+      -0.01773798965900953,
+      -0.01801191431452832,
+      -0.0183130489613476,
+      -0.017070447027302402,
+      -0.01664211781679396
+    ]
+  },
+  "conclusion": "regress",
+  "note": "未全面超过B4；CSI1000 RankIC 0.02642（B4 0.04398），RankICIR 0.2452（B4 0.3142），逐种子pairwise 0/5"
+}

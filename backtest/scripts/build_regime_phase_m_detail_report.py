@@ -10,6 +10,15 @@ import argparse
 import json
 from pathlib import Path
 
+if __package__:
+    from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _layout_href
+else:
+    from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _layout_href
+
+_RESEARCH_ROOT = Path(__file__).resolve().parents[2]
+
 EXP_ROOT = Path(__file__).resolve().parents[2]
 KS = ["5", "15", "50"]
 HS = ["2", "3", "5", "10"]
@@ -19,7 +28,7 @@ PRIMARY_K, PRIMARY_H = "3", "5"
 SPECS = {
     "feat": {
         "title": "Phase M v1 详细报告 · M0 H20 + regime 特征",
-        "out": "backtest/experiments/regime_adapt_m0h20_feat_report.html",
+        "out": "backtest/experiments/regime-adapt/m0-h20-regime-feat-v1/reports/regime_adapt_m0h20_feat_report.html",
         "hypothesis": "只加 11 列 regime 特征，标签仍 H20，日权重仍用 M0 自然分布",
         "arms": [
             {
@@ -38,7 +47,7 @@ SPECS = {
     },
     "sample": {
         "title": "Phase M v1 详细报告 · M0 H20 + 样本采样",
-        "out": "backtest/experiments/regime_adapt_m0h20_sample_report.html",
+        "out": "backtest/experiments/regime-adapt/m0-h20-sample-v1/reports/regime_adapt_m0h20_sample_report.html",
         "hypothesis": "特征仍是 M0，只把日权换成 M3 的 55/30/15 + 48m 半衰期",
         "arms": [
             {
@@ -57,7 +66,7 @@ SPECS = {
     },
     "t5h5es": {
         "title": "Phase M v1 详细报告 · M0 H20 top5×h5 早停",
-        "out": "backtest/experiments/regime_adapt_m0h20_t5h5es_report.html",
+        "out": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
         "hypothesis": (
             "训练配方仍是 M0 H20，早停改为全A 1454 天 top5×h5 扣费净年化；"
             "2026-08-19 晋升为当前 baseline。2026-08-20 起官方主格改为"
@@ -109,7 +118,7 @@ SPECS = {
     },
     "densemble-v3": {
         "title": "Phase M v1 详细报告 · v3 + DoubleEnsemble s42",
-        "out": "backtest/experiments/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+        "out": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
         "hypothesis": (
             "相对当前基线 v3，只把单 LGBM 换成 B6-M DoubleEnsemble；"
             "早停对齐 top3_h5_net_ann；单种子 42 侦察，不作晋升依据"
@@ -138,7 +147,7 @@ SPECS = {
     },
     "densemble-v3-all": {
         "title": "Phase M v1 详细报告 · v3 + DoubleEnsemble",
-        "out": "backtest/experiments/regime_adapt_m0h20_t3h5es_densemble_report.html",
+        "out": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
         "hypothesis": (
             "相对当前基线 v3，只把单 LGBM 换成 B6-M DoubleEnsemble；"
             "早停对齐 top3_h5_net_ann；五种子官方合成信号"
@@ -195,7 +204,7 @@ SPECS = {
     },
     "rankices": {
         "title": "Phase M v1 详细报告 · v4 · M0 H20 RankIC ES",
-        "out": "backtest/experiments/regime_adapt_m0h20_rankices_report.html",
+        "out": "backtest/experiments/regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
         "hypothesis": (
             "相对 v3，valid 仍是评估窗 t5h5es 帧，只把早停打分换成 daily_rank_ic；"
             "不是重跑 v1 的 499 天次日 RankIC。2026-08-22 晋升为当前模型基线 v4。"
@@ -309,7 +318,7 @@ SPECS = {
     },
     "densemble-v4": {
         "title": "Phase M v1 详细报告 · v4 + DoubleEnsemble s42",
-        "out": "backtest/experiments/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+        "out": "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
         "hypothesis": (
             "相对当前基线 v4，只把单 LGBM 换成 B6-M DoubleEnsemble；"
             "早停对齐评估窗 daily_rank_ic；单种子 42 侦察，不作晋升依据"
@@ -367,7 +376,7 @@ SPECS = {
 
 def load_json(rel: str):
     path = EXP_ROOT / rel
-    return json.loads(path.read_text()) if path.exists() else None
+    return json.loads(_resolve_research_path(path, _RESEARCH_ROOT).read_text()) if _resolve_research_path(path, _RESEARCH_ROOT).exists() else None
 
 
 def seed_view(rec, seed=None):
@@ -502,7 +511,7 @@ def main() -> None:
         f"<title>{spec['title']}</title>",
         f"<style>{css}</style></head><body><div class='wrap'>",
         f"<h1>{spec['title']}</h1>",
-        "<p class='meta'>总报告入口 <a href='phase_m_v1_report.html'>phase_m_v1_report.html</a> · "
+        f"<p class='meta'>总报告入口 <a href='{_layout_href('backtest/experiments/reports/phase_m_v1_report.html', spec['out'], EXP_ROOT)}'>phase_m_v1_report.html</a> · "
         f"当前 baseline = <b>{baseline_name}</b> · "
         f"{spec['hypothesis']} · "
         f"全A · 2020-08-03~2026-07-31 全部 {n_days or '—'} 个交易日 · "
@@ -571,7 +580,7 @@ def main() -> None:
         "</ul></div></div></body></html>"
     )
     out = EXP_ROOT / spec["out"]
-    out.write_text("\n".join(H), encoding="utf-8")
+    _resolve_research_path(out, _RESEARCH_ROOT).write_text("\n".join(H), encoding="utf-8")
     print("written:", out)
 
 

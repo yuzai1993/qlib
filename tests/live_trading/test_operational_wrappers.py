@@ -427,6 +427,7 @@ def test_monitor_launch_agent_owns_loopback_service():
         "/opt/anaconda3/envs/qlib/bin/python",
         "-m", "quant_platform",
         "--project-root", "/Users/yuxianqi/Project/qlib",
+        "--research-root", "/Users/yuxianqi/Project/qlib",
         "--live-config",
         "alla_v2_top5d1f100_postclose_real_active",
         "--data-root", "/Users/yuxianqi/.qlib/research_platform/analyses",

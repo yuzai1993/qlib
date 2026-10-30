@@ -11,6 +11,8 @@ from pathlib import Path
 from statistics import mean
 from typing import Any, Sequence
 
+import yaml
+
 DEFAULT_POOLS = ("csi300", "csi500", "csi1000")
 PRIMARY_TEST_POOL = "csi1000"
 FIXED_SEEDS = (42, 1000, 2000, 3000, 4000)
@@ -93,9 +95,8 @@ def _phase_m_candidate_score(
         if candidate_ir is not None and baseline_ir is not None:
             rank_icir_deltas.append(candidate_ir - baseline_ir)
 
-    primary_rank_delta = (
-        _metric(row, PRIMARY_TEST_POOL, "rank_ic_mean")
-        - _metric(baseline, PRIMARY_TEST_POOL, "rank_ic_mean")
+    primary_rank_delta = _metric(row, PRIMARY_TEST_POOL, "rank_ic_mean") - _metric(
+        baseline, PRIMARY_TEST_POOL, "rank_ic_mean"
     )
     primary_ir = _metric(row, PRIMARY_TEST_POOL, "rank_icir")
     baseline_primary_ir = _metric(baseline, PRIMARY_TEST_POOL, "rank_icir")
@@ -200,11 +201,19 @@ def _retained_result_dirs(
     retained = set()
     for row in retained_rows:
         row_sessions = set()
+        if tuple(sorted(row.get("seeds") or [])) != FIXED_SEEDS:
+            errors.append(
+                f"retained experiment seeds must be exactly {list(FIXED_SEEDS)}: {row.get('exp_id')}"
+            )
         for raw in row.get("result_dirs") or []:
             raw_path = Path(str(raw))
-            if len(raw_path.parts) < 3 or raw_path.parts[:2] != (
-                "backtest",
-                "result",
+            if not raw_path.is_absolute() and (
+                len(raw_path.parts) < 3
+                or raw_path.parts[:2]
+                != (
+                    "backtest",
+                    "result",
+                )
             ):
                 continue
             unresolved = repo_root / raw_path
@@ -226,11 +235,15 @@ def _retained_result_dirs(
                 f"expected {len(FIXED_SEEDS)}"
             )
         retained.update(row_sessions)
+    if errors:
+        warnings.append(
+            "Retention is confined to the selected repository; use --repo-root to explicitly select the real research root. No sibling repository is searched."
+        )
     return sorted(retained)
 
 
 def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
-    """Return the three test sessions of the latest registered Phase S baseline."""
+    """Return the current formal session, accepting historical split schemas."""
     anchor = _current_phase_s_baseline(rows)
     if anchor is not None:
         exp_id = str(anchor.get("exp_id") or "")
@@ -239,6 +252,18 @@ def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
         candidate_id = str((anchor.get("strategy") or {}).get("candidate_id") or "")
         if not candidate_id:
             raise ValueError(f"Phase S baseline strategy is missing: {exp_id}")
+        if anchor.get("evaluation_mode") == "full_history_in_sample":
+            paths = anchor.get("result_dirs") or []
+            if (
+                anchor.get("selection_pool") != "csi1000"
+                or len(paths) != 1
+                or not isinstance(paths[0], str)
+                or not paths[0]
+            ):
+                raise ValueError(
+                    f"Phase S baseline requires one CSI1000 full-period session: {exp_id}"
+                )
+            return set(paths)
         test_results = anchor.get("test_results") or {}
         if set(test_results) != set(PHASE_S_POOLS):
             raise ValueError(f"Phase S baseline test matrix is incomplete: {exp_id}")
@@ -251,7 +276,9 @@ def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
                 )
             raw = candidate.get("result_dir")
             if not isinstance(raw, str) or not raw:
-                raise ValueError(f"Phase S baseline result_dir missing: {exp_id}/{pool}")
+                raise ValueError(
+                    f"Phase S baseline result_dir missing: {exp_id}/{pool}"
+                )
             retained.add(raw)
         if len(retained) != len(PHASE_S_POOLS):
             raise ValueError(
@@ -297,7 +324,9 @@ def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
                 raise ValueError(f"Phase S diagnostic row is malformed: {exp_id}")
             continue
         if row.get("state") != "test_complete":
-            raise ValueError(f"Phase S row is incomplete: {exp_id} ({row.get('state')})")
+            raise ValueError(
+                f"Phase S row is incomplete: {exp_id} ({row.get('state')})"
+            )
         if row.get("cleanup_retention_eligible") is not True:
             raise ValueError(f"Phase S row is not retention eligible: {exp_id}")
         winner = str(row.get("selected_candidate_id") or "")
@@ -309,7 +338,9 @@ def select_phase_s_retained_result_paths(rows: Sequence[dict]) -> set[str]:
         expected_ids = {PHASE_S_BASELINE_ID, winner}
         for pool in PHASE_S_POOLS:
             candidates = test_results[pool]
-            if {candidate.get("candidate_id") for candidate in candidates} != expected_ids:
+            if {
+                candidate.get("candidate_id") for candidate in candidates
+            } != expected_ids:
                 raise ValueError(
                     f"Phase S candidate matrix is incomplete: {exp_id}/{pool}"
                 )
@@ -370,6 +401,9 @@ def _validate_phase_s_baseline_sessions(
     errors: list[str],
 ) -> None:
     """Bind each retained Phase S session to its pool-specific registry metadata."""
+    if anchor.get("evaluation_mode") == "full_history_in_sample":
+        _validate_full_period_baseline_session(repo_root, anchor, errors)
+        return
     strategy = anchor.get("strategy") or {}
     test_segment = anchor.get("test_segment") or []
     fees = anchor.get("fees") or {}
@@ -407,9 +441,10 @@ def _validate_phase_s_baseline_sessions(
             mismatches.append("source_pred")
         if meta.get("source_pred_sha256") != expected.get("source_pred_sha256"):
             mismatches.append("source_pred_sha256")
-        if len(test_segment) != 2 or [backtest.get("start_time"), backtest.get("end_time")] != list(
-            test_segment
-        ):
+        if len(test_segment) != 2 or [
+            backtest.get("start_time"),
+            backtest.get("end_time"),
+        ] != list(test_segment):
             mismatches.append("test_segment")
         if backtest.get("benchmark") != benchmarks.get(pool):
             mismatches.append("benchmark")
@@ -430,10 +465,183 @@ def _validate_phase_s_baseline_sessions(
             )
 
 
+def _validate_full_period_baseline_session(
+    repo_root: Path, anchor: dict, errors: list[str]
+) -> None:
+    """Check the config, frozen model, and canonical prediction before cleanup."""
+    try:
+        import yaml
+        from phase_s_prediction_validation import (
+            FULL_PREDICTION_COVERAGE,
+            validate_full_prediction_manifest,
+        )
+        from phase_s_protocol import sha256_file
+
+        paths = select_phase_s_retained_result_paths([anchor])
+        session = _repo_resolved(repo_root, next(iter(paths)))
+        if (
+            session is None
+            or _direct_child(repo_root / "backtest/result", session) is None
+        ):
+            raise ValueError("full-period session is outside selected --repo-root")
+        configs = anchor.get("configs") or []
+        if len(configs) != 1:
+            raise ValueError("full-period baseline requires one config")
+        config_path = _repo_resolved(repo_root, configs[0])
+        if config_path is None or not config_path.is_relative_to(repo_root):
+            raise ValueError("full-period config is outside selected --repo-root")
+        if sha256_file(config_path) != anchor.get("config_sha256"):
+            raise ValueError("full-period config SHA mismatch")
+        config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        meta = json.loads((session / "meta.json").read_text(encoding="utf-8"))
+        manifest_path = (
+            repo_root
+            / "backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json"
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        entry, _ = validate_full_prediction_manifest(
+            manifest,
+            manifest_path,
+            repo_root=repo_root,
+            authoritative_manifest_path=manifest_path,
+            expected_coverage=FULL_PREDICTION_COVERAGE,
+        )
+        expected_pred = _repo_resolved(repo_root, entry.get("path"))
+        if expected_pred is None or not expected_pred.is_relative_to(repo_root):
+            raise ValueError("full-period prediction is outside selected --repo-root")
+        strategy = config.get("strategy") or {}
+        expected_strategy = {
+            "class": strategy.get("class"),
+            **(strategy.get("kwargs") or {}),
+        }
+        expected_strategy.update(
+            {key: strategy.get(key) for key in ("topk", "n_drop", "hold_thresh")}
+        )
+        backtest = meta.get("backtest") or {}
+        expected_backtest = {
+            **(config.get("backtest") or {}),
+            "benchmark": (config.get("data") or {}).get("benchmark"),
+        }
+        period = anchor.get("selection_segment")
+        if (
+            anchor.get("model_ref") != "b6-m"
+            or anchor.get("frozen_model_ref") != "B6 v1.0"
+            or (config.get("data") or {}).get("instruments") != "csi1000"
+            or period != anchor.get("test_segment")
+            or period != (config.get("segments") or {}).get("test")
+            or [backtest.get("start_time"), backtest.get("end_time")] != period
+            or backtest.get("account") != anchor.get("account")
+            or any(
+                backtest.get(key) != value for key, value in expected_backtest.items()
+            )
+            or any(
+                (meta.get("strategy") or {}).get(key) != value
+                for key, value in expected_strategy.items()
+            )
+            or any(
+                (meta.get("strategy") or {}).get(key)
+                != (anchor.get("strategy") or {}).get(key)
+                for key in ("topk", "n_drop", "hold_thresh", "risk_degree")
+            )
+            or _repo_resolved(repo_root, meta.get("config_path")) != config_path
+            or _repo_resolved(repo_root, meta.get("source_pred")) != expected_pred
+            or meta.get("source_pred_sha256") != entry.get("prediction_sha256")
+        ):
+            raise ValueError("full-period baseline metadata mismatch")
+    except (OSError, ValueError, TypeError, KeyError, StopIteration) as exc:
+        errors.append(f"Phase S full-period baseline validation failed: {exc}")
+
+
+def _phase_m_v1_retained_rows(
+    rows: Sequence[dict], errors: list[str]
+) -> tuple[list[dict], list[dict]]:
+    """Keep versioned model baselines independently of CSI1000 metric ranking."""
+    models = {
+        row.get("exp_id"): row
+        for row in rows
+        if row.get("phase") == "M"
+        and row.get("phase_m_protocol") == "v1"
+        and row.get("baseline_version")
+    }
+    for row in models.values():
+        if row.get("state") != "completed":
+            errors.append(f"Phase M v1 baseline is incomplete: {row.get('exp_id')}")
+    current_bt = [
+        row
+        for row in rows
+        if row.get("report_kind") == "phase_m_v1_bt_baseline"
+        and row.get("current_bt") is True
+    ]
+    if len(current_bt) > 1:
+        errors.append("multiple current Phase M v1 BT baselines")
+    for row in current_bt:
+        if row.get("model_ref") not in models:
+            errors.append(
+                f"current BT model_ref has no versioned Phase M v1 baseline: {row.get('model_ref')}"
+            )
+        if tuple(sorted(row.get("seeds") or [])) != FIXED_SEEDS:
+            errors.append("current BT must reference the complete fixed five seeds")
+    return list(models.values()), current_bt
+
+
+def _validate_local_model_sessions(
+    repo_root: Path, rows: Sequence[dict], sessions: Sequence[Path], errors: list[str]
+) -> None:
+    for row in rows:
+        seeds = []
+        expected_sessions = {
+            _repo_resolved(repo_root, raw) for raw in row.get("result_dirs") or []
+        }
+        for session in sessions:
+            if session not in expected_sessions:
+                continue
+            try:
+                paths = [
+                    session / "meta.json",
+                    session / "run_01/mlruns_link.json",
+                    session / "run_01/train_summary.json",
+                    session / "run_01/artifacts_root/artifacts/trained_model",
+                ]
+                for path in paths:
+                    if (
+                        not path.is_file()
+                        or path.stat().st_size == 0
+                        or any(
+                            parent.is_symlink()
+                            for parent in (path, *path.parents)
+                            if parent != repo_root
+                        )
+                    ):
+                        raise ValueError(
+                            f"local training artifact missing or symlink: {path}"
+                        )
+                meta, link, summary = [
+                    json.loads(path.read_text(encoding="utf-8")) for path in paths[:3]
+                ]
+                seed = (meta.get("regime_adapt") or {}).get("seed")
+                if (
+                    meta.get("mode") != "train_only"
+                    or meta.get("n_runs") != 1
+                    or seed != summary.get("seed")
+                    or _repo_resolved(repo_root, link.get("train_artifacts"))
+                    != session / "run_01/artifacts_root"
+                ):
+                    raise ValueError(f"local training metadata mismatch: {session}")
+                seeds.append(seed)
+            except (OSError, ValueError, TypeError) as exc:
+                errors.append(f"Phase M v1 baseline validation failed: {exc}")
+        if sorted(seeds) != list(FIXED_SEEDS):
+            errors.append(
+                f"Phase M v1 baseline must contain one local model per fixed seed: {row.get('exp_id')}"
+            )
+
+
 def _train_experiment_ids(
     session_dirs: Sequence[Path],
     warnings: list[str],
     errors: list[str],
+    *,
+    mlruns_root: Path,
 ) -> set[str]:
     experiment_ids = set()
     for session in session_dirs:
@@ -456,6 +664,18 @@ def _train_experiment_ids(
             experiment_id = str(run.get("train_experiment_id") or "")
             if experiment_id.isdigit():
                 session_ids.add(experiment_id)
+            try:
+                run_index = int(run.get("run") or run.get("fold") or 0)
+                run_dir = session / f"run_{run_index:02d}"
+                link_path = run_dir / "mlruns_link.json"
+                if run_index < 1 or run_dir.is_symlink() or link_path.is_symlink():
+                    raise ValueError(f"unsafe train run metadata: {link_path}")
+                link = json.loads(link_path.read_text(encoding="utf-8"))
+                _validate_recorder(
+                    mlruns_root, experiment_id, run, link, "train", require_model=True
+                )
+            except (OSError, ValueError, TypeError, yaml.YAMLError) as exc:
+                errors.append(f"train recorder validation failed: {session}: {exc}")
         if meta.get("mode") == "rolling_train_only":
             expected = int(meta.get("expected_fold_count") or 0)
             folds = meta.get("rolling_folds") or []
@@ -473,9 +693,7 @@ def _train_experiment_ids(
             )
             if valid:
                 valid = all(
-                    successful_by_fold[int(fold.get("fold") or 0)].get(
-                        "segments"
-                    )
+                    successful_by_fold[int(fold.get("fold") or 0)].get("segments")
                     == fold.get("segments")
                     for fold in folds
                 )
@@ -493,8 +711,77 @@ def _train_experiment_ids(
     return experiment_ids
 
 
+def _validate_recorder(
+    mlruns_root: Path,
+    experiment_id: str,
+    run: dict,
+    link: dict,
+    kind: str,
+    *,
+    require_model: bool = False,
+) -> None:
+    """Bind session metadata to one real successful recorder under its experiment."""
+    recorder_id = link.get(f"{kind}_recorder_id")
+    if (
+        not experiment_id.isdigit()
+        or str(link.get(f"{kind}_experiment_id") or "") != experiment_id
+        or not isinstance(recorder_id, str)
+        or not recorder_id
+        or recorder_id in (".", "..")
+        or Path(recorder_id).name != recorder_id
+        or run.get(f"{kind}_recorder_id") != recorder_id
+        or (
+            f"{kind}_experiment_id" in run
+            and str(run[f"{kind}_experiment_id"]) != experiment_id
+        )
+    ):
+        raise ValueError(
+            f"{kind} recorder/experiment ID differs between session and link or is unsafe"
+        )
+    experiment = mlruns_root / experiment_id
+    recorder = experiment / recorder_id
+    recorder_meta = recorder / "meta.yaml"
+    if (
+        _direct_child(experiment, recorder) is None
+        or not recorder.is_dir()
+        or not recorder_meta.is_file()
+        or any(path.is_symlink() for path in (experiment, recorder, recorder_meta))
+    ):
+        raise ValueError(f"{kind} recorder missing, unsafe or symlink: {recorder}")
+    info = yaml.safe_load(recorder_meta.read_text(encoding="utf-8"))
+    if (
+        not isinstance(info, dict)
+        or str(info.get("experiment_id")) != experiment_id
+        or info.get("run_id") != recorder_id
+        or info.get("status") != 3
+        or info.get("lifecycle_stage") != "active"
+    ):
+        raise ValueError(
+            f"{kind} recorder metadata mismatch or not successful: {recorder}"
+        )
+    raw_artifacts = link.get(f"{kind}_artifacts")
+    if (
+        raw_artifacts is not None
+        and _repo_resolved(mlruns_root.parent, raw_artifacts) != recorder
+    ):
+        raise ValueError(f"{kind} recorder artifact link mismatch: {recorder}")
+    if require_model:
+        model = recorder / "artifacts/trained_model"
+        if (
+            raw_artifacts is None
+            or model.parent.is_symlink()
+            or model.is_symlink()
+            or not model.is_file()
+            or model.stat().st_size == 0
+            or model.resolve().parent != recorder / "artifacts"
+        ):
+            raise ValueError(
+                f"train recorder model missing, empty, unsafe or symlink: {model}"
+            )
+
+
 def _backtest_experiment_ids(
-    session_dirs: Sequence[Path], errors: list[str]
+    session_dirs: Sequence[Path], errors: list[str], *, mlruns_root: Path
 ) -> set[str]:
     experiment_ids = set()
     for session in session_dirs:
@@ -518,6 +805,13 @@ def _backtest_experiment_ids(
             errors.append(
                 f"Phase S session must contain one successful pred_backtest: {session}"
             )
+            continue
+        try:
+            _validate_recorder(
+                mlruns_root, experiment_id, successful[0], link, "backtest"
+            )
+        except (OSError, ValueError, TypeError, yaml.YAMLError) as exc:
+            errors.append(f"Phase S recorder validation failed: {session}: {exc}")
             continue
         experiment_ids.add(experiment_id)
     return experiment_ids
@@ -550,17 +844,44 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
     phase_s_anchor = _current_phase_s_baseline(rows)
     if roots_safe and phase_s_anchor is not None:
         _validate_phase_s_baseline_sessions(repo_root, phase_s_anchor, errors)
-    keep_result_dirs = sorted(set(phase_m_result_dirs) | set(phase_s_result_dirs))
+    local_rows, current_bt = _phase_m_v1_retained_rows(rows, errors)
+    local_dirs = (
+        _retained_result_dirs(repo_root, local_rows, warnings, errors)
+        if roots_safe
+        else []
+    )
+    if roots_safe:
+        _validate_local_model_sessions(repo_root, local_rows, local_dirs, errors)
+    bt_raw_paths = []
+    for row in current_bt:
+        raw = row.get("ensemble_session")
+        if not isinstance(raw, str) or not raw:
+            errors.append(f"current BT ensemble_session missing: {row.get('exp_id')}")
+        else:
+            bt_raw_paths.append(raw)
+    bt_dirs = (
+        _retained_phase_s_dirs(repo_root, bt_raw_paths, errors) if roots_safe else []
+    )
+    keep_result_dirs = sorted(
+        set(phase_m_result_dirs + phase_s_result_dirs + local_dirs + bt_dirs)
+    )
     all_result_dirs = _safe_child_dirs(result_root, errors) if roots_safe else []
+    for path in all_result_dirs:
+        if path not in keep_result_dirs and not (path / "meta.json").is_file():
+            keep_result_dirs.append(path)
+            warnings.append(f"non-session result directory preserved for audit: {path}")
+    keep_result_dirs.sort()
     delete_result_dirs = [
         path for path in all_result_dirs if path not in set(keep_result_dirs)
     ]
 
     keep_experiment_ids = _train_experiment_ids(
-        phase_m_result_dirs, warnings, errors
+        phase_m_result_dirs, warnings, errors, mlruns_root=mlruns_root
     )
     keep_experiment_ids.update(
-        _backtest_experiment_ids(phase_s_result_dirs, errors)
+        _backtest_experiment_ids(
+            phase_s_result_dirs + bt_dirs, errors, mlruns_root=mlruns_root
+        )
     )
     keep_mlruns_dirs = []
     delete_mlruns_dirs = []
@@ -572,6 +893,12 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
                 delete_mlruns_dirs.append(path)
             else:
                 warnings.append(f"unknown mlruns directory preserved: {path}")
+    if roots_safe:
+        for experiment_id in sorted(keep_experiment_ids):
+            if not (mlruns_root / experiment_id).is_dir():
+                errors.append(
+                    f"retained MLflow experiment missing: {mlruns_root / experiment_id}"
+                )
 
     if errors:
         delete_result_dirs = []
@@ -585,6 +912,8 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
         "candidate_exp_id": (
             retained_rows[1].get("exp_id") if len(retained_rows) > 1 else None
         ),
+        "phase_m_v1_baseline_exp_ids": [row.get("exp_id") for row in local_rows],
+        "current_bt_exp_ids": [row.get("exp_id") for row in current_bt],
         "keep_result_dirs": keep_result_dirs,
         "delete_result_dirs": delete_result_dirs,
         "keep_mlruns_dirs": keep_mlruns_dirs,
@@ -634,7 +963,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="清理实验产物；默认 dry-run，--apply 才删除"
     )
-    parser.add_argument("--repo-root", type=Path, default=repo_default)
+    parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=repo_default,
+        help="Explicit artifact/research root; no sibling fallback or cross-root deletion",
+    )
     parser.add_argument("--registry", type=Path)
     parser.add_argument("--apply", action="store_true")
     return parser.parse_args(argv)
@@ -642,7 +976,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    repo_root = args.repo_root.resolve()
+    repo_root = args.repo_root.expanduser().absolute()
     registry = (
         args.registry.resolve()
         if args.registry

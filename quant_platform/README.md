@@ -12,10 +12,10 @@ PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform 
   --live-config alla_v2_top5d1f100_postclose_real_active
 ```
 
-打开 <http://127.0.0.1:8090>。当前常驻服务配置：
+打开 <http://127.0.0.1:8090>。默认值与仓库常驻服务模板配置：
 
-- 研究源：`/Users/yuxianqi/Project/qlib_exp`
-- 实盘配置：`live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`（显式指定、只读加载；命令行省略参数时仍保留旧默认）
+- 项目根和研究源：`/Users/yuxianqi/Project/qlib`
+- 实盘配置：`live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`（命令行默认值与当前生产一致，仍建议显式指定；只读加载）
 - 分析存储：`/Users/yuxianqi/.qlib/research_platform/analyses/`
 - 监听：`127.0.0.1:8090`
 
@@ -23,18 +23,22 @@ PYTHONDONTWRITEBYTECODE=1 /opt/anaconda3/envs/qlib/bin/python -m quant_platform 
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python -m quant_platform \
-  --research-root /Users/yuxianqi/Project/qlib_exp \
+  --research-root /Users/yuxianqi/Project/qlib \
   --data-root /Users/yuxianqi/.qlib/research_platform/analyses \
   --project-root /Users/yuxianqi/Project/qlib \
   --live-config alla_v2_top5d1f100_postclose_real_active \
   --port 8090
 ```
 
+省略 `--research-root` 时使用 `--project-root`；自定义项目根后，研究源也随之切换。显式 `--research-root` 优先。活动配置从 `qlib` 读取研究资料；归档历史工作区前仍须保存唯一产物并核验报告与平台读取。修改仓库模板不会自动切换正在运行的服务，实际研究根可由 `/api/health` 的 `research_root` 核验。
+
+2026-10-30 已把必要基线训练原件、正式回测记录和持久化评估 JSON 迁入 `qlib`，更新已安装的 LaunchAgent 并重载平台；运行接口已确认研究根为 `/Users/yuxianqi/Project/qlib`，随后移除了旧 `qlib_exp` 工作区。旧源31条可用记录与2,623个既有指标值均保留，主根现有36条记录、35条指标源可用，1条历史缺失保持标注。迁移清单及切换验收见 `backtest/experiments/repository_migration_20261030/`；实盘交易调度器未改动。
+
 端口被占用时启动会退出，不会关闭已有服务。平台不读取交易环境密钥、不初始化或迁移生产 SQLite。`mode=ro` 与 `query_only=ON` 禁止业务数据和 schema 写入；正常读取正在更新的 WAL，不使用可能漏数据的 immutable 模式。
 
 ## 常驻服务
 
-复用原 Web 监控的 LaunchAgent `com.yuxianqi.qlib-live-monitor`，登录后启动、异常退出后重启。仓库模板位于 `live_trading/launchd/com.yuxianqi.qlib-live-monitor.plist`，安装路径为 `~/Library/LaunchAgents/`。原 8082 不再单独运行。
+复用原 Web 监控的 LaunchAgent `com.yuxianqi.qlib-live-monitor`，登录后启动、异常退出后重启。仓库模板位于 `live_trading/launchd/com.yuxianqi.qlib-live-monitor.plist`，显式设置项目根和研究根为 `/Users/yuxianqi/Project/qlib`，安装路径为 `~/Library/LaunchAgents/`。原 8082 不再单独运行。
 
 ```bash
 launchctl print gui/$(id -u)/com.yuxianqi.qlib-live-monitor
@@ -59,6 +63,8 @@ launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 模型固定 top3×h5（算术净年化/HAC 波动/夏普），策略使用 CAGR，包含基准涨幅，页面不再展示策略算术年化；全局 RankIC 仅在模型核心指标展示。禁止跨轨道、池、窗口、费用与过滤口径混比。单种子和扩展窗口等诊断单独标识，不能加入正式比较。
 
 历史源元数据不完整时保留来源说明；BT v3 的种子声明来自 registry。指标不从清理过的结果目录臆造补齐，缺失值显示为 `—`。研究源可持续更新，刷新页面即可重新读取；本平台不会运行报告生成器、训练、回测、pickle 反序列化或清理任务，也不修改实验 registry。
+
+登记 `portable_eval_output` 的实验优先读取这份持久化 JSON，指标资源链接与来源显示同步指向它；原 `eval_output` 作为来源证据保留。明确登记的持久化源缺失、无效或越界时如实报告，不自动改读旧结果掩盖问题。这使正式摘要能够独立于可清理的原始运行目录保留。
 
 **分析档案**支持新建、编辑、归档与恢复、搜索及日期筛选。每篇包括背景、方法、结论、代码使用说明和至少一份代码；可粘贴或上传多份文本。单份代码限 256 KiB，最多 20 份，最终完整记录限 2 MiB。代码只保存、展示和下载，不执行。保存使用原子替换、跨进程锁及版本号，冲突时页面保留未提交内容。
 

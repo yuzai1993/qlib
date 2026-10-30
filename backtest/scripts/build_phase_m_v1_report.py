@@ -290,7 +290,9 @@ def collect(rows: Sequence[dict]) -> tuple[list[dict], list[dict]]:
         baselines.append(
             {
                 **spec,
-                "doc": load_eval_doc(str(row.get("eval_output") or "")),
+                "doc": load_eval_doc(
+                    str(row.get("portable_eval_output", row.get("eval_output")) or "")
+                ),
                 "detail_report": row.get("detail_report"),
             }
         )

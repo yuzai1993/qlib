@@ -5,6 +5,8 @@
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
 
+2026-10-30 运行状态勘误（按用户本轮仓库整理要求同步，仅更新实盘状态说明）：Mac 生产调度已使用 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，历史 v2 五种子、top5/drop1/hold1/f100、risk_degree=1.0；工作日 20:00，统一监控 8090。旧全A阶梯、CSI1000 与 CSI300 配置作为历史/回退保留。下文各次修订中的“未切换”描述只记录相应批准时点；研究模型 v4、BT v5 的 100 万/risk_degree=0.90/原费用/历史窗口及全部评测和保留规则保持原定义。详见 `live_trading/BT_V5_CUTOVER.md`。
+
 本次修订（v2.17）由用户于 2026-10-29 明确批准：将历史模型 **v2 · M0 H20 ES** 五种子合成信号 × `TopkDropoutStrategy(topk=5,n_drop=1,hold_thresh=1,force_sell_rank=100,risk_degree=0.90)` 晋升为执行层回测基线 **BT v5**。保留100万账户、原费用和原历史窗口；该窗口已经用于模型早停与策略比较，属于历史选型窗口，不是独立样本外检验。模型研究基线仍为 **v4 · M0 H20 RankIC ES**。本次仅批准隔离环境的离线实盘适配，30万当前费用与新增期间结果另作诊断；生产实盘配置、资金持仓、数据库、调度、桥接和QMT均未因本次晋升而激活或切换。
 
 本次修订（v2.16）由用户于 2026-08-23 **明确批准**：把 **v4 RankIC ES × 真阶梯 k3×h5**（`CohortLadderStrategy` topk=3 horizon=5）晋升为执行层回测基线 **BT v4**。晋升依据是组合规则对齐主格 top3×h5，不是对 BT v3 逐维占优。v2.15 由用户于 2026-08-22 **明确批准**：Phase M v1 **训练早停**改回评估窗上的 `daily_rank_ic`；把「v3 + RankIC 早停」官方合成信号晋升为模型基线 **v4 · M0 H20 RankIC ES**；总报告第 1 块增加**全局 RankIC**（官方合成信号、全宇宙日截面 Spearman，读 `ensemble.h5.rank_ic_mean`）。**评测主格不变**，仍是 top3×h5 扣费净年化/波动/夏普。v4 不是重跑 v1：v1 是 499 天次日 RankIC + `valid_frame_70.pkl`；v4 仍用 `valid_frame_t5h5es.pkl`（约 1454 天，H5 标签只作 RankIC 的 y）。v2.14 由用户于 2026-08-22 **明确批准**：Phase M v1 每个实验的主指标都是 **top3×h5**；分年、分风格只报这一格，不再叉乘 k×h。v2.13 将官方主格与早停改为 top3×h5，并按净年化晋升 **v3**。v2.12 修了前视窗截断，并把执行层回测基线提升为 **BT v3**。CSI1000 历史 Phase M / Phase S 轨道（B6-M / B4-S、IC/RankIC、邻域规则）保持不变。两套轨道禁止混比。
@@ -32,7 +34,7 @@
 
 ## 1. 基线定义（B6-M / B4-S）
 
-研究基线与实盘配置分离维护。当前正式实盘仍是 `live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略；CSI1000 研究实盘配置随 B4-S 同步。实盘对照回测的唯一合法配置是 `backtest/configs/csi300_live_parity.yaml`（CSI300）与 `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml`（CSI1000 研究）。
+研究基线与实盘配置分离维护。当前 Mac 生产配置是 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，对应 `backtest/configs/alla_v2_top5d1f100_parity.yaml`；旧全A阶梯对应 `backtest/configs/alla_v4_ladder_k1h5_parity.yaml`。`live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略为历史正式盘；CSI1000 研究配置随 B4-S 同步。这两套历史配置的实盘对照分别使用 `backtest/configs/csi300_live_parity.yaml`（CSI300）与 `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml`（CSI1000 研究），不得混用。
 
 ### 1.1 模型基线 B6-M
 
@@ -216,7 +218,7 @@ handler 时间：`start_time=2003-01-02`，Phase M `end_time >= 2026-07-16`、Ph
 - **默认训练池 = 基线训练池 CSI1000**（train 2016-01-02 ~ 2020-01-10）；**默认测试集 = csi1000 / csi300 / csi500**，其中 CSI1000 为研究主目标池。用同一个训练好的模型分别打分评估（跨池推理只需取数打分，无需重训）。
 - **全A**：暂不纳入默认测试矩阵；若实验显式要求评估全A，剔除评估日距该股数据起始不足 60 个交易日的股票（次新股）；ST / 退市整理期一律按日频名单 `scripts/data_collector/tushare/st_daily.csv` 剔除（`eval_ic_multi_pool.py` 默认启用，缓存缺失则退出）。
 - 上表中其余池的训练配置仅用于**训练样本类实验**（direction 如 `train-data`：更换训练池、调整训练起点、样本加权等）；此类实验须在 registry 中注明所用训练池，并与相同训练池的基线组对比。
-- Phase S 默认在**研究主目标池**（当前 CSI1000）的连续全历史 `full` 段（2020-01-13 ~ 2026-07-31）执行比较与选型；`valid` / `test` 只供历史审计或复现，其余池作稳健性参考。所有 full 结果必须标注 `full_history_in_sample`，不得表述为样本外检验。当前实盘配置仍为 CSI300；研究目标池变更不自动修改实盘配置或 B1。
+- Phase S 默认在**研究主目标池**（当前 CSI1000）的连续全历史 `full` 段（2020-01-13 ~ 2026-07-31）执行比较与选型；`valid` / `test` 只供历史审计或复现，其余池作稳健性参考。所有 full 结果必须标注 `full_history_in_sample`，不得表述为样本外检验。当前 Mac 实盘是独立的全A Top5 配置；研究目标池变更不自动切换实盘配置或改写历史 B1。
 
 ### 3.3 种子
 
@@ -433,6 +435,16 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 
 清理器以 registry 为唯一选择依据，按**完整五种子实验组**保留，不得按 test 结果挑单个 seed。
 
+代码与训练原件位于不同工作区时，显式指定真实产物根与权威 registry；不自动搜索相邻目录。2026-10-30 已将必要研究原件迁入生产根并移除旧 `qlib_exp` 工作区，当前只读核对命令为：
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/cleanup_experiment_artifacts.py \
+  --repo-root /Users/yuxianqi/Project/qlib \
+  --registry /Users/yuxianqi/Project/qlib/backtest/experiments/registry.jsonl
+```
+
+以上仍是 dry-run；任何根缺失必要训练原件时报错是保护行为。迁移清单与元数据重定址见 `backtest/experiments/repository_migration_20261030/`，历史来源字符串保持审计语义。Phase M v1 按第 1.5 节保留版本化历史模型基线的完整五种子，执行层另保护当前 BT 的模型依赖和官方 ensemble；不能套用 CSI1000 的候选排名删除。旧 `plan_artifact_cleanup.py` 入口使用同一计划，有保留错误时拒绝导出删除脚本，实际执行时仍重新验证。
+
 **长期保留组**：
 
 1. 当前 Phase M baseline 五种子组；
@@ -528,6 +540,6 @@ Phase M v1（全A / regime-adapt）checklist：
 
 ## 附录 B：环境注意事项
 
-- macOS 下禁止用 heredoc/stdin 运行会触发 Qlib 并行取数的代码，见 `.cursor/rules/qlib-shell-multiprocessing.mdc`。
+- macOS 下禁止用 heredoc/stdin 运行会触发 Qlib 并行取数的代码，见 `docs/developer/qlib-shell-multiprocessing.md`。
 - Python 解释器：`/opt/anaconda3/envs/qlib/bin/python`。
 - 数据：`~/.qlib/qlib_data/cn_data`，跑实验前确认数据已更新到 `end_time` 之后。

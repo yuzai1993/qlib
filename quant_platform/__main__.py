@@ -9,8 +9,8 @@ from pathlib import Path
 def build_parser():
     parser = argparse.ArgumentParser(description="量化研究平台（实盘监控、离线实验、分析档案统一服务）")
     parser.add_argument("--project-root", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--live-config", default="alla_v4_ladder_k1h5_postclose_real")
-    parser.add_argument("--research-root", type=Path, default=Path("/Users/yuxianqi/Project/qlib_exp"))
+    parser.add_argument("--live-config", default="alla_v2_top5d1f100_postclose_real_active")
+    parser.add_argument("--research-root", type=Path, help="研究源目录，默认使用 --project-root")
     parser.add_argument("--data-root", type=Path, default=Path.home() / ".qlib/research_platform/analyses")
     parser.add_argument("--port", type=int, default=8090)
     return parser
@@ -19,6 +19,8 @@ def build_parser():
 def main():
     parser = build_parser()
     args = parser.parse_args()
+    if args.research_root is None:
+        args.research_root = args.project_root
     if not re.fullmatch(r"[A-Za-z0-9_-]+", args.live_config):
         parser.error("实盘配置必须是 configs 目录中的配置名称")
     if not 1024 <= args.port <= 65535:

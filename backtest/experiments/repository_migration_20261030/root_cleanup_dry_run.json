@@ -1,0 +1,67 @@
+{
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "result_root": "/Users/yuxianqi/Project/qlib/backtest/result",
+  "mlruns_root": "/Users/yuxianqi/Project/qlib/mlruns",
+  "baseline_exp_id": "baseline/b6-m",
+  "candidate_exp_id": null,
+  "phase_m_v1_baseline_exp_ids": [
+    "regime-adapt/m0-h20-label-v4",
+    "regime-adapt/m0-h20-t5h5-es-v1",
+    "regime-adapt/m0-h20-t3h5es-v1",
+    "regime-adapt/m0-h20-rankices-v1"
+  ],
+  "current_bt_exp_ids": [
+    "baseline/phase-m-v1-bt-v5"
+  ],
+  "keep_result_dirs": [
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260731_030732_mh_rankic_es_lr010_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260731_032149_mh_rankic_es_lr010_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260731_033541_mh_rankic_es_lr010_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260731_034838_mh_rankic_es_lr010_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260731_040103_mh_rankic_es_lr010_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260808_205609_baseline_b4s_topk-t22-d2-h2_figures",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble",
+    "/Users/yuxianqi/Project/qlib/backtest/result/bt_v5_cutover_audit",
+    "/Users/yuxianqi/Project/qlib/backtest/result/bt_v5_operator_preview_20261030",
+    "/Users/yuxianqi/Project/qlib/backtest/result/phase_s_regime",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s42"
+  ],
+  "delete_result_dirs": [],
+  "keep_mlruns_dirs": [
+    "/Users/yuxianqi/Project/qlib/mlruns/193294180634344660",
+    "/Users/yuxianqi/Project/qlib/mlruns/202999456416839429",
+    "/Users/yuxianqi/Project/qlib/mlruns/347176805538849999",
+    "/Users/yuxianqi/Project/qlib/mlruns/383955905181939329",
+    "/Users/yuxianqi/Project/qlib/mlruns/440511413852618761",
+    "/Users/yuxianqi/Project/qlib/mlruns/657807164385264418",
+    "/Users/yuxianqi/Project/qlib/mlruns/708236692900899016"
+  ],
+  "delete_mlruns_dirs": [
+    "/Users/yuxianqi/Project/qlib/mlruns/.trash"
+  ],
+  "warnings": [
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/bt_v5_cutover_audit",
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/bt_v5_operator_preview_20261030",
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/phase_s_regime"
+  ],
+  "errors": []
+}

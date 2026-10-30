@@ -110,6 +110,68 @@ def test_strategy_source_predictions_prove_five_seeds(tmp_path):
     assert record["official"]
 
 
+@pytest.mark.parametrize("kind", ["model", "strategy"])
+def test_portable_metrics_survive_original_result_cleanup(tmp_path, kind):
+    portable = "backtest/experiments/retained_metrics.json"
+    r = row("portable/baseline", kind, portable_eval_output=portable)
+    c = catalog(tmp_path, [r], [None])
+    path = write_json(tmp_path, portable, model_doc() if kind == "model" else strategy_doc())
+
+    record = c.snapshot()["records"][0]
+
+    assert record["source_status"] == "available"
+    assert record["source"] == portable
+    assert record["original_source"] == r["eval_output"]
+    key = "net_ann" if kind == "model" else "annualized_return"
+    assert record["metrics"][key] == (0.31 if kind == "model" else 0.26)
+    metrics_resource = next(resource for resource in record["resources"] if resource["kind"] == "metrics")
+    assert metrics_resource["available"]
+    assert c.resource(metrics_resource["id"]) == path
+
+
+def test_portable_metrics_take_precedence_over_original_result(tmp_path):
+    portable = "backtest/experiments/retained_metrics.json"
+    r = row("bt/portable", "strategy", portable_eval_output=portable)
+    original = strategy_doc()
+    original["ensemble"]["full_period"]["annualized_return"] = 0.01
+    c = catalog(tmp_path, [r], [original])
+    write_json(tmp_path, portable, strategy_doc())
+
+    record = c.snapshot()["records"][0]
+
+    assert record["metrics"]["annualized_return"] == 0.26
+    original_resource = next(resource for resource in record["resources"] if resource["kind"] == "original_metrics")
+    assert c.resource(original_resource["id"]) == tmp_path / r["eval_output"]
+
+
+@pytest.mark.parametrize("status", ["unsafe", "missing", "invalid"])
+def test_declared_portable_metrics_failure_does_not_silently_use_original(tmp_path, status):
+    portable = "../outside.json" if status == "unsafe" else "backtest/experiments/retained_metrics.json"
+    r = row("bt/portable", "strategy", portable_eval_output=portable)
+    c = catalog(tmp_path, [r], [strategy_doc()])
+    if status == "invalid":
+        write_json(tmp_path, portable, {}).write_text("{broken", encoding="utf-8")
+
+    record = c.snapshot()["records"][0]
+
+    assert record["source_status"] == status
+    assert record["source"] == portable
+    assert record["metrics"]["annualized_return"] is None
+    assert not record["official"]
+
+
+@pytest.mark.parametrize("portable", [None, "", []])
+def test_empty_declared_portable_source_does_not_hide_corrupt_metadata(tmp_path, portable):
+    r = row("bt/portable", "strategy", portable_eval_output=portable)
+    c = catalog(tmp_path, [r], [strategy_doc()])
+
+    record = c.snapshot()["records"][0]
+
+    assert record["source_status"] == "missing"
+    assert record["metrics"]["annualized_return"] is None
+    assert not record["official"]
+
+
 @pytest.mark.parametrize("declared,actual", [(SEEDS, [42]), ([42], SEEDS), (SEEDS, [])])
 def test_ensemble_field_alone_cannot_certify_five_seeds(tmp_path, declared, actual):
     c = catalog(tmp_path, [row(seeds=declared)], [model_doc(actual)])

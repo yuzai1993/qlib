@@ -17,7 +17,7 @@
 - 存量 `TopkDropoutStrategy` 配置（`csi1000_b6m_b2s_postclose`、`csi1000_b6m_b2s_postclose_real`、`csi300_topk10_live`）的行为**不得改变**；`tests/live_trading/` 全套必须继续通过。
 - `MAX_ORDER_QUANTITY = 100` 在本计划内**保持不动**（理由见「不在本计划内」一节）。写 bridge 代码时按它可能为 0 也可能为 100 来设计，测试里显式改成 0。
 - bridge 文件（`live_trading/qmt_strategy/qmt_signal_bridge.py`）运行在 QMT 内置 Python 3.6：**不得使用** f-string 之外的新语法（no walrus、no `dataclass`、no type hints、no `math.isqrt`）、**不得出现非 ASCII 字符**（文件头声明 gbk，ASCII 是其子集；中文注释会破坏两种编码下的一致性）。该文件里的注释一律写英文。
-- macOS 下禁止用 heredoc / stdin 运行会触发 Qlib 并行取数的代码（见 `.cursor/rules/qlib-shell-multiprocessing.mdc`）。Task 4 的 dry-run 与核对脚本必须落成真实 `.py` 文件再 `python <file>` 执行。
+- macOS 下禁止用 heredoc / stdin 运行会触发 Qlib 并行取数的代码（见 `docs/developer/qlib-shell-multiprocessing.md`）。Task 4 的 dry-run 与核对脚本必须落成真实 `.py` 文件再 `python <file>` 执行。
 - 固定 5 种子 `[42, 1000, 2000, 3000, 4000]`；时间划分 valid `2020-01-13~2021-07-15`、test `2021-07-16~2026-07-16`，禁止用 test 调参（本计划不训练模型，此约束仅约束不要拿 dry-run 结果去反向改参数）。
 
 ---

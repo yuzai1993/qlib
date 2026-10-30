@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -161,6 +162,43 @@ def test_collect_appends_v3_from_registry_and_marks_it_current():
     assert baselines[-1]["exp_id"] == "regime-adapt/m0-h20-rankices-v1"
     assert not any(b["current"] for b in baselines[:-1])
     assert [e["exp_id"] for e in experiments] == ["regime-adapt/m0-h1-t3h5es-v1"]
+
+
+def test_collect_uses_declared_portable_eval_without_original_result(tmp_path, monkeypatch):
+    monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
+    portable = tmp_path / "backtest/experiments/model_metrics/v4.json"
+    portable.parent.mkdir(parents=True)
+    portable.write_text(json.dumps(_eval_doc(ann=0.306, rank_ic=0.0878)))
+    row = {
+        "exp_id": "regime-adapt/m0-h20-rankices-v1",
+        "phase_m_protocol": "v1",
+        "baseline_version": "v4",
+        "eval_output": "backtest/result/removed/v4.json",
+        "portable_eval_output": str(portable.relative_to(tmp_path)),
+    }
+
+    baselines, _ = report.collect([row])
+    assert report.primary_cell(baselines[-1]["doc"])["net_ann"] == 0.306
+    assert report.official_rank_ic(baselines[-1]["doc"]) == 0.0878
+
+
+def test_collect_does_not_fallback_when_declared_portable_eval_is_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
+    original = tmp_path / "backtest/result/original/v4.json"
+    original.parent.mkdir(parents=True)
+    original.write_text(json.dumps(_eval_doc(ann=0.999)))
+    row = {
+        "exp_id": "regime-adapt/m0-h20-rankices-v1",
+        "phase_m_protocol": "v1",
+        "baseline_version": "v4",
+        "eval_output": str(original.relative_to(tmp_path)),
+        "portable_eval_output": "backtest/experiments/model_metrics/missing.json",
+    }
+
+    for declared in ["backtest/experiments/model_metrics/missing.json", "", None]:
+        row["portable_eval_output"] = declared
+        baselines, _ = report.collect([row])
+        assert baselines[-1]["doc"] is None
 
 
 def test_hub_experiments_are_records_with_detail_links():

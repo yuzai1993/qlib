@@ -8,7 +8,7 @@
 
 不可协商的要点：
 
-1. CSI1000 研究模型基线为 B6-M；研究策略基线为 B4-S（`topk=22,n_drop=2,hold_thresh=2,risk_degree=0.90`，见 `backtest/EXPERIMENT_STANDARD.md`）。CSI1000 实盘研究配置为 `live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml`（参数已切到 B4-S）。全A 当前观察实盘为 `alla_v4_ladder_k1h5_postclose_real`（30 万、risk_degree=1.0、top1×h5；生产根 `/Users/yuxianqi/Project/qlib`）；`alla_v4_ladder_k3h5_postclose_real` 保留待稳定后切换。Phase M v1（全A）当前模型基线为 **v4 · M0 H20 RankIC ES**（`regime-adapt/m0-h20-rankices-v1`；早停=评估窗 `daily_rank_ic`，不是 v1 的 499 天次日协议）。执行层回测基线为 **BT v5 · 历史模型 v2 M0 H20 ES × top5d1/hold1/f100**（`TopkDropoutStrategy` topk=5、n_drop=1、hold_thresh=1、force_sell_rank=100、risk_degree=0.90；`baseline/phase-m-v1-bt-v5`）。BT v5保留100万原费用和历史选型窗口；模型研究基线仍为v4。30万实盘适配仅离线准备，生产实盘尚未切换。CSI1000 每个方向表第一行为对应 baseline；Phase M v1 总报告是四块（历史 baseline 版本 / 分年 / 分风格 / 实验记录），第 1 块含全局 RankIC。CSI1000 Phase S 的 baseline 表须附邻域行（与上行同列，取轴向邻域各绝对指标 P25；不单独挂邻域 IR P25 列），晋升前必看。
+1. CSI1000 研究模型基线为 B6-M；研究策略基线为 B4-S（`topk=22,n_drop=2,hold_thresh=2,risk_degree=0.90`，见 `backtest/EXPERIMENT_STANDARD.md`）。CSI1000 实盘研究配置为 `live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml`（参数已切到 B4-S）。2026-10-30 起，Mac 当前生产配置为 `alla_v2_top5d1f100_postclose_real_active`（策略 ID `alla_v2_top5d1f100_postclose_real`；历史 v2 五种子、top5/drop1/hold1/f100、risk_degree=1.0；生产根 `/Users/yuxianqi/Project/qlib`），工作日 20:00 调度，平台监控端口 8090。旧 `alla_v4_ladder_k1h5_postclose_real`、预留 `alla_v4_ladder_k3h5_postclose_real` 与 CSI1000 配置保留作历史/回退，不能按活动配置调用；Windows 执行器启停另行核验。部署记录见 `live_trading/BT_V5_CUTOVER.md`。Phase M v1（全A）当前模型基线为 **v4 · M0 H20 RankIC ES**（`regime-adapt/m0-h20-rankices-v1`；早停=评估窗 `daily_rank_ic`，不是 v1 的 499 天次日协议）。执行层回测基线为 **BT v5 · 历史模型 v2 M0 H20 ES × top5d1/hold1/f100**（`TopkDropoutStrategy` topk=5、n_drop=1、hold_thresh=1、force_sell_rank=100、risk_degree=0.90；`baseline/phase-m-v1-bt-v5`）。BT v5 保留 100 万、risk_degree=0.90、原费用和历史选型窗口；模型研究基线仍为 v4，生产 Top5 的资金与 risk_degree=1.0 口径单独维护。CSI1000 每个方向表第一行为对应 baseline；Phase M v1 总报告是四块（历史 baseline 版本 / 分年 / 分风格 / 实验记录），第 1 块含全局 RankIC。CSI1000 Phase S 的 baseline 表须附邻域行（与上行同列，取轴向邻域各绝对指标 P25；不单独挂邻域 IR P25 列），晋升前必看。
 2. 模型与策略分开迭代：Phase M 只改模型（看 IC/RankIC），Phase S 只改策略（看扣费绝对收益夏普/年化/回撤，以及 Alpha/Beta/基准涨幅；晋升看邻域行绝对指标 P25，不是自身点复制）。
 3. 固定 5 种子 [42, 1000, 2000, 3000, 4000]；默认只在基线训练池（CSI1000）训练，在 3 个测试集（csi1000/csi300/csi500）上评估（全A 默认不测）；仅训练样本类实验才更换训练池。
 4. 时间划分固定：valid 2020-01-13~2021-07-15，test 2021-07-16~2026-07-16；禁止用 test 调参。
@@ -17,7 +17,8 @@
 
 ## 环境注意事项
 
-- macOS 下禁止用 heredoc/stdin 运行会触发 Qlib 并行取数的代码（详见 `.cursor/rules/qlib-shell-multiprocessing.mdc`）。
+- 平台研究源与必要研究原件统一在 `/Users/yuxianqi/Project/qlib`；旧 `qlib_exp` 工作区已移除。历史元数据中的旧路径只保留作来源审计，活动路径以 `backtest/experiments/repository_migration_20261030/manifest.json` 与实际配置为准。
+- macOS 下禁止用 heredoc/stdin 运行会触发 Qlib 并行取数的代码（详见 `docs/developer/qlib-shell-multiprocessing.md`）。
 - Python 解释器：`/opt/anaconda3/envs/qlib/bin/python`。
 
 ## Cursor Cloud specific instructions

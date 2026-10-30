@@ -79,13 +79,13 @@ Start-ScheduledTask -TaskName QlibClipboardRelayTop5
 
 查看 `D:\qmt_clipboard_top5\output\automation.status.json`、该目录下的会话result/log及 `output\state`。共享副本在 `D:\qmt_bridge\logs\clipboard`，终态回执和账户快照在 `D:\qmt_bridge\outbound`。`COMPLETE`表示回执与快照导出完成，不表示全部买单成交；逐笔核对实际状态和成交量。
 
-Mac本次只执行一次发布，原LaunchAgent保持停用。成交后可人工导入新版账本：
+Mac 已于 2026-10-30 启用新版配置的工作日 20:00 调度，执行 postclose→publish→evening，包含回执导入；旧策略已停调度。此前一次性发布是切换准备步骤，不能作为当前调度状态。需要人工补导入时使用新版账本：
 
 ```sh
 bash live_trading/run_import_cron.sh alla_v2_top5d1f100_postclose_real_active
 ```
 
-实际共享配置为 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，桥指向 `/Volumes/qmt_bridge`，与离线准备配置使用同一新策略账本及策略ID。以后人工调用wrapper时显式传这个配置ID，并以实际日期核对导入范围。本次一次性发布不启用自动调度；不要启动仍指向旧策略的默认wrapper。
+实际共享配置为 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，桥指向 `/Volumes/qmt_bridge`，与离线准备配置使用同一新策略账本及策略ID。人工调用 wrapper 时显式传这个配置 ID，并以实际日期核对导入范围。Mac 调度与 Windows relay/QMT 的启停分别管理；当前状态及部署证据见 `live_trading/BT_V5_CUTOVER.md`，Windows 执行器仍须现场核验。
 
 该配置的收益统计从新策略交接余额244607元开始，首份快照日为2026-10-30；基准起点为旧账本2026-10-29快照保存的中证全指收盘5070.46923828125。原始资本30万元和旧策略历史保留，不把此前损益当作新策略首日损益。
 

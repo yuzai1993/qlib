@@ -1,0 +1,54 @@
+{
+  "files_verified": 539,
+  "models_verified": 25,
+  "records": 36,
+  "available": 35,
+  "cleanup_errors": 0,
+  "current_model": [
+    "regime-adapt/m0-h20-rankices-v1"
+  ],
+  "current_strategy": [
+    "baseline/phase-m-v1-bt-v5"
+  ],
+  "before_health": {
+    "status": "ok",
+    "research_root": "/Users/yuxianqi/Project/qlib",
+    "monitor_mode": "direct-read-only",
+    "monitor_status": "ready",
+    "analysis_storage": "/Users/yuxianqi/.qlib/research_platform/analyses"
+  },
+  "new_research_root": "/Users/yuxianqi/Project/qlib",
+  "registration_method": "direct launchctl bootout/bootstrap after restoring service",
+  "platform_cutover_verified": true,
+  "health": {
+    "status": "ok",
+    "research_root": "/Users/yuxianqi/Project/qlib",
+    "monitor_mode": "direct-read-only",
+    "monitor_status": "ready",
+    "analysis_storage": "/Users/yuxianqi/.qlib/research_platform/analyses"
+  },
+  "old_worktree_allocated_kib": 30607652,
+  "scheduler_plist_unchanged": true,
+  "temporary_exclude_rules_removed": true,
+  "old_worktree_removed": true,
+  "git_dev_branch_preserved": true,
+  "free_space_delta_bytes": 31375708160,
+  "post_remove_health": {
+    "status": "ok",
+    "research_root": "/Users/yuxianqi/Project/qlib",
+    "monitor_mode": "direct-read-only",
+    "monitor_status": "ready",
+    "analysis_storage": "/Users/yuxianqi/.qlib/research_platform/analyses"
+  },
+  "known_missing_records": [
+    "regime-adapt/m0-h20es-densemble-s42-v1"
+  ],
+  "lifecycle_note": {
+    "initial_automatic_bootstrap_exit": 5,
+    "observed_unload_state": "SIGTERMed after bootout returned",
+    "recovery": "direct launchctl bootstrap restored service; staged bootout/bootstrap then completed source handoff",
+    "resolved": true
+  },
+  "targeted_python_tests_passed": 268,
+  "frontend_tests_passed": 45
+}

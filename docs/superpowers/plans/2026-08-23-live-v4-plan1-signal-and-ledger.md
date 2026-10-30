@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Python 解释器一律用 `/opt/anaconda3/envs/qlib/bin/python`，测试从仓库根目录运行。
-- macOS 下禁止用 heredoc / stdin 运行会触发 Qlib 并行取数的代码；此类验证必须写成 `.py` 文件再执行（见 `.cursor/rules/qlib-shell-multiprocessing.mdc`）。
+- macOS 下禁止用 heredoc / stdin 运行会触发 Qlib 并行取数的代码；此类验证必须写成 `.py` 文件再执行（见 `docs/developer/qlib-shell-multiprocessing.md`）。
 - 固定 5 种子 `[42, 1000, 2000, 3000, 4000]`。
 - BT v4 策略参数：`topk=3`、`horizon=5`、`risk_degree=0.90`、`only_tradable=false`、`forbid_all_trade_at_limit=false`。
 - 宇宙过滤四项固定为：`st_daily="scripts/data_collector/tushare/st_daily.csv"`、`min_amount=10_000_000`、`min_listing_days=60`、`min_recent_trading_days=60`、`pool="all"`。

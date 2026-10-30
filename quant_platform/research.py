@@ -283,7 +283,10 @@ class ResearchCatalog:
 
     def _record(self, row: dict, kind: str) -> dict:
         warnings: list[str] = []
-        doc, source_status = self._load(row.get("eval_output"), warnings)
+        # Registry-owned portable summaries survive cleanup of the original result.
+        # An explicitly declared but broken portable source must remain visible.
+        eval_source = row.get("portable_eval_output", row.get("eval_output"))
+        doc, source_status = self._load(eval_source, warnings)
         pool = str(row.get("eval_pool") or doc.get("pool") or "all")
         pool_doc = _dict(_dict(doc.get("pools")).get(pool))
         official_block = _dict(pool_doc.get("ensemble") if kind == "model" else doc.get("ensemble"))
@@ -386,7 +389,8 @@ class ResearchCatalog:
         resources = []
         refs = [
             (row.get("detail_report"), "report"),
-            (row.get("eval_output"), "metrics"),
+            (eval_source, "metrics"),
+            (row.get("eval_output") if eval_source != row.get("eval_output") else None, "original_metrics"),
             (row.get("paired_control_eval_output"), "paired_metrics"),
             (row.get("plan"), "plan"),
         ]
@@ -437,7 +441,8 @@ class ResearchCatalog:
             "promoted_from": row["promoted_from"] if isinstance(row.get("promoted_from"), str) else "",
             "warnings": warnings,
             "resources": resources,
-            "source": str(row.get("eval_output") or ""),
+            "source": str(eval_source or ""),
+            "original_source": str(row.get("eval_output") or ""),
         }
 
     def _comparison_key(

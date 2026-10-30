@@ -1,0 +1,679 @@
+{
+  "recommendations": {
+    "scope": "只读比对；未训练、回测、取数、删除、迁移或修改仓库。临时JSON/审查脚本写在/private/tmp。",
+    "must_preserve": [
+      {
+        "paths": [
+          "backtest/experiments/registry.jsonl",
+          "backtest/experiments/ic/",
+          "backtest/experiments/*_report.html",
+          "backtest/experiments/plans/"
+        ],
+        "reason": "主根保留BTv5晋升和portable字段；研究根追加9个独有ID；历史3个重复ID本来就存在，不自动去重或整文件覆盖。"
+      },
+      {
+        "paths": [
+          "backtest/result/20260731_030732_mh_rankic_es_lr010_s42",
+          "backtest/result/20260731_032149_mh_rankic_es_lr010_s1000",
+          "backtest/result/20260731_033541_mh_rankic_es_lr010_s2000",
+          "backtest/result/20260731_034838_mh_rankic_es_lr010_s3000",
+          "backtest/result/20260731_040103_mh_rankic_es_lr010_s4000",
+          "backtest/result/regimeadaptfast_m0h20_t5h5es_s42",
+          "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000",
+          "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000",
+          "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000",
+          "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000",
+          "backtest/result/regimeadaptfast_m0h20_rankices_s42",
+          "backtest/result/regimeadaptfast_m0h20_rankices_s1000",
+          "backtest/result/regimeadaptfast_m0h20_rankices_s2000",
+          "backtest/result/regimeadaptfast_m0h20_rankices_s3000",
+          "backtest/result/regimeadaptfast_m0h20_rankices_s4000",
+          "mlruns/193294180634344660",
+          "mlruns/202999456416839429",
+          "mlruns/383955905181939329",
+          "mlruns/657807164385264418",
+          "mlruns/708236692900899016"
+        ],
+        "reason": "B6-M、v4和BTv5历史v2三套完整五种子训练模型及链接元数据；主根只有可推理冻结/压缩副本，不能替代完整训练产物。"
+      },
+      {
+        "paths": [
+          "backtest/result/eval_regime_ablation/eval_densemble_s42_vs_v3.json",
+          "backtest/result/eval_regime_ablation/eval_densemble_s42_vs_v4.json",
+          "backtest/result/eval_regime_ablation/eval_densemble_vs_v3.json",
+          "backtest/result/eval_regime_ablation/eval_m0h20_rankices.json",
+          "backtest/result/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+          "backtest/result/eval_regime_m0_labels/eval_m0h20es_k123h2345.json",
+          "backtest/result/eval_regime_m0_t3h5es/eval_m0h1.json",
+          "backtest/result/eval_regime_m0_t3h5es/eval_m0h10.json",
+          "backtest/result/eval_regime_m0_t3h5es/eval_m0h20.json",
+          "backtest/result/eval_regime_m0_t3h5es/eval_m0h5.json",
+          "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json",
+          "backtest/result/phase_s_regime/all_ladder_k3h5_e20260830/m0h20rankices.json",
+          "backtest/result/phase_s_regime/all_ladder_k3h5f100/m0h20rankices.json",
+          "backtest/result/phase_s_regime/all_ladder_k3h5f100r/m0h20rankices.json",
+          "backtest/result/phase_s_regime/all_ladder_k5h5/m0h20es.json",
+          "backtest/result/phase_s_regime/all_top15d3f100/m0h20rankices.json",
+          "backtest/result/phase_s_regime/all_top25d5h5/m0h20es.json",
+          "backtest/result/phase_s_regime/all_top25d5h5f100/m0h20es.json",
+          "backtest/result/phase_s_regime/all_top3d1f100/m0h20rankices.json",
+          "backtest/result/phase_s_regime/all_top5d1/m0h20.json",
+          "backtest/result/phase_s_regime/all_top5d1/m0h20_before_fix.json",
+          "backtest/result/phase_s_regime/all_top5d1/m0h20es.json",
+          "backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json",
+          "backtest/result/phase_s_regime/all_top5d1f100/m0h20rankices.json",
+          "backtest/result/phase_s_regime/all_top5d1h5/m0h20es.json",
+          "backtest/result/phase_s_regime/all_top5d1h5f100/m0h20es.json"
+        ],
+        "bytes": 11513667,
+        "reason": "26个小JSON是模型/策略历史报告和平台数字的真实来源；总计远小于整个result。应持久化到experiments并更新portable来源，保留原路径作审计。"
+      },
+      {
+        "paths": [
+          "backtest/experiments/b6m_v4_extension_20261023/",
+          "backtest/experiments/b6m_v4_extension_20261023_report.html",
+          "backtest/experiments/b6m_v4_head_20261028/",
+          "backtest/experiments/b6m_v4_head_20261028_report.html",
+          "backtest/experiments/csi1000_2015_v4_20261027/",
+          "backtest/experiments/csi1000_2015_v4_report.html",
+          "backtest/experiments/csi1000_2015_v4_pool_20261027/",
+          "backtest/configs/train-data/csi1000-2015-v4/",
+          "backtest/configs/train-data/csi1000-2015-v4-pool-eval/"
+        ],
+        "reason": "最新独有研究摘要、模型哈希、配置、失败与清理记录。完成的CSI1000-2015五模型已因退步清理；pool变体仅3种子且registry仍running，不能误称五种子完成。"
+      }
+    ],
+    "recommended_archive": [
+      {
+        "paths": [
+          "backtest/experiments/bt_v4_extension_20261023/",
+          "backtest/experiments/bt_v4_top1h5_extension_20261023/"
+        ],
+        "reason": "联合归档：top1复用同级top3 inputs/cache/filtered_predictions；冻结20261023 cn_data快照43848文件/512.36MiB含ST/源码/模型与manifest，为当时精确复现凭证，不能仅凭当前共享行情重建。两目录本体共1438.16MiB。"
+      },
+      {
+        "paths": [
+          "docs/live_audit_20261016/",
+          "docs/live_status_20261019/",
+          "docs/style_review_20261017/",
+          "docs/style_review_20261024/"
+        ],
+        "reason": "仅研究根有的生产审计、冻结证据和风格分析共约262MiB；其中live_audit模型比较cache219.46MiB可从保留证据重建，原始DB/bridge快照需作为审计证据保留。"
+      },
+      {
+        "paths": [
+          "backtest/result/regimeadaptfast_m0h20_t3h5es_s{42,1000,2000,3000,4000}/",
+          "backtest/result/regimeadaptfast_m0h20_s{42,1000,2000,3000,4000}/"
+        ],
+        "reason": "历史v3/v1五种子训练元数据/模型，现行规范1.5明确写历史v3 session保留；若用户只保现基线也应先离线归档后再清理。"
+      }
+    ],
+    "rebuildable_after_prerequisites": [
+      {
+        "paths": [
+          "backtest/datasets/regime-adapt-cache/"
+        ],
+        "bytes": 18876653616,
+        "reason": "43个特征/标签/valid派生pickle，17.580GiB。producer=prepare_regime_train_chunks.py/build_regime_alt_labels.py/train_regime_arm.py。重建会消耗时间且当前行情有修订，不能保证历史bitwise一致；精确复现需冻结数据/版本。report_b6m_v4_extension.py:207与report_b6m_v4_head.py:165读取m0/year=2004.pkl的feature列，清理前先持久化列清单并解除报告生成器依赖。"
+      },
+      {
+        "paths": [
+          "mlruns/ (五个B6-M train recorder以外)"
+        ],
+        "bytes": 2777183109,
+        "reason": "30个均是backtest recorder，无trained_model；保存报告JSON/日收益/必要持仓订单后按保留规范处理。部分为B4-S正式比较锚点，需先确认对应bundle已持久化，不能直接本轮删除。"
+      },
+      {
+        "paths": [
+          "backtest/result/phase_s_regime/*/*_pred.pkl",
+          "backtest/result/*/external_pred.pkl"
+        ],
+        "reason": "相同官方预测有多份复制；抽验3个v4官方ensemble文件SHA完全一致，83,046,159 B/份。保留一份需要的冻结预测和manifest即可，不能按同尺寸认定所有重复。"
+      },
+      {
+        "paths": [
+          "backtest/result/csi1000_2015_v4_pool_20261027/train.pkl",
+          "backtest/result/csi1000_2015_v4_pool_20261027_s{42,1000,2000}/"
+        ],
+        "reason": "未完成pool实验451,541,040 B训练缓存+3模型，先记录为中断/待恢复或保留断点，再经授权选择恢复/清理；不自动补跑。"
+      }
+    ],
+    "migration_preconditions": [
+      "以主根v2.17标准和BTv5注册为权威，按字段合并9个exp独有ID，不回退portable_eval_output/current_bt。",
+      "保留全部小JSON/CSV和报告相对资源；主根目前14/36个Phase M v1/BT登记来源即使优先portable仍缺失。研究根38/40有源，另两条原本就缺失/未完成。",
+      "平台ResearchCatalog应优先portable_eval_output并给出实际来源resource；模型报告生成器也应支持持久化模型eval源。只跑报告构建/静态验证，禁止借迁移补训练或回测。",
+      "解除两个近期报告对year=2004.pkl的列名依赖；联合重定址top1/top3 snapshot运行配置provider_uri/benchmark/st_daily绝对qlib_exp路径，保留原manifest不篡改历史。",
+      "mlruns meta.yaml artifact_location和recorder artifact_uri为file:///.../qlib_exp，复制后须验证解析/受控重定址；result meta.config_path含同样绝对源路径。",
+      "平台research-root默认是qlib_exp；README命令有显式例子，已安装plist是否显式须以运行安装件为准。独立analyses存储~/.qlib/research_platform/analyses不在待删工作树，保留其source引用审计。切换应在数据就位与平台/报告验证后另行授权。",
+      "全局清理器当前preflight明确报B4-S test matrix incomplete和result_dir missing csi1000/csi300/csi500；禁止--apply，先修metadata/保留schema并复核dry-run。"
+    ],
+    "symlinks": {
+      "scanned_areas": [
+        "backtest/datasets",
+        "backtest/result",
+        "mlruns",
+        "backtest/experiments",
+        "docs",
+        "backtest/models/baselines",
+        "live_trading/models"
+      ],
+      "found": 0,
+      "scope": "各研究产物目录完整遍历，未追随符号链接；不等于全仓/外部存储扫描"
+    },
+    "selected_prediction_duplicate_hashes": [
+      {
+        "path": "backtest/result/20260822_233132_phase_s_m0h20rankices_all_ladder_k3h5_ensemble/external_pred.pkl",
+        "bytes": 83046159,
+        "sha256": "46b62e46bb0a882f3d412f27fcaa7f45ab5d0c53416c079d875471d798ac2da8"
+      },
+      {
+        "path": "backtest/result/phase_s_regime/preds/m0h20rankices_ensemble_pred.pkl",
+        "bytes": 83046159,
+        "sha256": "46b62e46bb0a882f3d412f27fcaa7f45ab5d0c53416c079d875471d798ac2da8"
+      },
+      {
+        "path": "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices_ensemble_pred.pkl",
+        "bytes": 83046159,
+        "sha256": "46b62e46bb0a882f3d412f27fcaa7f45ab5d0c53416c079d875471d798ac2da8"
+      }
+    ],
+    "portable_numeric_validation": [
+      {
+        "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+        "original": "backtest/result/phase_s_regime/all_ladder_k3h5f100r/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_ladder_k3h5f100r_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+        "original": "backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1f100_m0h20es.json",
+        "official_full_years_regimes_equal": false,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+        "original": "backtest/result/phase_s_regime/all_top3d1f100/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top3d1f100_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+        "original": "backtest/result/phase_s_regime/all_top15d3f100/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top15d3f100_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+        "original": "backtest/result/phase_s_regime/all_top5d1f100/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1f100_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "baseline/phase-m-v1-bt-v2",
+        "original": "backtest/result/phase_s_regime/all_top5d1/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1_m0h20es.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "baseline/phase-m-v1-bt-v3",
+        "original": "backtest/result/phase_s_regime/all_top5d1h5f100/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1h5f100_m0h20es.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+        "original": "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_ladder_k3h5_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "baseline/phase-m-v1-bt-v1",
+        "original": "backtest/result/phase_s_regime/all_top5d1/m0h20.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1_m0h20.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "baseline/phase-m-v1-bt-v4",
+        "original": "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_ladder_k3h5_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+        "original": "backtest/result/phase_s_regime/all_ladder_k5h5/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_ladder_k5h5_m0h20es.json",
+        "official_full_years_regimes_equal": false,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+        "original": "backtest/result/phase_s_regime/all_top25d5h5f100/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top25d5h5f100_m0h20es.json",
+        "official_full_years_regimes_equal": false,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+        "original": "backtest/result/phase_s_regime/all_top25d5h5/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top25d5h5_m0h20es.json",
+        "official_full_years_regimes_equal": false,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+        "original": "backtest/result/phase_s_regime/all_top5d1h5/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1h5_m0h20es.json",
+        "official_full_years_regimes_equal": false,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+        "original": "backtest/result/phase_s_regime/all_ladder_k3h5_e20260830/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_ladder_k3h5_e20260830_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20es-all-top5d1-bt",
+        "original": "backtest/result/phase_s_regime/all_top5d1/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1_m0h20es.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+        "original": "backtest/result/phase_s_regime/all_top5d1h5f100/m0h20es.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_top5d1h5f100_m0h20es.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      },
+      {
+        "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+        "original": "backtest/result/phase_s_regime/all_ladder_k3h5f100/m0h20rankices.json",
+        "portable": "backtest/experiments/phase_m_v1_bt_metrics/all_ladder_k3h5f100_m0h20rankices.json",
+        "official_full_years_regimes_equal": true,
+        "existing_official_values_preserved": true,
+        "existing_value_differences": [],
+        "note": "Portable may add previously absent regime slices; strict object equality can therefore be false even with every pre-existing value preserved."
+      }
+    ],
+    "minimum_baselines": {
+      "paths": [
+        "backtest/result/20260731_030732_mh_rankic_es_lr010_s42",
+        "backtest/result/20260731_032149_mh_rankic_es_lr010_s1000",
+        "backtest/result/20260731_033541_mh_rankic_es_lr010_s2000",
+        "backtest/result/20260731_034838_mh_rankic_es_lr010_s3000",
+        "backtest/result/20260731_040103_mh_rankic_es_lr010_s4000",
+        "backtest/result/regimeadaptfast_m0h20_t5h5es_s42",
+        "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000",
+        "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000",
+        "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000",
+        "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000",
+        "backtest/result/regimeadaptfast_m0h20_rankices_s42",
+        "backtest/result/regimeadaptfast_m0h20_rankices_s1000",
+        "backtest/result/regimeadaptfast_m0h20_rankices_s2000",
+        "backtest/result/regimeadaptfast_m0h20_rankices_s3000",
+        "backtest/result/regimeadaptfast_m0h20_rankices_s4000",
+        "backtest/result/regimeadaptfast_m0h20_t3h5es_s1000",
+        "backtest/result/regimeadaptfast_m0h20_t3h5es_s4000",
+        "backtest/result/regimeadaptfast_m0h20_t3h5es_s3000",
+        "backtest/result/regimeadaptfast_m0h20_t3h5es_s2000",
+        "backtest/result/regimeadaptfast_m0h20_t3h5es_s42",
+        "mlruns/193294180634344660",
+        "mlruns/202999456416839429",
+        "mlruns/383955905181939329",
+        "mlruns/657807164385264418",
+        "mlruns/708236692900899016"
+      ],
+      "bytes": 917812806,
+      "mib": 875.2945003509521,
+      "seed_groups": "B6-M,v4,历史v2(BTv5),历史v3，各完整5种子",
+      "note": "B6-M五session仅26,521 B，trained_model与训练记录另在五个指定mlruns；不复制全部mlruns。历史v1另7,274,194 B建议一起归档。"
+    },
+    "portable_validation_summary": {
+      "count": 18,
+      "all_existing_values_preserved": true
+    }
+  },
+  "registry_exp_only_ids": [
+    "live-audit/frozen-live-models-20261016",
+    "model-reeval/b6m-v4-all-top3-h5-20261028",
+    "train-data/csi1000-2015-v4-execution",
+    "model-reeval/b6m-v4-all-top3-h5-extension-20261023",
+    "model-reeval/b6m-v4-ladder-k3h5-extension-20261023",
+    "regime-adapt/m0h20rankices-all-ladder-k3h5-e20261023-bt",
+    "train-data/csi1000-2015-v4",
+    "regime-adapt/m0h20rankices-all-ladder-k1h5-e20261023-bt",
+    "train-data/csi1000-2015-v4-eval-csi1000"
+  ],
+  "registry_main_only_ids": [
+    "diag/bt-v5-300k-current-cost-20261029",
+    "baseline/phase-m-v1-bt-v5",
+    "diag/bt-v5-300k-risk1-current-cost-20261029",
+    "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1"
+  ],
+  "frozen_hash_comparison": [
+    {
+      "path": "backtest/models/baselines/b6-m/manifest.json",
+      "exp_sha256": "9aa8479902a54290f1dd764e709fdce98f8acf64982579bba04a50f721cd30a7",
+      "main_sha256": "9aa8479902a54290f1dd764e709fdce98f8acf64982579bba04a50f721cd30a7",
+      "bytes": 1027
+    },
+    {
+      "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+      "exp_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "main_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "bytes": 3391157
+    },
+    {
+      "path": "backtest/models/baselines/b1-m/manifest.json",
+      "exp_sha256": "28d7bdaf3b7d1c4dafeab4aa2917ce1a865ea4ad667b2b75e92c3e6fa9cb2f2e",
+      "main_sha256": "28d7bdaf3b7d1c4dafeab4aa2917ce1a865ea4ad667b2b75e92c3e6fa9cb2f2e",
+      "bytes": 1127
+    },
+    {
+      "path": "backtest/models/baselines/b1-m/seed2000/trained_model",
+      "exp_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "main_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "bytes": 121245
+    },
+    {
+      "path": "live_trading/models/b6_m/seed4000/trained_model",
+      "exp_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "main_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "bytes": 3391157
+    },
+    {
+      "path": "live_trading/models/b6_m/seed4000/manifest.json",
+      "exp_sha256": "6354af2220b80624d2742e3c4f7812f4f6a46fc476a8e18f92f758eddf46e1b8",
+      "main_sha256": "6354af2220b80624d2742e3c4f7812f4f6a46fc476a8e18f92f758eddf46e1b8",
+      "bytes": 1371
+    },
+    {
+      "path": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/metadata.json",
+      "exp_sha256": "cc87b3f7db6aaa4d8ffed0cd6436532942e4acf8926d296af4a065e6ee06e981",
+      "main_sha256": "cc87b3f7db6aaa4d8ffed0cd6436532942e4acf8926d296af4a065e6ee06e981",
+      "bytes": 789
+    },
+    {
+      "path": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model",
+      "exp_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "main_sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+      "bytes": 121245
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s4000/trained_model",
+      "exp_sha256": "ff795a6fe4500e0e2affc9c8aa14be603173290a93ee3b04fc91907796ff5525",
+      "main_sha256": "ff795a6fe4500e0e2affc9c8aa14be603173290a93ee3b04fc91907796ff5525",
+      "bytes": 2068678
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s1000/trained_model",
+      "exp_sha256": "38f9dea415b528916105a6f472adf9b1ff3032fca92250c4d66db0323f5acdbc",
+      "main_sha256": "38f9dea415b528916105a6f472adf9b1ff3032fca92250c4d66db0323f5acdbc",
+      "bytes": 1644041
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s42/trained_model",
+      "exp_sha256": "3c75ee96fb8868d1200145b97141529b8852a204c6f4615d321a93da71368ecd",
+      "main_sha256": "3c75ee96fb8868d1200145b97141529b8852a204c6f4615d321a93da71368ecd",
+      "bytes": 1347896
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s2000/trained_model",
+      "exp_sha256": "ff605722c4beece2cfa38324c0e3480c0fbb96fcfc35774a2838f39c4e131729",
+      "main_sha256": "ff605722c4beece2cfa38324c0e3480c0fbb96fcfc35774a2838f39c4e131729",
+      "bytes": 1740025
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s3000/trained_model",
+      "exp_sha256": "75d8f5a38ce13683a7f75760b220e678ecb9c055d93be2bb83df4edcc636b260",
+      "main_sha256": "75d8f5a38ce13683a7f75760b220e678ecb9c055d93be2bb83df4edcc636b260",
+      "bytes": 1729741
+    }
+  ],
+  "baseline_models": {
+    "baseline/b6-m": [
+      {
+        "session": "backtest/result/20260731_030732_mh_rankic_es_lr010_s42",
+        "exists": true,
+        "train_artifacts": "mlruns/202999456416839429/9966f7ef94a04d4ab2912c1e6222fee5",
+        "trained_model": "mlruns/202999456416839429/9966f7ef94a04d4ab2912c1e6222fee5/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 3447167,
+        "model_sha256": "0a4137827e02e0aefc0a7d797d9070104a01cd9efdd69ed6a0cdc1b57c704e5b"
+      },
+      {
+        "session": "backtest/result/20260731_032149_mh_rankic_es_lr010_s1000",
+        "exists": true,
+        "train_artifacts": "mlruns/193294180634344660/7d7f015532a1443b930af4060334a1ba",
+        "trained_model": "mlruns/193294180634344660/7d7f015532a1443b930af4060334a1ba/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 3333437,
+        "model_sha256": "bc21adac1c1ca1ee99ae0b7344944f708a5a382a47fe2498deb4ebe05db1bd87"
+      },
+      {
+        "session": "backtest/result/20260731_033541_mh_rankic_es_lr010_s2000",
+        "exists": true,
+        "train_artifacts": "mlruns/708236692900899016/79f9d553476842248cbfaf66a56525bb",
+        "trained_model": "mlruns/708236692900899016/79f9d553476842248cbfaf66a56525bb/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 4275901,
+        "model_sha256": "9f3039413dbf74553421495b223a7c46b60ee67308b4cea187fd4c18d0d57694"
+      },
+      {
+        "session": "backtest/result/20260731_034838_mh_rankic_es_lr010_s3000",
+        "exists": true,
+        "train_artifacts": "mlruns/383955905181939329/b4cba1ce8ea1430382a51b0e6f867d32",
+        "trained_model": "mlruns/383955905181939329/b4cba1ce8ea1430382a51b0e6f867d32/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 3563416,
+        "model_sha256": "a13b958056aedcbbf966bf59c2372650d75eeb46c5c88b2cf4f5767dee119e66"
+      },
+      {
+        "session": "backtest/result/20260731_040103_mh_rankic_es_lr010_s4000",
+        "exists": true,
+        "train_artifacts": "mlruns/657807164385264418/6c0d30716b31441887bb4d16593414b9",
+        "trained_model": "mlruns/657807164385264418/6c0d30716b31441887bb4d16593414b9/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 3391157,
+        "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325"
+      }
+    ],
+    "regime-adapt/m0-h20-t5h5-es-v1": [
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 59420562,
+        "model_sha256": "f9dd882f4d51bf9b22765dc3c2a12f9557eb1495c360a7cc1f4d51500df159d0"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 59858749,
+        "model_sha256": "11ef36f8cc3471d63b4e20347bbccfcf88a581921be75c886b5b23bd569fdd5c"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 59520498,
+        "model_sha256": "e9dc7e206949a7586fe281e6d9dd8381ca53a1082dd808f09c1e58b9adad9a27"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 59768134,
+        "model_sha256": "0b99b0ea4404b94621c86e0ed63a3c42a2257ced673d37cdd3f28e97cdda7092"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 59607205,
+        "model_sha256": "e0149f18d70e6c44b9023644513a563d13eafd42df49c20f62b0f9ad198ecf4c"
+      }
+    ],
+    "regime-adapt/m0-h20-rankices-v1": [
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_rankices_s42",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_rankices_s42/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_rankices_s42/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 60101899,
+        "model_sha256": "e194b5a1854a64a271b6db3463ed63bf72e98e871867496200afd4307f26cef3"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_rankices_s1000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_rankices_s1000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_rankices_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 60398044,
+        "model_sha256": "959b649b607a3e9631b3d37bcb49f0ab9f728abbd7e5a59228f5874e0183b7c8"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_rankices_s2000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_rankices_s2000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_rankices_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 60494028,
+        "model_sha256": "9f70677e8afbaa967e301f83385baf98874dfa669fc0493b062cd99aa482ef5d"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_rankices_s3000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_rankices_s3000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_rankices_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 60483744,
+        "model_sha256": "3e3efa98ef643b20fa3f7861bc5ab81914e92d4de898aa813e61675a43ebd40b"
+      },
+      {
+        "session": "backtest/result/regimeadaptfast_m0h20_rankices_s4000",
+        "exists": true,
+        "train_artifacts": "backtest/result/regimeadaptfast_m0h20_rankices_s4000/run_01/artifacts_root",
+        "trained_model": "backtest/result/regimeadaptfast_m0h20_rankices_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "model_exists": true,
+        "model_bytes": 60822681,
+        "model_sha256": "a45a41d2dffe3a64b034a94991ebb8b26d4545f7424860a161eec6c73920f135"
+      }
+    ]
+  },
+  "mlruns_train_recorders": [
+    {
+      "id": "193294180634344660",
+      "name": "train_20260731_032149_mh_rankic_es_lr010_s1000_run01",
+      "bytes": 3467343,
+      "models": [
+        {
+          "path": "mlruns/193294180634344660/7d7f015532a1443b930af4060334a1ba/artifacts/trained_model",
+          "bytes": 3333437
+        }
+      ]
+    },
+    {
+      "id": "202999456416839429",
+      "name": "train_20260731_030732_mh_rankic_es_lr010_s42_run01",
+      "bytes": 3581067,
+      "models": [
+        {
+          "path": "mlruns/202999456416839429/9966f7ef94a04d4ab2912c1e6222fee5/artifacts/trained_model",
+          "bytes": 3447167
+        }
+      ]
+    },
+    {
+      "id": "383955905181939329",
+      "name": "train_20260731_034838_mh_rankic_es_lr010_s3000_run01",
+      "bytes": 3697322,
+      "models": [
+        {
+          "path": "mlruns/383955905181939329/b4cba1ce8ea1430382a51b0e6f867d32/artifacts/trained_model",
+          "bytes": 3563416
+        }
+      ]
+    },
+    {
+      "id": "657807164385264418",
+      "name": "train_20260731_040103_mh_rankic_es_lr010_s4000_run01",
+      "bytes": 3525063,
+      "models": [
+        {
+          "path": "mlruns/657807164385264418/6c0d30716b31441887bb4d16593414b9/artifacts/trained_model",
+          "bytes": 3391157
+        }
+      ]
+    },
+    {
+      "id": "708236692900899016",
+      "name": "train_20260731_033541_mh_rankic_es_lr010_s2000_run01",
+      "bytes": 4409807,
+      "models": [
+        {
+          "path": "mlruns/708236692900899016/79f9d553476842248cbfaf66a56525bb/artifacts/trained_model",
+          "bytes": 4275901
+        }
+      ]
+    }
+  ]
+}

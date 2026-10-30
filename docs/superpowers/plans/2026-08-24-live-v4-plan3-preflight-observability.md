@@ -16,7 +16,7 @@
 - 失败关闭优先于可用性：新增门禁拿不到证据时报 CRIT，不得静默通过。
 - QMT bridge 单文件（`live_trading/qmt_strategy/qmt_signal_bridge.py`）保持无第三方依赖、Python 2/3 兼容写法（不用 f-string、不用 `dataclass`）。
 - 每个任务独立提交，提交信息用英文，遵循仓库现有风格（`fix:` / `feat:` / `docs:`）。
-- 运行测试固定用 `/opt/anaconda3/envs/qlib/bin/python -m pytest`。macOS 下禁止用 heredoc/stdin 跑会触发 Qlib 并行取数的代码（见 `.cursor/rules/qlib-shell-multiprocessing.mdc`）。
+- 运行测试固定用 `/opt/anaconda3/envs/qlib/bin/python -m pytest`。macOS 下禁止用 heredoc/stdin 跑会触发 Qlib 并行取数的代码（见 `docs/developer/qlib-shell-multiprocessing.md`）。
 
 ## 前置事实（已核准，实施时不必重查）
 
@@ -1578,7 +1578,7 @@ cd /Users/yuxianqi/Project/qlib_exp && \
 BT v4 产物；找不到就在提交信息里注明该前提。
 
 > macOS 注意：本脚本会触发 Qlib 并行取数，**必须**以文件形式运行，不能用
-> heredoc/stdin（见 `.cursor/rules/qlib-shell-multiprocessing.mdc`）。
+> heredoc/stdin（见 `docs/developer/qlib-shell-multiprocessing.md`）。
 
 - [x] **Step 3: 把实测数字写回 spec**
 

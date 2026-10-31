@@ -1,0 +1,304 @@
+{
+  "raw_records_unchanged": 23,
+  "benchmarks_unchanged": 9,
+  "strategy_history": [
+    {
+      "id": "baseline/phase-m-v1-bt-v1",
+      "strategy_history": {
+        "promotions": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v1",
+            "version": "v1",
+            "display_version": "s1",
+            "label": "Top5换1·持1",
+            "current": false,
+            "scope": "experiment_history",
+            "is_control": false
+          }
+        ],
+        "baseline": {
+          "ref": "",
+          "version": "",
+          "display_version": "",
+          "label": "初始基线",
+          "initial": true,
+          "scope": "historical",
+          "available": true
+        },
+        "historical_baselines": []
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+      "strategy_history": {
+        "promotions": [],
+        "baseline": {
+          "ref": "baseline/phase-m-v1-bt-v2",
+          "version": "v2",
+          "display_version": "s2",
+          "label": "Top5换1·持1",
+          "initial": false,
+          "scope": "historical",
+          "available": true
+        },
+        "historical_baselines": []
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+      "strategy_history": {
+        "promotions": [],
+        "baseline": {
+          "ref": "baseline/phase-m-v1-bt-v4",
+          "version": "v4",
+          "display_version": "s4",
+          "label": "阶梯3×5日",
+          "initial": false,
+          "scope": "historical",
+          "available": true
+        },
+        "historical_baselines": []
+      }
+    },
+    {
+      "id": "strategy-group/v2-top25-force100",
+      "strategy_history": {
+        "promotions": [],
+        "baseline": {
+          "ref": "regime-adapt/m0h20es-all-top25d5h5-bt",
+          "version": "",
+          "display_version": "",
+          "label": "不强制F100",
+          "initial": false,
+          "scope": "group_control",
+          "available": true
+        },
+        "historical_baselines": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v2",
+            "version": "v2",
+            "display_version": "s2",
+            "label": "Top5换1·持1",
+            "available": true,
+            "member_refs": [
+              "regime-adapt/m0h20es-all-top25d5h5-bt",
+              "regime-adapt/m0h20es-all-top25d5h5f100-bt"
+            ],
+            "member_labels": [
+              "不强制F100",
+              "F100"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "strategy-group/v2-top5-300k-risk",
+      "strategy_history": {
+        "promotions": [],
+        "baseline": {
+          "ref": "diag/bt-v5-300k-current-cost-20261029",
+          "version": "",
+          "display_version": "",
+          "label": "risk 0.90",
+          "initial": false,
+          "scope": "group_control",
+          "available": true
+        },
+        "historical_baselines": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v5",
+            "version": "v5",
+            "display_version": "s5",
+            "label": "Top5换1·持1·F100",
+            "available": true,
+            "member_refs": [
+              "diag/bt-v5-300k-current-cost-20261029",
+              "diag/bt-v5-300k-risk1-current-cost-20261029"
+            ],
+            "member_labels": [
+              "risk 0.90",
+              "risk 1.00"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "strategy-group/v2-top5-hold-force100",
+      "strategy_history": {
+        "promotions": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v2",
+            "version": "v2",
+            "display_version": "s2",
+            "label": "持1 · 不强制F100",
+            "current": false,
+            "scope": "member_history",
+            "is_control": true
+          },
+          {
+            "ref": "baseline/phase-m-v1-bt-v3",
+            "version": "v3",
+            "display_version": "s3",
+            "label": "持5 · F100",
+            "current": false,
+            "scope": "member_history",
+            "is_control": false
+          },
+          {
+            "ref": "baseline/phase-m-v1-bt-v5",
+            "version": "v5",
+            "display_version": "s5",
+            "label": "持1 · F100",
+            "current": true,
+            "scope": "member_history",
+            "is_control": false
+          }
+        ],
+        "baseline": {
+          "ref": "baseline/phase-m-v1-bt-v2",
+          "version": "v2",
+          "display_version": "s2",
+          "label": "持1 · 不强制F100",
+          "initial": false,
+          "scope": "group_control",
+          "available": true
+        },
+        "historical_baselines": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v1",
+            "version": "v1",
+            "display_version": "s1",
+            "label": "Top5换1·持1",
+            "available": true,
+            "member_refs": [
+              "baseline/phase-m-v1-bt-v2"
+            ],
+            "member_labels": [
+              "持1 · 不强制F100"
+            ]
+          },
+          {
+            "ref": "baseline/phase-m-v1-bt-v3",
+            "version": "v3",
+            "display_version": "s3",
+            "label": "Top5换1·持5·F100",
+            "available": true,
+            "member_refs": [
+              "regime-adapt/m0h20es-all-top5d1h5-bt"
+            ],
+            "member_labels": [
+              "持5 · 不强制F100"
+            ]
+          },
+          {
+            "ref": "baseline/phase-m-v1-bt-v4",
+            "version": "v4",
+            "display_version": "s4",
+            "label": "阶梯3×5日",
+            "available": true,
+            "member_refs": [
+              "baseline/phase-m-v1-bt-v5"
+            ],
+            "member_labels": [
+              "持1 · F100"
+            ]
+          },
+          {
+            "ref": "baseline/phase-m-v1-bt-v2",
+            "version": "v2",
+            "display_version": "s2",
+            "label": "Top5换1·持1",
+            "available": true,
+            "member_refs": [
+              "baseline/phase-m-v1-bt-v3"
+            ],
+            "member_labels": [
+              "持5 · F100"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "strategy-group/v4-cohort-force100-refill",
+      "strategy_history": {
+        "promotions": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v4",
+            "version": "v4",
+            "display_version": "s4",
+            "label": "不强制F100",
+            "current": false,
+            "scope": "member_history",
+            "is_control": true
+          }
+        ],
+        "baseline": {
+          "ref": "baseline/phase-m-v1-bt-v4",
+          "version": "v4",
+          "display_version": "s4",
+          "label": "不强制F100",
+          "initial": false,
+          "scope": "group_control",
+          "available": true
+        },
+        "historical_baselines": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v3",
+            "version": "v3",
+            "display_version": "s3",
+            "label": "Top5换1·持5·F100",
+            "available": true,
+            "member_refs": [
+              "baseline/phase-m-v1-bt-v4",
+              "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+              "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt"
+            ],
+            "member_labels": [
+              "不强制F100",
+              "F100 · 不补位",
+              "F100 · 补新票"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "strategy-group/v4-topk-drop-grid",
+      "strategy_history": {
+        "promotions": [],
+        "baseline": {
+          "ref": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+          "version": "",
+          "display_version": "",
+          "label": "Top3 · 换1",
+          "initial": false,
+          "scope": "group_control",
+          "available": true
+        },
+        "historical_baselines": [
+          {
+            "ref": "baseline/phase-m-v1-bt-v4",
+            "version": "v4",
+            "display_version": "s4",
+            "label": "阶梯3×5日",
+            "available": true,
+            "member_refs": [
+              "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+              "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+              "regime-adapt/m0h20rankices-all-top15d3f100-bt"
+            ],
+            "member_labels": [
+              "Top3 · 换1",
+              "Top5 · 换1",
+              "Top15 · 换3"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "warnings": []
+}

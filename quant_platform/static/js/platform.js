@@ -92,12 +92,12 @@
     }
     function exportResearch(){
         const rows=visibleRecords(),strategy=state.kind==='strategy';
-        const contentColumns=strategy?['模型版本','模型简称','策略简称','策略描述']:['实验内容','Baseline'];
-        const data=state.module==='records'?[['日期','实验 ID',...(strategy?[]:['实验类型']),...contentColumns,'结论','结论来源','备注','报告链接',strategy?'晋升版本':'Benchmark版本','状态'],...rows.map(r=>{
+        const contentColumns=strategy?['模型版本','模型简称','策略简称','策略描述','Baseline','对照范围','历史登记Baseline']:['实验内容','Baseline'];
+        const data=state.module==='records'?[['日期','实验 ID',...(strategy?[]:['实验类型']),...contentColumns,'结论','结论来源','备注','报告链接',strategy?'晋升策略版本':'Benchmark版本',...(strategy?['晋升对应参数']:[]),'状态'],...rows.map(r=>{
             const s=R.historySummary(r),links=(r.resources||[]).filter(resource=>resource.kind==='report'&&resource.available).map(resource=>'/api/resources/'+encodeURIComponent(resource.id)).join('\n');
-            const short=R.strategyHistorySummary(r),model=R.modelHistorySummary(r),identity=strategy?
-                [short.modelVersion||'未登记',short.modelName||'未登记模型',short.strategyName,short.strategyDescription]:[model.changeDescription,model.baselineLabel];
-            return [s.date,r.id,...(strategy?[]:[R.experimentType(r).label]),...identity,s.conclusion,s.conclusionSource==='analysis'?'人工分析':s.conclusionSource==='registry'?'原登记结论':'',s.note,links,s.promotion,s.status];
+            const short=R.strategyHistorySummary(r),model=R.modelHistorySummary(r),annotation=strategy?R.strategyHistoryAnnotations(r):null,identity=strategy?
+                [short.modelVersion||'未登记',short.modelName||'未登记模型',short.strategyName,short.strategyDescription,annotation.baselineLabel,annotation.baselineScopeLabel,annotation.historicalLabel]:[model.changeDescription,model.baselineLabel];
+            return [s.date,r.id,...(strategy?[]:[R.experimentType(r).label]),...identity,s.conclusion,s.conclusionSource==='analysis'?'人工分析':s.conclusionSource==='registry'?'原登记结论':'',s.note,links,strategy?annotation.promotionLabel||'未晋升':s.promotion,...(strategy?[annotation.promotionParameters]:[]),s.status];
         })]:R.metricCsvRows(currentMetricTables());
         download(`qlib-${state.track}-${state.kind}-${state.module}-${state.view}.csv`,H.csv(data));toast(`已导出 ${rows.length} 条记录（指标为原始数值）`);
     }
@@ -170,17 +170,26 @@
     function renderExperimentTable(token){
         const rows=visibleRecords(),strategy=state.kind==='strategy';
         const contentHeaders=strategy?'<th>模型</th><th>策略</th>':'<th>实验类型</th><th>实验内容</th>';
-        let html=rows.length?'<div class="table-wrap"><table class="experiment-history"><thead><tr><th>日期</th>'+contentHeaders+'<th>结论</th><th>报告链接</th><th>'+(strategy?'晋升版本':'Benchmark版本')+'</th></tr></thead><tbody>'+rows.map(r=>{
+        let html=rows.length?'<div class="table-wrap"><table class="experiment-history"><thead><tr><th>日期</th>'+contentHeaders+'<th>结论</th><th>报告链接</th><th>'+(strategy?'晋升策略版本':'Benchmark版本')+'</th></tr></thead><tbody>'+rows.map(r=>{
             const s=R.historySummary(r);
-            const short=R.strategyHistorySummary(r),model=R.modelHistorySummary(r),content=strategy?
-                `<td class="history-model">${esc(short.modelLabel)}</td><td class="history-strategy"><button class="record-name" data-detail="${esc(r.id)}">${esc(short.strategyName)}</button>${short.strategyDescription?`<div class="history-description">${esc(short.strategyDescription)}</div>`:''}</td>`:
+            const short=R.strategyHistorySummary(r),model=R.modelHistorySummary(r),annotation=strategy?R.strategyHistoryAnnotations(r):null,content=strategy?
+                `<td class="history-model">${esc(short.modelLabel)}</td><td class="history-strategy"><button class="record-name" data-detail="${esc(r.id)}">${esc(short.strategyName)}</button>${short.strategyDescription?`<div class="history-description">${esc(short.strategyDescription)}</div>`:''}<div class="history-baseline" data-strategy-baseline>${annotation.group?'组内 ':''}Baseline：${esc(annotation.baselineLabel)}</div></td>`:
                 `<td class="history-content"><button class="record-name" data-detail="${esc(r.id)}">${esc(s.name)}</button><div class="history-description">${esc(model.changeDescription)}</div><div class="card-sub">Baseline：${esc(model.baselineLabel)}</div></td>`;
-            return `<tr><td>${esc(s.date)}<div>${statusBadge(r)}</div></td>${strategy?'':`<td>${esc(R.experimentType(r).label)}</td>`}${content}<td class="history-conclusion">${conclusionCell(r,s)}</td><td class="history-reports">${R.reportLinks(r)}<div><button class="text-button" data-detail="${esc(r.id)}">查看实验详情 →</button></div></td><td>${s.promotion?`<span class="badge badge-baseline">${s.benchmarkOutputs.length?'产出':'晋升'} ${esc(s.promotion)}</span>`:'—'}${r.current?' <span class="badge badge-current">当前</span>':''}</td></tr>`;
+            const promotion=strategy?strategyPromotionBadges(annotation):`${s.promotion?`<span class="badge badge-baseline">${s.benchmarkOutputs.length?'产出':'晋升'} ${esc(s.promotion)}</span>`:'—'}${r.current?' <span class="badge badge-current">当前</span>':''}`;
+            return `<tr><td>${esc(s.date)}<div>${statusBadge(r)}</div></td>${strategy?'':`<td>${esc(R.experimentType(r).label)}</td>`}${content}<td class="history-conclusion">${conclusionCell(r,s)}</td><td class="history-reports">${R.reportLinks(r)}<div><button class="text-button" data-detail="${esc(r.id)}">查看实验详情 →</button></div></td><td${strategy?' class="history-promotions"':''}>${promotion}</td></tr>`;
         }).join('')+'</tbody></table></div>':'<div class="empty">没有匹配的实验记录。</div>';
         html+=`<div class="table-meta"><span>共 ${rows.length} 条实验记录</span><span>指标在实验详情中查看</span></div>`;
         document.getElementById('research-table').innerHTML=html;
         content.querySelectorAll('[data-detail]').forEach(button=>button.onclick=()=>researchDetail(button.dataset.detail,token));
         bindResources(content);bindConclusionEditors(token);
+    }
+    function strategyPromotionBadges(annotation){
+        if(!annotation.promotions.length)return '<span class="card-sub">未晋升</span>';
+        return (annotation.group?'<div class="history-promotion-caption">成员晋升</div>':'')+
+            `<div class="strategy-promotion-badges">${annotation.promotions.map(item=>{
+                const title=[item.label,item.isControl?'组内对照':'',item.current?'当前策略版本':''].filter(Boolean).join(' · ');
+                return `<span class="badge ${item.current?'badge-current':'badge-baseline'}" data-strategy-promotion="${esc(item.version)}" title="${esc(title)}">${esc(item.version)}${annotation.group&&item.isControl?' 对照':''}${item.current?' 当前':''}</span>`;
+            }).join('')}</div>`;
     }
     function renderResearchTable(token){
         if(!current(token))return;researchTableToken=token;
@@ -271,14 +280,17 @@
     }
     function experimentDetail(record){
         const summary=R.historySummary(record),baseline=record.comparison_baseline||{};
+        const strategyAnnotation=record.kind==='strategy'?R.strategyHistoryAnnotations(record):null;
         const version=R.strategyVersionLabel({kind:record.kind,track:R.recordTrack(record),version:baseline.version,display_version:baseline.display_version});
         const groupControl=typeof record.group_summary?.control_label==='string'?R.strategyReferenceText(record,record.group_summary.control_label.trim()):'';
-        const baselineLabel=version|| (baseline.initial===true?'初始基线':groupControl||'未登记');
+        const baselineLabel=strategyAnnotation?strategyAnnotation.baselineLabel:version|| (baseline.initial===true?'初始基线':groupControl||'未登记');
+        const baselineHeading=strategyAnnotation?.group?'组内对照':'Baseline';
+        const historicalBaselineHtml=strategyAnnotation?.historicalBaselines.length?`<details class="strategy-baseline-history" data-strategy-historical-baselines><summary>${strategyAnnotation.group?'成员历史登记 Baseline':'历史登记 Baseline'}</summary><ul>${strategyAnnotation.historicalBaselines.map(item=>`<li>${esc((item.members.length?item.members.join('、')+' → ':'')+item.label+(item.available?'':'（来源不可用）'))}</li>`).join('')}</ul></details>`:'';
         const change=typeof record.change_summary==='string'&&record.change_summary.trim()?R.strategyReferenceText(record,record.change_summary.trim()):'待填写变更内容';
         const failure=['failed','invalid','error'].includes(record.status)?'<div class="notice warning">本次实验无有效核心指标结果，缺失项保持为空。</div>':'';
         const resources=(record.resources||[]).map(resource=>resource.available?`<button data-resource="${esc(resource.id)}" data-resource-name="${esc(resource.name)}">预览 ${esc(resource.name)}</button><a class="button-link" href="/api/resources/${encodeURIComponent(resource.id)}?download=1">下载</a>`:`<span class="card-sub">${esc(resource.name)} · 已清理或缺失</span>`).join('');
         const analysis=summary.analysis;
-        openDialog(R.recordTitle(record),`<div class="detail-grid experiment-summary"><div class="detail-item" data-experiment-field="baseline"><small>Baseline</small>${esc(baselineLabel)}</div><div class="detail-item" data-experiment-field="changes"><small>变更内容</small>${esc(change)}</div></div><h3>核心指标结果</h3>${failure}<div id="detail-metrics"></div><h3>实验结论</h3><div class="prose">${esc(summary.conclusion)}</div><details class="source-audit experiment-source"><summary>原始报告与登记</summary><div class="detail-grid"><div class="detail-item"><small>内部登记 ID</small>${esc(record.id)}</div><div class="detail-item"><small>实验目录</small>${esc(record.directory||'未登记')}</div><div class="detail-item"><small>基线引用</small>${esc(record.baseline_ref||'未登记')}</div><div class="detail-item"><small>当时对照引用</small>${esc(baseline.ref||'未登记')}</div><div class="detail-item"><small>股票范围</small>${esc(trackLabel(R.recordTrack(record)))}</div></div><h3>原实验假设</h3><div class="prose">${esc(R.strategyReferenceText(record,record.hypothesis)||'未登记')}</div><h3>原登记结论</h3><div class="prose">${esc(summary.registryConclusion||'未登记结论')}</div>${summary.note?`<h3>记录备注</h3><div class="prose">${esc(summary.note)}</div>`:''}${analysis.limitations?`<h3>限制</h3><div class="prose">${esc(R.strategyReferenceText(record,analysis.limitations))}</div>`:''}${analysis.evidence.length?`<h3>证据</h3><ul>${analysis.evidence.map(path=>`<li>${esc(path)}</li>`).join('')}</ul>`:''}${(record.warnings||[]).map(w=>`<div class="notice warning">${esc(R.strategyReferenceText(record,w))}</div>`).join('')}<div class="page-actions resource-actions">${resources||'<span class="card-sub">未登记可访问资源</span>'}</div></details>`);
+        openDialog(R.recordTitle(record),`<div class="detail-grid experiment-summary"><div class="detail-item" data-experiment-field="baseline"><small>${baselineHeading}</small>${esc(baselineLabel)}</div><div class="detail-item" data-experiment-field="changes"><small>变更内容</small>${esc(change)}</div></div>${historicalBaselineHtml}<h3>核心指标结果</h3>${failure}<div id="detail-metrics"></div><h3>实验结论</h3><div class="prose">${esc(summary.conclusion)}</div><details class="source-audit experiment-source"><summary>原始报告与登记</summary><div class="detail-grid"><div class="detail-item"><small>内部登记 ID</small>${esc(record.id)}</div><div class="detail-item"><small>实验目录</small>${esc(record.directory||'未登记')}</div><div class="detail-item"><small>基线引用</small>${esc(record.baseline_ref||'未登记')}</div><div class="detail-item"><small>当时对照引用</small>${esc(baseline.ref||'未登记')}</div><div class="detail-item"><small>股票范围</small>${esc(trackLabel(R.recordTrack(record)))}</div></div><h3>原实验假设</h3><div class="prose">${esc(R.strategyReferenceText(record,record.hypothesis)||'未登记')}</div><h3>原登记结论</h3><div class="prose">${esc(summary.registryConclusion||'未登记结论')}</div>${summary.note?`<h3>记录备注</h3><div class="prose">${esc(summary.note)}</div>`:''}${analysis.limitations?`<h3>限制</h3><div class="prose">${esc(R.strategyReferenceText(record,analysis.limitations))}</div>`:''}${analysis.evidence.length?`<h3>证据</h3><ul>${analysis.evidence.map(path=>`<li>${esc(path)}</li>`).join('')}</ul>`:''}${(record.warnings||[]).map(w=>`<div class="notice warning">${esc(R.strategyReferenceText(record,w))}</div>`).join('')}<div class="page-actions resource-actions">${resources||'<span class="card-sub">未登记可访问资源</span>'}</div></details>`);
         const defs=R.metricDefinitions(R.definitionsForTrack(state.catalog,record.kind,R.recordTrack(record),record),record.kind,'full');
         const metrics=document.getElementById('detail-metrics');
         metrics.className='experiment-core-results';

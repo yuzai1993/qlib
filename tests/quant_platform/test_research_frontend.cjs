@@ -149,6 +149,26 @@ test('strategy benchmark labels and metric CSV show strategy s, linked model v a
     assert.equal(record.model_summary.version,'v2');
 });
 
+test('strategy history annotations keep group control distinct from verified member promotions and historical baselines',()=>{
+    const record={kind:'strategy',entity_type:'experiment_group',group_summary:{control_label:'持1关闭F100'},
+        strategy_history:{baseline:{ref:'bt/v2',version:'v2',display_version:'s2',label:'持1关闭F100',scope:'group_control',available:true},
+            promotions:[{ref:'bt/v2',version:'v2',display_version:'s2',label:'持1关闭F100',current:false},
+                {ref:'bt/v5',version:'v5',display_version:'s5',label:'持1 F100',current:true}],
+            historical_baselines:[{ref:'bt/v4',version:'v4',display_version:'s4',label:'阶梯',available:true,
+                member_refs:['bt/v5'],member_labels:['持1 F100']}]}};
+    const summary=R.strategyHistoryAnnotations(record);
+    assert.equal(summary.baselineLabel,'s2 · 持1关闭F100');
+    assert.equal(summary.baselineScope,'group_control');
+    assert.deepEqual(summary.promotions.map(p=>[p.version,p.label,p.current]),[['s2','持1关闭F100',false],['s5','持1 F100',true]]);
+    assert.deepEqual(summary.historicalBaselines.map(b=>[b.label,b.members]),[['s4 · 阶梯',['持1 F100']]]);
+    assert.equal(record.is_baseline,undefined);
+    assert.equal(R.strategyHistoryAnnotations({...record,strategy_history:{...record.strategy_history,promotions:[]},is_baseline:true,version:'v9'}).promotions.length,0);
+    const legacy=R.strategyHistoryAnnotations({id:'bt/v2',kind:'strategy',is_baseline:true,version:'v2',comparison_baseline:{ref:'bt/v1',version:'v1'}});
+    assert.equal(legacy.baselineLabel,'s1');assert.equal(legacy.promotions[0].version,'s2');
+    const forged=R.strategyHistoryAnnotations({kind:'strategy',entity_type:'experiment_group',promoted_version:'v9',version:'v9'});
+    assert.deepEqual(forged.promotions,[]);
+});
+
 test('strategy search covers linked model and strategy text while preserving other filters',()=>{
     const record={id:'bt/latest',kind:'strategy',experiment_type:'strategy_backtest',status:'completed',direction:'phase-m-v1-bt',
         model_summary:{ref:'model/es',version:'v2',name:'M0 H20 ES'},strategy_summary:{name:'Top5',description:'每日换1'}};

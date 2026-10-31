@@ -899,6 +899,55 @@ function strategyModelFilterCatalog(catalog){
         model_summary:{ref:'model/rank-v4',version:' v4 ',name:' RankIC早停 '}});
 }
 
+function groupedStrategyHistory(catalog){
+    strategyColumnsCatalog(catalog);
+    const source=catalog.records.find(r=>r.id==='bt/v5');
+    catalog.experiment_records=[{...source,id:'strategy-group/top5',entity_type:'experiment_group',is_baseline:false,current:false,
+        version:'',promoted_version:'',group_summary:{control_label:'持1关闭F100'},
+        strategy_history:{baseline:{ref:'bt/v2',version:'v2',display_version:'s2',label:'持1关闭F100',scope:'group_control',available:true},
+            promotions:[{ref:'bt/v2',version:'v2',display_version:'s2',label:'持1关闭F100',current:false},
+                {ref:'bt/v3',version:'v3',display_version:'s3',label:'持5 F100',current:false},
+                {ref:'bt/v5',version:'v5',display_version:'s5',label:'持1 F100',current:true}],
+            historical_baselines:[{ref:'bt/v4',version:'v4',display_version:'s4',label:'原阶梯',available:true,
+                member_refs:['bt/v5'],member_labels:['持1 F100']}]}}];
+}
+
+test('strategy history shows group control, member promotion badges and separate historical baselines in details and CSV',async()=>{
+    const page=await researchPage('#strategy-experiments',{catalog:groupedStrategyHistory});
+    await page.click('[data-module="records"]');
+    const row=page.get('[data-detail="strategy-group/top5"]').parentElement.parentElement;
+    assert.match(row.textContent,/组内 Baseline：s2 · 持1关闭F100/);
+    assert.match(row.textContent,/成员晋升/);
+    assert.deepEqual(row.querySelectorAll('[data-strategy-promotion]').map(b=>b.textContent),['s2 对照','s3','s5 当前']);
+    assert.match(row.querySelector('[data-strategy-promotion="s5"]').getAttribute('title'),/持1 F100/);
+    await page.click('[data-detail="strategy-group/top5"]');
+    assert.match(page.get('[data-experiment-field="baseline"]').textContent,/组内对照.*s2 · 持1关闭F100/);
+    assert.match(page.get('[data-strategy-historical-baselines]').textContent,/持1 F100 → s4 · 原阶梯/);
+    await page.click('#dialog-close');await page.click('#export-csv');
+    const csv=await page.downloads[0].text();
+    for(const label of ['Baseline','对照范围','历史登记Baseline','晋升对应参数'])assert.ok(csv.split('\r\n')[0].includes(label));
+    assert.match(csv,/s2 · 持1关闭F100/);assert.match(csv,/组内对照/);assert.match(csv,/持1 F100 → s4 · 原阶梯/);
+    assert.match(csv,/s2 \/ s3 \/ s5（当前）/);assert.match(csv,/s5：持1 F100/);
+    assert.equal(page.catalog.experiment_records[0].is_baseline,false);
+    assert.equal(page.catalog.experiment_records[0].current,false);
+});
+
+test('unpromoted strategy groups show 未晋升 and legacy standalone baselines remain visible',async()=>{
+    const page=await researchPage('#strategy-experiments',{catalog:catalog=>{
+        groupedStrategyHistory(catalog);catalog.experiment_records[0].strategy_history.promotions=[];
+    }});
+    await page.click('[data-module="records"]');
+    assert.match(page.get('#research-table').textContent,/未晋升/);
+    assert.equal(page.document.querySelector('[data-strategy-promotion]'),null);
+    const legacy=await researchPage('#strategy-experiments',{catalog:catalog=>{
+        const record=catalog.records.find(r=>r.kind==='strategy');
+        record.comparison_baseline={ref:'',version:'',initial:true};
+    }});
+    await legacy.click('[data-module="records"]');
+    assert.match(legacy.get('#research-table').textContent,/Baseline：初始基线/);
+    assert.equal(legacy.get('[data-strategy-promotion="s1"]').textContent,'s1');
+});
+
 test('strategy Benchmark shows compact model and rule identity with consistent s versions in details and CSV',async()=>{
     const page=await researchPage('#strategy-experiments',{catalog:catalog=>{
         strategyColumnsCatalog(catalog);
@@ -922,7 +971,7 @@ test('strategy Benchmark shows compact model and rule identity with consistent s
     const benchmarkCsv=await page.downloads[0].text();
     assert.match(benchmarkCsv,/"s5","v2","M0 H20 ES","Top5"/);
     await page.click('[data-module="records"]');
-    assert.match(page.get('#research-table').textContent,/晋升 s5/);
+    assert.equal(page.get('[data-strategy-promotion="s5"]').textContent,'s5');
     await page.click('[data-detail="bt/v5"]');
     assert.match(page.get('[data-experiment-field="baseline"]').textContent,/s4/);
     assert.doesNotMatch(page.get('[data-experiment-field="baseline"]').textContent,/BT v4/);
@@ -1141,7 +1190,7 @@ test('strategy records split model and strategy and retain original sources behi
     const row=page.get('[data-detail="bt/v5"]').parentElement.parentElement;
     const cells=row.querySelectorAll('td');
     assert.equal(cells[1].textContent,'v2 · M0 H20 ES');
-    assert.equal(cells[2].textContent,'Top5每日换1，持有1日');
+    assert.equal(cells[2].textContent,'Top5每日换1，持有1日Baseline：未登记');
     assert.doesNotMatch(cells[1].textContent+cells[2].textContent,/完整长假设|长对照引用|bt\/v5|旧执行回测标题/);
     await page.input('#research-search','H20 ES');
     assert.deepEqual(historyIds(page),['bt/v5']);
@@ -1239,7 +1288,7 @@ test('strategy cells escape new summary text and legacy records explicitly show 
     const legacy=await researchPage('#strategy-experiments');await legacy.click('[data-module="records"]');
     const oldRow=legacy.get('[data-detail="strategy/v1"]').parentElement.parentElement;
     assert.equal(oldRow.querySelectorAll('td')[1].textContent,'未登记模型');
-    assert.equal(oldRow.querySelectorAll('td')[2].textContent,'策略一');
+    assert.equal(oldRow.querySelectorAll('td')[2].textContent,'策略一Baseline：未登记');
     const page=await researchPage('#strategy-experiments',{catalog(catalog){
         const record=catalog.records.find(r=>r.kind==='strategy');
         record.model_summary={ref:'model/safe',version:'v2',name:'<img src=x onerror=bad()>'};

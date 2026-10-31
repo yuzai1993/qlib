@@ -88,7 +88,8 @@ def authenticated_group_protocol(root, record: dict, manifest: dict, axes: list[
         return {'status': 'invalid'}
 
 
-def strategy_parameter_group(manifest: dict, by_id: dict, metric_keys: list[str], *, runtime_protocols=None) -> dict:
+def strategy_parameter_group(manifest: dict, by_id: dict, metric_keys: list[str], *, runtime_protocols=None,
+                             member_manifests=None) -> dict:
     descriptor = manifest["experiment_group"]
     members = descriptor["members"]
     control_ref = descriptor["control_ref"]
@@ -98,9 +99,14 @@ def strategy_parameter_group(manifest: dict, by_id: dict, metric_keys: list[str]
     selected = [by_id.get(ref) for ref in refs]
     warnings = []
     for ref, child in zip(refs, selected):
+        child_manifest = member_manifests.get(ref) if member_manifests is not None else None
+        valid_archive = (member_manifests is None or bool(child_manifest
+                         and child_manifest.get('kind') == 'strategy'
+                         and child_manifest.get('track') == manifest['track']))
         if (not child or child.get("kind") != "strategy" or child.get("track") != manifest["track"]
                 or child.get("model_summary", {}).get("ref") != manifest["model_ref"]
-                or child.get("status") != "completed" or child.get("source_status") != "available"):
+                or child.get("status") != "completed" or child.get("source_status") != "available"
+                or not valid_archive):
             warnings.append(f"参数实验来源缺失、未完成或模型/股票范围不符：{ref}；保留原实验展示。")
     if not warnings and control:
         protocol_keys = ("window", "seeds", "scope", "pool", "protocol_id")

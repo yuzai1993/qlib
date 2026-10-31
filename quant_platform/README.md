@@ -74,6 +74,8 @@ launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 
 策略“实验记录”将原“实验内容”拆成“模型”和“策略”：模型只显示关联模型的版本、简称，策略显示简称与简短规则。各策略元数据维护 `model_ref` 和 `strategy_summary`，模型名称/版本从模型档案关联获取；BT版本不作为模型版本。CSV同步拆列，搜索覆盖模型和策略文本；模型实验记录及Benchmark保持原布局。长实验假设和原ID仍在详情。
 
+策略列表同时标出对比Baseline及关联的晋升策略版本。参数组注明“组内对照”，晋升标记来自组内成员的已验证Benchmark，例如Top5组关联s2、s3、s5（当前），其中s2为组内对照；这不表示汇总组自行晋升。未晋升的实验明确标注，30万诊断不会因为与s5比较就被标成晋升s5。详情另列成员原登记的历史Baseline，CSV同步保留组内对照和历史对照，避免混淆。
+
 模型、策略的实验记录详情独立精简为“Baseline、变更内容、核心指标结果”，并保留简短结论；完整假设、原登记和附件折叠保存。Baseline及差分说明由 `comparison_baseline`、`change_summary` 维护；有明确版本时策略展示 `sN`，参数组可显示对照组名称，不假造版本。核心结果表列出Baseline和各实验组的原始指标，不做新的合成计算。记录详情没有分年/分风格切换或加入对比，Benchmark的完整介绍、版本选择及分维度视图保留。
 
 策略归档按实际执行规则放在 `strategies/topk-dropout/` 和 `strategies/cohort-ladder/`。同类参数放到 `<规则族>/<组名>/variants/<变体>/`，组元数据使用 `entity_type: experiment_group`，只负责汇总展示；各源变体保留稳定ID、登记、完整报告和原始指标。API的 `records` 保存23个源实体，`experiment_records` 保存14个展示入口，`benchmarks` 独立保存9个版本。旧版API无 `experiment_records` 时兼容使用 `records`；显式空数组不恢复隐藏变体。

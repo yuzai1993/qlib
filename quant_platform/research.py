@@ -26,6 +26,7 @@ from backtest.scripts.research_labels import strategy_display_version, strategy_
 from .model_profiles import project_model_profile
 from .research_groups import baseline_results, training_target_results
 from .strategy_groups import authenticated_group_protocol, collapse_strategy_groups, strategy_parameter_group
+from .strategy_history import strategy_history
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
@@ -515,7 +516,7 @@ class ResearchCatalog:
                 for member in descriptor["members"] if member["ref"] in by_id and member["ref"] in manifests
             }
             group = strategy_parameter_group(manifest, by_id, [key for key, _, _ in STRATEGY_METRICS],
-                                             runtime_protocols=runtime_protocols)
+                                             runtime_protocols=runtime_protocols, member_manifests=manifests)
             self._archive_resources(group, manifest)
             # README is a conventional local entry point even when its manifest
             # does not repeat it in the explicit inventory.
@@ -551,6 +552,10 @@ class ResearchCatalog:
             for child in record.get("core_results", {}).get("records", []):
                 child["display_version"] = strategy_display_version(child.get("version"), **context)
                 child["display_name"] = strategy_reference_text(child.get("name"), **context)
+        experiment_records = [
+            {**record, "strategy_history": strategy_history(record, by_id, benchmark_by_id)}
+            if record["kind"] == "strategy" else record for record in experiment_records
+        ]
         mtimes = []
         for rel in ["backtest/experiments/registry.jsonl", *self._resources.values()]:
             path = self._safe_path(rel)

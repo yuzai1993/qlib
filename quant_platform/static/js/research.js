@@ -185,6 +185,43 @@
     const recordTitle=record=>record.kind==='strategy'&&record.is_baseline?
         strategyBenchmarkSummary(record).title:record.display_name||H.strategyReferenceText(record,record.name)||record.id;
 
+    function strategyHistoryAnnotations(record){
+        const text=value=>typeof value==='string'?value.trim():'';
+        const group=record.entity_type==='experiment_group'||Boolean(record.group_summary);
+        const history=record.strategy_history&&typeof record.strategy_history==='object'?record.strategy_history:null;
+        const reference=item=>{
+            const version=H.strategyVersionLabel({kind:'strategy',track:record.track,version:item.version,display_version:item.display_version});
+            const name=H.strategyReferenceText(record,text(item.label));
+            const label=item.initial===true?'初始基线':recordLabelText({kind:'strategy',track:record.track,version,
+                name:name||version||'未登记',id:''});
+            return {version,label,ref:text(item.ref),available:item.available!==false};
+        };
+        const fallback=record.comparison_baseline||{};
+        const baseline=history?.baseline&&typeof history.baseline==='object'?history.baseline:
+            {...fallback,label:group?record.group_summary?.control_label:'',scope:group?'group_control':'historical'};
+        const formatted=reference(baseline),baselineScope=baseline.scope==='group_control'?'group_control':'historical',baselineRef=formatted.ref;
+        let candidates=Array.isArray(history?.promotions)?history.promotions:[];
+        if(!history&&!group&&(record.is_baseline===true||record.registered===true&&record.promoted_version)&&
+            !['invalid','missing','unsafe'].includes(record.source_status)){
+            const version=record.promoted_version||record.version;
+            if(text(version))candidates=[{ref:record.id,version,display_version:record.display_promoted_version,
+                label:H.strategyHistorySummary(record).strategyName,current:record.current===true}];
+        }
+        const seen=new Set(),promotions=candidates.filter(item=>item&&typeof item==='object'&&text(item.ref)&&item.available!==false).map(item=>{
+            const formatted=reference(item);
+            return {ref:formatted.ref,version:formatted.version,label:H.strategyReferenceText(record,text(item.label)),
+                current:item.current===true,isControl:item.is_control===true||formatted.ref===baselineRef};
+        }).filter(item=>item.version&&!seen.has(item.ref+'|'+item.version)&&seen.add(item.ref+'|'+item.version));
+        const historicalBaselines=(Array.isArray(history?.historical_baselines)?history.historical_baselines:[])
+            .filter(item=>item&&typeof item==='object').map(item=>({...reference(item),
+                members:(Array.isArray(item.member_labels)?item.member_labels:[]).filter(label=>text(label)).map(label=>H.strategyReferenceText(record,label))}));
+        return {baselineLabel:formatted.label+(formatted.available?'':'（来源不可用）'),baselineScope,
+            baselineRef:formatted.ref,baselineScopeLabel:baselineScope==='group_control'?'组内对照':'历史对照',
+            promotions,historicalBaselines,promotionLabel:promotions.map(item=>item.version+(item.current?'（当前）':'')).join(' / '),
+            promotionParameters:promotions.map(item=>item.version+'：'+item.label).join('\n'),
+            historicalLabel:historicalBaselines.map(item=>(item.members.length?item.members.join('、')+' → ':'')+item.label+(item.available?'':'（来源不可用）')).join('\n'),group};
+    }
+
     function modelHistorySummary(record){
         const text=value=>typeof value==='string'?value.trim():'';
         const baseline=record.comparison_baseline&&typeof record.comparison_baseline==='object'&&!Array.isArray(record.comparison_baseline)?record.comparison_baseline:{};
@@ -255,5 +292,5 @@
             `<span class="card-sub">${esc(resource.name)} · 报告缺失</span>`).join('<br>')||'<span class="card-sub">未登记报告</span>';
     }
 
-    return {recordTrack,experimentType,experimentTypes,strategyModels,recordIdentity,recordTitle,recordLabelText,strategyBenchmarkSummary,strategyVersionLabel:H.strategyVersionLabel,strategyReferenceText:H.strategyReferenceText,modelHistorySummary,modelProfileSummary,strategyHistorySummary:H.strategyHistorySummary,recordsForTrack,availableTracks,definitionsForTrack,isComparable,comparisonIssue,orderVersions,orderHistory,metricDefinitions,createBenchmarkSelection,metricTables,renderMetricTables,metricCsvRows,historySummary,reportLinks};
+    return {recordTrack,experimentType,experimentTypes,strategyModels,recordIdentity,recordTitle,recordLabelText,strategyBenchmarkSummary,strategyHistoryAnnotations,strategyVersionLabel:H.strategyVersionLabel,strategyReferenceText:H.strategyReferenceText,modelHistorySummary,modelProfileSummary,strategyHistorySummary:H.strategyHistorySummary,recordsForTrack,availableTracks,definitionsForTrack,isComparable,comparisonIssue,orderVersions,orderHistory,metricDefinitions,createBenchmarkSelection,metricTables,renderMetricTables,metricCsvRows,historySummary,reportLinks};
 });

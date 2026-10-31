@@ -1,0 +1,24 @@
+{
+  "python_tests": {
+    "passed": 403,
+    "failed": 0
+  },
+  "frontend_tests": {
+    "passed": 134,
+    "failed": 0
+  },
+  "independent_review": "passed without blocking findings",
+  "raw_record_objects_unchanged": 23,
+  "benchmark_objects_unchanged": 9,
+  "strategy_entries_checked": 8,
+  "ui_verified": [
+    "Top5 group baseline s2 and member promotions s2/control, s3, s5/current",
+    "30万risk group baseline risk0.90 and no promotion",
+    "group control distinct from member historical baselines",
+    "model filter and CSV include annotations"
+  ],
+  "screenshot": "/Users/yuxianqi/.codex/visualizations/2026/11/01/strategy-history-references-20261101.jpg",
+  "temporary_root": "/private/tmp/qlib-strategy-history-labels-20261101",
+  "temporary_root_removed": true,
+  "git_diff_check": "passed"
+}

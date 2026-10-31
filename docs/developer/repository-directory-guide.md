@@ -27,7 +27,7 @@
 | `backtest/` | `data/` | **完成。**已删除目录及 IM 校验、占位和系统缓存文件；来源路径与哈希保留在历史实验记录中。 |
 | `backtest/` | `datasets/` | **确认保留。**研究用数据读取与样本选择源码，维持现状。 |
 | `backtest/` | `diagnostics/` | **确认保留。**平台分析档案及其元数据、报告和代码，维持现状。 |
-| `backtest/` | `experiments/` | **完成。**23个源实验归档；平台显示6模型＋8策略入口、9个Benchmark。策略编号s1–s5，Benchmark标记模型及策略简称；当前模型v2、策略s5。 |
+| `backtest/` | `experiments/` | **完成。**23个源实验、6模型＋8策略入口、9个Benchmark。策略s1–s5，列表标记晋升版本与Baseline；当前模型v2、策略s5。 |
 
 ## 先理解几组容易混淆的名字
 

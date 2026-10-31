@@ -1,0 +1,35 @@
+{
+  "status": "clean",
+  "scope": "Read-only independent review of actual 22 strategy metadata model_ref and strategy_summary; no repository edits or experiment execution.",
+  "checks": {
+    "strategy_count": 22,
+    "strategy_ids_complete": true,
+    "model_counts": {
+      "v1": 1,
+      "v2": 13,
+      "v4": 8
+    },
+    "actual_fields_match_applied": true,
+    "only_two_metadata_fields_changed": true,
+    "registry_bytes_identical": true,
+    "archive_errors": [],
+    "failed_attempt_state": "failed",
+    "risk_fee_cash_window_model_semantics": "consistent with source evidence"
+  },
+  "reviewed_fields_sha256": "0a6426eb9ae9306b4763f89c14587b08c0e6750f3a7b884d559b1ebc38164a79",
+  "findings": [],
+  "resolved_wording": [
+    "Forced ladder exits now specify execution constraints; refills use actual forced-sale proceeds.",
+    "Ordinary ladder descriptions now select up to K buyable names and issue maturity sell orders rather than promise completed trades."
+  ],
+  "evidence": [
+    "strategy-column-evidence.json",
+    "applied.json",
+    "qlib/contrib/strategy/signal_strategy.py:475-525",
+    "qlib/contrib/strategy/cohort_ladder.py:30-55"
+  ],
+  "limitations": [
+    "Review covers descriptive metadata, not scientific conclusions or realized performance.",
+    "Original .90 diagnostic JSON/summary omit risk_degree; its explicit .90 is documented in live_trading/BT_V5_CUTOVER.md:69-71. Raw replay config is absent locally."
+  ]
+}

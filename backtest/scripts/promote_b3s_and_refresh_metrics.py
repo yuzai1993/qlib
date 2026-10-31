@@ -39,7 +39,7 @@ from strategy_stability_metrics import summarize_stability  # noqa: E402
 REGISTRY = REPO_ROOT / "backtest/experiments/registry.jsonl"
 A10M_RESULTS = (
     REPO_ROOT
-    / "backtest/experiments/strategy-stability-full-period/b6-m-a10m/data/full_results.json"
+    / "backtest/experiments/strategies/strategy-stability-full-period/b6-m-a10m/data/full_results.json"
 )
 BASELINE_CONFIG = (
     REPO_ROOT

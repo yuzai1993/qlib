@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "exp_id": "baseline/phase-m-v1-bt-v4",
+  "event_numbers": [
+    142
+  ],
+  "phase": "M",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/cohort-ladder/bt-v4/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/cohort-ladder/bt-v4/reports/all_ladder_k3h5_m0h20rankices.html",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/all_ladder_k3h5_m0h20rankices.html",
+    "backtest/experiments/reports/phase_m_v1_bt_report.html",
+    "backtest/experiments/strategies/cohort-ladder/bt-v4/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+    "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/cohort-ladder/bt-v4/metrics/all_ladder_k3h5_m0h20rankices.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+    "backtest/experiments/strategies/cohort-ladder/bt-v4/metrics/m0h20rankices.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/m0h20rankices.json",
+    "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metrics/all_ladder_k3h5_m0h20rankices.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+    "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "baseline",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "v4 RankIC ES 真阶梯 k3×h5",
+  "model_ref": "regime-adapt/m0-h20-rankices-v1",
+  "strategy_summary": {
+    "name": "阶梯3×5日",
+    "description": "每日按排名选至多3只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4",
+  "analysis": {
+    "conclusion": "按主格执行规则晋升；较BT v3换手和回撤更低，但CAGR降至26.3%，并非全面占优。",
+    "evidence": [
+      "records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+      "metrics/all_ladder_k3h5_m0h20rankices.json",
+      "metrics/m0h20rankices.json",
+      "records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+      "reports/all_ladder_k3h5_m0h20rankices.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。与BT v3相比模型信号和执行规则均改变；晋升依据是对齐主格，不是逐维占优。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "从v2模型的Top5轮换，改为v4模型的Top3×H5真阶梯。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v3",
+    "version": "v3"
+  },
+  "metrics_source": {
+    "path": "metrics/all_ladder_k3h5_m0h20rankices.json",
+    "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7"
+  }
+}

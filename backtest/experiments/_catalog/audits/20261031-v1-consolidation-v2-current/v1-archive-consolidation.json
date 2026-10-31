@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "removed_active_id": "regime-adapt/m0-h20-label-v4",
+  "unique_active_entities_after_removal": 28,
+  "models_after_removal": 6,
+  "strategies_after_removal": 22,
+  "removed_directory": "backtest/experiments/models/training-target/h20-v1",
+  "old_receipt": "backtest/experiments/models/training-target/h20-v1/records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json",
+  "new_receipt": "backtest/experiments/models/training-target/horizon-comparison/baseline-records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json",
+  "frozen_receipt_sha256": "f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f",
+  "v1_metrics_unchanged": true,
+  "source_json": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+  "source_json_sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+  "v1_top3_h5_net_ann": 0.2933431911523481,
+  "v1_protocol": "frozen 499-day next-day RankIC early stopping",
+  "four_horizon_control": "H20 v3 with top3_h5_net_ann early stopping; separate provenance",
+  "removed_aliases": {
+    "paths": {
+      "backtest/experiments/regime-adapt/m0-h20-label-v4/metadata.json": "backtest/experiments/models/regime-adapt/m0-h20-label-v4/metadata.json",
+      "backtest/experiments/models/regime-adapt/m0-h20-label-v4/metadata.json": "backtest/experiments/models/training-target/h20-v1/metadata.json"
+    },
+    "directories": {
+      "backtest/experiments/regime-adapt/m0-h20-label-v4": "backtest/experiments/models/regime-adapt/m0-h20-label-v4",
+      "backtest/experiments/models/regime-adapt/m0-h20-label-v4": "backtest/experiments/models/training-target/h20-v1"
+    }
+  },
+  "added_alias": {
+    "backtest/experiments/models/training-target/h20-v1/records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json": "backtest/experiments/models/training-target/horizon-comparison/baseline-records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json"
+  },
+  "remaining_registry_lines_unchanged": true,
+  "temporary_script": "/private/tmp/qlib-v1-consolidation-v2-current-20261031/merge_v1_archive.py",
+  "verification": {
+    "archive_and_layout_tests": "32 passed",
+    "protected_source_files_checked": 72,
+    "all_source_hashes_unchanged": true,
+    "own_temporary_script_and_fixtures_removed": true
+  },
+  "model_weights_or_shared_assets_deleted": false
+}

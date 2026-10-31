@@ -778,7 +778,7 @@ def _encode_row(row: Mapping[str, Any], registry_path: Path) -> bytes:
 
 
 def _atomic_replace(path: Path, payload: bytes) -> None:
-    path = Path(path)
+    path = _resolve_research_path(path, _RESEARCH_ROOT)
     path.parent.mkdir(parents=True, exist_ok=True)
     temp_name: Optional[str] = None
     try:

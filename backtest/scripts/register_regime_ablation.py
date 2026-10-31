@@ -34,7 +34,7 @@ SPECS = [
         "display_name": "M0 H20 + regime 特征",
         "arm": "m0-h20-feat",
         "eval": "backtest/result/eval_regime_ablation/eval_feat.json",
-        "detail_report": "backtest/experiments/regime-adapt/m0-h20-regime-feat-v1/reports/regime_adapt_m0h20_feat_report.html",
+        "detail_report": "backtest/experiments/models/regime-adapt/m0-h20-regime-feat-v1/reports/regime_adapt_m0h20_feat_report.html",
         "hypothesis": (
             "只加 11 列 regime 特征（Alpha158RegimeTechnical），标签仍 H20、"
             "日权重仍用 M0 自然分布；预期主格 top5×h5 扣费夏普相对 M0 H20 上升"
@@ -46,7 +46,7 @@ SPECS = [
         "display_name": "M0 H20 + 样本采样",
         "arm": "m0-h20-sample",
         "eval": "backtest/result/eval_regime_ablation/eval_sample.json",
-        "detail_report": "backtest/experiments/regime-adapt/m0-h20-sample-v1/reports/regime_adapt_m0h20_sample_report.html",
+        "detail_report": "backtest/experiments/models/regime-adapt/m0-h20-sample-v1/reports/regime_adapt_m0h20_sample_report.html",
         "hypothesis": (
             "特征仍是 M0，只把训练日权换成 M3 的 55/30/15 + 48m 半衰期；"
             "预期主格 top5×h5 扣费夏普相对 M0 H20 上升，尤其 F 态"
@@ -123,7 +123,7 @@ SPECS = [
         "display_name": "v3 + DoubleEnsemble s42",
         "arm": "m0-h20-t3h5es-densemble",
         "eval": "backtest/result/eval_regime_ablation/eval_densemble_s42_vs_v3.json",
-        "detail_report": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+        "detail_report": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
         "hypothesis": (
             "相对当前基线 v3（M0 H20 t3h5es），只把单 LGBM 换成 B6-M 冻结超参"
             "DoubleEnsemble（num_models=3, SR/FS, lr=0.1）；"
@@ -147,7 +147,7 @@ SPECS = [
         "display_name": "v3 + DoubleEnsemble",
         "arm": "m0-h20-t3h5es-densemble",
         "eval": "backtest/result/eval_regime_ablation/eval_densemble_vs_v3.json",
-        "detail_report": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
+        "detail_report": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
         "hypothesis": (
             "相对当前基线 v3（M0 H20 t3h5es），只把单 LGBM 换成 B6-M 冻结超参"
             "DoubleEnsemble（num_models=3, SR/FS, lr=0.1）；"
@@ -175,7 +175,7 @@ SPECS = [
         "display_name": "M0 H20 RankIC ES",
         "arm": "m0-h20-rankices",
         "eval": "backtest/result/eval_regime_ablation/eval_m0h20_rankices.json",
-        "detail_report": "backtest/experiments/regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
+        "detail_report": "backtest/experiments/models/regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
         "hypothesis": (
             "相对当前基线 v3，训练配方不变（全A + H20 + M0 日权 + 单 LGBM B3-M），"
             "valid 仍用评估窗 valid_frame_t5h5es.pkl（约 1454 天、H5 标签），"
@@ -205,7 +205,7 @@ SPECS = [
         "display_name": "v4 + DoubleEnsemble s42",
         "arm": "m0-h20-rankices-densemble",
         "eval": "backtest/result/eval_regime_ablation/eval_densemble_s42_vs_v4.json",
-        "detail_report": "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+        "detail_report": "backtest/experiments/models/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
         "hypothesis": (
             "相对当前基线 v4（M0 H20 RankIC ES），只把单 LGBM 换成 B6-M 冻结超参"
             "DoubleEnsemble（num_models=3, SR/FS, lr=0.1）；"

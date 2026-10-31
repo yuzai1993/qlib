@@ -1,0 +1,36 @@
+{
+  "task_directory": "/private/tmp/qlib-strategy-layout-20261031",
+  "removed": true,
+  "one_off_scripts_removed": [
+    "finish.py",
+    "migrate.py",
+    "verify.py"
+  ],
+  "top_level_materials_removed": [
+    "active-references-before.json",
+    "before.json",
+    "cleanup-dry-run.json",
+    "final-git-status.txt",
+    "final-validation.log",
+    "finish.py",
+    "frontend-all.log",
+    "frontend-green.log",
+    "frontend-red.log",
+    "frontend-root.log",
+    "html-before.json",
+    "independent-review.json",
+    "layout-dependency-readonly-evidence.json",
+    "map-before.json",
+    "migrate.py",
+    "migration.json",
+    "pytest-final",
+    "pytest-root",
+    "python-final.log",
+    "python-focused.log",
+    "runtime-api.json",
+    "targeted-tests",
+    "verify.py"
+  ],
+  "before_snapshots_and_fixtures_removed": true,
+  "original_models_and_sessions_untouched": true
+}

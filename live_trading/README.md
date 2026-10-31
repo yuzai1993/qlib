@@ -22,13 +22,15 @@ bash live_trading/run_scheduler_cron.sh alla_v2_top5d1f100_postclose_real_active
 
 部署与验证记录：`live_trading/logs/bt_v5_services_enabled_20261030.json`。原plist和本机环境文件的私有备份路径记录在其中。新版调度日志为 `live_trading/logs/alla_v2_top5d1f100_postclose_real_active_scheduler.{stdout,stderr}.log`。详细交接见 [BT v5切换记录](BT_V5_CUTOVER.md)。
 
+当前 Top5 的 parity 配置在 `backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml`。2026-10-31 整理后，保留的 parity 配置统一归入 `backtest/experiments/`，`backtest/configs/` 不再维护 parity；旧阶梯 K1 对照档位于 `backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml`；CSI300、阶梯 K3 与两套 CSI1000 的对应 parity 已删除，相关 live 配置和账本仅作历史查阅，不能直接恢复发布。
+
 ## 旧阶梯运行说明（历史留档，当前生产以上文为准）
 
 此前活动系统是 `alla_v4_ladder_k1h5_postclose_real`。模型是 v4 五种子 RankIC ES
 日截面 z-score 等权，执行是收盘集合竞价 `prType=11`：竞价前提交，买单按最后成交价
-上浮 0.2%，卖单按下浮 0.2%，再夹到当日涨跌停。策略先用 **top1 × horizon=5、
-仓位 100%、期初 30 万** 观察；稳定后再切回 100 万的
-`alla_v4_ladder_k3h5_postclose_real`。研究基线 BT v4 仍是 k3×h5，本观察盘不改那条尺子。
+上浮 0.2%，卖单按下浮 0.2%，再夹到当日涨跌停。策略曾用 **top1 × horizon=5、
+仓位 100%、期初 30 万** 观察，并预留 100 万的
+`alla_v4_ladder_k3h5_postclose_real`，这是当时的切换计划。K3 现仅保留历史配置/账本供只读查阅，已删除对应 parity 并移除 live YAML 的 parity 映射，不能直接恢复发布；恢复前须重建并验证配对。历史研究基线 BT v4 的 k3×h5 配置保持不变。
 
 **执行开关是 QMT 策略的启停，不是 `LIVE_OK_` / `PR49_LIVE_OK_`。**
 Mac 只发布信号；Windows 上策略在跑、inbox 有 LIVE 批次，到点就会下单。不要为日常交易建 marker。
@@ -41,8 +43,8 @@ Mac 只发布信号；Windows 上策略在跑、inbox 有 LIVE 批次，到点�
 
 | 项目 | 值 |
 |---|---|
-| 活动配置 | `live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml` |
-| 对照配置 | `backtest/configs/alla_v4_ladder_k1h5_parity.yaml` |
+| 历史 K1 配置 | `live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml` |
+| 对照配置 | `backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml` |
 | 股票池 / benchmark | 全A 四重过滤 / `SH000985` |
 | 账户口径 | 账本期初 300,000 元、价值调整 0；真实账号只在 QMT 本地绑定 |
 | 策略 | `CohortLadderStrategy` topk=1 horizon=5 risk_degree=1.0 |
@@ -51,7 +53,7 @@ Mac 只发布信号；Windows 上策略在跑、inbox 有 LIVE 批次，到点�
 | 账户 | QMT 策略源码里的 `ACCOUNT_ID`；启停策略即开关 |
 | 执行 | 收盘集合竞价 `prType=11`，14:57:05 提交 / 15:00:05 撤单 / 15:00:30 终态 / 17:00 再拍账户快照；限价=竞价前最后成交价买卖各偏 0.2% |
 | 授权 | 无 marker。QMT 启停即开关 |
-| 后续切换 | `alla_v4_ladder_k3h5_postclose_real`（100 万、top3×h5、risk 0.90） |
+| 历史 K3 配置 | `alla_v4_ladder_k3h5_postclose_real`（原切换计划：100 万、top3×h5、risk 0.90；现仅供只读查阅，恢复前须重建并验证配对） |
 
 这不是旧 CSI1000 的「欠仓到 30 只再卖」。每天买当日第 1 名开一层，持满 5 个交易日到期卖；
 同一只可以多层叠加。每日买入预算是 `总资产 × 1.0 / 5`，再和现金取小。买单只带
@@ -70,9 +72,9 @@ Mac 只发布信号；Windows 上策略在跑、inbox 有 LIVE 批次，到点�
 
 | 配置 | 状态 |
 |---|---|
-| `alla_v4_ladder_k3h5_postclose_real` | 预留切回，未装调度 |
-| `csi1000_b6m_b2s_postclose_real` | 已停调度，账本冻结作历史。没有 `PAUSED` 行时 CLI `--get` 会显示默认 ACTIVE，这不是停机证明 |
-| `csi300_topk10_live` | 更早的 B1 正式盘，仅留文件 |
+| `alla_v4_ladder_k3h5_postclose_real` | 仅留历史配置/账本供只读查阅；2026-10-31 已删除对应 parity 配置并移除 live YAML 的 parity 映射，不能直接恢复发布 |
+| `csi1000_b6m_b2s_postclose` / `csi1000_b6m_b2s_postclose_real` | 已停用，仅留历史账本/配置信息；2026-10-31 已删除对应 parity 配置，缺少 parity 时发布门禁会报错，不能直接恢复发布。没有 `PAUSED` 行时 CLI `--get` 会显示默认 ACTIVE，这不是停机证明 |
+| `csi300_topk10_live` | 更早的 B1 正式盘，仅留历史配置/账本供只读查阅；2026-10-31 已删除对应 parity 配置并移除 live YAML 的 parity 映射，不能直接恢复发布 |
 
 CSI1000 一手 SELL / 快照 / marker 验收原文已迁到
 [CSI1000 一手 SELL 验收](qmt_strategy/CSI1000_OPERATOR_SELL_RUNBOOK.md)，

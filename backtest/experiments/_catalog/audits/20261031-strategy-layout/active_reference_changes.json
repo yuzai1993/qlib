@@ -1,0 +1,13 @@
+{
+  "parity_sha256": "da8a625014a28c88b367b228646f1eee7e68a242e7c7f5d29add91e9468bc8f2",
+  "live_configs": [
+    "live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml",
+    "live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml"
+  ],
+  "writer_updated": "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+  "formal_readers_fixed": [
+    "backtest/scripts/promote_bt_v5_top5d1f100.py",
+    "backtest/scripts/run_bt_v5_cutover_diagnostics.py"
+  ],
+  "preexisting_dangling_alias_removed": "backtest/experiments/repository_migration_20261030/registry.before.jsonl"
+}

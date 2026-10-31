@@ -4,15 +4,18 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
 from typing import Any, Optional, Sequence
 
 if __package__:
+    from .baseline_references import load_historical_baselines
     from .research_layout import resolve_research_path as _resolve_research_path
     from .research_layout import report_href as _report_href
 else:
+    from baseline_references import load_historical_baselines
     from research_layout import resolve_research_path as _resolve_research_path
     from research_layout import report_href as _report_href
 
@@ -36,7 +39,7 @@ YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"]
 REGIMES = ["D", "F", "T"]
 PRIMARY_K, PRIMARY_H = "3", "5"
 
-# 只认这两条为总报告 baseline 版本；其它 phase_m_protocol=v1 行进第 4 块。
+# 初始两代模板；后续版本从登记读取，当前版本服从显式选择。
 BASELINE_VERSIONS = (
     {
         "version": "v1",
@@ -171,6 +174,8 @@ def _matrix_table(
 
 def render_hub(baselines: Sequence[dict], experiments: Sequence[dict], *, output_path: Path = DEFAULT_OUTPUT) -> str:
     named = [(f"{b['version']} {b['name']}", b.get("doc")) for b in baselines]
+    shared_reports = EXP_ROOT / "backtest/experiments/reports"
+    execution_href = _esc(_report_href(shared_reports / "phase_m_v1_bt_report.html", output_path, EXP_ROOT))
     H = [
         "<!DOCTYPE html><html lang='zh-CN'><head><meta charset='utf-8'>",
         "<title>Phase M v1 总报告</title>",
@@ -182,8 +187,7 @@ def render_hub(baselines: Sequence[dict], experiments: Sequence[dict], *, output
         "全A · 2020-08-03~2026-07-31 · 日频 ST + 成交额≥1000万 + 上市≥60 + 剔 t+1 涨停。"
         "执行层回测也是绝对收益，但年化按 ×250、持有期规则不同，"
         "两者<b>不可直接相减</b>（见规范第 5.1.3 节）。数字来自 eval JSON，禁止手写。"
-        " CSI1000 历史 Phase M 见 <a href='report.html'>report.html</a>；"
-        "执行层回测见 <a href='phase_m_v1_bt_report.html'>phase_m_v1_bt_report.html</a>。</p>",
+        f" 执行层回测见 <a href='{execution_href}'>phase_m_v1_bt_report.html</a>。</p>",
         "<h2>1. 历史 baseline</h2>",
         "<table><thead><tr><th class='l'>版本</th><th class='l'>名称</th>"
         + "".join(f"<th>{_esc(lab)}</th>" for _, lab, _ in PRIMARY_KEYS)
@@ -265,7 +269,8 @@ def _display_name(row: dict) -> str:
 def _baseline_specs(rows: Sequence[dict]) -> list[dict]:
     specs = [dict(s) for s in BASELINE_VERSIONS]
     known = {s["exp_id"] for s in specs}
-    for row in rows:
+    latest_rows = {row.get("exp_id"): row for row in rows}
+    for row in latest_rows.values():
         ver = row.get("baseline_version")
         eid = row.get("exp_id")
         if not ver or not eid or eid in known:
@@ -281,17 +286,28 @@ def _baseline_specs(rows: Sequence[dict]) -> list[dict]:
             }
         )
         known.add(eid)
-    specs.sort(key=lambda s: s["version"])
+    version_key = lambda value: tuple(int(part) for part in re.findall(r"\d+", str(value)))
+    specs.sort(key=lambda s: version_key(s["version"]))
     if specs:
-        latest = max(s["version"] for s in specs)
+        registered = [row for row in latest_rows.values()
+                      if row.get("phase_m_protocol") == "v1" and row.get("baseline_version")]
+        explicit = [row for row in registered if row.get("current_baseline") is True
+                    or row.get("current") is True]
+        intended = max(explicit or registered, key=lambda row: version_key(row["baseline_version"]), default=None)
+        current_id = intended.get("exp_id") if intended else None
         for spec in specs:
-            spec["current"] = spec["version"] == latest
+            spec["current"] = spec["exp_id"] == current_id
     return specs
 
 
-def collect(rows: Sequence[dict]) -> tuple[list[dict], list[dict]]:
-    by_id = {r.get("exp_id"): r for r in rows}
-    specs = _baseline_specs(rows)
+def collect(rows: Sequence[dict], *, historical_rows: Sequence[dict] = ()) -> tuple[list[dict], list[dict]]:
+    by_id = {r.get("exp_id"): r for r in [*historical_rows, *rows]}
+    # Archived references provide metrics only, never current-selection authority.
+    specs = _baseline_specs([*({**row, "current_baseline": False, "current": False}
+                               for row in historical_rows), *rows])
+    active_current_ids = {spec["exp_id"] for spec in _baseline_specs(rows) if spec["current"]}
+    for spec in specs:
+        spec["current"] = spec["exp_id"] in active_current_ids
     baselines = []
     for spec in specs:
         row = by_id.get(spec["exp_id"]) or {}
@@ -335,10 +351,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
+    args.output = _resolve_research_path(args.output, _RESEARCH_ROOT)
     rows = load_registry(args.registry)
-    baselines, experiments = collect(rows)
+    historical_rows = load_historical_baselines(_RESEARCH_ROOT)
+    baselines, experiments = collect(rows, historical_rows=historical_rows)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(render_hub(baselines, experiments, output_path=args.output), encoding="utf-8")
+    args.output.write_text(render_hub(baselines, experiments, output_path=args.output), encoding="utf-8")
     print(
         f"{len(baselines)} 个 baseline / {len(experiments)} 条实验记录 → {args.output}"
     )

@@ -1,0 +1,49 @@
+{
+  "status": "clean",
+  "findings": [],
+  "historical_registry_rows_unchanged": 33,
+  "original_catalog_fields_unchanged_except_new_profile_and_revision": 33,
+  "strategy_records_unchanged": 22,
+  "model_metadata_only_profile_added": 11,
+  "source_and_metric_file_hashes_unchanged": true,
+  "catalog_warnings": [],
+  "baseline_model_files_available": 20,
+  "model_path_references": 52,
+  "available_path_references": 30,
+  "unavailable_path_references": 22,
+  "model_binary_deserialization": false,
+  "resource_ids_and_availability_unchanged": true,
+  "metadata_cannot_override_version_seeds_or_resource_ids": "schema rejects undeclared authority fields",
+  "scientific_checks": [
+    "training filtering is separate from evaluation ST/amount/tradability filtering",
+    "training dates distinguish nominal window and frozen sampled date list",
+    "v1 uses 499-day next-day RankIC, v4 uses evaluation-window H5 RankIC",
+    "official five-seed signal z-scores daily then averages; metrics are not averaged",
+    "DoubleEnsemble default sub_weights are all one, matching within-seed equal averaging",
+    "K×H grid reuses two separate v1/v2 signals, no new model claimed"
+  ],
+  "changed_research_files": [
+    "backtest/experiments/models/training-target/h10/metadata.json",
+    "backtest/experiments/models/training-target/h20-v1/metadata.json",
+    "backtest/experiments/models/training-target/h5/metadata.json",
+    "backtest/experiments/models/training-target/h1/metadata.json",
+    "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+    "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+    "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+    "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+    "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+    "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+    "backtest/experiments/models/model-structure/de-v3-s42/metadata.json"
+  ],
+  "tests": {
+    "python_model_profile": 20,
+    "frontend": 90,
+    "git_diff_check": "passed"
+  },
+  "temporary_review_materials": [
+    "independent_review.py",
+    "pytest-independent",
+    "independent-python.log",
+    "independent-frontend.log"
+  ]
+}

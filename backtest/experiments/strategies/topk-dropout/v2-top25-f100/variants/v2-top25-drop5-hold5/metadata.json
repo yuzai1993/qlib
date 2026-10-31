@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+  "event_numbers": [
+    123
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/reports/all_top25d5h5_m0h20es.html",
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/reports/phase_m_v1_bt_m0h20es_top25d5h5.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metrics/all_top25d5h5_m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/records/140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "v2 · Top25换5·最短持5日",
+  "metrics_source": {
+    "path": "metrics/all_top25d5h5_m0h20es.json",
+    "sha256": "10652d6106867270c5d57f863cda4318da4758aab2eaaf2e0a4ada5371577ba3"
+  },
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "Top25换5·持5",
+    "description": "排名轮换：常规每日最多换5只、最短持有5日，不按5日到期退出；100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5",
+  "analysis": {
+    "conclusion": "CAGR24.6%、回撤34.1%，较BT v2更稳；未复现Top5主格表现，未晋升。",
+    "evidence": [
+      "metrics/all_top25d5h5_m0h20es.json",
+      "metrics/m0h20es.json",
+      "records/140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042.json",
+      "reports/all_top25d5h5_m0h20es.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。2026年数字只截至7月底；25槽排名轮换并不等于Top5的5日到期阶梯。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "从Top5换1、最短持1日，改为Top25换5、最短持5日。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v2",
+    "version": "v2"
+  }
+}

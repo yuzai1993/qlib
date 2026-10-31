@@ -1,0 +1,745 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "audit_kind": "read_only_isolated_HEAD_and_current_runtime_reproduction",
+  "HEAD_commit": "b163d514d876885622578e8edf373d727ab9068b",
+  "isolation": {
+    "method": "git archive HEAD into a separate task-temporary checkout",
+    "archived_paths": [
+      "backtest",
+      "tests/backtest",
+      "scripts"
+    ],
+    "source_module_origins": {
+      "phase_s_protocol": "<task-temp>/head-check/backtest/scripts/phase_s_protocol.py",
+      "run_strategy_sweep": "<task-temp>/head-check/backtest/scripts/run_strategy_sweep.py",
+      "finalize_strategy_neighborhood": "<task-temp>/head-check/backtest/scripts/finalize_strategy_neighborhood.py",
+      "run_strategy_neighborhood_full": "<task-temp>/head-check/backtest/scripts/run_strategy_neighborhood_full.py",
+      "finalize_strategy_neighborhood_full": "<task-temp>/head-check/backtest/scripts/finalize_strategy_neighborhood_full.py",
+      "build_strategy_stability_report": "<task-temp>/head-check/backtest/scripts/build_strategy_stability_report.py",
+      "cleanup_experiment_artifacts": "<task-temp>/head-check/backtest/scripts/cleanup_experiment_artifacts.py"
+    },
+    "qlib_framework_and_scripts_changes_against_HEAD": [],
+    "shared_environment": "Same /opt/anaconda3/envs/qlib/bin/python and installed packages; qlib framework code has no HEAD diff.",
+    "no_main_repository_logic_or_test_edits_by_this_audit": true
+  },
+  "commands": [
+    "git archive HEAD backtest tests/backtest",
+    "git archive HEAD scripts",
+    "pytest <23 exact failing node IDs> -q --tb=short (isolated HEAD)",
+    "pytest <same 23 exact node IDs> -q --tb=short (current working tree)"
+  ],
+  "normalization": "Repository/task-temporary roots, pytest run labels, and pytest-truncated absolute fixture prefixes are normalized. The winner recorder path suffix backtest/result/.../run_00/mlruns_link.json is preserved. Exception types, expected/actual numbers and causal messages remain unchanged.",
+  "results": {
+    "initial_wide_run": {
+      "failed": 23,
+      "passed": 2547,
+      "skipped": 1
+    },
+    "isolated_HEAD": {
+      "failed": 23,
+      "passed": 0,
+      "exit_code": 1
+    },
+    "current_targeted_replay": {
+      "failed": 23,
+      "passed": 0,
+      "exit_code": 1
+    },
+    "identical_normalized_failures": 23,
+    "introduced_failures_among_initial_23": 0
+  },
+  "root_cause_categories": {
+    "preexisting_reference_to_absent_b2_s_yaml": 1,
+    "preexisting_CSI1000_baseline_identity_expectation": 3,
+    "preexisting_removed_private_report_function": 1,
+    "preexisting_test_expects_risk_095_while_HEAD_uses_090": 6,
+    "preexisting_incomplete_train_recorder_fixture": 1,
+    "preexisting_test_expects_arithmetic_return_while_HEAD_reports_CAGR": 1,
+    "preexisting_grid_omits_current_baseline_candidate": 10
+  },
+  "supporting_evidence": {
+    "winner_fixture_review": "winner-fixture-review.json",
+    "ephemeral_log_sha256": {
+      "cleanup-wide-tests.log": "27c98947be70fc317c4df9c19da293a5c3076c56829abbdadd3745c862c54374",
+      "head-failures.log": "5c225164200f9523e904a3472fd1019e15542b499ea002d832df4778146f6207",
+      "head-structured.log": "b9cc6fc9c9b86286a8111fce6cf785af30d0c0853efb2b6bcdf293891a968e44",
+      "current-structured.log": "6c8fb6c4cf28e88c96ee2cc5bf0944d5a12579d7b69b5ac18d4cc41cbc1c06cd"
+    },
+    "note": "Temporary runners/checkouts/logs can be removed; each exact node and both observed failure excerpts are preserved below."
+  },
+  "failures": [
+    {
+      "node_id": "tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_reference_to_absent_b2_s_yaml",
+      "normalized_failure": "FileNotFoundError: [Errno 2] No such file or directory: '<repository>/backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml'",
+      "HEAD_failure_fingerprint_sha256": "f8e5bc1e084dd14435c29a1db11172d1cf8492028106ee367e4bc28695a0c963",
+      "current_failure_fingerprint_sha256": "f8e5bc1e084dd14435c29a1db11172d1cf8492028106ee367e4bc28695a0c963",
+      "HEAD_location": {
+        "path": "/opt/anaconda3/envs/qlib/lib/python3.12/pathlib.py",
+        "line": 1013
+      },
+      "current_location": {
+        "path": "/opt/anaconda3/envs/qlib/lib/python3.12/pathlib.py",
+        "line": 1013
+      },
+      "HEAD_error_lines": [
+        "E   FileNotFoundError: [Errno 2] No such file or directory: '<repository>/backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml'"
+      ],
+      "current_error_lines": [
+        "E   FileNotFoundError: [Errno 2] No such file or directory: '<repository>/backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml'"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_CSI1000_baseline_identity_expectation",
+      "normalized_failure": "AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'\n  \n  - strategy-neighborhood/b2-s-local-full-v2\n  ?                        ^               ^\n  + strategy-neighborhood/b3-s-local-full-v1\n  ?                        ^               ^",
+      "HEAD_failure_fingerprint_sha256": "ef06b6aba74dea7bc8992b8d3c6cc14763bb4b16f49f1ea6930588dd816d77fb",
+      "current_failure_fingerprint_sha256": "ef06b6aba74dea7bc8992b8d3c6cc14763bb4b16f49f1ea6930588dd816d77fb",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_finalize_strategy_neighborhood_full.py",
+        "line": 217
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_finalize_strategy_neighborhood_full.py",
+        "line": 217
+      },
+      "HEAD_error_lines": [
+        "E   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'",
+        "E     ",
+        "E     - strategy-neighborhood/b2-s-local-full-v2",
+        "E     ?                        ^               ^",
+        "E     + strategy-neighborhood/b3-s-local-full-v1",
+        "E     ?                        ^               ^"
+      ],
+      "current_error_lines": [
+        "E   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'",
+        "E     ",
+        "E     - strategy-neighborhood/b2-s-local-full-v2",
+        "E     ?                        ^               ^",
+        "E     + strategy-neighborhood/b3-s-local-full-v1",
+        "E     ?                        ^               ^"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_CSI1000_baseline_identity_expectation",
+      "normalized_failure": "AssertionError: assert 'topk-t20-d2-h10-r095' == 'topk-t30-d2-h20-r095'\n  \n  - topk-t30-d2-h20-r095\n  ?       ^      ^\n  + topk-t20-d2-h10-r095\n  ?       ^      ^",
+      "HEAD_failure_fingerprint_sha256": "64995be84a30a06a7fdccb86c1cbc2bf0a7f74ecf4a75b216c2d7ca4afa5a5e3",
+      "current_failure_fingerprint_sha256": "64995be84a30a06a7fdccb86c1cbc2bf0a7f74ecf4a75b216c2d7ca4afa5a5e3",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_finalize_strategy_neighborhood_full.py",
+        "line": 487
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_finalize_strategy_neighborhood_full.py",
+        "line": 487
+      },
+      "HEAD_error_lines": [
+        "E   AssertionError: assert 'topk-t20-d2-h10-r095' == 'topk-t30-d2-h20-r095'",
+        "E     ",
+        "E     - topk-t30-d2-h20-r095",
+        "E     ?       ^      ^",
+        "E     + topk-t20-d2-h10-r095",
+        "E     ?       ^      ^"
+      ],
+      "current_error_lines": [
+        "E   AssertionError: assert 'topk-t20-d2-h10-r095' == 'topk-t30-d2-h20-r095'",
+        "E     ",
+        "E     - topk-t30-d2-h20-r095",
+        "E     ?       ^      ^",
+        "E     + topk-t20-d2-h10-r095",
+        "E     ?       ^      ^"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_removed_private_report_function",
+      "normalized_failure": "AttributeError: module 'build_strategy_stability_report' has no attribute '_full_neighborhood_section'. Did you mean: '_neighborhood_section'?",
+      "HEAD_failure_fingerprint_sha256": "6de6a6efaf5165a7d13855f21c6ad76dc45c2030fba643fd73810242d875a6f7",
+      "current_failure_fingerprint_sha256": "6de6a6efaf5165a7d13855f21c6ad76dc45c2030fba643fd73810242d875a6f7",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_finalize_strategy_neighborhood_full.py",
+        "line": 511
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_finalize_strategy_neighborhood_full.py",
+        "line": 511
+      },
+      "HEAD_error_lines": [
+        "E   AttributeError: module 'build_strategy_stability_report' has no attribute '_full_neighborhood_section'. Did you mean: '_neighborhood_section'?"
+      ],
+      "current_error_lines": [
+        "E   AttributeError: module 'build_strategy_stability_report' has no attribute '_full_neighborhood_section'. Did you mean: '_neighborhood_section'?"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_test_expects_risk_095_while_HEAD_uses_090",
+      "normalized_failure": "assert 0.045 == 0.0475 ± 4.7e-08\n  \n  comparison failed\n  Obtained: 0.045\n  Expected: 0.0475 ± 4.7e-08",
+      "HEAD_failure_fingerprint_sha256": "b0326deca392e3749cc009dde6297b223b56522ebf40315359b6308133ca193e",
+      "current_failure_fingerprint_sha256": "b0326deca392e3749cc009dde6297b223b56522ebf40315359b6308133ca193e",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "HEAD_error_lines": [
+        "E   assert 0.045 == 0.0475 ± 4.7e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.045",
+        "E     Expected: 0.0475 ± 4.7e-08"
+      ],
+      "current_error_lines": [
+        "E   assert 0.045 == 0.0475 ± 4.7e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.045",
+        "E     Expected: 0.0475 ± 4.7e-08"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_test_expects_risk_095_while_HEAD_uses_090",
+      "normalized_failure": "assert 0.030000000000000002 == 0.03166666666666666 ± 3.2e-08\n  \n  comparison failed\n  Obtained: 0.030000000000000002\n  Expected: 0.03166666666666666 ± 3.2e-08",
+      "HEAD_failure_fingerprint_sha256": "67366f1591d91e7c472beb6e1e47ff9d6df4f94c987040cfa4ba53a6892d53fb",
+      "current_failure_fingerprint_sha256": "67366f1591d91e7c472beb6e1e47ff9d6df4f94c987040cfa4ba53a6892d53fb",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "HEAD_error_lines": [
+        "E   assert 0.030000000000000002 == 0.03166666666666666 ± 3.2e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.030000000000000002",
+        "E     Expected: 0.03166666666666666 ± 3.2e-08"
+      ],
+      "current_error_lines": [
+        "E   assert 0.030000000000000002 == 0.03166666666666666 ± 3.2e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.030000000000000002",
+        "E     Expected: 0.03166666666666666 ± 3.2e-08"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_test_expects_risk_095_while_HEAD_uses_090",
+      "normalized_failure": "assert 0.0225 == 0.02375 ± 2.4e-08\n  \n  comparison failed\n  Obtained: 0.0225\n  Expected: 0.02375 ± 2.4e-08",
+      "HEAD_failure_fingerprint_sha256": "332332878a6e186f630c10988d370adeaa39cbbcefdaaeff6b277186a482ace5",
+      "current_failure_fingerprint_sha256": "332332878a6e186f630c10988d370adeaa39cbbcefdaaeff6b277186a482ace5",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "HEAD_error_lines": [
+        "E   assert 0.0225 == 0.02375 ± 2.4e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.0225",
+        "E     Expected: 0.02375 ± 2.4e-08"
+      ],
+      "current_error_lines": [
+        "E   assert 0.0225 == 0.02375 ± 2.4e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.0225",
+        "E     Expected: 0.02375 ± 2.4e-08"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_test_expects_risk_095_while_HEAD_uses_090",
+      "normalized_failure": "assert 0.0225 == 0.02375 ± 2.4e-08\n  \n  comparison failed\n  Obtained: 0.0225\n  Expected: 0.02375 ± 2.4e-08",
+      "HEAD_failure_fingerprint_sha256": "332332878a6e186f630c10988d370adeaa39cbbcefdaaeff6b277186a482ace5",
+      "current_failure_fingerprint_sha256": "332332878a6e186f630c10988d370adeaa39cbbcefdaaeff6b277186a482ace5",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_phase_s_protocol.py",
+        "line": 178
+      },
+      "HEAD_error_lines": [
+        "E   assert 0.0225 == 0.02375 ± 2.4e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.0225",
+        "E     Expected: 0.02375 ± 2.4e-08"
+      ],
+      "current_error_lines": [
+        "E   assert 0.0225 == 0.02375 ± 2.4e-08",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 0.0225",
+        "E     Expected: 0.02375 ± 2.4e-08"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_incomplete_train_recorder_fixture",
+      "normalized_failure": "AssertionError: assert ['train recor...nk.json', ...] == []\n  \n  Left contains 20 more items, first extra item: 'train recorder validation failed: <fixture>/backtest/result/baseline-s1000/run_00/mlruns_link.json'\n  Use -v to get more diff",
+      "HEAD_failure_fingerprint_sha256": "0821eb8bd9014f6f6fec43690d7d62ba729cee70f41e6c0e48a2e2c8a58fb556",
+      "current_failure_fingerprint_sha256": "0821eb8bd9014f6f6fec43690d7d62ba729cee70f41e6c0e48a2e2c8a58fb556",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_register_b5_rankic_hyperparams.py",
+        "line": 633
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_register_b5_rankic_hyperparams.py",
+        "line": 631
+      },
+      "HEAD_error_lines": [
+        "E   AssertionError: assert ['train recor...nk.json', ...] == []",
+        "E     ",
+        "E     Left contains 20 more items, first extra item: 'train recorder validation failed: <fixture>/backtest/result/baseline-s1000/run_00/mlruns_link.json'",
+        "E     Use -v to get more diff"
+      ],
+      "current_error_lines": [
+        "E   AssertionError: assert ['train recor...nk.json', ...] == []",
+        "E     ",
+        "E     Left contains 20 more items, first extra item: 'train recorder validation failed: <fixture>/backtest/result/baseline-s1000/run_00/mlruns_link.json'",
+        "E     Use -v to get more diff"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_CSI1000_baseline_identity_expectation",
+      "normalized_failure": "AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'\n  \n  - strategy-neighborhood/b2-s-local-full-v2\n  ?                        ^               ^\n  + strategy-neighborhood/b3-s-local-full-v1\n  ?                        ^               ^",
+      "HEAD_failure_fingerprint_sha256": "ef06b6aba74dea7bc8992b8d3c6cc14763bb4b16f49f1ea6930588dd816d77fb",
+      "current_failure_fingerprint_sha256": "ef06b6aba74dea7bc8992b8d3c6cc14763bb4b16f49f1ea6930588dd816d77fb",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_neighborhood_full.py",
+        "line": 29
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_neighborhood_full.py",
+        "line": 29
+      },
+      "HEAD_error_lines": [
+        "E   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'",
+        "E     ",
+        "E     - strategy-neighborhood/b2-s-local-full-v2",
+        "E     ?                        ^               ^",
+        "E     + strategy-neighborhood/b3-s-local-full-v1",
+        "E     ?                        ^               ^"
+      ],
+      "current_error_lines": [
+        "E   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'",
+        "E     ",
+        "E     - strategy-neighborhood/b2-s-local-full-v2",
+        "E     ?                        ^               ^",
+        "E     + strategy-neighborhood/b3-s-local-full-v1",
+        "E     ?                        ^               ^"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_test_expects_arithmetic_return_while_HEAD_reports_CAGR",
+      "normalized_failure": "assert 3.0284392620292646 == 1.4166666666666667 ± 1.4e-06\n  \n  comparison failed\n  Obtained: 3.0284392620292646\n  Expected: 1.4166666666666667 ± 1.4e-06",
+      "HEAD_failure_fingerprint_sha256": "4fc48b600b3af7707a6cf9df6e37a3fa25d25576b14d9114d79685292e373a2d",
+      "current_failure_fingerprint_sha256": "4fc48b600b3af7707a6cf9df6e37a3fa25d25576b14d9114d79685292e373a2d",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_neighborhood_full.py",
+        "line": 509
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_neighborhood_full.py",
+        "line": 509
+      },
+      "HEAD_error_lines": [
+        "E   assert 3.0284392620292646 == 1.4166666666666667 ± 1.4e-06",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 3.0284392620292646",
+        "E     Expected: 1.4166666666666667 ± 1.4e-06"
+      ],
+      "current_error_lines": [
+        "E   assert 3.0284392620292646 == 1.4166666666666667 ± 1.4e-06",
+        "E     ",
+        "E     comparison failed",
+        "E     Obtained: 3.0284392620292646",
+        "E     Expected: 1.4166666666666667 ± 1.4e-06"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_test_expects_risk_095_while_HEAD_uses_090",
+      "normalized_failure": "AssertionError: assert {'risk_degree...limit': False} == {'risk_degree...limit': False}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'risk_degree': 0.9} != {'risk_degree': 0.95}\n  Use -v to get more diff",
+      "HEAD_failure_fingerprint_sha256": "48f1291789a315b5cf112c6d390f184f369b973a84e5c00e522ad6f57a102085",
+      "current_failure_fingerprint_sha256": "48f1291789a315b5cf112c6d390f184f369b973a84e5c00e522ad6f57a102085",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 56
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 56
+      },
+      "HEAD_error_lines": [
+        "E   AssertionError: assert {'risk_degree...limit': False} == {'risk_degree...limit': False}",
+        "E     ",
+        "E     Omitting 2 identical items, use -vv to show",
+        "E     Differing items:",
+        "E     {'risk_degree': 0.9} != {'risk_degree': 0.95}",
+        "E     Use -v to get more diff"
+      ],
+      "current_error_lines": [
+        "E   AssertionError: assert {'risk_degree...limit': False} == {'risk_degree...limit': False}",
+        "E     ",
+        "E     Omitting 2 identical items, use -vv to show",
+        "E     Differing items:",
+        "E     {'risk_degree': 0.9} != {'risk_degree': 0.95}",
+        "E     Use -v to get more diff"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_test_expects_risk_095_while_HEAD_uses_090",
+      "normalized_failure": "AssertionError: assert {'class': 'So...degree': 0.9}} == {'class': 'So...egree': 0.95}}\n  \n  Omitting 3 identical items, use -vv to show\n  Differing items:\n  {'kwargs': {'trade_impact_limit': 0.0225, 'risk_degree': 0.9}} != {'kwargs': {'trade_impact_limit': 0.02375 ± 2.4e-08, 'risk_degree': 0.95}}\n  Use -v to get more diff",
+      "HEAD_failure_fingerprint_sha256": "3437470f184d542b1e7f512c07c9e5e5bb8ba074b6db066dce8c92ef6a1bc1e7",
+      "current_failure_fingerprint_sha256": "3437470f184d542b1e7f512c07c9e5e5bb8ba074b6db066dce8c92ef6a1bc1e7",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 413
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 413
+      },
+      "HEAD_error_lines": [
+        "E   AssertionError: assert {'class': 'So...degree': 0.9}} == {'class': 'So...egree': 0.95}}",
+        "E     ",
+        "E     Omitting 3 identical items, use -vv to show",
+        "E     Differing items:",
+        "E     {'kwargs': {'trade_impact_limit': 0.0225, 'risk_degree': 0.9}} != {'kwargs': {'trade_impact_limit': 0.02375 ± 2.4e-08, 'risk_degree': 0.95}}",
+        "E     Use -v to get more diff"
+      ],
+      "current_error_lines": [
+        "E   AssertionError: assert {'class': 'So...degree': 0.9}} == {'class': 'So...egree': 0.95}}",
+        "E     ",
+        "E     Omitting 3 identical items, use -vv to show",
+        "E     Differing items:",
+        "E     {'kwargs': {'trade_impact_limit': 0.0225, 'risk_degree': 0.9}} != {'kwargs': {'trade_impact_limit': 0.02375 ± 2.4e-08, 'risk_degree': 0.95}}",
+        "E     Use -v to get more diff"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    },
+    {
+      "node_id": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate",
+      "HEAD_outcome": "failed",
+      "current_outcome": "failed",
+      "same_root_cause": true,
+      "introduced_by_current_cleanup": false,
+      "classification": "preexisting_grid_omits_current_baseline_candidate",
+      "normalized_failure": "StopIteration",
+      "HEAD_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "current_failure_fingerprint_sha256": "6ec6ed3d6ad55b576ffd7ac1381316cc6ab33c30d3d34b1c5ed7768f986bae49",
+      "HEAD_location": {
+        "path": "/private/tmp/qlib-strategy-labels-20261031/head-check/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "current_location": {
+        "path": "/Users/yuxianqi/Project/qlib/tests/backtest/test_run_strategy_sweep.py",
+        "line": 539
+      },
+      "HEAD_error_lines": [
+        "E   StopIteration"
+      ],
+      "current_error_lines": [
+        "E   StopIteration"
+      ]
+    }
+  ],
+  "conclusion": "All 23 failures reproduce on isolated HEAD with the same normalized exception/assertion messages. These are existing CSI1000 historical expectations or incomplete fixtures, not failures introduced by this strategy display-label cleanup. No unrelated research logic or fixtures were changed to force them to pass."
+}

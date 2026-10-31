@@ -90,7 +90,7 @@ exchange:
   trade_unit: 100
 
 parity:
-  backtest_config: "backtest/configs/alla_v4_ladder_k1h5_parity.yaml"
+  backtest_config: "backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml"
 
 live:
   bridge_root: "/Volumes/qmt_bridge"

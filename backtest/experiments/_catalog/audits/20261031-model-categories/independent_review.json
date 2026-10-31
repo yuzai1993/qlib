@@ -1,0 +1,45 @@
+{
+  "scope": "Independent read-only review of storage, front end and actual migration; own backend implementation excluded from code review",
+  "status": "clean after one reported P2 was fixed",
+  "resolved_findings": [
+    {
+      "issue": "Reverse directory or exact-detail aliases could cause rejected auto-registration to publish an alias cycle",
+      "resolution": "Validate declared destination and prospective alias graph before atomic map publication",
+      "verification": "45 passed, 168 deselected in 0.31s including unchanged map/index assertions on reverse alias rejection"
+    }
+  ],
+  "frontend_verification": "35 tests passed; types/filter/CSV, title/directory display, manual analysis versus original conclusion, XSS escaping and read-only research navigation",
+  "migration_verification": {
+    "directories": 13,
+    "files_moved": 39,
+    "old_archived_files_checked": 199,
+    "index_bytes_unchanged": true,
+    "original_rows_unchanged": 35,
+    "immutable_detail_files_sha_unchanged": 35,
+    "html_files_body_unchanged": 46,
+    "html_files_with_attribute_changes": 1,
+    "changed_link_attributes": 4,
+    "previously_available_local_targets_lost": 0,
+    "metadata_updated": 13,
+    "other_documentation_change": "backtest/experiments/README.md",
+    "original_primary_source_resources_preserved": 35,
+    "original_registry_detail_resources_preserved": 35
+  },
+  "reviewed_file_sha256": {
+    "backtest/scripts/experiment_archive.py": "888db0e46376081815ea321487cbe9bb1d96d5bb10e34a51da2401348d921a76",
+    "backtest/scripts/experiment_registry.py": "2c1c2a15ce802ac11cde6c5dd18d8bbdd54c86d92c2ec278b0a3ee424d14a6a2",
+    "backtest/scripts/research_layout.py": "7802ef98ec9eab43759806d7618014e1736476b69f5e20891430fad17c59ff91",
+    "quant_platform/static/js/helpers.js": "7d091515ac4e9f0722bd8a1301bed3f9e9ded17e46ed6424174a8174db024363",
+    "quant_platform/static/js/research.js": "8a9a88d2b8c0d160147e280715286bf8bc5d361457c3d19cb3e20d79bb4804a6",
+    "quant_platform/static/js/platform.js": "63f5915478b92f8f7d1bd0f246bac843cd01b0aab72e018dd187823662733f3b"
+  },
+  "logs": [
+    "review-storage.log",
+    "review-frontend.log"
+  ],
+  "temporary_fixtures_removed": [
+    "review-autoalias-recursive",
+    "review-autoalias-cycle",
+    "pytest-review-storage"
+  ]
+}

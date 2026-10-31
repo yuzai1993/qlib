@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+  "event_numbers": [
+    139
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/reports/all_ladder_k3h5f100_m0h20rankices.html",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metrics/all_ladder_k3h5f100_m0h20rankices.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metrics/m0h20rankices.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/records/3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "v4 RankIC ES 真阶梯 k3×h5 + f100",
+  "metrics_source": {
+    "path": "metrics/all_ladder_k3h5f100_m0h20rankices.json",
+    "sha256": "c61c8cdb725ee4e8d12826a8ed96c90b6b5db52c846fb403611850b903a18178"
+  },
+  "model_ref": "regime-adapt/m0-h20-rankices-v1",
+  "strategy_summary": {
+    "name": "阶梯3×5日·F100",
+    "description": "每日选Top3建5日层；掉出前100或缺有效分数时触发该股各层提前卖出（受成交约束），不额外补票。100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100",
+  "analysis": {
+    "conclusion": "相对原阶梯，加F100后CAGR降至18.2%，回撤收窄至29.8%；收益损失明显，未晋升。",
+    "evidence": [
+      "metrics/all_ladder_k3h5f100_m0h20rankices.json",
+      "metrics/m0h20rankices.json",
+      "records/3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c.json",
+      "reports/all_ladder_k3h5f100_m0h20rankices.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "直接对照为v4模型原真阶梯：从无F100改为启用F100提前强卖。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v3",
+    "version": "v3"
+  }
+}

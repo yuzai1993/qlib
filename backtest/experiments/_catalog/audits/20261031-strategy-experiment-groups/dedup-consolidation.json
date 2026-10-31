@@ -1,0 +1,393 @@
+{
+  "date": "2026-10-31",
+  "action": "retain promoted Benchmarks and consolidate identical original candidates",
+  "registry_sha256_before": "234125203c2581eded4a7241dcc5f8902faebd8956ffbbc1368dec37439cabb4",
+  "registry_sha256_after": "9cfd4d1b1c4d19f9725046c2ed7f7b11b3de94c53246097d05b5cdb42fdbde0a",
+  "only_removed_index_lines_changed": true,
+  "preserved_baseline_raw_promoted_from": true,
+  "pairs": [
+    {
+      "canonical_exp_id": "baseline/phase-m-v1-bt-v5",
+      "removed_exp_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+      "source_sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04",
+      "same_source_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "common_registry_metrics_equal": [
+        "alpha",
+        "annualized_one_way_turnover",
+        "annualized_return",
+        "annualized_return_arith",
+        "annualized_volatility",
+        "beta",
+        "calmar_ratio",
+        "max_drawdown",
+        "n_days",
+        "sharpe_ratio"
+      ],
+      "baseline_only_registry_metrics": [
+        "benchmark_annualized_return",
+        "benchmark_annualized_return_arith",
+        "benchmark_cumulative_return",
+        "cumulative_return"
+      ],
+      "candidate_only_registry_metrics": [
+        "y2026_annualized_return",
+        "y2026_annualized_return_arith"
+      ],
+      "all_projected_metrics_years_regimes_window_pool_seeds_equal": true,
+      "files": [
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v5/metrics/all_top5d1f100_m0h20es.json",
+          "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04",
+          "bytes": 150754
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/m0h20es.json",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v5/metrics/m0h20es.json",
+          "sha256": "a0dad7bf248b00889b3400bf2840f82bda60f21c0ba519a38fc121ffb7bca0e4",
+          "bytes": 8826
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v5/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+          "sha256": "a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc",
+          "bytes": 2642
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/all_top5d1f100_m0h20es.html",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v5/reports/all_top5d1f100_m0h20es.html",
+          "sha256": "445c1a7f9e438f6ac4ce1b2a856e849a5d92649265e642181b8037968c18a64f",
+          "bytes": 47127
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/phase_m_v1_bt_m0h20es_f100.html",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v5/reports/phase_m_v1_bt_m0h20es_f100.html",
+          "sha256": "dfd7fdd3d224f05e0710e490eac29baded82d21481fb221259967a24bf87d5b1",
+          "bytes": 92043
+        }
+      ],
+      "retained_resource_urls": [
+        {
+          "id": "806ad3c12266bb6a24d3a92a",
+          "reference": "backtest/experiments/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
+          "kind": "report",
+          "sha256": "bb8fb1666e4262498f0b2953b8e516fec0303893bf1eab449ad68a936455017c"
+        },
+        {
+          "id": "9bc0933492e3e84dbcdc7f1b",
+          "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+          "kind": "metrics",
+          "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04"
+        },
+        {
+          "id": "6be05ff6c7ac5f5c0d94b609",
+          "reference": "backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/run_01/report.html",
+          "kind": "report",
+          "sha256": "58bb77e4b3f9b5178fb85ae1fa6e9c4904da1e8c4c0267b7423d863a72f67719"
+        },
+        {
+          "id": "24ccd370abd4063b3a032d48",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/all_top5d1f100_m0h20es.html",
+          "kind": "report",
+          "sha256": "445c1a7f9e438f6ac4ce1b2a856e849a5d92649265e642181b8037968c18a64f"
+        },
+        {
+          "id": "73bcb67eaf574d089c17bf95",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/m0h20es.json",
+          "kind": "metrics",
+          "sha256": "a0dad7bf248b00889b3400bf2840f82bda60f21c0ba519a38fc121ffb7bca0e4"
+        },
+        {
+          "id": "bd8bd0ddc9017d126e99e264",
+          "reference": "backtest/experiments/strategies/topk-dropout/bt-v5/records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+          "kind": "registry_record",
+          "sha256": "887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5"
+        },
+        {
+          "id": "b2396551d35bc35e0f34fa31",
+          "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
+          "kind": "report",
+          "sha256": "dfd7fdd3d224f05e0710e490eac29baded82d21481fb221259967a24bf87d5b1"
+        },
+        {
+          "id": "9bc0933492e3e84dbcdc7f1b",
+          "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+          "kind": "metrics",
+          "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04"
+        },
+        {
+          "id": "6be05ff6c7ac5f5c0d94b609",
+          "reference": "backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/run_01/report.html",
+          "kind": "report",
+          "sha256": "58bb77e4b3f9b5178fb85ae1fa6e9c4904da1e8c4c0267b7423d863a72f67719"
+        },
+        {
+          "id": "24ccd370abd4063b3a032d48",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/all_top5d1f100_m0h20es.html",
+          "kind": "report",
+          "sha256": "445c1a7f9e438f6ac4ce1b2a856e849a5d92649265e642181b8037968c18a64f"
+        },
+        {
+          "id": "73bcb67eaf574d089c17bf95",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/m0h20es.json",
+          "kind": "metrics",
+          "sha256": "a0dad7bf248b00889b3400bf2840f82bda60f21c0ba519a38fc121ffb7bca0e4"
+        },
+        {
+          "id": "c2435820aaa43b8907e4c75e",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+          "kind": "registry_record",
+          "sha256": "a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc"
+        }
+      ]
+    },
+    {
+      "canonical_exp_id": "baseline/phase-m-v1-bt-v3",
+      "removed_exp_id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+      "source_sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52",
+      "same_source_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/all_top5d1h5f100_m0h20es.json",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "common_registry_metrics_equal": [
+        "alpha",
+        "annualized_one_way_turnover",
+        "annualized_return",
+        "annualized_return_arith",
+        "annualized_volatility",
+        "beta",
+        "calmar_ratio",
+        "max_drawdown",
+        "n_days",
+        "sharpe_ratio",
+        "y2026_annualized_return"
+      ],
+      "baseline_only_registry_metrics": [],
+      "candidate_only_registry_metrics": [],
+      "all_projected_metrics_years_regimes_window_pool_seeds_equal": true,
+      "files": [
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/all_top5d1h5f100_m0h20es.json",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v3/metrics/all_top5d1h5f100_m0h20es.json",
+          "sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52",
+          "bytes": 149203
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/m0h20es.json",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v3/metrics/m0h20es.json",
+          "sha256": "fb2731d0c8820cdbea77c4d5fd4d5a23b6a357cfced0c6674e0fa63c9c3c1a79",
+          "bytes": 11987
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/records/4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4.json",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v3/records/4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4.json",
+          "sha256": "4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4",
+          "bytes": 2156
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/all_top5d1h5f100_m0h20es.html",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v3/reports/all_top5d1h5f100_m0h20es.html",
+          "sha256": "2d90ae2876e38ac98e7fdfed65f378e7556fe65239a4f0acb228aeece2db87ba",
+          "bytes": 46857
+        },
+        {
+          "source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+          "destination": "backtest/experiments/strategies/topk-dropout/bt-v3/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+          "sha256": "7bbaa30bbff5230fc62afdfec81ad5d59cb1062ca1b0438c2c2928fd3066fb5c",
+          "bytes": 91069
+        }
+      ],
+      "retained_resource_urls": [
+        {
+          "id": "b241458978627022d2932a2a",
+          "reference": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+          "kind": "report",
+          "sha256": "8c4468c1dc436aadba36e609e02b0745f973a3ed5569d5f603de2c55c910d16e"
+        },
+        {
+          "id": "b3c4fb3e1bc968983aee1a8b",
+          "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5f100-bt/metrics/all_top5d1h5f100_m0h20es.json",
+          "kind": "metrics",
+          "sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52"
+        },
+        {
+          "id": "ffba2409bc3ca5d2557362ea",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/all_top5d1h5f100_m0h20es.html",
+          "kind": "report",
+          "sha256": "2d90ae2876e38ac98e7fdfed65f378e7556fe65239a4f0acb228aeece2db87ba"
+        },
+        {
+          "id": "36f3739c2d77b47efed44309",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/m0h20es.json",
+          "kind": "metrics",
+          "sha256": "fb2731d0c8820cdbea77c4d5fd4d5a23b6a357cfced0c6674e0fa63c9c3c1a79"
+        },
+        {
+          "id": "b9585000b5e59d6e86fbe47c",
+          "reference": "backtest/experiments/strategies/topk-dropout/bt-v3/records/a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6.json",
+          "kind": "registry_record",
+          "sha256": "a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6"
+        },
+        {
+          "id": "0f21634e47d64e1be4ae42fc",
+          "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+          "kind": "report",
+          "sha256": "7bbaa30bbff5230fc62afdfec81ad5d59cb1062ca1b0438c2c2928fd3066fb5c"
+        },
+        {
+          "id": "b3c4fb3e1bc968983aee1a8b",
+          "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5f100-bt/metrics/all_top5d1h5f100_m0h20es.json",
+          "kind": "metrics",
+          "sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52"
+        },
+        {
+          "id": "ffba2409bc3ca5d2557362ea",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/all_top5d1h5f100_m0h20es.html",
+          "kind": "report",
+          "sha256": "2d90ae2876e38ac98e7fdfed65f378e7556fe65239a4f0acb228aeece2db87ba"
+        },
+        {
+          "id": "36f3739c2d77b47efed44309",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/m0h20es.json",
+          "kind": "metrics",
+          "sha256": "fb2731d0c8820cdbea77c4d5fd4d5a23b6a357cfced0c6674e0fa63c9c3c1a79"
+        },
+        {
+          "id": "3741383e071668e9a100fd00",
+          "reference": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/records/4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4.json",
+          "kind": "registry_record",
+          "sha256": "4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4"
+        }
+      ]
+    },
+    {
+      "canonical_exp_id": "baseline/phase-m-v1-bt-v4",
+      "removed_exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+      "source_sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7",
+      "same_source_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "common_registry_metrics_equal": [
+        "alpha",
+        "annualized_one_way_turnover",
+        "annualized_return",
+        "annualized_return_arith",
+        "annualized_volatility",
+        "beta",
+        "calmar_ratio",
+        "max_drawdown",
+        "n_days",
+        "sharpe_ratio",
+        "y2026_annualized_return"
+      ],
+      "baseline_only_registry_metrics": [],
+      "candidate_only_registry_metrics": [
+        "y2026_annualized_return_arith"
+      ],
+      "all_projected_metrics_years_regimes_window_pool_seeds_equal": true,
+      "files": [
+        {
+          "source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+          "destination": "backtest/experiments/strategies/cohort-ladder/bt-v4/metrics/all_ladder_k3h5_m0h20rankices.json",
+          "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7",
+          "bytes": 149854
+        },
+        {
+          "source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/m0h20rankices.json",
+          "destination": "backtest/experiments/strategies/cohort-ladder/bt-v4/metrics/m0h20rankices.json",
+          "sha256": "40d5f9290c388edcfcf30ad1e2a72cb7fb4c21a20d14d777c2008fb8885375df",
+          "bytes": 13261
+        },
+        {
+          "source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+          "destination": "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+          "sha256": "ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896",
+          "bytes": 2515
+        },
+        {
+          "source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/all_ladder_k3h5_m0h20rankices.html",
+          "destination": "backtest/experiments/strategies/cohort-ladder/bt-v4/reports/all_ladder_k3h5_m0h20rankices.html",
+          "sha256": "e01323ae0339e3ca00fcff70018cbc64e453687694e9a906610a0fa5293393ac",
+          "bytes": 46773
+        },
+        {
+          "source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+          "destination": "backtest/experiments/strategies/cohort-ladder/bt-v4/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+          "sha256": "3c6b0545b88dc7a66660a9cb9f615ea6d1d7affc402c5ae2cec0814f238480a1",
+          "bytes": 91556
+        }
+      ],
+      "retained_resource_urls": [
+        {
+          "id": "b241458978627022d2932a2a",
+          "reference": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+          "kind": "report",
+          "sha256": "8c4468c1dc436aadba36e609e02b0745f973a3ed5569d5f603de2c55c910d16e"
+        },
+        {
+          "id": "4834cbe9ca3600e13c682dda",
+          "reference": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metrics/all_ladder_k3h5_m0h20rankices.json",
+          "kind": "metrics",
+          "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7"
+        },
+        {
+          "id": "80db7d6f2a3a7fdf62793606",
+          "reference": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/all_ladder_k3h5_m0h20rankices.html",
+          "kind": "report",
+          "sha256": "e01323ae0339e3ca00fcff70018cbc64e453687694e9a906610a0fa5293393ac"
+        },
+        {
+          "id": "1288657f24d06f8f9dcaeab9",
+          "reference": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/m0h20rankices.json",
+          "kind": "metrics",
+          "sha256": "40d5f9290c388edcfcf30ad1e2a72cb7fb4c21a20d14d777c2008fb8885375df"
+        },
+        {
+          "id": "e5515569ec983361e5d86cfd",
+          "reference": "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+          "kind": "registry_record",
+          "sha256": "ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf"
+        },
+        {
+          "id": "b1f62d6f0a67e53983d5879d",
+          "reference": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+          "kind": "report",
+          "sha256": "3c6b0545b88dc7a66660a9cb9f615ea6d1d7affc402c5ae2cec0814f238480a1"
+        },
+        {
+          "id": "4834cbe9ca3600e13c682dda",
+          "reference": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metrics/all_ladder_k3h5_m0h20rankices.json",
+          "kind": "metrics",
+          "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7"
+        },
+        {
+          "id": "80db7d6f2a3a7fdf62793606",
+          "reference": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/all_ladder_k3h5_m0h20rankices.html",
+          "kind": "report",
+          "sha256": "e01323ae0339e3ca00fcff70018cbc64e453687694e9a906610a0fa5293393ac"
+        },
+        {
+          "id": "1288657f24d06f8f9dcaeab9",
+          "reference": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/m0h20rankices.json",
+          "kind": "metrics",
+          "sha256": "40d5f9290c388edcfcf30ad1e2a72cb7fb4c21a20d14d777c2008fb8885375df"
+        },
+        {
+          "id": "9ead4d48c13e2da58aa03130",
+          "reference": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+          "kind": "registry_record",
+          "sha256": "ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896"
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "remaining_events": 24,
+    "active_entities": 23,
+    "strategy_entities": 17,
+    "model_entities": 6,
+    "benchmarks": 9,
+    "all_remaining_numeric_results_unchanged": true,
+    "all_old_available_report_metric_record_urls_resolve_with_original_bytes": true,
+    "current_model_and_strategy_unchanged": true,
+    "catalog_warnings": []
+  }
+}

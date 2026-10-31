@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "inventory_kind": "deployment_parity_archive",
+  "description": "全A生产 Top5 与历史阶梯 K1×H5 的实盘一致性对照；共享部署资料，不登记为新增实验。",
+  "archived_on": "2026-10-31",
+  "related_registry_ids": [
+    "baseline/phase-m-v1-bt-v4",
+    "regime-adapt/m0-h20-rankices-v1",
+    "baseline/phase-m-v1-bt-v5",
+    "regime-adapt/m0-h20-t5h5-es-v1",
+    "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1"
+  ],
+  "configs": [
+    {
+      "path": "backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml",
+      "sha256": "d9f5d0d8d5075a41e54a82718ea524a699f7b9a5e7a38f7ee0fa1482978dff0e",
+      "live_config": "live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml",
+      "role": "historical_fallback",
+      "original_path": "backtest/configs/alla_v4_ladder_k1h5_parity.yaml",
+      "note": "30万元、topk=1、horizon=5、risk_degree=1.0；与 BT v4 研究基线的策略及资金口径分别保存。"
+    },
+    {
+      "path": "backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml",
+      "sha256": "da8a625014a28c88b367b228646f1eee7e68a242e7c7f5d29add91e9468bc8f2",
+      "live_config": "live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml",
+      "additional_live_configs": [
+        "live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml"
+      ],
+      "role": "current_production",
+      "original_path": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/configs/alla_v2_top5d1f100_parity.yaml",
+      "note": "30万元、历史模型v2五种子、top5/drop1/hold1/F100、risk_degree=1.0；从诊断档迁入共享部署档，配置字节未变。"
+    }
+  ],
+  "migration": {
+    "bytes_unchanged": true,
+    "original_sha256": "d9f5d0d8d5075a41e54a82718ea524a699f7b9a5e7a38f7ee0fa1482978dff0e",
+    "original_sha256_scope": "backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml"
+  }
+}

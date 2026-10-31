@@ -1,0 +1,242 @@
+........................................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 13%]
+...........................................................F....F....... [ 16%]
+.............FF......................................................... [ 18%]
+......s..........................................................FFFF... [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+...............F........................................................ [ 29%]
+........................................................................ [ 32%]
+....F....................F..........F..............F.....FFFFFFFFFF..... [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 93%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+.....................                                                    [100%]
+=================================== FAILURES ===================================
+__________ test_complete_row_verifies_prediction_and_config_contracts __________
+tests/backtest/test_finalize_strategy_neighborhood.py:292: in test_complete_row_verifies_prediction_and_config_contracts
+    base_config_sha256=finalizer.sha256_file(base_path),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backtest/scripts/phase_s_protocol.py:57: in sha256_file
+    with Path(path).open("rb") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/envs/qlib/lib/python3.12/pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/yuxianqi/Project/qlib/backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml'
+_____________ test_preregistered_row_freezes_full_period_contract ______________
+tests/backtest/test_finalize_strategy_neighborhood_full.py:217: in test_preregistered_row_freezes_full_period_contract
+    assert row["exp_id"] == "strategy-neighborhood/b2-s-local-full-v2"
+E   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'
+E
+E     - strategy-neighborhood/b2-s-local-full-v2
+E     ?                        ^               ^
+E     + strategy-neighborhood/b3-s-local-full-v1
+E     ?                        ^               ^
+_____ test_full_baseline_comparison_correction_preserves_completed_result ______
+tests/backtest/test_finalize_strategy_neighborhood_full.py:487: in test_full_baseline_comparison_correction_preserves_completed_result
+    assert correction["same_run_baseline"]["candidate_id"] == "topk-t30-d2-h20-r095"
+E   AssertionError: assert 'topk-t20-d2-h10-r095' == 'topk-t30-d2-h20-r095'
+E
+E     - topk-t30-d2-h20-r095
+E     ?       ^      ^
+E     + topk-t20-d2-h10-r095
+E     ?       ^      ^
+_____ test_full_neighborhood_report_shows_same_run_baseline_before_winner ______
+tests/backtest/test_finalize_strategy_neighborhood_full.py:511: in test_full_neighborhood_report_shows_same_run_baseline_before_winner
+    html = stability_report._full_neighborhood_section(completed, correction)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'build_strategy_stability_report' has no attribute '_full_neighborhood_section'. Did you mean: '_neighborhood_section'?
+_ test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475] _
+tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits
+    assert row["trade_impact_limit"] == pytest.approx(expected)
+E   assert 0.045 == 0.0475 ± 4.7e-08
+E
+E     comparison failed
+E     Obtained: 0.045
+E     Expected: 0.0475 ± 4.7e-08
+_ test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666] _
+tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits
+    assert row["trade_impact_limit"] == pytest.approx(expected)
+E   assert 0.030000000000000002 == 0.03166666666666666 ± 3.2e-08
+E
+E     comparison failed
+E     Obtained: 0.030000000000000002
+E     Expected: 0.03166666666666666 ± 3.2e-08
+_ test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375] _
+tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits
+    assert row["trade_impact_limit"] == pytest.approx(expected)
+E   assert 0.0225 == 0.02375 ± 2.4e-08
+E
+E     comparison failed
+E     Obtained: 0.0225
+E     Expected: 0.02375 ± 2.4e-08
+_ test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375] _
+tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits
+    assert row["trade_impact_limit"] == pytest.approx(expected)
+E   assert 0.0225 == 0.02375 ± 2.4e-08
+E
+E     comparison failed
+E     Obtained: 0.0225
+E     Expected: 0.02375 ± 2.4e-08
+____ test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions _____
+tests/backtest/test_register_b5_rankic_hyperparams.py:634: in test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions
+    assert plan["errors"] == []
+E   AssertionError: assert ['train recor...nk.json', ...] == []
+E
+E     Left contains 20 more items, first extra item: 'train recorder validation failed: /private/tmp/qlib-experiment-kind-layout-20261031/final-pytest/test_final_winner_pa...nd-layout-20261031/final-pytest/test_final_winner_paths_are_cl0/backtest/result/baseline-s1000/run_00/mlruns_link.json'
+E     Use -v to get more diff
+______________ test_protocol_is_versioned_full_history_in_sample _______________
+tests/backtest/test_run_strategy_neighborhood_full.py:29: in test_protocol_is_versioned_full_history_in_sample
+    assert payload["exp_id"] == "strategy-neighborhood/b2-s-local-full-v2"
+E   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'
+E
+E     - strategy-neighborhood/b2-s-local-full-v2
+E     ?                        ^               ^
+E     + strategy-neighborhood/b3-s-local-full-v1
+E     ?                        ^               ^
+_ test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics __
+tests/backtest/test_run_strategy_neighborhood_full.py:509: in test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics
+    assert result["absolute_portfolio"]["annualized_return"] == pytest.approx(
+E   assert 3.0284392620292646 == 1.4166666666666667 ± 1.4e-06
+E
+E     comparison failed
+E     Obtained: 3.0284392620292646
+E     Expected: 1.4166666666666667 ± 1.4e-06
+___________ test_valid_config_uses_csi1000_dates_500k_and_live_costs ___________
+tests/backtest/test_run_strategy_sweep.py:56: in test_valid_config_uses_csi1000_dates_500k_and_live_costs
+    assert cfg["strategy"]["kwargs"] == {
+E   AssertionError: assert {'risk_degree...limit': False} == {'risk_degree...limit': False}
+E
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'risk_degree': 0.9} != {'risk_degree': 0.95}
+E     Use -v to get more diff
+_________ test_soft_topk_config_uses_precomputed_absolute_impact_limit _________
+tests/backtest/test_run_strategy_sweep.py:413: in test_soft_topk_config_uses_precomputed_absolute_impact_limit
+    assert cfg["strategy"] == {
+E   AssertionError: assert {'class': 'So...degree': 0.9}} == {'class': 'So...egree': 0.95}}
+E
+E     Omitting 3 identical items, use -vv to show
+E     Differing items:
+E     {'kwargs': {'trade_impact_limit': 0.0225, 'risk_degree': 0.9}} != {'kwargs': {'trade_impact_limit': 0.02375 ± 2.4e-08, 'risk_degree': 0.95}}
+E     Use -v to get more diff
+_ test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref] _
+tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity
+    _resume_summary_fixture(tmp_path, monkeypatch)
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+_ test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool] __
+tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity
+    _resume_summary_fixture(tmp_path, monkeypatch)
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+_ test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment] _
+tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity
+    _resume_summary_fixture(tmp_path, monkeypatch)
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+_ test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode] _
+tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity
+    _resume_summary_fixture(tmp_path, monkeypatch)
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+_ test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA] _
+tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity
+    _resume_summary_fixture(tmp_path, monkeypatch)
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+_ test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config] _
+tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity
+    _resume_summary_fixture(tmp_path, monkeypatch)
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+_ test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config] _
+tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity
+    _resume_summary_fixture(tmp_path, monkeypatch)
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+_____ test_resume_summary_reuses_only_rows_with_matching_complete_identity _____
+tests/backtest/test_run_strategy_sweep.py:689: in test_resume_summary_reuses_only_rows_with_matching_complete_identity
+    base, pred, manifest, payload, candidates, calls = _resume_summary_fixture(
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+______ test_resume_summary_with_all_matching_successes_runs_no_candidates ______
+tests/backtest/test_run_strategy_sweep.py:723: in test_resume_summary_with_all_matching_successes_runs_no_candidates
+    _base, pred, manifest, payload, candidates, calls = _resume_summary_fixture(
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+__________ test_resume_summary_rejects_an_omitted_requested_candidate __________
+tests/backtest/test_run_strategy_sweep.py:756: in test_resume_summary_rejects_an_omitted_requested_candidate
+    _base, pred, manifest, payload, _candidates, calls = _resume_summary_fixture(
+tests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture
+    baseline = next(
+E   StopIteration
+=============================== warnings summary ===============================
+backtest/test_file_strategy.py::FileStrTest::test_file_str
+  /Users/yuxianqi/Project/qlib/qlib/utils/index_data.py:492: RuntimeWarning: Mean of empty slice
+    return np.nanmean(self.data)
+
+backtest/test_freeze_b5_rankic_selection.py::test_frozen_guard_rehashes_session_and_model_provenance_before_qlib[meta]
+  /Users/yuxianqi/Project/qlib/backtest/scripts/config_loader.py:381: UserWarning: 源 session meta 缺少 handler，将回退用当前 YAML 的 data.handler.class (20260731_rankic_es_l1low_s42)
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts
+FAILED tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract
+FAILED tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result
+FAILED tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner
+FAILED tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]
+FAILED tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]
+FAILED tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]
+FAILED tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]
+FAILED tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions
+FAILED tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample
+FAILED tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics
+FAILED tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs
+FAILED tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates
+FAILED tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate
+23 failed, 2661 passed, 1 skipped, 2 warnings in 91.37s (0:01:31)

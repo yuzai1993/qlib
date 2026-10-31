@@ -1,0 +1,2917 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-31",
+  "scope": "strategy_only_read_only_audit",
+  "before": {
+    "path": "/private/tmp/qlib-experiment-groups-20261031/before.json",
+    "sha256": "09c3255388653fed465940fea6da53effe83bd494d1086601218c07e09250238",
+    "bytes": 559005
+  },
+  "counts": {
+    "strategy_records_before": 21,
+    "exact_duplicate_pairs": 3,
+    "failed_records_to_remove": 1,
+    "distinct_successful_variants_after_cleanup": 17,
+    "proposed_groups": 5,
+    "grouped_variants": 14,
+    "standalone_variants": 3
+  },
+  "duplicates": [
+    {
+      "canonical_id": "baseline/phase-m-v1-bt-v5",
+      "alias_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+      "equal": {
+        "source": true,
+        "metrics": true,
+        "years": true,
+        "regimes": true,
+        "window": true,
+        "seeds": true,
+        "comparison_key": true
+      },
+      "action": "Keep baseline identity/version and add candidate alias; preserve frozen numeric bytes and original promotion history."
+    },
+    {
+      "canonical_id": "baseline/phase-m-v1-bt-v3",
+      "alias_id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+      "equal": {
+        "source": true,
+        "metrics": true,
+        "years": true,
+        "regimes": true,
+        "window": true,
+        "seeds": true,
+        "comparison_key": true
+      },
+      "action": "Keep baseline identity/version and add candidate alias; preserve frozen numeric bytes and original promotion history."
+    },
+    {
+      "canonical_id": "baseline/phase-m-v1-bt-v4",
+      "alias_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+      "equal": {
+        "source": true,
+        "metrics": true,
+        "years": true,
+        "regimes": true,
+        "window": true,
+        "seeds": true,
+        "comparison_key": true
+      },
+      "action": "Keep baseline identity/version and add candidate alias; preserve frozen numeric bytes and original promotion history."
+    }
+  ],
+  "failed": [
+    "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1"
+  ],
+  "groups": [
+    {
+      "id": "strategy-group/v2-top5-hold-force100",
+      "label": "v2 Top5 · 最短持有期与F100",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "strategy_family": "topk-dropout",
+      "control_id": "baseline/phase-m-v1-bt-v2",
+      "axes": [
+        "hold_thresh",
+        "force_sell_rank"
+      ],
+      "design": "2×2 parameter matrix; two axes, not one isolated parameter",
+      "fixed_summary": "TopkDropout topk5/drop1。五种子日截面zscore后等权融合信号，单次回测；全A、日频ST、日成交额≥1000万、上市≥60日、近60日持续成交；等权全A基准；2020-08-03～2026-07-31历史选型窗；100万、risk0.90、历史费率。旧运行config多数缺失，固定口径来自冻结登记协议和实验规范，不宣称逐项重新认证。",
+      "members": [
+        {
+          "id": "baseline/phase-m-v1-bt-v2",
+          "label": "持1 · 不强制F100",
+          "values": {
+            "hold_thresh": 1,
+            "force_sell_rank": null
+          },
+          "benchmark_version": "BT v2"
+        },
+        {
+          "id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+          "label": "持5 · 不强制F100",
+          "values": {
+            "hold_thresh": 5,
+            "force_sell_rank": null
+          }
+        },
+        {
+          "id": "baseline/phase-m-v1-bt-v5",
+          "label": "持1 · F100",
+          "values": {
+            "hold_thresh": 1,
+            "force_sell_rank": 100
+          },
+          "benchmark_version": "BT v5"
+        },
+        {
+          "id": "baseline/phase-m-v1-bt-v3",
+          "label": "持5 · F100",
+          "values": {
+            "hold_thresh": 5,
+            "force_sell_rank": 100
+          },
+          "benchmark_version": "BT v3"
+        }
+      ],
+      "cautions": [
+        "hold_thresh为常规卖出的最短持有期，不是5日到期退出。",
+        "无F100为冻结协议未启用该条款的登记含义；BT v2的hold1及risk0.9由规范/历史规则说明确认，原运行config未留存。",
+        "展示四格即可沿单轴对比；禁止归纳为只改一个参数。"
+      ],
+      "model_refs_from_metadata": [
+        "regime-adapt/m0-h20-t5h5-es-v1"
+      ],
+      "source_evidence": [
+        {
+          "id": "baseline/phase-m-v1-bt-v2",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/bt-v2/metrics/all_top5d1_m0h20es.json",
+            "sha256": "d6e7e819cb69877fdf33fcf1bb00320d473d8cbc1875eb0cbf7bcf03df94ef1e",
+            "bytes": 149366
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/bt-v2/records/2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b.json",
+              "sha256": "2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b",
+              "bytes": 1757,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5d1 account=1e6 | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metrics/all_top5d1h5_m0h20es.json",
+            "sha256": "5b3533224f27d9ece937352a28454b405ff7ea58735ef27e19459054e2665f9a",
+            "bytes": 149115
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/records/3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4.json",
+              "sha256": "3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4",
+              "bytes": 2418,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "baseline/phase-m-v1-bt-v5",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+            "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04",
+            "bytes": 150754
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/bt-v5/records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+              "sha256": "887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5",
+              "bytes": 4498,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "baseline/phase-m-v1-bt-v3",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/all_top5d1h5f100_m0h20es.json",
+            "sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52",
+            "bytes": 149203
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/bt-v3/records/a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6.json",
+              "sha256": "a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6",
+              "bytes": 2187,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5 n_drop=1 hold_thresh=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        }
+      ]
+    },
+    {
+      "id": "strategy-group/v2-top25-force100",
+      "label": "v2 Top25 · F100开关",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "strategy_family": "topk-dropout",
+      "control_id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+      "axes": [
+        "force_sell_rank"
+      ],
+      "design": "single_axis",
+      "fixed_summary": "TopkDropout topk25/drop5/最短持5日。五种子日截面zscore后等权融合信号，单次回测；全A、日频ST、日成交额≥1000万、上市≥60日、近60日持续成交；等权全A基准；2020-08-03～2026-07-31历史选型窗；100万、risk0.90、历史费率。旧运行config多数缺失，固定口径来自冻结登记协议和实验规范，不宣称逐项重新认证。",
+      "members": [
+        {
+          "id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+          "label": "不强制F100",
+          "values": {
+            "force_sell_rank": null
+          }
+        },
+        {
+          "id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+          "label": "F100",
+          "values": {
+            "force_sell_rank": 100
+          }
+        }
+      ],
+      "cautions": [
+        "分组内对照为无F100；原始登记baseline_ref仍是BT v2，不改写历史比较对象。",
+        "Top25最短持5日轮换不等同于Top5×H5阶梯。"
+      ],
+      "model_refs_from_metadata": [
+        "regime-adapt/m0-h20-t5h5-es-v1"
+      ],
+      "source_evidence": [
+        {
+          "id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metrics/all_top25d5h5_m0h20es.json",
+            "sha256": "10652d6106867270c5d57f863cda4318da4758aab2eaaf2e0a4ada5371577ba3",
+            "bytes": 149295
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/records/140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042.json",
+              "sha256": "140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042",
+              "bytes": 2729,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metrics/all_top25d5h5f100_m0h20es.json",
+            "sha256": "3e35eb3f71f886c42532d53f1485b0a06c1bbaf8c3e225041b3150cbf65aa73c",
+            "bytes": 149345
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/records/7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3.json",
+              "sha256": "7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3",
+              "bytes": 2419,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        }
+      ]
+    },
+    {
+      "id": "strategy-group/v4-cohort-force100-refill",
+      "label": "v4 阶梯3×5 · F100与补位",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "strategy_family": "cohort-ladder",
+      "control_id": "baseline/phase-m-v1-bt-v4",
+      "axes": [
+        "force_sell_rank",
+        "refill_force_sell"
+      ],
+      "design": "sequential_ablation_two_axes",
+      "fixed_summary": "CohortLadder 每日新买3只、持有5交易日到期。五种子日截面zscore后等权融合信号，单次回测；全A、日频ST、日成交额≥1000万、上市≥60日、近60日持续成交；等权全A基准；2020-08-03～2026-07-31历史选型窗；100万、risk0.90、历史费率。旧运行config多数缺失，固定口径来自冻结登记协议和实验规范，不宣称逐项重新认证。",
+      "members": [
+        {
+          "id": "baseline/phase-m-v1-bt-v4",
+          "label": "不强制F100",
+          "values": {
+            "force_sell_rank": null,
+            "refill_force_sell": false
+          },
+          "benchmark_version": "BT v4"
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+          "label": "F100 · 不补位",
+          "values": {
+            "force_sell_rank": 100,
+            "refill_force_sell": false
+          }
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+          "label": "F100 · 补新票",
+          "values": {
+            "force_sell_rank": 100,
+            "refill_force_sell": true
+          }
+        }
+      ],
+      "cautions": [
+        "F100开启后再比较是否补位，属于两个阶段的规则消融；不能声称只有一个参数变化。",
+        "保留原始BT v3历史对照关系，组内受控对照是相同v4信号的BT v4。"
+      ],
+      "model_refs_from_metadata": [
+        "regime-adapt/m0-h20-rankices-v1"
+      ],
+      "source_evidence": [
+        {
+          "id": "baseline/phase-m-v1-bt-v4",
+          "source": {
+            "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+            "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7",
+            "bytes": 149854
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+              "sha256": "ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf",
+              "bytes": 2206,
+              "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metrics/all_ladder_k3h5f100_m0h20rankices.json",
+            "sha256": "c61c8cdb725ee4e8d12826a8ed96c90b6b5db52c846fb403611850b903a18178",
+            "bytes": 150016
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/records/3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c.json",
+              "sha256": "3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c",
+              "bytes": 2447,
+              "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metrics/all_ladder_k3h5f100r_m0h20rankices.json",
+            "sha256": "b95130f7a640d9aa8cf0181c583f918547ca38b3921cbb09f517bbdede3a2e12",
+            "bytes": 149943
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/records/14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975.json",
+              "sha256": "14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975",
+              "bytes": 2520,
+              "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 refill_force_sell=true risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        }
+      ]
+    },
+    {
+      "id": "strategy-group/v4-topk-drop-grid",
+      "label": "v4 Topk · 持仓与换仓档位",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "strategy_family": "topk-dropout",
+      "control_id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+      "axes": [
+        "topk",
+        "n_drop"
+      ],
+      "design": "coupled_parameter_grid_not_isolated_topk",
+      "fixed_summary": "TopkDropout 最短持1日、F100。五种子日截面zscore后等权融合信号，单次回测；全A、日频ST、日成交额≥1000万、上市≥60日、近60日持续成交；等权全A基准；2020-08-03～2026-07-31历史选型窗；100万、risk0.90、历史费率。旧运行config多数缺失，固定口径来自冻结登记协议和实验规范，不宣称逐项重新认证。",
+      "members": [
+        {
+          "id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+          "label": "Top3 · 换1",
+          "values": {
+            "topk": 3,
+            "n_drop": 1
+          }
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+          "label": "Top5 · 换1",
+          "values": {
+            "topk": 5,
+            "n_drop": 1
+          }
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+          "label": "Top15 · 换3",
+          "values": {
+            "topk": 15,
+            "n_drop": 3
+          }
+        }
+      ],
+      "cautions": [
+        "Top15同时将n_drop从1改为3，应展示两个参数列，不得把差异归因于topk单轴。",
+        "严格单变量替代方案：仅Top3/Top5归一组，Top15单列。",
+        "组内控制选择Top3只是展示约定，原始登记baseline_ref=BT v4保留。"
+      ],
+      "model_refs_from_metadata": [
+        "regime-adapt/m0-h20-rankices-v1"
+      ],
+      "source_evidence": [
+        {
+          "id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metrics/all_top3d1f100_m0h20rankices.json",
+            "sha256": "f27e09db6d000f83aaa502be3840db0c8b239d975044a405683f25fbcceb3dc0",
+            "bytes": 150039
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/records/75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05.json",
+              "sha256": "75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05",
+              "bytes": 2236,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=3 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metrics/all_top5d1f100_m0h20rankices.json",
+            "sha256": "631f96364f26f7133d32156d298bd2ff4c6a558908d4a12a5323fdb1b2fb75c5",
+            "bytes": 149906
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/records/a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16.json",
+              "sha256": "a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16",
+              "bytes": 2235,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        },
+        {
+          "id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metrics/all_top15d3f100_m0h20rankices.json",
+            "sha256": "c20e80cc3941c9a85957f4401689af8f4f4a5da7627b5723af261eacfa506f3f",
+            "bytes": 150033
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/records/217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634.json",
+              "sha256": "217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634",
+              "bytes": 2247,
+              "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=15 n_drop=3 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+              "model_ref": null
+            }
+          ],
+          "runtime_config": null
+        }
+      ]
+    },
+    {
+      "id": "strategy-group/v2-top5-300k-risk",
+      "label": "v2 Top5 · 30万仓位比例诊断",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "strategy_family": "topk-dropout",
+      "control_id": "diag/bt-v5-300k-current-cost-20261029",
+      "axes": [
+        "risk_degree"
+      ],
+      "design": "single_axis_frozen_parameter_diagnostic",
+      "fixed_summary": "TopkDropout topk5/drop1/最短持1/F100；30万元，开仓0.0000954/平仓0.0005954/最低5元/100股；close/market_cn；同一冻结v2五种子信号。主表为2020-08-03～2026-07-31，新期间2026-08-03～2026-10-28承接历史持仓单列；不晋升。两份实际config均保留。",
+      "members": [
+        {
+          "id": "diag/bt-v5-300k-current-cost-20261029",
+          "label": "risk 0.90",
+          "values": {
+            "risk_degree": 0.9
+          }
+        },
+        {
+          "id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+          "label": "risk 1.00",
+          "values": {
+            "risk_degree": 1.0
+          }
+        }
+      ],
+      "cautions": [
+        "30万与BT v5的100万历史费率口径不同，不混入Top5参数消融组。",
+        "新增期间与主历史窗必须分开展示，不能将拼接区间冒充独立样本外或重新选型依据。"
+      ],
+      "model_refs_from_metadata": [
+        "regime-adapt/m0-h20-t5h5-es-v1"
+      ],
+      "source_evidence": [
+        {
+          "id": "diag/bt-v5-300k-current-cost-20261029",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metrics/bt_v5_300k_current_cost.json",
+            "sha256": "5735379d8f49afea6390671c4267b6103d543075e5efe3b9fdd3c4e0dc2e2101",
+            "bytes": 164729
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/records/ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f.json",
+              "sha256": "ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f",
+              "bytes": 2973,
+              "eval_protocol": "五种子daily_zscore_mean | TopkDropout topk5 drop1 hold1 force100 risk0.90 | account300000 open0.0000954 close0.0005954 min5 | 主表2020-08-03～2026-07-31，新增2026-08-03～2026-10-28承接历史持仓单列 | 等权全A",
+              "model_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+            }
+          ],
+          "runtime_config": {
+            "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/configs/config.yaml",
+            "sha256": "03b6080eb83e2e1f4ea5b88af954cbc60ea4607dfbcd7adb561c30cb24f67e60",
+            "bytes": 2974
+          }
+        },
+        {
+          "id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+          "source": {
+            "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metrics/bt_v5_300k_risk1_current_cost.json",
+            "sha256": "376a93414bba8bb32548cfa00f9432f8c2c824a14d73f2610ad6fdab9fc2dca5",
+            "bytes": 165259
+          },
+          "registry_originals": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/records/068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70.json",
+              "sha256": "068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70",
+              "bytes": 3197,
+              "eval_protocol": "五种子daily_zscore_mean | TopkDropout topk5 drop1 hold1 force100 risk1.00 | account300000 open0.0000954 close0.0005954 min5 | 主表2020-08-03～2026-07-31，新增2026-08-03～2026-10-28承接历史持仓单列 | 等权全A",
+              "model_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+            }
+          ],
+          "runtime_config": {
+            "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/configs/config.yaml",
+            "sha256": "59d9082844440f1d02bbc9847fbd3389383045789d325bce6f2eae8793e16ef6",
+            "bytes": 3018
+          }
+        }
+      ]
+    }
+  ],
+  "standalone": [
+    {
+      "id": "baseline/phase-m-v1-bt-v1",
+      "reason": "v1信号与v2不同，保留Benchmark历史；不与v2策略参数实验混合。"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+      "reason": "v2信号的阶梯K5H5；v4阶梯组模型不同，Topk组规则家族不同。"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+      "reason": "回测延长至2026-08-30（需以实际交易日解释终点），与7月31日历史选型窗不同，单列时窗验证。"
+    }
+  ],
+  "variants_before": [
+    {
+      "id": "baseline/phase-m-v1-bt-v1",
+      "name": "M0 H20 top5d1",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-label-v4",
+      "baseline_ref": "self",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5d1 account=1e6 | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v1/metrics/all_top5d1_m0h20.json",
+        "sha256": "df3975588d24e4b0bffa7fb9e06ed4bea52510a3e2ff8fe669c57f34cc12302f",
+        "bytes": 149319
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v1/metadata.json",
+        "sha256": "715032c0e477215d988c7d1fbcbd38bee80e4d0a30d5f10bcef544a2a6f56b1a",
+        "bytes": 2143
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v1/records/e9a6e2033ccccd6444f849d4d9f82368a4ee18bedc621e2e2a4c21371b1f820c.json",
+          "sha256": "e9a6e2033ccccd6444f849d4d9f82368a4ee18bedc621e2e2a4c21371b1f820c",
+          "bytes": 1671,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5d1 account=1e6 | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "4124a1b0487f90b96ace09c16973bf0d78d7090112825921b4dd6f5b3664eec5",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v2",
+      "name": "M0 H20 ES top5d1",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "self",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5d1 account=1e6 | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v2/metrics/all_top5d1_m0h20es.json",
+        "sha256": "d6e7e819cb69877fdf33fcf1bb00320d473d8cbc1875eb0cbf7bcf03df94ef1e",
+        "bytes": 149366
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v2/metadata.json",
+        "sha256": "54560b6cdf60fccb0079368b41c8f259f83f4d00951849017e9af891f7e5f29a",
+        "bytes": 3373
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v2/records/2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b.json",
+          "sha256": "2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b",
+          "bytes": 1757,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5d1 account=1e6 | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "b40a28196f5d69f8b6e6051ea0d135665eb0a8b10f05a56dc31496fa3f8f192f",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v3",
+      "name": "M0 H20 ES hold5 + 掉出前100必卖",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "self",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5 n_drop=1 hold_thresh=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/all_top5d1h5f100_m0h20es.json",
+        "sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52",
+        "bytes": 149203
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v3/metadata.json",
+        "sha256": "ea282dab9ac46214872d9d854c61772e231dcb9ed8613fce3a0c2e7c6eb9d376",
+        "bytes": 2133
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v3/records/a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6.json",
+          "sha256": "a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6",
+          "bytes": 2187,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5 n_drop=1 hold_thresh=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "1e706d80a73147f8cc535d2946f5f8ee53fdb341fbe0ab01d6208e3896d1b19c",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v4",
+      "name": "v4 RankIC ES 真阶梯 k3×h5",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "self",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "CohortLadderStrategy",
+      "axes": {
+        "topk": {
+          "value": 3,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "horizon": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+        "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7",
+        "bytes": 149854
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/cohort-ladder/bt-v4/metadata.json",
+        "sha256": "2bf6b57b57760ee186e8771e06351628b3bc6ccf2a3d6583c9619cb2a954d595",
+        "bytes": 2203
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+          "sha256": "ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf",
+          "bytes": 2206,
+          "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "60edfd09856c75468cb91664c523d43a0f735283a95ceee557f8d8848738dd8c",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v5",
+      "name": "v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "self",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "hold_thresh": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "only_tradable": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000,
+      "exchange_kwargs": {
+        "freq": "day",
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5.0,
+        "trade_unit": 100
+      },
+      "historical_cost_documentation": null,
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": "2026-07-31",
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+        "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04",
+        "bytes": 150754
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5/metadata.json",
+        "sha256": "679d864bd51e553475a5dd45151ed1eaf4de15d27440b607933dd51e267f4fbe",
+        "bytes": 2971
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5/records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+          "sha256": "887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5",
+          "bytes": 4498,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "26b011e6745ad7c4843557b07fad1b8b216ef1e57328dfcf61173bf3d344084d",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+      "name": "M0 H20 ES 真阶梯 k5×h5（按持有天数到期退出）",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "CohortLadderStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "horizon": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=5 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/metrics/all_ladder_k5h5_m0h20es.json",
+        "sha256": "9e0d7acb7b8b3790dabbdeedde6df53a26be6ba130b9dd497f684dfc3cb7f2fa",
+        "bytes": 149280
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/metadata.json",
+        "sha256": "59a1b992953e20f2f1a10e4f2988e4ec6fc594f1aa9ec0b6f01ab7b5abda90e5",
+        "bytes": 2638
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/records/17aaf731af99b5ae63f33981c4e3c667e8a7af62221ae9e6cdf0d862fe222f8d.json",
+          "sha256": "17aaf731af99b5ae63f33981c4e3c667e8a7af62221ae9e6cdf0d862fe222f8d",
+          "bytes": 3337,
+          "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=5 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "159bab945a076e86a58e82305112600a3799ec5a7dabc6a737e8800bbbec7732",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+      "name": "v2 · Top25换5·最短持5日",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 25,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metrics/all_top25d5h5_m0h20es.json",
+        "sha256": "10652d6106867270c5d57f863cda4318da4758aab2eaaf2e0a4ada5371577ba3",
+        "bytes": 149295
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metadata.json",
+        "sha256": "38c8f49aee8f2746873ccd348290600862e25d9e3eea8260260c510b8bca6fe3",
+        "bytes": 2555
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/records/140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042.json",
+          "sha256": "140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042",
+          "bytes": 2729,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "11916a9595baa02e53787091e8716530e92894b4da5a93b648eb2f034d316081",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+      "name": "M0 H20 ES top25 drop5 hold5 + 掉出前100必卖",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 25,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metrics/all_top25d5h5f100_m0h20es.json",
+        "sha256": "3e35eb3f71f886c42532d53f1485b0a06c1bbaf8c3e225041b3150cbf65aa73c",
+        "bytes": 149345
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metadata.json",
+        "sha256": "46af08696f7a2a83487e04890509e7d0edd3a774ffe500e35263186b806c676e",
+        "bytes": 2705
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/records/7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3.json",
+          "sha256": "7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3",
+          "bytes": 2419,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=25 n_drop=5 hold_thresh=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "73d14fe1da919a95bf5a3cb6f30260650ba778fa3be09dc7630c604588a99f37",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+      "name": "M0 H20 ES hold5 + 掉出前100必卖",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=5 force_sell_rank=100 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/all_top5d1h5f100_m0h20es.json",
+        "sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52",
+        "bytes": 149203
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metadata.json",
+        "sha256": "a0e40c4de91894fdca9333cacb8ccb3c3cc2537dec389dbac354f752851a576a",
+        "bytes": 2642
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/records/4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4.json",
+          "sha256": "4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4",
+          "bytes": 2156,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=5 force_sell_rank=100 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "1e706d80a73147f8cc535d2946f5f8ee53fdb341fbe0ab01d6208e3896d1b19c",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+      "name": "M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "hold_thresh": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "only_tradable": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000,
+      "exchange_kwargs": {
+        "freq": "day",
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5.0,
+        "trade_unit": 100
+      },
+      "historical_cost_documentation": null,
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": "2026-07-31",
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+        "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04",
+        "bytes": 150754
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metadata.json",
+        "sha256": "9d156423940f411f7de69bf5139c28d65f8fd2ca63775b98bbdd0e7c315053e5",
+        "bytes": 2626
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+          "sha256": "a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc",
+          "bytes": 2642,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "26b011e6745ad7c4843557b07fad1b8b216ef1e57328dfcf61173bf3d344084d",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+      "name": "M0 H20 ES top5d1 hold5（无强制卖出）",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metrics/all_top5d1h5_m0h20es.json",
+        "sha256": "5b3533224f27d9ece937352a28454b405ff7ea58735ef27e19459054e2665f9a",
+        "bytes": 149115
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metadata.json",
+        "sha256": "658daa01367a4e996b8f41d7c514f4f85c4175235b9a4407ca457cadbbcab27b",
+        "bytes": 2473
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/records/3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4.json",
+          "sha256": "3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4",
+          "bytes": 2418,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "3094268e1b9aab9337532dde8cf54b0fcecdd0ed722708f072a8d590e2cc1504",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+      "name": "v4 RankIC ES 真阶梯 k3×h5",
+      "kind": "strategy",
+      "status": "promoted",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "CohortLadderStrategy",
+      "axes": {
+        "topk": {
+          "value": 3,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "horizon": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+        "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7",
+        "bytes": 149854
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metadata.json",
+        "sha256": "b32eef98a3098ccba2a613ee9631c5a68de20def2e794e165750a299785d9373",
+        "bytes": 2608
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+          "sha256": "ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896",
+          "bytes": 2515,
+          "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "60edfd09856c75468cb91664c523d43a0f735283a95ceee557f8d8848738dd8c",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+      "name": "v4 RankIC ES 真阶梯 k3×h5 + f100",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "CohortLadderStrategy",
+      "axes": {
+        "topk": {
+          "value": 3,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "horizon": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metrics/all_ladder_k3h5f100_m0h20rankices.json",
+        "sha256": "c61c8cdb725ee4e8d12826a8ed96c90b6b5db52c846fb403611850b903a18178",
+        "bytes": 150016
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metadata.json",
+        "sha256": "7e6cbc6aac9439f853782a5d38fa65dd90710e9e242a1cc72f53bb3c1b5fea61",
+        "bytes": 2611
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/records/3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c.json",
+          "sha256": "3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c",
+          "bytes": 2447,
+          "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "69d41fe3197886b9cac81b082a30fad7136a9ecfa174a35620efa2b9b3708cff",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+      "name": "v4 RankIC ES 真阶梯 k3×h5 + f100 补新票",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "CohortLadderStrategy",
+      "axes": {
+        "topk": {
+          "value": 3,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "horizon": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": true,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 refill_force_sell=true risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metrics/all_ladder_k3h5f100r_m0h20rankices.json",
+        "sha256": "b95130f7a640d9aa8cf0181c583f918547ca38b3921cbb09f517bbdede3a2e12",
+        "bytes": 149943
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metadata.json",
+        "sha256": "6d09fe8f3e73b211a4381e084ff1d396595befc56548604e4cf543b48d520099",
+        "bytes": 2818
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/records/14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975.json",
+          "sha256": "14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975",
+          "bytes": 2520,
+          "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 force_sell_rank=100 refill_force_sell=true risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "3015d42ee25810ac8629ba6e37ea6221e7f740ea420d09a21bd9ef5caef75b91",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+      "name": "v4 RankIC ES top15d3 + f100",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 15,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 3,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=15 n_drop=3 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metrics/all_top15d3f100_m0h20rankices.json",
+        "sha256": "c20e80cc3941c9a85957f4401689af8f4f4a5da7627b5723af261eacfa506f3f",
+        "bytes": 150033
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metadata.json",
+        "sha256": "dca3873bdd98d167f81e2d1367f7c46cad0f1addee64a7630e466d0467edc989",
+        "bytes": 2595
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/records/217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634.json",
+          "sha256": "217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634",
+          "bytes": 2247,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=15 n_drop=3 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "745fb2559ab1203f49db06a64837ea2ba32f1a16c5fc3570d10000b79282d9c9",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+      "name": "v4 RankIC ES top3d1 + f100",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 3,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=3 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metrics/all_top3d1f100_m0h20rankices.json",
+        "sha256": "f27e09db6d000f83aaa502be3840db0c8b239d975044a405683f25fbcceb3dc0",
+        "bytes": 150039
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metadata.json",
+        "sha256": "0a1308335b4d49593747fd88c2e43f31bfd9687dc468451edd21b5b005f842f6",
+        "bytes": 2563
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/records/75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05.json",
+          "sha256": "75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05",
+          "bytes": 2236,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=3 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "eee88c4ccf7f9a96d31fe9e4a6c1b584af69446fa77bc181e1dbb4f87c85e7c8",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+      "name": "v4 RankIC ES top5d1 + f100",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "hold_thresh": {
+          "value": 1,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "historical_selection_window",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metrics/all_top5d1f100_m0h20rankices.json",
+        "sha256": "631f96364f26f7133d32156d298bd2ff4c6a558908d4a12a5323fdb1b2fb75c5",
+        "bytes": 149906
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metadata.json",
+        "sha256": "2ba35a9e5298e36f2aa40ef224b15fe91c442f47c11dc896f3163b46d94051f6",
+        "bytes": 2563
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/records/a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16.json",
+          "sha256": "a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16",
+          "bytes": 2235,
+          "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "1b620848ce4a84421173f6fe43ada67df7621f17aaf25f06c68357dbc1e2d56c",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+      "name": "v4 RankIC ES 真阶梯 k3×h5 延长至 2026-08-30",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "CohortLadderStrategy",
+      "axes": {
+        "topk": {
+          "value": 3,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "n_drop": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_applicable_cohort_expiry_strategy"
+        },
+        "horizon": {
+          "value": 5,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "frozen_registry_eval_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 1000000.0,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-08-28"
+      },
+      "requested_end": null,
+      "actual_end": null,
+      "selection_cutoff": null,
+      "evaluation_mode": "extended_window_diagnostic",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000.0,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60,
+        "st_filter": "daily"
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-08-30",
+      "source": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/metrics/all_ladder_k3h5_e20260830_m0h20rankices.json",
+        "sha256": "576441888b9cfef1d549573a6c62654ef12f66e23a0addf0864936db7bfd05e0",
+        "bytes": 151749
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/metadata.json",
+        "sha256": "91272974a450c0b9f67a0f44160b1066ab34e7af74ade1fc3ef1c042a676393b",
+        "bytes": 2743
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/records/2ae2c0e7f70db3713af8292163294ccc6ab47e095a7f18a4515359879ee1baf5.json",
+          "sha256": "2ae2c0e7f70db3713af8292163294ccc6ab47e095a7f18a4515359879ee1baf5",
+          "bytes": 2721,
+          "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-08-30",
+          "model_ref": null
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "6a0664c0a7a64bad041db35f68e518051cf72a1bb3053c3cad7b1c3d3677f063",
+      "comparison_key": "phase_m_v1:strategy:8815b8cf06a3d61c6404"
+    },
+    {
+      "id": "diag/bt-v5-300k-current-cost-20261029",
+      "name": "BT v5 · 30万元/当前费率复算 + 8月后冻结诊断",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "hold_thresh": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 0.9,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "only_tradable": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 300000.0,
+      "exchange_kwargs": {
+        "freq": "day",
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "open_cost": 9.54e-05,
+        "close_cost": 0.0005954,
+        "min_cost": 5.0,
+        "trade_unit": 100
+      },
+      "historical_cost_documentation": null,
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": "2026-10-28",
+      "actual_end": "2026-10-28",
+      "selection_cutoff": "2026-07-31",
+      "evaluation_mode": "frozen_parameter_diagnostic_not_selection",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "五种子daily_zscore_mean | TopkDropout topk5 drop1 hold1 force100 risk0.90 | account300000 open0.0000954 close0.0005954 min5 | 主表2020-08-03～2026-07-31，新增2026-08-03～2026-10-28承接历史持仓单列 | 等权全A",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metrics/bt_v5_300k_current_cost.json",
+        "sha256": "5735379d8f49afea6390671c4267b6103d543075e5efe3b9fdd3c4e0dc2e2101",
+        "bytes": 164729
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metadata.json",
+        "sha256": "7a87f52d2ceb645a88dfb779f4dbab71fee29b256bb17c75b1853f178bfdedad",
+        "bytes": 2801
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/records/ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f.json",
+          "sha256": "ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f",
+          "bytes": 2973,
+          "eval_protocol": "五种子daily_zscore_mean | TopkDropout topk5 drop1 hold1 force100 risk0.90 | account300000 open0.0000954 close0.0005954 min5 | 主表2020-08-03～2026-07-31，新增2026-08-03～2026-10-28承接历史持仓单列 | 等权全A",
+          "model_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+        }
+      ],
+      "runtime_config": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/configs/config.yaml",
+        "sha256": "03b6080eb83e2e1f4ea5b88af954cbc60ea4607dfbcd7adb561c30cb24f67e60",
+        "bytes": 2974
+      },
+      "numeric_sections_sha256": "8b650bbea942b5fa3abd52603efb4bbb6a97a80f331036e065b6aa1f3f706fa1",
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673"
+    },
+    {
+      "id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+      "name": "BT v5 · risk=1.00 · 30万元/当前费率复算 + 8月后冻结诊断",
+      "kind": "strategy",
+      "status": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": "TopkDropoutStrategy",
+      "axes": {
+        "topk": {
+          "value": 5,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "n_drop": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "hold_thresh": {
+          "value": 1,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_applicable_minimum_hold_is_not_fixed_expiry"
+        },
+        "force_sell_rank": {
+          "value": 100,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_applicable_TopkDropout_forced_sell_follows_its_existing_replacement_logic"
+        },
+        "risk_degree": {
+          "value": 1.0,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "only_tradable": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": false,
+          "evidence_quality": "raw_runtime_config_or_provenance"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 300000.0,
+      "exchange_kwargs": {
+        "freq": "day",
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "open_cost": 9.54e-05,
+        "close_cost": 0.0005954,
+        "min_cost": 5.0,
+        "trade_unit": 100
+      },
+      "historical_cost_documentation": null,
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": "2026-10-28",
+      "actual_end": "2026-10-28",
+      "selection_cutoff": "2026-07-31",
+      "evaluation_mode": "frozen_parameter_diagnostic_not_selection",
+      "universe_filter": {
+        "pool": "all",
+        "min_amount": 10000000,
+        "min_listing_days": 60,
+        "min_recent_trading_days": 60
+      },
+      "signal_method": "daily_zscore_mean",
+      "frozen_eval_protocol": "五种子daily_zscore_mean | TopkDropout topk5 drop1 hold1 force100 risk1.00 | account300000 open0.0000954 close0.0005954 min5 | 主表2020-08-03～2026-07-31，新增2026-08-03～2026-10-28承接历史持仓单列 | 等权全A",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metrics/bt_v5_300k_risk1_current_cost.json",
+        "sha256": "376a93414bba8bb32548cfa00f9432f8c2c824a14d73f2610ad6fdab9fc2dca5",
+        "bytes": 165259
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metadata.json",
+        "sha256": "7ca0968d9b25fb7695867faa5d15e4b87c05b1de49efbbf4f937006fd6a3f069",
+        "bytes": 2914
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/records/068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70.json",
+          "sha256": "068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70",
+          "bytes": 3197,
+          "eval_protocol": "五种子daily_zscore_mean | TopkDropout topk5 drop1 hold1 force100 risk1.00 | account300000 open0.0000954 close0.0005954 min5 | 主表2020-08-03～2026-07-31，新增2026-08-03～2026-10-28承接历史持仓单列 | 等权全A",
+          "model_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+        }
+      ],
+      "runtime_config": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/configs/config.yaml",
+        "sha256": "59d9082844440f1d02bbc9847fbd3389383045789d325bce6f2eae8793e16ef6",
+        "bytes": 3018
+      },
+      "numeric_sections_sha256": "d1c887d0c0271dacd79dab8b32c73807a3373755e128fb436d4703ae7c46ee35",
+      "comparison_key": "phase_m_v1:strategy:691f4ac02a4460718e43"
+    },
+    {
+      "id": "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1",
+      "name": "BT v5 · risk=1.00 · 诊断失败尝试1",
+      "kind": "strategy",
+      "status": "failed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "strategy_class": null,
+      "axes": {
+        "topk": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "n_drop": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "hold_thresh": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "horizon": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "force_sell_rank": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "refill_force_sell": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "risk_degree": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "only_tradable": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "forbid_all_trade_at_limit": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        },
+        "initial_buy_count": {
+          "value": null,
+          "evidence_quality": "not_recorded_in_available_runtime_config_or_protocol"
+        }
+      },
+      "account": 300000,
+      "exchange_kwargs": null,
+      "historical_cost_documentation": {
+        "status": "standard_documented_historical_protocol_not_original_runtime_config",
+        "source": "backtest/EXPERIMENT_STANDARD.md section 1.6",
+        "account": 1000000,
+        "risk_degree": 0.9,
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5,
+        "trade_unit": 100,
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "warning": "Do not claim each missing runtime config was independently authenticated."
+      },
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "requested_end": "2026-10-28",
+      "actual_end": null,
+      "selection_cutoff": "2026-07-31",
+      "evaluation_mode": "frozen_parameter_diagnostic_not_selection",
+      "universe_filter": {},
+      "signal_method": null,
+      "frozen_eval_protocol": "Phase M v1 · 执行层 CAGR",
+      "source": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/metrics/bt_v5_300k_risk1_current_cost_failed_1.json",
+        "sha256": "38fbbb4d22b4657b7626351e3ae09f1d785a6b649e4eff6d02daa36c31bc7b66",
+        "bytes": 2099
+      },
+      "metadata": {
+        "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/metadata.json",
+        "sha256": "77bfa9db3a979cb57eabcfaec627176002e0e233edb3aab558a215e152d7ff23",
+        "bytes": 2848
+      },
+      "registry_originals": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/records/dac7bef791edc18c5df5400cd111c3e4eea0143d853adf61f748d405f690d912.json",
+          "sha256": "dac7bef791edc18c5df5400cd111c3e4eea0143d853adf61f748d405f690d912",
+          "bytes": 1497,
+          "eval_protocol": null,
+          "model_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+        }
+      ],
+      "runtime_config": null,
+      "numeric_sections_sha256": "200af4473c6d34bfba71225c0180fe884e4eff5388e044fa4265f9ef2dcac9c3",
+      "comparison_key": "phase_m_v1:strategy:691f4ac02a4460718e43"
+    }
+  ],
+  "limitations": [
+    "None force_sell_rank or False refill in group display values are frozen protocol semantics; absent per-run config is separately disclosed in each variant axes evidence.",
+    "Unknown per-run only_tradable/forbid_all_trade_at_limit cannot be inferred from current code defaults (current default forbid_all_trade_at_limit=True differs from recorded BT v5 explicit False).",
+    "No new experiment, metric recomputation, production config changes, or repository archive writes were performed by this audit."
+  ]
+}

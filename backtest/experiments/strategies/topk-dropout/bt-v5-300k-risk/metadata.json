@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "entity_type": "experiment_group",
+  "exp_id": "strategy-group/v2-top5-300k-risk",
+  "kind": "strategy",
+  "track": "all_a",
+  "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk",
+  "title": "30万仓位比例对照",
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "Top5·30万仓位比例",
+    "description": "固定v2、Top5换1持1/F100、30万和当前费率，对比90%/100%仓位。"
+  },
+  "change_summary": "从30万、risk=0.90，改为30万、risk=1.00；模型、规则与费率不变。",
+  "experiment_group": {
+    "control_ref": "diag/bt-v5-300k-current-cost-20261029",
+    "members": [
+      {
+        "ref": "diag/bt-v5-300k-current-cost-20261029",
+        "label": "risk 0.90"
+      },
+      {
+        "ref": "diag/bt-v5-300k-risk1-current-cost-20261029",
+        "label": "risk 1.00"
+      }
+    ],
+    "axes": [
+      "risk_degree"
+    ],
+    "fixed_summary": "TopkDropout topk5/drop1/最短持1/F100；30万元，开仓0.0000954/平仓0.0005954/最低5元/100股；close/market_cn；同一冻结v2五种子信号。主表为2020-08-03～2026-07-31，新期间2026-08-03～2026-10-28承接历史持仓单列；不晋升。两份实际config均保留。"
+  },
+  "analysis": {
+    "conclusion": "历史窗内risk1.00较0.90的CAGR由35.7%升至37.2%，回撤由-32.7%扩大至-33.7%；新增期间仍单列诊断。",
+    "limitations": "30万与BT v5的100万历史费率口径不同，不混入Top5参数消融组。；新增期间与主历史窗必须分开展示，不能将拼接区间冒充独立样本外或重新选型依据。",
+    "evidence": [
+      "variants/bt-v5-300k/metadata.json",
+      "variants/bt-v5-300k-risk1/metadata.json"
+    ],
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "reports": [
+    "reports/summary.html"
+  ],
+  "docs": [
+    "README.md"
+  ]
+}

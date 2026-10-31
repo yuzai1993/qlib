@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const R = require('../../quant_platform/static/js/research.js');
+const H = require('../../quant_platform/static/js/helpers.js');
 
 const definitions = [
     {key:'net_ann',label:'扣费净年化',format:'pct'},
@@ -25,6 +26,166 @@ test('baseline versions sort numerically newest first without mutating the input
     assert.notEqual(sorted,versions);
 });
 
+test('experiment history sorts valid dates newest first with stable same-day and unknown dates last',()=>{
+    const history=[
+        {id:'old',date:'2026-08-01'}, {id:'missing'}, {id:'new-first',date:'2026-10-31'},
+        {id:'invalid-day',date:'2026-02-30'}, {id:'new-second',date:'2026-10-31'},
+        {id:'timed-first',date:'2026-10-31T00:01:00Z'}, {id:'timed-second',date:'2026-10-31T23:59:00Z'},
+        {id:'empty',date:''}, {id:'number',date:20261031}, {id:'bad',date:'not-a-date'},
+        {id:'leap',date:'2024-02-29'}
+    ];
+    assert.deepEqual(R.orderHistory(history).map(r=>r.id),
+        ['new-first','new-second','timed-first','timed-second','old','leap','missing','invalid-day','empty','number','bad']);
+    assert.equal(history[0].id,'old');
+});
+
+test('available research tracks follow each kind records without fabricating empty tracks',()=>{
+    assert.deepEqual(R.availableTracks(records,'model'),['all_a']);
+    assert.deepEqual(R.availableTracks(records,'unavailable'),[]);
+    assert.deepEqual(R.availableTracks([...records,{kind:'strategy',track:'csi1000'},
+        {kind:'model',track:'csi1000'},{kind:'model',track:'csi1000'}],'model'),['all_a','csi1000']);
+    assert.deepEqual(R.availableTracks([{kind:'model',track:'csi1000'}],'model'),['csi1000']);
+});
+
+test('experiment types use current record values, legacy defaults and combined record filters',()=>{
+    const samples=[
+        {id:'m/target',kind:'model',experiment_type:'training_target',experiment_type_label:'训练目标',status:'completed',direction:'research'},
+        {id:'m/structure',kind:'model',experiment_type:'model_structure',experiment_type_label:'模型结构',status:'failed',direction:'research'},
+        {id:'m/old',kind:'model'}, {id:'s/old',kind:'strategy'}
+    ];
+    assert.deepEqual(R.experimentTypes(samples.slice(0,3)),[
+        {key:'training_target',label:'训练目标'}, {key:'model_structure',label:'模型结构'}, {key:'uncategorized',label:'未分类'}
+    ]);
+    assert.equal(R.experimentType(samples[3]).label,'策略回测');
+    assert.deepEqual(H.filterRecords(samples,{kind:'model',query:'target',status:'completed',direction:'research',experimentType:'training_target'}).map(r=>r.id),['m/target']);
+    assert.equal(H.filterRecords(samples,{experimentType:'training_target',status:'failed'}).length,0);
+    assert.deepEqual(H.filterRecords(samples,{experimentType:'uncategorized'}).map(r=>r.id),['m/old']);
+});
+
+test('manual analysis conclusion overrides registry text without changing research authority',()=>{
+    const record={id:'m/manual',kind:'model',conclusion:'regress',comparable:false,official:false,
+        analysis:{conclusion:'人工确认结论',evidence:['metrics/eval.json'],limitations:'限制说明',review_status:'reviewed'}};
+    const summary=R.historySummary(record);
+    assert.equal(summary.conclusion,'人工确认结论');
+    assert.equal(summary.conclusionSource,'analysis');
+    assert.equal(summary.registryConclusion,'退步');
+    assert.deepEqual(summary.analysis.evidence,['metrics/eval.json']);
+    assert.equal(summary.promotion,'');
+    assert.equal(R.isComparable(record),false);
+    assert.equal(record.conclusion,'regress');
+    assert.equal(R.historySummary({...record,analysis:{conclusion:'  '}}).conclusion,'退步');
+    assert.equal(R.historySummary({id:'m/empty'}).conclusion,'待填写分析结论');
+});
+
+test('model table identity shows its classified directory and escapes editorial labels',()=>{
+    const record={id:'regime-adapt/old-slug',name:'可读模型名称',kind:'model',version:'v4',
+        directory:'backtest/experiments/models/training-target/new-name',metrics:{net_ann:.4}};
+    const html=R.renderMetricTables(R.metricTables([record],definitions,'full'));
+    assert.match(html,/models\/training-target\/new-name/);
+    assert.doesNotMatch(html,/regime-adapt\/old-slug/);
+    assert.match(html,/可读模型名称/);
+    assert.equal(R.recordIdentity({...record,directory:undefined}),record.id);
+    const unsafe=R.renderMetricTables(R.metricTables([{...record,directory:'backtest/experiments/models/<img src=x>'}],definitions,'full'));
+    assert.doesNotMatch(unsafe,/<img /);
+    assert.match(unsafe,/&lt;img/);
+});
+
+test('strategy history uses its linked model version and short strategy summary without guessing from BT version',()=>{
+    const record={id:'baseline/bt-v5',kind:'strategy',version:'v5',name:'旧实验名称',hypothesis:'完整研究假设',
+        model_summary:{ref:'model/es',version:'v2',name:'M0 H20 ES'},
+        strategy_summary:{name:'Top5',description:'每日换1，持有1日'}};
+    const summary=R.strategyHistorySummary(record);
+    assert.equal(summary.modelLabel,'v2 · M0 H20 ES');
+    assert.equal(summary.modelRef,'model/es');
+    assert.equal(summary.strategyName,'Top5');
+    assert.equal(summary.strategyDescription,'每日换1，持有1日');
+    const legacy=R.strategyHistorySummary({id:'strategy/old',kind:'strategy',version:'BT v99',name:'旧策略'});
+    assert.equal(legacy.modelLabel,'未登记模型');
+    assert.equal(legacy.modelVersion,'');
+    assert.equal(legacy.strategyName,'旧策略');
+    assert.equal(legacy.strategyDescription,'');
+    assert.equal(R.strategyHistorySummary({...record,model_summary:{ref:'unknown/model',version:'',name:''}}).modelLabel,'未登记模型');
+    assert.equal(R.strategyHistorySummary({...record,model_summary:{version:'v2',name:'未关联名称'}}).modelLabel,'未登记模型');
+    assert.equal(record.version,'v5');
+    const reference='模型v2，对照BT v4，晋升BT v5；原ID baseline/phase-m-v1-bt-v5';
+    assert.equal(R.strategyReferenceText(record,reference),'模型v2，对照s4，晋升s5；原ID baseline/phase-m-v1-bt-v5');
+    assert.equal(R.strategyReferenceText({...record,kind:'model'},reference),reference);
+    assert.equal(R.strategyReferenceText({...record,track:'csi1000'},reference),reference);
+    assert.equal(R.recordLabelText({...record,is_baseline:false,display_name:'Baseline · s5',name:'Baseline · BT v5'}),'Baseline · s5');
+});
+
+test('strategy presentation versions distinguish all-A strategy s from model v and CSI1000 names',()=>{
+    const record={kind:'strategy',track:'all_a',version:'v5',display_version:'s5'};
+    assert.equal(R.strategyVersionLabel(record),'s5');
+    assert.equal(R.strategyVersionLabel({kind:'strategy',version:' BT v3 '}),'s3');
+    assert.equal(R.strategyVersionLabel({kind:'strategy',version:'s4'}),'s4');
+    assert.equal(R.strategyVersionLabel({kind:'strategy',version:'v1.1',display_version:'s1.1'}),'s1.1');
+    assert.equal(R.strategyVersionLabel({kind:'strategy',version:'BT v1.2.3'}),'s1.2.3');
+    assert.equal(R.strategyVersionLabel({kind:'model',version:'v4',display_version:'s4'}),'v4');
+    assert.equal(R.strategyVersionLabel({kind:'strategy',track:'csi1000',version:'B4-S v1.0'}),'B4-S v1.0');
+    assert.equal(R.strategyVersionLabel({kind:'strategy',track:'csi1000',version:'v2'}),'v2');
+    assert.equal(R.strategyVersionLabel({kind:'strategy',version:'说明BT v2继续保留'}),'说明BT v2继续保留');
+    assert.equal(record.version,'v5');
+});
+
+test('strategy benchmark labels and metric CSV show strategy s, linked model v and the concise rule',()=>{
+    const record={id:'baseline/v5',kind:'strategy',version:'v5',display_version:'s5',is_baseline:true,
+        name:'完整历史执行回测标题不会恢复到表格',model_summary:{ref:'model/v2',version:'v2',name:'Top5早停'},
+        strategy_summary:{name:'Top5换1·持1·F100',description:'长策略说明'},metrics:{annualized_return:.35},
+        years:{2026:{annualized_return:.1}},regimes:{D:{annualized_return:.2}}};
+    for(const view of ['full','year','regime']){
+        const table=R.metricTables([record],[{key:'annualized_return',label:'CAGR',format:'pct'}],view);
+        const html=R.renderMetricTables(table,{compact:view==='full',interactive:true});
+        assert.match(html,/>s5<\/span>/);
+        assert.match(html,/>v2 · Top5早停<\/span>/);
+        assert.match(html,/>Top5换1·持1·F100<\/span>/);
+        assert.doesNotMatch(html,/>完整历史执行回测标题不会恢复到表格</);
+        const csv=R.metricCsvRows(table),offset=view==='full'?0:1;
+        assert.equal(csv[0][offset+2],'策略版本');
+        assert.deepEqual(csv[1].slice(offset+2,offset+6),['s5','v2','Top5早停','Top5换1·持1·F100']);
+    }
+    assert.equal(R.historySummary({...record,promoted_version:'v5'}).promotion,'s5');
+    assert.equal(R.historySummary({...record,kind:'model',promoted_version:'v5'}).promotion,'v5');
+    assert.equal(record.model_summary.version,'v2');
+});
+
+test('strategy search covers linked model and strategy text while preserving other filters',()=>{
+    const record={id:'bt/latest',kind:'strategy',experiment_type:'strategy_backtest',status:'completed',direction:'phase-m-v1-bt',
+        model_summary:{ref:'model/es',version:'v2',name:'M0 H20 ES'},strategy_summary:{name:'Top5',description:'每日换1'}};
+    for(const query of ['v2','H20 ES','Top5','每日换1'])assert.deepEqual(H.filterRecords([record],{query}).map(r=>r.id),['bt/latest']);
+    assert.equal(H.filterRecords([record],{query:'Top5',status:'failed'}).length,0);
+    assert.equal(H.filterRecords([record],{query:'Top5',experimentType:'model_structure'}).length,0);
+    assert.deepEqual(H.filterRecords([record],{query:'Top5',status:'completed',direction:'phase-m-v1-bt',experimentType:'strategy_backtest'}),[record]);
+});
+
+test('model history uses only the registered change and historical baseline without inferring from self or current versions',()=>{
+    const record={id:'model/new-v4',kind:'model',name:'短标题',version:'v4',current:true,baseline_ref:'self',
+        hypothesis:'完整假设不能截断后当改动',change_summary:'  只把早停从净年化改为 RankIC  ',
+        comparison_baseline:{ref:'model/previous-v3',version:' v3 ',initial:false}};
+    const summary=R.modelHistorySummary(record);
+    assert.equal(summary.changeDescription,'只把早停从净年化改为 RankIC');
+    assert.equal(summary.baselineLabel,'v3');
+    assert.equal(summary.baselineRef,'model/previous-v3');
+    for(const missing of [{},{change_summary:' '},{change_summary:{text:'不能作为摘要'}}]){
+        const legacy=R.modelHistorySummary({...record,change_summary:undefined,comparison_baseline:undefined,...missing});
+        assert.equal(legacy.changeDescription,'待填写改动说明');
+        assert.equal(legacy.baselineLabel,'未登记');
+    }
+    assert.equal(R.modelHistorySummary({...record,comparison_baseline:{ref:'self',version:''}}).baselineLabel,'未登记');
+    assert.equal(R.modelHistorySummary({...record,comparison_baseline:{ref:'',version:'',initial:true}}).baselineLabel,'初始基线');
+    assert.equal(R.modelHistorySummary({...record,comparison_baseline:{version:'v1',initial:true}}).baselineLabel,'v1');
+    assert.equal(R.historySummary(record).hypothesis,record.hypothesis);
+    assert.equal(record.baseline_ref,'self');
+});
+
+test('model history search includes the compact change and historical baseline while retaining status and category filters',()=>{
+    const record={id:'model/trial',kind:'model',name:'早停试验',status:'completed',experiment_type:'early_stopping',
+        change_summary:'只把 early stop 改为 daily_rank_ic',comparison_baseline:{ref:'model/previous',version:'v3'}};
+    for(const query of ['daily_rank_ic','v3'])assert.deepEqual(H.filterRecords([record],{query}),[record]);
+    assert.equal(H.filterRecords([record],{query:'daily_rank_ic',status:'failed'}).length,0);
+    assert.equal(H.filterRecords([record],{query:'daily_rank_ic',experimentType:'features'}).length,0);
+});
+
 test('benchmark defaults to all baselines including incomplete historical versions, separately per kind',()=>{
     const selection=R.createBenchmarkSelection();selection.sync(records);
     assert.deepEqual([...selection.ids('model')],['m1','m2']);
@@ -42,6 +203,46 @@ test('empty selection stays empty on refresh; newly promoted versions default se
     assert.deepEqual([...selection.ids('model')],['m3']);
     selection.all('model',true);
     assert.deepEqual([...selection.ids('model')],['m2','m3']);
+});
+
+test('track filtering defaults legacy records to all A and isolates baseline selections by kind and track',()=>{
+    const mixed=[...records,{id:'b6',kind:'model',track:'csi1000',is_baseline:true},
+        {id:'b4s',kind:'strategy',track:'csi1000',is_baseline:true}];
+    assert.deepEqual(R.recordsForTrack(mixed,'model').map(r=>r.id),['m1','m2','trial']);
+    assert.deepEqual(R.recordsForTrack(mixed,'model','csi1000').map(r=>r.id),['b6']);
+    const selection=R.createBenchmarkSelection();selection.sync(mixed);
+    assert.deepEqual([...selection.ids('model')],['m1','m2']);
+    assert.deepEqual([...selection.ids('model','csi1000')],['b6']);
+    selection.all('model',false,'csi1000');
+    selection.set('model','b6',true);
+    assert.deepEqual([...selection.ids('model','csi1000')],[]);
+    assert.deepEqual([...selection.ids('model')],['m1','m2']);
+    assert.deepEqual([...selection.ids('strategy','csi1000')],['b4s']);
+    selection.sync(mixed);
+    assert.equal(selection.ids('model','csi1000').size,0);
+});
+
+test('track metric definitions use record overrides and never borrow all A definitions for CSI1000',()=>{
+    const csi=[{key:'rank_ic',label:'CSI1000 RankIC',format:'rankic'}];
+    const catalog={metric_definitions:{model:definitions},metric_definitions_by_track:{csi1000:{model:csi}}};
+    assert.deepEqual(R.definitionsForTrack(catalog,'model'),definitions);
+    assert.deepEqual(R.definitionsForTrack(catalog,'model','csi1000'),csi);
+    assert.deepEqual(R.definitionsForTrack({metric_definitions:{model:definitions}},'model','csi1000'),[]);
+    const override=[{key:'ic',label:'本实验 IC',format:'number'}];
+    assert.deepEqual(R.definitionsForTrack(catalog,'model','all_a',{track:'csi1000',metric_definitions:override}),override);
+    assert.deepEqual(R.definitionsForTrack(catalog,'model','all_a',{track:'csi1000'}),csi);
+    assert.deepEqual(R.definitionsForTrack(catalog,'model','csi1000',{metric_definitions:[]}),[]);
+});
+
+test('comparison rejects cross-track records even with matching comparison keys and blocks drafts',()=>{
+    const a={id:'a',kind:'model',comparable:true,comparison_key:'same'};
+    assert.equal(R.comparisonIssue([a,{...a,id:'b',track:'all_a'}]),'');
+    assert.match(R.comparisonIssue([a,{...a,id:'b',track:'csi1000'}]),/股票范围/);
+    assert.match(R.comparisonIssue([a,{...a,id:'b',kind:'strategy'}]),/股票范围|类型/);
+    for(const extra of [{official:false},{status:'draft'},{status:'unverified'},{comparable:false}]){
+        assert.equal(R.isComparable({...a,...extra}),false);
+        assert.match(R.comparisonIssue([a,{...a,id:'b',...extra}]),/正式/);
+    }
 });
 
 test('annual tables use one metric per table, versions as rows, union of years as columns, no full-period fallback',()=>{
@@ -133,6 +334,14 @@ test('records keep conclusion, note, reports and explicit promotion distinct fro
     assert.equal(R.historySummary({id:'trial',promoted_version:'v3'}).promotion,'v3');
 });
 
+test('verified benchmark output is distinct from a legacy promotion and deduplicated',()=>{
+    const summary=R.historySummary({id:'study/targets',benchmark_outputs:[
+        {ref:'model/v1',version:'v1',available:true},{ref:'model/v1',version:'v1',available:true},
+        {ref:'model/v2',version:'v2',available:false},{ref:'',version:'v3',available:true}]});
+    assert.deepEqual(summary.benchmarkOutputs,['v1']);
+    assert.equal(summary.promotion,'v1');
+});
+
 test('reports use resource IDs, show missing reports and escape malicious source names',()=>{
     const html=R.reportLinks({resources:[{id:'a/b',kind:'report',name:'<img src=x>',available:true},{id:'gone',kind:'report',name:'gone.html',available:false},{id:'metrics',kind:'metrics',name:'metrics.json',available:true}]});
     assert.ok(html.includes('/api/resources/a%2Fb'));
@@ -141,4 +350,47 @@ test('reports use resource IDs, show missing reports and escape malicious source
     assert.match(R.reportLinks({resources:[]}),/未登记报告/);
     const unsafe=R.renderMetricTables(R.metricTables([{...records[0],name:'<script>bad</script>'}],definitions,'full'));
     assert.equal(unsafe.includes('<script>'),false);
+});
+
+test('model profiles retain explicit identity and seeds but do not infer missing research recipes',()=>{
+    const record={kind:'model',id:'regime-adapt/old',version:'v4',directory:'backtest/experiments/models/early-stopping/rankic-v4',
+        seeds:[42,1000],hypothesis:'完整假设不能猜成训练方法',change_summary:'原简短列表改动',
+        resources:[{id:'source',name:'source.json',kind:'metrics',available:true},{id:'gone',name:'gone.json',kind:'registry_record',available:false}]};
+    const before=JSON.stringify(record),profile=R.modelProfileSummary(record);
+    assert.equal(profile.version,'v4');assert.equal(profile.experimentId,'models/early-stopping/rankic-v4');
+    assert.deepEqual(profile.seeds,[42,1000]);
+    for(const field of ['structure','features','trainingTarget','earlyStopping','predictionSignal','changes'])assert.equal(profile[field],'');
+    assert.deepEqual(profile.trainingSample,{pool:'',time_range:'',filters:''});
+    assert.deepEqual(profile.evaluationSample,{pool:'',time_range:'',filters:''});
+    assert.equal(profile.artifacts[0].label,'评估结果');assert.equal(profile.artifacts[0].resourceId,'source');
+    assert.equal(profile.artifacts[1].label,'历史登记');assert.equal(profile.artifacts[1].available,false);
+    assert.equal(JSON.stringify(record),before);
+});
+
+test('model profiles treat malformed descriptive values as missing and keep model paths as text',()=>{
+    const profile=R.modelProfileSummary({kind:'model',model_profile:{structure:[],features:{name:'不能推断'},early_stopping:[],prediction_signal:4,seeds:[42,'1000',null,NaN],
+        training_sample:'not an object',evaluation_sample:{pool:['all']},
+        model_paths:[null,{path:''},{path:'backtest/result/run/trained_model',label:'v2',seed:42,available:true}],
+        artifacts:[null,{resource_id:'',name:'no-id.json',available:true},{id:'known',kind:'unknown',available:'true'}]}});
+    assert.equal(profile.structure,'');assert.deepEqual(profile.seeds,[42]);
+    assert.equal(profile.features,'');assert.equal(profile.earlyStopping,'');assert.equal(profile.predictionSignal,'');
+    assert.equal(profile.trainingSample.pool,'');assert.equal(profile.evaluationSample.pool,'');
+    assert.deepEqual(profile.modelPaths,[{path:'backtest/result/run/trained_model',label:'v2',seed:42,available:true}]);
+    assert.equal(profile.artifacts[0].available,false);assert.equal(profile.artifacts[1].available,false);
+    assert.equal(profile.artifacts[1].label,'研究附件');
+});
+
+test('model profile keeps explicit features and split methods without parsing deprecated combined text',()=>{
+    const input={kind:'model',model_profile:{structure:'  单LightGBM  ',features:'  Alpha158 + range  ',
+        early_stopping:'  499天次日RankIC  ',prediction_signal:'  五种子逐日z-score后等权融合  ',
+        evaluation_method:'训练早停：不应解析；评估融合：不应沿用'}};
+    const before=JSON.stringify(input),profile=R.modelProfileSummary(input);
+    assert.equal(profile.structure,'单LightGBM');assert.equal(profile.features,'Alpha158 + range');
+    assert.equal(profile.earlyStopping,'499天次日RankIC');
+    assert.equal(profile.predictionSignal,'五种子逐日z-score后等权融合');
+    assert.equal(Object.hasOwn(profile,'evaluationMethod'),false);
+    const legacy=R.modelProfileSummary({model_profile:{structure:'旧描述包含Alpha158，不能从中切分',evaluation_method:input.model_profile.evaluation_method}});
+    assert.equal(legacy.structure,'旧描述包含Alpha158，不能从中切分');
+    assert.equal(legacy.features,'');assert.equal(legacy.earlyStopping,'');assert.equal(legacy.predictionSignal,'');
+    assert.equal(JSON.stringify(input),before);
 });

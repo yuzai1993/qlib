@@ -1,0 +1,617 @@
+{
+  "date": "2026-10-31",
+  "purpose": "只读核准策略实验详情的当时baseline与精简变更；不改历史登记或数值。",
+  "semantic_notes": [
+    "comparison_baseline只作展示，不授予比较资格或晋升。",
+    "F100代表掉出有效评分前100或缺分数后的提前卖出触发，仍受可成交约束。",
+    "hold_thresh是普通卖出的最低持有门槛，不是到期必须成交卖出。",
+    "risk_degree是买入现金分配参数，不能解释为每天总仓位固定比例。"
+  ],
+  "experiments": [
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v1",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/bt-v1/metadata.json",
+      "change_summary": "初始执行基线：v1模型信号配Top5换1、最短持有1日。",
+      "comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": true
+      },
+      "original_baseline_ref": "self",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v1/records/e9a6e2033ccccd6444f849d4d9f82368a4ee18bedc621e2e2a4c21371b1f820c.json",
+          "sha256": "e9a6e2033ccccd6444f849d4d9f82368a4ee18bedc621e2e2a4c21371b1f820c"
+        },
+        {
+          "path": "backtest/scripts/build_regime_m0h20_top5d1_report.py",
+          "sha256": "55a61ec229970b536f75b3c456972d32f7cd6dcd5debe309b369d2e7ac7e7214"
+        }
+      ],
+      "notes": "EXPERIMENT_STANDARD.md §1.6.1明确初始执行锚点。"
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v2",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/bt-v2/metadata.json",
+      "change_summary": "策略保持Top5换1，模型信号从v1改为v2。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v1",
+        "version": "v1"
+      },
+      "original_baseline_ref": "self",
+      "direct_controls": [
+        "regime-adapt/m0h20es-all-top5d1-bt"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v2/records/2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b.json",
+          "sha256": "2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b"
+        },
+        {
+          "path": "backtest/scripts/build_regime_m0h20_top5d1_report.py",
+          "sha256": "55a61ec229970b536f75b3c456972d32f7cd6dcd5debe309b369d2e7ac7e7214"
+        }
+      ],
+      "notes": "来源候选明确仅替换模型信号，策略及100万口径不变。"
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v3",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/bt-v3/metadata.json",
+      "change_summary": "最短持有从1日改为5日，并增加F100提前强卖。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2"
+      },
+      "original_baseline_ref": "self",
+      "direct_controls": [
+        "regime-adapt/m0h20es-all-top5d1h5f100-bt"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v3/records/a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6.json",
+          "sha256": "a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6"
+        },
+        {
+          "path": "backtest/scripts/promote_bt_v3_h5f100.py",
+          "sha256": "01753032e87e84b0cc6774092bf88baad74fa2223cf81acf3273b4790019b167"
+        }
+      ],
+      "notes": "规范§1.6.1及promote_bt_v3_h5f100.py核准前代为BT v2。"
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v4",
+      "metadata_path": "backtest/experiments/strategies/cohort-ladder/bt-v4/metadata.json",
+      "change_summary": "从v2模型的Top5轮换，改为v4模型的Top3×H5真阶梯。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3"
+      },
+      "original_baseline_ref": "self",
+      "direct_controls": [
+        "regime-adapt/m0h20rankices-all-ladder-k3h5-bt"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+          "sha256": "ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf"
+        },
+        {
+          "path": "backtest/scripts/promote_bt_v4_ladder_k3h5.py",
+          "sha256": "a79aafa893ce147bc81c0abb8d1ccdbc68567c1e942789d0c56fe9510d5ef68c"
+        },
+        {
+          "path": "backtest/scripts/register_v4_ladder_k3h5.py",
+          "sha256": "529891388202e342891814368f65574cba3eaa0de502aa1dfe74f2f3cb350ab2"
+        }
+      ],
+      "notes": "模型和执行规则均与BT v3不同；晋升依据是主格规则对齐，不是逐维占优。"
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v5",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/bt-v5/metadata.json",
+      "change_summary": "从v4模型真阶梯，改为v2模型Top5换1、最短持1日并启用F100。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4"
+      },
+      "original_baseline_ref": "self",
+      "direct_controls": [
+        "regime-adapt/m0h20es-all-top5d1f100-bt"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5/records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+          "sha256": "887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5"
+        },
+        {
+          "path": "backtest/scripts/promote_bt_v5_top5d1f100.py",
+          "sha256": "dc22dac72898cc127b032893ce77a83eb82880b33ea901fe57d6c1d3deade387"
+        }
+      ],
+      "notes": "晋升脚本comparison_baseline_ref显式指BT v4；候选原登记仍对BT v3，二者时点不同。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metadata.json",
+      "change_summary": "策略保持Top5换1，模型信号从v1改为v2。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v1",
+        "version": "v1"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v1",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/records/317a896eb33f0730b61fe0034cabc069759ab4b5c006a9a1ea42c167588a7682.json",
+          "sha256": "317a896eb33f0730b61fe0034cabc069759ab4b5c006a9a1ea42c167588a7682"
+        },
+        {
+          "path": "backtest/scripts/build_regime_m0h20_top5d1_report.py",
+          "sha256": "55a61ec229970b536f75b3c456972d32f7cd6dcd5debe309b369d2e7ac7e7214"
+        }
+      ],
+      "notes": "登记hypothesis明确同策略仅换M0 H20 ES五种子信号。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+      "metadata_path": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/metadata.json",
+      "change_summary": "从Top5排名轮换改为每天Top5建层、持满5日发出卖单，允许同票多层。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/records/17aaf731af99b5ae63f33981c4e3c667e8a7af62221ae9e6cdf0d862fe222f8d.json",
+          "sha256": "17aaf731af99b5ae63f33981c4e3c667e8a7af62221ae9e6cdf0d862fe222f8d"
+        },
+        {
+          "path": "backtest/scripts/register_top25_ladder_bt.py",
+          "sha256": "6929e15d4386725952a58e4d9387fe47bac7872adee152ccf32bfc44868be7a3"
+        }
+      ],
+      "notes": "真正CohortLadderStrategy，不能与Top25/drop5/hold5的最短持有规则混同。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metadata.json",
+      "change_summary": "从Top5换1、最短持1日，改为Top25换5、最短持5日。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/records/140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042.json",
+          "sha256": "140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042"
+        },
+        {
+          "path": "backtest/scripts/register_top25_ladder_bt.py",
+          "sha256": "6929e15d4386725952a58e4d9387fe47bac7872adee152ccf32bfc44868be7a3"
+        }
+      ],
+      "notes": "实际为TopkDropoutStrategy；不沿用旧假设中“25槽阶梯等价”的错误解释。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metadata.json",
+      "change_summary": "从Top5换1、最短持1日，改为Top25换5、最短持5日并增加F100。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "direct_controls": [
+        "regime-adapt/m0h20es-all-top25d5h5-bt"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/records/7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3.json",
+          "sha256": "7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3"
+        },
+        {
+          "path": "backtest/scripts/register_top25_ladder_bt.py",
+          "sha256": "6929e15d4386725952a58e4d9387fe47bac7872adee152ccf32bfc44868be7a3"
+        }
+      ],
+      "notes": "主要登记基线仍BT v2，另与无F100的Top25臂作消融；不把该候选冒称正式baseline。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metadata.json",
+      "change_summary": "最短持有从1日改为5日，并增加F100提前强卖。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v2",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/records/4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4.json",
+          "sha256": "4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4"
+        },
+        {
+          "path": "backtest/scripts/register_top25_ladder_bt.py",
+          "sha256": "6929e15d4386725952a58e4d9387fe47bac7872adee152ccf32bfc44868be7a3"
+        }
+      ],
+      "notes": "原登记对BT v2；后来成为BT v3，不回写为self。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metadata.json",
+      "change_summary": "最短持有维持5日，从启用F100改为不设强卖排名。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "direct_controls": [
+        "baseline/phase-m-v1-bt-v2"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/records/3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4.json",
+          "sha256": "3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4"
+        },
+        {
+          "path": "backtest/scripts/register_h5f100_ablation.py",
+          "sha256": "47fb8a2060282d4fff7982ba46e3868bc4143ef835e594b087fffec2c471f507"
+        }
+      ],
+      "notes": "2×2消融在BT v3晋升后登记：相对BT v3只移除F100；也同时对照BT v2。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metadata.json",
+      "change_summary": "保留F100提前强卖，最短持有从5日改为1日。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "direct_controls": [
+        "baseline/phase-m-v1-bt-v2"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+          "sha256": "a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc"
+        },
+        {
+          "path": "backtest/scripts/register_h5f100_ablation.py",
+          "sha256": "47fb8a2060282d4fff7982ba46e3868bc4143ef835e594b087fffec2c471f507"
+        }
+      ],
+      "notes": "原登记BT v3对照，后于10/29被批准为BT v5；保留原实验时点。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+      "metadata_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metadata.json",
+      "change_summary": "从v2模型的Top5轮换，改为v4模型的Top3×H5真阶梯。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+          "sha256": "ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896"
+        },
+        {
+          "path": "backtest/scripts/register_v4_ladder_k3h5.py",
+          "sha256": "529891388202e342891814368f65574cba3eaa0de502aa1dfe74f2f3cb350ab2"
+        }
+      ],
+      "notes": "原登记为BT v3，之后成为BT v4；变更不伪装为只改一个策略参数。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+      "metadata_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metadata.json",
+      "change_summary": "直接对照为v4模型原真阶梯：从无F100改为启用F100提前强卖。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "direct_controls": [
+        "regime-adapt/m0h20rankices-all-ladder-k3h5-bt"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/records/3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c.json",
+          "sha256": "3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c"
+        },
+        {
+          "path": "backtest/scripts/register_v4_ladder_k3h5f100.py",
+          "sha256": "03a6574f5ed09861d3e1448b375f049c2f5704bfa6418ed9e99708d86500ead3"
+        }
+      ],
+      "notes": "登记锚点是BT v3；直接控变量对象是未加F100的v4模型真阶梯候选，后者后来才成为BT v4。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+      "metadata_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metadata.json",
+      "change_summary": "直接对照为v4模型F100真阶梯：从只强卖改为用实际回款补入未持有新票。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v3",
+      "direct_controls": [
+        "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+        "regime-adapt/m0h20rankices-all-ladder-k3h5-bt"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/records/14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975.json",
+          "sha256": "14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975"
+        },
+        {
+          "path": "backtest/scripts/register_v4_ladder_k3h5f100r.py",
+          "sha256": "a670a4803b291e6729972262490884aa614330fb0357e983417e10a1638eed27"
+        }
+      ],
+      "notes": "登记锚点是BT v3；补票仅使用实际成交的强卖回款，不凭预设强卖数或持仓市值造资金。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metadata.json",
+      "change_summary": "从Top3×H5真阶梯改为Top15最多换3、最短持1日并启用F100的排名轮换。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/records/217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634.json",
+          "sha256": "217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634"
+        },
+        {
+          "path": "backtest/scripts/register_v4_topk_f100_grid.py",
+          "sha256": "481c245f1a788801b5af6165a536b44b5cb5986692b21777bf79a2abca343017"
+        }
+      ],
+      "notes": "同v4模型信号，由CohortLadder切换TopkDropout；不是只把阶梯K改成15。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metadata.json",
+      "change_summary": "从Top3×H5真阶梯改为Top3最多换1、最短持1日并启用F100的排名轮换。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/records/75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05.json",
+          "sha256": "75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05"
+        },
+        {
+          "path": "backtest/scripts/register_v4_topk_f100_grid.py",
+          "sha256": "481c245f1a788801b5af6165a536b44b5cb5986692b21777bf79a2abca343017"
+        }
+      ],
+      "notes": "同v4模型信号；到期退出改为排名轮换及F100提前卖出。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metadata.json",
+      "change_summary": "从Top3×H5真阶梯改为Top5最多换1、最短持1日并启用F100的排名轮换。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/records/a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16.json",
+          "sha256": "a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16"
+        },
+        {
+          "path": "backtest/scripts/register_v4_topk_f100_grid.py",
+          "sha256": "481c245f1a788801b5af6165a536b44b5cb5986692b21777bf79a2abca343017"
+        }
+      ],
+      "notes": "保持v4模型信号，不能与BT v5使用历史模型v2的Top5误混。"
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+      "metadata_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/metadata.json",
+      "change_summary": "只将回测截止从2026-07-31延至2026-08-30，末交易日为08-28。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v4",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/records/2ae2c0e7f70db3713af8292163294ccc6ab47e095a7f18a4515359879ee1baf5.json",
+          "sha256": "2ae2c0e7f70db3713af8292163294ccc6ab47e095a7f18a4515359879ee1baf5"
+        },
+        {
+          "path": "backtest/scripts/register_v4_ladder_k3h5_e20260830.py",
+          "sha256": "55862772ebcc444f48570b923a76d2c96e3dacc11d58cbcd81368f2de30e6040"
+        }
+      ],
+      "notes": "扩窗诊断；模型和规则不变，不更新正式窗口或晋升。"
+    },
+    {
+      "exp_id": "diag/bt-v5-300k-current-cost-20261029",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metadata.json",
+      "change_summary": "固定BT v5规则，资金从100万改30万、改用当前费率近似并作后续区间诊断。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "version": "v5"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/records/ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f.json",
+          "sha256": "ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f"
+        },
+        {
+          "path": "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+          "sha256": "aa28dfd031bc376a84f158c4f90af84af41037b415b128a05ba28d5d78f64818"
+        }
+      ],
+      "notes": "risk参数仍0.90；7月后区间承接历史模拟持仓和现金，不是独立实盘收益。"
+    },
+    {
+      "exp_id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metadata.json",
+      "change_summary": "固定BT v5规则，资金从100万改30万、改用当前费率近似，risk从0.90改1.00。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "version": "v5"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "direct_controls": [
+        "diag/bt-v5-300k-current-cost-20261029"
+      ],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/records/068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70.json",
+          "sha256": "068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70"
+        },
+        {
+          "path": "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+          "sha256": "aa28dfd031bc376a84f158c4f90af84af41037b415b128a05ba28d5d78f64818"
+        }
+      ],
+      "notes": "相对登记BT v5还改资金与费率；相对另一30万诊断才是单独改risk。"
+    },
+    {
+      "exp_id": "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/metadata.json",
+      "change_summary": "固定BT v5规则，尝试30万及当前费率近似、risk从0.90改1.00；校验失败。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "version": "v5"
+      },
+      "original_baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "direct_controls": [],
+      "evidence": [
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/records/dac7bef791edc18c5df5400cd111c3e4eea0143d853adf61f748d405f690d912.json",
+          "sha256": "dac7bef791edc18c5df5400cd111c3e4eea0143d853adf61f748d405f690d912"
+        },
+        {
+          "path": "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+          "sha256": "aa28dfd031bc376a84f158c4f90af84af41037b415b128a05ba28d5d78f64818"
+        }
+      ],
+      "notes": "失败无有效回测指标，不能把此行当作策略收益结果。"
+    }
+  ],
+  "validation": {
+    "entries": 22,
+    "valid_metadata_proposals": 22,
+    "version_references_match_registered_baselines": true,
+    "original_baseline_refs_unchanged": true,
+    "repository_files_modified": false
+  }
+}

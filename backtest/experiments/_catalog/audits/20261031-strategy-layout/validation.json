@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-31",
+  "strategy_archives_moved": 22,
+  "strategy_family_counts": {
+    "topk-dropout": 16,
+    "cohort-ladder": 6
+  },
+  "baseline_records_retained": 5,
+  "diagnostic_records_retained": 3,
+  "historical_events_unchanged": 35,
+  "numeric_fields_unchanged": 11257,
+  "registry_index_bytes_unchanged": true,
+  "registry_sha256": "ad1408a17fd8560484dd671e04ebfd805550163f0ccc0d69c6d9544c0b9c9571",
+  "catalog_unchanged_except_layout_resources": 35,
+  "primary_report_metrics_and_registry_resource_ids_unchanged": true,
+  "catalog_warnings": [],
+  "files_checked": 195,
+  "byte_identical_files": 112,
+  "html_body_unchanged": 46,
+  "previously_available_local_links_checked": 130,
+  "parity": {
+    "old": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/configs/alla_v2_top5d1f100_parity.yaml",
+    "new": "backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml",
+    "sha256": "da8a625014a28c88b367b228646f1eee7e68a242e7c7f5d29add91e9468bc8f2"
+  },
+  "production_parity_direct_references_checked": 2,
+  "legacy_paths_resolve": true,
+  "training_or_backtests_run": false,
+  "temporary_tools_cleaned": true,
+  "tests": "tests.json",
+  "runtime": "runtime.json",
+  "cleanup_check": "cleanup_check.json",
+  "independent_review": "independent_review.json",
+  "temporary_cleanup": "temporary_cleanup.json"
+}

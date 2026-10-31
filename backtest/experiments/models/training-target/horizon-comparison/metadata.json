@@ -1,0 +1,261 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0-label-k123-h2345",
+  "event_numbers": [
+    130
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/models/training-target/horizon-comparison/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/models/training-target/horizon-comparison/README.md"
+  ],
+  "data": [
+    "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+    "backtest/experiments/models/training-target/horizon-comparison/source-records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+    "backtest/experiments/models/training-target/horizon-comparison/source-records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+    "backtest/experiments/models/training-target/horizon-comparison/source-records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+  ],
+  "recipe_sources": [
+    {
+      "role": "runner",
+      "path": "backtest/scripts/train_regime_arm.py",
+      "shared": true,
+      "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+    },
+    {
+      "role": "train_dates_csv",
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "shared": true,
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a"
+    },
+    {
+      "role": "day_weights_csv",
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "shared": true,
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6"
+    },
+    {
+      "role": "valid_dates_csv",
+      "path": "backtest/configs/regime-adapt/test_dates_stratified_70.csv",
+      "shared": true,
+      "sha256": "9f02291e176e8c78236bd1837e350f695df203cb56f315218802233b610096ed"
+    },
+    {
+      "role": "study_registration",
+      "path": "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+      "shared": true,
+      "sha256": "03ddc9113f9ad3636eebbe569086b041127432c44ae14ebec3f33d449bc146cc"
+    }
+  ],
+  "recipe_session_metadata": [
+    "backtest/result/regimeadaptfast_m0h20_t3h5es_s42/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_t3h5es_s1000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_t3h5es_s2000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_t3h5es_s3000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_t3h5es_s4000/meta.json"
+  ],
+  "records": [
+    "backtest/experiments/models/training-target/horizon-comparison/records/3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "model",
+  "track": "all_a",
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "训练目标期限对比",
+  "archive_path": "backtest/experiments/models/training-target/horizon-comparison",
+  "experiment_type": "training_target",
+  "analysis": {
+    "conclusion": "同Top3×H5口径下，H20净年化29.70%最高；H5为24.77%、H10为24.37%、H1为−39.79%。",
+    "evidence": [
+      "records/3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f.json"
+    ],
+    "limitations": "H1/H5/H10已合入本目录；汇总其冻结训练记录与H20同Top3×H5早停结果，并未新增训练；H20为v3，非Top5早停v2。原event130是H20旧v1/v2的持仓网格，保留原登记供追溯。同一历史窗用于早停及选型，不是独立样本外证明。",
+    "review_status": "reviewed",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "训练目标从H20分别改为H1/H5/H10，固定Top3×H5早停与评估。",
+  "comparison_baseline": {
+    "ref": "regime-adapt/m0-h20-t3h5es-v1",
+    "version": "v3"
+  },
+  "model_profile": {
+    "structure": "单LightGBM；每个训练标签H各5个固定种子。此处汇总已有训练结果，未新增训练。",
+    "training_sample": {
+      "pool": "沪深A股（代码SH60/SH68/SZ00/SZ30，剔除指数、B股及北交所）",
+      "time_range": "2004-01-02～2020-07-31（名义训练窗；冻结保留日集2976日，2004-01-07～2020-07-30）",
+      "filters": "沿用共用H40缓存的有效样本行（上市满60个交易日、H40标签非空），替换为各组对应的H1/H5/H10/H20标签后再剔除缺失标签；按冻结训练日期清单抽样，M0逆抽样概率权重补偿为期望自然分布。训练未额外施加评估用的日频ST或成交额门槛。"
+    },
+    "training_target": "分别预测未来1/5/10/20日累计收益（训练H1/H5/H10/H20），各自按交易日截面CSRankNorm；H20采用v3。",
+    "evaluation_sample": {
+      "pool": "沪深A股（全A股票）",
+      "time_range": "2020-08-03～2026-07-31（名义评估窗；H5头部收益样本末端截至2026-07-23）",
+      "filters": "上市满60个交易日、剔除日频ST、日成交额至少1000万元；头部收益评估另剔除t+1涨停封板或零成交量的不可建仓样本，并截断H5退出日越界样本。"
+    },
+    "changes": "训练目标从H20分别改为H1/H5/H10，固定Top3×H5早停与评估。",
+    "model_paths": [
+      {
+        "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "H1"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "H1"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "H1"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "H1"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "H1"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "H5"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "H5"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "H5"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "H5"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "H5"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "H10"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "H10"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "H10"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "H10"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "H10"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "H20"
+      }
+    ],
+    "features": "Alpha158＋range技术扩展；不含regime特征。",
+    "early_stopping": "四组统一使用全评估窗Top3×H5扣费净年化早停；与v2的Top5×H5早停分开。",
+    "prediction_signal": "每组5个种子先分别按日截面z-score，再等权平均成该组信号，固定Top3×H5评估一次；不同训练H之间不混合信号。"
+  },
+  "training_target_comparison": {
+    "refs": [
+      "regime-adapt/m0-h1-t3h5es-v1",
+      "regime-adapt/m0-h5-t3h5es-v1",
+      "regime-adapt/m0-h10-t3h5es-v1",
+      "regime-adapt/m0-h20-t3h5es-v1"
+    ],
+    "control_ref": "regime-adapt/m0-h20-t3h5es-v1",
+    "archived_records": [
+      {
+        "path": "source-records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+        "sha256": "42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85"
+      },
+      {
+        "path": "source-records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+        "sha256": "6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5"
+      },
+      {
+        "path": "source-records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json",
+        "sha256": "1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1"
+      }
+    ]
+  },
+  "metrics": [
+    "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h1.json",
+    "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h5.json",
+    "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h10.json",
+    "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json"
+  ],
+  "historical_baselines": [
+    {
+      "path": "baseline-records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json",
+      "sha256": "f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f",
+      "profile": {
+        "path": "baseline-profiles/v1.json",
+        "sha256": "ffe8eb4976a033cbd2430f3e4e71c81628c32877eed2e534b5ebf84d83652561"
+      }
+    }
+  ],
+  "benchmark_outputs": [
+    {
+      "ref": "regime-adapt/m0-h20-label-v4",
+      "version": "v1"
+    }
+  ]
+}

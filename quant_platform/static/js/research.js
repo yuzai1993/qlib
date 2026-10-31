@@ -10,6 +10,47 @@
         benchmark_cumulative_return:'基准涨幅',max_drawdown:'最大回撤',calmar_ratio:'Calmar',
         annualized_volatility:'年化波动',annualized_one_way_turnover:'年换手（倍）'};
 
+    const recordTrack=record=>record?.track||'all_a';
+    const typeLabels={training_target:'训练目标',early_stopping:'早停方法',model_structure:'模型结构',
+        features:'特征',evaluation_method:'评估方法',strategy_backtest:'策略回测',uncategorized:'未分类'};
+    function experimentType(record){
+        const key=H.experimentTypeKey(record),label=record.experiment_type_label;
+        return {key,label:typeof label==='string'&&label.trim()?label.trim():typeLabels[key]||key};
+    }
+    const experimentTypes=records=>[...new Map(records.map(record=>{
+        const type=experimentType(record);return [type.key,type];
+    })).values()];
+    const strategyModels=records=>[...new Map(records.filter(record=>record.kind==='strategy').map(record=>{
+        const model=H.strategyHistorySummary(record),ref=model.modelRef||H.UNKNOWN_STRATEGY_MODEL;
+        return [ref,{ref,label:model.modelLabel}];
+    })).values()].sort((a,b)=>a.label.localeCompare(b.label,'zh-CN',{numeric:true}));
+    function recordIdentity(record){
+        const directory=record.directory;
+        if(record.kind==='model'&&typeof directory==='string'){
+            if(directory.startsWith('backtest/experiments/models/'))return directory.slice('backtest/experiments/'.length);
+            if(directory.startsWith('models/'))return directory;
+        }
+        return record.id;
+    }
+    const recordsForTrack=(records,kind,track='all_a')=>records.filter(r=>r.kind===kind&&recordTrack(r)===track);
+    const availableTracks=(records,kind)=>[...new Set(records.filter(r=>r.kind===kind).map(recordTrack))]
+        .sort((a,b)=>a===b?0:a==='all_a'?-1:b==='all_a'?1:a.localeCompare(b));
+    function definitionsForTrack(catalog,kind,track='all_a',record){
+        if(record){
+            if(Array.isArray(record.metric_definitions))return record.metric_definitions;
+            track=recordTrack(record);
+        }
+        return catalog?.metric_definitions_by_track?.[track]?.[kind]||
+            (track==='all_a'?catalog?.metric_definitions?.[kind]:null)||[];
+    }
+    const isComparable=record=>record.comparable===true&&record.official!==false&&
+        !['draft','unverified','unregistered'].includes(record.status);
+    function comparisonIssue(records){
+        if(records.some(r=>r.kind!==records[0]?.kind||recordTrack(r)!==recordTrack(records[0])))return '所选记录的股票范围或实验类型不同';
+        if(records.some(r=>!isComparable(r)))return '所选记录包含非正式或不完整结果，不能参与正式比较';
+        return H.comparisonIssue(records);
+    }
+
     function orderVersions(records){
         return records.map((record,index)=>({record,index,parts:(String(record.version||'').match(/\d+/g)||[]).map(Number)}))
             .sort((a,b)=>{
@@ -21,6 +62,19 @@
             }).map(item=>item.record);
     }
 
+    function orderHistory(records){
+        const timestamp=record=>{
+            const value=record.date;
+            if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(value))return null;
+            const day=value.slice(0,10),calendar=Date.parse(day),time=Date.parse(value);
+            if(!Number.isFinite(calendar)||new Date(calendar).toISOString().slice(0,10)!==day||!Number.isFinite(time))return null;
+            return calendar;
+        };
+        return records.map((record,index)=>({record,index,time:timestamp(record)}))
+            .sort((a,b)=>a.time===null?(b.time===null?a.index-b.index:1):
+                b.time===null?-1:b.time-a.time||a.index-b.index).map(item=>item.record);
+    }
+
     function metricDefinitions(definitions,kind,view='full'){
         const visible=kind==='strategy'?definitions.filter(d=>d.key!=='annualized_return_arith'):definitions;
         return H.metricColumns(visible,view).map(d=>kind==='strategy'&&view==='full'?
@@ -28,19 +82,24 @@
     }
 
     function createBenchmarkSelection(){
-        const selected={model:new Set(),strategy:new Set()},known={model:new Set(),strategy:new Set()};
+        const selected={},known={},group=(kind,track='all_a')=>kind+':'+track;
         return {
             sync(records){
                 for(const kind of ['model','strategy']){
-                    const ids=new Set(records.filter(r=>r.kind===kind&&r.is_baseline).map(r=>r.id));
-                    for(const id of ids)if(!known[kind].has(id))selected[kind].add(id);
-                    for(const id of selected[kind])if(!ids.has(id))selected[kind].delete(id);
-                    known[kind]=ids;
+                    const tracks=new Set([...availableTracks(records,kind),
+                        ...Object.keys(known).filter(key=>key.startsWith(kind+':')).map(key=>key.slice(kind.length+1))]);
+                    for(const track of tracks){
+                        const key=group(kind,track),ids=new Set(recordsForTrack(records,kind,track).filter(r=>r.is_baseline).map(r=>r.id));
+                        selected[key]??=new Set();known[key]??=new Set();
+                        for(const id of ids)if(!known[key].has(id))selected[key].add(id);
+                        for(const id of selected[key])if(!ids.has(id))selected[key].delete(id);
+                        known[key]=ids;
+                    }
                 }
             },
-            ids(kind){return new Set(selected[kind]);},
-            set(kind,id,checked){if(known[kind].has(id)){if(checked)selected[kind].add(id);else selected[kind].delete(id);}},
-            all(kind,checked){selected[kind]=checked?new Set(known[kind]):new Set();}
+            ids(kind,track='all_a'){return new Set(selected[group(kind,track)]);},
+            set(kind,id,checked,track='all_a'){const key=group(kind,track);if(known[key]?.has(id)){if(checked)selected[key].add(id);else selected[key].delete(id);}},
+            all(kind,checked,track='all_a'){const key=group(kind,track);selected[key]=checked?new Set(known[key]):new Set();}
         };
     }
 
@@ -68,12 +127,23 @@
             rows:records.map(record=>({record,values:slices.map(key=>H.metricsFor(record,view,key)[d.key]??null)}))}));
     }
 
+    function recordLabelText(record){
+        const name=record.display_name||H.strategyReferenceText(record,record.name)||record.id,version=H.strategyVersionLabel(record);
+        const hasVersion=record.kind==='strategy'&&version&&new RegExp('(^|[^A-Za-z0-9])'+version.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=$|[^A-Za-z0-9])').test(name);
+        return (version&&!hasVersion?version+' · ':'')+name;
+    }
     function recordLabel(record,interactive,compact=false){
-        const name=record.name||record.id,label=(record.version?record.version+' · ':'')+name;
-        const shown=compact?(record.version||name):label,title=compact?` title="${esc(label)}"`:'';
+        const name=record.display_name||H.strategyReferenceText(record,record.name)||record.id,version=H.strategyVersionLabel(record),label=recordLabelText(record);
+        const identity=recordIdentity(record);
+        if(record.kind==='strategy'&&record.is_baseline){
+            const summary=strategyBenchmarkSummary(record),tag=interactive?'button':'span';
+            return `<${tag} class="record-name strategy-benchmark-name"${interactive?` data-detail="${esc(record.id)}"`:''} title="${esc(summary.title)}"><span class="benchmark-version">${esc(summary.version||'未登记版本')}</span><span class="benchmark-model">${esc(summary.modelLabel)}</span><span class="benchmark-strategy">${esc(summary.strategyName)}</span></${tag}>`+
+                (record.current?' <span class="badge badge-current">当前</span>':'');
+        }
+        const shown=compact?(version||name):label,title=compact?` title="${esc(label)}"`:'';
         return (interactive?`<button class="record-name" data-detail="${esc(record.id)}"${title}>${esc(shown)}</button>`:`<span class="record-name"${title}>${esc(shown)}</span>`)+
             (record.current?' <span class="badge badge-current">当前</span>':'')+
-            (compact?'':`<div class="record-id" title="${esc(record.id)}">${esc(record.id)}</div>`);
+            (compact?'':`<div class="record-id" title="${esc(identity)}">${esc(identity)}</div>`);
     }
 
     function renderMetricTables(tables,{interactive=false,sortable=false,sort='',order='desc',selection,compact=false}={}){
@@ -88,7 +158,7 @@
                 return `<th scope="col"${label!==column.label?` title="${esc(column.label)}"`:''}>${sortable&&table.view==='full'?`<button class="text-button" data-sort="${esc(column.key)}">${esc(label)}${sort===column.key?(order==='desc'?' ↓':' ↑'):' ↕'}</button>`:esc(label)}</th>`;
             }).join('');
             const rows=table.rows.map(({record,values})=>`<tr class="${record.current?'current-row':''}">`+
-                (selectable?`<td class="benchmark-selection"><input type="checkbox" data-benchmark="${esc(record.id)}" aria-label="展示 ${esc(record.version||record.name||record.id)}"${selection.has(record.id)?' checked':''}></td>`:'')+
+                (selectable?`<td class="benchmark-selection"><input type="checkbox" data-benchmark="${esc(record.id)}" aria-label="展示 ${esc(H.strategyVersionLabel(record)||record.display_name||record.name||record.id)}"${selection.has(record.id)?' checked':''}></td>`:'')+
                 `<td class="record-column">${recordLabel(record,interactive,compact)}</td>${values.map((value,index)=>`<td>${H.formatMetric(value,table.columns[index].format)}</td>`).join('')}</tr>`).join('');
             return `<section class="metric-section" data-metric-table="${esc(table.key)}"><h3>${esc(table.title)}</h3>`+
                 (!table.columns.length?'<div class="empty">暂无分维度数据。</div>':
@@ -99,17 +169,84 @@
 
     function metricCsvRows(tables){
         if(!tables.length)return [['实验 ID','名称','版本']];
-        const sliced=tables[0].view!=='full';
-        return [[...(sliced?['指标']:[]),'实验 ID','名称','版本',...tables[0].columns.map(c=>c.label)],
-            ...tables.flatMap(table=>table.rows.map(({record,values})=>[...(sliced?[table.title]:[]),record.id,record.name||record.id,record.version||'',...values.map(v=>v??'')]))];
+        const sliced=tables[0].view!=='full',strategy=tables[0].rows.every(({record})=>record.kind==='strategy');
+        return [[...(sliced?['指标']:[]),'实验 ID','名称',strategy?'策略版本':'版本',...(strategy?['模型版本','模型简称','策略简称']:[]),...tables[0].columns.map(c=>c.label)],
+            ...tables.flatMap(table=>table.rows.map(({record,values})=>{
+                const summary=H.strategyHistorySummary(record);
+                return [...(sliced?[table.title]:[]),record.id,record.display_name||H.strategyReferenceText(record,record.name)||record.id,H.strategyVersionLabel(record),
+                    ...(strategy?[summary.modelVersion||'未登记',summary.modelName||'未登记模型',summary.strategyName]:[]),...values.map(v=>v??'')];
+            }))];
+    }
+
+    function strategyBenchmarkSummary(record){
+        const summary=H.strategyHistorySummary(record),version=H.strategyVersionLabel(record);
+        return {...summary,version,title:[version,summary.modelLabel,summary.strategyName].filter(Boolean).join(' · ')};
+    }
+    const recordTitle=record=>record.kind==='strategy'&&record.is_baseline?
+        strategyBenchmarkSummary(record).title:record.display_name||H.strategyReferenceText(record,record.name)||record.id;
+
+    function modelHistorySummary(record){
+        const text=value=>typeof value==='string'?value.trim():'';
+        const baseline=record.comparison_baseline&&typeof record.comparison_baseline==='object'&&!Array.isArray(record.comparison_baseline)?record.comparison_baseline:{};
+        const baselineVersion=text(baseline.version);
+        return {changeDescription:text(record.change_summary)||'待填写改动说明',
+            baselineRef:text(baseline.ref),baselineVersion,
+            baselineLabel:baselineVersion||(baseline.initial===true?'初始基线':'未登记')};
+    }
+
+    const artifactTypes={
+        report:['实验报告','该实验的原始研究报告。'],
+        metrics:['评估结果','模型评估使用的原始指标或数据。'],
+        original_metrics:['原运行评估结果','原始运行目录中的评估文件，可能已按保留规则清理。'],
+        plan:['研究方案','实验设计、方法或复现说明。'],
+        config:['运行配置','实验运行时使用的参数配置。'],
+        metadata:['实验元数据','实验介绍、人工结论及资产清单。'],
+        registry_record:['历史登记','保留原始登记字段和详细指标的历史事件。']
+    };
+    function modelProfileSummary(record){
+        const text=value=>typeof value==='string'?value.trim():'';
+        const object=value=>value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+        const profile=object(record.model_profile),sample=value=>{
+            const source=object(value);return {pool:text(source.pool),time_range:text(source.time_range),filters:text(source.filters)};
+        };
+        const directory=text(record.directory),identity=directory.startsWith('backtest/experiments/')?
+            directory.slice('backtest/experiments/'.length):directory.startsWith('models/')?directory:'';
+        const sourceSeeds=Array.isArray(profile.seeds)?profile.seeds:Array.isArray(record.seeds)?record.seeds:[];
+        const sourceArtifacts=Array.isArray(profile.artifacts)&&profile.artifacts.length?profile.artifacts:
+            Array.isArray(record.resources)?record.resources:[];
+        const artifacts=sourceArtifacts.filter(item=>item&&typeof item==='object'&&!Array.isArray(item)).map(item=>{
+            const kind=text(item.kind),fallback=artifactTypes[kind]||['研究附件','实验归档中的原始附件。'];
+            const resourceId=text(item.resource_id)||text(item.id);
+            return {resourceId,name:text(item.name)||'未登记文件名',kind,label:text(item.label)||fallback[0],
+                description:text(item.description)||fallback[1],available:item.available===true&&Boolean(resourceId)};
+        });
+        return {version:text(profile.version)||text(record.version),experimentId:text(profile.experiment_id)||identity,
+            structure:text(profile.structure),features:text(profile.features),seeds:sourceSeeds.filter(seed=>Number.isInteger(seed)),
+            trainingSample:sample(profile.training_sample),trainingTarget:text(profile.training_target),
+            evaluationSample:sample(profile.evaluation_sample),earlyStopping:text(profile.early_stopping),
+            predictionSignal:text(profile.prediction_signal),changes:text(profile.changes),
+            modelPaths:(Array.isArray(profile.model_paths)?profile.model_paths:[]).filter(item=>text(object(item).path)).map(item=>({
+                path:text(item.path),label:text(item.label),seed:Number.isInteger(item.seed)?item.seed:null,available:item.available===true})),artifacts};
     }
 
     function historySummary(record){
         const conclusions={promote:'晋升',promoted:'已晋升',baseline:'基线',regress:'退步',reject:'未通过',rejected:'未通过',improve:'提升',improved:'提升',inconclusive:'暂无定论',neutral:'持平',mixed:'结果不一致',invalid:'无效',failed:'失败'};
+        const text=value=>typeof value==='string'?value.trim():'';
+        const source=record.analysis&&typeof record.analysis==='object'?record.analysis:{};
+        const analysis={conclusion:text(source.conclusion),evidence:Array.isArray(source.evidence)?source.evidence.filter(value=>text(value)).map(text):[],
+            limitations:text(source.limitations),review_status:text(source.review_status),updated_at:text(source.updated_at)};
+        const registryConclusion=conclusions[record.conclusion]||text(record.conclusion);
+        const hasAnalysis=Boolean(analysis.conclusion||analysis.evidence.length||analysis.limitations);
+        const benchmarkOutputs=Array.isArray(record.benchmark_outputs)?[...new Set(record.benchmark_outputs
+            .filter(output=>output&&output.available===true&&text(output.ref)&&text(output.version))
+            .map(output=>text(output.version)))]:[];
         return {...H.experimentSummary(record),
-            conclusion:conclusions[record.conclusion]||record.conclusion||'未登记结论',
-            note:record.note&&record.note!==record.conclusion?record.note:'',
-            promotion:record.promoted_version||(record.is_baseline?record.version:'')||''};
+            name:record.display_name||H.strategyReferenceText(record,record.name)||record.id,
+            conclusion:H.strategyReferenceText(record,analysis.conclusion||registryConclusion)||'待填写分析结论',
+            conclusionSource:analysis.conclusion?'analysis':registryConclusion?'registry':'',
+            registryConclusion,analysis,hasAnalysis,
+            note:record.note&&record.note!==record.conclusion?H.strategyReferenceText(record,record.note):'',
+            benchmarkOutputs,promotion:benchmarkOutputs.join(' / ')||H.strategyVersionLabel({...record,version:record.promoted_version||(record.is_baseline?record.version:'')||'',display_version:record.display_promoted_version||''})};
     }
 
     function reportLinks(record){
@@ -118,5 +255,5 @@
             `<span class="card-sub">${esc(resource.name)} · 报告缺失</span>`).join('<br>')||'<span class="card-sub">未登记报告</span>';
     }
 
-    return {orderVersions,metricDefinitions,createBenchmarkSelection,metricTables,renderMetricTables,metricCsvRows,historySummary,reportLinks};
+    return {recordTrack,experimentType,experimentTypes,strategyModels,recordIdentity,recordTitle,recordLabelText,strategyBenchmarkSummary,strategyVersionLabel:H.strategyVersionLabel,strategyReferenceText:H.strategyReferenceText,modelHistorySummary,modelProfileSummary,strategyHistorySummary:H.strategyHistorySummary,recordsForTrack,availableTracks,definitionsForTrack,isComparable,comparisonIssue,orderVersions,orderHistory,metricDefinitions,createBenchmarkSelection,metricTables,renderMetricTables,metricCsvRows,historySummary,reportLinks};
 });

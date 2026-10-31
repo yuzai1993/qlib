@@ -43,7 +43,7 @@ BASELINE = "baseline/phase-m-v1-bt-v5"
 MODEL = "regime-adapt/m0-h20-t5h5-es-v1"
 SEEDS = [42, 1000, 2000, 3000, 4000]
 SUMMARY_DIR = Path("backtest/experiments/phase_m_v1_bt_metrics")
-LABELS = Path("backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv")
+LABELS = Path("backtest/experiments/strategies/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv")
 LIMITATION = (
     "历史选型窗口：2020-08-03~2026-07-31 已用于模型早停及策略比较，"
     "不是独立样本外检验。100万历史成本口径；30万当前费用与新增期间结果另作诊断，"
@@ -52,11 +52,12 @@ LIMITATION = (
 
 
 def fingerprint(path: Path) -> dict:
+    actual_path = _resolve_research_path(path, _RESEARCH_ROOT)
     digest = hashlib.sha256()
-    with _resolve_research_path(path, _RESEARCH_ROOT).open("rb") as stream:
+    with actual_path.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
-    return {"path": str(path), "sha256": digest.hexdigest(), "bytes": path.stat().st_size}
+    return {"path": str(path), "sha256": digest.hexdigest(), "bytes": actual_path.stat().st_size}
 
 
 def validate_candidate(source_root: Path, candidate: dict) -> dict:
@@ -144,7 +145,7 @@ def promote(*, repo_root: Path = ROOT, source_root: Path) -> dict:
         raise ValueError("candidate and promoted baseline IDs must be unambiguous")
     candidate = next(r for r in rows if r["exp_id"] == CANDIDATE)
     provenance = validate_candidate(source_root, candidate)
-    label_path = repo_root / LABELS
+    label_path = _resolve_research_path(repo_root / LABELS, repo_root)
     labels = load_regime_labels(label_path)
     labels_info = {**fingerprint(label_path), "path": str(LABELS)}
     snapshots = {}
@@ -179,7 +180,7 @@ def promote(*, repo_root: Path = ROOT, source_root: Path) -> dict:
         "metrics": copy.deepcopy(official["ensemble"]["full_period"]),
         "ensemble_session": official["ensemble"]["session_dir"],
         "evaluation_mode": "historical_selection_window", "note": LIMITATION,
-        "detail_report": "backtest/experiments/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
+        "detail_report": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
         "comparison_baseline_ref": "baseline/phase-m-v1-bt-v4",
         "provenance": copy.deepcopy(official["provenance"]),
     }
@@ -191,9 +192,9 @@ def promote(*, repo_root: Path = ROOT, source_root: Path) -> dict:
     # Do not rewrite historical conclusions or baseline references.
     json.dumps(rows, allow_nan=False)
     for destination, doc in snapshots.items():
-        output = repo_root / destination
+        output = _resolve_research_path(repo_root / destination, repo_root)
         output.parent.mkdir(parents=True, exist_ok=True)
-        _resolve_research_path(output, _RESEARCH_ROOT).write_text(json.dumps(doc, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        output.write_text(json.dumps(doc, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     _write_registry_rows(registry, rows)
     return {"baseline": BASELINE, "eval_output": official_path, "portable_documents": len(snapshots)}
 

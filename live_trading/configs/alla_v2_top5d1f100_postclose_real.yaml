@@ -78,7 +78,7 @@ exchange:
   min_cost: 5.0
   trade_unit: 100
 parity:
-  backtest_config: backtest/configs/alla_v2_top5d1f100_parity.yaml
+  backtest_config: backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml
 live:
   bridge_root: live_trading/data/bt_v5_offline_bridge
   strategy_id: alla_v2_top5d1f100_postclose_real

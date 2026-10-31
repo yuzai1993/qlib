@@ -1,0 +1,15 @@
+{
+  "tests": 576,
+  "errors": 0,
+  "failures": 0,
+  "skipped": 0,
+  "passed": 576,
+  "frontend_passed": 68,
+  "scope": "Platform Python, archive/registry/layout, real archive invariants, BT registration/promotion and Live parity; all frontend suites.",
+  "backend_independent_review": "Clean: history-first model reference, linked model version, no authority/source changes, schema isolation.",
+  "metadata_independent_review": "metadata_review.json",
+  "frontend_command": "node --test tests/quant_platform/*.cjs",
+  "python_command": "/opt/anaconda3/envs/qlib/bin/python -m pytest tests/quant_platform tests/backtest/test_experiment_archive.py tests/backtest/test_experiment_registry.py tests/backtest/test_research_archive.py tests/backtest/test_research_layout.py tests/backtest/test_bt_v5_promotion.py tests/backtest/test_bt_v5_diagnostics.py tests/backtest/test_registry_script_integration.py tests/live_trading/test_backtest_parity.py -q --tb=short -p no:cacheprovider",
+  "python_output_sha256": "c1aa78604e7f250dcb29783acd7a3707b74d77386e5f2a2ddeee85008e95e707",
+  "frontend_output_sha256": "b3534977a28795d697592de1626a99c645103a818fc8e87773ffd1bbf1567c50"
+}

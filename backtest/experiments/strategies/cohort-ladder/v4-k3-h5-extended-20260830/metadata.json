@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+  "event_numbers": [
+    146
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/reports/all_ladder_k3h5_e20260830_m0h20rankices.html",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/metrics/all_ladder_k3h5_e20260830_m0h20rankices.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/metrics/m0h20rankices.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/records/2ae2c0e7f70db3713af8292163294ccc6ab47e095a7f18a4515359879ee1baf5.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "v4 RankIC ES 真阶梯 k3×h5 延长至 2026-08-30",
+  "metrics_source": {
+    "path": "metrics/all_ladder_k3h5_e20260830_m0h20rankices.json",
+    "sha256": "576441888b9cfef1d549573a6c62654ef12f66e23a0addf0864936db7bfd05e0"
+  },
+  "model_ref": "regime-adapt/m0-h20-rankices-v1",
+  "strategy_summary": {
+    "name": "阶梯3×5日（延窗）",
+    "description": "同BT v4真阶梯，100万、risk=0.90、历史费率；仅延窗至2026-08-30，末交易日08-28，不改官方窗。"
+  },
+  "archive_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830",
+  "analysis": {
+    "conclusion": "延窗末交易日为2026-08-28，CAGR31.1%、夏普1.17；仅作诊断，不替换官方窗口。",
+    "evidence": [
+      "metrics/all_ladder_k3h5_e20260830_m0h20rankices.json",
+      "metrics/m0h20rankices.json",
+      "records/2ae2c0e7f70db3713af8292163294ccc6ab47e095a7f18a4515359879ee1baf5.json",
+      "reports/all_ladder_k3h5_e20260830_m0h20rankices.html"
+    ],
+    "limitations": "仅延长既有参数的回测窗，末交易日2026-08-28；窗口与官方BT v4不同，不能视为同窗提升或新的选型依据。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "只将回测截止从2026-07-31延至2026-08-30，末交易日为08-28。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v4",
+    "version": "v4"
+  }
+}

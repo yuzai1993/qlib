@@ -37,7 +37,7 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20es-all-top5d1h5-bt",
         "display_name": "M0 H20 ES top5d1 hold5（无强制卖出）",
         "result": "all_top5d1h5",
-        "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
+        "detail_report": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
         "session": "backtest/result/20260822_091251_phase_s_m0h20es_all_top5d1h5_ensemble",
         "config": "TopkDropout topk=5 n_drop=1 hold_thresh=5",
         "hypothesis": (
@@ -56,7 +56,7 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
         "display_name": "M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
         "result": "all_top5d1f100",
-        "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
+        "detail_report": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
         "session": "backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble",
         "config": "TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100",
         "hypothesis": (

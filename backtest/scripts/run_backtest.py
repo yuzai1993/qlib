@@ -2,9 +2,7 @@
 仅训练 / 训练+回测 / 免重训回测
 
 用法:
-  python backtest/scripts/run_backtest.py
-  python backtest/scripts/run_backtest.py --config csi300_live_parity.yaml
-  python backtest/scripts/run_backtest.py --config csi300_lgbm_bt_only.example.yaml
+  python backtest/scripts/run_backtest.py --config csi300_lgbm_train_start_2006.yaml
 
 配置见 backtest/configs/；结果写入 backtest/result/YYYYMMDD_HHMMSS[_note]/。
 """
@@ -633,8 +631,8 @@ def parse_args():
     p.add_argument(
         "--config",
         type=str,
-        default=None,
-        help="YAML 路径或 backtest/configs/ 下文件名（默认 csi300_live_parity.yaml）",
+        required=True,
+        help="显式指定 YAML 路径或配置文件名，例如 csi300_lgbm_train_start_2006.yaml",
     )
     return p.parse_args()
 

@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-31",
+  "model_experiments": 13,
+  "strategy_experiments": 22,
+  "types": {
+    "evaluation_method": 2,
+    "training_target": 4,
+    "model_structure": 4,
+    "early_stopping": 3
+  },
+  "registry_index_bytes_unchanged": true,
+  "history_events_unchanged": 35,
+  "immutable_assets_checked": 116,
+  "html_report_bodies_unchanged": 46,
+  "working_local_links_checked": 130,
+  "platform_metric_and_authority_fields_unchanged": 35,
+  "original_primary_source_resources_preserved": 35,
+  "original_detail_resources_preserved": 35,
+  "no_research_conclusions_generated": true,
+  "directory_errors": [],
+  "training_backtests_or_model_cleanup_run": false,
+  "temporary_tools_cleaned": true,
+  "registry_index_sha256": "ad1408a17fd8560484dd671e04ebfd805550163f0ccc0d69c6d9544c0b9c9571",
+  "numeric_fields_unchanged": 11257,
+  "migration": "migration.json",
+  "file_hashes": "file_hashes.json",
+  "tests": "tests.json",
+  "runtime": "runtime.json",
+  "backend_validation": "backend_validation.json",
+  "independent_review": "independent_review.json",
+  "conclusion_storage": "metadata.json.analysis; original registry conclusion remains immutable and separate",
+  "baseline_ids": [
+    "regime-adapt/m0-h20-rankices-v1",
+    "baseline/phase-m-v1-bt-v5"
+  ],
+  "temporary_cleanup": "temporary_cleanup.json"
+}

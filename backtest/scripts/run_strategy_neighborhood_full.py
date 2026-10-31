@@ -69,7 +69,7 @@ FULL_PREDICTION_COVERAGE = copy.deepcopy(
     full_prediction_validation.FULL_PREDICTION_COVERAGE
 )
 DEFAULT_OUTPUT_ROOT = (
-    REPO_ROOT / "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data"
+    REPO_ROOT / "backtest/experiments/strategies/strategy-neighborhood/b3-s-local-full-v1/data"
 )
 DEFAULT_CONFIGS_DIR = (
     REPO_ROOT / "backtest/configs/strategy-neighborhood/b3-s-local-full"

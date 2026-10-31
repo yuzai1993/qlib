@@ -260,7 +260,7 @@ def render_html(
     )
     H.append(
         "<li><b>池</b>：全A NameDFilter <code>^(SH60|SH68|SZ00|SZ30)</code>；"
-        "基准 <code>backtest/experiments/baseline/phase-m-v1-bt-v5/configs/bench_ew_all.csv</code>。</li>"
+        "基准 <code>backtest/experiments/strategies/baseline/phase-m-v1-bt-v5/configs/bench_ew_all.csv</code>。</li>"
     )
     H.extend(_filter_bullets(uf, filter_stats))
     H.append(

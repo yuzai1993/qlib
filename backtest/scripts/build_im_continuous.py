@@ -6,9 +6,12 @@ settle-to-settle change; rolls do not inject price jumps.
 
 Usage:
     /opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_im_continuous.py \\
-        --cffex-dir backtest/experiments/ic/cffex_daily \\
-        --output backtest/data/im/im_continuous_daily.csv \\
+        --cffex-dir /path/to/cffex_daily \\
+        --output backtest/experiments/strategies/strategy-beta-overlay/b4s-im-target1-roll60/data/im_continuous_daily.csv \\
         --write-hash
+
+The historical source cache is not bundled. Supply an existing cache and keep
+any rebuilt CSV with its owning experiment instead of a shared data directory.
 """
 
 from __future__ import annotations

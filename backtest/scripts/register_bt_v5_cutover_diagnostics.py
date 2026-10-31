@@ -84,11 +84,14 @@ def register_failure(result, summary, *, attempt):
         raise ValueError("failed summary and positive failure attempt are required")
     identity = diagnostic_identity(summary)
     dest = identity["destination"] / f"failed_attempt_{attempt}"
-    dest.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(result / "summary.json", dest / "summary.json")
-    output = identity["eval_output"].with_stem(
+    summary_output = _resolve_research_path(dest / "summary.json", ROOT)
+    summary_output.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(_resolve_research_path(result / "summary.json", ROOT), summary_output)
+    legacy_output = identity["eval_output"].with_stem(
         identity["eval_output"].stem + f"_failed_{attempt}"
     )
+    output = _resolve_research_path(legacy_output, ROOT)
+    portable_report = _resolve_research_path(legacy_output.with_suffix(".html"), ROOT)
     output.parent.mkdir(parents=True, exist_ok=True)
     relative_output = str(output.relative_to(ROOT))
     limitation = (
@@ -100,7 +103,7 @@ def register_failure(result, summary, *, attempt):
             "years": {},
             "regimes": {},
             "session_dir": str(result.relative_to(ROOT)),
-            "portable_report": str(output.with_suffix(".html").relative_to(ROOT)),
+            "portable_report": str(portable_report.relative_to(ROOT)),
         },
         "selection_limitation": limitation,
         "provenance": summary,
@@ -125,8 +128,8 @@ def register_failure(result, summary, *, attempt):
         "detail_report": identity["detail_report"].replace(
             "_diagnostic.html", f"_failed_{attempt}.html"
         ),
-        "source_summary": str((dest / "summary.json").relative_to(ROOT)),
-        "config_path": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/configs/alla_v2_top5d1f100_parity.yaml",
+        "source_summary": str(summary_output.relative_to(ROOT)),
+        "config_path": "backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml",
         "result_dirs": [str(result.relative_to(ROOT))],
         "metrics": {},
         "hypothesis": summary["hypothesis"],
@@ -163,12 +166,11 @@ def main():
         != summary["config_sha256"]
     ):
         raise ValueError("diagnostic config SHA mismatch")
-    report_path = result / "portfolio_daily.csv"
+    report_path = _resolve_research_path(result / "portfolio_daily.csv", ROOT)
     if hashlib.sha256(_resolve_research_path(report_path, _RESEARCH_ROOT).read_bytes()).hexdigest() != summary["report_sha256"]:
         raise ValueError("daily returns SHA mismatch")
     report = pd.read_csv(report_path, index_col=0, parse_dates=True)
     historical, forward = report.loc[:"2026-07-31"], report.loc["2026-08-03":]
-    dest.mkdir(parents=True, exist_ok=True)
     for name in (
         "summary.json",
         "portfolio_daily.csv",
@@ -176,8 +178,12 @@ def main():
         "bench_ew_all.csv",
         "filter_stats.json",
     ):
-        shutil.copyfile(result / name, dest / name)
-    portable_report = str(eval_output.with_suffix(".html").relative_to(ROOT))
+        destination = _resolve_research_path(dest / name, ROOT)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(_resolve_research_path(result / name, ROOT), destination)
+    portable_report = str(_resolve_research_path(eval_output.with_suffix(".html"), ROOT).relative_to(ROOT))
+    eval_output = _resolve_research_path(eval_output, ROOT)
+    eval_output.parent.mkdir(parents=True, exist_ok=True)
     doc = {
         "ensemble": {
             **summary["historical_current_cost"],
@@ -217,8 +223,8 @@ def main():
         "eval_output": str(eval_output.relative_to(ROOT)),
         "portable_eval_output": str(eval_output.relative_to(ROOT)),
         "detail_report": identity["detail_report"],
-        "config_path": str((dest / "config.yaml").relative_to(ROOT)),
-        "source_summary": str((dest / "summary.json").relative_to(ROOT)),
+        "config_path": str(_resolve_research_path(dest / "config.yaml", ROOT).relative_to(ROOT)),
+        "source_summary": str(_resolve_research_path(dest / "summary.json", ROOT).relative_to(ROOT)),
         "result_dirs": [str(result.relative_to(ROOT))],
         "metrics": summary["historical_current_cost"]["full_period"],
         "forward_metrics": summary["forward_carried_positions"],

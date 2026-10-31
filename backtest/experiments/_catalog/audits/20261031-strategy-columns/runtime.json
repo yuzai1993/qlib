@@ -1,0 +1,30 @@
+{
+  "url": "http://127.0.0.1:8090/#strategy-experiments",
+  "records": 35,
+  "strategy_records": 22,
+  "model_versions": {
+    "v1": 1,
+    "v2": 13,
+    "v4": 8
+  },
+  "warnings": [],
+  "directory_errors": [],
+  "ui": {
+    "headers": [
+      "对比",
+      "日期",
+      "实验类型",
+      "模型",
+      "策略",
+      "结论",
+      "报告链接",
+      "晋升版本"
+    ],
+    "model_cell_example": "v2 · Top5早停",
+    "row_count": 22,
+    "bt_v5_model_version": "v2",
+    "strategy_short_name_and_description_verified": true
+  },
+  "service_reloaded": "qlib-live-monitor only",
+  "scheduler_or_trading_changed": false
+}

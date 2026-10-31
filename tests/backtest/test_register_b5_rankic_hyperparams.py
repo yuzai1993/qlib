@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import statistics
 import sys
 from copy import deepcopy
@@ -18,6 +17,7 @@ import build_experiment_report as report  # noqa: E402
 import cleanup_experiment_artifacts as cleanup  # noqa: E402
 import register_b5_rankic_hyperparams as register  # noqa: E402
 from experiment_registry import load_registry, write_registry  # noqa: E402
+from tests.backtest.rankic_fixtures import write_candidate_configs  # noqa: E402
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
@@ -213,12 +213,7 @@ def _write_session(path: Path, experiment_id: int) -> None:
 
 def _prepare_preregistered_artifacts(repo_root: Path) -> Path:
     config_root = repo_root / "backtest" / "configs" / "model-hyperparam"
-    for candidate in register.CANDIDATES:
-        destination = config_root / candidate
-        destination.mkdir(parents=True, exist_ok=True)
-        for seed in SEEDS:
-            source = register._config_path(ROOT, candidate, seed)
-            shutil.copy2(source, destination / source.name)
+    write_candidate_configs(config_root)
     baseline_path = repo_root / register.BASELINE_RESULT_REL
     _write_json(baseline_path, _baseline_result())
     for index, seed in enumerate(SEEDS, start=1):
@@ -283,8 +278,9 @@ def _finalize(
     )
 
 
-def test_pending_row_freezes_the_complete_valid_only_search_protocol():
-    row = register.build_pending_row("2026-07-30")
+def test_pending_row_freezes_the_complete_valid_only_search_protocol(tmp_path):
+    _prepare_preregistered_artifacts(tmp_path)
+    row = register.build_pending_row("2026-07-30", repo_root=tmp_path)
 
     assert row["exp_id"] == "model-hyperparam/valid-rankic-search-v1"
     assert row["baseline_ref"] == "B5 v1.0"
@@ -305,7 +301,7 @@ def test_pending_row_freezes_the_complete_valid_only_search_protocol():
         "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json"
     )
     assert row["baseline_result_sha256"] == hashlib.sha256(
-        (ROOT / row["baseline_result"]).read_bytes()
+        (tmp_path / row["baseline_result"]).read_bytes()
     ).hexdigest()
     assert row["selection_segment"] == "valid"
     assert row["selection_official_segment"] == ["2020-01-13", "2021-07-15"]
@@ -339,14 +335,15 @@ def test_pending_append_preserves_every_existing_byte_and_rejects_duplicate(
     )
     registry_path.write_bytes(original)
 
-    row = register.register_pending(registry_path, "2026-07-30")
+    _prepare_preregistered_artifacts(tmp_path)
+    row = register.register_pending(registry_path, "2026-07-30", repo_root=tmp_path)
 
     updated = registry_path.read_bytes()
     assert updated.startswith(original + b"\n")
     assert json.loads(updated.splitlines()[-1]) == row
     before_duplicate = updated
     with pytest.raises(ValueError, match="already exists"):
-        register.register_pending(registry_path, "2026-07-30")
+        register.register_pending(registry_path, "2026-07-30", repo_root=tmp_path)
     assert registry_path.read_bytes() == before_duplicate
 
 
@@ -397,12 +394,13 @@ def test_final_replaces_only_pending_line_and_preserves_bystander_bytes(
     raw = registry_path.read_bytes()
     assert raw.startswith(prefix)
     assert raw.endswith(suffix)
-    assert raw.count(register.EXP_ID.encode()) == 1
+    stored_rows = load_registry(registry_path)
+    assert sum(item.get("exp_id") == register.EXP_ID for item in stored_rows) == 1
     assert row["conclusion"] == "improve"
     stored = next(
-        json.loads(line)
-        for line in raw.splitlines()
-        if register.EXP_ID.encode() in line
+        item
+        for item in stored_rows
+        if item.get("exp_id") == register.EXP_ID
     )
     assert stored == row
 

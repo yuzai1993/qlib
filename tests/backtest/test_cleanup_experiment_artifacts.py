@@ -970,6 +970,113 @@ def test_phase_m_v1_baseline_groups_and_current_bt_dependency_are_retained(tmp_p
     )
 
 
+def test_pure_all_a_registry_retains_models_and_current_bt_without_csi_anchor(tmp_path):
+    v2 = _local_phase_m_baseline(tmp_path, "v2", "m0-es")
+    v4 = _local_phase_m_baseline(tmp_path, "v4", "m0-rankic")
+    bt_session = tmp_path / "backtest/result/current-bt"
+    _write_phase_s_session(bt_session, "800")
+    bt = {
+        "exp_id": "baseline/phase-m-v1-bt-v5",
+        "phase": "S",
+        "report_kind": "phase_m_v1_bt_baseline",
+        "current_bt": True,
+        "seeds": [42, 1000, 2000, 3000, 4000],
+        "model_ref": v2["exp_id"],
+        "ensemble_session": "backtest/result/current-bt",
+    }
+    old_csi_session = tmp_path / "backtest/result/old-csi"
+    _write_session(old_csi_session, "999")
+
+    plan = cleanup.build_cleanup_plan(tmp_path, [v2, v4, bt])
+
+    assert plan["errors"] == []
+    assert plan["scope"] == "all_a"
+    assert plan["baseline_exp_id"] is None
+    assert plan["candidate_exp_id"] is None
+    assert plan["phase_m_v1_baseline_exp_ids"] == [v2["exp_id"], v4["exp_id"]]
+    assert plan["current_bt_exp_ids"] == [bt["exp_id"]]
+    assert len(plan["keep_result_dirs"]) == 11
+    assert all(
+        tmp_path / raw in plan["keep_result_dirs"]
+        for row in (v2, v4)
+        for raw in row["result_dirs"]
+    )
+    assert bt_session in plan["keep_result_dirs"]
+    assert plan["keep_mlruns_dirs"] == [tmp_path / "mlruns/800"]
+    assert plan["delete_result_dirs"] == [old_csi_session]
+    assert plan["delete_mlruns_dirs"] == [tmp_path / "mlruns/999"]
+    cleanup.apply_cleanup(plan, apply=False)
+    assert old_csi_session.is_dir()
+    assert (tmp_path / "mlruns/999").is_dir()
+
+
+def test_merged_historical_model_receipt_keeps_its_training_sessions(tmp_path):
+    import hashlib
+
+    v1 = _local_phase_m_baseline(tmp_path, "v1", "m0-original")
+    v2 = _local_phase_m_baseline(tmp_path, "v2", "m0-es")
+    v2["current_baseline"] = True
+    group = tmp_path / "backtest/experiments/models/training-target/horizons"
+    path = group / "baseline-records/v1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(v1))
+    (group / "metadata.json").write_text(json.dumps({
+        "schema_version": 2, "entity_type": "experiment", "kind": "model", "track": "all_a",
+        "exp_id": "training-target/horizons", "title": "目标期限汇总",
+        "historical_baselines": [{"path": "baseline-records/v1.json",
+                                  "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}]}))
+
+    plan = cleanup.build_cleanup_plan(tmp_path, [v2])
+
+    assert plan["errors"] == []
+    assert set(plan["phase_m_v1_baseline_exp_ids"]) == {v1["exp_id"], v2["exp_id"]}
+    assert all(tmp_path / raw in plan["keep_result_dirs"] for raw in v1["result_dirs"])
+
+    path.write_text(path.read_text() + " ")
+    broken = cleanup.build_cleanup_plan(tmp_path, [v2])
+    assert broken["errors"]
+    assert broken["delete_result_dirs"] == []
+    assert broken["delete_mlruns_dirs"] == []
+
+
+@pytest.mark.parametrize("csi_kind", ["model", "strategy"])
+@pytest.mark.parametrize("with_all_a", [False, True])
+def test_any_csi_record_still_requires_its_baseline_anchor(tmp_path, csi_kind, with_all_a):
+    csi = (
+        _row("feature-test/orphan", metrics={}, result_dirs=[])
+        if csi_kind == "model"
+        else _phase_s_row("b6-m", ["unused"] * 6)
+    )
+    rows = [_local_phase_m_baseline(tmp_path, "v4", "m0-rankic")] if with_all_a else []
+    rows.append(csi)
+
+    with pytest.raises(ValueError, match="baseline anchor"):
+        cleanup.build_cleanup_plan(tmp_path, rows)
+
+
+def test_empty_registry_refuses_cleanup_before_proposing_deletion(tmp_path):
+    session = tmp_path / "backtest/result/unclassified"
+    _write_session(session, "999")
+
+    with pytest.raises(ValueError, match="registry"):
+        cleanup.build_cleanup_plan(tmp_path, [])
+
+    assert session.is_dir()
+    assert (tmp_path / "mlruns/999").is_dir()
+
+
+def test_pure_all_a_registry_without_versioned_model_baseline_blocks_deletion(tmp_path):
+    unversioned = _local_phase_m_baseline(tmp_path, "v4", "m0-rankic")
+    del unversioned["baseline_version"]
+    _write_session(tmp_path / "backtest/result/old-csi", "999")
+
+    plan = cleanup.build_cleanup_plan(tmp_path, [unversioned])
+
+    assert any("versioned Phase M v1 baseline" in error for error in plan["errors"])
+    assert plan["delete_result_dirs"] == []
+    assert plan["delete_mlruns_dirs"] == []
+
+
 @pytest.mark.parametrize("breakage", ["seed", "model", "symlink", "link_escape"])
 def test_incomplete_local_phase_m_v1_baseline_blocks_all_deletion(tmp_path, breakage):
     baseline = _complete_baseline(tmp_path)

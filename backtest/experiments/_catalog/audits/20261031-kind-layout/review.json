@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-31",
+  "review_scope": "Only the two previously reported findings; read-only snapshot and render, no training, backtests, full suite, or repository edits.",
+  "findings": {
+    "csi1000_historical_annualization_label": "resolved",
+    "relocated_phase_m_hub_navigation": "resolved"
+  },
+  "csi1000_verified_sources": [
+    {
+      "id": "baseline/b3-s-on-b6-m",
+      "ann": 0.24347797559678627,
+      "label": "扣费年化（历史算术口径）",
+      "source_sha256_matches": true,
+      "source_path_matches": true
+    },
+    {
+      "id": "baseline/b4-s-on-b6-m",
+      "ann": 0.23861478807769584,
+      "label": "扣费年化（历史算术口径）",
+      "source_sha256_matches": true,
+      "source_path_matches": true
+    }
+  ],
+  "unverified_protocol_samples": [
+    {
+      "id": "regime-adapt/m0-h5-phase-s",
+      "ann": 0.13998806020562155,
+      "label": "扣费年化（历史原口径）"
+    },
+    {
+      "id": "regime-adapt/m0-h5-phase-s-all-b4s",
+      "ann": 0.19177048993633375,
+      "label": "扣费年化（历史原口径）"
+    },
+    {
+      "id": "regime-adapt/m0-h5-phase-s-all-daily-topk",
+      "ann": 0.09713988078019632,
+      "label": "扣费年化（历史原口径）"
+    }
+  ],
+  "original_allA_records_unchanged": 36,
+  "original_allA_resource_subset_preserved": true,
+  "B1_B2_excess_summary_metrics_remain_empty": true,
+  "navigation_hrefs": [
+    "../../../../reports/report.html",
+    "../../../../reports/phase_m_v1_bt_report.html"
+  ],
+  "navigation_targets_exist": true,
+  "archive_discovery_errors": [],
+  "files_sha256": {
+    "quant_platform/research.py": "e5a7235af59f348c2267abd09463782b6f04c552f44a08972a2f3a8046f08f4e",
+    "backtest/scripts/build_phase_m_v1_report.py": "5d8d8d4679e76bd89cd9eef50e27730b9ba60edd23e3429a0de92fca092a1770",
+    "backtest/scripts/experiment_archive.py": "73b672cfc476e32fe0aa0fa26639c47f1b84466f20937bb1737c14583c5b0bbc"
+  }
+}

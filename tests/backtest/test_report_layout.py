@@ -40,6 +40,24 @@ def test_model_hub_links_to_experiment_directory_and_keeps_metrics(tmp_path, mon
     assert "+12.5%" in rendered
 
 
+def test_model_hub_navigation_resolves_to_shared_reports_from_archive_directory(tmp_path, monkeypatch):
+    report = importlib.import_module("build_phase_m_v1_report")
+    monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
+    output = tmp_path / "backtest/experiments/models/group/arm/reports/hub.html"
+    shared = tmp_path / "backtest/experiments/reports"
+    shared.mkdir(parents=True)
+    expected = {shared / "phase_m_v1_bt_report.html"}
+    for target in expected:
+        target.write_text("shared report")
+
+    rendered = report.render_hub([], [], output_path=output)
+
+    targets = {(output.parent / href).resolve() for href in Links(rendered).hrefs}
+    assert expected <= targets
+    assert all(target.is_file() for target in targets)
+    assert shared / "report.html" not in targets
+
+
 def test_backtest_detail_resolves_hub_reports_and_figures_from_its_directory(tmp_path, monkeypatch):
     report = importlib.import_module("build_phase_m_v1_bt_report")
     monkeypatch.setattr(report, "EXP_ROOT", tmp_path)

@@ -204,12 +204,13 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
     from build_strategy_stability_report import build_html as build_unified_html
 
-    UNIFIED_REPORT.parent.mkdir(parents=True, exist_ok=True)
+    output = _resolve_research_path(UNIFIED_REPORT, _RESEARCH_ROOT)
+    output.parent.mkdir(parents=True, exist_ok=True)
     rows = load_registry(args.registry)
-    _resolve_research_path(UNIFIED_REPORT, _RESEARCH_ROOT).write_text(build_unified_html(rows), encoding="utf-8")
+    output.write_text(build_unified_html(rows, output_path=output), encoding="utf-8")
     print(
         f"{sum(row.get('phase') == 'S' for row in rows)} Phase S rows -> "
-        f"{UNIFIED_REPORT}"
+        f"{output}"
     )
 
 

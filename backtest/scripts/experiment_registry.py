@@ -16,7 +16,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterable
 
-SCHEMA = "qlib-experiment-index-v2"
+SCHEMA = "qlib-experiment-index-v3"
+V2_SCHEMA = LEGACY_V2_SCHEMA = "qlib-experiment-index-v2"
 LEGACY_SCHEMA = "qlib-experiment-index-v1"
 MAX_JSON_BYTES = 16 * 1024 * 1024
 DETAIL_DIRECTORY = "records"
@@ -26,7 +27,22 @@ INDEX_FIELDS = (
     "report_kind", "display_name", "baseline_ref", "baseline_version",
     "is_current_baseline", "conclusion", "promoted_to", "promoted_from",
 )
-_TRANSPORT = {"_registry_schema", "detail_path", "detail_sha256"}
+_TRANSPORT = {"_registry_schema", "_archive_kind", "detail_path", "detail_sha256"}
+
+
+def _archive_module():
+    if __package__:
+        from . import experiment_archive
+    else:
+        import experiment_archive
+    return experiment_archive
+
+
+def _repository_root(path: Path) -> Path | None:
+    directory = path.parent.resolve()
+    if directory.name == "experiments" and directory.parent.name == "backtest":
+        return directory.parent.parent
+    return None
 
 
 def _json_bytes(row: dict) -> bytes:
@@ -46,17 +62,26 @@ def _experiment_parts(exp_id: object) -> list[str]:
 def _detail_relative(row: dict, digest: str, schema: str) -> str:
     if schema == LEGACY_SCHEMA:
         return f"{LEGACY_DETAIL_DIRECTORY}/{digest}.json"
-    if schema == SCHEMA:
+    if schema in {V2_SCHEMA, SCHEMA}:
         parts = _experiment_parts(row.get("exp_id"))
+        if schema == SCHEMA:
+            kind = row.get("_archive_kind")
+            if kind not in ("model", "strategy"):
+                raise ValueError("registry archive kind must be model or strategy")
+            parts.insert(0, "models" if kind == "model" else "strategies")
         return "/".join([*parts, DETAIL_DIRECTORY, f"{digest}.json"])
     raise ValueError(f"unsupported registry schema: {schema!r}")
 
 
 def _index(row: dict, digest: str, schema: str = SCHEMA) -> dict:
+    transport = {}
+    if schema == SCHEMA:
+        transport["_archive_kind"] = _archive_module().classify_experiment(row)["kind"]
     return {
         "_registry_schema": schema,
+        **transport,
         **{key: row[key] for key in INDEX_FIELDS if key in row},
-        "detail_path": _detail_relative(row, digest, schema),
+        "detail_path": _detail_relative({**row, **transport}, digest, schema),
         "detail_sha256": digest,
     }
 
@@ -86,19 +111,44 @@ def _canonical_write_row(registry_path: Path, row: dict) -> dict:
     return relocate(row)
 
 
-def _detail_path(registry_path: Path, entry: dict) -> Path:
+def _detail_path(registry_path: Path, entry: dict, *, for_write: bool = False) -> Path:
     digest = entry.get("detail_sha256")
     if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
         raise ValueError("registry detail SHA256 must be 64 lowercase hex characters")
     relative = _detail_relative(entry, digest, entry["_registry_schema"])
     if entry.get("detail_path") != relative:
         raise ValueError("registry detail path must match its content-addressed filename")
+    raw_base = Path(registry_path).parent
+    if raw_base.name == "experiments" and raw_base.parent.name == "backtest":
+        _archive_module()._safe_path(raw_base.parent.parent.resolve(), "backtest/experiments")
     base = Path(registry_path).parent.resolve()
     path = base
     for part in relative.split("/"):
         path = path / part
         if path.is_symlink():
             raise ValueError("registry detail symlinks are not allowed")
+    root = _repository_root(Path(registry_path))
+    if root is not None:
+        if __package__:
+            from .research_layout import relocate_path, resolve_research_path
+        else:
+            from research_layout import relocate_path, resolve_research_path
+        archive = _archive_module()
+        archive._safe_path(root, "backtest/experiments/_catalog/path_map.json")
+        logical = path.relative_to(root).as_posix()
+        # Inspect the un-resolved physical spelling before resolve() can hide a
+        # symlink that points back inside the repository.
+        archive._safe_path(root, relocate_path(logical, root))
+        path = resolve_research_path(logical, root)
+        if entry["_registry_schema"] == SCHEMA:
+            kind = entry["_archive_kind"]
+            archive._kind_path(root, path.relative_to(root).as_posix(), kind)
+            if path.name != f"{digest}.json" or path.parent.name != DETAIL_DIRECTORY:
+                raise ValueError("registry physical detail must retain its content-addressed filename")
+            if for_write:
+                directory = archive.archive_directory(root, entry["exp_id"], kind)
+                if path.parent.parent != directory:
+                    raise ValueError("registry detail alias conflicts with the experiment archive")
     try:
         path.resolve().relative_to(base)
     except (OSError, RuntimeError, ValueError) as exc:
@@ -115,7 +165,7 @@ def decode_registry_line(line: str, registry_path: Path) -> dict:
         if _TRANSPORT.intersection(entry):
             raise ValueError("registry detail reference is missing its schema")
         return entry
-    if not isinstance(entry["_registry_schema"], str) or entry["_registry_schema"] not in {SCHEMA, LEGACY_SCHEMA}:
+    if not isinstance(entry["_registry_schema"], str) or entry["_registry_schema"] not in {SCHEMA, V2_SCHEMA, LEGACY_SCHEMA}:
         raise ValueError(f"unsupported registry schema: {entry['_registry_schema']!r}")
     path = _detail_path(registry_path, entry)
     if path.stat().st_size > MAX_JSON_BYTES:
@@ -151,6 +201,8 @@ def load_registry(path: Path) -> list[dict]:
 
 
 def _indexed(path: Path, indexed: bool | None) -> bool:
+    if _repository_root(path) is not None:
+        return True
     if indexed is not None:
         return indexed
     if not path.exists():
@@ -223,30 +275,60 @@ def encode_registry_row(registry_path: Path, row: dict, *, indexed: bool | None 
     if not isinstance(row, dict) or _TRANSPORT.intersection(row):
         raise ValueError("expected a complete registry event, not an index entry")
     row = _canonical_write_row(registry_path, row)
+    root = _repository_root(registry_path)
     entry = row
     if _indexed(registry_path, indexed):
         payload = _json_bytes(row)
         if len(payload) > MAX_JSON_BYTES:
             raise ValueError("registry detail exceeds 16 MiB")
         digest = hashlib.sha256(payload).hexdigest()
-        entry = _index(row, digest)
-        detail = _detail_path(registry_path, entry)
+        entry = _index(row, digest, SCHEMA if root is not None else V2_SCHEMA)
+        detail = _detail_path(registry_path, entry, for_write=True)
         if detail.exists():
             if detail.read_bytes() != payload:
                 raise ValueError("content-addressed registry detail was modified")
         else:
             _atomic_write(detail, payload)
+    if root is not None:
+        _archive_module().ensure_experiment_metadata(root, row, atomic_writer=_atomic_write)
     return json.dumps(entry, ensure_ascii=False, separators=(",", ":"))
+
+
+def _prepare_archive_binding(path: Path, row: dict) -> None:
+    """Prepare category aliases only while a formal writer holds its lock."""
+    if not isinstance(row, dict) or _TRANSPORT.intersection(row):
+        raise ValueError("expected a complete registry event, not an index entry")
+    root = _repository_root(path)
+    if root is not None:
+        archive = _archive_module()
+        archive.ensure_archive_directory_alias(root, row.get("exp_id"), archive.classify_experiment(row)["kind"],
+                                               atomic_writer=_atomic_write)
 
 
 def write_registry(path: Path, rows: Iterable[dict], *, indexed: bool | None = None) -> None:
     """Atomically replace an index after all referenced details are durable."""
     path = Path(path)
     with _registry_lock(path):
+        originals = {}
         if path.exists():
-            load_registry(path)  # Never overwrite an unreadable history with a partial view.
+            history = load_registry(path)  # Never overwrite unreadable history with a partial view.
+            if _repository_root(path) is not None:
+                lines = [line for line in _read_text(path).splitlines() if line.strip()]
+                for row, line in zip(history, lines):
+                    if indexed is True and "_registry_schema" not in json.loads(line):
+                        continue
+                    originals.setdefault(_json_bytes(row), []).append(line)
         mode = _indexed(path, indexed)
-        payload = "".join(encode_registry_row(path, row, indexed=mode) + "\n" for row in rows).encode("utf-8")
+        lines = []
+        for row in rows:
+            _prepare_archive_binding(path, row)
+            existing = originals.get(_json_bytes(row))
+            if existing:
+                lines.append(existing.pop(0))
+                _archive_module().ensure_experiment_metadata(_repository_root(path), row, atomic_writer=_atomic_write)
+            else:
+                lines.append(encode_registry_row(path, row, indexed=mode))
+        payload = "".join(line + "\n" for line in lines).encode("utf-8")
         if len(payload) > MAX_JSON_BYTES:
             raise ValueError("registry exceeds 16 MiB")
         _atomic_write(path, payload)
@@ -260,6 +342,7 @@ def append_registry(path: Path, row: dict, *, indexed: bool | None = None) -> No
         if path.exists():
             load_registry(path)
             original = path.read_bytes()
+        _prepare_archive_binding(path, row)
         line = encode_registry_row(path, row, indexed=indexed).encode("utf-8")
         separator = b"\n" if original and not original.endswith((b"\n", b"\r")) else b""
         payload = original + separator + line + b"\n"

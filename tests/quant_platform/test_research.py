@@ -2,15 +2,29 @@
 
 import json
 import os
+import hashlib
 from datetime import datetime, timezone
 import pytest
 
-from backtest.scripts.experiment_registry import write_registry
+from backtest.scripts.experiment_registry import V2_SCHEMA, _index, _json_bytes
 from quant_platform.research import ResearchCatalog
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
 WINDOW = ["2020-08-03", "2026-07-31"]
+
+
+def write_legacy_registry(path, rows):
+    """Freeze the v2 read-compatibility fixture; current writers create v3 archives."""
+    entries = []
+    for value in rows:
+        payload = _json_bytes(value)
+        entry = _index(value, hashlib.sha256(payload).hexdigest(), V2_SCHEMA)
+        detail = path.parent / entry["detail_path"]
+        detail.parent.mkdir(parents=True, exist_ok=True)
+        detail.write_bytes(payload)
+        entries.append(json.dumps(entry))
+    path.write_text("\n".join(entries) + "\n")
 
 
 def write_json(root, rel, value):
@@ -145,7 +159,7 @@ def test_indexed_registry_preserves_catalog_values_and_exposes_verified_detail(t
     rows = [row(), row("bt/v4", "strategy")]
     c = catalog(tmp_path, rows, [model_doc(), strategy_doc()])
     before = c.snapshot()
-    write_registry(c.registry, rows, indexed=True)
+    write_legacy_registry(c.registry, rows)
 
     after = c.snapshot()
 
@@ -156,12 +170,19 @@ def test_indexed_registry_preserves_catalog_values_and_exposes_verified_detail(t
         assert len(detail) == 1 and detail[0]["available"]
         detail_path = c.resource(detail[0]["id"])
         assert json.loads(detail_path.read_text()) == next(r for r in rows if r["exp_id"] == migrated["id"])
-        assert {**migrated, "resources": [r for r in migrated["resources"] if r["kind"] != "registry_record"]} == original
+        normalized = {**migrated, "resources": [r for r in migrated["resources"] if r["kind"] != "registry_record"]}
+        if "model_profile" in migrated:
+            normalized["model_profile"] = {
+                **migrated["model_profile"],
+                "artifacts": [r for r in migrated["model_profile"]["artifacts"] if r["kind"] != "registry_record"],
+            }
+            assert any(r["resource_id"] == detail[0]["id"] for r in migrated["model_profile"]["artifacts"])
+        assert normalized == original
 
 
 def test_registry_detail_mtime_participates_in_catalog_refresh(tmp_path):
     c = catalog(tmp_path, [row()])
-    write_registry(c.registry, [row()], indexed=True)
+    write_legacy_registry(c.registry, [row()])
     index = json.loads(c.registry.read_text().splitlines()[0])
     detail = c.registry.parent / index["detail_path"]
     modified = 2_000_000_000
@@ -176,7 +197,7 @@ def test_invalid_indexed_event_never_restores_previous_event_or_current_baseline
     latest = row("model/v4", date="2026-10-28", note="latest event")
     other = row("model/v3", baseline_version="v3")
     c = catalog(tmp_path, [old, latest, other])
-    write_registry(c.registry, [old, latest, other], indexed=True)
+    write_legacy_registry(c.registry, [old, latest, other])
     lines = c.registry.read_text().splitlines()
     index = json.loads(lines[1])
     detail = c.registry.parent / index["detail_path"]
@@ -201,9 +222,28 @@ def test_invalid_indexed_event_never_restores_previous_event_or_current_baseline
     assert any("第 2 行" in w for w in snapshot["warnings"])
 
 
+@pytest.mark.parametrize("indexed", [False, True], ids=["inline", "indexed"])
+def test_legitimate_event_updates_use_latest_without_duplicate_warning(tmp_path, indexed):
+    old = row("model/v4", date="2026-10-27", note="old event")
+    latest = row("model/v4", date="2026-10-28", note="latest event")
+    c = catalog(tmp_path, [old, latest])
+    if indexed:
+        write_legacy_registry(c.registry, [old, latest])
+
+    snapshot = c.snapshot()
+
+    assert len(snapshot["records"]) == 1
+    assert snapshot["records"][0]["note"] == "latest event"
+    assert snapshot["records"][0]["date"] == "2026-10-28"
+    assert snapshot["records"][0]["current"]
+    assert snapshot["sources"]["registry_rows"] == 2
+    assert len(c.registry.read_text().splitlines()) == 2
+    assert not any("重复 exp_id" in warning for warning in snapshot["warnings"])
+
+
 def test_verified_registry_resource_rechecks_detail_hash_on_download(tmp_path):
     c = catalog(tmp_path, [row()])
-    write_registry(c.registry, [row()], indexed=True)
+    write_legacy_registry(c.registry, [row()])
     resource = next(r for r in c.snapshot()["records"][0]["resources"] if r["kind"] == "registry_record")
     path = c.resource(resource["id"])
     assert path is not None

@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+  "event_numbers": [
+    129
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/all_top5d1f100_m0h20es.html",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/phase_m_v1_bt_m0h20es_f100.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+  "metrics_source": {
+    "path": "metrics/all_top5d1f100_m0h20es.json",
+    "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04"
+  },
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "Top5换1·持1·F100",
+    "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100",
+  "analysis": {
+    "conclusion": "单开F100在2×2消融中收益最高，CAGR34.8%、夏普1.18；已晋升BT v5，换手较高。",
+    "evidence": [
+      "metrics/all_top5d1f100_m0h20es.json",
+      "metrics/m0h20es.json",
+      "records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+      "reports/all_top5d1f100_m0h20es.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。收益优势较依赖2025年；已于2026-10-29获准晋升BT v5，旧结论的未晋升仅记录原时点。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "保留F100提前强卖，最短持有从5日改为1日。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v3",
+    "version": "v3"
+  }
+}

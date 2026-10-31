@@ -1,0 +1,316 @@
+TAP version 13
+# Subtest: missing and non-finite metrics remain missing, percentages are explicit
+ok 1 - missing and non-finite metrics remain missing, percentages are explicit
+  ---
+  duration_ms: 1.774709
+  type: 'test'
+  ...
+# Subtest: filters search source IDs and status without mixing model and strategy
+ok 2 - filters search source IDs and status without mixing model and strategy
+  ---
+  duration_ms: 0.648
+  type: 'test'
+  ...
+# Subtest: comparison denies diagnostic, incomplete and mismatched protocols
+ok 3 - comparison denies diagnostic, incomplete and mismatched protocols
+  ---
+  duration_ms: 0.146542
+  type: 'test'
+  ...
+# Subtest: CSV escapes formulas, quotes and newlines; text never injects markup
+ok 4 - CSV escapes formulas, quotes and newlines; text never injects markup
+  ---
+  duration_ms: 0.297959
+  type: 'test'
+  ...
+# Subtest: navigation generations reject stale completions and dispose old charts
+ok 5 - navigation generations reject stale completions and dispose old charts
+  ---
+  duration_ms: 0.238916
+  type: 'test'
+  ...
+# Subtest: annual/regime metrics do not fallback to full-period values
+ok 6 - annual/regime metrics do not fallback to full-period values
+  ---
+  duration_ms: 0.081459
+  type: 'test'
+  ...
+# Subtest: switching to slices drops global RankIC and resets unavailable metric focus
+ok 7 - switching to slices drops global RankIC and resets unavailable metric focus
+  ---
+  duration_ms: 0.167083
+  type: 'test'
+  ...
+# Subtest: timestamps use Asia/Shanghai for both display and date filters
+ok 8 - timestamps use Asia/Shanghai for both display and date filters
+  ---
+  duration_ms: 30.47175
+  type: 'test'
+  ...
+# Subtest: diagnostic scope and registry status use accurate Chinese labels
+ok 9 - diagnostic scope and registry status use accurate Chinese labels
+  ---
+  duration_ms: 0.382584
+  type: 'test'
+  ...
+# Subtest: experiment history summary contains metadata and no mixed comparison metrics
+ok 10 - experiment history summary contains metadata and no mixed comparison metrics
+  ---
+  duration_ms: 0.83325
+  type: 'test'
+  ...
+# Subtest: historical Markdown safely renders headings, tables, lists, quotes and code
+ok 11 - historical Markdown safely renders headings, tables, lists, quotes and code
+  ---
+  duration_ms: 0.990166
+  type: 'test'
+  ...
+# Subtest: historical Markdown never activates HTML, scripts, event handlers or remote images
+ok 12 - historical Markdown never activates HTML, scripts, event handlers or remote images
+  ---
+  duration_ms: 0.216833
+  type: 'test'
+  ...
+# Subtest: all browser entrypoints parse before deployment
+ok 13 - all browser entrypoints parse before deployment
+  ---
+  duration_ms: 3.486458
+  type: 'test'
+  ...
+# Subtest: prediction navigation cannot render shell after leaving page
+ok 14 - prediction navigation cannot render shell after leaving page
+  ---
+  duration_ms: 0.15775
+  type: 'test'
+  ...
+# Subtest: slow autocomplete resource does not delay primary prediction query
+ok 15 - slow autocomplete resource does not delay primary prediction query
+  ---
+  duration_ms: 5.904542
+  type: 'test'
+  ...
+# Subtest: slow archive keeps a newer new draft open
+ok 16 - slow archive keeps a newer new draft open
+  ---
+  duration_ms: 10.58975
+  type: 'test'
+  ...
+# Subtest: slow restore keeps a newer edit draft open
+ok 17 - slow restore keeps a newer edit draft open
+  ---
+  duration_ms: 1.280833
+  type: 'test'
+  ...
+# Subtest: archive response closes its own unchanged detail and refreshes the analysis list
+ok 18 - archive response closes its own unchanged detail and refreshes the analysis list
+  ---
+  duration_ms: 1.34475
+  type: 'test'
+  ...
+# Subtest: URL ledger outranks memory; monitor requests use that ledger and an empty snapshot retains cash
+ok 19 - URL ledger outranks memory; monitor requests use that ledger and an empty snapshot retains cash
+  ---
+  duration_ms: 41.070583
+  type: 'test'
+  ...
+# Subtest: selection falls back to valid remembered ledger
+ok 20 - selection falls back to valid remembered ledger
+  ---
+  duration_ms: 2.604958
+  type: 'test'
+  ...
+# Subtest: selection falls back to unknown URL with valid memory
+ok 21 - selection falls back to unknown URL with valid memory
+  ---
+  duration_ms: 3.62325
+  type: 'test'
+  ...
+# Subtest: selection falls back to unknown URL and memory
+ok 22 - selection falls back to unknown URL and memory
+  ---
+  duration_ms: 8.381458
+  type: 'test'
+  ...
+# Subtest: switching ledger persists selection, closes detail, and ignores a delayed previous dashboard
+ok 23 - switching ledger persists selection, closes detail, and ignores a delayed previous dashboard
+  ---
+  duration_ms: 3.608834
+  type: 'test'
+  ...
+# Subtest: explicit ledger switch updates a URL selection so refresh keeps the new ledger and current route
+ok 24 - explicit ledger switch updates a URL selection so refresh keeps the new ledger and current route
+  ---
+  duration_ms: 5.602875
+  type: 'test'
+  ...
+# Subtest: batch details remain ledger scoped and a delayed previous detail cannot expand the new ledger row
+ok 25 - batch details remain ledger scoped and a delayed previous detail cannot expand the new ledger row
+  ---
+  duration_ms: 3.292708
+  type: 'test'
+  ...
+# Subtest: deferred Top5 buys explain execution-time sizing while legacy target amounts remain visible
+ok 26 - deferred Top5 buys explain execution-time sizing while legacy target amounts remain visible
+  ---
+  duration_ms: 2.308083
+  type: 'test'
+  ...
+# Subtest: a failed request from a previous ledger does not leak an error into the selected ledger
+ok 27 - a failed request from a previous ledger does not leak an error into the selected ledger
+  ---
+  duration_ms: 2.960708
+  type: 'test'
+  ...
+# Subtest: prediction switch resets dates and filter and cannot reuse delayed instruments from the previous ledger
+ok 28 - prediction switch resets dates and filter and cannot reuse delayed instruments from the previous ledger
+  ---
+  duration_ms: 4.173792
+  type: 'test'
+  ...
+# Subtest: baseline versions sort numerically newest first without mutating the input or reordering ties
+ok 29 - baseline versions sort numerically newest first without mutating the input or reordering ties
+  ---
+  duration_ms: 1.160458
+  type: 'test'
+  ...
+# Subtest: benchmark defaults to all baselines including incomplete historical versions, separately per kind
+ok 30 - benchmark defaults to all baselines including incomplete historical versions, separately per kind
+  ---
+  duration_ms: 0.424625
+  type: 'test'
+  ...
+# Subtest: empty selection stays empty on refresh; newly promoted versions default selected and removed IDs disappear
+ok 31 - empty selection stays empty on refresh; newly promoted versions default selected and removed IDs disappear
+  ---
+  duration_ms: 0.2905
+  type: 'test'
+  ...
+# Subtest: track filtering defaults legacy records to all A and isolates baseline selections by kind and track
+ok 32 - track filtering defaults legacy records to all A and isolates baseline selections by kind and track
+  ---
+  duration_ms: 0.235125
+  type: 'test'
+  ...
+# Subtest: track metric definitions use record overrides and never borrow all A definitions for CSI1000
+ok 33 - track metric definitions use record overrides and never borrow all A definitions for CSI1000
+  ---
+  duration_ms: 0.131
+  type: 'test'
+  ...
+# Subtest: comparison rejects cross-track records even with matching comparison keys and blocks drafts
+ok 34 - comparison rejects cross-track records even with matching comparison keys and blocks drafts
+  ---
+  duration_ms: 0.243583
+  type: 'test'
+  ...
+# Subtest: annual tables use one metric per table, versions as rows, union of years as columns, no full-period fallback
+ok 35 - annual tables use one metric per table, versions as rows, union of years as columns, no full-period fallback
+  ---
+  duration_ms: 16.542875
+  type: 'test'
+  ...
+# Subtest: regime tables preserve D/F/T columns and shared renderer supports a single experiment
+ok 36 - regime tables preserve D/F/T columns and shared renderer supports a single experiment
+  ---
+  duration_ms: 0.563875
+  type: 'test'
+  ...
+# Subtest: core metrics retain global RankIC, raw export matches selected rows and dimensional tables
+ok 37 - core metrics retain global RankIC, raw export matches selected rows and dimensional tables
+  ---
+  duration_ms: 1.579666
+  type: 'test'
+  ...
+# Subtest: core selection puts accessible checkboxes first and retains unchecked version rows
+ok 38 - core selection puts accessible checkboxes first and retains unchecked version rows
+  ---
+  duration_ms: 1.356458
+  type: 'test'
+  ...
+# Subtest: strategy arithmetic annual return is excluded in every view without changing source definitions
+ok 39 - strategy arithmetic annual return is excluded in every view without changing source definitions
+  ---
+  duration_ms: 0.972125
+  type: 'test'
+  ...
+# Subtest: empty benchmarks and empty source dimensions render clear empty states without fake numbers
+ok 40 - empty benchmarks and empty source dimensions render clear empty states without fake numbers
+  ---
+  duration_ms: 0.205917
+  type: 'test'
+  ...
+# Subtest: records keep conclusion, note, reports and explicit promotion distinct from comparison baseline
+ok 41 - records keep conclusion, note, reports and explicit promotion distinct from comparison baseline
+  ---
+  duration_ms: 0.330208
+  type: 'test'
+  ...
+# Subtest: reports use resource IDs, show missing reports and escape malicious source names
+ok 42 - reports use resource IDs, show missing reports and escape malicious source names
+  ---
+  duration_ms: 0.515833
+  type: 'test'
+  ...
+# Subtest: research track selector defaults to all A and isolates benchmarks, definitions and history options
+ok 43 - research track selector defaults to all A and isolates benchmarks, definitions and history options
+  ---
+  duration_ms: 53.772833
+  type: 'test'
+  ...
+# Subtest: track-aware experiment detail uses the record metric definitions and strategy track survives kind navigation
+ok 44 - track-aware experiment detail uses the record metric definitions and strategy track survives kind navigation
+  ---
+  duration_ms: 7.878333
+  type: 'test'
+  ...
+# Subtest: comparison results arriving after a track switch cannot open an incompatible dialog
+ok 45 - comparison results arriving after a track switch cannot open an incompatible dialog
+  ---
+  duration_ms: 5.726916
+  type: 'test'
+  ...
+# Subtest: core table replaces cards and version picker, newest first; checkboxes filter only dimension rows
+ok 46 - core table replaces cards and version picker, newest first; checkboxes filter only dimension rows
+  ---
+  duration_ms: 3.575834
+  type: 'test'
+  ...
+# Subtest: header checkbox clears only dimension selection and persists across dimension tabs and refresh
+ok 47 - header checkbox clears only dimension selection and persists across dimension tabs and refresh
+  ---
+  duration_ms: 4.258125
+  type: 'test'
+  ...
+# Subtest: model and strategy version selections stay independent when switching kinds
+ok 48 - model and strategy version selections stay independent when switching kinds
+  ---
+  duration_ms: 3.512375
+  type: 'test'
+  ...
+# Subtest: sidebar exposes direct model and strategy routes while the old research link still opens models
+ok 49 - sidebar exposes direct model and strategy routes while the old research link still opens models
+  ---
+  duration_ms: 3.054167
+  type: 'test'
+  ...
+# Subtest: experiment records expose content conclusion report links and promoted version without metric columns
+ok 50 - experiment records expose content conclusion report links and promoted version without metric columns
+  ---
+  duration_ms: 2.213834
+  type: 'test'
+  ...
+# Subtest: single experiment detail switches to yearly metric matrices with slices rather than full values
+ok 51 - single experiment detail switches to yearly metric matrices with slices rather than full values
+  ---
+  duration_ms: 3.385458
+  type: 'test'
+  ...
+1..51
+# tests 51
+# suites 0
+# pass 51
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 149.945625

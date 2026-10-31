@@ -37,7 +37,7 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20es-all-top25d5h5-bt",
         "display_name": "M0 H20 ES top25 drop5 hold5（主格阶梯等价）",
         "result": "all_top25d5h5",
-        "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+        "detail_report": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
         "session": "backtest/result/20260821_234251_phase_s_m0h20es_all_top25d5h5_ensemble",
         "config": "TopkDropout topk=25 n_drop=5 hold_thresh=5",
         "hypothesis": (
@@ -58,7 +58,7 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
         "display_name": "M0 H20 ES top25 drop5 hold5 + 掉出前100必卖",
         "result": "all_top25d5h5f100",
-        "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+        "detail_report": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
         "session": "backtest/result/20260821_234327_phase_s_m0h20es_all_top25d5h5f100_ensemble",
         "config": "TopkDropout topk=25 n_drop=5 hold_thresh=5 force_sell_rank=100",
         "hypothesis": (
@@ -76,7 +76,7 @@ SPECS = [
         "exp_id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
         "display_name": "M0 H20 ES 真阶梯 k5×h5（按持有天数到期退出）",
         "result": "all_ladder_k5h5",
-        "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+        "detail_report": "backtest/experiments/strategies/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
         "session": "backtest/result/20260822_001249_phase_s_m0h20es_all_ladder_k5h5_ensemble",
         "config": "CohortLadder topk=5 horizon=5",
         "hypothesis": (

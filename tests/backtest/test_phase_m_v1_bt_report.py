@@ -76,7 +76,7 @@ def test_hub_marks_current_bt_version():
         },
     ]
     html = report.render_hub(baselines, experiments=[])
-    assert "v2 · 当前" in html
+    assert "s2 · 当前" in html
     assert "class='current'" in html
 
 
@@ -101,7 +101,7 @@ def test_hub_header_anchor_follows_current_baseline():
 
     html = report.render_hub(baselines, experiments=[])
 
-    assert "当前对照锚点是 <b>BT v3 · M0 H20 ES hold5 + 掉出前100必卖</b>" in html
+    assert "当前对照锚点是 <b>s3 · M0 H20 ES hold5 + 掉出前100必卖</b>" in html
     assert "force_sell_rank=100" in html
     assert "BT v2 · " not in html
 
@@ -126,9 +126,9 @@ def test_hub_header_shows_v4_ladder_when_current():
 
     html = report.render_hub(baselines, experiments=[])
 
-    assert "当前对照锚点是 <b>BT v4 · v4 RankIC ES 真阶梯 k3×h5</b>" in html
+    assert "当前对照锚点是 <b>s4 · v4 RankIC ES 真阶梯 k3×h5</b>" in html
     assert "CohortLadder topk=3 horizon=5" in html
-    assert "v4 · 当前" in html
+    assert "s4 · 当前" in html
     assert "BT v3 · " not in html
 
 

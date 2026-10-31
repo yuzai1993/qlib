@@ -1,0 +1,1368 @@
+{
+  "audit_date": "2026-10-31",
+  "audit_scope": "Read-only experiment identity and existing metric source audit; no training, evaluation, source metric, frozen record, or repository metadata modification.",
+  "standards": {
+    "source": {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1",
+      "bytes": 59162
+    },
+    "sections": [
+      "0",
+      "1.5",
+      "1.5.1",
+      "1.5.2",
+      "1.5.3"
+    ],
+    "primary_cell": {
+      "k": 3,
+      "h": 5
+    },
+    "historical_selection_window": true
+  },
+  "evidence_files": [
+    {
+      "path": "backtest/scripts/register_regime_m0_labels.py",
+      "sha256": "b305bc565e6dd57ff0b614c350cb8cbb7657a3e4b22ef499f49f5fb882a11361",
+      "bytes": 9936
+    },
+    {
+      "path": "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+      "sha256": "03ddc9113f9ad3636eebbe569086b041127432c44ae14ebec3f33d449bc146cc",
+      "bytes": 8570
+    },
+    {
+      "path": "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html",
+      "sha256": "b55a4b0d13927ffd16ef3bf28d54b3437257866f11507050ad3c100d196a85d1",
+      "bytes": 17223
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/repository_migration_20261030/metadata.originals.json",
+      "sha256": "8860d2a0808d1371a0f30f7eca9869143184a6f4ef7779c574cd6f558af3953a",
+      "bytes": 50717
+    }
+  ],
+  "original_grid_identity": {
+    "registry_index": {
+      "_registry_schema": "qlib-experiment-index-v3",
+      "_archive_kind": "model",
+      "exp_id": "regime-adapt/m0-label-k123-h2345",
+      "date": "2026-08-22",
+      "state": "completed",
+      "phase": "M",
+      "direction": "regime-adapt",
+      "phase_m_protocol": "v1",
+      "display_name": "M0 标签网格 k1-5×h2345",
+      "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "detail_path": "models/regime-adapt/m0-label-k123-h2345/records/3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f.json",
+      "detail_sha256": "3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f"
+    },
+    "registry_index_file": {
+      "path": "backtest/experiments/registry.jsonl",
+      "sha256": "7792d98d545962fe54994165a813f3aa02a9c580edcd4843e3d52fdd941dbe4b",
+      "bytes": 24373
+    },
+    "event_numbers": [
+      130
+    ],
+    "frozen_record": {
+      "path": "backtest/experiments/models/evaluation/kh-grid/records/3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f.json",
+      "sha256": "3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f",
+      "bytes": 339312
+    },
+    "raw_fields": {
+      "exp_id": "regime-adapt/m0-label-k123-h2345",
+      "date": "2026-08-22",
+      "arm": "m0-h20",
+      "display_name": "M0 标签网格 k1-5×h2345",
+      "train_label_horizon": 20,
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "hypothesis": "在更小持仓 k∈{1,2,3,4,5} 与更短持有 h∈{2,3,4,5} 上看 M0 H20 ES / M0 H20 的扣费净年化、波动、夏普；不改官方主格 top5×h5",
+      "eval_protocol": "allA_k1to5_h2345_net_ann/vol/sharpe | 官方=五种子zscore均值信号一次评估 | 网格 1/2/3/4/5×2/3/4/5 | 上市>=60 + 日频ST + 成交额>=1000万 + 剔t+1涨停 | 不覆盖官方 top5×h5 JSON",
+      "eval_output": "backtest/result/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+      "detail_report": "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html",
+      "note": "本轮只重评仍在的 M0 H20 ES / M0 H20；不改写 m0-h20-label-v4 / m0-h20-t5h5-es-v1 的官方 top5×h5 数字",
+      "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1"
+    },
+    "training_label_fixed_H": 20,
+    "grid_k": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "grid_h": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "arms": [
+      {
+        "arm": "m0h20es",
+        "training_horizon": 20,
+        "historical_version": "v2",
+        "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按Top5×H5扣费净年化早停（top5_h5_net_ann）。",
+        "source": {
+          "path": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+          "sha256": "dae3c1acc9984e3645d7d51abf948eb670532424bdeea3e3540a4f11d6eff102",
+          "bytes": 1263001
+        },
+        "primary_top3_h5": {
+          "n_days": 1448,
+          "ann_excess": 0.2513738795479873,
+          "ir": 0.6821192683240404,
+          "ann": 0.3410481653160812,
+          "beta": 1.0368954129355636,
+          "ann_alpha": 0.2480653097448718,
+          "appraisal_ir": 0.6737234946358194,
+          "turnover_period": 0.8930468930468931,
+          "turnover": 0.17860937860937862,
+          "ann_cost": 0.03910830954030955,
+          "net_ann_excess": 0.21226557000767773,
+          "net_ann": 0.30193985577577165,
+          "net_ann_alpha": 0.20895700020456223,
+          "net_ann_vol": 0.5820114423686474,
+          "net_sharpe": 0.5187868034809567
+        },
+        "entire_head_equals_frozen_record": true,
+        "all_head_years_equal_frozen_record": true,
+        "all_head_regimes_equal_frozen_record": true
+      },
+      {
+        "arm": "m0h20",
+        "training_horizon": 20,
+        "historical_version": "v1",
+        "early_stopping": "冻结499个分层交易日（2020-08-03～2026-07-23）的次日收益标签日RankIC，valid_frame_70；不是全评估窗H5 RankIC。",
+        "source": {
+          "path": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+          "sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+          "bytes": 1262812
+        },
+        "primary_top3_h5": {
+          "n_days": 1448,
+          "ann_excess": 0.24328301303036187,
+          "ir": 0.6672015046150941,
+          "ann": 0.33295729879845576,
+          "beta": 0.9997929109230703,
+          "ann_alpha": 0.24330158359542592,
+          "appraisal_ir": 0.667253225033137,
+          "turnover_period": 0.9045969045969047,
+          "turnover": 0.18091938091938092,
+          "ann_cost": 0.03961410764610765,
+          "net_ann_excess": 0.20366890538425422,
+          "net_ann": 0.2933431911523481,
+          "net_ann_alpha": 0.20368747594931827,
+          "net_ann_vol": 0.5665444606764577,
+          "net_sharpe": 0.5177761173449555
+        },
+        "entire_head_equals_frozen_record": true,
+        "all_head_years_equal_frozen_record": true,
+        "all_head_regimes_equal_frozen_record": true
+      }
+    ],
+    "identity_conclusion": "Event 130 only reevaluates two H20-trained signals (v1 frozen 499-day next-day RankIC early stop and v2 evaluation-window top5_h5_net_ann early stop) over K=1..5 and held h=2..5. It contains no H1/H5/H10 training-label arms."
+  },
+  "shared_report_identity": {
+    "source": {
+      "path": "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html",
+      "sha256": "b55a4b0d13927ffd16ef3bf28d54b3437257866f11507050ad3c100d196a85d1",
+      "bytes": 17223
+    },
+    "title": "Phase M v1 详细报告 · M0 训练标签期限",
+    "intro": "H1/H5/H10/H20 × top3×h5 早停对照",
+    "report_declares": "四臂都是 M0 + top3×h5 早停，只改训练标签期限 H1/H5/H10/H20。",
+    "reported_source_original_alias": "backtest/result/eval_regime_m0_t3h5es/eval_m0h*.json",
+    "mismatch": "Shared report was rebuilt for the later H1/H5/H10/H20 batch; event130 still points to it. This link creates a misleading impression that original event130 was the four-label experiment."
+  },
+  "same_protocol_label_comparison": {
+    "arms": [
+      {
+        "exp_id": "regime-adapt/m0-h1-t3h5es-v1",
+        "event_numbers": [
+          131
+        ],
+        "baseline_version": null,
+        "train_label_horizon": 1,
+        "hypothesis": "官方主格与早停改为 top3×h5 后，比较训练标签 H1/H5/H10/H20 的扣费净年化",
+        "record_note": "es_metric=top3_h5_net_ann；同批标签对照，未晋升",
+        "raw_baseline_ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "editorial_comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3"
+        },
+        "source": {
+          "path": "backtest/experiments/models/training-target/h1/metrics/eval_m0h1.json",
+          "sha256": "b83c3f1808491102fba70d6a0c5890a73c7b4c207895e39b0c167750e0820b5e",
+          "bytes": 1269130
+        },
+        "record": {
+          "path": "backtest/experiments/models/training-target/h1/records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+          "sha256": "42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85",
+          "bytes": 21444
+        },
+        "record_metric_equals_source_primary": true,
+        "header": {
+          "generated_at": "2026-08-22T14:05:05",
+          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/regime-adapt/eval_m0fast.yaml",
+          "eval_mode": "multi_horizon",
+          "horizons": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "eval_labels": {
+            "h2": "Ref($close, -3)/Ref($close, -1) - 1",
+            "h3": "Ref($close, -4)/Ref($close, -1) - 1",
+            "h4": "Ref($close, -5)/Ref($close, -1) - 1",
+            "h5": "Ref($close, -6)/Ref($close, -1) - 1"
+          },
+          "eval_segment_name": "test",
+          "effective_eval_segment": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "eval_dates_count": null,
+          "regime_pools": [
+            "all"
+          ],
+          "tail_topk": [],
+          "head_k": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "head_core": {
+            "k": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "h": [
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "head_universe": "t+1 可成交（剔除次日涨停封板与零成交量）",
+          "filters": {
+            "min_listing_days": 60,
+            "st_filter": "daily",
+            "min_amount": 10000000.0
+          },
+          "primary_cell": {
+            "k": 3,
+            "h": 5
+          },
+          "official_signal": "seed_zscore_mean",
+          "cost_round_trip": 0.00092,
+          "turnover_reliable": true,
+          "data_version": "2026-08-21",
+          "st_filter": "daily",
+          "label_window_cutoff": {
+            "h2": "2026-07-28",
+            "h3": "2026-07-27",
+            "h4": "2026-07-24",
+            "h5": "2026-07-23"
+          }
+        },
+        "sessions": [
+          {
+            "session": "regimeadaptfast_m0h1_t3h5es_s42",
+            "seed": 42
+          },
+          {
+            "session": "regimeadaptfast_m0h1_t3h5es_s1000",
+            "seed": 1000
+          },
+          {
+            "session": "regimeadaptfast_m0h1_t3h5es_s2000",
+            "seed": 2000
+          },
+          {
+            "session": "regimeadaptfast_m0h1_t3h5es_s3000",
+            "seed": 3000
+          },
+          {
+            "session": "regimeadaptfast_m0h1_t3h5es_s4000",
+            "seed": 4000
+          }
+        ],
+        "primary_top3_h5": {
+          "n_days": 1448,
+          "ann_excess": -0.4447984249171995,
+          "ir": -0.9968522483537859,
+          "ann": -0.3551241391491056,
+          "beta": 1.1404425307932624,
+          "ann_alpha": -0.45739250855754887,
+          "appraisal_ir": -1.0381938007355265,
+          "turnover_period": 0.9778239778239778,
+          "turnover": 0.19556479556479556,
+          "ann_cost": 0.04282086763686764,
+          "net_ann_excess": -0.48761929255406716,
+          "net_ann": -0.3979450067859733,
+          "net_ann_alpha": -0.5002133761944165,
+          "net_ann_vol": 0.6714861665495863,
+          "net_sharpe": -0.5926332166019191
+        },
+        "h5_global": null,
+        "early_stopping_metadata": "评估窗Top3×H5扣费净年化"
+      },
+      {
+        "exp_id": "regime-adapt/m0-h5-t3h5es-v1",
+        "event_numbers": [
+          132
+        ],
+        "baseline_version": null,
+        "train_label_horizon": 5,
+        "hypothesis": "官方主格与早停改为 top3×h5 后，比较训练标签 H1/H5/H10/H20 的扣费净年化",
+        "record_note": "es_metric=top3_h5_net_ann；同批标签对照，未晋升",
+        "raw_baseline_ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "editorial_comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3"
+        },
+        "source": {
+          "path": "backtest/experiments/models/training-target/h5/metrics/eval_m0h5.json",
+          "sha256": "8422bad9f322134a76fbd88354f60779e52251395cec8217979ca6d827f27ef6",
+          "bytes": 1263286
+        },
+        "record": {
+          "path": "backtest/experiments/models/training-target/h5/records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+          "sha256": "6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5",
+          "bytes": 21307
+        },
+        "record_metric_equals_source_primary": true,
+        "header": {
+          "generated_at": "2026-08-22T14:11:43",
+          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/regime-adapt/eval_m0fast.yaml",
+          "eval_mode": "multi_horizon",
+          "horizons": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "eval_labels": {
+            "h2": "Ref($close, -3)/Ref($close, -1) - 1",
+            "h3": "Ref($close, -4)/Ref($close, -1) - 1",
+            "h4": "Ref($close, -5)/Ref($close, -1) - 1",
+            "h5": "Ref($close, -6)/Ref($close, -1) - 1"
+          },
+          "eval_segment_name": "test",
+          "effective_eval_segment": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "eval_dates_count": null,
+          "regime_pools": [
+            "all"
+          ],
+          "tail_topk": [],
+          "head_k": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "head_core": {
+            "k": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "h": [
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "head_universe": "t+1 可成交（剔除次日涨停封板与零成交量）",
+          "filters": {
+            "min_listing_days": 60,
+            "st_filter": "daily",
+            "min_amount": 10000000.0
+          },
+          "primary_cell": {
+            "k": 3,
+            "h": 5
+          },
+          "official_signal": "seed_zscore_mean",
+          "cost_round_trip": 0.00092,
+          "turnover_reliable": true,
+          "data_version": "2026-08-21",
+          "st_filter": "daily",
+          "label_window_cutoff": {
+            "h2": "2026-07-28",
+            "h3": "2026-07-27",
+            "h4": "2026-07-24",
+            "h5": "2026-07-23"
+          }
+        },
+        "sessions": [
+          {
+            "session": "regimeadaptfast_m0h5_t3h5es_s42",
+            "seed": 42
+          },
+          {
+            "session": "regimeadaptfast_m0h5_t3h5es_s1000",
+            "seed": 1000
+          },
+          {
+            "session": "regimeadaptfast_m0h5_t3h5es_s2000",
+            "seed": 2000
+          },
+          {
+            "session": "regimeadaptfast_m0h5_t3h5es_s3000",
+            "seed": 3000
+          },
+          {
+            "session": "regimeadaptfast_m0h5_t3h5es_s4000",
+            "seed": 4000
+          }
+        ],
+        "primary_top3_h5": {
+          "n_days": 1448,
+          "ann_excess": 0.2001526674344471,
+          "ir": 0.4729839361898929,
+          "ann": 0.2898269532025409,
+          "beta": 1.1806141862045123,
+          "ann_alpha": 0.1839562192869719,
+          "appraisal_ir": 0.44320737301208524,
+          "turnover_period": 0.9623469623469624,
+          "turnover": 0.1924693924693925,
+          "ann_cost": 0.04214309817509818,
+          "net_ann_excess": 0.15800956925934892,
+          "net_ann": 0.24768385502744275,
+          "net_ann_alpha": 0.14181312111187372,
+          "net_ann_vol": 0.6637351822223707,
+          "net_sharpe": 0.37316668102198236
+        },
+        "h5_global": null,
+        "early_stopping_metadata": "评估窗Top3×H5扣费净年化"
+      },
+      {
+        "exp_id": "regime-adapt/m0-h10-t3h5es-v1",
+        "event_numbers": [
+          133
+        ],
+        "baseline_version": null,
+        "train_label_horizon": 10,
+        "hypothesis": "官方主格与早停改为 top3×h5 后，比较训练标签 H1/H5/H10/H20 的扣费净年化",
+        "record_note": "es_metric=top3_h5_net_ann；同批标签对照，未晋升",
+        "raw_baseline_ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "editorial_comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3"
+        },
+        "source": {
+          "path": "backtest/experiments/models/training-target/h10/metrics/eval_m0h10.json",
+          "sha256": "47848f51908e0d243cd9a1b56adc5da889987d5a02f5440f6e2e2227b1bb66f9",
+          "bytes": 1263512
+        },
+        "record": {
+          "path": "backtest/experiments/models/training-target/h10/records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json",
+          "sha256": "1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1",
+          "bytes": 21343
+        },
+        "record_metric_equals_source_primary": true,
+        "header": {
+          "generated_at": "2026-08-22T14:18:44",
+          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/regime-adapt/eval_m0fast.yaml",
+          "eval_mode": "multi_horizon",
+          "horizons": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "eval_labels": {
+            "h2": "Ref($close, -3)/Ref($close, -1) - 1",
+            "h3": "Ref($close, -4)/Ref($close, -1) - 1",
+            "h4": "Ref($close, -5)/Ref($close, -1) - 1",
+            "h5": "Ref($close, -6)/Ref($close, -1) - 1"
+          },
+          "eval_segment_name": "test",
+          "effective_eval_segment": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "eval_dates_count": null,
+          "regime_pools": [
+            "all"
+          ],
+          "tail_topk": [],
+          "head_k": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "head_core": {
+            "k": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "h": [
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "head_universe": "t+1 可成交（剔除次日涨停封板与零成交量）",
+          "filters": {
+            "min_listing_days": 60,
+            "st_filter": "daily",
+            "min_amount": 10000000.0
+          },
+          "primary_cell": {
+            "k": 3,
+            "h": 5
+          },
+          "official_signal": "seed_zscore_mean",
+          "cost_round_trip": 0.00092,
+          "turnover_reliable": true,
+          "data_version": "2026-08-21",
+          "st_filter": "daily",
+          "label_window_cutoff": {
+            "h2": "2026-07-28",
+            "h3": "2026-07-27",
+            "h4": "2026-07-24",
+            "h5": "2026-07-23"
+          }
+        },
+        "sessions": [
+          {
+            "session": "regimeadaptfast_m0h10_t3h5es_s42",
+            "seed": 42
+          },
+          {
+            "session": "regimeadaptfast_m0h10_t3h5es_s1000",
+            "seed": 1000
+          },
+          {
+            "session": "regimeadaptfast_m0h10_t3h5es_s2000",
+            "seed": 2000
+          },
+          {
+            "session": "regimeadaptfast_m0h10_t3h5es_s3000",
+            "seed": 3000
+          },
+          {
+            "session": "regimeadaptfast_m0h10_t3h5es_s4000",
+            "seed": 4000
+          }
+        ],
+        "primary_top3_h5": {
+          "n_days": 1448,
+          "ann_excess": 0.1933302481526245,
+          "ir": 0.39734822454651786,
+          "ann": 0.28300453392071845,
+          "beta": 1.1237402975176574,
+          "ann_alpha": 0.18223392535199714,
+          "appraisal_ir": 0.37750097734957827,
+          "turnover_period": 0.8974358974358976,
+          "turnover": 0.17948717948717952,
+          "ann_cost": 0.03930051282051283,
+          "net_ann_excess": 0.15402973533211167,
+          "net_ann": 0.24370402110020561,
+          "net_ann_alpha": 0.1429334125314843,
+          "net_ann_vol": 0.6925605752765835,
+          "net_sharpe": 0.35188838319720855
+        },
+        "h5_global": null,
+        "early_stopping_metadata": "评估窗Top3×H5扣费净年化"
+      },
+      {
+        "exp_id": "regime-adapt/m0-h20-t3h5es-v1",
+        "event_numbers": [
+          134
+        ],
+        "baseline_version": "v3",
+        "train_label_horizon": 20,
+        "hypothesis": "官方主格与早停改为 top3×h5 后，比较训练标签 H1/H5/H10/H20 的扣费净年化",
+        "record_note": "es_metric=top3_h5_net_ann；主格 top3×h5 净年化最优，晋升为 v3",
+        "raw_baseline_ref": "self",
+        "editorial_comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+          "version": "v2"
+        },
+        "source": {
+          "path": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+          "sha256": "bf4aa5a3bd889d33628a89359a378b8c7153f893508b784dd7c62dcfa0886db7",
+          "bytes": 1262736
+        },
+        "record": {
+          "path": "backtest/experiments/models/early-stopping/top3-v3/records/bc74b6823ef6b724d1baf4b5f1f988ca0830492553c340178bc42134e2c3f9d7.json",
+          "sha256": "bc74b6823ef6b724d1baf4b5f1f988ca0830492553c340178bc42134e2c3f9d7",
+          "bytes": 21298
+        },
+        "record_metric_equals_source_primary": true,
+        "header": {
+          "generated_at": "2026-08-22T14:25:45",
+          "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/regime-adapt/eval_m0fast.yaml",
+          "eval_mode": "multi_horizon",
+          "horizons": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "eval_labels": {
+            "h2": "Ref($close, -3)/Ref($close, -1) - 1",
+            "h3": "Ref($close, -4)/Ref($close, -1) - 1",
+            "h4": "Ref($close, -5)/Ref($close, -1) - 1",
+            "h5": "Ref($close, -6)/Ref($close, -1) - 1"
+          },
+          "eval_segment_name": "test",
+          "effective_eval_segment": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "eval_dates_count": null,
+          "regime_pools": [
+            "all"
+          ],
+          "tail_topk": [],
+          "head_k": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "head_core": {
+            "k": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "h": [
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "head_universe": "t+1 可成交（剔除次日涨停封板与零成交量）",
+          "filters": {
+            "min_listing_days": 60,
+            "st_filter": "daily",
+            "min_amount": 10000000.0
+          },
+          "primary_cell": {
+            "k": 3,
+            "h": 5
+          },
+          "official_signal": "seed_zscore_mean",
+          "cost_round_trip": 0.00092,
+          "turnover_reliable": true,
+          "data_version": "2026-08-21",
+          "st_filter": "daily",
+          "label_window_cutoff": {
+            "h2": "2026-07-28",
+            "h3": "2026-07-27",
+            "h4": "2026-07-24",
+            "h5": "2026-07-23"
+          }
+        },
+        "sessions": [
+          {
+            "session": "regimeadaptfast_m0h20_t3h5es_s42",
+            "seed": 42
+          },
+          {
+            "session": "regimeadaptfast_m0h20_t3h5es_s1000",
+            "seed": 1000
+          },
+          {
+            "session": "regimeadaptfast_m0h20_t3h5es_s2000",
+            "seed": 2000
+          },
+          {
+            "session": "regimeadaptfast_m0h20_t3h5es_s3000",
+            "seed": 3000
+          },
+          {
+            "session": "regimeadaptfast_m0h20_t3h5es_s4000",
+            "seed": 4000
+          }
+        ],
+        "primary_top3_h5": {
+          "n_days": 1448,
+          "ann_excess": 0.24647836864065611,
+          "ir": 0.6702149243266932,
+          "ann": 0.33615265440875,
+          "beta": 1.0197142232724938,
+          "ann_alpha": 0.24471050974922243,
+          "appraisal_ir": 0.6655820420526017,
+          "turnover_period": 0.8942018942018943,
+          "turnover": 0.17884037884037887,
+          "ann_cost": 0.039158889350889355,
+          "net_ann_excess": 0.20731947928976677,
+          "net_ann": 0.2969937650578606,
+          "net_ann_alpha": 0.20555162039833308,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099
+        },
+        "h5_global": {
+          "n_days": 1448,
+          "ic_mean": 0.06472391973157206,
+          "ic_std": 0.11834679041555643,
+          "icir": 0.5469005074350055,
+          "rank_ic_mean": 0.09837344126849204,
+          "rank_ic_std": 0.11980484587157586,
+          "rank_icir": 0.8211140421977831
+        },
+        "early_stopping_metadata": "全评估窗2020-08-03～2026-07-31，1454日，按Top3×H5扣费净年化早停（top3_h5_net_ann）。"
+      }
+    ],
+    "primary_source_pointer": "pools.all.ensemble.head.3.5",
+    "matching_protocol_fields": {
+      "eval_mode": true,
+      "horizons": true,
+      "eval_labels": true,
+      "effective_eval_segment": true,
+      "regime_pools": true,
+      "tail_topk": true,
+      "head_k": true,
+      "head_core": true,
+      "head_universe": true,
+      "filters": true,
+      "primary_cell": true,
+      "official_signal": true,
+      "cost_round_trip": true,
+      "turnover_reliable": true,
+      "data_version": true,
+      "st_filter": true,
+      "label_window_cutoff": true
+    },
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "all_four_seed_sets_match": true,
+    "early_stopping": "top3_h5_net_ann over the shared evaluation window for all H1/H5/H10/H20 arms; evidenced by original frozen hypotheses/notes, promotion script and shared report.",
+    "h20_v3_original_session_metadata": {
+      "backtest/result/regimeadaptfast_m0h20_t3h5es_s1000/meta.json": {
+        "session_name": "regimeadaptfast_m0h20_t3h5es_s1000",
+        "note": "regime-adapt m0 seed=1000",
+        "mode": "train_only",
+        "created_at": "2026-08-22T13:48:59",
+        "n_runs": 1,
+        "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/scripts/train_regime_arm.py",
+        "provider_uri": "~/.qlib/qlib_data/cn_data",
+        "market": "all",
+        "benchmark": null,
+        "handler": "Alpha158Technical",
+        "segments": {
+          "train": [
+            "2004-01-02",
+            "2020-07-31"
+          ],
+          "valid": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "test": [
+            "2020-08-03",
+            "2026-07-31"
+          ]
+        },
+        "regime_adapt": {
+          "arm": "m0",
+          "weight_arm": "m0",
+          "seed": 1000,
+          "train_dates_csv": "backtest/configs/regime-adapt/train_dates_v1.csv",
+          "valid_dates_csv": null,
+          "es_metric": "top3_h5_net_ann",
+          "day_weights_csv": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+          "regime_csv": null,
+          "label": "Ref($close, -21)/Ref($close, -1) - 1",
+          "label_horizon": 20,
+          "instruments": {
+            "market": "all",
+            "filter_pipe": [
+              {
+                "filter_type": "NameDFilter",
+                "name_rule_re": "^(SH60|SH68|SZ00|SZ30)",
+                "filter_start_time": null,
+                "filter_end_time": null
+              }
+            ]
+          },
+          "model": "single",
+          "frozen_hyperparams": "B3-M (feature-b2/range) + cs-rank-norm"
+        }
+      },
+      "backtest/result/regimeadaptfast_m0h20_t3h5es_s2000/meta.json": {
+        "session_name": "regimeadaptfast_m0h20_t3h5es_s2000",
+        "note": "regime-adapt m0 seed=2000",
+        "mode": "train_only",
+        "created_at": "2026-08-22T13:53:32",
+        "n_runs": 1,
+        "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/scripts/train_regime_arm.py",
+        "provider_uri": "~/.qlib/qlib_data/cn_data",
+        "market": "all",
+        "benchmark": null,
+        "handler": "Alpha158Technical",
+        "segments": {
+          "train": [
+            "2004-01-02",
+            "2020-07-31"
+          ],
+          "valid": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "test": [
+            "2020-08-03",
+            "2026-07-31"
+          ]
+        },
+        "regime_adapt": {
+          "arm": "m0",
+          "weight_arm": "m0",
+          "seed": 2000,
+          "train_dates_csv": "backtest/configs/regime-adapt/train_dates_v1.csv",
+          "valid_dates_csv": null,
+          "es_metric": "top3_h5_net_ann",
+          "day_weights_csv": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+          "regime_csv": null,
+          "label": "Ref($close, -21)/Ref($close, -1) - 1",
+          "label_horizon": 20,
+          "instruments": {
+            "market": "all",
+            "filter_pipe": [
+              {
+                "filter_type": "NameDFilter",
+                "name_rule_re": "^(SH60|SH68|SZ00|SZ30)",
+                "filter_start_time": null,
+                "filter_end_time": null
+              }
+            ]
+          },
+          "model": "single",
+          "frozen_hyperparams": "B3-M (feature-b2/range) + cs-rank-norm"
+        }
+      },
+      "backtest/result/regimeadaptfast_m0h20_t3h5es_s3000/meta.json": {
+        "session_name": "regimeadaptfast_m0h20_t3h5es_s3000",
+        "note": "regime-adapt m0 seed=3000",
+        "mode": "train_only",
+        "created_at": "2026-08-22T13:58:49",
+        "n_runs": 1,
+        "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/scripts/train_regime_arm.py",
+        "provider_uri": "~/.qlib/qlib_data/cn_data",
+        "market": "all",
+        "benchmark": null,
+        "handler": "Alpha158Technical",
+        "segments": {
+          "train": [
+            "2004-01-02",
+            "2020-07-31"
+          ],
+          "valid": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "test": [
+            "2020-08-03",
+            "2026-07-31"
+          ]
+        },
+        "regime_adapt": {
+          "arm": "m0",
+          "weight_arm": "m0",
+          "seed": 3000,
+          "train_dates_csv": "backtest/configs/regime-adapt/train_dates_v1.csv",
+          "valid_dates_csv": null,
+          "es_metric": "top3_h5_net_ann",
+          "day_weights_csv": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+          "regime_csv": null,
+          "label": "Ref($close, -21)/Ref($close, -1) - 1",
+          "label_horizon": 20,
+          "instruments": {
+            "market": "all",
+            "filter_pipe": [
+              {
+                "filter_type": "NameDFilter",
+                "name_rule_re": "^(SH60|SH68|SZ00|SZ30)",
+                "filter_start_time": null,
+                "filter_end_time": null
+              }
+            ]
+          },
+          "model": "single",
+          "frozen_hyperparams": "B3-M (feature-b2/range) + cs-rank-norm"
+        }
+      },
+      "backtest/result/regimeadaptfast_m0h20_t3h5es_s4000/meta.json": {
+        "session_name": "regimeadaptfast_m0h20_t3h5es_s4000",
+        "note": "regime-adapt m0 seed=4000",
+        "mode": "train_only",
+        "created_at": "2026-08-22T14:05:01",
+        "n_runs": 1,
+        "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/scripts/train_regime_arm.py",
+        "provider_uri": "~/.qlib/qlib_data/cn_data",
+        "market": "all",
+        "benchmark": null,
+        "handler": "Alpha158Technical",
+        "segments": {
+          "train": [
+            "2004-01-02",
+            "2020-07-31"
+          ],
+          "valid": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "test": [
+            "2020-08-03",
+            "2026-07-31"
+          ]
+        },
+        "regime_adapt": {
+          "arm": "m0",
+          "weight_arm": "m0",
+          "seed": 4000,
+          "train_dates_csv": "backtest/configs/regime-adapt/train_dates_v1.csv",
+          "valid_dates_csv": null,
+          "es_metric": "top3_h5_net_ann",
+          "day_weights_csv": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+          "regime_csv": null,
+          "label": "Ref($close, -21)/Ref($close, -1) - 1",
+          "label_horizon": 20,
+          "instruments": {
+            "market": "all",
+            "filter_pipe": [
+              {
+                "filter_type": "NameDFilter",
+                "name_rule_re": "^(SH60|SH68|SZ00|SZ30)",
+                "filter_start_time": null,
+                "filter_end_time": null
+              }
+            ]
+          },
+          "model": "single",
+          "frozen_hyperparams": "B3-M (feature-b2/range) + cs-rank-norm"
+        }
+      },
+      "backtest/result/regimeadaptfast_m0h20_t3h5es_s42/meta.json": {
+        "session_name": "regimeadaptfast_m0h20_t3h5es_s42",
+        "note": "regime-adapt m0 seed=42",
+        "mode": "train_only",
+        "created_at": "2026-08-22T13:42:25",
+        "n_runs": 1,
+        "config_path": "/Users/yuxianqi/Project/qlib_exp/backtest/scripts/train_regime_arm.py",
+        "provider_uri": "~/.qlib/qlib_data/cn_data",
+        "market": "all",
+        "benchmark": null,
+        "handler": "Alpha158Technical",
+        "segments": {
+          "train": [
+            "2004-01-02",
+            "2020-07-31"
+          ],
+          "valid": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "test": [
+            "2020-08-03",
+            "2026-07-31"
+          ]
+        },
+        "regime_adapt": {
+          "arm": "m0",
+          "weight_arm": "m0",
+          "seed": 42,
+          "train_dates_csv": "backtest/configs/regime-adapt/train_dates_v1.csv",
+          "valid_dates_csv": null,
+          "es_metric": "top3_h5_net_ann",
+          "day_weights_csv": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+          "regime_csv": null,
+          "label": "Ref($close, -21)/Ref($close, -1) - 1",
+          "label_horizon": 20,
+          "instruments": {
+            "market": "all",
+            "filter_pipe": [
+              {
+                "filter_type": "NameDFilter",
+                "name_rule_re": "^(SH60|SH68|SZ00|SZ30)",
+                "filter_start_time": null,
+                "filter_end_time": null
+              }
+            ]
+          },
+          "model": "single",
+          "frozen_hyperparams": "B3-M (feature-b2/range) + cs-rank-norm"
+        }
+      }
+    },
+    "winner": {
+      "train_horizon": 20,
+      "exp_id": "regime-adapt/m0-h20-t3h5es-v1",
+      "historical_model_version": "v3",
+      "net_ann": 0.2969937650578606,
+      "net_ann_vol": 0.5763272178720751,
+      "net_sharpe": 0.5153214282581099
+    },
+    "net_ann_ranking_H": [
+      20,
+      5,
+      10,
+      1
+    ],
+    "comparison_baseline": "For H1/H5/H10 use v3 H20 as matched-label baseline. For v3's early-stop version experiment the predecessor is v2; that is a separate comparison, not the label-control baseline."
+  },
+  "historical_H20_protocol_controls": [
+    {
+      "exp_id": "regime-adapt/m0-h20-label-v4",
+      "event_numbers": [
+        109
+      ],
+      "baseline_version": "v1",
+      "train_label_horizon": 20,
+      "hypothesis": "不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普",
+      "record_note": "官方评估：日频 ST + 五种子 z-score 等权合成后再算 top5×h5（eval_m0h20_st_daily.json）；eval_m0h20.json 保留 8/16 st_names 对照；seed_mean 只作稳健性",
+      "raw_baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "editorial_comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": true
+      },
+      "source": {
+        "path": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+        "sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+        "bytes": 1262812
+      },
+      "record": {
+        "path": "backtest/experiments/models/training-target/h20-v1/records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json",
+        "sha256": "f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f",
+        "bytes": 21869
+      },
+      "record_metric_equals_source_primary": true,
+      "header": {
+        "generated_at": "2026-08-22T12:02:47",
+        "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/regime-adapt/eval_m0fast.yaml",
+        "eval_mode": "multi_horizon",
+        "horizons": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "eval_labels": {
+          "h2": "Ref($close, -3)/Ref($close, -1) - 1",
+          "h3": "Ref($close, -4)/Ref($close, -1) - 1",
+          "h4": "Ref($close, -5)/Ref($close, -1) - 1",
+          "h5": "Ref($close, -6)/Ref($close, -1) - 1"
+        },
+        "eval_segment_name": "test",
+        "effective_eval_segment": [
+          "2020-08-03",
+          "2026-07-31"
+        ],
+        "eval_dates_count": null,
+        "regime_pools": [
+          "all"
+        ],
+        "tail_topk": [],
+        "head_k": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "head_core": {
+          "k": [
+            5,
+            15,
+            50
+          ],
+          "h": [
+            2,
+            3,
+            5,
+            10
+          ]
+        },
+        "head_universe": "t+1 可成交（剔除次日涨停封板与零成交量）",
+        "filters": {
+          "min_listing_days": 60,
+          "st_filter": "daily",
+          "min_amount": 10000000.0
+        },
+        "primary_cell": {
+          "k": 5,
+          "h": 5
+        },
+        "official_signal": "seed_zscore_mean",
+        "cost_round_trip": 0.00092,
+        "turnover_reliable": true,
+        "data_version": "2026-08-21",
+        "st_filter": "daily",
+        "label_window_cutoff": {
+          "h2": "2026-07-28",
+          "h3": "2026-07-27",
+          "h4": "2026-07-24",
+          "h5": "2026-07-23"
+        }
+      },
+      "sessions": [
+        {
+          "session": "regimeadaptfast_m0h20_s42",
+          "seed": 42
+        },
+        {
+          "session": "regimeadaptfast_m0h20_s1000",
+          "seed": 1000
+        },
+        {
+          "session": "regimeadaptfast_m0h20_s2000",
+          "seed": 2000
+        },
+        {
+          "session": "regimeadaptfast_m0h20_s3000",
+          "seed": 3000
+        },
+        {
+          "session": "regimeadaptfast_m0h20_s4000",
+          "seed": 4000
+        }
+      ],
+      "primary_top3_h5": {
+        "n_days": 1448,
+        "ann_excess": 0.24328301303036187,
+        "ir": 0.6672015046150941,
+        "ann": 0.33295729879845576,
+        "beta": 0.9997929109230703,
+        "ann_alpha": 0.24330158359542592,
+        "appraisal_ir": 0.667253225033137,
+        "turnover_period": 0.9045969045969047,
+        "turnover": 0.18091938091938092,
+        "ann_cost": 0.03961410764610765,
+        "net_ann_excess": 0.20366890538425422,
+        "net_ann": 0.2933431911523481,
+        "net_ann_alpha": 0.20368747594931827,
+        "net_ann_vol": 0.5665444606764577,
+        "net_sharpe": 0.5177761173449555
+      },
+      "h5_global": {
+        "n_days": 1448,
+        "ic_mean": 0.06590679318817798,
+        "ic_std": 0.11816801792801575,
+        "icir": 0.5577379932726495,
+        "rank_ic_mean": 0.09889293530789339,
+        "rank_ic_std": 0.11960796290105671,
+        "rank_icir": 0.8268089591133709
+      },
+      "early_stopping_metadata": "冻结499个分层交易日（2020-08-03～2026-07-23）的次日收益标签日RankIC，valid_frame_70；不是全评估窗H5 RankIC。"
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t5h5-es-v1",
+      "event_numbers": [
+        115
+      ],
+      "baseline_version": "v2",
+      "train_label_horizon": 20,
+      "hypothesis": "训练配方仍是 M0 H20，早停改为全A 1454 天 top5×h5 扣费净年化（上市>=60 + 日频 ST + 成交额>=1000万 + 剔t+1涨停）；valid=整段评估窗，乐观偏差大于原 499 天 RankIC 早停",
+      "record_note": "es_metric=top5_h5_net_ann；2026-08-19 晋升为 Phase M v1 当前基线；2026-08-20 官方主格改为五种子 z-score 等权合成后再算 top5×h5；不覆盖 regimeadaptfast_m0h20_s*；2026-08-22 官方主格改为 top3×h5，本行保留为历史 v2，数字改读新主格；2026-08-22 官方主格改为 top3×h5，本行保留为历史 v2，数字改读新主格",
+      "raw_baseline_ref": "self",
+      "editorial_comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-label-v4",
+        "version": "v1"
+      },
+      "source": {
+        "path": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+        "sha256": "dae3c1acc9984e3645d7d51abf948eb670532424bdeea3e3540a4f11d6eff102",
+        "bytes": 1263001
+      },
+      "record": {
+        "path": "backtest/experiments/models/early-stopping/top5-v2/records/ce5c4daad76093a340dc5b651e195eb9de90ae1e1d689915c863e0ace9786e0e.json",
+        "sha256": "ce5c4daad76093a340dc5b651e195eb9de90ae1e1d689915c863e0ace9786e0e",
+        "bytes": 21951
+      },
+      "record_metric_equals_source_primary": true,
+      "header": {
+        "generated_at": "2026-08-22T12:11:52",
+        "config": "/Users/yuxianqi/Project/qlib_exp/backtest/configs/regime-adapt/eval_m0fast.yaml",
+        "eval_mode": "multi_horizon",
+        "horizons": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "eval_labels": {
+          "h2": "Ref($close, -3)/Ref($close, -1) - 1",
+          "h3": "Ref($close, -4)/Ref($close, -1) - 1",
+          "h4": "Ref($close, -5)/Ref($close, -1) - 1",
+          "h5": "Ref($close, -6)/Ref($close, -1) - 1"
+        },
+        "eval_segment_name": "test",
+        "effective_eval_segment": [
+          "2020-08-03",
+          "2026-07-31"
+        ],
+        "eval_dates_count": null,
+        "regime_pools": [
+          "all"
+        ],
+        "tail_topk": [],
+        "head_k": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "head_core": {
+          "k": [
+            5,
+            15,
+            50
+          ],
+          "h": [
+            2,
+            3,
+            5,
+            10
+          ]
+        },
+        "head_universe": "t+1 可成交（剔除次日涨停封板与零成交量）",
+        "filters": {
+          "min_listing_days": 60,
+          "st_filter": "daily",
+          "min_amount": 10000000.0
+        },
+        "primary_cell": {
+          "k": 5,
+          "h": 5
+        },
+        "official_signal": "seed_zscore_mean",
+        "cost_round_trip": 0.00092,
+        "turnover_reliable": true,
+        "data_version": "2026-08-21",
+        "st_filter": "daily",
+        "label_window_cutoff": {
+          "h2": "2026-07-28",
+          "h3": "2026-07-27",
+          "h4": "2026-07-24",
+          "h5": "2026-07-23"
+        }
+      },
+      "sessions": [
+        {
+          "session": "regimeadaptfast_m0h20_t5h5es_s42",
+          "seed": 42
+        },
+        {
+          "session": "regimeadaptfast_m0h20_t5h5es_s1000",
+          "seed": 1000
+        },
+        {
+          "session": "regimeadaptfast_m0h20_t5h5es_s2000",
+          "seed": 2000
+        },
+        {
+          "session": "regimeadaptfast_m0h20_t5h5es_s3000",
+          "seed": 3000
+        },
+        {
+          "session": "regimeadaptfast_m0h20_t5h5es_s4000",
+          "seed": 4000
+        }
+      ],
+      "primary_top3_h5": {
+        "n_days": 1448,
+        "ann_excess": 0.2513738795479873,
+        "ir": 0.6821192683240404,
+        "ann": 0.3410481653160812,
+        "beta": 1.0368954129355636,
+        "ann_alpha": 0.2480653097448718,
+        "appraisal_ir": 0.6737234946358194,
+        "turnover_period": 0.8930468930468931,
+        "turnover": 0.17860937860937862,
+        "ann_cost": 0.03910830954030955,
+        "net_ann_excess": 0.21226557000767773,
+        "net_ann": 0.30193985577577165,
+        "net_ann_alpha": 0.20895700020456223,
+        "net_ann_vol": 0.5820114423686474,
+        "net_sharpe": 0.5187868034809567
+      },
+      "h5_global": {
+        "n_days": 1448,
+        "ic_mean": 0.0643089049482531,
+        "ic_std": 0.11917219830733349,
+        "icir": 0.5396300971339532,
+        "rank_ic_mean": 0.0975632090210084,
+        "rank_ic_std": 0.12054154147243877,
+        "rank_icir": 0.8093741612165773
+      },
+      "early_stopping_metadata": "全评估窗2020-08-03～2026-07-31，1454日，按Top5×H5扣费净年化早停（top5_h5_net_ann）。"
+    }
+  ],
+  "presentation_recommendation": {
+    "title": "训练目标期限对比",
+    "experiment_type": "training_target",
+    "change_summary": "训练标签从H20改为H1/H5/H10；固定Top3×H5早停和评估。",
+    "core_table_columns": [
+      "训练目标",
+      "对应模型/实验",
+      "扣费净年化",
+      "扣费波动",
+      "扣费夏普",
+      "日换手",
+      "交易日"
+    ],
+    "table_rows_source_exp_ids": [
+      "regime-adapt/m0-h1-t3h5es-v1",
+      "regime-adapt/m0-h5-t3h5es-v1",
+      "regime-adapt/m0-h10-t3h5es-v1",
+      "regime-adapt/m0-h20-t3h5es-v1"
+    ],
+    "conclusion": "固定Top3×H5下，H20净年化29.70%、夏普0.52，为这组训练目标比较最好；H1为负，H5/H10均低于H20。",
+    "preserve_original_grid": "Keep event130 and its frozen registry record unchanged; if its visible archive becomes an editorial group view for the later label batch, declare the displayed group member exp_ids/sources explicitly and retain the original v1/v2 grid as a labeled historical reevaluation section. Do not claim the new table was generated by event130.",
+    "do_not_mix": "Do not replace H20 in the four-label table with v2's 30.1939856%: v2 uses top5 early stop, unlike the shared top3 early-stop label batch.",
+    "global_rankic": "H1/H5/H10 original ensemble JSON do not contain h5 global RankIC. Leave missing; do not borrow metrics from other protocols/versions.",
+    "not_OOS": "Evaluation window also used for training early stop and historical selection; no new independent out-of-sample claim."
+  },
+  "validation": {
+    "source_metric_checks": true,
+    "same_protocol_label_checks": true,
+    "original_grid_matches_v1_v2_json": true,
+    "read_only_repo": true,
+    "raw_record_or_metric_writes": false,
+    "temporary_script_created": false
+  }
+}

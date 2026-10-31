@@ -19,8 +19,28 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from research_layout import resolve_research_path
+
 BOUNDARY = pd.Timestamp("2026-07-31")
 OFFICIAL_PRED_SHA = "3d6f768930a4b9ac63622ee039ded617b68addfac56f44d77002a0188572021e"
+
+
+def load_historical_benchmark(root: Path = ROOT) -> pd.Series:
+    return pd.read_csv(
+        resolve_research_path("backtest/configs/regime-adapt/bench_ew_all.csv", root),
+        index_col=0,
+        parse_dates=True,
+    ).iloc[:, 0]
+
+
+def load_historical_regimes(root: Path = ROOT) -> pd.Series:
+    from backtest.scripts.strategy_stability_metrics import load_regime_labels
+
+    return load_regime_labels(
+        resolve_research_path(
+            "backtest/configs/regime-adapt/monthly_regime_labels_eval_window_v1.csv", root
+        )
+    )
 
 
 def sha(path):
@@ -122,7 +142,6 @@ def run(args):
     from run_pred_backtest import prepare_signal_and_port_cfg
     from config_loader import load_config
     from strategy_stability_metrics import (
-        load_regime_labels,
         summarize_stability,
         summarize_period,
     )
@@ -218,11 +237,7 @@ def run(args):
                 "prediction/calendar does not cover requested diagnostic window"
             )
         # Preserve the official historical benchmark, extend with the same equal-weight recipe.
-        old_bench = pd.read_csv(
-            ROOT / "backtest/configs/regime-adapt/bench_ew_all.csv",
-            index_col=0,
-            parse_dates=True,
-        ).iloc[:, 0]
+        old_bench = load_historical_benchmark(ROOT)
         if cached_bench is not None:
             bench = cached_bench
             if not (
@@ -269,10 +284,7 @@ def run(args):
         report.to_csv(out / "portfolio_daily.csv", index_label="datetime")
         historical = report.loc[:BOUNDARY]
         forward_report = report.loc["2026-08-03":]
-        regimes = load_regime_labels(
-            ROOT
-            / "backtest/configs/regime-adapt/monthly_regime_labels_eval_window_v1.csv"
-        )
+        regimes = load_historical_regimes(ROOT)
         audit.update(
             status="completed",
             report_sha256=sha(out / "portfolio_daily.csv"),

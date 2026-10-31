@@ -19,7 +19,6 @@ CONFIGS_DIR = BACKTEST_ROOT / "configs"
 RESULT_ROOT = BACKTEST_ROOT / "result"
 
 VALID_MODES = ("train_only", "train_backtest", "backtest_only", "pred_backtest")
-DEFAULT_CONFIG_NAME = "csi300_live_parity.yaml"
 
 
 class ConfigError(ValueError):
@@ -32,54 +31,53 @@ def resolve_config_path(config: Optional[str] = None) -> Path:
     支持 `backtest/experiments/<exp_id>/configs/<name>.yaml` 及历史配置路径。
     若只给文件名，在共享 configs/ 与实验配置目录中查找唯一匹配。
     """
-    if not config:
-        path = resolve_research_path(CONFIGS_DIR / DEFAULT_CONFIG_NAME, BACKTEST_ROOT.parent)
-    else:
-        p = Path(config).expanduser()
-        candidates: list[Path] = []
-        if p.is_file():
-            explicit = resolve_research_path(p.resolve(), BACKTEST_ROOT.parent)
-            if explicit.is_file():
-                candidates.append(explicit)
-        for cand in (
-            resolve_research_path(p, BACKTEST_ROOT.parent),
-            CONFIGS_DIR / config,
-            CONFIGS_DIR / f"{config}.yaml",
-            CONFIGS_DIR / f"{config}.yml",
-        ):
-            cand = resolve_research_path(cand, BACKTEST_ROOT.parent)
-            if cand.is_file():
-                candidates.append(cand.resolve())
-        if not candidates:
-            # 仅文件名：递归查找
-            name = p.name if p.suffix else f"{p.name}.yaml"
-            alt = name if name.endswith((".yaml", ".yml")) else f"{name}.yaml"
-            def find_matches(filename: str) -> list[Path]:
-                candidates = list(CONFIGS_DIR.rglob(filename))
-                experiments = BACKTEST_ROOT / "experiments"
-                candidates.extend(
-                    item for item in experiments.rglob(filename)
-                    if "configs" in item.relative_to(experiments).parts
-                    and not any(part.startswith("_") for part in item.relative_to(experiments).parts)
-                )
-                return sorted({resolve_research_path(item, BACKTEST_ROOT.parent) for item in candidates})
+    if config is None or not str(config).strip():
+        raise ConfigError("必须通过 --config 显式指定回测或训练 YAML 配置")
+    p = Path(config).expanduser()
+    candidates: list[Path] = []
+    if p.is_file():
+        explicit = resolve_research_path(p.resolve(), BACKTEST_ROOT.parent)
+        if explicit.is_file():
+            candidates.append(explicit)
+    for cand in (
+        resolve_research_path(p, BACKTEST_ROOT.parent),
+        CONFIGS_DIR / config,
+        CONFIGS_DIR / f"{config}.yaml",
+        CONFIGS_DIR / f"{config}.yml",
+    ):
+        cand = resolve_research_path(cand, BACKTEST_ROOT.parent)
+        if cand.is_file():
+            candidates.append(cand.resolve())
+    if not candidates:
+        # 仅文件名：递归查找
+        name = p.name if p.suffix else f"{p.name}.yaml"
+        alt = name if name.endswith((".yaml", ".yml")) else f"{name}.yaml"
+        def find_matches(filename: str) -> list[Path]:
+            candidates = list(CONFIGS_DIR.rglob(filename))
+            experiments = BACKTEST_ROOT / "experiments"
+            candidates.extend(
+                item for item in experiments.rglob(filename)
+                if "configs" in item.relative_to(experiments).parts
+                and not any(part.startswith("_") for part in item.relative_to(experiments).parts)
+            )
+            return sorted({resolve_research_path(item, BACKTEST_ROOT.parent) for item in candidates})
 
-            matches = find_matches(alt)
-            # 也试 .yml
-            if not matches and not alt.endswith(".yml"):
-                matches = find_matches(alt[:-5] + ".yml")
-            if len(matches) == 1:
-                candidates.append(matches[0].resolve())
-            elif len(matches) > 1:
-                shown = ", ".join(str(m.relative_to(BACKTEST_ROOT)) for m in matches[:5])
-                raise ConfigError(
-                    f"配置名 {config!r} 在共享或实验 configs/ 下有多份匹配，请写相对路径："
-                    f" {shown}"
-                )
-        if not candidates:
-            raise ConfigError(f"配置文件不存在: {config}")
-        # 去重后取第一个
-        path = candidates[0]
+        matches = find_matches(alt)
+        # 也试 .yml
+        if not matches and not alt.endswith(".yml"):
+            matches = find_matches(alt[:-5] + ".yml")
+        if len(matches) == 1:
+            candidates.append(matches[0].resolve())
+        elif len(matches) > 1:
+            shown = ", ".join(str(m.relative_to(BACKTEST_ROOT)) for m in matches[:5])
+            raise ConfigError(
+                f"配置名 {config!r} 在共享或实验 configs/ 下有多份匹配，请写相对路径："
+                f" {shown}"
+            )
+    if not candidates:
+        raise ConfigError(f"配置文件不存在: {config}")
+    # 去重后取第一个
+    path = candidates[0]
     if not path.is_file():
         raise ConfigError(f"配置文件不存在: {path}")
     return path
@@ -183,7 +181,7 @@ def validate_run_section(cfg: dict) -> dict:
 
 
 def load_config(config: Optional[str] = None) -> dict:
-    """加载 YAML → 校验 → 按 segments.test 对齐日期。返回配置，并附 `_config_path`。"""
+    """加载显式指定的 YAML → 校验 → 日期对齐。返回配置，并附 `_config_path`。"""
     path = resolve_config_path(config)
     with open(path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)

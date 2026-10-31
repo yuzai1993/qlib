@@ -2,10 +2,11 @@
     'use strict';
     const H=window.PlatformHelpers, R=window.PlatformResearch, esc=H.escape, tracker=window.PlatformNavigation;
     const benchmarkSelection=R.createBenchmarkSelection();
+    const conclusionDrafts=new Map();
     const content=document.getElementById('content'), dialog=document.getElementById('detail-dialog');
     const dialogBody=document.getElementById('dialog-body');
-    let csrf=null, toastTimer=null, dialogGeneration=0;
-    const state={page:'dashboard',catalog:null,analyses:[],kind:'model',module:'benchmark',view:'regime',query:'',status:'',direction:'',selected:new Set(),analysisQuery:'',analysisStatus:'active',analysisDate:''};
+    let csrf=null, toastTimer=null, dialogGeneration=0, researchScopeGeneration=0, researchTableToken=null;
+    const state={page:'dashboard',catalog:null,analyses:[],kind:'model',track:'all_a',module:'benchmark',view:'regime',query:'',status:'',experimentType:'',strategyModel:'',analysisQuery:'',analysisStatus:'active',analysisDate:''};
     const statusName=H.statusLabel;
     const statusBadge=r=>`<span class="badge ${['failed','invalid','error'].includes(r.status)?'badge-crit':r.status==='running'?'badge-warn':'badge-neutral'}">${esc(statusName(r.status))}</span>`;
     const date=H.formatDate;
@@ -24,32 +25,60 @@
     dialog.addEventListener('click',event=>{if(event.target===dialog){const b=dialog.getBoundingClientRect();if(event.clientX<b.left||event.clientX>b.right||event.clientY<b.top||event.clientY>b.bottom)dialog.close();}});
     function download(name,text,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
     const pageHead=(eyebrow,title,subtitle,actions='')=>`<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2><div class="subtitle">${subtitle}</div></div><div class="page-actions">${actions}</div></div>`;
-    function metricDefinitions(view=state.view){return R.metricDefinitions(state.catalog?.metric_definitions?.[state.kind]||[],state.kind,view);}
-    const selectedRecords=()=>[...state.selected].map(id=>state.catalog.records.find(r=>r.id===id)).filter(Boolean);
-    const baselines=()=>R.orderVersions(state.catalog.records.filter(r=>r.kind===state.kind&&r.is_baseline));
+    const trackLabel=track=>track==='csi1000'?'CSI1000':track==='all_a'?'全A':track;
+    const metricContext=(kind,track)=>!track?'暂无股票范围':track==='csi1000'?(kind==='model'?'CSI1000 · IC / RankIC · B6-M':'CSI1000 · 扣费绝对收益 / 邻域 P25 · B4-S'):(kind==='model'?'固定 top3 × h5 · 算术年化':'执行层复合收益 · CAGR');
+    function metricDefinitions(view=state.view){return R.metricDefinitions(R.definitionsForTrack(state.catalog,state.kind,state.track),state.kind,view);}
+    const historyRecords=()=>Array.isArray(state.catalog.experiment_records)?state.catalog.experiment_records:state.catalog.records||[];
+    const scopedRecords=()=>R.recordsForTrack(historyRecords(),state.kind,state.track);
+    const benchmarkRecords=()=>Array.isArray(state.catalog.benchmarks)?state.catalog.benchmarks:
+        (state.catalog.records||[]).filter(record=>record.is_baseline);
+    const researchRecords=()=>[...(state.catalog.records||[]),...benchmarkRecords()];
+    const baselines=()=>R.orderVersions(R.recordsForTrack(benchmarkRecords(),state.kind,state.track).filter(r=>r.is_baseline));
     function visibleRecords(){
-        if(state.module==='records')return H.filterRecords(state.catalog.records,{kind:state.kind,query:state.query,status:state.status,direction:state.direction});
-        const ids=benchmarkSelection.ids(state.kind);
+        if(state.module==='records')return R.orderHistory(H.filterRecords(scopedRecords(),{query:state.query,status:state.status,experimentType:state.kind==='model'?state.experimentType:'',modelRef:state.kind==='strategy'?state.strategyModel:''}));
+        const ids=benchmarkSelection.ids(state.kind,state.track);
         return baselines().filter(r=>ids.has(r.id));
+    }
+    function setResearchTrack(track){
+        if(track===state.track)return;
+        state.track=track;researchScopeGeneration++;
+        state.query='';state.status='';state.experimentType='';state.strategyModel='';state.metricFocus='';
+        if(dialog.open)dialog.close();
     }
     function currentMetricTables(){return R.metricTables(visibleRecords(),H.metricColumns(metricDefinitions(),state.view,state.metricFocus),state.view,baselines());}
     async function renderResearch(token){
         const catalog=await request('/api/research');if(!current(token))return;
-        state.catalog=catalog;benchmarkSelection.sync(catalog.records||[]);renderResearchShell(token);
+        state.catalog=catalog;benchmarkSelection.sync(benchmarkRecords());
+        const tracks=R.availableTracks(researchRecords(),state.kind);
+        if(!tracks.includes(state.track))setResearchTrack(tracks[0]||'');
+        renderResearchShell(token);
     }
     function renderResearchShell(token){
-        const all=state.catalog.records||[],history=state.module==='records',isModel=state.kind==='model';
+        const all=scopedRecords(),history=state.module==='records',isModel=state.kind==='model',tracks=R.availableTracks(researchRecords(),state.kind),types=isModel?R.experimentTypes(all):[],models=isModel?[]:R.strategyModels(all);
+        if(!isModel||state.experimentType&&!types.some(type=>type.key===state.experimentType))state.experimentType='';
+        if(isModel||state.strategyModel&&!models.some(model=>model.ref===state.strategyModel))state.strategyModel='';
         content.innerHTML=pageHead(isModel?'RESEARCH / MODELS':'RESEARCH / STRATEGIES',isModel?'模型实验':'策略实验','查看基线版本表现与实验记录。','<button id="export-csv">↓ 导出 CSV</button>')+
         `
-        <div class="research-intro"><div class="segmented" aria-label="实验子模块">${[['benchmark','Benchmark'],['records','实验记录']].map(([key,label])=>`<button data-module="${key}" class="${state.module===key?'active':''}" aria-pressed="${state.module===key}">${label}</button>`).join('')}</div><span class="card-sub">${state.kind==='model'?'固定 top3 × h5 · 算术年化':'执行层复合收益 · CAGR'}</span></div>
+        <div class="research-intro"><div class="page-actions"><label for="research-track">股票范围</label><select id="research-track" aria-label="股票范围"${tracks.length?'':' disabled'}>${tracks.map(key=>`<option value="${esc(key)}"${state.track===key?' selected':''}>${esc(trackLabel(key))}</option>`).join('')}</select></div><div class="segmented" aria-label="实验子模块">${[['benchmark','Benchmark'],['records','实验记录']].map(([key,label])=>`<button data-module="${key}" class="${state.module===key?'active':''}" aria-pressed="${state.module===key}">${label}</button>`).join('')}</div><span class="card-sub">${metricContext(state.kind,state.track)}</span></div>
         <div id="research-warnings">${(state.catalog.warnings||[]).map(w=>`<div class="notice warning">${esc(w)}</div>`).join('')}</div>
-        ${history?`<div class="filters"><input type="search" id="research-search" aria-label="搜索实验" placeholder="搜索版本、实验名称或 ID" value="${esc(state.query)}"><select id="research-status" aria-label="实验状态"><option value="">全部状态</option>${[...new Set(all.filter(r=>r.kind===state.kind).map(r=>r.status).filter(Boolean))].sort().map(s=>`<option value="${esc(s)}" ${s===state.status?'selected':''}>${esc(statusName(s))}</option>`).join('')}</select><select id="research-direction" aria-label="实验方向"><option value="">全部方向</option>${[...new Set(all.filter(r=>r.kind===state.kind).map(r=>r.direction).filter(Boolean))].sort().map(s=>`<option value="${esc(s)}" ${s===state.direction?'selected':''}>${esc(s)}</option>`).join('')}</select></div>`:'<div id="research-core"></div><div id="research-controls"></div>'}
-        <div id="research-table"></div><div id="compare-bar"></div><div class="source-line">研究源：${esc(state.catalog.sources?.root||'未提供')}<br>Registry：${esc(state.catalog.sources?.registry||'—')} · 源更新时间 ${esc(H.formatDate(state.catalog.sources?.modified_at,true))}</div>`;
+        ${history?`<div class="filters"><input type="search" id="research-search" aria-label="搜索实验" placeholder="搜索版本、实验名称或 ID" value="${esc(state.query)}">${isModel?`<select id="research-type" aria-label="实验类型"><option value="">全部类型</option>${types.map(type=>`<option value="${esc(type.key)}" ${type.key===state.experimentType?'selected':''}>${esc(type.label)}</option>`).join('')}</select>`:`<select id="research-model" aria-label="模型"><option value="">全部模型</option>${models.map(model=>`<option value="${esc(model.ref)}" ${model.ref===state.strategyModel?'selected':''}>${esc(model.label)}</option>`).join('')}</select>`}<select id="research-status" aria-label="实验状态"><option value="">全部状态</option>${[...new Set(all.map(r=>r.status).filter(Boolean))].sort().map(s=>`<option value="${esc(s)}" ${s===state.status?'selected':''}>${esc(statusName(s))}</option>`).join('')}</select></div>`:'<div id="research-core"></div><div id="research-controls"></div>'}
+        <div id="research-table"></div><div class="source-line">研究源：${esc(state.catalog.sources?.root||'未提供')}<br>Registry：${esc(state.catalog.sources?.registry||'—')} · 源更新时间 ${esc(H.formatDate(state.catalog.sources?.modified_at,true))}</div>`;
         content.querySelectorAll('[data-module]').forEach(button=>button.onclick=()=>{state.module=button.dataset.module;renderResearchShell(token);});
+        document.getElementById('research-track').onchange=event=>{
+            if(!tracks.includes(event.target.value)||event.target.value===state.track)return;
+            setResearchTrack(event.target.value);renderResearchShell(token);
+        };
         if(history){
             document.getElementById('research-search').oninput=event=>{state.query=event.target.value;renderResearchTable(token);};
+            if(isModel)document.getElementById('research-type').onchange=event=>{
+                if(event.target.value&&!types.some(type=>type.key===event.target.value))return;
+                state.experimentType=event.target.value;renderResearchTable(token);
+            };
+            else document.getElementById('research-model').onchange=event=>{
+                if(event.target.value&&!models.some(model=>model.ref===event.target.value))return;
+                state.strategyModel=event.target.value;renderResearchTable(token);
+            };
             document.getElementById('research-status').onchange=event=>{state.status=event.target.value;renderResearchTable(token);};
-            document.getElementById('research-direction').onchange=event=>{state.direction=event.target.value;renderResearchTable(token);};
         }else renderResearchControls(token);
         document.getElementById('export-csv').onclick=exportResearch;
         renderResearchTable(token);
@@ -62,12 +91,15 @@
         document.getElementById('research-metric').onchange=event=>{state.metricFocus=event.target.value;renderResearchTable(token);};
     }
     function exportResearch(){
-        const rows=visibleRecords();
-        const data=state.module==='records'?[['日期','实验 ID','实验内容','实验假设','结论','备注','报告链接','晋升版本','状态'],...rows.map(r=>{
+        const rows=visibleRecords(),strategy=state.kind==='strategy';
+        const contentColumns=strategy?['模型版本','模型简称','策略简称','策略描述']:['实验内容','Baseline'];
+        const data=state.module==='records'?[['日期','实验 ID',...(strategy?[]:['实验类型']),...contentColumns,'结论','结论来源','备注','报告链接',strategy?'晋升版本':'Benchmark版本','状态'],...rows.map(r=>{
             const s=R.historySummary(r),links=(r.resources||[]).filter(resource=>resource.kind==='report'&&resource.available).map(resource=>'/api/resources/'+encodeURIComponent(resource.id)).join('\n');
-            return [s.date,r.id,s.name,r.hypothesis||'',r.conclusion?s.conclusion:'',s.note,links,s.promotion,s.status];
+            const short=R.strategyHistorySummary(r),model=R.modelHistorySummary(r),identity=strategy?
+                [short.modelVersion||'未登记',short.modelName||'未登记模型',short.strategyName,short.strategyDescription]:[model.changeDescription,model.baselineLabel];
+            return [s.date,r.id,...(strategy?[]:[R.experimentType(r).label]),...identity,s.conclusion,s.conclusionSource==='analysis'?'人工分析':s.conclusionSource==='registry'?'原登记结论':'',s.note,links,s.promotion,s.status];
         })]:R.metricCsvRows(currentMetricTables());
-        download(`qlib-${state.kind}-${state.module}-${state.view}.csv`,H.csv(data));toast(`已导出 ${rows.length} 条记录（指标为原始数值）`);
+        download(`qlib-${state.track}-${state.kind}-${state.module}-${state.view}.csv`,H.csv(data));toast(`已导出 ${rows.length} 条记录（指标为原始数值）`);
     }
     function bindResources(container){
         container.querySelectorAll('[data-resource]').forEach(button=>button.onclick=event=>{
@@ -75,21 +107,85 @@
             openDialog(button.dataset.resourceName,`<div class="notice">原始报告以隔离预览呈现。</div><iframe class="report-frame" sandbox="" referrerpolicy="no-referrer" title="原始研究报告" src="${src}"></iframe><a class="button-link" href="${src}?download=1">下载原始文件</a>`);
         });
     }
+    const editableConclusion=record=>typeof record.analysis_revision==='string'&&/^[a-f0-9]{64}$/.test(record.analysis_revision);
+    function conclusionCell(record,summary){
+        const draft=conclusionDrafts.get(record.id),id=esc(record.id),name=esc(record.name||record.id);
+        if(draft){
+            return `<div class="conclusion-editor"><textarea rows="4" maxlength="500" aria-label="实验结论：${name}" data-conclusion-input="${id}"${draft.saving?' disabled':''}>${esc(draft.value)}</textarea><div class="conclusion-actions"><button type="button" class="primary" aria-label="保存结论：${name}" data-save-conclusion="${id}"${draft.saving?' disabled':''}>${draft.saving?'保存中…':'保存'}</button><button type="button" data-cancel-conclusion="${id}"${draft.saving?' disabled':''}>取消</button></div><div class="conclusion-error" role="alert" data-conclusion-error="${id}">${esc(draft.error)}</div></div>`;
+        }
+        const label=summary.conclusionSource==='analysis'?'<span class="badge badge-neutral">人工分析</span>':summary.hasAnalysis?'<div class="history-note">人工分析：待填写分析结论</div>':'';
+        return `${label}<div class="conclusion-text">${esc(summary.conclusion)}</div>${summary.note&&summary.conclusionSource!=='analysis'?`<div class="history-note">${esc(summary.note)}</div>`:''}${editableConclusion(record)?`<button type="button" class="text-button" aria-label="编辑结论：${name}" data-edit-conclusion="${id}">编辑</button>`:''}`;
+    }
+    function redrawConclusion(id){
+        if(current(researchTableToken)&&state.module==='records'&&scopedRecords().some(record=>record.id===id))renderResearchTable(researchTableToken);
+    }
+    async function saveConclusion(id,token){
+        const draft=conclusionDrafts.get(id);if(!draft||draft.saving)return;
+        const value=draft.value.trim();
+        if(!value||value.length>500){
+            draft.error=!value?'请填写结论。':'结论不能超过 500 字。';renderResearchTable(token);return;
+        }
+        const page=state.page,kind=state.kind,module=state.module,track=state.track,generation=researchScopeGeneration;
+        const inContext=()=>current(token)&&state.page===page&&state.kind===kind&&state.module===module&&state.track===track&&researchScopeGeneration===generation;
+        draft.saving=true;draft.error='';renderResearchTable(token);
+        try{
+            const saved=await mutate('/api/research/conclusion','PUT',{id,conclusion:value,revision:draft.revision});
+            if(saved.id!==id||!saved.analysis||typeof saved.analysis.conclusion!=='string'||typeof saved.analysis_revision!=='string'||!/^[a-f0-9]{64}$/.test(saved.analysis_revision))throw new Error('保存响应不完整，请刷新核对结论。');
+            // A refresh may already contain a newer edit. A late save cannot
+            // replace that newer snapshot or insert a deleted experiment.
+            for(const record of new Set([...(state.catalog?.records||[]),...historyRecords()])){
+                if(record.id===id&&(record.analysis_revision===draft.revision||record.analysis_revision===saved.analysis_revision)){
+                    record.analysis=saved.analysis;record.analysis_revision=saved.analysis_revision;
+                }
+            }
+            if(conclusionDrafts.get(id)===draft)conclusionDrafts.delete(id);
+            redrawConclusion(id);if(inContext())toast('结论已保存。');
+        }catch(error){
+            draft.saving=false;draft.error=error.status===409?'结论或元数据已被更新，草稿已保留。请复制草稿，取消编辑并刷新后重试。':error.message;
+            redrawConclusion(id);
+        }
+    }
+    function bindConclusionEditors(token){
+        content.querySelectorAll('[data-edit-conclusion]').forEach(button=>button.onclick=()=>{
+            const record=scopedRecords().find(row=>row.id===button.dataset.editConclusion);
+            if(!record||!editableConclusion(record))return;
+            const summary=R.historySummary(record);
+            conclusionDrafts.set(record.id,{value:summary.analysis.conclusion||summary.registryConclusion||'',revision:record.analysis_revision,saving:false,error:''});
+            renderResearchTable(token);
+            [...content.querySelectorAll('[data-conclusion-input]')].find(input=>input.dataset.conclusionInput===record.id)?.focus?.();
+        });
+        content.querySelectorAll('[data-conclusion-input]').forEach(input=>{
+            const draft=conclusionDrafts.get(input.dataset.conclusionInput);input.value=draft.value;
+            input.oninput=event=>{
+                if(draft.saving)return;draft.value=event.target.value;draft.error='';
+                const error=input.parentElement.querySelector('[data-conclusion-error]');if(error)error.textContent='';
+            };
+        });
+        content.querySelectorAll('[data-save-conclusion]').forEach(button=>button.onclick=handle(()=>saveConclusion(button.dataset.saveConclusion,token)));
+        content.querySelectorAll('[data-cancel-conclusion]').forEach(button=>button.onclick=()=>{
+            const id=button.dataset.cancelConclusion,draft=conclusionDrafts.get(id);if(draft?.saving)return;
+            conclusionDrafts.delete(id);renderResearchTable(token);
+        });
+    }
     function renderExperimentTable(token){
-        const rows=visibleRecords();
-        let html=rows.length?'<div class="table-wrap"><table class="experiment-history"><thead><tr><th>对比</th><th>日期</th><th>实验内容</th><th>结论</th><th>报告链接</th><th>晋升版本</th></tr></thead><tbody>'+rows.map(r=>{
+        const rows=visibleRecords(),strategy=state.kind==='strategy';
+        const contentHeaders=strategy?'<th>模型</th><th>策略</th>':'<th>实验类型</th><th>实验内容</th>';
+        let html=rows.length?'<div class="table-wrap"><table class="experiment-history"><thead><tr><th>日期</th>'+contentHeaders+'<th>结论</th><th>报告链接</th><th>'+(strategy?'晋升版本':'Benchmark版本')+'</th></tr></thead><tbody>'+rows.map(r=>{
             const s=R.historySummary(r);
-            return `<tr><td><input type="checkbox" aria-label="比较 ${esc(s.name)}" data-select="${esc(r.id)}" ${state.selected.has(r.id)?'checked':''} ${!r.comparable?'disabled title="不满足正式比较条件"':''}></td><td>${esc(s.date)}<div>${statusBadge(r)}</div></td><td class="history-content"><button class="record-name" data-detail="${esc(r.id)}">${esc(s.name)}</button><div class="history-description">${esc(s.hypothesis)}</div><div class="card-sub">对照：${esc(s.baseline)} · ${esc(s.scope)}</div><div class="record-id" title="${esc(r.id)}">${esc(r.id)}</div></td><td class="history-conclusion"><div>${esc(s.conclusion)}</div>${s.note?`<div class="history-note">${esc(s.note)}</div>`:''}</td><td class="history-reports">${R.reportLinks(r)}<div><button class="text-button" data-detail="${esc(r.id)}">查看实验详情 →</button></div></td><td>${s.promotion?`<span class="badge badge-baseline">晋升 ${esc(s.promotion)}</span>`:'—'}${r.current?' <span class="badge badge-current">当前</span>':''}</td></tr>`;
+            const short=R.strategyHistorySummary(r),model=R.modelHistorySummary(r),content=strategy?
+                `<td class="history-model">${esc(short.modelLabel)}</td><td class="history-strategy"><button class="record-name" data-detail="${esc(r.id)}">${esc(short.strategyName)}</button>${short.strategyDescription?`<div class="history-description">${esc(short.strategyDescription)}</div>`:''}</td>`:
+                `<td class="history-content"><button class="record-name" data-detail="${esc(r.id)}">${esc(s.name)}</button><div class="history-description">${esc(model.changeDescription)}</div><div class="card-sub">Baseline：${esc(model.baselineLabel)}</div></td>`;
+            return `<tr><td>${esc(s.date)}<div>${statusBadge(r)}</div></td>${strategy?'':`<td>${esc(R.experimentType(r).label)}</td>`}${content}<td class="history-conclusion">${conclusionCell(r,s)}</td><td class="history-reports">${R.reportLinks(r)}<div><button class="text-button" data-detail="${esc(r.id)}">查看实验详情 →</button></div></td><td>${s.promotion?`<span class="badge badge-baseline">${s.benchmarkOutputs.length?'产出':'晋升'} ${esc(s.promotion)}</span>`:'—'}${r.current?' <span class="badge badge-current">当前</span>':''}</td></tr>`;
         }).join('')+'</tbody></table></div>':'<div class="empty">没有匹配的实验记录。</div>';
         html+=`<div class="table-meta"><span>共 ${rows.length} 条实验记录</span><span>指标在实验详情中查看</span></div>`;
         document.getElementById('research-table').innerHTML=html;
-        content.querySelectorAll('[data-select]').forEach(box=>box.onchange=()=>{if(box.checked)state.selected.add(box.dataset.select);else state.selected.delete(box.dataset.select);renderCompareBar(token);});
         content.querySelectorAll('[data-detail]').forEach(button=>button.onclick=()=>researchDetail(button.dataset.detail,token));
-        bindResources(content);renderCompareBar(token);
+        bindResources(content);bindConclusionEditors(token);
     }
     function renderResearchTable(token){
+        if(!current(token))return;researchTableToken=token;
         if(state.module==='records'){renderExperimentTable(token);return;}
-        const rows=visibleRecords(),all=baselines(),ids=benchmarkSelection.ids(state.kind),issue=rows.length>1?H.comparisonIssue(rows):'';
+        const rows=visibleRecords(),all=baselines(),ids=benchmarkSelection.ids(state.kind,state.track),issue=rows.length>1?R.comparisonIssue(rows):'';
         document.getElementById('research-core').innerHTML=all.length?
             R.renderMetricTables(R.metricTables(all,metricDefinitions('full'),'full'),{interactive:true,selection:ids,compact:state.kind==='strategy'}):
             '<div class="empty">暂无已晋升版本。</div>';
@@ -97,40 +193,127 @@
             (all.length?R.renderMetricTables(currentMetricTables(),{interactive:true}):'')+
             `<div class="table-meta"><span>分维度已选 ${rows.length} / ${all.length} 个版本</span><span>在核心指标首列勾选版本 · 缺失值为「—」</span></div>`;
         content.querySelectorAll('[data-benchmark]').forEach(box=>box.onchange=()=>{
-            benchmarkSelection.set(state.kind,box.dataset.benchmark,box.checked);renderResearchTable(token);
+            benchmarkSelection.set(state.kind,box.dataset.benchmark,box.checked,state.track);renderResearchTable(token);
         });
         const toggle=document.getElementById('benchmark-toggle-all');
         if(toggle){
             toggle.indeterminate=ids.size>0&&ids.size<all.length;
-            toggle.onchange=()=>{benchmarkSelection.all(state.kind,toggle.checked);renderResearchTable(token);};
+            toggle.onchange=()=>{benchmarkSelection.all(state.kind,toggle.checked,state.track);renderResearchTable(token);};
         }
         content.querySelectorAll('[data-detail]').forEach(button=>button.onclick=()=>researchDetail(button.dataset.detail,token));
-        document.getElementById('compare-bar').innerHTML='';
     }
-    function renderCompareBar(token){
-        const box=document.getElementById('compare-bar');if(!state.selected.size){box.innerHTML='';return;}
-        const issue=state.selected.size>12?'最多选择 12 条记录':H.comparisonIssue(selectedRecords());
-        box.innerHTML=`<div class="compare-bar"><span>已选择 <strong>${state.selected.size}</strong> 条记录</span><span class="card-sub">${esc(issue||'已通过前端口径检查')}</span><button id="compare-now" class="primary" ${issue?'disabled':''}>同口径对比 →</button><button id="compare-clear">清空</button></div>`;
-        document.getElementById('compare-clear').onclick=()=>{state.selected.clear();renderResearchTable(token);};
-        document.getElementById('compare-now').onclick=handle(async()=>{
-            const kind=state.kind,module=state.module,params=new URLSearchParams();state.selected.forEach(id=>params.append('id',id));
-            const data=await request('/api/research/compare?'+params);
-            if(!current(token)||state.kind!==kind||state.module!==module)return;
-            openDialog('同口径实验对比','<div class="notice">服务端已校验研究轨道、评估池、时间窗与评估协议一致。</div><div id="detail-metrics"></div>');
-            renderDetailMetrics(data.records||[],kind);
-        });
+    function fallbackExperimentResults(record){
+        const declared=record.comparison_baseline||{},ref=typeof declared.ref==='string'?declared.ref.trim():'';
+        const version=typeof declared.version==='string'?declared.version.trim():'';
+        const target=ref&&ref!==record.id?researchRecords().find(row=>row.id===ref):null;
+        let reason=declared.initial===true?'初始基线，无前版':!target?'历史Baseline未登记或已缺失':'';
+        if(!reason&&(target.kind!==record.kind||R.recordTrack(target)!==R.recordTrack(record)))reason='历史Baseline的股票范围或类型不一致';
+        if(!reason&&version&&version!==target.version)reason='历史Baseline版本与引用不一致';
+        const seeds=row=>Array.isArray(row?.seeds)&&row.seeds.every(seed=>Number.isInteger(seed)&&seed>=0)?row.seeds.slice().sort((a,b)=>a-b):[];
+        const targetSeeds=seeds(target),trialSeeds=seeds(record);
+        if(!reason&&(!targetSeeds.length||!trialSeeds.length||JSON.stringify(targetSeeds)!==JSON.stringify(trialSeeds)))reason='Baseline与实验组的种子口径未统一，等待同种子结果';
+        if(!reason&&(target.source_status!=='available'||['failed','invalid','error'].includes(target.status)))reason='历史Baseline来源不可用';
+        const label=row=>row?R.recordLabelText(row):'';
+        const projection=(row,role,name)=>({id:row?.id||ref,kind:record.kind,track:R.recordTrack(record),
+            name,version:'',directory:row?.directory||'',metrics:!['failed','invalid','error'].includes(row?.status)&&row?.metrics&&typeof row.metrics==='object'?row.metrics:{},role});
+        const baseline=reason?{id:ref,kind:record.kind,track:R.recordTrack(record),name:`Baseline（${reason}）`,version:'',metrics:{},role:'baseline'}:
+            projection(target,'baseline','Baseline · '+label(target));
+        const context=row=>`${row?.window?.start||'未登记'}～${row?.window?.end||'未登记'}，种子${seeds(row).join(' / ')||'未登记'}`;
+        return {kind:'baseline_comparison',status:'available',title:'实验组与Baseline',
+            note:`Baseline：${reason||context(target)}；实验组：${context(record)}。`,
+            records:[baseline,projection(record,'experiment','实验组 · '+label(record))],warnings:reason?[reason]:[]};
+    }
+    function groupedCoreMetrics(record,definitions,{experiment=false}={}){
+        if(!Object.hasOwn(record,'core_results')&&!experiment)return null;
+        const group=Object.hasOwn(record,'core_results')?(record.core_results&&typeof record.core_results==='object'?record.core_results:{}):fallbackExperimentResults(record);
+        const study=group.kind==='training_target_comparison'||(!group.kind&&typeof group.title==='string'&&group.title.includes('训练目标'));
+        const title=typeof group.title==='string'&&group.title.trim()?R.strategyReferenceText(record,group.title):'实验核心结果对照';
+        const heading=`<h4 data-core-results-title>${esc(title)}</h4>`;
+        const note=typeof group.note==='string'&&group.note?`<div class="prose">${esc(R.strategyReferenceText(record,group.note))}</div>`:'';
+        const warnings=(Array.isArray(group.warnings)?group.warnings:[]).filter(w=>typeof w==='string')
+            .map(w=>`<div class="notice warning">${esc(R.strategyReferenceText(record,w))}</div>`).join('');
+        const rows=group.records;
+        if(group.status!=='available'||!Array.isArray(rows)||!rows.length||(group.kind==='baseline_comparison'&&rows.length!==2)||
+            !rows.every(row=>row&&typeof row==='object'&&row.metrics&&typeof row.metrics==='object'&&!Array.isArray(row.metrics))){
+            const unavailable=study?'训练目标对比暂不可用，请核验来源；不展示旧网格指标。':'实验核心结果对照暂不可用，请核验Baseline及实验组来源。';
+            return `${heading}${note}<div class="notice warning">${unavailable}</div>${warnings}`;
+        }
+        const tables=R.metricTables(rows,definitions,'full');
+        return heading+note+R.renderMetricTables(tables)+warnings;
     }
     function renderDetailMetrics(records,kind,view='full'){
+        const record=records[0],track=R.recordTrack(record);
+        const grouped=record.core_results?.kind==='baseline_comparison'?null:
+            groupedCoreMetrics(record,R.metricDefinitions(R.definitionsForTrack(state.catalog,kind,track,record),kind,'full'));
+        if(grouped!==null){
+            const metrics=document.getElementById('detail-metrics');
+            metrics.className='experiment-core-results';metrics.innerHTML=grouped;return;
+        }
         document.getElementById('detail-metrics').innerHTML=`<div class="segmented" aria-label="实验指标视图">${[['full','核心指标'],['year','分年指标'],['regime','分风格指标']].map(([key,label])=>`<button data-detail-view="${key}" class="${view===key?'active':''}" aria-pressed="${view===key}">${label}</button>`).join('')}</div>`+
-            R.renderMetricTables(R.metricTables(records,R.metricDefinitions(state.catalog.metric_definitions?.[kind]||[],kind,view),view));
+            R.renderMetricTables(R.metricTables(records,R.metricDefinitions(R.definitionsForTrack(state.catalog,kind,track,record),kind,view),view));
         dialogBody.querySelectorAll('[data-detail-view]').forEach(button=>button.onclick=()=>renderDetailMetrics(records,kind,button.dataset.detailView));
     }
+    function modelProfileFields(profile){
+        const value=text=>esc(text||'未登记');
+        const sample=source=>`<div class="model-profile-sample">${[['股票池',source.pool],['时间范围',source.time_range],['过滤逻辑',source.filters]].map(([label,text])=>`<div><span class="card-sub">${label}：</span>${value(text)}</div>`).join('')}</div>`;
+        const paths=profile.modelPaths.length?`<ul class="model-profile-paths">${profile.modelPaths.map(item=>`<li>${item.label?`<span class="badge badge-neutral">${esc(item.label)}</span> `:''}${item.seed!==null?`<span class="card-sub">种子${esc(item.seed)} · </span>`:''}<code>${esc(item.path)}</code> <span class="badge ${item.available?'badge-neutral':'badge-warn'}">${item.available?'可用':'已清理或缺失'}</span></li>`).join('')}</ul>`:'<span class="card-sub">未登记模型地址</span>';
+        const fields=[['version','模型版本',value(profile.version)],['experiment_id','实验 ID',value(profile.experimentId)],
+            ['structure','模型结构',value(profile.structure)],['features','使用特征',value(profile.features)],
+            ['seeds','模型种子',profile.seeds.length?esc(profile.seeds.join(' / ')):'未登记'],
+            ['training_sample','训练样本',sample(profile.trainingSample)],['training_target','训练目标',value(profile.trainingTarget)],
+            ['evaluation_sample','评估样本',sample(profile.evaluationSample)],['early_stopping','训练早停',value(profile.earlyStopping)],
+            ['prediction_signal','预测信号',value(profile.predictionSignal)],
+            ['changes','变更内容',value(profile.changes)],['model_paths','模型地址',paths]];
+        return `<div class="detail-grid model-profile">${fields.map(([key,label,html],index)=>`<div class="detail-item model-profile-field${index>=4?' wide':''}" data-profile-field="${key}"><small>${label}</small>${html}</div>`).join('')}</div>`;
+    }
+    function modelProfileArtifacts(profile){
+        return `<div class="model-profile-artifacts">${profile.artifacts.map(resource=>`<div class="model-profile-artifact" data-profile-artifact="${esc(resource.kind)}"><strong>${esc(resource.label)}</strong><div class="card-sub">${esc(resource.description)}</div><code>${esc(resource.name)}</code><div class="page-actions resource-actions">${resource.available?`<button aria-label="预览 ${esc(resource.label)} ${esc(resource.name)}" data-resource="${esc(resource.resourceId)}" data-resource-name="${esc(resource.name)}">预览</button><a class="button-link" aria-label="下载 ${esc(resource.label)} ${esc(resource.name)}" href="/api/resources/${encodeURIComponent(resource.resourceId)}?download=1">下载</a>`:'<span class="badge badge-warn">原产物已清理或缺失</span>'}</div></div>`).join('')||'<span class="card-sub">未登记可访问资源</span>'}</div>`;
+    }
+    function experimentDetail(record){
+        const summary=R.historySummary(record),baseline=record.comparison_baseline||{};
+        const version=R.strategyVersionLabel({kind:record.kind,track:R.recordTrack(record),version:baseline.version,display_version:baseline.display_version});
+        const groupControl=typeof record.group_summary?.control_label==='string'?R.strategyReferenceText(record,record.group_summary.control_label.trim()):'';
+        const baselineLabel=version|| (baseline.initial===true?'初始基线':groupControl||'未登记');
+        const change=typeof record.change_summary==='string'&&record.change_summary.trim()?R.strategyReferenceText(record,record.change_summary.trim()):'待填写变更内容';
+        const failure=['failed','invalid','error'].includes(record.status)?'<div class="notice warning">本次实验无有效核心指标结果，缺失项保持为空。</div>':'';
+        const resources=(record.resources||[]).map(resource=>resource.available?`<button data-resource="${esc(resource.id)}" data-resource-name="${esc(resource.name)}">预览 ${esc(resource.name)}</button><a class="button-link" href="/api/resources/${encodeURIComponent(resource.id)}?download=1">下载</a>`:`<span class="card-sub">${esc(resource.name)} · 已清理或缺失</span>`).join('');
+        const analysis=summary.analysis;
+        openDialog(R.recordTitle(record),`<div class="detail-grid experiment-summary"><div class="detail-item" data-experiment-field="baseline"><small>Baseline</small>${esc(baselineLabel)}</div><div class="detail-item" data-experiment-field="changes"><small>变更内容</small>${esc(change)}</div></div><h3>核心指标结果</h3>${failure}<div id="detail-metrics"></div><h3>实验结论</h3><div class="prose">${esc(summary.conclusion)}</div><details class="source-audit experiment-source"><summary>原始报告与登记</summary><div class="detail-grid"><div class="detail-item"><small>内部登记 ID</small>${esc(record.id)}</div><div class="detail-item"><small>实验目录</small>${esc(record.directory||'未登记')}</div><div class="detail-item"><small>基线引用</small>${esc(record.baseline_ref||'未登记')}</div><div class="detail-item"><small>当时对照引用</small>${esc(baseline.ref||'未登记')}</div><div class="detail-item"><small>股票范围</small>${esc(trackLabel(R.recordTrack(record)))}</div></div><h3>原实验假设</h3><div class="prose">${esc(R.strategyReferenceText(record,record.hypothesis)||'未登记')}</div><h3>原登记结论</h3><div class="prose">${esc(summary.registryConclusion||'未登记结论')}</div>${summary.note?`<h3>记录备注</h3><div class="prose">${esc(summary.note)}</div>`:''}${analysis.limitations?`<h3>限制</h3><div class="prose">${esc(R.strategyReferenceText(record,analysis.limitations))}</div>`:''}${analysis.evidence.length?`<h3>证据</h3><ul>${analysis.evidence.map(path=>`<li>${esc(path)}</li>`).join('')}</ul>`:''}${(record.warnings||[]).map(w=>`<div class="notice warning">${esc(R.strategyReferenceText(record,w))}</div>`).join('')}<div class="page-actions resource-actions">${resources||'<span class="card-sub">未登记可访问资源</span>'}</div></details>`);
+        const defs=R.metricDefinitions(R.definitionsForTrack(state.catalog,record.kind,R.recordTrack(record),record),record.kind,'full');
+        const metrics=document.getElementById('detail-metrics');
+        metrics.className='experiment-core-results';
+        metrics.innerHTML=groupedCoreMetrics(record,defs,{experiment:true});
+        bindResources(dialogBody);
+    }
     function researchDetail(id,token){
-        const r=state.catalog.records.find(row=>row.id===id);if(!r)return;
-        const summary=R.historySummary(r),fields=[['实验 ID',r.id],['晋升版本',summary.promotion],['记录状态',statusName(r.status)],['评估范围',H.scopeLabel(r.scope)],['评估池',r.pool],['日期范围',(r.window?.start||'—')+' ~ '+(r.window?.end||'—')],['种子',Array.isArray(r.seeds)?r.seeds.join(' / '):'未提供'],['基线引用',r.baseline_ref],['评估协议',typeof r.protocol==='object'?JSON.stringify(r.protocol):r.protocol]];
-        openDialog(r.name||r.id,`<div class="detail-grid">${fields.map(([label,value])=>`<div class="detail-item"><small>${label}</small>${esc(value||'—')}</div>`).join('')}</div>${(r.warnings||[]).map(w=>`<div class="notice warning">${esc(w)}</div>`).join('')}<h3>实验内容</h3><div class="prose">${esc(r.hypothesis||'来源未提供实验假设。')}</div><h3>实验结论</h3><div class="prose">${esc(summary.conclusion)}</div>${summary.note?`<h3>记录备注</h3><div class="prose">${esc(summary.note)}</div>`:''}<h3>评估指标</h3>${!r.comparable?'<div class="notice warning">该实验独立展示，不纳入正式同口径比较。</div>':''}<div id="detail-metrics"></div><h3>原始报告与产物</h3><div class="page-actions resource-actions">${(r.resources||[]).map(resource=>resource.available?`<button data-resource="${esc(resource.id)}" data-resource-name="${esc(resource.name)}">预览 ${esc(resource.name)}</button><a class="button-link" href="/api/resources/${encodeURIComponent(resource.id)}?download=1">下载</a>`:`<span class="badge badge-warn">${esc(resource.name)} · 原产物已清理或缺失</span>`).join('')||'<span class="card-sub">未登记可访问资源</span>'}</div>${r.comparable?'<div class="form-actions"><button class="primary" id="detail-compare">加入同口径对比</button></div>':''}`);
+        const source=state.module==='records'?historyRecords():benchmarkRecords();
+        const r=source.find(row=>row.id===id);if(!r)return;
+        if(state.module==='records'){experimentDetail(r);return;}
+        const summary=R.historySummary(r),fields=[[r.kind==='model'?'内部登记 ID':'实验 ID',r.id],['实验类型',R.experimentType(r).label],['股票范围',trackLabel(R.recordTrack(r))],['原登记方向',r.direction],['晋升版本',summary.promotion],['记录状态',statusName(r.status)],['评估范围',H.scopeLabel(r.scope)],['评估池',r.pool],['日期范围',(r.window?.start||'—')+' ~ '+(r.window?.end||'—')],['种子',Array.isArray(r.seeds)?r.seeds.join(' / '):'未提供'],['基线引用',r.baseline_ref],['评估协议',typeof r.protocol==='object'?JSON.stringify(r.protocol):r.protocol]];
+        if(r.kind==='model'){
+            const model=R.modelHistorySummary(r);
+            fields.push(['改动说明',model.changeDescription],['当时对照 Baseline',model.baselineLabel],['实验目录',r.directory]);
+        }
+        if(r.kind==='strategy'){
+            const short=R.strategyHistorySummary(r);
+            fields.push(['模型引用',short.modelRef||'未登记'],['模型版本',short.modelVersion||'未登记'],
+                ['模型简称',short.modelName||'未登记模型'],['策略简称',short.strategyName],['策略描述',short.strategyDescription]);
+        }
+        const analysis=summary.analysis,reviewLabel={draft:'草稿',reviewed:'已复核'}[analysis.review_status]||analysis.review_status;
+        const analysisMeta=[reviewLabel,analysis.updated_at?H.formatDate(analysis.updated_at):''].filter(Boolean).map(esc).join(' · ');
+        const analysisHtml=`<h3>人工分析</h3>${analysisMeta?`<div class="card-sub">${analysisMeta}</div>`:''}<div class="prose">${esc(R.strategyReferenceText(r,analysis.conclusion)||'待填写分析结论')}</div>`+
+            (analysis.evidence.length?`<h4>证据</h4><ul>${analysis.evidence.map(path=>`<li>${esc(path)}</li>`).join('')}</ul>`:'')+
+            (analysis.limitations?`<h4>限制</h4><div class="prose">${esc(R.strategyReferenceText(r,analysis.limitations))}</div>`:'');
+        const registeredFields=`<div class="detail-grid">${fields.map(([label,value])=>`<div class="detail-item"><small>${label}</small>${esc((label==='评估协议'?R.strategyReferenceText(r,value):value)||'—')}</div>`).join('')}</div>`;
+        const warnings=(r.warnings||[]).map(w=>`<div class="notice warning">${esc(R.strategyReferenceText(r,w))}</div>`).join('');
+        const originalText=`<h3>实验内容</h3><div class="prose">${esc(R.strategyReferenceText(r,r.hypothesis)||'来源未提供实验假设。')}</div>${analysisHtml}<h3>原登记结论</h3><div class="prose">${esc(summary.registryConclusion||'未登记结论')}</div>${summary.note?`<h3>记录备注</h3><div class="prose">${esc(summary.note)}</div>`:''}`;
+        const metrics=`<h3>评估指标</h3>${!R.isComparable(r)?'<div class="notice warning">该实验独立展示，不纳入正式同口径比较。</div>':''}<div id="detail-metrics"></div>`;
+        const profile=r.kind==='model'?R.modelProfileSummary(r):null;
+        const introduction=profile?modelProfileFields(profile)+warnings+metrics+`<details class="source-audit"><summary>结论与原登记</summary>${originalText}${registeredFields}</details>`:
+            registeredFields+warnings+originalText+metrics;
+        const resources=profile?modelProfileArtifacts(profile):`<div class="page-actions resource-actions">${(r.resources||[]).map(resource=>resource.available?`<button data-resource="${esc(resource.id)}" data-resource-name="${esc(resource.name)}">预览 ${esc(resource.name)}</button><a class="button-link" href="/api/resources/${encodeURIComponent(resource.id)}?download=1">下载</a>`:`<span class="badge badge-warn">${esc(resource.name)} · 原产物已清理或缺失</span>`).join('')||'<span class="card-sub">未登记可访问资源</span>'}</div>`;
+        openDialog(R.recordTitle(r),introduction+'<h3>原始报告与产物</h3>'+resources);
         renderDetailMetrics([r],r.kind);bindResources(dialogBody);
-        const add=document.getElementById('detail-compare');if(add)add.onclick=()=>{state.selected.add(id);dialog.close();if(current(token)){state.module='records';renderResearchShell(token);}};
     }
     async function renderAnalyses(token){const data=await request('/api/analyses');if(!current(token))return;state.analyses=data.records||[];renderAnalysisShell(token);}
     function renderAnalysisShell(token){const rows=state.analyses;content.innerHTML=pageHead('KNOWLEDGE / ARCHIVE','分析档案','让研究结论、方法与代码留在一起，沉淀可追溯的研究记录。','<button class="primary" id="new-analysis">＋ 新建分析</button>')+`<div class="card-grid"><div class="card"><div class="card-label">全部分析</div><div class="card-value">${rows.length.toString().padStart(2,'0')}</div><div class="card-sub">按目录归档 · 版本留存</div></div><div class="card"><div class="card-label">平台分析</div><div class="card-value">${rows.filter(r=>!r.historical&&r.status!=='archived').length}</div><div class="card-sub">可以继续编辑与补充</div></div><div class="card"><div class="card-label">历史报告</div><div class="card-value">${rows.filter(r=>r.historical).length}</div><div class="card-sub">保留原文 · 只读归档</div></div><div class="card"><div class="card-label">已归档</div><div class="card-value">${rows.filter(r=>r.status==='archived'&&!r.historical).length}</div><div class="card-sub">支持随时恢复</div></div></div><div class="toolbar"><div class="segmented">${[['active','当前记录'],['all','全部'],['historical','历史报告'],['archived','已归档']].map(([key,label])=>`<button data-analysis-status="${key}" class="${key===state.analysisStatus?'active':''}">${label}</button>`).join('')}</div><span class="card-sub">报告 · 代码 · 关联实验</span></div><div class="filters"><input type="search" id="analysis-search" placeholder="搜索分析标题或标签" aria-label="搜索分析标题或标签" value="${esc(state.analysisQuery)}"><label for="analysis-date">更新日期</label><input type="date" id="analysis-date" value="${esc(state.analysisDate)}"><button id="analysis-reset">重置筛选</button></div><div id="analysis-list"></div>`;
@@ -166,7 +349,7 @@
         const isResearch=['model-experiments','strategy-experiments'].includes(page);
         if(isResearch){
             const kind=page==='strategy-experiments'?'strategy':'model';
-            if(kind!==state.kind){state.kind=kind;state.metricFocus='';state.status='';state.direction='';state.query='';state.selected.clear();}
+            if(kind!==state.kind){state.kind=kind;state.metricFocus='';state.status='';state.experimentType='';state.strategyModel='';state.query='';}
         }
         state.page=page;const token=tracker.begin(page);window.PlatformMonitor.clear();if(dialog.open)dialog.close();
         const isMonitor=['dashboard','batches','predictions'].includes(page);

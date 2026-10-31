@@ -218,7 +218,7 @@ def _registry_entries(raw: bytes, registry_path: Path) -> list[tuple[int, dict]]
 
 
 def _atomic_replace(path: Path, payload: bytes) -> None:
-    path = Path(path)
+    path = _resolve_research_path(path, _RESEARCH_ROOT)
     path.parent.mkdir(parents=True, exist_ok=True)
     temp_name: Optional[str] = None
     try:

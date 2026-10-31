@@ -1,0 +1,146 @@
+{
+  "url": "http://127.0.0.1:8090/#model-experiments",
+  "records": 13,
+  "rows": [
+    {
+      "id": "regime-adapt/m0-h20-label-v4",
+      "name": "H20训练目标（v1）",
+      "change_summary": "训练目标改为未来20日累计收益（H20）。",
+      "comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": true
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h20-t5h5-es-v1",
+      "name": "Top5早停（v2）",
+      "change_summary": "早停由499天次日RankIC改为评估窗Top5×H5扣费净年化。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-label-v4",
+        "version": "v1",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h20-t3h5es-v1",
+      "name": "Top3早停（v3）",
+      "change_summary": "扣费净年化早停与主评估格由Top5×H5改为Top3×H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h20-rankices-v1",
+      "name": "RankIC早停（v4）",
+      "change_summary": "早停由Top3×H5扣费净年化改为评估窗日RankIC。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h20es-densemble-s42-v1",
+      "name": "集成模型（v2，单种子）",
+      "change_summary": "改用三子模型DoubleEnsemble及其超参，早停改为RankIC（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "initial": false
+      }
+    },
+    {
+      "id": "diag/eval-window-edge-lookahead",
+      "name": "评估末端前视检查",
+      "change_summary": "增加评估末端标签取价越界检查（不重训）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h1-t3h5es-v1",
+      "name": "H1训练目标",
+      "change_summary": "训练标签由H20改为H1。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h10-t3h5es-v1",
+      "name": "H10训练目标",
+      "change_summary": "训练标签由H20改为H10。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+      "name": "集成模型（v3，单种子）",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+      "name": "集成模型（v3，五种子）",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（五种子）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h5-t3h5es-v1",
+      "name": "H5训练目标",
+      "change_summary": "训练标签由H20改为H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-label-k123-h2345",
+      "name": "持仓×持有期评估",
+      "change_summary": "评估网格改为K=1–5、H=2–5，复用现有信号。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "initial": false
+      }
+    },
+    {
+      "id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+      "name": "集成模型（v4，单种子）",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "initial": false
+      }
+    }
+  ],
+  "inline_directory_removed": true,
+  "full_original_hypothesis_and_baseline_ref_preserved_in_detail": true,
+  "rankic_v4_detail": {
+    "original_baseline_ref": "self",
+    "historical_comparison": "v3"
+  },
+  "screenshot": "/Users/yuxianqi/.codex/visualizations/2026/10/31/qlib-model-content.jpg",
+  "screenshot_sha256": "8a3ea949740050846fa5164ea0c4aea4216639691fdb46b76725a3f01c7c483f",
+  "monitor_reloaded": true,
+  "trading_schedule_changed": false
+}

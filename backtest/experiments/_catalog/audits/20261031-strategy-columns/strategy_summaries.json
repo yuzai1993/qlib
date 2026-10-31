@@ -1,0 +1,200 @@
+[
+  {
+    "exp_id": "baseline/phase-m-v1-bt-v1",
+    "path": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v1/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-label-v4",
+    "strategy_summary": {
+      "name": "Top5换1·持1",
+      "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20es-all-top5d1-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持1",
+      "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "baseline/phase-m-v1-bt-v2",
+    "path": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v2/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持1",
+      "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5f100-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持5·F100",
+      "description": "常规最多换1只、最短持有5日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top25换5·持5",
+      "description": "排名轮换：常规每日最多换5只、最短持有5日，不按5日到期退出；100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5f100-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top25换5·持5·F100",
+      "description": "常规最多换5只、最短持有5日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20es-all-ladder-k5h5-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "阶梯5×5日",
+      "description": "每日按排名选至多5只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "baseline/phase-m-v1-bt-v3",
+    "path": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v3/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持5·F100",
+      "description": "常规最多换1只、最短持有5日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持5",
+      "description": "排名轮换：常规每日最多换1只，最短持有5日；仅开hold5、不设f100。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持1·F100",
+      "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "阶梯3×5日",
+      "description": "每日按排名选至多3只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "阶梯3×5日·F100",
+      "description": "每日选Top3建5日层；掉出前100或缺有效分数时触发该股各层提前卖出（受成交约束），不额外补票。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "阶梯3×5日·F100补票",
+      "description": "Top3建5日层；掉出前100或缺分数时触发该股各层提前卖出（受成交约束），用实际强卖所得补未持有新票，归当日层。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "baseline/phase-m-v1-bt-v4",
+    "path": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v4/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "阶梯3×5日",
+      "description": "每日按排名选至多3只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top15d3f100-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "Top15换3·持1·F100",
+      "description": "常规最多换3只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top5d1f100-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持1·F100",
+      "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top3d1f100-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "Top3换1·持1·F100",
+      "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+    "path": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-rankices-v1",
+    "strategy_summary": {
+      "name": "阶梯3×5日（延窗）",
+      "description": "同BT v4真阶梯，100万、risk=0.90、历史费率；仅延窗至2026-08-30，末交易日08-28，不改官方窗。"
+    }
+  },
+  {
+    "exp_id": "baseline/phase-m-v1-bt-v5",
+    "path": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v5/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·持1·F100",
+      "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+    }
+  },
+  {
+    "exp_id": "diag/bt-v5-300k-current-cost-20261029",
+    "path": "backtest/experiments/strategies/diag/bt-v5-300k-current-cost-20261029/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·F100（30万）",
+      "description": "BT v5规则，30万、risk=0.90、当前费率近似；7月后区间承接历史持仓和现金，非独立实盘收益。"
+    }
+  },
+  {
+    "exp_id": "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1",
+    "path": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·F100（失败尝试）",
+      "description": "BT v5规则，30万、risk=1.00、当前费率近似；基准缓存校验失败，无有效回测指标。"
+    }
+  },
+  {
+    "exp_id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+    "path": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029/metadata.json",
+    "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "strategy_summary": {
+      "name": "Top5换1·F100（30万，risk1）",
+      "description": "BT v5规则，30万、risk=1.00、当前费率近似；7月后区间承接历史持仓和现金，非独立实盘收益。"
+    }
+  }
+]

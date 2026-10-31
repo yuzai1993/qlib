@@ -1,0 +1,127 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0-h20-label-v4",
+  "event_numbers": [
+    109
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/models/training-target/h20-v1/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [
+    "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+  ],
+  "recipe_sources": [
+    {
+      "role": "runner",
+      "path": "backtest/scripts/train_regime_arm.py",
+      "shared": true,
+      "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+    },
+    {
+      "role": "train_dates_csv",
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "shared": true,
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a"
+    },
+    {
+      "role": "valid_dates_csv",
+      "path": "backtest/configs/regime-adapt/test_dates_stratified_70.csv",
+      "shared": true,
+      "sha256": "9f02291e176e8c78236bd1837e350f695df203cb56f315218802233b610096ed"
+    },
+    {
+      "role": "day_weights_csv",
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "shared": true,
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6"
+    }
+  ],
+  "recipe_session_metadata": [
+    "backtest/result/regimeadaptfast_m0h20_s42/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_s1000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_s2000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_s3000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_s4000/meta.json"
+  ],
+  "records": [
+    "backtest/experiments/models/training-target/h20-v1/records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "model",
+  "track": "all_a",
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "H20训练目标（v1）",
+  "archive_path": "backtest/experiments/models/training-target/h20-v1",
+  "experiment_type": "training_target",
+  "analysis": {
+    "conclusion": "初始H20基线：主格净年化29.33%、夏普0.52，保留作后续版本对照。",
+    "evidence": [
+      "records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json"
+    ],
+    "limitations": "现行主格为Top3×H5；这是历史研究窗口重评结果，没有可核实的更早同轨道基线版本。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "训练目标改为未来20日累计收益（H20）。",
+  "comparison_baseline": {
+    "ref": "",
+    "version": "",
+    "initial": true
+  },
+  "model_profile": {
+    "structure": "每个种子一个单LightGBM（B3-M冻结超参）。",
+    "training_sample": {
+      "pool": "沪深A股（代码SH60/SH68/SZ00/SZ30，剔除指数、B股及北交所）",
+      "time_range": "2004-01-02～2020-07-31（名义训练窗；冻结保留日集2976日，2004-01-07～2020-07-30）",
+      "filters": "沿用共用H40缓存的有效样本行（上市满60个交易日、H40标签非空），替换为H20标签后再剔除缺失标签；按冻结训练日期清单抽样，M0逆抽样概率权重补偿为期望自然分布。训练未额外施加评估用的日频ST或成交额门槛。"
+    },
+    "training_target": "未来20日累计收益（H20）：Ref($close,-21)/Ref($close,-1)-1；标签按交易日截面CSRankNorm。",
+    "evaluation_sample": {
+      "pool": "沪深A股（全A股票）",
+      "time_range": "2020-08-03～2026-07-31（名义评估窗；H5头部收益样本末端截至2026-07-23）",
+      "filters": "上市满60个交易日、剔除日频ST、日成交额至少1000万元；头部收益评估另剔除t+1涨停封板或零成交量的不可建仓样本，并截断H5退出日越界样本。"
+    },
+    "changes": "初始版本：固定H20训练目标，采用499天次日RankIC早停。",
+    "model_paths": [
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000
+      }
+    ],
+    "features": "Alpha158＋range技术扩展；不含regime特征。",
+    "early_stopping": "冻结499个分层交易日（2020-08-03～2026-07-23）的次日收益标签日RankIC，valid_frame_70；不是全评估窗H5 RankIC。",
+    "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。"
+  }
+}

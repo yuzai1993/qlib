@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-31",
+  "test": "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+  "review_kind": "read_only_source_and_fixture_review",
+  "sources": [
+    {
+      "path": "backtest/scripts/cleanup_experiment_artifacts.py",
+      "function": "_train_experiment_ids",
+      "HEAD_sha256": "e088003c3174cba0503c2fe6de62a3a5d69740283a7a730e3e6ae27aed799b6b",
+      "current_sha256": "e088003c3174cba0503c2fe6de62a3a5d69740283a7a730e3e6ae27aed799b6b",
+      "source_identical_to_HEAD": true
+    },
+    {
+      "path": "backtest/scripts/cleanup_experiment_artifacts.py",
+      "function": "_validate_recorder",
+      "HEAD_sha256": "a00e322c950149ec80da10300c9ac97341f230d89be0b7d5bcf1a12c884684e5",
+      "current_sha256": "a00e322c950149ec80da10300c9ac97341f230d89be0b7d5bcf1a12c884684e5",
+      "source_identical_to_HEAD": true
+    },
+    {
+      "path": "tests/backtest/test_register_b5_rankic_hyperparams.py",
+      "function": "_write_session",
+      "HEAD_sha256": "942eb03006f17b6c5106cbf944d2c2f7f8d80d6b37fb55c8dba24138039862af",
+      "current_sha256": "942eb03006f17b6c5106cbf944d2c2f7f8d80d6b37fb55c8dba24138039862af",
+      "source_identical_to_HEAD": true
+    }
+  ],
+  "fixture_facts": [
+    "_write_session writes only meta.json with runs[0].status and train_experiment_id.",
+    "The fixture does not set run or fold; the existing cleanup validator computes run_index=0 and rejects run_00/mlruns_link.json as unsafe.",
+    "The fixture does not create run_01/mlruns_link.json, mlruns experiment/recorder metadata or a nonempty trained_model artifact.",
+    "The migration only replaces copied candidate configuration inputs with generated test inputs; the session fixture and recorder validation functions are byte-identical to HEAD."
+  ],
+  "conclusion": "Existing fixture is incomplete for the existing recorder safety contract; this display-label change does not introduce the failure.",
+  "runtime_reproduction": "Separately owned by baseline audit agent; this evidence records static HEAD/current function equality only."
+}

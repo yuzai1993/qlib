@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "exp_id": "baseline/phase-m-v1-bt-v2",
+  "event_numbers": [
+    120
+  ],
+  "phase": "M",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/bt-v2/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/reports/all_top5d1_m0h20es.html",
+    "backtest/experiments/reports/phase_m_v1_bt_report.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metrics/all_top5d1_m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/bt-v2/records/2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "baseline",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "M0 H20 ES top5d1",
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "Top5换1·持1",
+    "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v2",
+  "analysis": {
+    "conclusion": "较BT v1收益小幅提高，CAGR23.1%、夏普0.86；回撤略深，并非全面改善。",
+    "evidence": [
+      "records/2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b.json"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。相对BT v1更换冻结模型信号，差异不能归因于策略规则。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "策略保持Top5换1，模型信号从v1改为v2。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v1",
+    "version": "v1"
+  }
+}

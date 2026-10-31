@@ -1,3 +1,5 @@
+> 2026-10-31 归档清理说明：只检查旧 CSI1000 归档配置的测试已随归档删除；下方命令改用当前归档完整性测试，训练执行功能测试继续保留。
+
 # H40 Survival Weight Experiments Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -155,7 +157,7 @@ Run:
 ```bash
 /opt/anaconda3/envs/qlib/bin/python -m pytest \
   tests/backtest/test_label_horizon_configs.py \
-  tests/backtest/test_phase_m_train_only_configs.py -q
+  tests/backtest/test_research_archive.py -q
 ```
 
 Also inspect the generated YAML matrix for 3 variants × 5 exact seeds.

@@ -1,0 +1,31 @@
+{
+  "started_date": "2026-10-31",
+  "python_relevant_tests": {
+    "passed": 731,
+    "failed": 0
+  },
+  "frontend_tests": {
+    "passed": 131,
+    "failed": 0
+  },
+  "wider_backtest_live_tests": {
+    "passed": 2547,
+    "failed": 23,
+    "skipped": 1,
+    "all_failures_reproduced_on_previous_HEAD": true,
+    "baseline_commit": "b163d514d876885622578e8edf373d727ab9068b"
+  },
+  "independent_review": "no remaining findings",
+  "ui_verified": [
+    "five strategy benchmark labels s1-s5",
+    "model labels v1/v2/v2/v4/v2 and strategy short names",
+    "current s5 uses model v2",
+    "detail hypothesis/limitations use sN while bare model vN remains",
+    "CSV numeric cells unchanged"
+  ],
+  "screenshot": "/Users/yuxianqi/.codex/visualizations/2026/10/31/strategy-benchmark-labels-20261031.jpg",
+  "staged_archive_validation": "23 sources, 14 history entries, 9 benchmarks, 5 available groups; no warnings",
+  "git_diff_cached_check": "passed",
+  "temporary_root": "/private/tmp/qlib-strategy-labels-20261031",
+  "temporary_root_removed": true
+}

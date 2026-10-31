@@ -1,0 +1,79 @@
+{
+  "source_records": 23,
+  "benchmarks": 9,
+  "source_json_unchanged": 104,
+  "science_fields_unchanged": [
+    "version",
+    "metrics",
+    "years",
+    "regimes",
+    "window",
+    "seeds",
+    "current",
+    "is_baseline",
+    "official",
+    "comparable",
+    "comparison_key",
+    "date",
+    "model_summary",
+    "strategy_summary"
+  ],
+  "strategy_labels": [
+    {
+      "raw": "v1",
+      "display": "s1",
+      "model": {
+        "ref": "regime-adapt/m0-h20-label-v4",
+        "version": "v1",
+        "name": "M0 H20"
+      },
+      "strategy": "Top5换1·持1",
+      "current": false
+    },
+    {
+      "raw": "v2",
+      "display": "s2",
+      "model": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy": "Top5换1·持1",
+      "current": false
+    },
+    {
+      "raw": "v3",
+      "display": "s3",
+      "model": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy": "Top5换1·持5·F100",
+      "current": false
+    },
+    {
+      "raw": "v4",
+      "display": "s4",
+      "model": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy": "阶梯3×5日",
+      "current": false
+    },
+    {
+      "raw": "v5",
+      "display": "s5",
+      "model": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy": "Top5换1·持1·F100",
+      "current": true
+    }
+  ],
+  "warnings": []
+}

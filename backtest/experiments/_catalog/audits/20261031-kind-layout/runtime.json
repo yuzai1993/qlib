@@ -1,0 +1,99 @@
+{
+  "url": "http://127.0.0.1:8090",
+  "reload": "qlib-live-monitor only",
+  "discovery": {
+    "mode": "typed",
+    "count": 147,
+    "errors": []
+  },
+  "counts": {
+    "model:csi1000": 78,
+    "model:all_a": 13,
+    "strategy:csi1000": 32,
+    "strategy:all_a": 24
+  },
+  "original_platform_records_exact": 36,
+  "b3_summary": {
+    "source_status": "historical_summary",
+    "metrics": {
+      "annualized_return": 0.24347797559678627,
+      "sharpe_ratio": 1.1250084945519425,
+      "alpha": 0.20522337814815075,
+      "beta": 0.6267966815605561,
+      "benchmark_cumulative_return": 0.2090987201751482,
+      "max_drawdown": -0.3053618360209408,
+      "calmar_ratio": null,
+      "annualized_volatility": null,
+      "annualized_one_way_turnover": null,
+      "annualized_return_arith": null
+    },
+    "metric_definitions": [
+      {
+        "key": "annualized_return",
+        "label": "扣费年化（历史算术口径）",
+        "format": "pct"
+      },
+      {
+        "key": "sharpe_ratio",
+        "label": "扣费夏普",
+        "format": "number"
+      },
+      {
+        "key": "alpha",
+        "label": "Alpha",
+        "format": "pct"
+      },
+      {
+        "key": "beta",
+        "label": "Beta",
+        "format": "number"
+      },
+      {
+        "key": "benchmark_cumulative_return",
+        "label": "基准涨幅",
+        "format": "pct"
+      },
+      {
+        "key": "max_drawdown",
+        "label": "最大回撤",
+        "format": "pct"
+      },
+      {
+        "key": "calmar_ratio",
+        "label": "Calmar",
+        "format": "number"
+      },
+      {
+        "key": "annualized_volatility",
+        "label": "年化波动",
+        "format": "pct"
+      },
+      {
+        "key": "annualized_one_way_turnover",
+        "label": "年化单边换手（倍）",
+        "format": "number"
+      },
+      {
+        "key": "annualized_return_arith",
+        "label": "算术年化（审计）",
+        "format": "pct"
+      }
+    ],
+    "official": false,
+    "comparable": false
+  },
+  "ui": {
+    "model_all_a": 13,
+    "model_csi1000": 78,
+    "strategy_all_a": 24,
+    "strategy_csi1000": 32,
+    "track_selector_verified": true,
+    "all_a_current_model": "regime-adapt/m0-h20-rankices-v1"
+  },
+  "parity_checks_passed": [
+    "alla_v2_top5d1f100_postclose_real_active",
+    "alla_v2_top5d1f100_postclose_real",
+    "alla_v4_ladder_k1h5_postclose_real"
+  ],
+  "scheduler_or_trading_changed": false
+}

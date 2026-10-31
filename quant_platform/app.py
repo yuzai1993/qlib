@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .analyses import AnalysisStore, ConflictError
 from .research import ResearchCatalog
+from .research_annotations import ResearchAnnotations
 from .ledgers import LedgerCatalog, UNAVAILABLE as MONITOR_UNAVAILABLE
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -52,6 +53,7 @@ def create_app(
     research_root = Path(research_root).resolve()
     store = AnalysisStore(data_root, research_root)
     catalog = ResearchCatalog(research_root)
+    annotations = ResearchAnnotations(research_root)
     csrf_token = secrets.token_urlsafe(32)
     app = FastAPI(title="量化研究平台", version="1.1.0", docs_url=None, redoc_url=None, openapi_url=None)
     monitor_slots = asyncio.Semaphore(6)
@@ -104,7 +106,7 @@ def create_app(
                 or request.headers.get("sec-fetch-site") == "cross-site"
                 or not hmac.compare_digest(request.headers.get("x-csrf-token", ""), csrf_token)
             ):
-                return JSONResponse({"detail": "请从本平台页面保存分析"}, status_code=403)
+                return JSONResponse({"detail": "请从本平台页面保存内容"}, status_code=403)
             raw_length = request.headers.get("content-length", "0")
             if not raw_length.isdigit() or int(raw_length) > MAX_REQUEST_BYTES:
                 return JSONResponse({"detail": "请求超过 2 MiB"}, status_code=413)
@@ -171,6 +173,10 @@ def create_app(
         if not 2 <= len(id) <= 12:
             raise ValueError("请选择 2–12 个同口径版本进行比较")
         return catalog.compare(id)
+
+    @app.put("/api/research/conclusion")
+    def update_conclusion(payload: dict):
+        return annotations.update(payload)
 
     @app.get("/api/resources/{resource_id}")
     def resource(resource_id: str, download: bool = False):

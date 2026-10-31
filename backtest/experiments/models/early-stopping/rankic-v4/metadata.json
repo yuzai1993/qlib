@@ -1,0 +1,124 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0-h20-rankices-v1",
+  "event_numbers": [
+    137
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/models/early-stopping/rankic-v4/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/models/early-stopping/rankic-v4/reports/regime_adapt_m0h20_rankices_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [
+    "backtest/experiments/models/early-stopping/rankic-v4/metrics/eval_m0h20_rankices.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "recipe_sources": [
+    {
+      "role": "runner",
+      "path": "backtest/scripts/train_regime_arm.py",
+      "shared": true,
+      "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+    },
+    {
+      "role": "train_dates_csv",
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "shared": true,
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a"
+    },
+    {
+      "role": "day_weights_csv",
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "shared": true,
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6"
+    }
+  ],
+  "recipe_session_metadata": [
+    "backtest/result/regimeadaptfast_m0h20_rankices_s42/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_rankices_s1000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_rankices_s2000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_rankices_s3000/meta.json",
+    "backtest/result/regimeadaptfast_m0h20_rankices_s4000/meta.json"
+  ],
+  "records": [
+    "backtest/experiments/models/early-stopping/rankic-v4/records/54599b63162c804e96069151221e010b76c6af3b0ac81a0ce6041aa658922513.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "model",
+  "track": "all_a",
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "RankIC早停（v4）",
+  "metrics_source": {
+    "path": "metrics/eval_m0h20_rankices.json",
+    "sha256": "1420687eda4740bc0467a2e3524f608ea5c055f1a7bcae2415fa0840621f915c"
+  },
+  "archive_path": "backtest/experiments/models/early-stopping/rankic-v4",
+  "experiment_type": "early_stopping",
+  "analysis": {
+    "conclusion": "净年化30.57%、RankIC为0.0999，较v3小幅改善；保留为历史版本。",
+    "evidence": [
+      "metrics/eval_m0h20_rankices.json",
+      "reports/regime_adapt_m0h20_rankices_report.html",
+      "records/54599b63162c804e96069151221e010b76c6af3b0ac81a0ce6041aa658922513.json"
+    ],
+    "limitations": "早停使用评估窗日RankIC，不是v1的499天次日协议；同一历史窗口已用于早停与模型比较，不能当作独立样本外改善。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "早停由Top3×H5扣费净年化改为评估窗日RankIC。",
+  "comparison_baseline": {
+    "ref": "regime-adapt/m0-h20-t3h5es-v1",
+    "version": "v3"
+  },
+  "model_profile": {
+    "structure": "每个种子一个单LightGBM（B3-M冻结超参）。",
+    "training_sample": {
+      "pool": "沪深A股（代码SH60/SH68/SZ00/SZ30，剔除指数、B股及北交所）",
+      "time_range": "2004-01-02～2020-07-31（名义训练窗；冻结保留日集2976日，2004-01-07～2020-07-30）",
+      "filters": "沿用共用H40缓存的有效样本行（上市满60个交易日、H40标签非空），替换为H20标签后再剔除缺失标签；按冻结训练日期清单抽样，M0逆抽样概率权重补偿为期望自然分布。训练未额外施加评估用的日频ST或成交额门槛。"
+    },
+    "training_target": "未来20日累计收益（H20）：Ref($close,-21)/Ref($close,-1)-1；标签按交易日截面CSRankNorm。",
+    "evaluation_sample": {
+      "pool": "沪深A股（全A股票）",
+      "time_range": "2020-08-03～2026-07-31（名义评估窗；H5头部收益样本末端截至2026-07-23）",
+      "filters": "上市满60个交易日、剔除日频ST、日成交额至少1000万元；头部收益评估另剔除t+1涨停封板或零成交量的不可建仓样本，并截断H5退出日越界样本。"
+    },
+    "changes": "早停从Top3×H5扣费净年化改为评估窗日RankIC。",
+    "model_paths": [
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_rankices_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_rankices_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_rankices_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_rankices_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h20_rankices_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000
+      }
+    ],
+    "features": "Alpha158＋range技术扩展；不含regime特征。",
+    "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按日RankIC早停（daily_rank_ic；H5标签，valid_frame_t5h5es）。",
+    "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。"
+  }
+}

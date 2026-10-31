@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "scope": {
+    "keep": "baseline/phase-m-v1-bt-v2",
+    "remove_active_duplicate": "regime-adapt/m0h20es-all-top5d1-bt",
+    "other_baseline_candidate_pairs_out_of_scope": true
+  },
+  "comparison_before": {
+    "model_summary": true,
+    "strategy_summary": true,
+    "seeds": true,
+    "window": true,
+    "pool": true,
+    "metrics": true,
+    "years": true,
+    "regimes": true,
+    "comparison_key": true,
+    "comparison_baseline": true,
+    "source": true,
+    "original_source": true
+  },
+  "same_physical_portable_source": true,
+  "portable_source": {
+    "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/metrics/all_top5d1_m0h20es.json",
+    "current_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metrics/all_top5d1_m0h20es.json",
+    "sha256": "d6e7e819cb69877fdf33fcf1bb00320d473d8cbc1875eb0cbf7bcf03df94ef1e",
+    "ensemble_session": "20260821_211247_phase_s_m0h20es_all_top5d1_ensemble_market_cn",
+    "full_period": {
+      "n_days": 1454,
+      "annualized_return": 0.23130372925034037,
+      "annualized_return_arith": 0.25148313646986087,
+      "sharpe_ratio": 0.8550332914136377,
+      "alpha": 0.1530863066073424,
+      "beta": 0.9216253031911962,
+      "calmar_ratio": 0.5907573389282053,
+      "annualized_volatility": 0.29412087107635365,
+      "max_drawdown": -0.3915376314579322,
+      "annualized_one_way_turnover": 49.28892160954971,
+      "cumulative_return": 2.354007064987727,
+      "benchmark_annualized_return": 0.08255076587351717,
+      "benchmark_annualized_return_arith": 0.10676446221887799,
+      "benchmark_cumulative_return": 0.5861751718482147
+    }
+  },
+  "original_source": {
+    "reference": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/metrics/m0h20es.json",
+    "current_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metrics/m0h20es.json",
+    "sha256": "9ad8c571e540491559c68cde3c8163ef9623257ad53322a11453c896859335f4",
+    "arm": "m0h20es",
+    "seed_ids": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "window": [
+      "2020-08-03",
+      "2026-07-31"
+    ],
+    "pool": "all",
+    "account": 1000000,
+    "strategy": "top5 drop1 hold_thresh=1 risk_degree=0.90",
+    "fees": {
+      "open_cost": 0.00021,
+      "close_cost": 0.00071,
+      "min_cost": 5.0,
+      "trade_unit": 100,
+      "note": "QMT 2026-07-16 校准：买 0.021% + 卖 0.071%，往返 0.092%，最低 5 元"
+    },
+    "benchmark": {
+      "equal_weight_csv": "backtest/configs/regime-adapt/bench_ew_all.csv"
+    },
+    "ensemble_session": "20260821_211247_phase_s_m0h20es_all_top5d1_ensemble_market_cn",
+    "universe_filter": {
+      "st_daily": "scripts/data_collector/tushare/st_daily.csv",
+      "min_amount": 10000000,
+      "min_listing_days": 60,
+      "min_recent_trading_days": 60,
+      "pool": "all"
+    }
+  },
+  "original_registry_evaluation_refs": {
+    "base": {
+      "eval_output": "backtest/result/phase_s_regime/all_top5d1/m0h20es.json",
+      "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/metrics/all_top5d1_m0h20es.json",
+      "detail_report": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+      "baseline_ref": "self",
+      "promoted_from": "regime-adapt/m0h20es-all-top5d1-bt",
+      "bt_version": "v2"
+    },
+    "candidate": {
+      "eval_output": "backtest/result/phase_s_regime/all_top5d1/m0h20es.json",
+      "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/metrics/all_top5d1_m0h20es.json",
+      "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/reports/phase_m_v1_bt_m0h20es.html",
+      "baseline_ref": "baseline/phase-m-v1-bt-v1",
+      "promoted_to": "baseline/phase-m-v1-bt-v2",
+      "bt_version": null
+    }
+  },
+  "explicit_references_to_candidate": [
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v2",
+      "fields": {
+        "promoted_from": "regime-adapt/m0h20es-all-top5d1-bt"
+      }
+    }
+  ],
+  "future_baseline_ref_targets_candidate": false,
+  "experiments_using_retained_bt_v2_baseline": [
+    "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+    "regime-adapt/m0h20es-all-top25d5h5-bt",
+    "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+    "regime-adapt/m0h20es-all-ladder-k5h5-bt"
+  ],
+  "safety_findings": [
+    "Same frozen evaluation occurs as candidate event and promoted BT v2 baseline; no scientific rerun is required.",
+    "Retain BT v2 frozen promoted_from audit bytes; removing active candidate can clear only projected provenance.",
+    "Old portable metrics, original metrics, and both report paths require explicit file aliases to canonical BT v2 files.",
+    "Other records reference BT v2, not the removed candidate; BT v2 identity must remain stable.",
+    "Cleaner local baseline protection derives versioned model rows plus current BT v5; this non-current duplicate is not an independent keep anchor. No cleaner apply or model deletion is authorized."
+  ],
+  "mutation_performed": false,
+  "projected_historical_comparison_dependents": [
+    "baseline/phase-m-v1-bt-v3",
+    "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+    "regime-adapt/m0h20es-all-top25d5h5-bt",
+    "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+    "regime-adapt/m0h20es-all-top5d1h5f100-bt"
+  ],
+  "projected_comparison_targets_removed_candidate": []
+}

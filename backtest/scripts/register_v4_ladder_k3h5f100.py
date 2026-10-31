@@ -27,7 +27,7 @@ REG = ROOT / "backtest" / "experiments" / "registry.jsonl"
 EVAL = "backtest/result/phase_s_regime/all_ladder_k3h5f100/m0h20rankices.json"
 LADDER = "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json"
 BT_V3 = "backtest/result/phase_s_regime/all_top5d1h5f100/m0h20es.json"
-DETAIL = "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html"
+DETAIL = "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html"
 EXP_ID = "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt"
 
 

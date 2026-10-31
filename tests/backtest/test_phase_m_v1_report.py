@@ -201,6 +201,61 @@ def test_collect_does_not_fallback_when_declared_portable_eval_is_missing(tmp_pa
         assert baselines[-1]["doc"] is None
 
 
+def test_explicit_older_current_model_overrides_higher_historical_version():
+    v2 = {"exp_id": report.BASELINE_VERSIONS[1]["exp_id"], "phase_m_protocol": "v1",
+          "baseline_version": "v2", "current_baseline": True}
+    v4 = {"exp_id": "regime-adapt/m0-h20-rankices-v1", "phase_m_protocol": "v1", "baseline_version": "v4"}
+    baselines, _ = report.collect([v2, v4])
+    assert [b["version"] for b in baselines if b["current"]] == ["v2"]
+    assert {b["version"] for b in baselines} == {"v1", "v2", "v4"}
+
+
+def test_missing_explicit_current_source_remains_missing_without_promoting_v4(tmp_path, monkeypatch):
+    monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
+    source = tmp_path / "backtest/experiments/v4.json"
+    source.parent.mkdir(parents=True)
+    source.write_text(json.dumps(_eval_doc(ann=.3057)))
+    v2 = {"exp_id": report.BASELINE_VERSIONS[1]["exp_id"], "phase_m_protocol": "v1",
+          "baseline_version": "v2", "current_baseline": True,
+          "portable_eval_output": "backtest/experiments/missing-v2.json"}
+    v4 = {"exp_id": "regime-adapt/m0-h20-rankices-v1", "phase_m_protocol": "v1", "baseline_version": "v4",
+          "portable_eval_output": "backtest/experiments/v4.json"}
+    baselines, _ = report.collect([v2, v4])
+    current = [b for b in baselines if b["current"]]
+    assert len(current) == 1 and current[0]["version"] == "v2" and current[0]["doc"] is None
+
+
+def test_historical_receipt_supplies_v1_baseline_without_an_experiment_row(tmp_path, monkeypatch):
+    monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
+    source = tmp_path / "backtest/experiments/v1.json"
+    source.parent.mkdir(parents=True)
+    source.write_text(json.dumps(_eval_doc(ann=.2933)))
+    v1 = {"exp_id": report.BASELINE_VERSIONS[0]["exp_id"], "phase_m_protocol": "v1",
+          "baseline_version": "v1", "portable_eval_output": "backtest/experiments/v1.json",
+          "detail_report": "backtest/experiments/reports/label-study.html"}
+    baselines, experiments = report.collect([], historical_rows=[v1])
+    assert report.primary_cell(baselines[0]["doc"])["net_ann"] == .2933
+    assert baselines[0]["detail_report"] == v1["detail_report"]
+    assert experiments == []
+
+
+def test_higher_archived_version_does_not_override_active_legacy_current():
+    active = {"exp_id": report.BASELINE_VERSIONS[1]["exp_id"], "phase_m_protocol": "v1",
+              "baseline_version": "v2"}
+    archived = {"exp_id": "regime-adapt/archived-v9", "phase_m_protocol": "v1",
+                "baseline_version": "v9", "current_baseline": True}
+    baselines, _ = report.collect([active], historical_rows=[archived])
+    assert [b["version"] for b in baselines if b["current"]] == ["v2"]
+    assert "v9" in {b["version"] for b in baselines}
+
+
+def test_archived_only_versions_do_not_select_a_current_baseline():
+    archived = {"exp_id": "regime-adapt/archived-v9", "phase_m_protocol": "v1",
+                "baseline_version": "v9", "current_baseline": True}
+    baselines, _ = report.collect([], historical_rows=[archived])
+    assert not any(b["current"] for b in baselines)
+
+
 def test_hub_experiments_are_records_with_detail_links():
     html = report.render_hub(
         [_baseline("v2", "M0 H20 ES")],

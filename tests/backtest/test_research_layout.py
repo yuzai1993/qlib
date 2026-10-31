@@ -41,6 +41,73 @@ def test_unknown_historical_artifact_paths_are_preserved(tmp_path):
     assert resolve_research_path(missing, tmp_path) == tmp_path / missing
 
 
+def test_explicit_archive_directory_routes_new_outputs_without_guessing(tmp_path):
+    old = "backtest/experiments/model/variant"
+    new = "backtest/experiments/models/model/variant"
+    _map(tmp_path, {})
+    map_path = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    map_path.write_text(json.dumps({"schema_version": 1, "paths": {}, "directories": {old: new}}))
+
+    output = old + "/reports/new-report.html"
+    assert resolve_research_path(output, tmp_path) == tmp_path / new / "reports/new-report.html"
+    assert research_path_identity(new + "/reports/new-report.html", tmp_path) == output
+    assert relocate_path("backtest/experiments/model/other/new.json", tmp_path) == "backtest/experiments/model/other/new.json"
+
+
+def test_exact_and_directory_aliases_keep_the_original_asset_identity(tmp_path):
+    original = "backtest/configs/old.yaml"
+    middle = "backtest/experiments/model/variant/configs/old.yaml"
+    current = "backtest/experiments/models/model/variant/configs/old.yaml"
+    _map(tmp_path, {original: middle, middle: current})
+    map_path = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    document = json.loads(map_path.read_text())
+    document["directories"] = {"backtest/experiments/model/variant": "backtest/experiments/models/model/variant"}
+    map_path.write_text(json.dumps(document))
+
+    for alias in (original, middle, current):
+        assert resolve_research_path(alias, tmp_path) == tmp_path / current
+        assert research_path_identity(alias, tmp_path) == original
+
+
+def test_directory_inverse_does_not_override_exact_forward_alias(tmp_path):
+    source = "backtest/experiments/a"
+    target = "backtest/experiments/b"
+    exact = "backtest/experiments/c/x.json"
+    earliest = "backtest/configs/original.json"
+    _map(tmp_path, {earliest: source + "/x.json", source + "/x.json": exact})
+    map_path = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    document = json.loads(map_path.read_text())
+    document["directories"] = {source: target}
+    map_path.write_text(json.dumps(document))
+    assert relocate_path(source + "/x.json", tmp_path) == exact
+    assert research_path_identity(target + "/x.json", tmp_path) == target + "/x.json"
+    for alias in (earliest, source + "/x.json", exact):
+        assert research_path_identity(alias, tmp_path) == earliest
+
+
+def test_convergent_exact_chain_has_one_original_despite_directory_shortcut(tmp_path):
+    original = "backtest/experiments/a/x.json"
+    middle = "backtest/experiments/c/x.json"
+    current = "backtest/experiments/b/x.json"
+    _map(tmp_path, {original: middle, middle: current})
+    map_path = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    document = json.loads(map_path.read_text())
+    document["directories"] = {"backtest/experiments/a": "backtest/experiments/b"}
+    map_path.write_text(json.dumps(document))
+    for alias in (original, middle, current):
+        assert relocate_path(alias, tmp_path) == current
+        assert research_path_identity(alias, tmp_path) == original
+
+
+def test_directory_alias_cannot_escape_or_cycle(tmp_path):
+    old = "backtest/experiments/model/variant"
+    _map(tmp_path, {})
+    map_path = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    map_path.write_text(json.dumps({"schema_version": 1, "paths": {}, "directories": {old: old + "/nested"}}))
+    with pytest.raises(ValueError, match="cycle|recursive"):
+        relocate_path(old + "/new.json", tmp_path)
+
+
 @pytest.mark.parametrize("destination", [".", "../outside.json", "/private/tmp/outside.json", "backtest/experiments/../../outside.json", "bad\\path"])
 def test_invalid_path_map_fails_closed(tmp_path, destination):
     _map(tmp_path, {"backtest/configs/old.yaml": destination})

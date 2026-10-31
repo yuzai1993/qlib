@@ -14,8 +14,12 @@ from typing import Any, Sequence
 import yaml
 
 if __package__:
+    from .baseline_references import load_historical_baselines
+    from .experiment_archive import classify_experiment
     from .research_layout import resolve_research_path
 else:
+    from baseline_references import load_historical_baselines
+    from experiment_archive import classify_experiment
     from research_layout import resolve_research_path
 
 if __package__:
@@ -827,14 +831,24 @@ def _backtest_experiment_ids(
 
 
 def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
+    if not rows:
+        raise ValueError("registry does not contain any research records")
     warnings: list[str] = []
     errors: list[str] = []
     repo_root, result_root, mlruns_root, roots_safe = _validate_artifact_roots(
         Path(repo_root), errors
     )
 
-    retained_rows = select_retained_rows(rows)
-    _validate_baseline(retained_rows[0], errors)
+    csi_rows = [
+        row for row in rows if classify_experiment(row)["track"] == "csi1000"
+    ]
+    scope = (
+        "csi1000_and_all_a" if csi_rows and len(csi_rows) < len(rows)
+        else "csi1000" if csi_rows else "all_a"
+    )
+    retained_rows = select_retained_rows(csi_rows) if csi_rows else []
+    if retained_rows:
+        _validate_baseline(retained_rows[0], errors)
     phase_m_result_dirs = (
         _retained_result_dirs(repo_root, retained_rows, warnings, errors)
         if roots_safe
@@ -842,7 +856,7 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
     )
     phase_s_raw_paths: set[str] = set()
     try:
-        phase_s_raw_paths = select_phase_s_retained_result_paths(rows)
+        phase_s_raw_paths = select_phase_s_retained_result_paths(csi_rows)
     except ValueError as exc:
         errors.append(str(exc))
     phase_s_result_dirs = (
@@ -850,10 +864,17 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
         if roots_safe
         else []
     )
-    phase_s_anchor = _current_phase_s_baseline(rows)
+    phase_s_anchor = _current_phase_s_baseline(csi_rows)
     if roots_safe and phase_s_anchor is not None:
         _validate_phase_s_baseline_sessions(repo_root, phase_s_anchor, errors)
-    local_rows, current_bt = _phase_m_v1_retained_rows(rows, errors)
+    try:
+        historical_rows = load_historical_baselines(repo_root)
+    except (OSError, ValueError) as exc:
+        historical_rows = []
+        errors.append(f"historical model baseline reference validation failed: {exc}")
+    local_rows, current_bt = _phase_m_v1_retained_rows([*historical_rows, *rows], errors)
+    if not csi_rows and not local_rows:
+        errors.append("all-A registry has no versioned Phase M v1 baseline")
     local_dirs = (
         _retained_result_dirs(repo_root, local_rows, warnings, errors)
         if roots_safe
@@ -917,7 +938,8 @@ def build_cleanup_plan(repo_root: Path, rows: Sequence[dict]) -> dict[str, Any]:
         "repo_root": repo_root,
         "result_root": result_root,
         "mlruns_root": mlruns_root,
-        "baseline_exp_id": retained_rows[0].get("exp_id"),
+        "scope": scope,
+        "baseline_exp_id": retained_rows[0].get("exp_id") if retained_rows else None,
         "candidate_exp_id": (
             retained_rows[1].get("exp_id") if len(retained_rows) > 1 else None
         ),

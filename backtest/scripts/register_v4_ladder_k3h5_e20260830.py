@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 REG = ROOT / "backtest" / "experiments" / "registry.jsonl"
 EVAL = "backtest/result/phase_s_regime/all_ladder_k3h5_e20260830/m0h20rankices.json"
 OFFICIAL = "backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json"
-DETAIL = "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html"
+DETAIL = "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html"
 EXP_ID = "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt"
 
 

@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "exp_id": "baseline/phase-m-v1-bt-v5",
+  "event_numbers": [
+    147
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/bt-v5/records",
+  "configs": [
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5/configs/bench_ew_all.csv",
+      "shared": false,
+      "sha256": "92d5cfdb4d328705db1204c7f3ff8df459b83f1e62b5b80c635cecb3a05154a9"
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "shared": false,
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f"
+    }
+  ],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/bt-v5/reports/phase_m_v1_bt_v5.html",
+    "backtest/experiments/strategies/topk-dropout/bt-v5/reports/all_top5d1f100_m0h20es.html",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/all_top5d1f100_m0h20es.html",
+    "backtest/experiments/strategies/topk-dropout/bt-v5/reports/phase_m_v1_bt_m0h20es_f100.html",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/phase_m_v1_bt_m0h20es_f100.html",
+    "backtest/experiments/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
+    "backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/run_01/report.html",
+    "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/bt-v5/configs/bench_ew_all.csv",
+    "backtest/experiments/strategies/topk-dropout/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+    "backtest/experiments/strategies/topk-dropout/bt-v5/metrics/all_top5d1f100_m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v5/metrics/m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/m0h20es.json",
+    "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/bt-v5/records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v5/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "baseline",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "Top5换1·持1·F100",
+    "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5",
+  "analysis": {
+    "conclusion": "当前执行基线，CAGR34.8%、夏普1.18；较BT v4收益更高，但换手增加、回撤未改善。",
+    "evidence": [
+      "records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+      "reports/phase_m_v1_bt_v5.html",
+      "metrics/all_top5d1f100_m0h20es.json",
+      "metrics/m0h20es.json",
+      "records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+      "reports/all_top5d1f100_m0h20es.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。优势较依赖2025年，2021～2023收益低于BT v4；不代表实盘已激活或收益有保证。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "从v4模型真阶梯，改为v2模型Top5换1、最短持1日并启用F100。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v4",
+    "version": "v4"
+  },
+  "metrics_source": {
+    "path": "metrics/all_top5d1f100_m0h20es.json",
+    "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04"
+  }
+}

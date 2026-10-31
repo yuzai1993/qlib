@@ -282,8 +282,9 @@ def write_protocol(path: Path, *, account: float = ACCOUNT) -> None:
         "fees": dict(EXCHANGE_KWARGS),
         "selection": None,
     }
+    path = _resolve_research_path(path, _RESEARCH_ROOT)
     path.parent.mkdir(parents=True, exist_ok=True)
-    _resolve_research_path(path, _RESEARCH_ROOT).write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:

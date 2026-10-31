@@ -1,0 +1,678 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-31",
+  "scope": "Read-only regression attribution for 23 failures excluding test_bt_v5_promotion.py. No research metrics, training, backtests, repository files, or production state modified.",
+  "result": {
+    "selected_test_count": 23,
+    "reproduced_preexisting_failures": 23,
+    "new_regressions_found_in_selected_tests": 0,
+    "test_exit_code": 1,
+    "pytest_summary": "23 failed in 6.45s",
+    "failure_node_sets_identical": true
+  },
+  "groups": {
+    "missing_historical_base_config": {
+      "count": 1,
+      "cause": "Historical B2-S runner defaults to a config absent from HEAD and not created by preexisting.diff."
+    },
+    "stale_full_protocol_expectation": {
+      "count": 2,
+      "cause": "Tests expect b2-s-local-full-v2/B2-S while the task-start runner and finalizer use b3-s-local-full-v1/B3-S."
+    },
+    "stale_same_run_baseline_expectation": {
+      "count": 1,
+      "cause": "Test expects topk-t30-d2-h20-r095, but task-start finalizer explicitly selects B3-S topk-t20-d2-h10-r095."
+    },
+    "removed_private_report_helper": {
+      "count": 1,
+      "cause": "Test calls _full_neighborhood_section, which is already absent from task-start build_strategy_stability_report.py."
+    },
+    "risk_degree_expectation": {
+      "count": 6,
+      "cause": "Tests retain 0.95 expectations while task-start phase_s_protocol.RISK_DEGREE is 0.90; soft impact limits derive from this constant."
+    },
+    "incomplete_cleanup_fixture": {
+      "count": 1,
+      "cause": "Test session fixtures supply status and train_experiment_id only; task-start cleanup requires positive run/fold indexes and recorder metadata, producing run_00 validation errors."
+    },
+    "arithmetic_vs_cagr_expectation": {
+      "count": 1,
+      "cause": "Test expects mean(net)*250=1.4166666666666667 in annualized_return, while task-start production metrics use CAGR=3.0284392620292646; arithmetic return is exposed separately."
+    },
+    "baseline_absent_from_legacy_grid": {
+      "count": 10,
+      "cause": "Resume fixture searches immutable legacy b6-m strategy_grid for current topk-t22-d2-h2, which the task-start grid does not contain; fixture raises StopIteration before resume logic."
+    }
+  },
+  "test_cases": [
+    {
+      "nodeid": "tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts",
+      "classification": "missing_historical_base_config",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_snapshot/backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml'",
+      "before_failure_trace": "tests/backtest/test_finalize_strategy_neighborhood.py:292: in test_complete_row_verifies_prediction_and_config_contracts\n    base_config_sha256=finalizer.sha256_file(base_path),\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nbacktest/scripts/phase_s_protocol.py:57: in sha256_file\n    with Path(path).open(\"rb\") as handle:\n         ^^^^^^^^^^^^^^^^^^^^^\n/opt/anaconda3/envs/qlib/lib/python3.12/pathlib.py:1013: in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_snapshot/backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml'",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml"
+    },
+    {
+      "nodeid": "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract",
+      "classification": "stale_full_protocol_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'\n  \n  - strategy-neighborhood/b2-s-local-full-v2\n  ?                        ^               ^\n  + strategy-neighborhood/b3-s-local-full-v1\n  ?                        ^               ^",
+      "before_failure_trace": "tests/backtest/test_finalize_strategy_neighborhood_full.py:217: in test_preregistered_row_freezes_full_period_contract\n    assert row[\"exp_id\"] == \"strategy-neighborhood/b2-s-local-full-v2\"\nE   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'\nE     \nE     - strategy-neighborhood/b2-s-local-full-v2\nE     ?                        ^               ^\nE     + strategy-neighborhood/b3-s-local-full-v1\nE     ?                        ^               ^",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "strategy-neighborhood/b3-s-local-full-v1"
+    },
+    {
+      "nodeid": "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result",
+      "classification": "stale_same_run_baseline_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "AssertionError: assert 'topk-t20-d2-h10-r095' == 'topk-t30-d2-h20-r095'\n  \n  - topk-t30-d2-h20-r095\n  ?       ^      ^\n  + topk-t20-d2-h10-r095\n  ?       ^      ^",
+      "before_failure_trace": "tests/backtest/test_finalize_strategy_neighborhood_full.py:487: in test_full_baseline_comparison_correction_preserves_completed_result\n    assert correction[\"same_run_baseline\"][\"candidate_id\"] == \"topk-t30-d2-h20-r095\"\nE   AssertionError: assert 'topk-t20-d2-h10-r095' == 'topk-t30-d2-h20-r095'\nE     \nE     - topk-t30-d2-h20-r095\nE     ?       ^      ^\nE     + topk-t20-d2-h10-r095\nE     ?       ^      ^",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "topk-t20-d2-h10-r095"
+    },
+    {
+      "nodeid": "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+      "classification": "removed_private_report_helper",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "AttributeError: module 'build_strategy_stability_report' has no attribute '_full_neighborhood_section'. Did you mean: '_neighborhood_section'?",
+      "before_failure_trace": "tests/backtest/test_finalize_strategy_neighborhood_full.py:511: in test_full_neighborhood_report_shows_same_run_baseline_before_winner\n    html = stability_report._full_neighborhood_section(completed, correction)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   AttributeError: module 'build_strategy_stability_report' has no attribute '_full_neighborhood_section'. Did you mean: '_neighborhood_section'?",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "has no attribute '_full_neighborhood_section'"
+    },
+    {
+      "nodeid": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+      "classification": "risk_degree_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "assert 0.045 == 0.0475 ± 4.7e-08\n  \n  comparison failed\n  Obtained: 0.045\n  Expected: 0.0475 ± 4.7e-08",
+      "before_failure_trace": "tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits\n    assert row[\"trade_impact_limit\"] == pytest.approx(expected)\nE   assert 0.045 == 0.0475 ± 4.7e-08\nE     \nE     comparison failed\nE     Obtained: 0.045\nE     Expected: 0.0475 ± 4.7e-08",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "0.045 == 0.0475 ± 4.7e-08"
+    },
+    {
+      "nodeid": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+      "classification": "risk_degree_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "assert 0.030000000000000002 == 0.03166666666666666 ± 3.2e-08\n  \n  comparison failed\n  Obtained: 0.030000000000000002\n  Expected: 0.03166666666666666 ± 3.2e-08",
+      "before_failure_trace": "tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits\n    assert row[\"trade_impact_limit\"] == pytest.approx(expected)\nE   assert 0.030000000000000002 == 0.03166666666666666 ± 3.2e-08\nE     \nE     comparison failed\nE     Obtained: 0.030000000000000002\nE     Expected: 0.03166666666666666 ± 3.2e-08",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "0.030000000000000002 == 0.03166666666666666 ± 3.2e-08"
+    },
+    {
+      "nodeid": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+      "classification": "risk_degree_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "assert 0.0225 == 0.02375 ± 2.4e-08\n  \n  comparison failed\n  Obtained: 0.0225\n  Expected: 0.02375 ± 2.4e-08",
+      "before_failure_trace": "tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits\n    assert row[\"trade_impact_limit\"] == pytest.approx(expected)\nE   assert 0.0225 == 0.02375 ± 2.4e-08\nE     \nE     comparison failed\nE     Obtained: 0.0225\nE     Expected: 0.02375 ± 2.4e-08",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "0.0225 == 0.02375 ± 2.4e-08"
+    },
+    {
+      "nodeid": "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+      "classification": "risk_degree_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "assert 0.0225 == 0.02375 ± 2.4e-08\n  \n  comparison failed\n  Obtained: 0.0225\n  Expected: 0.02375 ± 2.4e-08",
+      "before_failure_trace": "tests/backtest/test_phase_s_protocol.py:178: in test_soft_topk_grid_precomputes_absolute_impact_limits\n    assert row[\"trade_impact_limit\"] == pytest.approx(expected)\nE   assert 0.0225 == 0.02375 ± 2.4e-08\nE     \nE     comparison failed\nE     Obtained: 0.0225\nE     Expected: 0.02375 ± 2.4e-08",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "0.0225 == 0.02375 ± 2.4e-08"
+    },
+    {
+      "nodeid": "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+      "classification": "incomplete_cleanup_fixture",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "AssertionError: assert ['train recor...nk.json', ...] == []\n  \n  Left contains 20 more items, first extra item: 'train recorder validation failed: /private/tmp/qlib-experiment-kind-layout-20261031/old_failures_pytest_tmp/test_fina...0261031/old_failures_pytest_tmp/test_final_winner_paths_are_cl0/backtest/result/baseline-s1000/run_00/mlruns_link.json'\n  Use -v to get more diff",
+      "before_failure_trace": "tests/backtest/test_register_b5_rankic_hyperparams.py:633: in test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions\n    assert plan[\"errors\"] == []\nE   AssertionError: assert ['train recor...nk.json', ...] == []\nE     \nE     Left contains 20 more items, first extra item: 'train recorder validation failed: /private/tmp/qlib-experiment-kind-layout-20261031/old_failures_pytest_tmp/test_fina...0261031/old_failures_pytest_tmp/test_final_winner_paths_are_cl0/backtest/result/baseline-s1000/run_00/mlruns_link.json'\nE     Use -v to get more diff",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "run_00/mlruns_link.json"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample",
+      "classification": "stale_full_protocol_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'\n  \n  - strategy-neighborhood/b2-s-local-full-v2\n  ?                        ^               ^\n  + strategy-neighborhood/b3-s-local-full-v1\n  ?                        ^               ^",
+      "before_failure_trace": "tests/backtest/test_run_strategy_neighborhood_full.py:29: in test_protocol_is_versioned_full_history_in_sample\n    assert payload[\"exp_id\"] == \"strategy-neighborhood/b2-s-local-full-v2\"\nE   AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'\nE     \nE     - strategy-neighborhood/b2-s-local-full-v2\nE     ?                        ^               ^\nE     + strategy-neighborhood/b3-s-local-full-v1\nE     ?                        ^               ^",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "strategy-neighborhood/b3-s-local-full-v1"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+      "classification": "arithmetic_vs_cagr_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "assert 3.0284392620292646 == 1.4166666666666667 ± 1.4e-06\n  \n  comparison failed\n  Obtained: 3.0284392620292646\n  Expected: 1.4166666666666667 ± 1.4e-06",
+      "before_failure_trace": "tests/backtest/test_run_strategy_neighborhood_full.py:509: in test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics\n    assert result[\"absolute_portfolio\"][\"annualized_return\"] == pytest.approx(\nE   assert 3.0284392620292646 == 1.4166666666666667 ± 1.4e-06\nE     \nE     comparison failed\nE     Obtained: 3.0284392620292646\nE     Expected: 1.4166666666666667 ± 1.4e-06",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "3.0284392620292646 == 1.4166666666666667"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs",
+      "classification": "risk_degree_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "AssertionError: assert {'risk_degree...limit': False} == {'risk_degree...limit': False}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'risk_degree': 0.9} != {'risk_degree': 0.95}\n  Use -v to get more diff",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:56: in test_valid_config_uses_csi1000_dates_500k_and_live_costs\n    assert cfg[\"strategy\"][\"kwargs\"] == {\nE   AssertionError: assert {'risk_degree...limit': False} == {'risk_degree...limit': False}\nE     \nE     Omitting 2 identical items, use -vv to show\nE     Differing items:\nE     {'risk_degree': 0.9} != {'risk_degree': 0.95}\nE     Use -v to get more diff",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "0.9"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+      "classification": "risk_degree_expectation",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "AssertionError: assert {'class': 'So...degree': 0.9}} == {'class': 'So...egree': 0.95}}\n  \n  Omitting 3 identical items, use -vv to show\n  Differing items:\n  {'kwargs': {'trade_impact_limit': 0.0225, 'risk_degree': 0.9}} != {'kwargs': {'trade_impact_limit': 0.02375 ± 2.4e-08, 'risk_degree': 0.95}}\n  Use -v to get more diff",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:413: in test_soft_topk_config_uses_precomputed_absolute_impact_limit\n    assert cfg[\"strategy\"] == {\nE   AssertionError: assert {'class': 'So...degree': 0.9}} == {'class': 'So...egree': 0.95}}\nE     \nE     Omitting 3 identical items, use -vv to show\nE     Differing items:\nE     {'kwargs': {'trade_impact_limit': 0.0225, 'risk_degree': 0.9}} != {'kwargs': {'trade_impact_limit': 0.02375 ± 2.4e-08, 'risk_degree': 0.95}}\nE     Use -v to get more diff",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "0.9"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity\n    _resume_summary_fixture(tmp_path, monkeypatch)\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity\n    _resume_summary_fixture(tmp_path, monkeypatch)\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity\n    _resume_summary_fixture(tmp_path, monkeypatch)\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity\n    _resume_summary_fixture(tmp_path, monkeypatch)\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity\n    _resume_summary_fixture(tmp_path, monkeypatch)\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity\n    _resume_summary_fixture(tmp_path, monkeypatch)\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:662: in test_resume_summary_rejects_mismatched_run_or_candidate_identity\n    _resume_summary_fixture(tmp_path, monkeypatch)\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:689: in test_resume_summary_reuses_only_rows_with_matching_complete_identity\n    base, pred, manifest, payload, candidates, calls = _resume_summary_fixture(\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:723: in test_resume_summary_with_all_matching_successes_runs_no_candidates\n    _base, pred, manifest, payload, candidates, calls = _resume_summary_fixture(\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    },
+    {
+      "nodeid": "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate",
+      "classification": "baseline_absent_from_legacy_grid",
+      "preexisting": true,
+      "before_failure_type": null,
+      "before_failure_message": "StopIteration",
+      "before_failure_trace": "tests/backtest/test_run_strategy_sweep.py:756: in test_resume_summary_rejects_an_omitted_requested_candidate\n    _base, pred, manifest, payload, _candidates, calls = _resume_summary_fixture(\ntests/backtest/test_run_strategy_sweep.py:539: in _resume_summary_fixture\n    baseline = next(\nE   StopIteration",
+      "same_failure_signature_in_post_migration_log": true,
+      "stable_failure_signature": "E   StopIteration"
+    }
+  ],
+  "provenance": {
+    "head": "b163d514d876885622578e8edf373d727ab9068b",
+    "preexisting_diff_sha256": "d1aff558a0da016c7c375e61f3e65620bb1c83b63f78580951ce015d67cdb258",
+    "snapshot": "/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_snapshot",
+    "files": {
+      "backtest/configs/baseline-strategy/b3-s/topk-t20-d2-h10_csi1000_full.yaml": {
+        "source": "HEAD",
+        "sha256": "3918d833097235ed5a5b550df2c9e0eae3b344ef86fd97389bfd9518964b7214"
+      },
+      "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s1000.yaml": {
+        "source": "HEAD",
+        "sha256": "51daac302c584caa1c61a166a3ab8a2ec1ea0a765bccb8e9573974325855e772"
+      },
+      "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s2000.yaml": {
+        "source": "HEAD",
+        "sha256": "10cb2a34bcf851ff6f25d610a604b21bc0c8b9e0b6918611760059570f33e020"
+      },
+      "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s3000.yaml": {
+        "source": "HEAD",
+        "sha256": "bcd3827a6e14fdaad8e0277a2953f2badf5e0db2738d128e0021592151016546"
+      },
+      "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml": {
+        "source": "HEAD",
+        "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+      },
+      "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s42.yaml": {
+        "source": "HEAD",
+        "sha256": "d1abdb4693c776fb2f64d9dbe8cdd9f2ed18e6182f5cefc186eb77013d99f461"
+      },
+      "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml": {
+        "source": "HEAD",
+        "sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a"
+      },
+      "backtest/experiments/_catalog/path_map.json": {
+        "source": "HEAD plus preexisting.diff",
+        "sha256": "1b05d9816dfadd93ff8b35b935deaf64110077b2caf3a0c1a8e6b1ae46ed80f5"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s1000.yaml": {
+        "source": "HEAD",
+        "sha256": "72ff6d25d9f2649440a77ed77f4bd58808b339663df2a070a4d6a5da49056b84"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s2000.yaml": {
+        "source": "HEAD",
+        "sha256": "abe15852c2bb64489007fa410710774b004b5c3d63d075d4253f1c3d73829b9e"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s3000.yaml": {
+        "source": "HEAD",
+        "sha256": "2392f851be1f76138d38510ba89779288672e5dba255d20910714f68782f3d79"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s4000.yaml": {
+        "source": "HEAD",
+        "sha256": "9c78c97698c07d85e1ddecf03cf3b67da60cbd837da0e5ab13b28440ba0f5c2a"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s42.yaml": {
+        "source": "HEAD",
+        "sha256": "5dfd162cd47717464c59d2dae26b1d4e333a72e6cff70a4378d338474776ab19"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s1000.yaml": {
+        "source": "HEAD",
+        "sha256": "618446b702602045b2f81c0ad165185475587d82205ec8929ee2dbd285366153"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s2000.yaml": {
+        "source": "HEAD",
+        "sha256": "658d705c402cd46916e232062f00033db35f54a99d63f1cb0e5a162d7828feb2"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s3000.yaml": {
+        "source": "HEAD",
+        "sha256": "327479d215fb044b29c5df4fed8dc132f9b45132f7ea6a9687019dcf8b890290"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s4000.yaml": {
+        "source": "HEAD",
+        "sha256": "d6438dad92a5f1696de401c459769ee08c18aebaabbab593034aa64850a04eee"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s42.yaml": {
+        "source": "HEAD",
+        "sha256": "577fbc515af3f146ca352f8f2a2de61ea7cad6b9f20dfc6d3d278e9a962bd763"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s1000.yaml": {
+        "source": "HEAD",
+        "sha256": "48c2d566f4ae6018d041ee67a393123abaaf3d8373b01a20a9b33977dc137db0"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s2000.yaml": {
+        "source": "HEAD",
+        "sha256": "6834d30cb5e57658ef6b1d4eb62a3737002686c265a275da545dec2f4d5ce223"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s3000.yaml": {
+        "source": "HEAD",
+        "sha256": "b846be54f68d10b738b7decde5e2cd0de94ba203017af22d6916c8096e89d4a9"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s4000.yaml": {
+        "source": "HEAD",
+        "sha256": "acecf16a6e574df55bf4b5e7288c6c8dfbacccd2c4b8e01ca46ee14c3e0aa34c"
+      },
+      "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s42.yaml": {
+        "source": "HEAD",
+        "sha256": "bf76a31610bef96920855ad982162d5aee8185e190391a87c4d4471b33c608c4"
+      },
+      "backtest/models/baselines/b6-m/manifest.json": {
+        "source": "HEAD",
+        "sha256": "9aa8479902a54290f1dd764e709fdce98f8acf64982579bba04a50f721cd30a7"
+      },
+      "backtest/scripts/build_experiment_report.py": {
+        "source": "HEAD",
+        "sha256": "0b5c57b199f677e78f6449d739c13226e98728834e6475ab7a0c27a7217748b0"
+      },
+      "backtest/scripts/build_strategy_stability_report.py": {
+        "source": "HEAD",
+        "sha256": "a8939a1d081f175ca5e84eba54b1732d704361ed51fa1b15c9decfd48d90f2dc"
+      },
+      "backtest/scripts/cleanup_experiment_artifacts.py": {
+        "source": "HEAD",
+        "sha256": "6db164517ea8c511c2665d95a30fa9789d2bf3d24fe53020b4f88df7caf2c5ee"
+      },
+      "backtest/scripts/config_loader.py": {
+        "source": "HEAD plus preexisting.diff",
+        "sha256": "93331d59bff9e55587f11ce4560f261a3536925acf3f78e31a66bdb2471184a9"
+      },
+      "backtest/scripts/ensemble_preds.py": {
+        "source": "HEAD",
+        "sha256": "62b4e0d32090af074c6c326a27255d4db3a03cc4aa1a5551c4b6b5bd7c968de0"
+      },
+      "backtest/scripts/eval_frozen_b5_rankic.py": {
+        "source": "HEAD",
+        "sha256": "a39960dff9b3ce53982ed83392a022b7a3f2ad33c9f835a8525b7694cfc47e52"
+      },
+      "backtest/scripts/eval_ic_multi_pool.py": {
+        "source": "HEAD",
+        "sha256": "8ca3b34b782f9ad75568a5adc4120dee819628734cdc7b0505ede5cc69abc730"
+      },
+      "backtest/scripts/eval_protocol.py": {
+        "source": "HEAD",
+        "sha256": "037130b71c4e3fa9a70b639eab3d621dd2c6ab8d991bfea44b348a3e1d480991"
+      },
+      "backtest/scripts/experiment_registry.py": {
+        "source": "HEAD",
+        "sha256": "77504aabb86a762aab29812b4dfeea7be22dd6a468c8193eab6b4803097c6b82"
+      },
+      "backtest/scripts/finalize_strategy_neighborhood.py": {
+        "source": "HEAD",
+        "sha256": "98621f0f8526f6df5afec183c4dff111691ea492b94e0f4b524aa21c548d0e73"
+      },
+      "backtest/scripts/finalize_strategy_neighborhood_full.py": {
+        "source": "HEAD",
+        "sha256": "691c63a8e2e5542637d30bbbf7f1b727db31af6aae5060db0de0d23d671a5f48"
+      },
+      "backtest/scripts/freeze_b5_rankic_selection.py": {
+        "source": "HEAD",
+        "sha256": "310ecc84e2f17aad25421d45f47798d5cd3f0e048bde6b22e53a0f6e91776945"
+      },
+      "backtest/scripts/generate_b5_rankic_hyperparams.py": {
+        "source": "HEAD",
+        "sha256": "67124d39a52277d145a0a13a6ccb9a6dfd43dbca688ac4df74e8a663e70ef6fc"
+      },
+      "backtest/scripts/generate_phase_s_predictions.py": {
+        "source": "HEAD",
+        "sha256": "0c968eb954ab0585349718d1a59b692a9c48da71506f1ac8ad46de1f1fb8f988"
+      },
+      "backtest/scripts/phase_s_prediction_validation.py": {
+        "source": "HEAD",
+        "sha256": "242bbe1c30d8243cf611419c8f66b62fe82f8af9ce0599ba4c3b7ba65878663b"
+      },
+      "backtest/scripts/phase_s_protocol.py": {
+        "source": "HEAD",
+        "sha256": "332c0afca18c33361af73b56fe09b9b66add207d794a966258a48c8e7ac53f96"
+      },
+      "backtest/scripts/register_b5_rankic_hyperparams.py": {
+        "source": "HEAD",
+        "sha256": "88c773f854f228397e11e8119de6972f3de6dd191be624edc4796ab8f1bb9cc7"
+      },
+      "backtest/scripts/report_utils.py": {
+        "source": "HEAD",
+        "sha256": "bf6bdf8c3200cf67f99c6b8136b7d0a8a5c5e90f09ca0ef14d0b0d2b274bcc95"
+      },
+      "backtest/scripts/research_layout.py": {
+        "source": "HEAD",
+        "sha256": "bbc02b742db582b8c07aab177fa35e199971ca03202a8a4acf42af607d0dcd4b"
+      },
+      "backtest/scripts/run_strategy_neighborhood.py": {
+        "source": "HEAD",
+        "sha256": "3aaa4e544eb866c8618cb87674e9db1077b99a4689aa5d181f62424b103027a2"
+      },
+      "backtest/scripts/run_strategy_neighborhood_full.py": {
+        "source": "HEAD",
+        "sha256": "f254b186910454082a1986ebc16638b3fd78e5fac068020f41cb861a81d07b1b"
+      },
+      "backtest/scripts/run_strategy_sweep.py": {
+        "source": "HEAD",
+        "sha256": "2578fd347097d8f7a5932376783e1da3fe67d9303d9047113b03347b1882dc60"
+      },
+      "backtest/scripts/strategy_neighborhood_protocol.py": {
+        "source": "HEAD",
+        "sha256": "850ef86048d5beb767fff1ce0267317948e10980324fe5b813da002800e07efc"
+      },
+      "backtest/scripts/strategy_stability_metrics.py": {
+        "source": "HEAD",
+        "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb"
+      },
+      "backtest/scripts/universe_filter.py": {
+        "source": "HEAD",
+        "sha256": "e681bfbf63ec5ce70dbfd5ab05964a1d0f9b2e8122d9f5050a41dfa46da4eea8"
+      },
+      "scripts/data_collector/tushare/st_calendar.py": {
+        "source": "HEAD",
+        "sha256": "0f96b6b56b91d7535f6a2f22d2ee408f7eea87d1562d64ba27f620a30155f420"
+      },
+      "tests/backtest/test_finalize_strategy_neighborhood.py": {
+        "source": "HEAD",
+        "sha256": "796924490fc862d4f712b6e334b7c47df8c286939f8580a4accf1ace237b0d38"
+      },
+      "tests/backtest/test_finalize_strategy_neighborhood_full.py": {
+        "source": "HEAD",
+        "sha256": "414296b38a872e5c24a336158fb8f850d4098d722e2c950963646791a5557c4e"
+      },
+      "tests/backtest/test_phase_s_protocol.py": {
+        "source": "HEAD",
+        "sha256": "18d2a628a52c4a81220465fdebbd463eb0a279e1a64132551d7042fd5105d3f2"
+      },
+      "tests/backtest/test_register_b5_rankic_hyperparams.py": {
+        "source": "HEAD",
+        "sha256": "af293d511514a1de54c9c855cbf3ec8ccba9c63fc3fb89947354806bf9f1d218"
+      },
+      "tests/backtest/test_run_strategy_neighborhood_full.py": {
+        "source": "HEAD",
+        "sha256": "3e1c8a73ee61fa5bc735d2a66973dca76a49be9e74367772d55593f980ed144d"
+      },
+      "tests/backtest/test_run_strategy_sweep.py": {
+        "source": "HEAD",
+        "sha256": "c426074170f7c491f5274a0f6e34cb217814a3fce6577110f1be64d171ed44ab"
+      },
+      "tests/conftest.py": {
+        "source": "HEAD",
+        "sha256": "7cee4a35fee33bddaba3f802cf285dc32b0255f8401dc03781efb916725c8946"
+      },
+      "tests/pytest.ini": {
+        "source": "HEAD",
+        "sha256": "88204bc5476b3a6ad0853f72f00d4fd47af890819ec80f04252ad3c7bd8efb35"
+      }
+    },
+    "copied_retained_model": {
+      "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+      "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "size_bytes": 3391157,
+      "matches_frozen_head_manifest": true
+    },
+    "reproduced_nodes": [
+      "tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts",
+      "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract",
+      "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result",
+      "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+      "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+      "tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample",
+      "tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+      "tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs",
+      "tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate"
+    ],
+    "patched_paths": [
+      "backtest/experiments/_catalog/path_map.json",
+      "backtest/scripts/config_loader.py"
+    ],
+    "snapshot_total_bytes": 4142009,
+    "absence_check": {
+      "path": "backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml",
+      "in_HEAD": false,
+      "mentioned_in_preexisting_patch": false
+    },
+    "command": [
+      "/opt/anaconda3/envs/qlib/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--tb=short",
+      "-p",
+      "no:cacheprovider",
+      "--junitxml=/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_before.junit.xml",
+      "--basetemp=/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_pytest_tmp",
+      "tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts",
+      "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract",
+      "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result",
+      "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+      "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+      "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+      "tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample",
+      "tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+      "tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs",
+      "tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+      "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate"
+    ],
+    "environment": {
+      "PYTHONPATH": "/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_snapshot:/Users/yuxianqi/Project/qlib",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    }
+  },
+  "source_evidence": [
+    {
+      "path": "backtest/scripts/phase_s_protocol.py",
+      "start_line": 13,
+      "end_line": 32,
+      "sha256": "332c0afca18c33361af73b56fe09b9b66add207d794a966258a48c8e7ac53f96",
+      "text": "13: CURRENT_MODEL_REFS = (\"b6-m\",)\n14: BASELINE_CANDIDATE_ID = \"topk-t10-d2-h1\"\n15: CURRENT_STRATEGY_BASELINE_ID = \"topk-t22-d2-h2\"\n16: VALID_SEGMENT = (\"2020-01-13\", \"2021-07-15\")\n17: TEST_SEGMENT = (\"2021-07-16\", \"2026-07-31\")\n18: # The only active Phase S selection interval.  The split segments remain for\n19: # reproducing and auditing historical valid/test sweeps.\n20: FULL_SEGMENT = (\"2020-01-13\", \"2026-07-31\")\n21: POOL_BENCHMARKS = {\n22:     \"csi1000\": \"SH000852\",\n23:     \"csi300\": \"SH000300\",\n24:     \"csi500\": \"SH000905\",\n25: }\n26: ACCOUNT = 500_000\n27: RISK_DEGREE = 0.90\n28: EXCHANGE_KWARGS = {\n29:     \"freq\": \"day\",\n30:     \"deal_price\": \"close\",\n31:     \"limit_threshold\": 0.095,\n32:     \"open_cost\": 0.00021,"
+    },
+    {
+      "path": "backtest/scripts/phase_s_protocol.py",
+      "start_line": 142,
+      "end_line": 190,
+      "sha256": "332c0afca18c33361af73b56fe09b9b66add207d794a966258a48c8e7ac53f96",
+      "text": "142:         \"candidate_id\": f\"soft-t{topk}-i{ratio_label:03d}\",\n143:         \"strategy_class\": \"SoftTopkStrategy\",\n144:         \"topk\": topk,\n145:         \"impact_ratio\": impact_ratio,\n146:         \"trade_impact_limit\": RISK_DEGREE / topk * impact_ratio,\n147:         \"risk_degree\": RISK_DEGREE,\n148:     }\n149: \n150: \n151: def strategy_grid(model_ref: str) -> list[dict[str, Any]]:\n152:     \"\"\"Return the immutable, model-aware valid candidate grid.\"\"\"\n153:     if model_ref == \"b1-m\":\n154:         rows = [\n155:             _topk_candidate(topk, n_drop, hold)\n156:             for topk, drops in ((10, (1, 2)), (20, (2, 4)), (30, (3, 6)))\n157:             for n_drop in drops\n158:             for hold in (1, 3)\n159:         ]\n160:         rows.extend(\n161:             _soft_candidate(topk, impact)\n162:             for topk in (10, 20, 30)\n163:             for impact in (0.50, 1.00)\n164:         )\n165:         rows.sort(\n166:             key=lambda row: row[\"candidate_id\"] != BASELINE_CANDIDATE_ID\n167:         )\n168:     elif model_ref == \"b6-m\":\n169:         rows = [_topk_candidate(10, 2, 1)]\n170:         rows.extend(\n171:             _topk_candidate(topk, n_drop, hold)\n172:             for topk, drops in ((10, (1,)), (20, (1, 2)), (30, (2, 3)))\n173:             for n_drop in drops\n174:             for hold in (5, 10, 20)\n175:         )\n176:         rows.extend(\n177:             _soft_candidate(topk, impact)\n178:             for topk in (10, 20, 30)\n179:             for impact in (0.25, 0.50)\n180:         )\n181:     else:\n182:         raise ValueError(f\"unsupported Phase S model_ref: {model_ref}\")\n183:     if len({row[\"candidate_id\"] for row in rows}) != len(rows):\n184:         raise AssertionError(f\"duplicate strategy candidate for {model_ref}\")\n185:     return rows\n186: \n187: \n188: def _finite_metric(row: dict[str, Any], key: str) -> float | None:\n189:     try:\n190:         value = float(row.get(key))"
+    },
+    {
+      "path": "backtest/scripts/run_strategy_neighborhood_full.py",
+      "start_line": 56,
+      "end_line": 90,
+      "sha256": "f254b186910454082a1986ebc16638b3fd78e5fac068020f41cb861a81d07b1b",
+      "text": "56: from strategy_stability_metrics import (  # noqa: E402\n57:     IncompletePortfolioError,\n58:     summarize_period,\n59: )\n60: \n61: EXP_ID = \"strategy-neighborhood/b3-s-local-full-v1\"\n62: EVALUATION_MODE = \"full_history_in_sample\"\n63: MODEL_REF = \"b6-m\"\n64: POOL = \"csi1000\"\n65: SEGMENT = \"full\"\n66: DEFAULT_ACCOUNT = 10_000_000\n67: DATA_VERSION = full_prediction_validation.FULL_DATA_VERSION\n68: FULL_PREDICTION_COVERAGE = copy.deepcopy(\n69:     full_prediction_validation.FULL_PREDICTION_COVERAGE\n70: )\n71: DEFAULT_OUTPUT_ROOT = (\n72:     REPO_ROOT / \"backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data\"\n73: )\n74: DEFAULT_CONFIGS_DIR = (\n75:     REPO_ROOT / \"backtest/configs/strategy-neighborhood/b3-s-local-full\"\n76: )\n77: DEFAULT_BASE_CONFIG = (\n78:     REPO_ROOT\n79:     / \"backtest/configs/baseline-strategy/b3-s/topk-t20-d2-h10_csi1000_full.yaml\"\n80: )\n81: DEFAULT_PREDICTION_MANIFEST = (\n82:     REPO_ROOT\n83:     / \"backtest/experiments/_shared/phase-s\"\n84:     / \"prediction_manifest.json\"\n85: )\n86: SELECTION_RULE = [\n87:     \"axial_neighbor_ir_p25 desc\",\n88:     \"own_ir desc\",\n89:     \"annualized_return desc\",\n90:     \"max_drawdown desc\","
+    },
+    {
+      "path": "tests/backtest/test_register_b5_rankic_hyperparams.py",
+      "start_line": 190,
+      "end_line": 212,
+      "sha256": "af293d511514a1de54c9c855cbf3ec8ccba9c63fc3fb89947354806bf9f1d218",
+      "text": "190: \n191: \n192: def _write_json(path: Path, payload: dict) -> None:\n193:     path.parent.mkdir(parents=True, exist_ok=True)\n194:     path.write_text(json.dumps(payload, ensure_ascii=False), encoding=\"utf-8\")\n195: \n196: \n197: def _write_session(path: Path, experiment_id: int) -> None:\n198:     path.mkdir(parents=True, exist_ok=True)\n199:     (path / \"meta.json\").write_text(\n200:         json.dumps(\n201:             {\n202:                 \"runs\": [\n203:                     {\n204:                         \"status\": \"success\",\n205:                         \"train_experiment_id\": str(experiment_id),\n206:                     }\n207:                 ]\n208:             }\n209:         ),\n210:         encoding=\"utf-8\",\n211:     )\n212: "
+    },
+    {
+      "path": "backtest/scripts/cleanup_experiment_artifacts.py",
+      "start_line": 640,
+      "end_line": 687,
+      "sha256": "6db164517ea8c511c2665d95a30fa9789d2bf3d24fe53020b4f88df7caf2c5ee",
+      "text": "640:             except (OSError, ValueError, TypeError) as exc:\n641:                 errors.append(f\"Phase M v1 baseline validation failed: {exc}\")\n642:         if sorted(seeds) != list(FIXED_SEEDS):\n643:             errors.append(\n644:                 f\"Phase M v1 baseline must contain one local model per fixed seed: {row.get('exp_id')}\"\n645:             )\n646: \n647: \n648: def _train_experiment_ids(\n649:     session_dirs: Sequence[Path],\n650:     warnings: list[str],\n651:     errors: list[str],\n652:     *,\n653:     mlruns_root: Path,\n654: ) -> set[str]:\n655:     experiment_ids = set()\n656:     for session in session_dirs:\n657:         meta_path = session / \"meta.json\"\n658:         if not meta_path.is_file():\n659:             errors.append(f\"session meta missing: {meta_path}\")\n660:             continue\n661:         try:\n662:             meta = json.loads(meta_path.read_text(encoding=\"utf-8\"))\n663:         except (OSError, json.JSONDecodeError) as exc:\n664:             errors.append(f\"session meta unreadable: {meta_path}: {exc}\")\n665:             continue\n666:         runs = meta.get(\"runs\") or []\n667:         successful_runs = []\n668:         session_ids = set()\n669:         for run in runs:\n670:             if run.get(\"status\") != \"success\":\n671:                 continue\n672:             successful_runs.append(run)\n673:             experiment_id = str(run.get(\"train_experiment_id\") or \"\")\n674:             if experiment_id.isdigit():\n675:                 session_ids.add(experiment_id)\n676:             try:\n677:                 run_index = int(run.get(\"run\") or run.get(\"fold\") or 0)\n678:                 run_dir = session / f\"run_{run_index:02d}\"\n679:                 link_path = run_dir / \"mlruns_link.json\"\n680:                 if run_index < 1 or run_dir.is_symlink() or link_path.is_symlink():\n681:                     raise ValueError(f\"unsafe train run metadata: {link_path}\")\n682:                 link = json.loads(link_path.read_text(encoding=\"utf-8\"))\n683:                 _validate_recorder(\n684:                     mlruns_root, experiment_id, run, link, \"train\", require_model=True\n685:                 )\n686:             except (OSError, ValueError, TypeError, yaml.YAMLError) as exc:\n687:                 errors.append(f\"train recorder validation failed: {session}: {exc}\")"
+    },
+    {
+      "path": "backtest/scripts/strategy_stability_metrics.py",
+      "start_line": 1,
+      "end_line": 8,
+      "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb",
+      "text": "1: \"\"\"After-cost absolute-return metrics for full-period strategy diagnostics.\n2: \n3: Official annualized_return is CAGR from the compounded wealth path.\n4: annualized_return_arith (mean × 250) is audit-only. Sharpe still uses the\n5: arithmetic mean in the numerator.\n6: \"\"\"\n7: \n8: from __future__ import annotations"
+    },
+    {
+      "path": "backtest/scripts/strategy_stability_metrics.py",
+      "start_line": 51,
+      "end_line": 101,
+      "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb",
+      "text": "51: def summarize_period(report: pd.DataFrame) -> dict[str, float | int | None]:\n52:     report = _validate_report(report)\n53:     incomplete = report[list(REQUIRED_COLUMNS)].isna().any(axis=1)\n54:     if incomplete.any():\n55:         first = report.index[incomplete][0]\n56:         raise IncompletePortfolioError(\n57:             f\"continuous portfolio is incomplete from {first.date()}\"\n58:         )\n59:     clean = report\n60:     net = clean[\"return\"].astype(float) - clean[\"cost\"].astype(float)\n61:     bench = clean[\"bench\"].astype(float)\n62:     n_days = int(len(clean))\n63:     annualized_return_arith = float(net.mean() * TRADING_DAYS)\n64:     benchmark_annualized_return_arith = float(bench.mean() * TRADING_DAYS)\n65:     daily_std = float(net.std(ddof=1)) if n_days > 1 else float(\"nan\")\n66:     annualized_volatility = _finite(daily_std * math.sqrt(TRADING_DAYS))\n67:     sharpe = (\n68:         _finite(annualized_return_arith / annualized_volatility)\n69:         if annualized_volatility not in (None, 0.0)\n70:         else None\n71:     )\n72:     wealth = (1.0 + net).cumprod()\n73:     end_wealth = float(wealth.iloc[-1])\n74:     annualized_return = _cagr(end_wealth, n_days)\n75:     drawdown = wealth / wealth.cummax() - 1.0\n76:     max_drawdown = float(drawdown.min())\n77:     calmar = (\n78:         _finite(annualized_return / abs(max_drawdown))\n79:         if annualized_return is not None and max_drawdown != 0.0\n80:         else None\n81:     )\n82:     bench_wealth = float((1.0 + bench).prod())\n83:     benchmark_cumulative_return = bench_wealth - 1.0\n84:     benchmark_annualized_return = _cagr(bench_wealth, n_days)\n85:     beta = None\n86:     alpha = None\n87:     if n_days > 1:\n88:         bench_var = float(bench.var(ddof=1))\n89:         if math.isfinite(bench_var) and bench_var > 0.0:\n90:             beta = _finite(float(net.cov(bench)))\n91:             if beta is not None:\n92:                 beta = _finite(beta / bench_var)\n93:             if beta is not None:\n94:                 alpha = _finite((float(net.mean()) - float(beta) * float(bench.mean())) * TRADING_DAYS)\n95:     return {\n96:         \"n_days\": n_days,\n97:         \"annualized_return\": annualized_return,\n98:         \"annualized_return_arith\": _finite(annualized_return_arith),\n99:         \"sharpe_ratio\": sharpe,\n100:         \"alpha\": alpha,\n101:         \"beta\": beta,"
+    }
+  ],
+  "evidence_files": {
+    "old_failures_before.log": {
+      "path": "preexisting-failures.log",
+      "sha256": "5d3f7b1d19f1e11894601eae92f7dd0005a4af265f904c31d0bad2d654787953"
+    },
+    "old_failures_before.junit.xml": {
+      "path": "preexisting-failures.junit.xml",
+      "sha256": "59f49fec8ca048ffe3b7975a01b72d729d8a114f6d7f2ba5bf9f3759ccb9462b"
+    },
+    "old_failures_provenance.json": {
+      "path": "preexisting-failures-provenance.json",
+      "sha256": "8dbf96297e1553dc831deade4378b09881a519f63a3c935cedc0c23eb8a22c1f"
+    },
+    "integration-final-tests.log": {
+      "path": "integration-before-final-fixes.log",
+      "sha256": "1be095bad128c11ad781b5c42d6ed8afc1ae00d40a239a87e8def11288674b33"
+    },
+    "preexisting.diff": {
+      "path": null,
+      "sha256": "d1aff558a0da016c7c375e61f3e65620bb1c83b63f78580951ce015d67cdb258",
+      "retained": false,
+      "note": "Task-only working snapshot deleted after extracting source and failure evidence."
+    }
+  },
+  "cleanup": {
+    "temporary_script": "/private/tmp/qlib-experiment-kind-layout-20261031/audit_old_failures.py",
+    "snapshot": "/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_snapshot",
+    "pytest_fixtures": "/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_pytest_tmp",
+    "status": "Deleted after evidence extraction. Audit JSON, JUnit XML, provenance JSON and logs retained."
+  }
+}

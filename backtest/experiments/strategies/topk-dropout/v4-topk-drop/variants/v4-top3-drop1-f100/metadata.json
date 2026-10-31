@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+  "event_numbers": [
+    145
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/reports/all_top3d1f100_m0h20rankices.html",
+    "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metrics/all_top3d1f100_m0h20rankices.json",
+    "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metrics/m0h20rankices.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/records/75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "v4 RankIC ES top3d1 + f100",
+  "metrics_source": {
+    "path": "metrics/all_top3d1f100_m0h20rankices.json",
+    "sha256": "f27e09db6d000f83aaa502be3840db0c8b239d975044a405683f25fbcceb3dc0"
+  },
+  "model_ref": "regime-adapt/m0-h20-rankices-v1",
+  "strategy_summary": {
+    "name": "Top3换1·持1·F100",
+    "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top3-drop1-f100",
+  "analysis": {
+    "conclusion": "较BT v4明显退步：CAGR14.8%、回撤42.3%，换手大增，未晋升。",
+    "evidence": [
+      "metrics/all_top3d1f100_m0h20rankices.json",
+      "metrics/m0h20rankices.json",
+      "records/75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05.json",
+      "reports/all_top3d1f100_m0h20rankices.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "从Top3×H5真阶梯改为Top3最多换1、最短持1日并启用F100的排名轮换。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v4",
+    "version": "v4"
+  }
+}

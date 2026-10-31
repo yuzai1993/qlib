@@ -1,0 +1,375 @@
+{
+  "reason": "Commit whitespace validation of previously untracked generated test logs and an extra EOF blank line. Test results and source scientific assets are unchanged. Historical hash receipts retain their original snapshot values; log bytes can be reconstructed using the removed suffixes below.",
+  "files": [
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/integration-before-final-fixes.log",
+      "sha256_before": "1be095bad128c11ad781b5c42d6ed8afc1ae00d40a239a87e8def11288674b33",
+      "sha256_after": "a63c0d1b28b1b5478e3fd81ee779b747e94ccd8a2cbf3529113d8ff405dc1b46",
+      "removed_line_suffixes": [
+        {
+          "line": 420,
+          "suffix": "     "
+        },
+        {
+          "line": 429,
+          "suffix": "     "
+        },
+        {
+          "line": 443,
+          "suffix": "     "
+        },
+        {
+          "line": 451,
+          "suffix": "     "
+        },
+        {
+          "line": 459,
+          "suffix": "     "
+        },
+        {
+          "line": 467,
+          "suffix": "     "
+        },
+        {
+          "line": 475,
+          "suffix": "     "
+        },
+        {
+          "line": 482,
+          "suffix": "     "
+        },
+        {
+          "line": 491,
+          "suffix": "     "
+        },
+        {
+          "line": 499,
+          "suffix": "     "
+        },
+        {
+          "line": 508,
+          "suffix": "     "
+        }
+      ],
+      "original_reconstruction_verified": true
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.junit.xml",
+      "sha256_before": "59f49fec8ca048ffe3b7975a01b72d729d8a114f6d7f2ba5bf9f3759ccb9462b",
+      "sha256_after": "56f371ba150cc0b1a92e3dfa21c78afa0316547b13a0cf9f7fb299c9de7b9107",
+      "removed_line_suffixes": [
+        {
+          "line": 13,
+          "suffix": "     "
+        },
+        {
+          "line": 20,
+          "suffix": "     "
+        },
+        {
+          "line": 30,
+          "suffix": "     "
+        },
+        {
+          "line": 36,
+          "suffix": "     "
+        },
+        {
+          "line": 42,
+          "suffix": "     "
+        },
+        {
+          "line": 48,
+          "suffix": "     "
+        },
+        {
+          "line": 54,
+          "suffix": "     "
+        },
+        {
+          "line": 59,
+          "suffix": "     "
+        },
+        {
+          "line": 66,
+          "suffix": "     "
+        },
+        {
+          "line": 72,
+          "suffix": "     "
+        },
+        {
+          "line": 79,
+          "suffix": "     "
+        }
+      ],
+      "original_reconstruction_verified": true
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.log",
+      "sha256_before": "5d3f7b1d19f1e11894601eae92f7dd0005a4af265f904c31d0bad2d654787953",
+      "sha256_after": "c7da3a614193cadf125e2155918ab8309a70c2ea60b50d037e84963cc5dd6f68",
+      "removed_line_suffixes": [
+        {
+          "line": 18,
+          "suffix": "     "
+        },
+        {
+          "line": 27,
+          "suffix": "     "
+        },
+        {
+          "line": 41,
+          "suffix": "     "
+        },
+        {
+          "line": 49,
+          "suffix": "     "
+        },
+        {
+          "line": 57,
+          "suffix": "     "
+        },
+        {
+          "line": 65,
+          "suffix": "     "
+        },
+        {
+          "line": 73,
+          "suffix": "     "
+        },
+        {
+          "line": 80,
+          "suffix": "     "
+        },
+        {
+          "line": 89,
+          "suffix": "     "
+        },
+        {
+          "line": 102,
+          "suffix": "     "
+        },
+        {
+          "line": 111,
+          "suffix": "     "
+        }
+      ],
+      "original_reconstruction_verified": true
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.junit.xml",
+      "sha256_before": "40590276613ae983724d07ec50029b4a1db85b3c329bab8b588b62b6ff51190f",
+      "sha256_after": "13a0bc874fbaff64cbb89ac6184870dc824f8c7a827fe8dbab6604df281548f0",
+      "removed_line_suffixes": [
+        {
+          "line": 13,
+          "suffix": "     "
+        },
+        {
+          "line": 20,
+          "suffix": "     "
+        },
+        {
+          "line": 30,
+          "suffix": "     "
+        },
+        {
+          "line": 36,
+          "suffix": "     "
+        },
+        {
+          "line": 42,
+          "suffix": "     "
+        },
+        {
+          "line": 48,
+          "suffix": "     "
+        },
+        {
+          "line": 54,
+          "suffix": "     "
+        },
+        {
+          "line": 59,
+          "suffix": "     "
+        },
+        {
+          "line": 66,
+          "suffix": "     "
+        },
+        {
+          "line": 72,
+          "suffix": "     "
+        },
+        {
+          "line": 79,
+          "suffix": "     "
+        }
+      ],
+      "original_reconstruction_verified": true
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.log",
+      "sha256_before": "6d2ed0a84b6b782f2393d17c3b04795f3845ae81431b6eee6f5c9b22f585647b",
+      "sha256_after": "7c2d5e5f8f1abc7649a99813b39769a0d458e6099eb230db1dafd7e0322356de",
+      "removed_line_suffixes": [
+        {
+          "line": 55,
+          "suffix": "     "
+        },
+        {
+          "line": 64,
+          "suffix": "     "
+        },
+        {
+          "line": 78,
+          "suffix": "     "
+        },
+        {
+          "line": 86,
+          "suffix": "     "
+        },
+        {
+          "line": 94,
+          "suffix": "     "
+        },
+        {
+          "line": 102,
+          "suffix": "     "
+        },
+        {
+          "line": 110,
+          "suffix": "     "
+        },
+        {
+          "line": 117,
+          "suffix": "     "
+        },
+        {
+          "line": 126,
+          "suffix": "     "
+        },
+        {
+          "line": 134,
+          "suffix": "     "
+        },
+        {
+          "line": 143,
+          "suffix": "     "
+        }
+      ],
+      "original_reconstruction_verified": true
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-model-categories/python-tests.log",
+      "sha256_before": "8b86f867448fb3f6ee08af69cf4eb3882af81d5cff49a40db20f32520f9c0358",
+      "sha256_after": "c8f4e7e78bcea80cf77ddf6535dbce00fbdfdc245ce08e4c76fa4c928abceea7",
+      "removed_line_suffixes": [
+        {
+          "line": 56,
+          "suffix": "     "
+        },
+        {
+          "line": 65,
+          "suffix": "     "
+        },
+        {
+          "line": 79,
+          "suffix": "     "
+        },
+        {
+          "line": 87,
+          "suffix": "     "
+        },
+        {
+          "line": 95,
+          "suffix": "     "
+        },
+        {
+          "line": 103,
+          "suffix": "     "
+        },
+        {
+          "line": 111,
+          "suffix": "     "
+        },
+        {
+          "line": 118,
+          "suffix": "     "
+        },
+        {
+          "line": 127,
+          "suffix": "     "
+        },
+        {
+          "line": 135,
+          "suffix": "     "
+        },
+        {
+          "line": 144,
+          "suffix": "     "
+        }
+      ],
+      "original_reconstruction_verified": true
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-retained-experiments/python-tests.log",
+      "sha256_before": "1ffcab60ed98c058a91f16fc2a1f0beb0433b2fef24c0d53fff1332e18c63f0d",
+      "sha256_after": "8f78b20e1461db4f8b0efc799d6d7145ade1eaeb7952da236ba5634dff6d9338",
+      "removed_line_suffixes": [
+        {
+          "line": 55,
+          "suffix": "     "
+        },
+        {
+          "line": 64,
+          "suffix": "     "
+        },
+        {
+          "line": 78,
+          "suffix": "     "
+        },
+        {
+          "line": 86,
+          "suffix": "     "
+        },
+        {
+          "line": 94,
+          "suffix": "     "
+        },
+        {
+          "line": 102,
+          "suffix": "     "
+        },
+        {
+          "line": 110,
+          "suffix": "     "
+        },
+        {
+          "line": 117,
+          "suffix": "     "
+        },
+        {
+          "line": 126,
+          "suffix": "     "
+        },
+        {
+          "line": 134,
+          "suffix": "     "
+        },
+        {
+          "line": 143,
+          "suffix": "     "
+        }
+      ],
+      "original_reconstruction_verified": true
+    },
+    {
+      "path": "tests/backtest/test_experiment_archive.py",
+      "sha256_before": "f69379e776b1f0514248e88c00ecf77685660cded0dd2f2145443da2e6482013",
+      "sha256_after": "9695e22218969a18fdea258e6d29fc0ac56057778f5795bfab3348af75b1c46c",
+      "removed_eof_newlines": 1
+    }
+  ]
+}

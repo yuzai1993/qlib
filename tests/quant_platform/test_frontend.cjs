@@ -18,6 +18,16 @@ test('filters search source IDs and status without mixing model and strategy', (
     assert.deepEqual(H.filterRecords(rows,{kind:'model',query:'v4'}).map(x=>x.id),['m-v4']);
     assert.deepEqual(H.sortRecords(rows,'x','desc').map(x=>x.id),['s-v4','m-v3','m-v4']);
 });
+test('strategy model filters use the full model ref and combine with search and status', () => {
+    const trial={id:'trial',kind:'strategy',status:'completed',model_summary:{ref:' model/es-v2 ',version:'v2',name:'Top5早停'},
+        strategy_summary:{name:'Top5',description:'强制卖出100'}};
+    const rows=[trial,{...trial,id:'same-label',model_summary:{...trial.model_summary,ref:'model/another-v2'}},
+        {...trial,id:'failed',status:'failed'}, {...trial,id:'top10',strategy_summary:{name:'Top10'}},
+        {id:'model',kind:'model',status:'completed'}, {id:'unknown',kind:'strategy',status:'completed'}];
+    assert.deepEqual(H.filterRecords(rows,{kind:'strategy',modelRef:'model/es-v2',query:'强制卖出',status:'completed'}).map(r=>r.id),['trial']);
+    assert.deepEqual(H.filterRecords(rows,{kind:'strategy',modelRef:H.UNKNOWN_STRATEGY_MODEL}).map(r=>r.id),['unknown']);
+    assert.deepEqual(H.filterRecords(rows,{kind:'model',modelRef:'model/es-v2'}).map(r=>r.id),['model']);
+});
 test('comparison denies diagnostic, incomplete and mismatched protocols', () => {
     const a = {id:'a',comparable:true,comparison_key:'official-model'};
     assert.equal(H.comparisonIssue([a,{...a,id:'b'}]),'');

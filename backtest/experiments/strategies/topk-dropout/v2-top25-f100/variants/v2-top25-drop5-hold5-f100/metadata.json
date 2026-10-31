@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+  "event_numbers": [
+    124
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/reports/all_top25d5h5f100_m0h20es.html",
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metrics/all_top25d5h5f100_m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/records/7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "M0 H20 ES top25 drop5 hold5 + 掉出前100必卖",
+  "metrics_source": {
+    "path": "metrics/all_top25d5h5f100_m0h20es.json",
+    "sha256": "3e35eb3f71f886c42532d53f1485b0a06c1bbaf8c3e225041b3150cbf65aa73c"
+  },
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "Top25换5·持5·F100",
+    "description": "常规最多换5只、最短持有5日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5-f100",
+  "analysis": {
+    "conclusion": "强卖改善2026局部表现，但较不设F100者CAGR降至22.9%、换手增加，未晋升。",
+    "evidence": [
+      "metrics/all_top25d5h5f100_m0h20es.json",
+      "metrics/m0h20es.json",
+      "records/7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3.json",
+      "reports/all_top25d5h5f100_m0h20es.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。2026年局部表现只截至7月底；强卖受实际成交约束，不能保证即时清仓。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "从Top5换1、最短持1日，改为Top25换5、最短持5日并增加F100。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v2",
+    "version": "v2"
+  }
+}

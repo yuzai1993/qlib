@@ -20,7 +20,7 @@ from backtest.scripts.generate_b5_post2020_forward import (  # noqa: E402
     VALID_SEGMENT,
     generate_configs,
 )
-from backtest.scripts.experiment_registry import load_registry  # noqa: E402
+from backtest.scripts.research_layout import resolve_research_path  # noqa: E402
 
 
 WINNER_TEMPLATE = (
@@ -31,15 +31,14 @@ WINNER_TEMPLATE = (
     / "rankic-es-lr010"
     / "mh_rankic_es_lr010_s42.yaml"
 )
-REGISTRY = ROOT / "backtest" / "experiments" / "registry.jsonl"
 
 
 def _load(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
+    return yaml.safe_load(resolve_research_path(path, ROOT).read_text(encoding="utf-8"))
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashlib.sha256(resolve_research_path(path, ROOT).read_bytes()).hexdigest()
 
 
 def _without_identity_and_cutoff(cfg: dict) -> dict:
@@ -158,20 +157,23 @@ def test_generation_is_deterministic_and_refuses_changed_existing_file(tmp_path)
         generate_configs(winner_cfg=winner, output_root=tmp_path)
 
 
-def test_registry_retains_post2020_configs_and_metrics_without_protocol_manifest():
-    rows = load_registry(REGISTRY)
-    by_id = {row["exp_id"]: row for row in rows}
+def test_generation_resolves_each_output_before_creating_directories(tmp_path, monkeypatch):
+    from backtest.scripts import generate_b5_post2020_forward as generator
 
-    for group in GROUPS:
-        row = by_id[f"train-recency/{group}"]
-        assert "protocol_manifest" not in row
-        assert "protocol_manifest_sha256" not in row
-        assert row["evaluation_comparable_to_baseline"] is False
-        assert row["cleanup_retention_eligible"] is False
-        assert len(row["configs"]) == 5
-        assert row["metrics_summary"]
-        assert _sha256(ROOT / row["eval_result"]) == row["eval_result_sha256"]
-        for artifact in row["config_hashes"]:
-            assert _sha256(ROOT / artifact["path"]) == artifact["sha256"]
+    monkeypatch.setattr(generator, "BACKTEST_ROOT", tmp_path / "backtest")
+    output_root = tmp_path / "backtest/configs/train-recency"
+    mappings = {
+        f"backtest/configs/train-recency/{group}/tr_{group.replace('-', '_')}_s{seed}.yaml":
+        f"backtest/experiments/models/train-recency/{group}/configs/tr_{group.replace('-', '_')}_s{seed}.yaml"
+        for group in GROUPS
+        for seed in SEEDS
+    }
+    mapping_path = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    mapping_path.parent.mkdir(parents=True)
+    mapping_path.write_text(json.dumps({"schema_version": 1, "paths": mappings}))
 
-    assert not (ROOT / "backtest/experiments/b5_post2020_forward_protocol.json").exists()
+    paths = generate_configs(winner_cfg=_load(WINNER_TEMPLATE), output_root=output_root)
+
+    assert {path.relative_to(tmp_path).as_posix() for path in paths} == set(mappings.values())
+    assert all(path.is_file() for path in paths)
+    assert not output_root.exists()

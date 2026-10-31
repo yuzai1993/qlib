@@ -1,0 +1,60 @@
+{
+  "status": "clean",
+  "findings": [],
+  "historical_registry_rows_unchanged": 33,
+  "model_records_and_metadata_unchanged": 11,
+  "model_benchmark_profiles_and_metrics_unchanged": true,
+  "strategy_metadata_only_two_editorial_fields_added": 22,
+  "strategy_metrics_and_authority_fields_unchanged": 22,
+  "baseline_predecessors_verified": {
+    "BT v1": "initial",
+    "BT v2": "BT v1",
+    "BT v3": "BT v2",
+    "BT v4": "BT v3",
+    "BT v5": "BT v4"
+  },
+  "manual_record_compare_state_controls_and_requests_removed": true,
+  "benchmark_selection_and_full_profiles_preserved": true,
+  "compact_detail_core_metrics_use_original_renderer": true,
+  "raw_report_metric_and_registry_file_hashes_unchanged": true,
+  "catalog_warnings": [],
+  "changed_research_files": [
+    "backtest/experiments/README.md",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metadata.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metadata.json",
+    "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/metadata.json",
+    "backtest/experiments/strategies/cohort-ladder/bt-v4/metadata.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/metadata.json",
+    "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v1/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v3/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v5/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/bt-v2/metadata.json",
+    "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metadata.json"
+  ],
+  "informational_notes": [
+    "F100/F100r keep historical BT v3 anchor while describing the v4-model ladder family direct control; root notified to make this distinction explicit if necessary."
+  ],
+  "temporary_review_materials": [
+    "independent_review.py",
+    "independent-python.log",
+    "independent-frontend.log",
+    "pytest-independent-review"
+  ],
+  "tests": {
+    "python_strategy_detail_summary": 4,
+    "frontend": 95,
+    "git_diff_check": "passed"
+  }
+}

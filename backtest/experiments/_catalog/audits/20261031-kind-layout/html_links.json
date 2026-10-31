@@ -1,0 +1,810 @@
+[
+  {
+    "source": "backtest/experiments/reports/strategy_stability_report.html",
+    "destination": "backtest/experiments/reports/strategy_stability_report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "2a29f49858c3fea7375f1dfa01a984cf1d3e1a1c0dda62327e6fd945fd2c290a",
+    "after_sha256": "2a29f49858c3fea7375f1dfa01a984cf1d3e1a1c0dda62327e6fd945fd2c290a"
+  },
+  {
+    "source": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+    "destination": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+    "changes": [
+      {
+        "before": "../baseline/phase-m-v1-bt-v1/reports/all_top5d1_m0h20.html",
+        "after": "../strategies/baseline/phase-m-v1-bt-v1/reports/all_top5d1_m0h20.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top5d1-bt/reports/all_top5d1_m0h20es.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top5d1-bt/reports/all_top5d1_m0h20es.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/all_top5d1h5f100_m0h20es.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/all_top5d1h5f100_m0h20es.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/all_ladder_k3h5_m0h20rankices.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/all_ladder_k3h5_m0h20rankices.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top5d1f100-bt/reports/all_top5d1f100_m0h20es.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top5d1f100-bt/reports/all_top5d1f100_m0h20es.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top5d1-bt/reports/phase_m_v1_bt_m0h20es.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top5d1-bt/reports/phase_m_v1_bt_m0h20es.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top25d5h5-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top25d5h5-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
+        "after": "../strategies/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-top15d3f100-bt/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-top15d3f100-bt/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html",
+        "after": "../strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html",
+        "target_exists": true
+      },
+      {
+        "before": "../diag/bt-v5-300k-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_diagnostic.html",
+        "after": "../strategies/diag/bt-v5-300k-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_diagnostic.html",
+        "target_exists": true
+      },
+      {
+        "before": "../diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/reports/phase_m_v1_bt_v5_cutover_risk1_failed_1.html",
+        "after": "../strategies/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/reports/phase_m_v1_bt_v5_cutover_risk1_failed_1.html",
+        "target_exists": true
+      },
+      {
+        "before": "../diag/bt-v5-300k-risk1-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+        "after": "../strategies/diag/bt-v5-300k-risk1-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "ba2eb9fbc7af03e493b95563becc9d446a979310a7eaeef8bc18ae84b0932e55",
+    "after_sha256": "9f2232ccf098de0544319aba952e42c43cfe33e0c2075e3e5705e4edf33e3cbb"
+  },
+  {
+    "source": "backtest/experiments/reports/report.html",
+    "destination": "backtest/experiments/reports/report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "7234c840eddb4f1e5decbfac44f2d5a2e0e3f4c4cc57da1539e6eda45ef65c89",
+    "after_sha256": "7234c840eddb4f1e5decbfac44f2d5a2e0e3f4c4cc57da1539e6eda45ef65c89"
+  },
+  {
+    "source": "backtest/experiments/reports/phase_m_v1_report.html",
+    "destination": "backtest/experiments/reports/phase_m_v1_report.html",
+    "changes": [
+      {
+        "before": "../regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
+        "after": "../models/regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+        "after": "../models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
+        "after": "../models/regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
+        "target_exists": true
+      },
+      {
+        "before": "../regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+        "after": "../models/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "74b4d805522dec763d92a4f3a52e2a33cda22d546e3bdf627381ea30cd6b9a6e",
+    "after_sha256": "6cfd1962b21de67ae018fbc849cd6f0e914f14e44cb81bf32e4151a0479cac69"
+  },
+  {
+    "source": "backtest/experiments/diag/bt-v5-300k-current-cost-20261029/reports/bt_v5_300k_current_cost.html",
+    "destination": "backtest/experiments/strategies/diag/bt-v5-300k-current-cost-20261029/reports/bt_v5_300k_current_cost.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "a345fd9589cc594a2b33e9c3b8a97ff6c13376324671a6f33debe11067b8e381",
+    "after_sha256": "028e02be8c1f457f1f64b1a8642353fb38f1a5e5ab4e62184879c2546ac3c105"
+  },
+  {
+    "source": "backtest/experiments/diag/bt-v5-300k-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_diagnostic.html",
+    "destination": "backtest/experiments/strategies/diag/bt-v5-300k-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_diagnostic.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "1ac16998cbb255f7de0cb89ac838011a34691be07d63bb8cc338c2ca42aba82c",
+    "after_sha256": "c6cb378eb18e8cc5f1810ff8d7cf17acbd0b7792f31fdf615c8702a4ed654108"
+  },
+  {
+    "source": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/reports/bt_v5_300k_risk1_current_cost_failed_1.html",
+    "destination": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/reports/bt_v5_300k_risk1_current_cost_failed_1.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "ef1dede6d71e351b4e3f968f0d098907e4a757fc80fdcc9f5d3cc087ae6ed511",
+    "after_sha256": "a4e4e5d6b5bb739d64f48bb157e41fdfdcd80d7c8069b56005afbef88b62627c"
+  },
+  {
+    "source": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/reports/phase_m_v1_bt_v5_cutover_risk1_failed_1.html",
+    "destination": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/reports/phase_m_v1_bt_v5_cutover_risk1_failed_1.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "cacf5e87dc92884471889a6bc1caff8d87ab927bd4af1b861a1e6db45ad13b46",
+    "after_sha256": "4b86d838c39a4d2d61292f4f6b49ce8552eb2e578c1e10ff0dbe4355df51261b"
+  },
+  {
+    "source": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029/reports/bt_v5_300k_risk1_current_cost.html",
+    "destination": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029/reports/bt_v5_300k_risk1_current_cost.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "f73e091d94e1a4e822baea043bd91d3eedcbd002047f6a36407c140201230cbe",
+    "after_sha256": "191960fbdf9b5dc05389c85ab54a38fa669e2456c2d579ffbd37d64a325262b5"
+  },
+  {
+    "source": "backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+    "destination": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "10fa09b95dbcd1075326300ad27d070e1d9ffd52906099bf5a52a49ba933cd24",
+    "after_sha256": "8bc46905cbbf8e91d592ae834ae2d6984b008aeb854e1a10f47040feed2693a3"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/reports/all_top5d1f100_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/reports/all_top5d1f100_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "a3e279c9b9bc2b29a09f0636db81956762b70c429292f872a65610e54b4eb842",
+    "after_sha256": "445c1a7f9e438f6ac4ce1b2a856e849a5d92649265e642181b8037968c18a64f"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20es_f100.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "c5d5d2a376a1a717df0143e177f2a9903d5cd7bc8de9be18e8a29418a36eab09",
+    "after_sha256": "1e0fa0645f2e25aecf9456e37df6d8517d5886f00008c865448f5db15e978dba"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/all_ladder_k5h5_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/all_ladder_k5h5_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "d27f8669e04c803cfc1c296c764175b6dbcfac44272e6ec27060b674becfd6d1",
+    "after_sha256": "f0c466306f0868b83d3a2fa1377b5148e98e2e29cf594a6cadebd9686278ee5d"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-ladder-k5h5-bt/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "02c38ec4f84657c2b658723f42db93e95711a9d21097638d5e5750d0cda5649a",
+    "after_sha256": "e5076ad6a034e55c1cda29c99fc6350e4fb2a0a34d13c5ef3fe88a627d615016"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
+    "destination": "backtest/experiments/models/regime-adapt/m0-h20-rankices-v1/reports/regime_adapt_m0h20_rankices_report.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_report.html",
+        "after": "../../../../reports/phase_m_v1_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "141a09ad98ff232d7c40931294dd93897bda8694a115f40975d9f7d58ad841dd",
+    "after_sha256": "9c56ca9b4a7c2484e5b48b3e936f8f79cf84ef17821e5eb1fcee39ba60aa9f23"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-top15d3f100-bt/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top15d3f100-bt/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "4b2cad7af7710721e1c2d26617267a6b96d3638122bcf57b181659608317de5d",
+    "after_sha256": "88bdb9c1a74d0282bde335af4e8479140fb782091bd0f2fab24d4a791bf8e689"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-top15d3f100-bt/reports/all_top15d3f100_m0h20rankices.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top15d3f100-bt/reports/all_top15d3f100_m0h20rankices.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "3e7304d502df8ecef85af6c9e890b373a86af9a37df6bc206fb2134c60e61e79",
+    "after_sha256": "11f88f9575d03463497023fbb130cc76c0b9b696bcaa2fa01ecc8a53f834c797"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+    "destination": "backtest/experiments/models/regime-adapt/m0-h20-rankices-densemble-s42-v1/reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_report.html",
+        "after": "../../../../reports/phase_m_v1_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "f9b94fa41a169cbe6354cf5db2380ab7e715a4f8057483198b6becc358ba9cb4",
+    "after_sha256": "ebc82821c28653533e40f18567822b779fd01b5e049e745ff1a293c9e59dbe79"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/reports/phase_m_v1_bt_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1-bt/reports/phase_m_v1_bt_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "ae8e10151072d0eeb9f21f19879f186ef69f5d047f377a37b10b4ee6c137ccce",
+    "after_sha256": "e34707bb50a63bdce2e7a7cb01c7dca6ce02239af9c86f39fa8b7a2338d4da19"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/reports/all_top5d1_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1-bt/reports/all_top5d1_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "9e050d99cdb95e1f65876419f124abe03dce2e867d949b8e4a019adbea418881",
+    "after_sha256": "8045f8cb06a96683f9cdd78fa1879e71dea81ea9b486e9f60fa0b69502f8cc71"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/all_ladder_k3h5_e20260830_m0h20rankices.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/all_ladder_k3h5_e20260830_m0h20rankices.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "58bc59554d3aaa6075107f31a4f695a0d6471f9659f1ab8a3e4b714e3a170356",
+    "after_sha256": "c195db0f9b13025481ebbb7d6ffc8e46fb28d6fe93d5231fce2b6fd6c9a72e38"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "d5f423791663e7031f04e776a5b7801786111b06683d465f499a080eadc45cd0",
+    "after_sha256": "34f9abd4fed21610db2cf2f5268f2c56e52d67d9371c72de197aebf75d9b0341"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "f5d6cd738a4125c8129c6c38214715886b6b8a994060c370a39a3aee440f4aed",
+    "after_sha256": "5721c90beb36cb57206897df6c6cb9e5c6529e315e66a3ab241ae6bde932fa9f"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/all_top25d5h5f100_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5f100-bt/reports/all_top25d5h5f100_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "264ad0242b79daf6e43f731bb35642736c38fc149711941e7b8a84df966eba38",
+    "after_sha256": "fb00e6700083f2c936a20201297eddc7ea15ab5005c91cb603231d69605e00db"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+    "destination": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_report.html",
+        "after": "../../../../reports/phase_m_v1_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "d60177e9de24d3915f38f7757154db6c1bda1befa6c44b6560cad46dace00492",
+    "after_sha256": "2dc8a14dcc637a41804930eacf1c342e8fcbe499f23597a57be876d5b544d526"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "4f5f70c6d4e570458c017381e47b960d9d365ff08c17f174f4d4f3e3a8848bdb",
+    "after_sha256": "3a11545a6b3a703f6962c3b1b93c0ddf64d74bc7f4c52342bf440cb6850a9c8f"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/all_ladder_k3h5_m0h20rankices.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/reports/all_ladder_k3h5_m0h20rankices.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "2f79981304868e3e7859b7cf82799e2a1aec18dad74f2eab293991186fa06ae0",
+    "after_sha256": "e01323ae0339e3ca00fcff70018cbc64e453687694e9a906610a0fa5293393ac"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/all_ladder_k3h5f100r_m0h20rankices.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/all_ladder_k3h5f100r_m0h20rankices.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "5cc64818bf1c05d3a5449f6fc1af5a75aa9042daa3e7d40c0afc540e794f0b72",
+    "after_sha256": "7843d0c19a9c69a85b5f244a6db8b90c5abb697d39ddba02599c4a8ecc670474"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "ae168d157d332478231b58fda7a4181187664cc367842fd4cedfc6508b05f6f3",
+    "after_sha256": "debf235ccac46fd895e715c54cc1e936c3d3723a55da24ca5659557563dd31ee"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "5f70b52fe95b95df9651b022e6b83d801ff71dc56fd7157b75e5405f16b9bd05",
+    "after_sha256": "46001f7277c2c03d7899b6af0adb180c93db8e1b883ede1d2f0fc9edf0c1cb66"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/all_top3d1f100_m0h20rankices.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top3d1f100-bt/reports/all_top3d1f100_m0h20rankices.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "e61a77d88da331422265ebde0f6848ca5b77937e0237af45e2117785e09c07f7",
+    "after_sha256": "06498a73ecc348dad02298616890a819e9d13a3e79b13446e312fc5c6bb16262"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
+    "destination": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-v1/reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_report.html",
+        "after": "../../../../reports/phase_m_v1_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "8e22d4ce2b6519538f7446765d835a7d3a80755803447ce010f7b6dbb7d02c30",
+    "after_sha256": "24d9ba15565c4995c74978a114a7ebce3ac3aec246ec5efb5624fc78ddbaf221"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0-h20-sample-v1/reports/regime_adapt_m0h20_sample_report.html",
+    "destination": "backtest/experiments/models/regime-adapt/m0-h20-sample-v1/reports/regime_adapt_m0h20_sample_report.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_report.html",
+        "after": "../../../../reports/phase_m_v1_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "9e8763b2d02651b7a6c736ffb6eb282e3baa50cdad90e32528f814b8459d4bc0",
+    "after_sha256": "990fa715b1cc59dd841ed724467ccbef0c8eb61b49b0786e087233ce24abafae"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5-bt/reports/all_top5d1h5_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5-bt/reports/all_top5d1h5_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "d491a2cc2d596b51da2dba17f1c8bcf23ab13f0691c22ba23ecf84e238cf845f",
+    "after_sha256": "c15c00016289799930ea3103fe211f37ab6727ea038b8b000d39347ba3ae821b"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5-bt/reports/phase_m_v1_bt_m0h20es_h5.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "92e74c906849f98cb9690813c32e9ed36894f76ae916bf9dc18caeadeecbfa5d",
+    "after_sha256": "a1e7e81139ed892a244647b4cef85de419d78e65c9b0aec476985a411bed0417"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/head-eval-audit/reports/regime_adapt_head_eval_report.html",
+    "destination": "backtest/experiments/models/regime-adapt/head-eval-audit/reports/regime_adapt_head_eval_report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "5a6dcbe5103600de7bfe6c105ce92f9b6bc10cacd8122b5e8449f5948c8a8d49",
+    "after_sha256": "5a6dcbe5103600de7bfe6c105ce92f9b6bc10cacd8122b5e8449f5948c8a8d49"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5-bt/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "0d7ea26f48a825847ab991084b4f4e23b21c4bd9be770a7cfb883d9cd8cfd420",
+    "after_sha256": "aea3908e4655df29ac109f7f537261663c3cea0bdb7d16ede47a9134e654ec44"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top25d5h5-bt/reports/all_top25d5h5_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5-bt/reports/all_top25d5h5_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "2b6b408f7c379cee6dc335af32c1a54a30797f4681f2c9dd25d7e9f0a53754dc",
+    "after_sha256": "41615ccf60ff254b0a80b7e95667a23dfffd8ca614b78fb7580b0978bac375c3"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/all_ladder_k3h5f100_m0h20rankices.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/all_ladder_k3h5f100_m0h20rankices.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "638657330915429dbbfef01807d99f55dc27759d3a92774bf72b10c8069ea08d",
+    "after_sha256": "95892902194dc9622f8fb77cf4a9de7c81837baeae0e300b01f429729b41ac5d"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "a9b80363a5325ef371c30c335483cca45c27756483a308579b1560b26fd1eac5",
+    "after_sha256": "f4faf1099e0af3ca5eeca4e7925b77e059c882222b7e2e807de90954b96b33d0"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0-h20-regime-feat-v1/reports/regime_adapt_m0h20_feat_report.html",
+    "destination": "backtest/experiments/models/regime-adapt/m0-h20-regime-feat-v1/reports/regime_adapt_m0h20_feat_report.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_report.html",
+        "after": "../../../../reports/phase_m_v1_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "e5347c7890d4ede04a7479f7a2a827468ca2fb27f38ee4ce251bc94f45ee5f38",
+    "after_sha256": "7f855e666e3151c1a5f3aea600e922ab7e310f134631814c38645dfde793edf8"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "999fc514d789d98db467b1a0cbf5599363fd7d8c5ef16c841fc2f0a1c6ed26f7",
+    "after_sha256": "0dd3604f4f5c520e5c8372b895f3ddc34bb5990c6f8397996ba40bfe516996f6"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/all_top5d1h5f100_m0h20es.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5f100-bt/reports/all_top5d1h5f100_m0h20es.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "2c1992f57f9dd53a23ebc8ca6c25a508146c174285d3abd7ad399f91e7dabdbe",
+    "after_sha256": "2d90ae2876e38ac98e7fdfed65f378e7556fe65239a4f0acb228aeece2db87ba"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-top5d1f100-bt/reports/all_top5d1f100_m0h20rankices.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top5d1f100-bt/reports/all_top5d1f100_m0h20rankices.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "d92c8f307a3df49b52f34a2b2d5aa37f3bdd4ed3bd235b0693c08cbef609d1ba",
+    "after_sha256": "233e5b78046834aea0eb594af95e2ba79d025dbbb55c48347103b4a76c83e40b"
+  },
+  {
+    "source": "backtest/experiments/regime-adapt/m0h20rankices-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+    "destination": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top5d1f100-bt/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "365ed7d48b413f34a7a666a6ae141f6702d5503cade080f4b09dfac53412c484",
+    "after_sha256": "cca8f0471128c71612eb0af85b25e35bf9d6436b5ba6b35e3aa130c42c787418"
+  },
+  {
+    "source": "backtest/experiments/baseline/phase-m-v1-bt-v1/reports/all_top5d1_m0h20.html",
+    "destination": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v1/reports/all_top5d1_m0h20.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "d4b591f930b674c38eecded66c996e72603f62942333b7450d5310f4d13a6758",
+    "after_sha256": "ded6d4cc4cdd46dafb3eedcc93842950c8eebe1ed6c5d36a750659e98fc431e3"
+  },
+  {
+    "source": "backtest/experiments/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
+    "destination": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
+    "changes": [
+      {
+        "before": "../../../reports/phase_m_v1_bt_report.html",
+        "after": "../../../../reports/phase_m_v1_bt_report.html",
+        "target_exists": true
+      }
+    ],
+    "body_unchanged": true,
+    "before_sha256": "8fa5f5afcb73739da679a4439cb5422971e54fabea70f382bc7ce9b369d695a4",
+    "after_sha256": "d42e4d4c5b68cf4b14a5250edecf1509231ab1288239b7e296de1be85c780ba2"
+  },
+  {
+    "source": "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html",
+    "destination": "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "b55a4b0d13927ffd16ef3bf28d54b3437257866f11507050ad3c100d196a85d1",
+    "after_sha256": "b55a4b0d13927ffd16ef3bf28d54b3437257866f11507050ad3c100d196a85d1"
+  },
+  {
+    "source": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report_before_fix.html",
+    "destination": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report_before_fix.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "2f76ba0f5ad178ff6bbf5aa3c15a08ba68892a9342a2b699f5915d989d035c24",
+    "after_sha256": "2f76ba0f5ad178ff6bbf5aa3c15a08ba68892a9342a2b699f5915d989d035c24"
+  },
+  {
+    "source": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report.html",
+    "destination": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "ea2031aef886fe63d68c94b4ffd4cc5458efb5a594469c5fa09602ae66d632fa",
+    "after_sha256": "ea2031aef886fe63d68c94b4ffd4cc5458efb5a594469c5fa09602ae66d632fa"
+  },
+  {
+    "source": "backtest/experiments/_shared/reports/regime_adapt_phase_s_report.html",
+    "destination": "backtest/experiments/_shared/reports/regime_adapt_phase_s_report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "5eef104baf631667634958ee3dccbedf452746e7a0cc4497ca602b0f0a36af70",
+    "after_sha256": "5eef104baf631667634958ee3dccbedf452746e7a0cc4497ca602b0f0a36af70"
+  },
+  {
+    "source": "backtest/experiments/_shared/reports/regime_adapt_stage1_report.html",
+    "destination": "backtest/experiments/_shared/reports/regime_adapt_stage1_report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "aeaaa31821beedea1f1064f6f4e05a9b6beddc67f69365388da80b0cdce136ab",
+    "after_sha256": "aeaaa31821beedea1f1064f6f4e05a9b6beddc67f69365388da80b0cdce136ab"
+  },
+  {
+    "source": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
+    "destination": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
+    "changes": [],
+    "body_unchanged": true,
+    "before_sha256": "c76e8c82524737738caf303dc140647ea985baa7609c3ace7088a948421b938a",
+    "after_sha256": "c76e8c82524737738caf303dc140647ea985baa7609c3ace7088a948421b938a"
+  }
+]

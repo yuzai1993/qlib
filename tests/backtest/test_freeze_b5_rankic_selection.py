@@ -11,6 +11,7 @@ import yaml
 from backtest.scripts import eval_b5_rankic_valid as valid_cli
 from backtest.scripts import eval_frozen_b5_rankic as frozen_cli
 from backtest.scripts import freeze_b5_rankic_selection as freeze
+from tests.backtest.rankic_fixtures import write_candidate_configs
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
@@ -22,32 +23,8 @@ CANDIDATES = [
 ]
 
 
-def _candidate_config(candidate: str, seed: int) -> dict:
-    source = (
-        Path(__file__).resolve().parents[2]
-        / "backtest"
-        / "configs"
-        / "model-hyperparam"
-        / candidate
-        / f"mh_{candidate.replace('-', '_')}_s{seed}.yaml"
-    )
-    return yaml.safe_load(source.read_text(encoding="utf-8"))
-
-
 def _write_matrix(tmp_path: Path) -> dict[str, list[Path]]:
-    paths: dict[str, list[Path]] = {}
-    for candidate in CANDIDATES:
-        candidate_dir = tmp_path / "configs" / "model-hyperparam" / candidate
-        candidate_dir.mkdir(parents=True)
-        paths[candidate] = []
-        for seed in SEEDS:
-            path = candidate_dir / f"mh_{candidate.replace('-', '_')}_s{seed}.yaml"
-            path.write_text(
-                yaml.safe_dump(_candidate_config(candidate, seed), sort_keys=False),
-                encoding="utf-8",
-            )
-            paths[candidate].append(path)
-    return paths
+    return write_candidate_configs(tmp_path / "configs/model-hyperparam")
 
 
 def _write_sessions(

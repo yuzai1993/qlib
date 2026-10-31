@@ -1,0 +1,61 @@
+{
+  "meaning": "Distinct preregistration/completion revisions; the last valid event is the display state.",
+  "normal_revision_warning_removed": true,
+  "conflicting_metadata_and_invalid_detail_errors_preserved": true,
+  "groups": [
+    {
+      "exp_id": "regime-adapt/b6m-reference",
+      "removed_with_out_of_scope_archive": true,
+      "events": [
+        {
+          "original_event_number": 69,
+          "date": "2026-08-09",
+          "state": "preregistered",
+          "detail_sha256": "976a7ebd47c7047da98240fe2fa6be5c6f6b1a2c5647a0a5a0e21b1b199dc372"
+        },
+        {
+          "original_event_number": 74,
+          "date": "2026-08-12",
+          "state": "completed",
+          "detail_sha256": "b3a98430e9f59e13f7196a37744448d8799cacf3f1a48a3bee511e8f3a66fd44"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-fast-anchor",
+      "removed_with_out_of_scope_archive": true,
+      "events": [
+        {
+          "original_event_number": 70,
+          "date": "2026-08-12",
+          "state": "preregistered",
+          "detail_sha256": "910107f21894509946a0e44c1e32f8726e75d17375669f01da05c6c2cb5b8e18"
+        },
+        {
+          "original_event_number": 72,
+          "date": "2026-08-12",
+          "state": "completed",
+          "detail_sha256": "b25c255c4cd5d85af40780bf1973cc34dd5264a96eea7e541788c39926c22ed9"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m3-fast-feat-sample",
+      "removed_with_out_of_scope_archive": true,
+      "events": [
+        {
+          "original_event_number": 71,
+          "date": "2026-08-12",
+          "state": "preregistered",
+          "detail_sha256": "e9ff33d6bc7859974c8377868ea99a556aa9b31e32bb4abfd9fec64b127a9c0d"
+        },
+        {
+          "original_event_number": 73,
+          "date": "2026-08-12",
+          "state": "completed",
+          "detail_sha256": "eb3848558e177736934fe71cccd98c7b9720d34a5ccb007b8e1e0357ad90e0e9"
+        }
+      ]
+    }
+  ]
+}

@@ -37,6 +37,24 @@ GROUPS = {
 }
 
 
+@pytest.mark.parametrize("module_name", ["register_b5_post2020_forward", "register_b5_rankic_hyperparams"])
+def test_atomic_writer_resolves_destination_before_mkdir(tmp_path, monkeypatch, module_name):
+    import importlib
+
+    module = importlib.import_module(f"backtest.scripts.{module_name}")
+    monkeypatch.setattr(module, "_RESEARCH_ROOT", tmp_path)
+    old = "backtest/experiments/old/report.html"
+    new = "backtest/experiments/models/example/reports/report.html"
+    mapping = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    mapping.parent.mkdir(parents=True)
+    mapping.write_text(json.dumps({"schema_version": 1, "paths": {old: new}}))
+
+    module._atomic_replace(tmp_path / old, b"report")
+
+    assert (tmp_path / new).read_bytes() == b"report"
+    assert not (tmp_path / old).parent.exists()
+
+
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -317,7 +335,7 @@ def test_register_appends_control_then_expanded_and_builds_report(tmp_path):
 
     raw = bundle["registry_path"].read_bytes()
     assert raw.startswith(original + b"\n")
-    stored = [json.loads(line) for line in raw.splitlines() if line.strip()]
+    stored = load_registry(bundle["registry_path"])
     assert [row["exp_id"] for row in stored[-2:]] == [
         "train-recency/rankic-winner-stale",
         "train-recency/rankic-winner-post2020",

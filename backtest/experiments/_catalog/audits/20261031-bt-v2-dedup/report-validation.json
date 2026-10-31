@@ -1,0 +1,95 @@
+{
+  "hub": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+  "sha256": "8c4468c1dc436aadba36e609e02b0745f973a3ed5569d5f603de2c55c910d16e",
+  "baseline_count": 5,
+  "experiment_count": 16,
+  "current": "v5",
+  "baseline_sources_readable": true,
+  "local_links": [
+    {
+      "href": "../strategies/topk-dropout/bt-v1/reports/all_top5d1_m0h20.html",
+      "target": "backtest/experiments/strategies/topk-dropout/bt-v1/reports/all_top5d1_m0h20.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/bt-v2/reports/all_top5d1_m0h20es.html",
+      "target": "backtest/experiments/strategies/topk-dropout/bt-v2/reports/all_top5d1_m0h20es.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/all_top5d1h5f100_m0h20es.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/all_top5d1h5f100_m0h20es.html"
+    },
+    {
+      "href": "../strategies/cohort-ladder/v4-k3-h5/reports/all_ladder_k3h5_m0h20rankices.html",
+      "target": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/all_ladder_k3h5_m0h20rankices.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v2-top5-drop1-f100/reports/all_top5d1f100_m0h20es.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/all_top5d1f100_m0h20es.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/reports/phase_m_v1_bt_m0h20es_h5f100.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v2-top25-drop5-hold5/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/reports/phase_m_v1_bt_m0h20es_top25d5h5.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v2-top25-drop5-hold5-f100/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html"
+    },
+    {
+      "href": "../strategies/cohort-ladder/v2-k5-h5/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+      "target": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v2-top5-drop1-hold5/reports/phase_m_v1_bt_m0h20es_h5.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/reports/phase_m_v1_bt_m0h20es_h5.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v2-top5-drop1-f100/reports/phase_m_v1_bt_m0h20es_f100.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/reports/phase_m_v1_bt_m0h20es_f100.html"
+    },
+    {
+      "href": "../strategies/cohort-ladder/v4-k3-h5/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+      "target": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html"
+    },
+    {
+      "href": "../strategies/cohort-ladder/v4-k3-h5-f100/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+      "target": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html"
+    },
+    {
+      "href": "../strategies/cohort-ladder/v4-k3-h5-f100-replace/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+      "target": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v4-top15-drop3-f100/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v4-top5-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/v4-top3-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+      "target": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html"
+    },
+    {
+      "href": "../strategies/cohort-ladder/v4-k3-h5-extended-20260830/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html",
+      "target": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/bt-v5-300k/reports/phase_m_v1_bt_v5_cutover_diagnostic.html",
+      "target": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/reports/phase_m_v1_bt_v5_cutover_diagnostic.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/bt-v5-300k-risk1-failed-1/reports/phase_m_v1_bt_v5_cutover_risk1_failed_1.html",
+      "target": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/reports/phase_m_v1_bt_v5_cutover_risk1_failed_1.html"
+    },
+    {
+      "href": "../strategies/topk-dropout/bt-v5-300k-risk1/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+      "target": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html"
+    }
+  ],
+  "other_original_reports_rewritten": false
+}

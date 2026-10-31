@@ -7,6 +7,11 @@ from pathlib import Path
 
 import yaml
 
+if __package__:
+    from .research_layout import resolve_research_path
+else:
+    from research_layout import resolve_research_path
+
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_ROOT = BACKTEST_ROOT / "configs"
 SOURCE_ROOT = CONFIG_ROOT / "train-data" / "csi1000-full-v2"
@@ -23,10 +28,10 @@ def generate() -> list[Path]:
     written: list[Path] = []
     for arm, cutoff in ARMS.items():
         output_dir = OUTPUT_ROOT / arm
-        output_dir.mkdir(parents=True, exist_ok=True)
         arm_note = arm.replace("-", "_")
         for seed in SEEDS:
             source = SOURCE_ROOT / f"td_csi1000_full_v2_lgbm_s{seed}.yaml"
+            source = resolve_research_path(source, BACKTEST_ROOT.parent)
             cfg = copy.deepcopy(yaml.safe_load(source.read_text(encoding="utf-8")))
             cfg["run"]["mode"] = "train_only"
             note = f"lt_{arm_note}_lgbm_s{seed}"
@@ -40,7 +45,7 @@ def generate() -> list[Path]:
                     "lag": 1,
                 },
             }
-            output = output_dir / f"{note}.yaml"
+            output = resolve_research_path(output_dir / f"{note}.yaml", BACKTEST_ROOT.parent)
             header = (
                 f"# EXPERIMENT_STANDARD v1.2 | exp: liquidity-trim/{arm} | "
                 f"seed {seed}\n"
@@ -48,6 +53,7 @@ def generate() -> list[Path]:
                 f"backtest/scripts/run_backtest.py "
                 f"--config liquidity-trim/{arm}/{output.name}\n"
             )
+            output.parent.mkdir(parents=True, exist_ok=True)
             output.write_text(
                 header + yaml.safe_dump(cfg, allow_unicode=True, sort_keys=False),
                 encoding="utf-8",

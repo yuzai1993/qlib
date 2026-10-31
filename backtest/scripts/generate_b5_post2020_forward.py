@@ -13,6 +13,10 @@ from typing import Optional, Sequence
 
 import yaml
 
+if __package__:
+    from .research_layout import resolve_research_path
+else:
+    from research_layout import resolve_research_path
 
 BACKTEST_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WINNER_CONFIG = (
@@ -104,7 +108,6 @@ def generate_configs(*, winner_cfg: dict, output_root: Path) -> list[Path]:
     paths: list[Path] = []
     for group, train_end in GROUPS.items():
         group_dir = output_root / group
-        group_dir.mkdir(parents=True, exist_ok=True)
         for seed in SEEDS:
             cfg = copy.deepcopy(winner_cfg)
             cfg["run"]["mode"] = "train_only"
@@ -125,10 +128,13 @@ def generate_configs(*, winner_cfg: dict, output_root: Path) -> list[Path]:
             kwargs["valid_segment"] = list(VALID_SEGMENT)
             kwargs["test_segment"] = list(TEST_SEGMENT)
 
-            path = group_dir / f"{_note(group, seed)}.yaml"
+            path = resolve_research_path(
+                group_dir / f"{_note(group, seed)}.yaml", BACKTEST_ROOT.parent
+            )
             rendered = _render_config(cfg, group=group, seed=seed)
             if path.exists() and path.read_text(encoding="utf-8") != rendered:
                 raise FileExistsError(f"existing config differs: {path}")
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(rendered, encoding="utf-8")
             paths.append(path)
     return paths
@@ -153,7 +159,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
-    winner_cfg = yaml.safe_load(args.winner_config.read_text(encoding="utf-8"))
+    winner_cfg = yaml.safe_load(
+        resolve_research_path(args.winner_config, BACKTEST_ROOT.parent).read_text(encoding="utf-8")
+    )
     paths = generate_configs(
         winner_cfg=winner_cfg,
         output_root=args.output_root,

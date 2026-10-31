@@ -1,0 +1,518 @@
+{
+  "schema_version": 1,
+  "groups": [
+    "strategy-group/v2-top5-hold-force100",
+    "strategy-group/v2-top25-force100",
+    "strategy-group/v4-cohort-force100-refill",
+    "strategy-group/v4-topk-drop-grid",
+    "strategy-group/v2-top5-300k-risk"
+  ],
+  "moves": [
+    {
+      "id": "baseline/phase-m-v1-bt-v2",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/bt-v2",
+      "directory": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5",
+      "directory": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/v2-top5-drop1-hold5"
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v5",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/bt-v5",
+      "directory": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5"
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v3",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/bt-v3",
+      "directory": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v3"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5",
+      "directory": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5"
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100",
+      "directory": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5-f100"
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v4",
+      "old_directory": "backtest/experiments/strategies/cohort-ladder/bt-v4",
+      "directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+      "old_directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100",
+      "directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+      "old_directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace",
+      "directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100-replace"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100",
+      "directory": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top3-drop1-f100"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100",
+      "directory": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top5-drop1-f100"
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100",
+      "directory": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top15-drop3-f100"
+    },
+    {
+      "id": "diag/bt-v5-300k-current-cost-20261029",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/bt-v5-300k",
+      "directory": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k"
+    },
+    {
+      "id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+      "old_directory": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1",
+      "directory": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1"
+    }
+  ],
+  "preserved_files": [
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v2/README.md",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2/README.md",
+      "sha256": "30c08a525e945ae453b3b61e3c98a8978f694fbcaa96dc8c6485da04fe6afa2e"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v2/metrics/m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2/metrics/m0h20es.json",
+      "sha256": "9ad8c571e540491559c68cde3c8163ef9623257ad53322a11453c896859335f4"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v2/metrics/all_top5d1_m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2/metrics/all_top5d1_m0h20es.json",
+      "sha256": "d6e7e819cb69877fdf33fcf1bb00320d473d8cbc1875eb0cbf7bcf03df94ef1e"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v2/records/317a896eb33f0730b61fe0034cabc069759ab4b5c006a9a1ea42c167588a7682.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2/records/317a896eb33f0730b61fe0034cabc069759ab4b5c006a9a1ea42c167588a7682.json",
+      "sha256": "317a896eb33f0730b61fe0034cabc069759ab4b5c006a9a1ea42c167588a7682"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v2/records/2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2/records/2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b.json",
+      "sha256": "2fb9a969d8d9a7ad8ce028b4b85cc1ef3b9b26dd44eb1574673612bcb3b6842b"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v2/reports/phase_m_v1_bt_m0h20es.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2/reports/phase_m_v1_bt_m0h20es.html",
+      "sha256": "53074316ce97e9c70f6e71f9eda22d938005bf4847d4fde7f1c9304a41b576a8"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v2/reports/all_top5d1_m0h20es.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v2/reports/all_top5d1_m0h20es.html",
+      "sha256": "8045f8cb06a96683f9cdd78fa1879e71dea81ea9b486e9f60fa0b69502f8cc71"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metrics/m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/v2-top5-drop1-hold5/metrics/m0h20es.json",
+      "sha256": "5197341ac3e9e1318079264c8368e768222ca300c65a42b7c1d2441a26412d95"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metrics/all_top5d1h5_m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/v2-top5-drop1-hold5/metrics/all_top5d1h5_m0h20es.json",
+      "sha256": "5b3533224f27d9ece937352a28454b405ff7ea58735ef27e19459054e2665f9a"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/records/3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/v2-top5-drop1-hold5/records/3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4.json",
+      "sha256": "3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/reports/all_top5d1h5_m0h20es.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/v2-top5-drop1-hold5/reports/all_top5d1h5_m0h20es.html",
+      "sha256": "c15c00016289799930ea3103fe211f37ab6727ea038b8b000d39347ba3ae821b"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/reports/phase_m_v1_bt_m0h20es_h5.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/v2-top5-drop1-hold5/reports/phase_m_v1_bt_m0h20es_h5.html",
+      "sha256": "7e8c1c214301506a95d1a1a4611d5a9d2b48cf507b23a5ba83e790ec9f63a6a7"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/metrics/m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/metrics/m0h20es.json",
+      "sha256": "a0dad7bf248b00889b3400bf2840f82bda60f21c0ba519a38fc121ffb7bca0e4"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/metrics/all_top5d1f100_m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/metrics/all_top5d1f100_m0h20es.json",
+      "sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+      "sha256": "a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+      "sha256": "887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/configs/bench_ew_all.csv",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/bench_ew_all.csv",
+      "sha256": "92d5cfdb4d328705db1204c7f3ff8df459b83f1e62b5b80c635cecb3a05154a9"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/reports/all_top5d1f100_m0h20es.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/reports/all_top5d1f100_m0h20es.html",
+      "sha256": "445c1a7f9e438f6ac4ce1b2a856e849a5d92649265e642181b8037968c18a64f"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/reports/phase_m_v1_bt_m0h20es_f100.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/reports/phase_m_v1_bt_m0h20es_f100.html",
+      "sha256": "dfd7fdd3d224f05e0710e490eac29baded82d21481fb221259967a24bf87d5b1"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5/reports/phase_m_v1_bt_v5.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/reports/phase_m_v1_bt_v5.html",
+      "sha256": "bb8fb1666e4262498f0b2953b8e516fec0303893bf1eab449ad68a936455017c"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v3/metrics/m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v3/metrics/m0h20es.json",
+      "sha256": "fb2731d0c8820cdbea77c4d5fd4d5a23b6a357cfced0c6674e0fa63c9c3c1a79"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v3/metrics/all_top5d1h5f100_m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v3/metrics/all_top5d1h5f100_m0h20es.json",
+      "sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v3/records/a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v3/records/a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6.json",
+      "sha256": "a7636ca253c81e3acae28f97d67a98e9ed6290432191208a46140a7ba73000c6"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v3/records/4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v3/records/4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4.json",
+      "sha256": "4e8f923749bcaf882ac050e09ce642c26e5d29cd0d324d9bd312f212a3e05fb4"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v3/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v3/reports/phase_m_v1_bt_m0h20es_h5f100.html",
+      "sha256": "7bbaa30bbff5230fc62afdfec81ad5d59cb1062ca1b0438c2c2928fd3066fb5c"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v3/reports/all_top5d1h5f100_m0h20es.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v3/reports/all_top5d1h5f100_m0h20es.html",
+      "sha256": "2d90ae2876e38ac98e7fdfed65f378e7556fe65239a4f0acb228aeece2db87ba"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metrics/all_top25d5h5_m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5/metrics/all_top25d5h5_m0h20es.json",
+      "sha256": "10652d6106867270c5d57f863cda4318da4758aab2eaaf2e0a4ada5371577ba3"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metrics/m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5/metrics/m0h20es.json",
+      "sha256": "b6767921f47866de27c916180a77a5c15199441290aa15c459a0e8966e240ca2"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/records/140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5/records/140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042.json",
+      "sha256": "140fc9686d96f805efdd486a1dff6816b17fcdfe817c8bdc6d36108a7c683042"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5/reports/phase_m_v1_bt_m0h20es_top25d5h5.html",
+      "sha256": "ed57afd9c60c17a754f39dc8d9233e639c8121d6ac6d0a35906c037bb5bd144c"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/reports/all_top25d5h5_m0h20es.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5/reports/all_top25d5h5_m0h20es.html",
+      "sha256": "41615ccf60ff254b0a80b7e95667a23dfffd8ca614b78fb7580b0978bac375c3"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metrics/m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5-f100/metrics/m0h20es.json",
+      "sha256": "7aeb8913069c341c5bd294dee80aceea387a6700cdaa1d01f5f794107f717985"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metrics/all_top25d5h5f100_m0h20es.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5-f100/metrics/all_top25d5h5f100_m0h20es.json",
+      "sha256": "3e35eb3f71f886c42532d53f1485b0a06c1bbaf8c3e225041b3150cbf65aa73c"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/records/7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5-f100/records/7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3.json",
+      "sha256": "7d76672ae97ae9338d97e9122ceeac53d9cb27e0bcec591404e1360b74eba3b3"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5-f100/reports/phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+      "sha256": "6247cef482f190a3d89f72584ef7a5d9b2f58761424cc45c48cbc6d901fd1aae"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/reports/all_top25d5h5f100_m0h20es.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top25-f100/variants/v2-top25-drop5-hold5-f100/reports/all_top25d5h5f100_m0h20es.html",
+      "sha256": "fb00e6700083f2c936a20201297eddc7ea15ab5005c91cb603231d69605e00db"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/bt-v4/metrics/all_ladder_k3h5_m0h20rankices.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4/metrics/all_ladder_k3h5_m0h20rankices.json",
+      "sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/bt-v4/metrics/m0h20rankices.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4/metrics/m0h20rankices.json",
+      "sha256": "40d5f9290c388edcfcf30ad1e2a72cb7fb4c21a20d14d777c2008fb8885375df"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4/records/ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896.json",
+      "sha256": "ec9be7ab28ef90a3c3e6ca0fd9023f4ac30307fd11046f56525c69bf90c5b896"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/bt-v4/records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4/records/ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf.json",
+      "sha256": "ee4d6cfdbde80fe0bac2a733903418102a945b2e9f62cd881f95b9d155848aaf"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/bt-v4/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+      "sha256": "3c6b0545b88dc7a66660a9cb9f615ea6d1d7affc402c5ae2cec0814f238480a1"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/bt-v4/reports/all_ladder_k3h5_m0h20rankices.html",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4/reports/all_ladder_k3h5_m0h20rankices.html",
+      "sha256": "e01323ae0339e3ca00fcff70018cbc64e453687694e9a906610a0fa5293393ac"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metrics/all_ladder_k3h5f100_m0h20rankices.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100/metrics/all_ladder_k3h5f100_m0h20rankices.json",
+      "sha256": "c61c8cdb725ee4e8d12826a8ed96c90b6b5db52c846fb403611850b903a18178"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metrics/m0h20rankices.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100/metrics/m0h20rankices.json",
+      "sha256": "18ed0d109c00efdc4a083fb30efa3a1b8743fc5d7db5f4ddaa2df2b2538aaaa7"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/records/3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100/records/3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c.json",
+      "sha256": "3f2bfb957865cad9fcb07f72c0bb572f6409280f8930322260bf0f8c5831602c"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/reports/all_ladder_k3h5f100_m0h20rankices.html",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100/reports/all_ladder_k3h5f100_m0h20rankices.html",
+      "sha256": "95892902194dc9622f8fb77cf4a9de7c81837baeae0e300b01f429729b41ac5d"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+      "sha256": "78392af41303a98b6688137de4645c8877730306244a779bd545ebe47b489f65"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metrics/all_ladder_k3h5f100r_m0h20rankices.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100-replace/metrics/all_ladder_k3h5f100r_m0h20rankices.json",
+      "sha256": "b95130f7a640d9aa8cf0181c583f918547ca38b3921cbb09f517bbdede3a2e12"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metrics/m0h20rankices.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100-replace/metrics/m0h20rankices.json",
+      "sha256": "2c6ad00d9cede7d2814556dfc77d87ecbaead57829794a447aa0ebff9ea09760"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/records/14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975.json",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100-replace/records/14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975.json",
+      "sha256": "14026acc303dac9adc64b4d978aa03c64ee53938fbe9799a9482075e0c6fe975"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/reports/all_ladder_k3h5f100r_m0h20rankices.html",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100-replace/reports/all_ladder_k3h5f100r_m0h20rankices.html",
+      "sha256": "7843d0c19a9c69a85b5f244a6db8b90c5abb697d39ddba02599c4a8ecc670474"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+      "path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/v4-k3-h5-f100-replace/reports/phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+      "sha256": "7acc76a3f0dd29d07a05d435bd0de913929538251d9aece3b3187d1b529f2a3d"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metrics/all_top3d1f100_m0h20rankices.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top3-drop1-f100/metrics/all_top3d1f100_m0h20rankices.json",
+      "sha256": "f27e09db6d000f83aaa502be3840db0c8b239d975044a405683f25fbcceb3dc0"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metrics/m0h20rankices.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top3-drop1-f100/metrics/m0h20rankices.json",
+      "sha256": "b48f57a6000e0690e83cfd49d71304ad5b8ca91e577700ffba7a8e2091e917d3"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/records/75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top3-drop1-f100/records/75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05.json",
+      "sha256": "75617f033cc0d79fd31ba1e7b3a181a4a69126e37c6e45b6e0054e3513192d05"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top3-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+      "sha256": "2456a2737068fe9383746ed833edb88dfec74d128c58abdea2408edbdf33c874"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/reports/all_top3d1f100_m0h20rankices.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top3-drop1-f100/reports/all_top3d1f100_m0h20rankices.html",
+      "sha256": "06498a73ecc348dad02298616890a819e9d13a3e79b13446e312fc5c6bb16262"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metrics/all_top5d1f100_m0h20rankices.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top5-drop1-f100/metrics/all_top5d1f100_m0h20rankices.json",
+      "sha256": "631f96364f26f7133d32156d298bd2ff4c6a558908d4a12a5323fdb1b2fb75c5"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metrics/m0h20rankices.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top5-drop1-f100/metrics/m0h20rankices.json",
+      "sha256": "5ab67da4091215103ee79ca683ca939954ea511ef3ec909c141cf4669c4eb5d9"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/records/a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top5-drop1-f100/records/a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16.json",
+      "sha256": "a007da0c4485250321a04adbffb6948207e47458ac62935f2a0835612d1a6b16"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/reports/all_top5d1f100_m0h20rankices.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top5-drop1-f100/reports/all_top5d1f100_m0h20rankices.html",
+      "sha256": "233e5b78046834aea0eb594af95e2ba79d025dbbb55c48347103b4a76c83e40b"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top5-drop1-f100/reports/phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+      "sha256": "3771e8e1a75dce67fe59b0a3b414822ad60da460f1ad56241b7f204e44a6ab78"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metrics/all_top15d3f100_m0h20rankices.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top15-drop3-f100/metrics/all_top15d3f100_m0h20rankices.json",
+      "sha256": "c20e80cc3941c9a85957f4401689af8f4f4a5da7627b5723af261eacfa506f3f"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metrics/m0h20rankices.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top15-drop3-f100/metrics/m0h20rankices.json",
+      "sha256": "b639b741ca066655f9782988d4807bec6f8dec076afa45879e5d65b405d0478f"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/records/217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634.json",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top15-drop3-f100/records/217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634.json",
+      "sha256": "217d927a1731eaac9a477666a74521e2946b3fc6a4eb715aaca6e38462b6f634"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top15-drop3-f100/reports/phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+      "sha256": "2d703e57621109f360eab3ace63d3496987cc374a8747cd8dabdf89340966ad1"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/reports/all_top15d3f100_m0h20rankices.html",
+      "path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top15-drop3-f100/reports/all_top15d3f100_m0h20rankices.html",
+      "sha256": "11f88f9575d03463497023fbb130cc76c0b9b696bcaa2fa01ecc8a53f834c797"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metrics/bt_v5_300k_current_cost.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/metrics/bt_v5_300k_current_cost.json",
+      "sha256": "5735379d8f49afea6390671c4267b6103d543075e5efe3b9fdd3c4e0dc2e2101"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/records/ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/records/ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f.json",
+      "sha256": "ea9aaa6b532ffd3be61422c6b9b6d2abfab0c74d6060599dc402495fd863544f"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/configs/config.yaml",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/configs/config.yaml",
+      "sha256": "03b6080eb83e2e1f4ea5b88af954cbc60ea4607dfbcd7adb561c30cb24f67e60"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/data/summary.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/summary.json",
+      "sha256": "37381e05f9e6d0cc5c2566cbd581a4e875334870def9e71a695db9166919853b"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/data/portfolio_daily.csv",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/portfolio_daily.csv",
+      "sha256": "45746eec7695275fc1ecf4ac4da35c6efc5acf9f33ae3e6eb708f2f9d2477d4e"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/data/filter_stats.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/filter_stats.json",
+      "sha256": "17884aad32dc016f979fd75c1ce9686c78a3d9037d26bfff5aed445bbdef364d"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/data/bench_ew_all.csv",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/bench_ew_all.csv",
+      "sha256": "7ff480b2fff98e7d328289e67dc836c4f583371085b7126f8a402550e0ae4336"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/reports/bt_v5_300k_current_cost.html",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/reports/bt_v5_300k_current_cost.html",
+      "sha256": "028e02be8c1f457f1f64b1a8642353fb38f1a5e5ab4e62184879c2546ac3c105"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/reports/phase_m_v1_bt_v5_cutover_diagnostic.html",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/reports/phase_m_v1_bt_v5_cutover_diagnostic.html",
+      "sha256": "85d89d6ccdb619bc8ec67642bba47bf1d071e72e4923c44ac92858a4cb6be24a"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metrics/bt_v5_300k_risk1_current_cost.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/metrics/bt_v5_300k_risk1_current_cost.json",
+      "sha256": "376a93414bba8bb32548cfa00f9432f8c2c824a14d73f2610ad6fdab9fc2dca5"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/records/068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/records/068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70.json",
+      "sha256": "068647873582177ec090a15337dbe277cfd68022c81ffa9ae93137b0941e3e70"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/configs/config.yaml",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/configs/config.yaml",
+      "sha256": "59d9082844440f1d02bbc9847fbd3389383045789d325bce6f2eae8793e16ef6"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/data/summary.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/data/summary.json",
+      "sha256": "999f19bd7293f2227493a82d48748b97178a538caca2f0ca8c418b5b31da90e7"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/data/portfolio_daily.csv",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/data/portfolio_daily.csv",
+      "sha256": "8ca0eea3c4237ebf981d8bd91d4fe4ad2cc341889e39277041eab3fa3f452f81"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/data/filter_stats.json",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/data/filter_stats.json",
+      "sha256": "17884aad32dc016f979fd75c1ce9686c78a3d9037d26bfff5aed445bbdef364d"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/data/bench_ew_all.csv",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/data/bench_ew_all.csv",
+      "sha256": "3f2b0fa84f3f1f50606581d1dd52befb4165b7062443502195a35f3c7841ec81"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/reports/bt_v5_300k_risk1_current_cost.html",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/reports/bt_v5_300k_risk1_current_cost.html",
+      "sha256": "191960fbdf9b5dc05389c85ab54a38fa669e2456c2d579ffbd37d64a325262b5"
+    },
+    {
+      "old_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/reports/phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+      "sha256": "87d1c6fcdb6c285f972f240aa29913821eca4185e20411934b8f38a5ecab2a23"
+    }
+  ],
+  "registry_sha256": "9cfd4d1b1c4d19f9725046c2ed7f7b11b3de94c53246097d05b5cdb42fdbde0a",
+  "source_count": 23,
+  "benchmark_count": 9,
+  "notes": "Only source archive_path editorial metadata changed. All non-metadata source files were moved byte-for-byte. Frozen registry values and original logical resource paths are retained via explicit aliases."
+}

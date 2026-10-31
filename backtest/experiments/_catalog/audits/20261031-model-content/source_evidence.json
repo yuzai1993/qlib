@@ -1,0 +1,195 @@
+{
+  "date": "2026-10-31",
+  "purpose": "仅为模型记录表提供改动摘要及实验当时的对照版本；不改原 baseline_ref、登记、配置或指标。",
+  "standards_read": "backtest/EXPERIMENT_STANDARD.md §1.5–1.5.3；§1.6.1（诊断信号对应关系）",
+  "findings": [
+    "现存登记日期多为2026-08-22重评/刷新日，不能按当前date推断实验当时的baseline。",
+    "promote_phase_m_v1_es.py显式把旧v1记录baseline_ref重写为v2，并把v2改为self；v3/v4晋升工具也把赢家改成self，故不能直接把当前baseline_ref视为历史比较版本。",
+    "规范明确v1为2026-08-16至19日初代全A版本，v2为8月19至22日，v3为8月22日短暂基线，随后v4接替。v1未能核出更早的同一全A版本号，标为初始版本，不制造v0或把CSI B6-M当v1前代。",
+    "v2相对v1改变早停指标与valid窗口；v3相对v2改变Top5为Top3早停及主评估格；v4相对v3只改变早停指标，仍用评估窗，不是v1的499天次日RankIC。",
+    "评估末端检查原baseline_ref=baseline/phase-m-v1-v2已无对应模型档案，但登记eval_protocol和arm=m0h20es明确其为BT v2同一五种子M0 H20 ES信号；规范§1.6.1确认这就是模型v2。仅展示元数据改用实际模型v2 ref。",
+    "DE-v2不只是模型结构改变，还采用DE冻结超参并使用RankIC早停，因此摘要不能写成只换模型且其余不变。v3/v4 DE沿用各自早停准则。",
+    "K×H网格和窗口末端检查属于评估方法变化，不是重训或策略调参。"
+  ],
+  "experiments": [
+    {
+      "exp_id": "regime-adapt/m0-h20-label-v4",
+      "metadata_path": "backtest/experiments/models/training-target/h20-v1/metadata.json",
+      "change_summary": "训练目标改为未来20日累计收益（H20）。",
+      "comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": true
+      },
+      "evidence": [
+        "backtest/EXPERIMENT_STANDARD.md §1.5.3：v1是8/16–8/19初代模型基线，早停为499天次日RankIC。",
+        "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md §12.7：复用已有H1/H5/H10/H40，补训H2/H3/H20。",
+        "backtest/scripts/promote_phase_m_v1_es.py main：v4[baseline_ref]=ES_ID是后续登记变更，不是当时前代。"
+      ],
+      "caveat": "初代没有可核实的更早同轨道版本号；不显示当前登记所指的后来v2作为当时baseline。"
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t5h5-es-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+      "change_summary": "早停由499天次日RankIC改为评估窗Top5×H5扣费净年化。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-label-v4",
+        "version": "v1"
+      },
+      "evidence": [
+        "backtest/EXPERIMENT_STANDARD.md §1.5.2–1.5.3：v2取代v1的时序及两者早停定义。",
+        "backtest/scripts/register_regime_ablation.py ARMS[m0-h20-t5h5-es-v1].hypothesis：原499天RankIC改为全A1454天Top5×H5净年化。",
+        "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html：M0 H20（日频ST）标为前基线，与M0 H20 ES对照。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+      "change_summary": "扣费净年化早停与主评估格由Top5×H5改为Top3×H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      },
+      "evidence": [
+        "backtest/EXPERIMENT_STANDARD.md §1.5.1–1.5.2：v3的top3_h5_net_ann与前基线v2的top5_h5_net_ann。",
+        "backtest/scripts/promote_phase_m_v1_t3h5es.py：V2_ID定义前代，登记H1/H5/H10/H20同批Top3早停对照，winner成为v3。"
+      ],
+      "caveat": "其self是晋升后的基线角色，不是改动所比较的前代。H1/H5/H10同批标签臂以H20赢家v3为标签对照；本v3行以迭代前代v2说明其早停改动。"
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-rankices-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+      "change_summary": "早停由Top3×H5扣费净年化改为评估窗日RankIC。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      },
+      "evidence": [
+        "冻结registry该行hypothesis明确相对当前基线v3，只把top3_h5_net_ann换成daily_rank_ic，仍用评估窗。",
+        "backtest/scripts/register_regime_ablation.py ARMS[m0-h20-rankices-v1]：五种子，对照v3官方合成信号。",
+        "backtest/EXPERIMENT_STANDARD.md §1.5：v4不是v1的499天次日协议。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h1-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h1/metadata.json",
+      "change_summary": "训练标签由H20改为H1。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      },
+      "evidence": [
+        "冻结registry该行train_label_horizon=1、baseline_ref指H20 Top3早停模型。",
+        "backtest/scripts/promote_phase_m_v1_t3h5es.py build_row：同批H1/H5/H10/H20保持Top3×H5早停，非winner引用H20 winner（v3）。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h5-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h5/metadata.json",
+      "change_summary": "训练标签由H20改为H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      },
+      "evidence": [
+        "冻结registry该行train_label_horizon=5、baseline_ref指H20 Top3早停模型。",
+        "backtest/scripts/promote_phase_m_v1_t3h5es.py build_row：同批H1/H5/H10/H20保持Top3×H5早停，非winner引用H20 winner（v3）。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h10-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h10/metadata.json",
+      "change_summary": "训练标签由H20改为H10。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      },
+      "evidence": [
+        "冻结registry该行train_label_horizon=10、baseline_ref指H20 Top3早停模型。",
+        "backtest/scripts/promote_phase_m_v1_t3h5es.py build_row：同批H1/H5/H10/H20保持Top3×H5早停，非winner引用H20 winner（v3）。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20es-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v2-s42/metadata.json",
+      "change_summary": "改用三子模型DoubleEnsemble及其超参，早停改为RankIC（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      },
+      "evidence": [
+        "冻结registry该行hypothesis与note明确：v2对照，B6-M冻结超参DoubleEnsemble、num_models=3、SR/FS、lr=0.1，尚未接Top5早停而用RankIC。",
+        "backtest/scripts/register_regime_ablation.py ARMS[m0-h20es-densemble-s42-v1]同内容；note同时保留v2官方合成与seed42对照。"
+      ],
+      "caveat": "多项改动同时发生，不能把此行解释成纯模型结构控变量实验；单种子不作晋升依据。"
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      },
+      "evidence": [
+        "冻结registry该行hypothesis明确相对v3改用DoubleEnsemble（num_models=3、SR/FS、lr=0.1），早停仍为Top3×H5净年化，先跑seed42。",
+        "backtest/scripts/register_regime_ablation.py 对应ARMS条目。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（五种子）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      },
+      "evidence": [
+        "冻结registry该行hypothesis明确相对v3改用DoubleEnsemble（num_models=3、SR/FS、lr=0.1），Top3×H5早停，五种子正式评估。",
+        "backtest/scripts/register_regime_ablation.py 对应ARMS条目。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4"
+      },
+      "evidence": [
+        "冻结registry该行hypothesis明确相对v4改用DoubleEnsemble（num_models=3、SR/FS、lr=0.1），仍用评估窗daily_rank_ic，先跑seed42。",
+        "backtest/scripts/register_regime_ablation.py 对应ARMS条目。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-label-k123-h2345",
+      "metadata_path": "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+      "change_summary": "评估网格改为K=1–5、H=2–5，复用现有信号。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      },
+      "evidence": [
+        "冻结registry该行hypothesis、baseline_ref和metrics.arms明确：既有v2（m0h20es）与v1（m0h20），仅在更小K与更短H重新评估，不覆盖当时官方Top5×H5。",
+        "backtest/scripts/register_regime_m0_labels.py GRID_HYPOTHESIS、GRID_FILES、build_grid_row。"
+      ],
+      "caveat": "v2为登记的主要对照；同表还含v1信号，详情保留，不写成新训练或策略调参。"
+    },
+    {
+      "exp_id": "diag/eval-window-edge-lookahead",
+      "metadata_path": "backtest/experiments/models/evaluation/window-edge/metadata.json",
+      "change_summary": "增加评估末端标签取价越界检查（不重训）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      },
+      "evidence": [
+        "冻结registry该行arm=m0h20es，eval_protocol明确BT v2同一五种子zscore合成信号、只读诊断不训练。",
+        "backtest/scripts/register_eval_window_edge_diag.py 记录同内容，旧baseline_ref=baseline/phase-m-v1-v2没有现存对应档案。",
+        "backtest/EXPERIMENT_STANDARD.md §1.6.1：BT v2冻结的是M0 H20 ES，即模型v2。"
+      ],
+      "caveat": "展示用ref与版本采用有明确来源的模型v2，原冻结baseline_ref保留。摘要仅描述诊断，不宣称该历史记录已重训或改算指标。"
+    }
+  ]
+}

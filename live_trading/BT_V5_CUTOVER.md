@@ -59,7 +59,7 @@ $relayProcesses | ForEach-Object {
 - 历史执行层回测基线：`baseline/phase-m-v1-bt-v5`，原risk=0.90数字保留；拟实盘及配对回测按用户本次要求改为risk=1.0，结果独立登记。
 - 模型：历史 **v2 · M0 H20 ES**，`regime-adapt/m0-h20-t5h5-es-v1`；五种子 `[42,1000,2000,3000,4000]`，早停 `top5_h5_net_ann`，最佳轮次 `[36,63,42,57,48]`。五个导出模型的164维输入及精简前后预测已核对；来源和导出 SHA 在 `models/v2_t5h5es/manifest.json`。
 - 拟实盘策略：`TopkDropoutStrategy(topk=5,n_drop=1,hold_thresh=1,force_sell_rank=100,risk_degree=1.0,initial_buy_count=None)`。常规换出1只；掉出前100的持仓额外退出，受实际可卖数量和交易限制约束。hold=1 是最低持仓约束，不是每天清空所有股票。首日人工清理旧持仓是一次性切换步骤，不加入每日策略。
-- 官方信号：每个种子先按日截面 z-score，再等权平均。模型研究基线继续是 **v4 RankIC ES**，CSI1000 B6-M/B4-S 不变。
+- 官方信号：每个种子先按日截面z-score，再等权平均。本次BT v5晋升批准时，模型研究基线为v4 RankIC ES；2026-10-31用户另行将当前模型选回 **v2 Top5早停**，历史指标及对照不改写。CSI1000 B6-M/B4-S不变。
 - 30万元为账户原始资金口径，**切换时继承实际现金与持仓，不重新注入30万元或重置净值**。risk=1.0用于卖出后可用现金的名义买入预算；整手、最低佣金及限价预留可能留下现金，不保证实际满仓。买入还受真实现金和费用可负担上限约束。
 
 ## 回测证据与口径
@@ -82,7 +82,7 @@ risk=1.0复算结果：历史1454日CAGR37.23%、夏普1.209、最大回撤−33
 
 ## 新执行协议
 
-新配置为 `configs/alla_v2_top5d1f100_postclose_real.yaml`，配对回测为 `backtest/configs/alla_v2_top5d1f100_parity.yaml`。当前桥目录是本地 `live_trading/data/bt_v5_offline_bridge`，通知关闭，账本路径独立；这些是离线准备配置，尚未安装进生产调度。
+新配置为 `configs/alla_v2_top5d1f100_postclose_real.yaml`，配对回测为 `backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml`。当前桥目录是本地 `live_trading/data/bt_v5_offline_bridge`，通知关闭，账本路径独立；这些是离线准备配置，尚未安装进生产调度。
 
 `strategy.execution_policy=post_sell_cash_v1`、`max_positions=5` 开启新协议。订单使用 `CLOSE_AUCTION_TOPK_CASH_V1`，每单带相同的现金比例与持仓上限；旧执行器会拒绝未知价型，禁止只更新Mac端而继续用旧QMT执行器。原阶梯策略和不含该协议的旧批次维持原行为。
 

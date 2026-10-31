@@ -20,6 +20,20 @@ ROOT = Path(__file__).resolve().parents[2]
 LIVE = ROOT / "live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml"
 
 
+@pytest.mark.parametrize(
+    "config_name",
+    [
+        "alla_v2_top5d1f100_postclose_real",
+        "alla_v2_top5d1f100_postclose_real_active",
+    ],
+)
+def test_top5_deployment_configs_resolve_designated_parity(config_name):
+    config = load_live_config(ROOT / "live_trading/configs" / f"{config_name}.yaml")
+    path = validate_configured_backtest(config, ROOT)
+    assert path.parent == ROOT / "backtest/experiments/_shared/deployment-parity"
+    assert path.name == "alla_v2_top5d1f100_parity.yaml"
+
+
 def test_deployment_package_passes_parity_and_is_offline_by_default():
     config = load_live_config(LIVE)
     validate_configured_backtest(config, ROOT)

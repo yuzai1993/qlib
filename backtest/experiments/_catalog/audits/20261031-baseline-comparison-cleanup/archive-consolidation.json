@@ -1,0 +1,179 @@
+{
+  "date": "2026-10-31",
+  "removed_active_experiment_ids": [
+    "regime-adapt/m0-h1-t3h5es-v1",
+    "regime-adapt/m0-h5-t3h5es-v1",
+    "regime-adapt/m0-h10-t3h5es-v1",
+    "regime-adapt/m0-h20-t3h5es-densemble-s42-v1"
+  ],
+  "removed_archive_directories": [
+    "backtest/experiments/models/training-target/h1",
+    "backtest/experiments/models/training-target/h5",
+    "backtest/experiments/models/training-target/h10",
+    "backtest/experiments/models/model-structure/de-v3-s42"
+  ],
+  "before": {
+    "experiments": 33,
+    "models": 11,
+    "strategies": 22
+  },
+  "after": {
+    "experiments": 29,
+    "models": 7,
+    "strategies": 22
+  },
+  "retained_registry_rows_byte_identical": true,
+  "label_source_receipts": [
+    {
+      "path": "source-records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+      "sha256": "42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85"
+    },
+    {
+      "path": "source-records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+      "sha256": "6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5"
+    },
+    {
+      "path": "source-records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json",
+      "sha256": "1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1"
+    }
+  ],
+  "file_actions": [
+    {
+      "action": "moved_unchanged",
+      "old": "backtest/experiments/models/training-target/h1/metrics/eval_m0h1.json",
+      "new": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h1.json",
+      "sha256": "b83c3f1808491102fba70d6a0c5890a73c7b4c207895e39b0c167750e0820b5e"
+    },
+    {
+      "action": "moved_unchanged",
+      "old": "backtest/experiments/models/training-target/h1/records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+      "new": "backtest/experiments/models/training-target/horizon-comparison/source-records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+      "sha256": "42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85"
+    },
+    {
+      "action": "deleted",
+      "path": "backtest/experiments/models/training-target/h1/metadata.json",
+      "sha256": "471c8b8ffeb94336b77f0ab9154a64288002b7515e7daa9d71d1d78c7231a08e"
+    },
+    {
+      "action": "moved_unchanged",
+      "old": "backtest/experiments/models/training-target/h5/metrics/eval_m0h5.json",
+      "new": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h5.json",
+      "sha256": "8422bad9f322134a76fbd88354f60779e52251395cec8217979ca6d827f27ef6"
+    },
+    {
+      "action": "moved_unchanged",
+      "old": "backtest/experiments/models/training-target/h5/records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+      "new": "backtest/experiments/models/training-target/horizon-comparison/source-records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+      "sha256": "6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5"
+    },
+    {
+      "action": "deleted",
+      "path": "backtest/experiments/models/training-target/h5/metadata.json",
+      "sha256": "2a1abbc161bb11f562ddb708fd2473cf0c6424fccb59e74e8f47bce1539d75cc"
+    },
+    {
+      "action": "moved_unchanged",
+      "old": "backtest/experiments/models/training-target/h10/metrics/eval_m0h10.json",
+      "new": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h10.json",
+      "sha256": "47848f51908e0d243cd9a1b56adc5da889987d5a02f5440f6e2e2227b1bb66f9"
+    },
+    {
+      "action": "moved_unchanged",
+      "old": "backtest/experiments/models/training-target/h10/records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json",
+      "new": "backtest/experiments/models/training-target/horizon-comparison/source-records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json",
+      "sha256": "1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1"
+    },
+    {
+      "action": "deleted",
+      "path": "backtest/experiments/models/training-target/h10/metadata.json",
+      "sha256": "1589392a5b33c6c1344799c3804b628f3216c701a6956a5f4a2220c93ceb4318"
+    },
+    {
+      "action": "deleted",
+      "path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+      "sha256": "7f04d13788fa8e5a2e8d825cfa7cde5fdc77acff56bb19f147ed87cd46e10893"
+    },
+    {
+      "action": "deleted",
+      "path": "backtest/experiments/models/model-structure/de-v3-s42/metrics/eval_densemble_s42_vs_v3.json",
+      "sha256": "22c5a4aa2eff548206ce018da3c07ffff49848bf465900e8e42a8cb4d2004f85"
+    },
+    {
+      "action": "deleted",
+      "path": "backtest/experiments/models/model-structure/de-v3-s42/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json",
+      "sha256": "0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71"
+    },
+    {
+      "action": "deleted",
+      "path": "backtest/experiments/models/model-structure/de-v3-s42/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+      "sha256": "2dc8a14dcc637a41804930eacf1c342e8fcbe499f23597a57be876d5b544d526"
+    }
+  ],
+  "removed_aliases": {
+    "paths": {
+      "backtest/experiments/regime_adapt_m0h20_t3h5es_densemble_s42_report.html": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+      "backtest/experiments/registry_records/3a3f9f20f6e4c96b748ecfefc4acd29fc0052acbaa7c3f1ad4e05f360f668d5a.json": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json",
+      "backtest/experiments/research_eval_sources_20261030/eval_regime_ablation/eval_densemble_s42_vs_v3.json": "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/metrics/eval_densemble_s42_vs_v3.json",
+      "backtest/experiments/regime-adapt/m0-h1-t3h5es-v1/metadata.json": "backtest/experiments/models/regime-adapt/m0-h1-t3h5es-v1/metadata.json",
+      "backtest/experiments/regime-adapt/m0-h5-t3h5es-v1/metadata.json": "backtest/experiments/models/regime-adapt/m0-h5-t3h5es-v1/metadata.json",
+      "backtest/experiments/regime-adapt/m0-h10-t3h5es-v1/metadata.json": "backtest/experiments/models/regime-adapt/m0-h10-t3h5es-v1/metadata.json",
+      "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/metadata.json": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/metadata.json",
+      "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/metrics/eval_densemble_s42_vs_v3.json": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/metrics/eval_densemble_s42_vs_v3.json",
+      "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json",
+      "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+      "backtest/experiments/models/regime-adapt/m0-h1-t3h5es-v1/metadata.json": "backtest/experiments/models/training-target/h1/metadata.json",
+      "backtest/experiments/models/regime-adapt/m0-h5-t3h5es-v1/metadata.json": "backtest/experiments/models/training-target/h5/metadata.json",
+      "backtest/experiments/models/regime-adapt/m0-h10-t3h5es-v1/metadata.json": "backtest/experiments/models/training-target/h10/metadata.json",
+      "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/metadata.json": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+      "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/metrics/eval_densemble_s42_vs_v3.json": "backtest/experiments/models/model-structure/de-v3-s42/metrics/eval_densemble_s42_vs_v3.json",
+      "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json": "backtest/experiments/models/model-structure/de-v3-s42/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json",
+      "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html": "backtest/experiments/models/model-structure/de-v3-s42/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html"
+    },
+    "directories": {
+      "backtest/experiments/regime-adapt/m0-h1-t3h5es-v1": "backtest/experiments/models/regime-adapt/m0-h1-t3h5es-v1",
+      "backtest/experiments/regime-adapt/m0-h5-t3h5es-v1": "backtest/experiments/models/regime-adapt/m0-h5-t3h5es-v1",
+      "backtest/experiments/regime-adapt/m0-h10-t3h5es-v1": "backtest/experiments/models/regime-adapt/m0-h10-t3h5es-v1",
+      "backtest/experiments/regime-adapt/m0-h20-t3h5es-densemble-s42-v1": "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+      "backtest/experiments/models/regime-adapt/m0-h1-t3h5es-v1": "backtest/experiments/models/training-target/h1",
+      "backtest/experiments/models/regime-adapt/m0-h5-t3h5es-v1": "backtest/experiments/models/training-target/h5",
+      "backtest/experiments/models/regime-adapt/m0-h10-t3h5es-v1": "backtest/experiments/models/training-target/h10",
+      "backtest/experiments/models/regime-adapt/m0-h20-t3h5es-densemble-s42-v1": "backtest/experiments/models/model-structure/de-v3-s42"
+    }
+  },
+  "added_file_aliases": {
+    "backtest/experiments/models/training-target/h1/metrics/eval_m0h1.json": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h1.json",
+    "backtest/experiments/models/training-target/h1/records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json": "backtest/experiments/models/training-target/horizon-comparison/source-records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+    "backtest/experiments/models/training-target/h5/metrics/eval_m0h5.json": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h5.json",
+    "backtest/experiments/models/training-target/h5/records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json": "backtest/experiments/models/training-target/horizon-comparison/source-records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+    "backtest/experiments/models/training-target/h10/metrics/eval_m0h10.json": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h10.json",
+    "backtest/experiments/models/training-target/h10/records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json": "backtest/experiments/models/training-target/horizon-comparison/source-records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json"
+  },
+  "production_models_shared_reports_untouched": true,
+  "temporary_script": "/private/tmp/qlib-baseline-comparison-cleanup-20261031/merge_archives.py",
+  "verification": {
+    "unchanged_record_and_metric_files": 72,
+    "source_report_layout_tests": "39 passed (after archived_records integration)",
+    "summary_report": {
+      "baselines": 4,
+      "experiments": 3,
+      "all_local_links_valid": true
+    },
+    "catalog_integration": {
+      "records": 29,
+      "registry_events": 29,
+      "discovery_errors": [],
+      "catalog_warnings": [],
+      "group_status": "available",
+      "group_warnings": []
+    }
+  },
+  "temporary_tools_cleaned": {
+    "script_removed": true,
+    "test_fixture_roots_removed": [
+      "/private/tmp/qlib-baseline-comparison-cleanup-20261031/pytest-merge-final",
+      "/private/tmp/qlib-baseline-comparison-cleanup-20261031/pytest-merge-source-final",
+      "/private/tmp/qlib-baseline-comparison-cleanup-20261031/pytest-merge-integration"
+    ]
+  }
+}

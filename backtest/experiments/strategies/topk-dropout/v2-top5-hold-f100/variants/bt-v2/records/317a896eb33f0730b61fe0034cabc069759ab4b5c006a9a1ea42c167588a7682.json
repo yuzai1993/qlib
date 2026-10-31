@@ -1,0 +1,40 @@
+{
+  "exp_id": "regime-adapt/m0h20es-all-top5d1-bt",
+  "direction": "phase-m-v1-bt",
+  "phase": "M",
+  "date": "2026-08-19",
+  "state": "promoted",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "M0 H20 ES top5d1",
+  "arm": "m0h20es",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "hypothesis": "同一套 top5d1 / 日频ST / 账户100万，把冻结模型换成 M0 H20 ES 五种子均值信号，对照 BT v1（修复后 M0 H20）",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout top5d1 account=1e6 | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/result/phase_s_regime/all_top5d1/m0h20es.json",
+  "detail_report": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/reports/phase_m_v1_bt_m0h20es.html",
+  "metrics_source": "ensemble",
+  "metrics": {
+    "annualized_return": 0.23130372925034037,
+    "sharpe_ratio": 0.8550332914136377,
+    "alpha": 0.1530863066073424,
+    "beta": 0.9216253031911962,
+    "max_drawdown": -0.3915376314579322,
+    "calmar_ratio": 0.5907573389282053,
+    "annualized_volatility": 0.29412087107635365,
+    "annualized_one_way_turnover": 49.28892160954971,
+    "n_days": 1454,
+    "annualized_return_arith": 0.25148313646986087,
+    "y2026_annualized_return": 0.13619883810142963
+  },
+  "ensemble_session": "backtest/result/20260821_211247_phase_s_m0h20es_all_top5d1_ensemble_market_cn",
+  "baseline_ref": "baseline/phase-m-v1-bt-v1",
+  "promoted_to": "baseline/phase-m-v1-bt-v2",
+  "note": "2026-08-19 晋升为 BT v2；本行保留为对照 BT v1 的实验记录。官方数字来自 ensemble，不是 CSI1000 B4-S",
+  "portable_eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top5d1-bt/metrics/all_top5d1_m0h20es.json"
+}

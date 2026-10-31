@@ -3,6 +3,41 @@
  [hidden]{display:none!important}
  .monitor-ledger-control{display:flex;align-items:center;gap:9px}.monitor-ledger-control label{font-size:11px;color:var(--muted);white-space:nowrap}.monitor-ledger-control select{max-width:250px;min-width:150px;min-height:33px;padding:6px 10px}
  @media(max-width:720px){.monitor-ledger-control{gap:6px}.monitor-ledger-control select{min-width:110px;max-width:170px;font-size:11px}.topbar:has(.monitor-ledger-control:not([hidden])){height:auto;min-height:58px;flex-wrap:wrap;gap:8px;padding-top:10px;padding-bottom:10px}}
+
+/* Keep filter arrows inset consistently across research, analyses and monitoring. */
+select:not([multiple]) {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-inline-end: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23788b9f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 12px;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, background-color .15s;
+}
+select:not([multiple]):hover:not(:disabled) {
+    border-color: #b6c9d7;
+    background-color: #fbfdff;
+}
+select:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+    border-color: var(--teal);
+}
+select:disabled {
+    cursor: not-allowed;
+    color: var(--muted);
+    background-color: #f5f8fb;
+}
+@media (forced-colors: active) {
+    select:not([multiple]) {
+        -webkit-appearance: auto;
+        appearance: auto;
+        background-image: none;
+        padding-inline-end: 12px;
+    }
+}
  @media(max-width:720px){.sidebar nav{flex-wrap:wrap}.subnav:not([hidden]){display:flex!important;flex-basis:100%;order:5;padding:2px 8px;gap:22px}.subnav:not([hidden]) a{padding:5px 0;font-size:11px}}
  .experiment-history .history-name{min-width:210px;max-width:260px;text-align:left;white-space:normal}.experiment-history .history-hypothesis{min-width:220px;max-width:340px;white-space:normal;text-align:left;color:#73849a;font-size:11px;line-height:1.8}.experiment-history .history-baseline{max-width:210px;min-width:150px;white-space:normal;overflow-wrap:anywhere;text-align:left;font-size:11px;color:#8494a7}.experiment-history .record-name{line-height:1.7}.experiment-history .history-hypothesis div{max-height:95px;overflow:auto}
  .markdown-report{font-size:13px;line-height:1.9;color:#50657b;overflow-wrap:anywhere}.markdown-report h1{font-size:24px;line-height:1.5;color:#20384f;margin:27px 0 17px}.markdown-report h2{font-size:20px;line-height:1.6;color:#20384f;margin:27px 0 14px;letter-spacing:0}.markdown-report h3{font-size:16px;line-height:1.7;color:#20384f;margin:24px 0 13px}.markdown-report h4,.markdown-report h5,.markdown-report h6{font-size:14px;color:#20384f;margin:20px 0 10px}.markdown-report p{margin:12px 0}.markdown-report ul,.markdown-report ol{padding-left:25px;margin:12px 0}.markdown-report li{padding:3px 0}.markdown-report blockquote{margin:17px 0;padding:11px 17px;border-left:3px solid #6ac8cc;background:#f1f9fa;color:#5e7c89;border-radius:0 6px 6px 0}.markdown-report hr{border:0;border-top:1px solid #e4ebf2;margin:24px 0}.markdown-report .table-wrap{margin:18px 0}.markdown-report :not(pre)>code{font-size:11px;font-family:SFMono-Regular,Consolas,monospace;background:#edf3f7;color:#277982;padding:2px 5px;border-radius:4px}.source-audit{margin:25px 0 12px;border-top:1px solid #e4ebf2;padding-top:16px}.source-audit summary{font-size:12px;color:#8a9aac;cursor:pointer}.source-audit pre{max-height:500px}.markdown-report strong{color:#304e66;font-weight:650}

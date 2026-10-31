@@ -1,3 +1,5 @@
+> 2026-10-31 归档清理说明：旧技术特征实验 YAML 已随 CSI1000 档案删除；只检查这些历史文件的用例已移除，功能验证保留在 `test_technical_feature_handler.py`。
+
 # B1-M Technical Feature Experiment Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -40,7 +42,7 @@
 
 **Files:**
 - Create: `backtest/configs/feature-technical/{bollinger,momentum,trend,combined}/*.yaml`
-- Test: `tests/backtest/test_technical_feature_configs.py`
+- Test: `tests/backtest/test_technical_feature_handler.py`
 
 **Interfaces:**
 - Consumes: `Alpha158Technical` and B1-M seed configs

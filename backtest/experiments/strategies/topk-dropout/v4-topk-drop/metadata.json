@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "entity_type": "experiment_group",
+  "exp_id": "strategy-group/v4-topk-drop-grid",
+  "kind": "strategy",
+  "track": "all_a",
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v4-topk-drop",
+  "title": "持仓与换仓档位",
+  "model_ref": "regime-adapt/m0-h20-rankices-v1",
+  "strategy_summary": {
+    "name": "Topk·持仓/换仓",
+    "description": "固定持1日、F100，对比Top3换1、Top5换1与Top15换3。"
+  },
+  "change_summary": "从Top3换1，改为Top5换1或Top15换3；最后一档同时改变持仓数和换仓数。",
+  "experiment_group": {
+    "control_ref": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+    "members": [
+      {
+        "ref": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+        "label": "Top3 · 换1"
+      },
+      {
+        "ref": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+        "label": "Top5 · 换1"
+      },
+      {
+        "ref": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+        "label": "Top15 · 换3"
+      }
+    ],
+    "axes": [
+      "topk",
+      "n_drop"
+    ],
+    "fixed_summary": "TopkDropout 最短持1日、F100。五种子日截面zscore后等权融合信号，单次回测；全A、日频ST、日成交额≥1000万、上市≥60日、近60日持续成交；等权全A基准；2020-08-03～2026-07-31历史选型窗；100万、risk0.90、历史费率。旧运行config多数缺失，固定口径来自冻结登记协议和实验规范，不宣称逐项重新认证。"
+  },
+  "analysis": {
+    "conclusion": "Top5换1的CAGR23.6%、夏普0.87，高于Top3换1的14.8%/0.60；Top15换3为19.4%/0.82。",
+    "limitations": "Top15同时将n_drop从1改为3，应展示两个参数列，不得把差异归因于topk单轴。；严格单变量替代方案：仅Top3/Top5归一组，Top15单列。；组内控制选择Top3只是展示约定，原始登记baseline_ref=BT v4保留。",
+    "evidence": [
+      "variants/v4-top3-drop1-f100/metadata.json",
+      "variants/v4-top5-drop1-f100/metadata.json",
+      "variants/v4-top15-drop3-f100/metadata.json"
+    ],
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "reports": [
+    "reports/summary.html"
+  ],
+  "docs": [
+    "README.md"
+  ]
+}

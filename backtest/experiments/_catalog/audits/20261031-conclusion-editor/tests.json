@@ -1,0 +1,14 @@
+{
+  "python": {
+    "passed": 471,
+    "command": "python -m pytest tests/quant_platform tests/backtest/test_experiment_archive.py tests/backtest/test_experiment_registry.py tests/backtest/test_research_archive.py tests/backtest/test_build_experiment_report.py tests/backtest/test_report_layout.py -q"
+  },
+  "frontend": {
+    "passed": 85,
+    "command": "node --test tests/quant_platform/*.cjs"
+  },
+  "backend_tests": 20,
+  "red_then_green_verified": true,
+  "concurrent_same_revision": "one 200 and one 409; only winning conclusion persisted",
+  "git_diff_check": "passed"
+}

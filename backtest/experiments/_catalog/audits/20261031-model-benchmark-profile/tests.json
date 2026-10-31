@@ -1,0 +1,12 @@
+{
+  "python": {
+    "passed": 480,
+    "command": "python -m pytest tests/quant_platform tests/backtest/test_experiment_archive.py tests/backtest/test_experiment_registry.py tests/backtest/test_research_archive.py -q"
+  },
+  "frontend": {
+    "passed": 90,
+    "command": "node --test tests/quant_platform/*.cjs"
+  },
+  "red_then_green_verified": true,
+  "git_diff_check": "passed"
+}

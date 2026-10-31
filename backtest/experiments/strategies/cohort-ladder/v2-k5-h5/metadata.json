@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+  "event_numbers": [
+    125
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/reports/all_ladder_k5h5_m0h20es.html",
+    "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/reports/phase_m_v1_bt_m0h20es_ladder_k5h5.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/metrics/all_ladder_k5h5_m0h20es.json",
+    "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/records/17aaf731af99b5ae63f33981c4e3c667e8a7af62221ae9e6cdf0d862fe222f8d.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "M0 H20 ES 真阶梯 k5×h5（按持有天数到期退出）",
+  "metrics_source": {
+    "path": "metrics/all_ladder_k5h5_m0h20es.json",
+    "sha256": "9e0d7acb7b8b3790dabbdeedde6df53a26be6ba130b9dd497f684dfc3cb7f2fa"
+  },
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "阶梯5×5日",
+    "description": "每日按排名选至多5只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5",
+  "analysis": {
+    "conclusion": "较BT v2收益相近、回撤更浅，CAGR23.4%、夏普0.98；仍未消除与模型评估的差距。",
+    "evidence": [
+      "metrics/all_ladder_k5h5_m0h20es.json",
+      "metrics/m0h20es.json",
+      "records/17aaf731af99b5ae63f33981c4e3c667e8a7af62221ae9e6cdf0d862fe222f8d.json",
+      "reports/all_ladder_k5h5_m0h20es.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。与模型主格的年化口径及可成交性不同，不能直接相减或据此确定单一残差原因；旧结论的2026年+2.8%是算术年化。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "从Top5排名轮换改为每天Top5建层、持满5日发出卖单，允许同票多层。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v2",
+    "version": "v2"
+  }
+}

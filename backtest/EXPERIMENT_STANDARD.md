@@ -3,13 +3,20 @@
 版本：v2.17（2026-10-29）
 状态：生效中
 适用范围：本仓库内所有模型迭代与策略迭代实验（人工或 agent 执行）。
+
+2026-10-31 策略命名说明（用户明确要求）：全A执行层策略版本统一展示为 **s1–s5**，模型仍使用 **v1–v4**；当前为模型v2、策略s5。s编号对应历史冻结登记的`bt_version: vN`，原实验ID、登记原件和生产配置文件名保持可追溯；该命名调整不改变策略参数、指标、版本选择或晋升事实。
+
+2026-10-31 归档范围说明：按用户明确要求，现存实验归档与登记仅保留全A模型及 `phase-m-v1-bt` 策略方向。其它实验结果档案已删除；下文 CSI1000 条款保留历史研究定义，参数、评估口径及时间划分未因此改动。当前保留范围见 `backtest/experiments/README.md`。
+同日按用户要求归并完全重复的策略候选、删除当前失败档案，并把14个策略源变体按5个参数组展示；保留23个源实体、24条登记事件和9个Benchmark。参数组只负责目录组织及展示，不登记新事件、不决定晋升、不改写成员指标；后续失败实验仍按本规范登记。本次归档核验见 `backtest/experiments/_catalog/audits/20261031-strategy-experiment-groups/`。
 修改本文件需用户明确批准；agent 不得自行修改评测口径或时间划分。
 
-2026-10-30 运行状态勘误（按用户本轮仓库整理要求同步，仅更新实盘状态说明）：Mac 生产调度已使用 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，历史 v2 五种子、top5/drop1/hold1/f100、risk_degree=1.0；工作日 20:00，统一监控 8090。旧全A阶梯、CSI1000 与 CSI300 配置作为历史/回退保留。下文各次修订中的“未切换”描述只记录相应批准时点；研究模型 v4、BT v5 的 100 万/risk_degree=0.90/原费用/历史窗口及全部评测和保留规则保持原定义。详见 `live_trading/BT_V5_CUTOVER.md`。
+2026-10-31，用户明确要求将全A当前模型基线选回 **v2 · M0 H20 ES（Top5早停）**。本次只变更当前选择，不重训、不重编号、不改历史指标或实验对照；登记以最新`current_baseline: true`事件为准，不能再按最高版本号推断当前模型。v3/v4保留为历史研究版本；s5及当前生产Top5配置保持各自既有参数。下文旧修订中的“当前”只表示相应批准时点。
 
-本次修订（v2.17）由用户于 2026-10-29 明确批准：将历史模型 **v2 · M0 H20 ES** 五种子合成信号 × `TopkDropoutStrategy(topk=5,n_drop=1,hold_thresh=1,force_sell_rank=100,risk_degree=0.90)` 晋升为执行层回测基线 **BT v5**。保留100万账户、原费用和原历史窗口；该窗口已经用于模型早停与策略比较，属于历史选型窗口，不是独立样本外检验。模型研究基线仍为 **v4 · M0 H20 RankIC ES**。本次仅批准隔离环境的离线实盘适配，30万当前费用与新增期间结果另作诊断；生产实盘配置、资金持仓、数据库、调度、桥接和QMT均未因本次晋升而激活或切换。
+2026-10-30 运行状态勘误（按用户本轮仓库整理要求同步，仅更新实盘状态说明）：Mac 生产调度已使用 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，历史 v2 五种子、top5/drop1/hold1/f100、risk_degree=1.0；工作日 20:00，统一监控 8090。旧全A阶梯、CSI1000 与 CSI300 配置作为历史/回退保留。下文各次修订中的“未切换”描述只记录相应批准时点；研究模型 v4、s5 的 100 万/risk_degree=0.90/原费用/历史窗口及全部评测和保留规则保持原定义。详见 `live_trading/BT_V5_CUTOVER.md`。
 
-本次修订（v2.16）由用户于 2026-08-23 **明确批准**：把 **v4 RankIC ES × 真阶梯 k3×h5**（`CohortLadderStrategy` topk=3 horizon=5）晋升为执行层回测基线 **BT v4**。晋升依据是组合规则对齐主格 top3×h5，不是对 BT v3 逐维占优。v2.15 由用户于 2026-08-22 **明确批准**：Phase M v1 **训练早停**改回评估窗上的 `daily_rank_ic`；把「v3 + RankIC 早停」官方合成信号晋升为模型基线 **v4 · M0 H20 RankIC ES**；总报告第 1 块增加**全局 RankIC**（官方合成信号、全宇宙日截面 Spearman，读 `ensemble.h5.rank_ic_mean`）。**评测主格不变**，仍是 top3×h5 扣费净年化/波动/夏普。v4 不是重跑 v1：v1 是 499 天次日 RankIC + `valid_frame_70.pkl`；v4 仍用 `valid_frame_t5h5es.pkl`（约 1454 天，H5 标签只作 RankIC 的 y）。v2.14 由用户于 2026-08-22 **明确批准**：Phase M v1 每个实验的主指标都是 **top3×h5**；分年、分风格只报这一格，不再叉乘 k×h。v2.13 将官方主格与早停改为 top3×h5，并按净年化晋升 **v3**。v2.12 修了前视窗截断，并把执行层回测基线提升为 **BT v3**。CSI1000 历史 Phase M / Phase S 轨道（B6-M / B4-S、IC/RankIC、邻域规则）保持不变。两套轨道禁止混比。
+本次修订（v2.17）由用户于 2026-10-29 明确批准：将历史模型 **v2 · M0 H20 ES** 五种子合成信号 × `TopkDropoutStrategy(topk=5,n_drop=1,hold_thresh=1,force_sell_rank=100,risk_degree=0.90)` 晋升为执行层回测基线 **s5**。保留100万账户、原费用和原历史窗口；该窗口已经用于模型早停与策略比较，属于历史选型窗口，不是独立样本外检验。模型研究基线仍为 **v4 · M0 H20 RankIC ES**。本次仅批准隔离环境的离线实盘适配，30万当前费用与新增期间结果另作诊断；生产实盘配置、资金持仓、数据库、调度、桥接和QMT均未因本次晋升而激活或切换。
+
+本次修订（v2.16）由用户于 2026-08-23 **明确批准**：把 **v4 RankIC ES × 真阶梯 k3×h5**（`CohortLadderStrategy` topk=3 horizon=5）晋升为执行层回测基线 **s4**。晋升依据是组合规则对齐主格 top3×h5，不是对 s3 逐维占优。v2.15 由用户于 2026-08-22 **明确批准**：Phase M v1 **训练早停**改回评估窗上的 `daily_rank_ic`；把「v3 + RankIC 早停」官方合成信号晋升为模型基线 **v4 · M0 H20 RankIC ES**；总报告第 1 块增加**全局 RankIC**（官方合成信号、全宇宙日截面 Spearman，读 `ensemble.h5.rank_ic_mean`）。**评测主格不变**，仍是 top3×h5 扣费净年化/波动/夏普。v4 不是重跑 v1：v1 是 499 天次日 RankIC + `valid_frame_70.pkl`；v4 仍用 `valid_frame_t5h5es.pkl`（约 1454 天，H5 标签只作 RankIC 的 y）。v2.14 由用户于 2026-08-22 **明确批准**：Phase M v1 每个实验的主指标都是 **top3×h5**；分年、分风格只报这一格，不再叉乘 k×h。v2.13 将官方主格与早停改为 top3×h5，并按净年化晋升 **v3**。v2.12 修了前视窗截断，并把执行层回测基线提升为 **s3**。CSI1000 历史 Phase M / Phase S 轨道（B6-M / B4-S、IC/RankIC、邻域规则）保持不变。两套轨道禁止混比。
 
 ---
 
@@ -20,9 +27,9 @@
 | 轨道 | 用途 | 模型基线 | 策略基线 | 评估口径 | 报告入口 |
 |---|---|---|---|---|---|
 | CSI1000 研究/实盘 | 历史 Phase M 已收尾；当前 Phase S | **B6-M** | **B4-S** | Phase M：IC/RankIC（三池）；Phase S：扣费绝对收益 + 邻域行 | `report.html` / `strategy_stability_report.html` |
-| Phase M v1（全A / regime-adapt） | 现行全A 模型迭代 | **v4 · M0 H20 RankIC ES** | 本轨道只改模型，不套用 B4-S 选型 | 主格 = 五种子合成信号上的 top3×h5 扣费净年化/波动/夏普（无北极星）；总报告另报官方合成信号的全局 h5 RankIC；执行层对照另见第 1.6 节 | `phase_m_v1_report.html` + 各实验详细报告；执行层回测 `phase_m_v1_bt_report.html` |
+| Phase M v1（全A / regime-adapt） | 现行全A 模型迭代 | **v2 · M0 H20 ES（Top5早停）** | 本轨道只改模型，不套用 B4-S 选型 | 主格 = 五种子合成信号上的 top3×h5 扣费净年化/波动/夏普（无北极星）；总报告另报官方合成信号的全局 h5 RankIC；执行层对照另见第 1.6 节 | `phase_m_v1_report.html` + 各实验详细报告；执行层回测 `phase_m_v1_bt_report.html` |
 
-1. CSI1000 轨道：当前研究模型基线为 **B6-M**，见第 1 节；该轨道模型迭代已收尾。历史实验的 `baseline_ref` 不改写，HTML 每个方向表格**第一行**仍为该方向对应的 baseline 指标行。Phase M v1 轨道：当前模型基线为 **v4**（第 1.5 节，评估窗 `daily_rank_ic` 早停）；总报告按第 5.1.2 节四块排版，不再按 direction 分表。v3 · M0 H20 t3h5es 与更早版本留在历史 baseline 表。
+1. CSI1000 轨道：当前研究模型基线为 **B6-M**，见第1节；该轨道模型迭代已收尾。历史实验的`baseline_ref`不改写，HTML每个方向表格第一行仍为该方向对应baseline。Phase M v1轨道：当前模型基线为 **v2**（第1.5节，评估窗Top5×H5净年化早停）；总报告按第5.1.2节四块排版。历史v1、v3、v4保留版本来源与指标。
 2. 模型与策略**分开迭代**。CSI1000 轨道当前进入 Phase S，只使用 `backtest/models/baselines/<model-ref>/manifest.json` 指向的单一冻结模型，只改策略；当前研究策略基线为 B4-S。该轨道 Phase M 的五种子训练与评估要求不变。Phase M v1 只改模型（特征/标签/加权/结构），用第 5.1.2 节口径评估，不得与 CSI1000 Phase S 回测数字混排或互相覆盖。
 3. CSI1000 Phase M 看 **IC / RankIC**；CSI1000 Phase S 报告主展示为**扣费绝对收益**口径（年化/夏普/Alpha/Beta/基准涨幅/卡玛/波动/回撤/换手）；邻域选型另看**邻域 IR P25**。Phase M v1 **取消北极星**，主格为 **top3 × h5**，主指标为扣费净年化、扣费波动（HAC 年化标准差）、扣费夏普（净年化/波动）。
 4. CSI1000 轨道：每个模型变体 **5 个固定种子，默认只在基线训练池（CSI1000）训练**（共 5 次训练），训练好的模型在 **3 个测试集**（csi1000/csi300/csi500）上评估 IC/RankIC，**研究主目标池为 CSI1000**。全A 暂不作为该轨道默认测试集（实验设计显式要求时再加）。仅训练样本类实验（更换训练池/起点/样本加权等）才使用其他训练池。Phase M v1：固定 5 种子 `[42, 1000, 2000, 3000, 4000]`，默认在**全A**长窗训练，评估宇宙为全A（三过滤，见 5.1.2）。
@@ -34,7 +41,7 @@
 
 ## 1. 基线定义（B6-M / B4-S）
 
-研究基线与实盘配置分离维护。当前 Mac 生产配置是 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，对应 `backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/configs/alla_v2_top5d1f100_parity.yaml`；旧全A阶梯对应 `backtest/configs/alla_v4_ladder_k1h5_parity.yaml`。`live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略为历史正式盘；CSI1000 研究配置随 B4-S 同步。这两套历史配置的实盘对照分别使用 `backtest/configs/csi300_live_parity.yaml`（CSI300）与 `backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml`（CSI1000 研究），不得混用。
+研究基线与实盘配置分离维护。当前 Mac 生产配置是 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，对应 `backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml`；parity 配置统一归入 `backtest/experiments/`，`backtest/configs/` 不再维护 parity；旧全A阶梯 K1 对照档位于 `backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml`。`live_trading/configs/csi300_topk10_live.yaml` 的 B1 模型与 B1-S 策略为历史正式盘；该配置与 `live_trading/configs/alla_v4_ladder_k3h5_postclose_real.yaml` 仅保留历史配置/账本供只读查阅，2026-10-31 已删除对应 parity 配置并移除 live YAML 的 parity 映射，不能直接恢复发布。历史 s4 研究基线与配置保留不变。CSI1000 研究基线仍为 B6-M / B4-S；两套历史配置 `live_trading/configs/csi1000_b6m_b2s_postclose.yaml`、`live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml` 仅保留历史账本/配置信息，2026-10-31 已删除对应 parity 配置。缺少 parity 时发布门禁会报错，不能直接恢复发布。
 
 ### 1.1 模型基线 B6-M
 
@@ -93,24 +100,24 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 
 只有当某实验按本规范完成完整评估（第 4/5 节）、结果对比数据经用户确认后，才可将其提升为新基线；提升时在本文件更新当前基线定义并记录版本号与日期。agent 不得自行提升基线。
 
-本次 B6-M 提升、Phase M 收尾、B2-S / B3-S / B4-S 提升、以及 2026-08-19 Phase M v1 的日频 ST 切口径、**M0 H20 ES** 模型提升、2026-08-22 的前视窗截断口径修正、**BT v3** 执行层提升、2026-08-22 用户明确批准的 **主格改 top3×h5 并按净年化晋升 v3**、同日用户明确批准的 **早停改回 daily_rank_ic 并晋升 v4**、以及 2026-08-23 用户明确批准的 **BT v4 真阶梯 k3×h5**，均已获用户明确确认。CSI1000 研究实盘配置随 B4-S 同步；CSI300 B1 正式实盘配置仍保留。2026-08-27 用户批准把全A 观察实盘切到 `alla_v4_ladder_k1h5_postclose_real`（30 万、top1×h5、仓位 100%），**不改变** BT v4 研究基线（仍是 k3×h5）。B5-M、B1-S、B2-S、B3-S、M0 H20、M0 H20 ES、M0 H20 t3h5es、BT v1 / v2 / v3 与更早基线保留为历史对照。
+本次 B6-M 提升、Phase M 收尾、B2-S / B3-S / B4-S 提升、以及 2026-08-19 Phase M v1 的日频 ST 切口径、**M0 H20 ES** 模型提升、2026-08-22 的前视窗截断口径修正、**s3** 执行层提升、2026-08-22 用户明确批准的 **主格改 top3×h5 并按净年化晋升 v3**、同日用户明确批准的 **早停改回 daily_rank_ic 并晋升 v4**、以及 2026-08-23 用户明确批准的 **s4 真阶梯 k3×h5**，均已获用户明确确认。CSI1000 研究实盘配置随 B4-S 同步；CSI300 B1 正式实盘配置仍保留。2026-08-27 用户批准把全A 观察实盘切到 `alla_v4_ladder_k1h5_postclose_real`（30 万、top1×h5、仓位 100%），**不改变** s4 研究基线（仍是 k3×h5）。B5-M、B1-S、B2-S、B3-S、M0 H20、M0 H20 ES、M0 H20 t3h5es、s1 / s2 / s3 与更早基线保留为历史对照。
 
-### 1.5 Phase M v1 模型基线（现行协议 top3×h5，早停 RankIC）
+### 1.5 Phase M v1 模型基线（现行评估 top3×h5，v2 Top5早停）
 
 本基线只服务 **Phase M v1（全A / regime-adapt）** 轨道，**不替换**第 1.1 节 B6-M，也不进入 CSI1000 Phase S 冻结模型。两套轨道禁止混比。
 
 | 项 | 值 |
 |---|---|
-| 基线版本 | **v4 · M0 H20 RankIC ES**（2026-08-22，用户明确批准：训练早停改回评估窗 `daily_rank_ic`，晋升官方合成信号） |
-| registry | `regime-adapt/m0-h20-rankices-v1`（`baseline_version: v4`） |
+| 基线版本 | **v2 · M0 H20 ES**（2026-10-31，用户明确选择为当前模型；复用历史五种子模型，未重新训练） |
+| registry | `regime-adapt/m0-h20-t5h5-es-v1`（`baseline_version: v2`；最新事件`current_baseline: true`） |
 | 训练池 | 全A |
 | 训练窗 | 2004-01-02 ~ 2020-07-31 |
 | 模型 | 单 LGBM（B3-M 冻结超参 + CSRankNorm；超参见 `backtest/scripts/train_regime_arm.py` 的 `FROZEN_SINGLE_KWARGS`） |
 | 标签 | 累计未来 H20 + CSRankNorm |
 | 特征 | Alpha158 + range；**无 regime 特征** |
 | 日权重 | 自然分布（M0 权重，无风格再加权） |
-| 早停 | `es_metric=daily_rank_ic`，`es_valid=eval_window`：全A 评估窗日截面 RankIC；valid 特征缓存仍是 `valid_frame_t5h5es.pkl`（标签仍是 H5，只作 RankIC 的 y）。新实验 `--es-valid auto` 也走评估窗，不再默认 499 日分层集 |
-| 训练 session | `regimeadaptfast_m0h20_rankices_s{42,1000,2000,3000,4000}` |
+| 早停 | `es_metric=top5_h5_net_ann`，`es_valid=eval_window`：全A评估窗Top5×H5扣费净年化；历史模型选择时的主格为Top5×H5，现行报告统一评估Top3×H5 |
+| 训练 session | `regimeadaptfast_m0h20_t5h5es_s{42,1000,2000,3000,4000}` |
 | 种子 | `[42, 1000, 2000, 3000, 4000]` |
 | 评估窗 | 2020-08-03 ~ 2026-07-31（常用；与 CSI1000 旧 test 截止 2026-07-16 不同） |
 | 评估 ST | 日频 `scripts/data_collector/tushare/st_daily.csv` |
@@ -120,27 +127,33 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 | 全局 RankIC | 同一条合成信号、全宇宙、h5 标签的日 Spearman 均值（`ensemble.h5.rank_ic_mean`） |
 | 禁止 | 用五种子指标的算术平均充当官方数字；用 `seed_mean` 的 RankIC 冒充官方全局 RankIC；把 v4 写成 v1 的 499 天次日协议 |
 
-官方数字读 eval JSON 的 `pools.all.ensemble`（总报告 / registry `metrics` 已按此取），**禁止手写死数字**。`pools.all.seed_mean` 仍是种子指标均值，只作稳健性，不进总报告第 1～3 块。读表直觉约数（`eval_regime_ablation/eval_m0h20_rankices.json`，以 JSON 为准）：净年化约 **+30.6%**、波动 57.8%、夏普 0.53、全局 RankIC 约 **0.0999**、`n_days` 1448。
+官方数字读 eval JSON 的 `pools.all.ensemble`（总报告 / registry `metrics` 已按此取），**禁止手写死数字**。`pools.all.seed_mean` 仍是种子指标均值，只作稳健性，不进总报告第 1～3 块。读表直觉约数（`eval_regime_m0_labels/eval_m0h20es_k123h2345.json`，以JSON为准）：净年化约 **+30.2%**、波动58.2%、夏普0.52、全局RankIC约 **0.0976**、`n_days` 1448。这里读取现行Top3×H5，不把历史Top5早停分数当成当前评估主格。
 
 #### 1.5.1 历史基线 v3 · M0 H20 t3h5es
 
 `regime-adapt/m0-h20-t3h5es-v1`（`baseline_version: v3`）是 2026-08-22 当日短暂的 Phase M v1 模型基线。配方与上表相同，但早停为 `top3_h5_net_ann`。读 `eval_regime_m0_t3h5es/eval_m0h20.json`：约净年化 **+29.7%**、波动 57.6%、夏普 0.52、非扣费 +33.6%、`n_days` 1448。训练 session `regimeadaptfast_m0h20_t3h5es_s{42,1000,2000,3000,4000}` 保留。历史实验的 `baseline_ref` 不改写。
 
-#### 1.5.2 历史基线 v2 · M0 H20 ES
+#### 1.5.2 v2 · M0 H20 ES 的历史登记与现行选择
 
-`regime-adapt/m0-h20-t5h5-es-v1`（`baseline_version: v2`）是 2026-08-19 至 2026-08-22 的 Phase M v1 模型基线。配方与上表相同，但训练标签固定 H20、早停为 `top5_h5_net_ann`。2026-08-22 起官方主格改为 top3×h5 后，该行改读 `eval_regime_m0_labels/eval_m0h20es_k123h2345.json`：约净年化 **+30.2%**、波动 58.2%、夏普 0.52、非扣费 +34.1%、`n_days` 1448；2026 净年化约 +9.8%。当时主格 top5×h5 的约数（+28.6% / 56.1% / 0.51，2026 −0.3%）只作历史尺子对照。训练 session `regimeadaptfast_m0h20_t5h5es_s{42,1000,2000,3000,4000}` 保留。
+`regime-adapt/m0-h20-t5h5-es-v1`（`baseline_version: v2`）在2026-08-19至2026-08-22曾为Phase M v1模型基线，2026-10-31按用户要求重新选为当前模型。训练标签固定H20、早停为`top5_h5_net_ann`。2026-08-22起官方主格改为top3×h5后，该行改读`eval_regime_m0_labels/eval_m0h20es_k123h2345.json`：约净年化 **+30.2%**、波动58.2%、夏普0.52、非扣费+34.1%、`n_days` 1448；2026净年化约+9.8%。当时主格top5×h5的约数（+28.6% / 56.1% / 0.51，2026 −0.3%）只作历史尺子对照。训练session `regimeadaptfast_m0h20_t5h5es_s{42,1000,2000,3000,4000}`保留。
 
 #### 1.5.3 历史基线 v1 · M0 H20
 
 `regime-adapt/m0-h20-label-v4`（`baseline_version: v1`）是 2026-08-16 至 2026-08-19 的 Phase M v1 模型基线，早停为冻结 499 天次日 RankIC。2026-08-22 起该行官方评估改读 `eval_regime_m0_labels/eval_m0h20_k123h2345.json`（top3×h5）：约净年化 **+29.3%**、波动 56.7%、夏普 0.52、`n_days` 1448；2026 净年化约 +11.0%。当时主格 top5×h5 约数（+29.1% / 55.5% / 0.52，2026 +3.6%）只作历史尺子对照。8/16 的静态 `st_names` 数字、8/20 超额口径约数、以及 `eval_m0h20_st_daily.seedmean.json` 的五种子均值不再作官方口径。历史实验的 `baseline_ref` 不改写。
 
-### 1.6 Phase M v1 执行层回测基线 BT v5
+2026-10-31移除v1独立实验档案与活动登记，其冻结来源记录归入训练目标汇总的`historical_baselines`，继续服务v2历史对照与模型产物保留。历史v1不等于四标签对照中的H20（v3）：后者早停为Top3×H5，不能混用数值或重写来源。
 
-本基线只服务 **Phase M v1 的真实执行层对照**，不是 CSI1000 Phase S，也不替换第 1.5 节模型基线。BT v5 使用历史模型 v2 与 TopkDropout；它与模型主格 top3×h5 的组合规则不同。模型研究基线 v4 与执行层基线 BT v5 的版本号分别管理。
+#### 1.5.4 历史基线 v4 · M0 H20 RankIC ES
+
+`regime-adapt/m0-h20-rankices-v1`（`baseline_version: v4`）于2026-08-22获批晋升，2026-10-31起保留为历史研究版本。它沿用H20训练目标，早停为全评估窗H5标签`daily_rank_ic`，不是v1的499天次日RankIC。五种子session `regimeadaptfast_m0h20_rankices_s{42,1000,2000,3000,4000}`保留；官方Top3×H5源JSON `eval_regime_ablation/eval_m0h20_rankices.json`约净年化+30.6%、波动57.8%、夏普0.53、全局RankIC0.0999。历史指标、版本和实验对照均不改写。
+
+### 1.6 Phase M v1 执行层回测基线 s5
+
+本基线只服务 **Phase M v1 的真实执行层对照**，不是CSI1000 Phase S，也不替换第1.5节模型基线。s5使用v2模型与TopkDropout；它与模型主格top3×h5的组合规则不同。当前模型研究基线v2与执行层基线s5的版本号分别管理。
 
 | 项 | 值 |
 |---|---|
-| 回测基线版本 | **BT v5**（2026-10-29，用户批准晋升现有 top5d1/hold1/f100 官方合成信号回测） |
+| 回测基线版本 | **s5**（2026-10-29，用户批准晋升现有 top5d1/hold1/f100 官方合成信号回测） |
 | registry | `baseline/phase-m-v1-bt-v5`；来源 `regime-adapt/m0h20es-all-top5d1f100-bt` |
 | 冻结模型 | **历史模型 v2 · M0 H20 ES**：`regime-adapt/m0-h20-t5h5-es-v1`；五种子 `regimeadaptfast_m0h20_t5h5es_s{42,1000,2000,3000,4000}`；早停 `top5_h5_net_ann`，并非 v4 RankIC ES |
 | 官方信号 | 五种子 pred 先做**日截面 z-score**，再等权平均，**只回测这一次** |
@@ -156,21 +169,21 @@ B0-M 为 CSI300、Alpha158、LGBM、fit 2006-01-02 ~ 2020-01-10；B0-S 与历史
 | 官方年化 | **CAGR**：\((1+\text{累计})^{250/n}-1\)。JSON 字段 `annualized_return` |
 | 审计年化 | 算术：日均扣费收益 ×250，字段 `annualized_return_arith` |
 | 夏普 | 算术年化 /（日收益标准差 ×√250），分子不用 CAGR |
-| 官方数字 | 读 `backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json` 的 `ensemble`；来源是 `backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json` 与原日收益CSV。直觉约数：CAGR +34.8%、算术年化 +34.1%、夏普 1.18、Alpha +24.7%、回撤 −33.0%、波动29.0%、单边年换手73.3；2026截至7月底CAGR +26.3%。以JSON为准，不手填报告数字 |
+| 官方数字 | 读 `backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/metrics/all_top5d1f100_m0h20es.json` 的 `ensemble`；来源是 `backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json` 与原日收益CSV。直觉约数：CAGR +34.8%、算术年化 +34.1%、夏普 1.18、Alpha +24.7%、回撤 −33.0%、波动29.0%、单边年换手73.3；2026截至7月底CAGR +26.3%。以JSON为准，不手填报告数字 |
 | 可复核来源 | 持久化JSON保存原结果、日收益CSV、ensemble预测、元数据和风格标签的路径及SHA-256；净值曲线与风格切片由原CSV重算，报告可在无 `mlruns/` / `backtest/result/` 的checkout重建 |
 | 选型限制 | `historical_selection_window`：2020-08-03~2026-07-31参与早停与策略比较，不是独立样本外检验；新增期间冻结参数诊断不用于再调参 |
 
 **TopkDropout含义**：目标最多5只；普通轮换最多1只/日，并非每天必换。`hold_thresh=1`是普通卖出的最低持有门槛，不是满1天必卖。掉出有效评分前100或个股缺失有效分数时强卖，不占普通 `n_drop`、不受最低持有期限制，但仍须遵守可成交限制。此配置买入金额按卖出后现金的90%分配，不强制每天将总仓位调回90%。
 
-本次晋升依据是用户在历史比较后确认收益、波动与换手的取舍，不是逐维占优：相对 BT v4，CAGR +34.8%/+26.3%、夏普1.18/1.04、回撤−33.02%/−32.96%、波动29.0%/25.7%、换手73.3/44.3。候选2021～2023收益均低于BT v4，优势较依赖2025；这些限制随报告保存。晋升不等于实盘激活。
+本次晋升依据是用户在历史比较后确认收益、波动与换手的取舍，不是逐维占优：相对 s4，CAGR +34.8%/+26.3%、夏普1.18/1.04、回撤−33.02%/−32.96%、波动29.0%/25.7%、换手73.3/44.3。候选2021～2023收益均低于s4，优势较依赖2025；这些限制随报告保存。晋升不等于实盘激活。
 
-总报告必须维护：历史 BT baseline 全周期表（含可移植带图报告链接）、分年矩阵（一行一个 baseline 版本、一列一年、每个指标一张表）、分风格矩阵（D/F/T，同样每个指标一张表）、实验表（链接到该次实验详细报告）。实验详细报告版式与总报告相同，但「历史 baseline」换成**实验组 vs 基准组**。风格标签用 `backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv`。当前行标 **BT v5**；v1、v2、v3、v4 留在历史表。重建用 `build_phase_m_v1_bt_report.py`；历史行优先读取 `portable_eval_output`，原 `eval_output` 与 `baseline_ref` 保留。
+总报告必须维护：历史 BT baseline 全周期表（含可移植带图报告链接）、分年矩阵（一行一个 baseline 版本、一列一年、每个指标一张表）、分风格矩阵（D/F/T，同样每个指标一张表）、实验表（链接到独立实验或参数组的详细报告）。实验详细报告版式与总报告相同，但「历史 baseline」换成**实验组 vs 基准组**；参数组直接列各源变体的原始指标。风格标签用 `backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv`。当前行标 **s5**；s1、s2、s3、s4 留在历史表。重建用 `build_phase_m_v1_bt_report.py`；历史行优先读取 `portable_eval_output`，原 `eval_output` 与 `baseline_ref` 保留。
 
-#### 1.6.1 历史回测基线 BT v1 / v2 / v3 / v4
+#### 1.6.1 历史回测基线 s1 / s2 / s3 / s4
 
-`baseline/phase-m-v1-bt-v1` 是 2026-08-19 当日的执行层锚点：修复后的 M0 H20（RankIC 早停）× top5d1 均值信号回测。`baseline/phase-m-v1-bt-v2` 是 2026-08-19~2026-08-22 的锚点：M0 H20 ES × top5d1（`hold_thresh=1`，无强制卖出）。`baseline/phase-m-v1-bt-v3` 是 2026-08-22~2026-08-23 的锚点：M0 H20 ES × TopkDropout `topk=5, n_drop=1, hold_thresh=5, force_sell_rank=100`（对 BT v2 逐维占优：CAGR +30.1%/+23.1%、夏普 1.06/0.86、回撤 −34.7%/−39.2%）。三者晋升后均保留在历史 baseline 表，不改写数字。
+`baseline/phase-m-v1-bt-v1` 是 2026-08-19 当日的执行层锚点：修复后的 M0 H20（RankIC 早停）× top5d1 均值信号回测。`baseline/phase-m-v1-bt-v2` 是 2026-08-19~2026-08-22 的锚点：M0 H20 ES × top5d1（`hold_thresh=1`，无强制卖出）。`baseline/phase-m-v1-bt-v3` 是 2026-08-22~2026-08-23 的锚点：M0 H20 ES × TopkDropout `topk=5, n_drop=1, hold_thresh=5, force_sell_rank=100`（对 s2 逐维占优：CAGR +30.1%/+23.1%、夏普 1.06/0.86、回撤 −34.7%/−39.2%）。三者晋升后均保留在历史 baseline 表，不改写数字。
 
-`baseline/phase-m-v1-bt-v4` 是 2026-08-23~2026-10-29 的执行层锚点：模型 v4 RankIC ES 五种子均值信号 × `CohortLadderStrategy(topk=3,horizon=5,risk_degree=0.90)`，100万原费用；每日买当日top3、允许同票多层、持满5个交易日到期卖。其晋升依据是规则对齐模型主格，不是对BT v3逐维占优。官方CAGR +26.3%、夏普1.04、回撤−33.0%、换手44.3；原JSON `backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json` 保留，报告使用持久化副本，不改写历史数字。2026-08-28延长窗仍是单独诊断。
+`baseline/phase-m-v1-bt-v4` 是 2026-08-23~2026-10-29 的执行层锚点：模型 v4 RankIC ES 五种子均值信号 × `CohortLadderStrategy(topk=3,horizon=5,risk_degree=0.90)`，100万原费用；每日买当日top3、允许同票多层、持满5个交易日到期卖。其晋升依据是规则对齐模型主格，不是对s3逐维占优。官方CAGR +26.3%、夏普1.04、回撤−33.0%、换手44.3；原JSON `backtest/result/phase_s_regime/all_ladder_k3h5/m0h20rankices.json` 保留，报告使用持久化副本，不改写历史数字。2026-08-28延长窗仍是单独诊断。
 
 ---
 
@@ -286,7 +299,7 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 
 #### 5.1.2 现行全A 轨道：Phase M v1
 
-现行全A / regime-adapt **模型迭代**使用本口径。统一计算入口仍是 `backtest/scripts/eval_ic_multi_pool.py`。**取消北极星**。主格：**五种子日截面 z-score 等权合成后再算 top3 × h5**。当前该轨道模型基线为 **v4**（第 1.5 节）。执行层回测仍是独立对照（第 1.6 节），不得与主格 ×238/h 直接相减。
+现行全A / regime-adapt **模型迭代**使用本口径。统一计算入口仍是`backtest/scripts/eval_ic_multi_pool.py`。**取消北极星**。主格：**五种子日截面z-score等权合成后再算top3×h5**。当前该轨道模型基线为 **v2（Top5早停）**（第1.5节）；评估主格仍为Top3×H5。执行层回测仍是独立对照（第1.6节），不得与主格×238/h直接相减。
 
 合成方式由 `ensemble_preds.blend_score_series` / `eval_ic_multi_pool.official_head_from_preds` 计算，结果写入 eval JSON 的 `pools.<pool>.ensemble`。`seed_mean` 仍保留五种子指标算术平均，只作稳健性，**不得**作为总报告第 1～3 块或 registry 官方 `metrics`。
 
@@ -341,12 +354,12 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 | 收益含义 | **绝对**（头部等权 h 日前瞻收益） | **绝对**（账户净值） |
 | 年化 | `mean × 238 / h`（算术，标签是 h 日收益） | 主数字 **CAGR**（累计净值 \(^{250/n}-1\)）；算术 `mean × 250` 只作审计 |
 | 基准 | 过滤后可成交池等权（剔 ST/小额/新股/t+1 涨停） | `bench_ew_all.csv` 全池等权（不过滤） |
-| 持有期 | 满 h 个交易日**到期必卖** | 当前 BT v5：TopkDropout最低持有1日，排名退出和f100强卖，无固定到期；历史BT v4满5日到期卖 |
-| 入场只数 | 每天等权 k 只 | 当前 BT v5：目标5只、普通最多换1只/日，强卖额外腾出槽位；历史BT v4每日top3、允许同票多层 |
+| 持有期 | 满 h 个交易日**到期必卖** | 当前 s5：TopkDropout最低持有1日，排名退出和f100强卖，无固定到期；历史s4满5日到期卖 |
+| 入场只数 | 每天等权 k 只 | 当前 s5：目标5只、普通最多换1只/日，强卖额外腾出槽位；历史s4每日top3、允许同票多层 |
 
 两边都是绝对收益后，仍须对齐时间单位才能比数量级；**不得**把 Phase M 的 `×238/h` 和回测 CAGR（或算术 ×250）直接相减。JSON 里仍保留 `ann_excess` 作审计，报告不读。
 
-历史BT v4虽对齐主格组合规则，**主格 ×238/h 净年化仍不能用来预期回测 CAGR**；当前BT v5的模型、退出和配置规则也不同。年化定义、基准宇宙、费率与可成交性须分别说明。要评估某个执行层策略，只能跑那个策略本身。
+历史s4虽对齐主格组合规则，**主格 ×238/h 净年化仍不能用来预期回测 CAGR**；当前s5的模型、退出和配置规则也不同。年化定义、基准宇宙、费率与可成交性须分别说明。要评估某个执行层策略，只能跑那个策略本身。
 
 ### 5.2 Phase S（策略迭代）
 
@@ -384,8 +397,8 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 
 - 实验方向（direction）：短横线小写，如 `label-design`、`feature-ablation`、`model-arch`、`strategy-sweep`、`train-data`。
 - 实验 ID（exp_id）：`<direction>/<变体名>`，如 `label-design/cum_h10`、`baseline/b0-m`、`train-data/csi1000`。
-- 实验档案：**按 exp_id 建目录**，放在 `backtest/experiments/<exp_id>/`，用 `metadata.json` 管理配置、报告、文档、指标摘要与完整登记事件。
-- 实验独有配置放在 `backtest/experiments/<exp_id>/configs/`，文件名含变体与种子，保持冻结配置原字节及 SHA。共享基线、实盘和通用模板继续保留权威配置，通过实验元数据显式引用。
+- 实验档案：模型放在 `backtest/experiments/models/<类型>/<简名>/`；策略按执行规则放在 `strategies/<规则族>/<简名>/`，同类参数组的源实验放在 `<规则族>/<组名>/variants/<变体>/`。`metadata.json.archive_path` 声明实际位置，原exp_id不变，元数据明确kind、track、experiment_type、资产和共享依赖；显式别名兼容历史路径。组使用 `entity_type: experiment_group`，不代替源实验登记或取得晋升资格。不改写历史phase字段。
+- 实验独有配置放在所属源实验的 `configs/`，文件名含变体与种子，保持冻结配置原字节及SHA。共享研究基线和通用模板继续保留权威配置；实盘parity统一在 `backtest/experiments/_shared/deployment-parity/`，生产配置直接引用，不依赖某次实验或参数组。
 - `config_loader` 支持新完整路径、唯一文件名以及 `_catalog/path_map.json` 中明确登记的旧路径别名；不通过文件名猜测已清理的产物。
 - 结果目录：`backtest/result/<时间戳>_<变体名>/`（run_backtest.py 默认行为，note 字段填变体名）。
 
@@ -393,8 +406,8 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 
 每个实验（含判负的）完成后，向 `backtest/experiments/registry.jsonl` 追加一个实验事件。
 登记入口统一使用 `backtest/scripts/experiment_registry.py`：当前 JSONL 为轻量事件索引，
-完整 JSON 保存在对应实验目录的 `<exp_id>/records/<SHA-256>.json`，v2 索引按文件字节校验 SHA-256。
-旧完整内联行及 v1 索引仍兼容；统一读取器返回完整事件，不去重、不改变历史顺序。
+完整 JSON 保存在所属实验的 `records/<SHA-256>.json`。v3 索引保留按原 exp_id 构造的逻辑 `detail_path`，通过明确的路径别名解析分类后的实际位置，按原文件字节校验 SHA-256；共享入口自动维护目录元数据。人工分析结论写入元数据 `analysis`，不替代正式登记结论，不改变指标或晋升授权。
+旧完整内联行、v1 和 v2 索引仍兼容；统一读取器返回完整事件，不去重、不改变历史顺序。迁移不重新序列化历史详情或修改其中的来源审计路径。
 索引、详情均为长期登记记录，不参与运行产物清理；详情缺失、哈希或元字段不一致时必须报错。
 存储格式与迁移校验说明见 `backtest/experiments/README.md`。以下为完整逻辑事件示例，字段要求不变：
 
@@ -423,7 +436,7 @@ CSI1000 研究轨道的历史 Phase M 口径：test 段逐日截面 IC / RankIC 
 - **`baseline_ref` 必填**：写明对照的 baseline 版本（当前如 `B1 v1.0`）；同一 `direction` 内不得混用多个版本。HTML 该方向表第一行即此版本对应的 baseline 指标。
 - **`data_version` 必填**：填当时数据日历的最后交易日（`eval_ic_multi_pool.py` 输出中自动带出）。数据前复权重标定不改变 Alpha158 特征值（全部为比值形态），但历史修正/补数会轻微改变截面构成，此字段用于事后解释不同时间实验结果的差异，无需做数据快照。
 - Phase S 行另须填写 **`frozen_model_ref`**、manifest/模型/预测 artifact 与 SHA、selection segment、**`evaluation_mode: full_history_in_sample`**、冻结策略参数、费率、benchmark 及三项扣费指标；模型必须来自 `backtest/models/baselines/<model-ref>/manifest.json`。新 Phase S full-period 行缺少该 `evaluation_mode` 不得登记为完成的选型结果。
-- Phase M v1 行另须填写 **`phase_m_protocol: "v1"`**、`baseline_ref`（当前为 `regime-adapt/m0-h20-rankices-v1`，该基线行写 `self`）、`detail_report`，以及主格主指标（`net_ann` / `net_ann_vol` / `net_sharpe` / `ann` / 日换手 `turnover`；可选 `rank_ic_mean`）。baseline 行另须 `baseline_version`（现 v1 / v2 / v3 / v4）。无该标记的历史行不进入总报告第 1～3 块。历史实验的 `baseline_ref` 不改写。
+- Phase M v1行另须填写 **`phase_m_protocol: "v1"`**、`baseline_ref`（当前为`regime-adapt/m0-h20-t5h5-es-v1`，该基线行写`self`）、`detail_report`，以及主格主指标（`net_ann` / `net_ann_vol` / `net_sharpe` / `ann` / 日换手`turnover`；可选`rank_ic_mean`）。baseline行另须`baseline_version`（历史版本v1 / v2 / v3 / v4）；当前选择按最新显式`current_baseline: true`事件，不按最大版本号推断。归并的v1来源只作历史引用，不恢复活动实验。历史实验的`baseline_ref`不改写。
 
 ### 6.3 mlruns 与 result 清理（强制，防磁盘打爆）
 
@@ -510,12 +523,12 @@ CSI1000 轨道 Phase M 已以 B6-M 收尾。该轨道 Phase S checklist：
 Phase M v1（全A / regime-adapt）checklist：
 
 ```
-[ ] 1. 开跑前写好 hypothesis；对照 baseline 为第 1.5 节当前 v4（未填入前对照历史 v3 · M0 H20 t3h5es）
+[ ] 1. 开跑前写好hypothesis；对照baseline为第1.5节当前v2 · M0 H20 ES（Top5早停），历史实验仍用其原对照
 [ ] 2. 全A 长窗训练（2004-01-02~2020-07-31），固定五种子；只改模型，不改策略
 [ ] 3. 用 eval_ic_multi_pool.py 按第 5.1.2 节口径评估（主格 top3×h5；分年/分风格只报这一格，不叉乘 k×h；日频 ST + 成交额 + 上市 + 剔 t+1 涨停；官方合成信号须带 h5 RankIC）
 [ ] 4. 登记 registry：phase_m_protocol=v1、baseline_ref、detail_report、主格主指标
-[ ] 5. 重建 phase_m_v1_report.html（四块）与该实验详细 HTML；总报告第 1 块须含当前 baseline 版本（现为 v4）与全局 RankIC
-[ ] 6. 若做执行层对照：五种子均值信号单次回测，对照当前 BT baseline（现为 BT v5），登记 report_kind=phase_m_v1_bt，重建 phase_m_v1_bt_report.html
+[ ] 5. 重建phase_m_v1_report.html（四块）与该实验详细HTML；总报告第1块须含当前baseline版本（现为v2）与全局RankIC
+[ ] 6. 若做执行层对照：五种子均值信号单次回测，对照当前 BT baseline（现为 s5），登记 report_kind=phase_m_v1_bt，重建 phase_m_v1_bt_report.html
 ```
 
 
@@ -530,7 +543,7 @@ Phase M v1（全A / regime-adapt）checklist：
 | `backtest/scripts/dump_regime_preds.py` | 从训练 session 推理 test pred 并合成官方信号（回测 / RankIC 补算） |
 | `backtest/scripts/patch_official_rank_ic.py` | 给已有 eval JSON 补 `ensemble.h5.rank_ic_mean`，不重跑头部网格 |
 | `backtest/scripts/promote_phase_m_v1_rankices.py` | 把 RankIC 早停官方合成信号晋升为模型基线 v4 |
-| `backtest/scripts/promote_bt_v4_ladder_k3h5.py` | 把 v4 × 真阶梯 k3×h5 晋升为执行层基线 BT v4 |
+| `backtest/scripts/promote_bt_v4_ladder_k3h5.py` | 把 v4 × 真阶梯 k3×h5 晋升为执行层基线 s4 |
 | `backtest/scripts/promote_bt_v5_top5d1f100.py` | 重放已批准的 v2 模型 × top5d1/hold1/f100 晋升，校验原始来源、补风格并保存可移植指标；不训练、不激活实盘 |
 | `backtest/scripts/eval_protocol.py` | daily_ic / summarize_ic / pairwise_win_count / yearly_ir |
 | `backtest/scripts/run_pred_backtest.py` | 基于现成 pred 分数回测（Phase S 用） |

@@ -1,0 +1,856 @@
+{
+  "date": "2026-10-31",
+  "scope": "7个未晋升模型/评估实验，只读事实审查",
+  "common_source_evidence": [
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1",
+      "note": "§1.5：训练窗、特征、历史v1/v2/v3/v4及当前评估定义。"
+    },
+    {
+      "path": "backtest/scripts/prepare_regime_train_chunks.py",
+      "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615",
+      "note": "沪深A股代码过滤、ProcessInf、DropnaLabel、CSRankNorm、上市≥60交易日；训练中没有ST和金额门槛。"
+    },
+    {
+      "path": "backtest/scripts/train_regime_arm.py",
+      "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a",
+      "note": "TRAIN_SEGMENT、冻结单模型/DE参数、训练日及日权重、训练标签替换、两套早停、save_session原件位置。"
+    },
+    {
+      "path": "backtest/scripts/build_regime_alt_labels.py",
+      "sha256": "8e078b96ee3c1dc57fb207be0a13ab8e55272c672541b4127ca328506173d371",
+      "note": "改标签在共用H40缓存有效行上覆盖，保留缓存原有DropnaLabel/上市龄筛选，再剔除新标签缺失。"
+    },
+    {
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a",
+      "note": "固定抽样2976日；清单范围2004-01-07~2020-07-30，训练窗声明仍2004-01-02~2020-07-31。"
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "note": "M0只补偿较少抽样日期的权重，不采用M3风格/时间加权。"
+    },
+    {
+      "path": "backtest/scripts/eval_ic_multi_pool.py",
+      "sha256": "8ca3b34b782f9ad75568a5adc4120dee819628734cdc7b0505ede5cc69abc730",
+      "note": "official_head_from_preds先合成信号再评估；头部可成交过滤与末端标签截断。"
+    },
+    {
+      "path": "backtest/scripts/ensemble_preds.py",
+      "sha256": "62b4e0d32090af074c6c326a27255d4db3a03cc4aa1a5551c4b6b5bd7c968de0",
+      "note": "blend_score_series对每个分数先每日截面z-score，再等权平均。"
+    },
+    {
+      "path": "qlib/contrib/model/double_ensemble.py",
+      "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669",
+      "note": "predict使用sub_weights加权平均子模型；冻结配方sub_weights=[1,1,1]。"
+    }
+  ],
+  "experiments": [
+    {
+      "exp_id": "regime-adapt/m0-label-k123-h2345",
+      "metadata_path": "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+      "display_experiment_id": "models/evaluation/kh-grid",
+      "scientific_model_version": "",
+      "recommended_version_label": "未晋升（复用v1/v2）",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "model_profile": {
+        "structure": "复用v1/v2的单LightGBM模型，各5个种子；Alpha158+range特征，本实验未训练新模型。",
+        "training_sample": {
+          "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+          "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+          "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+        },
+        "training_target": "复用v1/v2的H20累计收益+CSRankNorm训练目标，本实验不重新训练。",
+        "evaluation_sample": {
+          "pool": "全A（沪深A股）",
+          "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+          "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+        },
+        "evaluation_method": "训练早停：复用v1的499天次日RankIC与v2的评估窗Top5×H5净年化模型；评估融合：各版本5个种子分别做每日截面z-score后等权平均，再在K=1–5、H=2–5的20格网格上评估；不混合v1/v2信号。",
+        "changes": "从Top5×H5单一主格评估改为K=1–5、H=2–5的20格评估网格。",
+        "model_paths": [
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42,
+            "label": "v2"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 1000,
+            "label": "v2"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 2000,
+            "label": "v2"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 3000,
+            "label": "v2"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 4000,
+            "label": "v2"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42,
+            "label": "v1"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 1000,
+            "label": "v1"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 2000,
+            "label": "v1"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 3000,
+            "label": "v1"
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 4000,
+            "label": "v1"
+          }
+        ]
+      },
+      "model_path_checks": [
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "label": "v2",
+          "available": true,
+          "bytes": 59420562,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 1000,
+          "label": "v2",
+          "available": true,
+          "bytes": 59858749,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 2000,
+          "label": "v2",
+          "available": true,
+          "bytes": 59520498,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 3000,
+          "label": "v2",
+          "available": true,
+          "bytes": 59768134,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 4000,
+          "label": "v2",
+          "available": true,
+          "bytes": 59607205,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "label": "v1",
+          "available": true,
+          "bytes": 1597913,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 1000,
+          "label": "v1",
+          "available": true,
+          "bytes": 1045119,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 2000,
+          "label": "v1",
+          "available": true,
+          "bytes": 1256458,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 3000,
+          "label": "v1",
+          "available": true,
+          "bytes": 1649334,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 4000,
+          "label": "v1",
+          "available": true,
+          "bytes": 1715400,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        }
+      ],
+      "source_evidence": [
+        {
+          "path": "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+          "sha256": "259cfb3222fd76313b477737041f43fa5e1195a1f38836204fb29b6f372b6fb7",
+          "note": "读取前的当前档案；profile尚未写入。"
+        },
+        {
+          "path": "backtest/experiments/models/evaluation/kh-grid/records/3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f.json",
+          "sha256": "3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f",
+          "note": "冻结登记详情：seeds、result_dirs、标签期限、对照、评估定义。"
+        },
+        {
+          "path": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+          "sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+          "note": "当前数值源：sessions、过滤、评估日期、融合方式和末端标签截止。"
+        },
+        {
+          "path": "backtest/scripts/register_regime_m0_labels.py",
+          "sha256": "b305bc565e6dd57ff0b614c350cb8cbb7657a3e4b22ef499f49f5fb882a11361",
+          "note": "GRID_FILES明确只复用m0h20与m0h20es既有信号。"
+        },
+        {
+          "path": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+          "sha256": "dae3c1acc9984e3645d7d51abf948eb670532424bdeea3e3540a4f11d6eff102",
+          "note": "网格内另一个v2信号的当前数值源。"
+        }
+      ],
+      "caveats": [
+        "训练原件与session meta已清理时，训练配方取冻结登记、同批训练脚本及规范；模型地址列只表示原路径和实际可用状态。",
+        "不得把ST/成交额/次日可成交过滤套回训练样本。",
+        "固定抽样清单日期范围是日期清单本身，不推断每个模型标签purge后的实际首末样本。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+      "display_experiment_id": "models/model-structure/de-v3-5seed",
+      "scientific_model_version": "",
+      "recommended_version_label": "未晋升（对照v3）",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "model_profile": {
+        "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；Alpha158+range特征，B6-M冻结超参（学习率0.1）。",
+        "training_sample": {
+          "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+          "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+          "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+        },
+        "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+        "evaluation_sample": {
+          "pool": "全A（沪深A股）",
+          "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+          "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+        },
+        "evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：每个种子内3个子模型等权平均；5个种子的分数分别做每日截面z-score后等权平均，只评估一次合成信号（主格Top3×H5）。",
+        "changes": "从单LightGBM改为3子模型DoubleEnsemble，并切换到相应冻结超参。",
+        "model_paths": [
+          {
+            "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42
+          },
+          {
+            "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 1000
+          },
+          {
+            "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 2000
+          },
+          {
+            "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 3000
+          },
+          {
+            "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 4000
+          }
+        ]
+      },
+      "model_path_checks": [
+        {
+          "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 1000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 2000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 3000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 4000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        }
+      ],
+      "source_evidence": [
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+          "sha256": "636c6c47d98201760cf656a616e576de86c9a9b2daeb4bb0939112ea5a5c233d",
+          "note": "读取前的当前档案；profile尚未写入。"
+        },
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-5seed/records/c51bab99399e38301282d33a1f0c3dbf9ac274819d3755e994ae9ddd14a332e5.json",
+          "sha256": "c51bab99399e38301282d33a1f0c3dbf9ac274819d3755e994ae9ddd14a332e5",
+          "note": "冻结登记详情：seeds、result_dirs、标签期限、对照、评估定义。"
+        },
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-5seed/metrics/eval_densemble_vs_v3.json",
+          "sha256": "afec0bb06e1ca442f91ce36dc2685c021edd3005a40af3d3c29c1d767ee1c398",
+          "note": "当前数值源：sessions、过滤、评估日期、融合方式和末端标签截止。"
+        },
+        {
+          "path": "backtest/scripts/register_regime_ablation.py",
+          "sha256": "c51c0b9e1cf4a240973ceb6cfeb47c5eefb364524f427350dfb4aa6f0567c109",
+          "note": "对应臂明确B6-M冻结超参、三子模型、早停与侦察/五种子。"
+        }
+      ],
+      "caveats": [
+        "训练原件与session meta已清理时，训练配方取冻结登记、同批训练脚本及规范；模型地址列只表示原路径和实际可用状态。",
+        "不得把ST/成交额/次日可成交过滤套回训练样本。",
+        "固定抽样清单日期范围是日期清单本身，不推断每个模型标签purge后的实际首末样本。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+      "display_experiment_id": "models/model-structure/de-v3-s42",
+      "scientific_model_version": "",
+      "recommended_version_label": "未晋升（对照v3）",
+      "seeds": [
+        42
+      ],
+      "model_profile": {
+        "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；Alpha158+range特征，B6-M冻结超参（学习率0.1）。",
+        "training_sample": {
+          "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+          "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+          "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+        },
+        "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+        "evaluation_sample": {
+          "pool": "全A（沪深A股）",
+          "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+          "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+        },
+        "evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+        "changes": "从单LightGBM改为3子模型DoubleEnsemble，并切换到相应冻结超参。",
+        "model_paths": [
+          {
+            "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42
+          }
+        ]
+      },
+      "model_path_checks": [
+        {
+          "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        }
+      ],
+      "source_evidence": [
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+          "sha256": "b9fb7bbdcd9cb1d1638e95246cbecd241026ebb75ea7504d81f573e705881381",
+          "note": "读取前的当前档案；profile尚未写入。"
+        },
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-s42/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json",
+          "sha256": "0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71",
+          "note": "冻结登记详情：seeds、result_dirs、标签期限、对照、评估定义。"
+        },
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-s42/metrics/eval_densemble_s42_vs_v3.json",
+          "sha256": "22c5a4aa2eff548206ce018da3c07ffff49848bf465900e8e42a8cb4d2004f85",
+          "note": "当前数值源：sessions、过滤、评估日期、融合方式和末端标签截止。"
+        },
+        {
+          "path": "backtest/scripts/register_regime_ablation.py",
+          "sha256": "c51c0b9e1cf4a240973ceb6cfeb47c5eefb364524f427350dfb4aa6f0567c109",
+          "note": "对应臂明确B6-M冻结超参、三子模型、早停与侦察/五种子。"
+        }
+      ],
+      "caveats": [
+        "训练原件与session meta已清理时，训练配方取冻结登记、同批训练脚本及规范；模型地址列只表示原路径和实际可用状态。",
+        "不得把ST/成交额/次日可成交过滤套回训练样本。",
+        "固定抽样清单日期范围是日期清单本身，不推断每个模型标签purge后的实际首末样本。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+      "display_experiment_id": "models/model-structure/de-v4-s42",
+      "scientific_model_version": "",
+      "recommended_version_label": "未晋升（对照v4）",
+      "seeds": [
+        42
+      ],
+      "model_profile": {
+        "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；Alpha158+range特征，B6-M冻结超参（学习率0.1）。",
+        "training_sample": {
+          "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+          "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+          "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+        },
+        "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+        "evaluation_sample": {
+          "pool": "全A（沪深A股）",
+          "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+          "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+        },
+        "evaluation_method": "训练早停：同一评估窗内日RankIC（H5标签）；评估融合：seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+        "changes": "从单LightGBM改为3子模型DoubleEnsemble，并切换到相应冻结超参。",
+        "model_paths": [
+          {
+            "path": "backtest/result/regimeadapt_m0h20_rankices_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42
+          }
+        ]
+      },
+      "model_path_checks": [
+        {
+          "path": "backtest/result/regimeadapt_m0h20_rankices_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        }
+      ],
+      "source_evidence": [
+        {
+          "path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+          "sha256": "e2cdbe25822ac49bf756de66e2ffee062a8defa89bf9d82f1760ee6f2dc9abea",
+          "note": "读取前的当前档案；profile尚未写入。"
+        },
+        {
+          "path": "backtest/experiments/models/model-structure/de-v4-s42/records/50615f6e0c075baa892b1d5be7e569acec91298b741274fc3a5625e285158386.json",
+          "sha256": "50615f6e0c075baa892b1d5be7e569acec91298b741274fc3a5625e285158386",
+          "note": "冻结登记详情：seeds、result_dirs、标签期限、对照、评估定义。"
+        },
+        {
+          "path": "backtest/experiments/models/model-structure/de-v4-s42/metrics/eval_densemble_s42_vs_v4.json",
+          "sha256": "5b380e49b2e6223983aebc548b277257b3e57eb90f7389f9dbc62068cd47b8c0",
+          "note": "当前数值源：sessions、过滤、评估日期、融合方式和末端标签截止。"
+        },
+        {
+          "path": "backtest/scripts/register_regime_ablation.py",
+          "sha256": "c51c0b9e1cf4a240973ceb6cfeb47c5eefb364524f427350dfb4aa6f0567c109",
+          "note": "对应臂明确B6-M冻结超参、三子模型、早停与侦察/五种子。"
+        }
+      ],
+      "caveats": [
+        "训练原件与session meta已清理时，训练配方取冻结登记、同批训练脚本及规范；模型地址列只表示原路径和实际可用状态。",
+        "不得把ST/成交额/次日可成交过滤套回训练样本。",
+        "固定抽样清单日期范围是日期清单本身，不推断每个模型标签purge后的实际首末样本。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h1-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h1/metadata.json",
+      "display_experiment_id": "models/training-target/h1",
+      "scientific_model_version": "",
+      "recommended_version_label": "未晋升（对照v3）",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "model_profile": {
+        "structure": "单LightGBM；Alpha158+range特征，B3-M冻结超参（学习率0.2）。",
+        "training_sample": {
+          "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+          "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+          "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+        },
+        "training_target": "未来1个交易日累计收益，经日截面CSRankNorm标准化。",
+        "evaluation_sample": {
+          "pool": "全A（沪深A股）",
+          "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+          "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+        },
+        "evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+        "changes": "从H20训练标签改为H1训练标签。",
+        "model_paths": [
+          {
+            "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 1000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 2000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 3000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 4000
+          }
+        ]
+      },
+      "model_path_checks": [
+        {
+          "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 1000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 2000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 3000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h1_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 4000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        }
+      ],
+      "source_evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/h1/metadata.json",
+          "sha256": "ca64ceddeb36a26df12edde428158930337bae1f5df3746755de24f167279555",
+          "note": "读取前的当前档案；profile尚未写入。"
+        },
+        {
+          "path": "backtest/experiments/models/training-target/h1/records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
+          "sha256": "42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85",
+          "note": "冻结登记详情：seeds、result_dirs、标签期限、对照、评估定义。"
+        },
+        {
+          "path": "backtest/experiments/models/training-target/h1/metrics/eval_m0h1.json",
+          "sha256": "b83c3f1808491102fba70d6a0c5890a73c7b4c207895e39b0c167750e0820b5e",
+          "note": "当前数值源：sessions、过滤、评估日期、融合方式和末端标签截止。"
+        },
+        {
+          "path": "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+          "sha256": "03ddc9113f9ad3636eebbe569086b041127432c44ae14ebec3f33d449bc146cc",
+          "note": "H1/H5/H10同批标签消融、Top3早停及未晋升状态。"
+        }
+      ],
+      "caveats": [
+        "训练原件与session meta已清理时，训练配方取冻结登记、同批训练脚本及规范；模型地址列只表示原路径和实际可用状态。",
+        "不得把ST/成交额/次日可成交过滤套回训练样本。",
+        "固定抽样清单日期范围是日期清单本身，不推断每个模型标签purge后的实际首末样本。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h10-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h10/metadata.json",
+      "display_experiment_id": "models/training-target/h10",
+      "scientific_model_version": "",
+      "recommended_version_label": "未晋升（对照v3）",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "model_profile": {
+        "structure": "单LightGBM；Alpha158+range特征，B3-M冻结超参（学习率0.2）。",
+        "training_sample": {
+          "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+          "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+          "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+        },
+        "training_target": "未来10个交易日累计收益，经日截面CSRankNorm标准化。",
+        "evaluation_sample": {
+          "pool": "全A（沪深A股）",
+          "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+          "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+        },
+        "evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+        "changes": "从H20训练标签改为H10训练标签。",
+        "model_paths": [
+          {
+            "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 1000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 2000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 3000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 4000
+          }
+        ]
+      },
+      "model_path_checks": [
+        {
+          "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 1000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 2000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 3000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h10_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 4000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        }
+      ],
+      "source_evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/h10/metadata.json",
+          "sha256": "4fc39a143f03800818ab2a015bfdf6c89f632dbdfef3bada74b30e695f99e6c1",
+          "note": "读取前的当前档案；profile尚未写入。"
+        },
+        {
+          "path": "backtest/experiments/models/training-target/h10/records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json",
+          "sha256": "1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1",
+          "note": "冻结登记详情：seeds、result_dirs、标签期限、对照、评估定义。"
+        },
+        {
+          "path": "backtest/experiments/models/training-target/h10/metrics/eval_m0h10.json",
+          "sha256": "47848f51908e0d243cd9a1b56adc5da889987d5a02f5440f6e2e2227b1bb66f9",
+          "note": "当前数值源：sessions、过滤、评估日期、融合方式和末端标签截止。"
+        },
+        {
+          "path": "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+          "sha256": "03ddc9113f9ad3636eebbe569086b041127432c44ae14ebec3f33d449bc146cc",
+          "note": "H1/H5/H10同批标签消融、Top3早停及未晋升状态。"
+        }
+      ],
+      "caveats": [
+        "训练原件与session meta已清理时，训练配方取冻结登记、同批训练脚本及规范；模型地址列只表示原路径和实际可用状态。",
+        "不得把ST/成交额/次日可成交过滤套回训练样本。",
+        "固定抽样清单日期范围是日期清单本身，不推断每个模型标签purge后的实际首末样本。"
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h5-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h5/metadata.json",
+      "display_experiment_id": "models/training-target/h5",
+      "scientific_model_version": "",
+      "recommended_version_label": "未晋升（对照v3）",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "model_profile": {
+        "structure": "单LightGBM；Alpha158+range特征，B3-M冻结超参（学习率0.2）。",
+        "training_sample": {
+          "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+          "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+          "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+        },
+        "training_target": "未来5个交易日累计收益，经日截面CSRankNorm标准化。",
+        "evaluation_sample": {
+          "pool": "全A（沪深A股）",
+          "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+          "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+        },
+        "evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+        "changes": "从H20训练标签改为H5训练标签。",
+        "model_paths": [
+          {
+            "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 1000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 2000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 3000
+          },
+          {
+            "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 4000
+          }
+        ]
+      },
+      "model_path_checks": [
+        {
+          "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 42,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 1000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 2000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 3000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        },
+        {
+          "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "seed": 4000,
+          "available": false,
+          "bytes": null,
+          "basis": "原result_dirs与train_regime_arm.save_session固定保存结构；只检查存在，不反序列化。"
+        }
+      ],
+      "source_evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/h5/metadata.json",
+          "sha256": "6377fa75fab10ff32052b55426c4c7c3a8ff3f3a9a11171e77a80687e0b7ded5",
+          "note": "读取前的当前档案；profile尚未写入。"
+        },
+        {
+          "path": "backtest/experiments/models/training-target/h5/records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
+          "sha256": "6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5",
+          "note": "冻结登记详情：seeds、result_dirs、标签期限、对照、评估定义。"
+        },
+        {
+          "path": "backtest/experiments/models/training-target/h5/metrics/eval_m0h5.json",
+          "sha256": "8422bad9f322134a76fbd88354f60779e52251395cec8217979ca6d827f27ef6",
+          "note": "当前数值源：sessions、过滤、评估日期、融合方式和末端标签截止。"
+        },
+        {
+          "path": "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+          "sha256": "03ddc9113f9ad3636eebbe569086b041127432c44ae14ebec3f33d449bc146cc",
+          "note": "H1/H5/H10同批标签消融、Top3早停及未晋升状态。"
+        }
+      ],
+      "caveats": [
+        "训练原件与session meta已清理时，训练配方取冻结登记、同批训练脚本及规范；模型地址列只表示原路径和实际可用状态。",
+        "不得把ST/成交额/次日可成交过滤套回训练样本。",
+        "固定抽样清单日期范围是日期清单本身，不推断每个模型标签purge后的实际首末样本。"
+      ]
+    }
+  ],
+  "validation": {
+    "count": 7,
+    "model_path_references": 32,
+    "available_model_path_references": 10,
+    "no_model_deserialized": true,
+    "metadata_or_registry_written": false
+  }
+}

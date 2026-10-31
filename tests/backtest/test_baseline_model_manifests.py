@@ -8,10 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from backtest.scripts.experiment_registry import load_registry  # noqa: E402
-
 B6_MANIFEST = ROOT / "backtest/models/baselines/b6-m/manifest.json"
-REGISTRY = ROOT / "backtest/experiments/registry.jsonl"
 STANDARD = ROOT / "backtest/EXPERIMENT_STANDARD.md"
 
 
@@ -46,16 +43,10 @@ def test_b6_manifest_is_single_model_phase_s_contract_selected_on_valid():
     assert _sha256(model_path) == model["sha256"]
 
 
-def test_phase_s_references_canonical_single_model_manifest_only():
+def test_frozen_models_resolve_inside_canonical_baseline_directory():
     sys.path.insert(0, str(ROOT / "backtest/scripts"))
     from phase_s_protocol import load_frozen_model
 
-    rows = load_registry(REGISTRY)
-    b6 = next(row for row in rows if row["exp_id"] == "baseline/b6-m")
-
-    assert b6["model_manifest"] == "backtest/models/baselines/b6-m/manifest.json"
-    assert "freeze_manifest" not in b6
-    assert "backtest/experiments/b6_model_freeze.json" not in json.dumps(b6)
     for model_ref in ("b1-m", "b6-m"):
         frozen = load_frozen_model(ROOT, model_ref)
         expected_dir = (ROOT / "backtest/models/baselines" / model_ref).resolve()

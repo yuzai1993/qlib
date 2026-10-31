@@ -1,0 +1,22 @@
+{
+  "url": "http://127.0.0.1:8090",
+  "records": 35,
+  "directory_errors": [],
+  "warnings": [],
+  "ui": {
+    "model_history_count": 13,
+    "column": "实验类型",
+    "available_types": [
+      "训练目标",
+      "早停方法",
+      "模型结构",
+      "评估方法"
+    ],
+    "model_structure_filter_count": 4,
+    "category_paths_visible": true,
+    "manual_analysis_and_original_conclusion_separate": true
+  },
+  "active_top5_parity": "passed",
+  "service_reloaded": "qlib-live-monitor only",
+  "scheduler_or_trading_changed": false
+}

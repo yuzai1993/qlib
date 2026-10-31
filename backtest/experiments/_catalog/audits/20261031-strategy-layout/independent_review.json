@@ -1,0 +1,906 @@
+{
+  "registry_bytes_identical": true,
+  "rows_identical": true,
+  "archives": 35,
+  "archive_errors": [],
+  "platform_warnings": [],
+  "record_changed_fields": {
+    "regime-adapt/m0-h20-label-v4": [],
+    "regime-adapt/m0-h20-t5h5-es-v1": [],
+    "regime-adapt/m0-h20-t3h5es-v1": [],
+    "regime-adapt/m0-h20-rankices-v1": [],
+    "regime-adapt/m0-h20es-densemble-s42-v1": [],
+    "diag/eval-window-edge-lookahead": [],
+    "regime-adapt/m0-h1-t3h5es-v1": [],
+    "regime-adapt/m0-h10-t3h5es-v1": [],
+    "regime-adapt/m0-h20-t3h5es-densemble-s42-v1": [],
+    "regime-adapt/m0-h20-t3h5es-densemble-v1": [],
+    "regime-adapt/m0-h5-t3h5es-v1": [],
+    "regime-adapt/m0-label-k123-h2345": [],
+    "regime-adapt/m0-h20-rankices-densemble-s42-v1": [],
+    "baseline/phase-m-v1-bt-v1": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "baseline/phase-m-v1-bt-v2": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "baseline/phase-m-v1-bt-v3": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "baseline/phase-m-v1-bt-v4": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "baseline/phase-m-v1-bt-v5": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20es-all-top5d1-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20es-all-ladder-k5h5-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20es-all-top25d5h5-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20es-all-top25d5h5f100-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20es-all-top5d1h5f100-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20es-all-top5d1f100-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20es-all-top5d1h5-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20rankices-all-top15d3f100-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20rankices-all-top3d1f100-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20rankices-all-top5d1f100-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "diag/bt-v5-300k-current-cost-20261029": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "diag/bt-v5-300k-risk1-current-cost-20261029": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ],
+    "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1": [
+      "resources",
+      "directory",
+      "metadata_path"
+    ]
+  },
+  "unexpected_record_changes": {},
+  "removed_resource_ids": {
+    "baseline/phase-m-v1-bt-v1": [
+      {
+        "id": "cb698904b686f966f72456f2",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "c7013bde5d18508325a7397b",
+        "name": "all_top5d1_m0h20.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "d3885f6978d60d9c21bd168c",
+        "name": "all_top5d1_m0h20.html",
+        "available": true,
+        "kind": "report"
+      }
+    ],
+    "baseline/phase-m-v1-bt-v2": [
+      {
+        "id": "7bed9019edde287affde2b69",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "633a8d6a9c96c27cdb80c940",
+        "name": "all_top5d1_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "afca95ff38a933e58afa509e",
+        "name": "all_top5d1_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "9994d34191224ae319556552",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "baseline/phase-m-v1-bt-v3": [
+      {
+        "id": "6b4a7eff3ed5a2ed1beafe5d",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "0e260250549315739d1585dd",
+        "name": "all_top5d1h5f100_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "53765d802b3a2e95b51e54be",
+        "name": "all_top5d1h5f100_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "3d42b8bd8aff7d3201115d7d",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "baseline/phase-m-v1-bt-v4": [
+      {
+        "id": "bb8cc26909dbd3ba7ac65fa7",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "4400e22e017bc8f61b0bd856",
+        "name": "all_ladder_k3h5_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "cb84cef8972165d0c2c5b561",
+        "name": "all_ladder_k3h5_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "d2da8aadfd03aa461d644169",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "baseline/phase-m-v1-bt-v5": [
+      {
+        "id": "cb81267db474590adecb4726",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "f3b1cff373ba2a21f46bda06",
+        "name": "bench_ew_all.csv",
+        "available": true,
+        "kind": "config"
+      },
+      {
+        "id": "918e69bd32f0c309d7a4185a",
+        "name": "monthly_regime_labels_eval_window_v1.csv",
+        "available": true,
+        "kind": "config"
+      },
+      {
+        "id": "a8c7c7e83815012e3c65e744",
+        "name": "phase_m_v1_bt_v5.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "83997e7e0e347adb7137ffc9",
+        "name": "all_top5d1f100_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "60e71fd94e9735a98da3d990",
+        "name": "all_top5d1f100_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "c556249441b8172adb1b6026",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20es-all-top5d1-bt": [
+      {
+        "id": "76f0c378c0ac16d96dad7232",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "afca95ff38a933e58afa509e",
+        "name": "all_top5d1_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "633a8d6a9c96c27cdb80c940",
+        "name": "all_top5d1_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "10a6b3e6f7d41e2ac566b697",
+        "name": "phase_m_v1_bt_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "9994d34191224ae319556552",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20es-all-ladder-k5h5-bt": [
+      {
+        "id": "26df854ac7a71d7676b4808e",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "2334f8e5c0d6b680da3bfa16",
+        "name": "all_ladder_k5h5_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "ca16a312ece797a57c4e2d94",
+        "name": "all_ladder_k5h5_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "16432ae8b91184449bef9fcc",
+        "name": "phase_m_v1_bt_m0h20es_ladder_k5h5.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "70046b1fdb346c7c11fbef54",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20es-all-top25d5h5-bt": [
+      {
+        "id": "67d2bff3838a7fa675492594",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "059a54ca49127f1f239ed30f",
+        "name": "all_top25d5h5_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "15af88547a3abc8ded3c5b7b",
+        "name": "all_top25d5h5_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "85099c0d9e70a2c2e25052b9",
+        "name": "phase_m_v1_bt_m0h20es_top25d5h5.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "9d886e729350e63f3c411b52",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20es-all-top25d5h5f100-bt": [
+      {
+        "id": "37083511ef05a82eced401c7",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "f63f4e7a7bd808ca9ad6a883",
+        "name": "all_top25d5h5f100_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "b924e2769eb89950209ea1d3",
+        "name": "all_top25d5h5f100_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "de04cbd376aa4d5a5f137e40",
+        "name": "phase_m_v1_bt_m0h20es_top25d5h5f100.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "06b233b9860b5ddcbe5d4004",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20es-all-top5d1h5f100-bt": [
+      {
+        "id": "389de4f7471c5673a71327b8",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "53765d802b3a2e95b51e54be",
+        "name": "all_top5d1h5f100_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "0e260250549315739d1585dd",
+        "name": "all_top5d1h5f100_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "ebda8b0cb18e5ed14fc5928d",
+        "name": "phase_m_v1_bt_m0h20es_h5f100.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "3d42b8bd8aff7d3201115d7d",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20es-all-top5d1f100-bt": [
+      {
+        "id": "afb240a4c9586a6b9f30c023",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "60e71fd94e9735a98da3d990",
+        "name": "all_top5d1f100_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "83997e7e0e347adb7137ffc9",
+        "name": "all_top5d1f100_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "1df6c531d7b5c11e414d582c",
+        "name": "phase_m_v1_bt_m0h20es_f100.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "c556249441b8172adb1b6026",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20es-all-top5d1h5-bt": [
+      {
+        "id": "5e50aec918798dfe434c4000",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "00e5640442409292e92258c5",
+        "name": "all_top5d1h5_m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "6bbaa2b738d501ffc4ed0491",
+        "name": "all_top5d1h5_m0h20es.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "ad580ad4189bde27c269ba52",
+        "name": "phase_m_v1_bt_m0h20es_h5.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "18bf75d2d761c3426b3472f9",
+        "name": "m0h20es.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5-bt": [
+      {
+        "id": "b8a922ae4d52486c3b59b345",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "cb84cef8972165d0c2c5b561",
+        "name": "all_ladder_k3h5_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "4400e22e017bc8f61b0bd856",
+        "name": "all_ladder_k3h5_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "5d4272259d0f530bdacebd34",
+        "name": "phase_m_v1_bt_m0h20rankices_ladder_k3h5.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "d2da8aadfd03aa461d644169",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt": [
+      {
+        "id": "fb9a00964429b2c73c1459b4",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "c2e9972fd8e1ee851bdaad36",
+        "name": "all_ladder_k3h5f100_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "2dcbe6db31e794bcc0fac989",
+        "name": "all_ladder_k3h5f100_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "5a2b0f7b2fac7338b7b00ff1",
+        "name": "phase_m_v1_bt_m0h20rankices_ladder_k3h5f100.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "d35f925d374e3e96890a6dfa",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt": [
+      {
+        "id": "76408e641eef4384438f423f",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "2ee6af31ba650bdb11b3a765",
+        "name": "all_ladder_k3h5f100r_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "c78a548e1ec8bc475da17bc1",
+        "name": "all_ladder_k3h5f100r_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "64216dc7f19b863d45b851fc",
+        "name": "phase_m_v1_bt_m0h20rankices_ladder_k3h5f100r.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "3772236bd9b4a33665f82ad0",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20rankices-all-top15d3f100-bt": [
+      {
+        "id": "683fb7115eec353d7d29faa1",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "5f3081de60cd09ef53906ba5",
+        "name": "all_top15d3f100_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "4ae4acfdfbe69d2a987290fe",
+        "name": "all_top15d3f100_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "bad7b78d7f1e168744ab536d",
+        "name": "phase_m_v1_bt_m0h20rankices_top15d3f100.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "d59fc35cb61652e3bd828923",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20rankices-all-top3d1f100-bt": [
+      {
+        "id": "e1d084750ca9f38dd8781dab",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "49c53dc5eca30e069d4b7c75",
+        "name": "all_top3d1f100_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "f3ea8ea98779701dd66359b0",
+        "name": "all_top3d1f100_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "46244e2b531c6b4ae89bd9d7",
+        "name": "phase_m_v1_bt_m0h20rankices_top3d1f100.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "c7c1f134e3deb779f6c825f8",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20rankices-all-top5d1f100-bt": [
+      {
+        "id": "48477b7d8ed2e938f851b242",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "dfa84742fdedfae2d2030d00",
+        "name": "all_top5d1f100_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "4571b8807a84e0c212ee38bb",
+        "name": "all_top5d1f100_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "44c5db0bb5da5e4095cf66f9",
+        "name": "phase_m_v1_bt_m0h20rankices_top5d1f100.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "14231cdd63df734ffdb713fa",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt": [
+      {
+        "id": "aa7c7d46477b51b070826519",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "ad65bc28512679ce77036f33",
+        "name": "all_ladder_k3h5_e20260830_m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "c55c44988c8202680810b9a0",
+        "name": "all_ladder_k3h5_e20260830_m0h20rankices.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "551afc2cbaff2ac74c14e269",
+        "name": "phase_m_v1_bt_m0h20rankices_ladder_k3h5_e20260830.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "46e10ac8c14f56bc7ac31cfc",
+        "name": "m0h20rankices.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "diag/bt-v5-300k-current-cost-20261029": [
+      {
+        "id": "06c9b638a2562d588bfca3e5",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "e89069fcc18229f4beb1da67",
+        "name": "bt_v5_300k_current_cost.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "fd0be7476aac3226aa30febc",
+        "name": "bt_v5_300k_current_cost.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "5e42e582c9de539e25fab354",
+        "name": "phase_m_v1_bt_v5_cutover_diagnostic.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "a83d10eeec43fd9efc1af6d6",
+        "name": "bench_ew_all.csv",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "3e838bfc193cba3ac9dc19ce",
+        "name": "filter_stats.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "c3dba3e9241f3935da041d32",
+        "name": "portfolio_daily.csv",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "851c97263490ec143e30e60d",
+        "name": "summary.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "diag/bt-v5-300k-risk1-current-cost-20261029": [
+      {
+        "id": "3c6a49dee4f0ffb38336ae75",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "0b553733ecf8b9739f9ededc",
+        "name": "bt_v5_300k_risk1_current_cost.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "9ca1e18a5cfa375ff474d108",
+        "name": "bt_v5_300k_risk1_current_cost.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "1c4799be424b200a1b098463",
+        "name": "phase_m_v1_bt_v5_cutover_risk1_diagnostic.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "59245b5c041e875bd72b5a80",
+        "name": "bench_ew_all.csv",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "2767c303216dd748e44d8977",
+        "name": "filter_stats.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "27e553166fd0a5346cb2c97c",
+        "name": "portfolio_daily.csv",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "2d10cfabffc5929b39c893ff",
+        "name": "summary.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ],
+    "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1": [
+      {
+        "id": "402de097c03bb07181afbdf0",
+        "name": "metadata.json",
+        "available": true,
+        "kind": "metadata"
+      },
+      {
+        "id": "35584bf7be096173898f244e",
+        "name": "bt_v5_300k_risk1_current_cost_failed_1.json",
+        "available": true,
+        "kind": "metrics"
+      },
+      {
+        "id": "9839ef18fd19b72f85837cf3",
+        "name": "alla_v2_top5d1f100_parity.yaml",
+        "available": true,
+        "kind": "config"
+      },
+      {
+        "id": "d12d064091ce280bfcebd092",
+        "name": "bt_v5_300k_risk1_current_cost_failed_1.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "329cc8fa7521a8b1a72dc5f8",
+        "name": "phase_m_v1_bt_v5_cutover_risk1_failed_1.html",
+        "available": true,
+        "kind": "report"
+      },
+      {
+        "id": "5d3306c6ecc62ccecf92b176",
+        "name": "summary.json",
+        "available": true,
+        "kind": "metrics"
+      }
+    ]
+  },
+  "immutable_assets_checked": 113,
+  "immutable_assets_changed": [
+    [
+      "backtest/experiments/README.md",
+      "backtest/experiments/README.md"
+    ]
+  ],
+  "missing_files": [
+    [
+      "backtest/experiments/strategies/baseline/.DS_Store",
+      "backtest/experiments/strategies/baseline/.DS_Store"
+    ]
+  ],
+  "html_body_changes": [],
+  "original_available_links_missing": [],
+  "dangling_aliases": [],
+  "ambiguous_identities": [],
+  "expected_document_changes": [
+    "backtest/experiments/README.md"
+  ],
+  "expected_cache_removals": [
+    "backtest/experiments/strategies/baseline/.DS_Store"
+  ],
+  "preexisting_dangling_aliases": [
+    "backtest/experiments/repository_migration_20261030/registry.before.jsonl"
+  ],
+  "new_dangling_aliases": [],
+  "primary_metric_and_registry_resources_changed": [],
+  "primary_metric_and_registry_resources_unreadable": [],
+  "direct_parity_validation": {
+    "alla_v2_top5d1f100_postclose_real_active.yaml": "backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml",
+    "alla_v2_top5d1f100_postclose_real.yaml": "backtest/experiments/_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml",
+    "alla_v4_ladder_k1h5_postclose_real.yaml": "backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml"
+  },
+  "parity_bytes_unchanged": true,
+  "formal_loader_probes": {
+    "historical_benchmark_rows": 1858,
+    "historical_regime_rows": 72,
+    "label_fingerprint_bytes": 1203
+  },
+  "preexisting_backup_alias_removed": true,
+  "review_findings": [],
+  "review_status": "clean"
+}

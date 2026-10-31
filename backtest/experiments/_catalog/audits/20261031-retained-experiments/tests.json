@@ -1,0 +1,46 @@
+{
+  "python_integration": {
+    "tests": 2682,
+    "failures": 23,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 2658
+  },
+  "frontend": {
+    "passed": 56,
+    "failed": 0
+  },
+  "preexisting_failure_node_ids": [
+    "tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+    "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+    "tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample",
+    "tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+    "tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+    "tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs"
+  ],
+  "preexisting_failure_proof": "../20261031-kind-layout/preexisting-failures.json",
+  "commands": [
+    "/opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest tests/quant_platform tests/live_trading tests/misc/test_backtest_config_loader.py -q --tb=short -p no:cacheprovider",
+    "node --test tests/quant_platform/*.cjs"
+  ],
+  "new_regressions": 0,
+  "test_fixture_migration": "test_migration.json",
+  "independent_test_review": "Synthetic fixtures run the formal generators; protocol, provenance, tampering, overwrite and atomic-write assertions retained. No research artifacts copied back into the test suite."
+}

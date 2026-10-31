@@ -291,3 +291,335 @@ def test_independent_processes_append_without_losing_events(tmp_path):
     ]
     assert [worker.wait(timeout=15) for worker in workers] == [0, 0]
     assert len(registry.load_registry(path)) == 17
+
+
+def test_repository_writes_typed_manifest_and_v3_transport(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    row = {"exp_id": "new/strategy", "phase": "S", "display_name": "New strategy"}
+    registry.write_registry(path, [row])
+    entry = json.loads(path.read_text())
+    assert entry["_registry_schema"] == "qlib-experiment-index-v3"
+    assert entry["_archive_kind"] == "strategy"
+    assert entry["detail_path"].startswith("strategies/new/strategy/records/")
+    metadata_path = path.parent / "strategies/new/strategy/metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    assert metadata["schema_version"] == 2 and metadata["entity_type"] == "experiment"
+    assert metadata["title"] == "New strategy"
+    metadata["description"] = "Keep editorial content"
+    metadata_path.write_text(json.dumps(metadata))
+    registry.append_registry(path, {**row, "state": "completed"})
+    assert json.loads(metadata_path.read_text())["description"] == "Keep editorial content"
+    assert registry.load_registry(path) == [row, {**row, "state": "completed"}]
+
+
+def test_v3_tampered_kind_and_transport_in_detail_are_rejected(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    registry.write_registry(path, [{"exp_id": "group/arm", "phase": "M"}])
+    entry = json.loads(path.read_text())
+    entry["_archive_kind"] = "strategy"
+    path.write_text(json.dumps(entry) + "\n")
+    with pytest.raises(ValueError):
+        registry.load_registry(path)
+    with pytest.raises(ValueError):
+        registry.encode_registry_row(path, {"exp_id": "x", "_archive_kind": "model"})
+
+
+def test_repository_rewrite_preserves_immutable_history_and_original_paths(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    row = {"exp_id": "old/arm", "detail_report": "backtest/experiments/old.html", "score": -0.0}
+    registry.write_registry(path, [row])
+    before_index = path.read_bytes()
+    entry = json.loads(before_index)
+    detail = path.parent / entry["detail_path"]
+    before_detail = detail.read_bytes()
+    catalog = path.parent / "_catalog"
+    catalog.mkdir()
+    (catalog / "path_map.json").write_text(json.dumps({"schema_version": 1, "paths": {
+        row["detail_report"]: "backtest/experiments/models/old/arm/reports/new.html"}}))
+    registry.write_registry(path, registry.load_registry(path))
+    assert path.read_bytes() == before_index and detail.read_bytes() == before_detail
+
+
+def test_explicit_indexing_of_repository_inline_history_is_supported(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    path.parent.mkdir(parents=True)
+    row = {"exp_id": "old/inline", "phase": "M"}
+    path.write_text(json.dumps(row) + "\n")
+    registry.write_registry(path, registry.load_registry(path), indexed=True)
+    assert json.loads(path.read_text())["detail_path"].startswith("models/old/inline/records/")
+    assert registry.load_registry(path) == [row]
+
+
+def test_migrated_v3_details_remain_byte_exact_on_append_and_rewrite(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    payload = b'{"exp_id":"old/arm","phase":"M","metrics":[7,7.0,-0.0,1.2345678901234567]}\n'
+    digest = hashlib.sha256(payload).hexdigest()
+    relative = f"models/old/arm/records/{digest}.json"
+    detail = path.parent / relative
+    detail.parent.mkdir(parents=True)
+    detail.write_bytes(payload)
+    entry = {"_registry_schema": "qlib-experiment-index-v3", "_archive_kind": "model",
+             "exp_id": "old/arm", "phase": "M", "detail_path": relative, "detail_sha256": digest}
+    path.write_text(json.dumps(entry) + "\n")
+    registry.append_registry(path, {"exp_id": "old/arm", "phase": "M", "state": "completed"})
+    registry.write_registry(path, registry.load_registry(path))
+    assert detail.read_bytes() == payload
+    assert json.loads(path.read_text().splitlines()[0])["detail_sha256"] == digest
+    records = json.loads((detail.parent.parent / "metadata.json").read_text())["records"]
+    assert len(records) == 2 and f"backtest/experiments/{relative}" in records
+
+
+def test_v3_rejects_nonstring_transport_kind_as_value_error(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    registry.write_registry(path, [{"exp_id": "group/arm"}])
+    entry = json.loads(path.read_text())
+    entry["_archive_kind"] = []
+    path.write_text(json.dumps(entry) + "\n")
+    with pytest.raises(ValueError):
+        registry.load_registry(path)
+
+
+def test_rewrite_unchanged_repository_history_repairs_missing_manifest(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    registry.write_registry(path, [{"exp_id": "group/arm"}])
+    metadata = path.parent / "models/group/arm/metadata.json"
+    metadata.unlink()
+    before = path.read_bytes()
+    registry.write_registry(path, registry.load_registry(path))
+    assert metadata.exists() and path.read_bytes() == before
+
+
+def _categorized_registry(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    row = {"exp_id": "stable/old-id", "phase": "M", "phase_m_protocol": "v1", "score": -0.0}
+    registry.write_registry(path, [row])
+    before = path.read_bytes()
+    entry = json.loads(before)
+    old = path.parent / "models/stable/old-id"
+    new = path.parent / "models/training-target/h1"
+    new.parent.mkdir(parents=True)
+    old.rename(new)
+    metadata_path = new / "metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    analysis = {"conclusion": "Editorial", "limitations": "Synthetic evidence",
+                "evidence": [], "review_status": "draft", "updated_at": None}
+    metadata.update(archive_path="backtest/experiments/models/training-target/h1",
+                    experiment_type="training_target", analysis=analysis, title="Preserved title")
+    metadata_path.write_text(json.dumps(metadata))
+    catalog = path.parent / "_catalog"
+    catalog.mkdir()
+    (catalog / "path_map.json").write_text(json.dumps({"schema_version": 1, "paths": {}, "directories": {
+        "backtest/experiments/models/stable/old-id": "backtest/experiments/models/training-target/h1"}}))
+    return path, row, entry, before, old, new, analysis
+
+
+def test_category_alias_reads_and_writes_keep_logical_detail_identity_and_editorial_metadata(tmp_path):
+    path, row, entry, before, old, new, analysis = _categorized_registry(tmp_path)
+    detail = new / "records" / f"{entry['detail_sha256']}.json"
+    payload = detail.read_bytes()
+    assert registry.load_registry(path) == [row]
+
+    registry.write_registry(path, registry.load_registry(path))
+    assert path.read_bytes() == before and detail.read_bytes() == payload
+    registry.append_registry(path, {**row, "state": "completed"})
+
+    entries = [json.loads(line) for line in path.read_text().splitlines()]
+    assert entries[0] == entry
+    assert all(item["detail_path"].startswith("models/stable/old-id/records/") for item in entries)
+    assert registry.load_registry(path) == [row, {**row, "state": "completed"}]
+    assert not old.exists() and len(list((new / "records").glob("*.json"))) == 2
+    metadata = json.loads((new / "metadata.json").read_text())
+    assert metadata["title"] == "Preserved title" and metadata["analysis"] == analysis
+    assert metadata["experiment_type"] == "training_target"
+    assert metadata["archive_path"] == "backtest/experiments/models/training-target/h1"
+
+
+@pytest.mark.parametrize("target", ["backtest/experiments/strategies/foreign",
+                                    "backtest/experiments/_shared/foreign", "docs/foreign"])
+def test_category_detail_alias_cannot_escape_its_archive_kind(tmp_path, target):
+    path, row, _, before, _, _, _ = _categorized_registry(tmp_path)
+    mapping = path.parent / "_catalog/path_map.json"
+    value = json.loads(mapping.read_text())
+    value["directories"]["backtest/experiments/models/stable/old-id"] = target
+    mapping.write_text(json.dumps(value))
+    with pytest.raises(ValueError):
+        registry.load_registry(path)
+    with pytest.raises(ValueError):
+        registry.encode_registry_row(path, {**row, "state": "completed"})
+    assert path.read_bytes() == before
+
+
+def test_category_detail_alias_rejects_symlinked_physical_ancestor(tmp_path):
+    path, row, _, before, _, new, _ = _categorized_registry(tmp_path)
+    target = new.parent / "other"
+    new.rename(target)
+    new.symlink_to(target, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        registry.load_registry(path)
+    with pytest.raises(ValueError, match="symlink"):
+        registry.encode_registry_row(path, {**row, "state": "completed"})
+    assert path.read_bytes() == before
+
+
+def test_new_alias_target_gets_declared_metadata_without_recreating_logical_directory(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    catalog = path.parent / "_catalog"
+    catalog.mkdir(parents=True)
+    old = "backtest/experiments/models/stable/old-id"
+    new = "backtest/experiments/models/evaluation/window-edge"
+    (catalog / "path_map.json").write_text(json.dumps({"schema_version": 1, "paths": {}, "directories": {old: new}}))
+    registry.append_registry(path, {"exp_id": "stable/old-id", "phase": "M"})
+    assert not (tmp_path / "repo" / old).exists()
+    metadata = json.loads((tmp_path / "repo" / new / "metadata.json").read_text())
+    assert metadata["archive_path"] == new
+    assert registry.load_registry(path)[0]["exp_id"] == "stable/old-id"
+
+
+def test_writer_rejects_true_duplicate_metadata_before_creating_a_detail(tmp_path):
+    path, row, _, before, old, new, _ = _categorized_registry(tmp_path)
+    metadata = json.loads((new / "metadata.json").read_text())
+    metadata.pop("archive_path")
+    old.mkdir(parents=True)
+    (old / "metadata.json").write_text(json.dumps(metadata))
+    before_details = list((new / "records").iterdir())
+    with pytest.raises(ValueError, match="duplicate"):
+        registry.encode_registry_row(path, {**row, "state": "completed"})
+    assert list((new / "records").iterdir()) == before_details
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("ancestor", ["backtest", "backtest/experiments", "backtest/experiments/models"])
+def test_repository_detail_roots_cannot_be_hidden_behind_symlinks(tmp_path, ancestor):
+    root = tmp_path / "repo"
+    path = root / "backtest/experiments/registry.jsonl"
+    row = {"exp_id": "group/arm", "phase": "M"}
+    registry.write_registry(path, [row])
+    source, target = root / ancestor, root / "elsewhere"
+    source.rename(target)
+    source.symlink_to(target, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        registry.load_registry(path)
+    with pytest.raises(ValueError, match="symlink"):
+        registry.encode_registry_row(path, {**row, "state": "completed"})
+
+
+def _unbound_manifest(tmp_path):
+    path = tmp_path / "repo/backtest/experiments/registry.jsonl"
+    physical = path.parent / "models/model-structure/new-model"
+    physical.mkdir(parents=True)
+    analysis = {"conclusion": "", "limitations": "", "evidence": [],
+                "review_status": "draft", "updated_at": None}
+    metadata = {"schema_version": 2, "entity_type": "experiment", "exp_id": "example/new-model",
+                "kind": "model", "track": "all_a", "title": "Editorial title",
+                "archive_path": "backtest/experiments/models/model-structure/new-model",
+                "experiment_type": "model_structure", "analysis": analysis}
+    (physical / "metadata.json").write_text(json.dumps(metadata))
+    row = {"exp_id": "example/new-model", "phase": "M", "phase_m_protocol": "v1"}
+    return path, physical, metadata, row
+
+
+@pytest.mark.parametrize("method", ["append", "rewrite"])
+def test_formal_writer_binds_new_manifest_directory_without_manual_path_map(tmp_path, method):
+    path, physical, metadata, row = _unbound_manifest(tmp_path)
+    if method == "append":
+        registry.append_registry(path, row)
+    else:
+        registry.write_registry(path, [row])
+
+    entry = json.loads(path.read_text())
+    assert entry["detail_path"].startswith("models/example/new-model/records/")
+    assert (physical / "records" / f"{entry['detail_sha256']}.json").is_file()
+    assert not (path.parent / "models/example/new-model").exists()
+    assert registry.load_registry(path) == [row]
+    mapping = json.loads((path.parent / "_catalog/path_map.json").read_text())
+    assert mapping["directories"]["backtest/experiments/models/example/new-model"] == metadata["archive_path"]
+    actual = json.loads((physical / "metadata.json").read_text())
+    for key in ("title", "experiment_type", "analysis", "archive_path"):
+        assert actual[key] == metadata[key]
+    before = path.read_bytes()
+    registry.write_registry(path, registry.load_registry(path))
+    assert path.read_bytes() == before
+
+
+def test_unlocked_encoder_does_not_silently_publish_a_new_directory_binding(tmp_path):
+    path, physical, _, row = _unbound_manifest(tmp_path)
+    with pytest.raises(ValueError, match="alias"):
+        registry.encode_registry_row(path, row)
+    assert not (path.parent / "_catalog/path_map.json").exists()
+    assert not (physical / "records").exists()
+
+
+def test_auto_binding_never_overrides_an_existing_conflicting_alias(tmp_path):
+    path, _, _, row = _unbound_manifest(tmp_path)
+    mapping = path.parent / "_catalog/path_map.json"
+    mapping.parent.mkdir()
+    mapping.write_text(json.dumps({"schema_version": 1, "paths": {}, "directories": {
+        "backtest/experiments/models/example/new-model": "backtest/experiments/models/elsewhere/other"}}))
+    before = mapping.read_bytes()
+    with pytest.raises(ValueError, match="conflict"):
+        registry.append_registry(path, row)
+    assert mapping.read_bytes() == before and not path.exists()
+
+
+@pytest.mark.parametrize("reverse", ["directory", "exact-detail"])
+def test_auto_binding_rejects_reverse_alias_before_publishing_a_cycle(tmp_path, reverse):
+    path, _, metadata, row = _unbound_manifest(tmp_path)
+    registry.write_registry(path, [{"exp_id": "unrelated/history", "phase": "S"}])
+    before_index = path.read_bytes()
+    mapping = path.parent / "_catalog/path_map.json"
+    mapping.parent.mkdir()
+    logical = "backtest/experiments/models/example/new-model"
+    if reverse == "directory":
+        document = {"schema_version": 1, "paths": {}, "directories": {metadata["archive_path"]: logical}}
+    else:
+        digest = hashlib.sha256(registry._json_bytes(row)).hexdigest()
+        suffix = f"/records/{digest}.json"
+        document = {"schema_version": 1, "directories": {}, "paths": {
+            metadata["archive_path"] + suffix: logical + suffix}}
+    mapping.write_text(json.dumps(document))
+    before = mapping.read_bytes()
+    with pytest.raises(ValueError, match="conflict|cycle"):
+        registry.append_registry(path, row)
+    assert mapping.read_bytes() == before and path.read_bytes() == before_index
+
+
+@pytest.mark.parametrize("entry", ["file", "ancestor"])
+def test_auto_binding_rejects_symlinked_map_and_map_ancestor(tmp_path, entry):
+    path, _, _, row = _unbound_manifest(tmp_path)
+    catalog = path.parent / "_catalog"
+    target = path.parent / "other-catalog"
+    target.mkdir()
+    (target / "path_map.json").write_text(json.dumps({"schema_version": 1, "paths": {}}))
+    if entry == "ancestor":
+        catalog.symlink_to(target, target_is_directory=True)
+    else:
+        catalog.mkdir()
+        (catalog / "path_map.json").symlink_to(target / "path_map.json")
+    with pytest.raises(ValueError, match="symlink"):
+        registry.append_registry(path, row)
+    assert not path.exists()
+
+
+def test_auto_binding_refuses_to_hide_populated_old_logical_archive(tmp_path):
+    path, _, _, row = _unbound_manifest(tmp_path)
+    old = path.parent / "models/example/new-model/records"
+    old.mkdir(parents=True)
+    (old / "unmigrated.json").write_text("unmigrated original")
+    with pytest.raises(ValueError, match="populated"):
+        registry.append_registry(path, row)
+    assert not (path.parent / "_catalog/path_map.json").exists()
+    assert (old / "unmigrated.json").read_text() == "unmigrated original"
+
+
+def test_concurrent_formal_appends_preserve_each_new_directory_binding(tmp_path):
+    path, physical, metadata, row = _unbound_manifest(tmp_path)
+    other = physical.parent / "second-model"
+    other.mkdir()
+    second = {**row, "exp_id": "example/second-model"}
+    (other / "metadata.json").write_text(json.dumps({**metadata, "exp_id": second["exp_id"],
+        "archive_path": "backtest/experiments/models/model-structure/second-model"}))
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        list(workers.map(lambda value: registry.append_registry(path, value), [row, second]))
+    assert {item["exp_id"] for item in registry.load_registry(path)} == {row["exp_id"], second["exp_id"]}
+    mapping = json.loads((path.parent / "_catalog/path_map.json").read_text())
+    assert len(mapping["directories"]) == 2

@@ -1,0 +1,97 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+  "event_numbers": [
+    136
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/models/model-structure/de-v3-5seed/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/models/model-structure/de-v3-5seed/reports/regime_adapt_m0h20_t3h5es_densemble_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [
+    "backtest/experiments/models/model-structure/de-v3-5seed/metrics/eval_densemble_vs_v3.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "records": [
+    "backtest/experiments/models/model-structure/de-v3-5seed/records/c51bab99399e38301282d33a1f0c3dbf9ac274819d3755e994ae9ddd14a332e5.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "model",
+  "track": "all_a",
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "集成模型（v3，五种子）",
+  "metrics_source": {
+    "path": "metrics/eval_densemble_vs_v3.json",
+    "sha256": "afec0bb06e1ca442f91ce36dc2685c021edd3005a40af3d3c29c1d767ee1c398"
+  },
+  "archive_path": "backtest/experiments/models/model-structure/de-v3-5seed",
+  "experiment_type": "model_structure",
+  "analysis": {
+    "conclusion": "五种子合成净年化19.24%、夏普0.29，均低于v3；未见替换收益。",
+    "evidence": [
+      "metrics/eval_densemble_vs_v3.json",
+      "reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
+      "records/c51bab99399e38301282d33a1f0c3dbf9ac274819d3755e994ae9ddd14a332e5.json"
+    ],
+    "limitations": "读取官方五种子合成信号而非种子指标平均；模型结构及冻结超参一起改变，结果仅描述本配方的历史表现。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（五种子）。",
+  "comparison_baseline": {
+    "ref": "regime-adapt/m0-h20-t3h5es-v1",
+    "version": "v3"
+  },
+  "model_profile": {
+    "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；B6-M冻结超参（学习率0.1）。",
+    "training_sample": {
+      "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+      "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+      "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+    },
+    "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+    "evaluation_sample": {
+      "pool": "全A（沪深A股）",
+      "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+      "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+    },
+    "changes": "从单LightGBM改为3子模型DoubleEnsemble，并切换到相应冻结超参。",
+    "model_paths": [
+      {
+        "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42
+      },
+      {
+        "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000
+      },
+      {
+        "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000
+      },
+      {
+        "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000
+      },
+      {
+        "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000
+      }
+    ],
+    "features": "Alpha158＋range技术扩展；不含regime特征。",
+    "early_stopping": "评估窗Top3×H5扣费净年化",
+    "prediction_signal": "每个种子内3个子模型等权平均；5个种子的分数分别做每日截面z-score后等权平均，只评估一次合成信号（主格Top3×H5）。"
+  }
+}

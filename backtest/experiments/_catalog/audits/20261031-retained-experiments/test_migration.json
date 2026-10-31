@@ -1,0 +1,37 @@
+{
+  "scope": "Only three assigned test files; no production source or real archives changed",
+  "removed": {
+    "file": "tests/backtest/test_technical_feature_configs.py",
+    "cases": 20,
+    "reason": "Only asserted existence and frozen equality of user-deleted CSI1000 historical YAMLs; no dedicated technical config generator exists",
+    "retained_functional_coverage": "tests/backtest/test_technical_feature_handler.py",
+    "historical_plan_reference": "docs/superpowers/plans/2026-07-25-technical-feature-experiment.md:43"
+  },
+  "rewritten_cases": [
+    {
+      "old": "test_each_arm_has_fixed_five_seeds_and_frozen_model_protocol",
+      "new": "test_generator_writes_five_seed_configs_and_expected_sampling_for_each_arm"
+    },
+    {
+      "old": "test_only_seed_note_and_dataset_bucket_vary_across_arms",
+      "new": "test_generator_preserves_source_fields_outside_mode_note_and_sampling"
+    },
+    {
+      "old": "test_trim_arms_have_five_frozen_b1_configs",
+      "new": "test_trim_generator_changes_only_mode_note_and_cutoff_for_each_seed"
+    }
+  ],
+  "preserved_alias_writer_cases": 2,
+  "before": "23 failed, 2 passed in 0.43s",
+  "after": "14 passed in 2.66s",
+  "remaining_owned_cases_passed": 5,
+  "existing_technical_handler_cases_passed": 9,
+  "logs": [
+    "historical-config-red.log",
+    "historical-config-green.log"
+  ],
+  "temporary_fixtures_removed": [
+    "pytest-historical-config-red",
+    "pytest-historical-config-green"
+  ]
+}

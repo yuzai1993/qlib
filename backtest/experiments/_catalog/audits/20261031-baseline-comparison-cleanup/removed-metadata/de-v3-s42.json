@@ -1,0 +1,81 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+  "event_numbers": [
+    135
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/models/model-structure/de-v3-s42/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/models/model-structure/de-v3-s42/reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [
+    "backtest/experiments/models/model-structure/de-v3-s42/metrics/eval_densemble_s42_vs_v3.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "records": [
+    "backtest/experiments/models/model-structure/de-v3-s42/records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "model",
+  "track": "all_a",
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "集成模型（v3，单种子）",
+  "metrics_source": {
+    "path": "metrics/eval_densemble_s42_vs_v3.json",
+    "sha256": "22c5a4aa2eff548206ce018da3c07ffff49848bf465900e8e42a8cb4d2004f85"
+  },
+  "archive_path": "backtest/experiments/models/model-structure/de-v3-s42",
+  "experiment_type": "model_structure",
+  "analysis": {
+    "conclusion": "同种子净年化24.93%，低于v3的33.11%；单种子侦察不支持替换。",
+    "evidence": [
+      "metrics/eval_densemble_s42_vs_v3.json",
+      "reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+      "records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json"
+    ],
+    "limitations": "只比较种子42，不能与五种子正式结论等同；DoubleEnsemble结构与超参同时改变，不把差异单独归因于结构。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+  "comparison_baseline": {
+    "ref": "regime-adapt/m0-h20-t3h5es-v1",
+    "version": "v3"
+  },
+  "model_profile": {
+    "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；B6-M冻结超参（学习率0.1）。",
+    "training_sample": {
+      "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+      "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+      "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+    },
+    "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+    "evaluation_sample": {
+      "pool": "全A（沪深A股）",
+      "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+      "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+    },
+    "changes": "从单LightGBM改为3子模型DoubleEnsemble，并切换到相应冻结超参。",
+    "model_paths": [
+      {
+        "path": "backtest/result/regimeadapt_m0h20_t3h5es_densemble_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42
+      }
+    ],
+    "features": "Alpha158＋range技术扩展；不含regime特征。",
+    "early_stopping": "评估窗Top3×H5扣费净年化",
+    "prediction_signal": "seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。"
+  }
+}

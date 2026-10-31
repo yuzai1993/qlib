@@ -1,3 +1,5 @@
+> 2026-10-31 归档清理说明：只检查旧 CSI1000 归档配置的测试已随归档删除；下方命令改用当前归档完整性测试，训练执行功能测试继续保留。
+
 # B5 RankIC Early-Stopping Hyperparameter Experiment Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -189,7 +191,7 @@ the parent class index and equal submodel weights.
 /opt/anaconda3/envs/qlib/bin/python -m pytest \
   tests/backtest/test_rankic_early_stop.py \
   tests/backtest/test_eval_ic_multi_pool.py \
-  tests/backtest/test_phase_m_train_only_configs.py -q
+  tests/backtest/test_research_archive.py -q
 ```
 
 Expected: all pass.
@@ -526,7 +528,7 @@ selected experiment, with all 12 Phase M metric cells populated.
   tests/backtest/test_eval_ic_multi_pool.py \
   tests/backtest/test_cleanup_experiment_artifacts.py \
   tests/backtest/test_build_experiment_report.py \
-  tests/backtest/test_phase_m_train_only_configs.py -q
+  tests/backtest/test_research_archive.py -q
 ```
 
 - [ ] **Step 2: Run cleanup dry-run, inspect, then apply**

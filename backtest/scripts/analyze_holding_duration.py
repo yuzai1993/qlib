@@ -260,6 +260,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
+    args.output = _resolve_research_path(args.output, _RESEARCH_ROOT)
     cfg = load_config(args.config)
     _init_qlib(cfg)
     result = analyze(
@@ -271,7 +272,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         n_drop=args.n_drop,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(
+    args.output.write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )

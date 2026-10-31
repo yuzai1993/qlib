@@ -45,7 +45,7 @@ BASELINE_CONFIG = (
 )
 NEIGHBORHOOD_RESULTS = (
     REPO_ROOT
-    / "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data/full_results.json"
+    / "backtest/experiments/strategies/strategy-neighborhood/b3-s-local-full-v1/data/full_results.json"
 )
 CANDIDATE_ID = "topk-t22-d2-h2"
 NEIGHBORHOOD_ID = "topk-t22-d2-h2-r090"

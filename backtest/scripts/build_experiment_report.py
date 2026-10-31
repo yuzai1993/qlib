@@ -23,8 +23,10 @@ from typing import Any, Optional, Sequence
 
 if __package__:
     from .research_layout import resolve_research_path as _resolve_research_path
+    from .research_layout import report_href as _layout_href
 else:
     from research_layout import resolve_research_path as _resolve_research_path
+    from research_layout import report_href as _layout_href
 
 _RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
@@ -458,7 +460,10 @@ def _build_phase_s_table(rows: Sequence[dict]) -> str:
     )
 
 
-def _build_stability_audit_table(rows: Sequence[dict]) -> str:
+def _build_stability_audit_table(rows: Sequence[dict], *, output_path: Path = DEFAULT_OUTPUT) -> str:
+    report_link = _esc(_layout_href(
+        _RESEARCH_ROOT / "backtest/experiments/reports/strategy_stability_report.html", output_path, _RESEARCH_ROOT
+    ))
     body = []
     for row in sorted(rows, key=lambda item: str(item.get("model_ref") or "")):
         results = row.get("diagnostic_results") or []
@@ -472,7 +477,7 @@ def _build_stability_audit_table(rows: Sequence[dict]) -> str:
             f'<td>{_esc(str(row.get("model_ref") or "").upper())}</td>'
             f'<td>{_esc(row.get("state"))}</td>'
             f'<td class="num">{counts["success"]}/{counts["invalid"]}/{counts["failed"]}</td>'
-            '<td><a href="strategy_stability_report.html">strategy_stability_report.html</a></td>'
+            f'<td><a href="{report_link}">strategy_stability_report.html</a></td>'
             "</tr>"
         )
     return (
@@ -483,7 +488,11 @@ def _build_stability_audit_table(rows: Sequence[dict]) -> str:
     )
 
 
-def build_html(rows: Sequence[dict]) -> str:
+def build_html(rows: Sequence[dict], *, output_path: Path = DEFAULT_OUTPUT) -> str:
+    reports = _RESEARCH_ROOT / "backtest/experiments/reports"
+    strategy_link = _esc(_layout_href(reports / "strategy_stability_report.html", output_path, _RESEARCH_ROOT))
+    phase_m_link = _esc(_layout_href(reports / "phase_m_v1_report.html", output_path, _RESEARCH_ROOT))
+    legend = PHASE_M_LEGEND_HTML.replace('href="phase_m_v1_report.html"', f'href="{phase_m_link}"')
     phase_s_count = sum(_phase_of(row) == "S" for row in rows)
     by_direction: dict[str, list[dict]] = {}
     for r in rows:
@@ -504,7 +513,7 @@ def build_html(rows: Sequence[dict]) -> str:
     sections = [
         '<section class="legend" id="phase-s-report"><h3>Phase S 统一报告</h3>'
         '<p class="meta">Phase S 的当前基线、全历史稳定性、策略选型与所有历史审计登记统一发布于 '
-        '<a href="strategy_stability_report.html">strategy_stability_report.html</a>；'
+        f'<a href="{strategy_link}">strategy_stability_report.html</a>；'
         "本 Phase M 报告不渲染竞争性的策略选型表。</p></section>"
     ] if phase_s_count else []
     for direction in sorted(by_direction):
@@ -526,7 +535,7 @@ def build_html(rows: Sequence[dict]) -> str:
                 f"<section id='{anchor}'><h2>{_esc(direction)}</h2>"
                 "<p class='meta'>诊断协议：B2-S 基线位于独立报告首行；"
                 "本登记摘要不注入跨模型基线，也不产生选型结论。</p>"
-                f"{_build_stability_audit_table(current_group)}</section>"
+                f"{_build_stability_audit_table(current_group, output_path=output_path)}</section>"
             )
             continue
         table_rows, baseline_ref = _with_baseline_first(rows, group)
@@ -579,7 +588,7 @@ def build_html(rows: Sequence[dict]) -> str:
 数据源 <code>backtest/experiments/registry.jsonl</code> ·
 规范 <code>backtest/EXPERIMENT_STANDARD.md</code></p>
 {toc}
-{PHASE_M_LEGEND_HTML}
+{legend}
 {"".join(sections)}
 </body>
 </html>
@@ -595,9 +604,10 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
+    args.output = _resolve_research_path(args.output, _RESEARCH_ROOT)
     rows = load_registry(args.registry)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(build_html(rows), encoding="utf-8")
+    args.output.write_text(build_html(rows, output_path=args.output), encoding="utf-8")
     print(f"{len(rows)} 条记录 → {args.output}")
 
 

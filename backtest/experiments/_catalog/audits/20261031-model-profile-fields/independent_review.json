@@ -1,0 +1,41 @@
+{
+  "status": "clean",
+  "findings": [],
+  "historical_registry_rows_unchanged": 33,
+  "strategy_records_unchanged": 22,
+  "model_metadata_changed_only_profile_fields": 11,
+  "model_authority_metrics_resources_paths_and_samples_unchanged": 11,
+  "input_features_separated_from_structure": true,
+  "de_algorithm_feature_selection_retained_in_structure": true,
+  "v1_499_day_and_v4_eval_window_stopping_distinction_preserved": true,
+  "single_seed_five_seed_submodel_and_grid_signal_fusion_preserved": true,
+  "legacy_combined_method_accepted_but_not_automatically_parsed": true,
+  "new_text_escaped_by_existing_value_renderer": true,
+  "compact_record_detail_branch_preserved": true,
+  "catalog_warnings": [],
+  "changed_research_files": [
+    "backtest/experiments/README.md",
+    "backtest/experiments/models/training-target/h10/metadata.json",
+    "backtest/experiments/models/training-target/h20-v1/metadata.json",
+    "backtest/experiments/models/training-target/h5/metadata.json",
+    "backtest/experiments/models/training-target/h1/metadata.json",
+    "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+    "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+    "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+    "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+    "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+    "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+    "backtest/experiments/models/model-structure/de-v3-s42/metadata.json"
+  ],
+  "temporary_review_materials": [
+    "independent_review.py",
+    "independent-python.log",
+    "independent-frontend.log",
+    "pytest-independent-review"
+  ],
+  "tests": {
+    "python_model_profiles": 24,
+    "frontend": 96,
+    "git_diff_check": "passed"
+  }
+}

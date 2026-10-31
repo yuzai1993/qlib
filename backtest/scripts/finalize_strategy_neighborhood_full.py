@@ -608,12 +608,12 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         correction = build_full_baseline_comparison_correction(
             completed, results, results_path=args.results
         )
-        correction_path = _resolve_path(args.correction)
-        if _resolve_research_path(correction_path, _RESEARCH_ROOT).exists() and _read_json(correction_path) != correction:
+        correction_path = _resolve_research_path(_resolve_path(args.correction), _RESEARCH_ROOT)
+        if correction_path.exists() and _read_json(correction_path) != correction:
             raise ValueError("existing correction artifact is immutable")
         correction_path.parent.mkdir(parents=True, exist_ok=True)
-        if not _resolve_research_path(correction_path, _RESEARCH_ROOT).exists():
-            _resolve_research_path(correction_path, _RESEARCH_ROOT).write_text(
+        if not correction_path.exists():
+            correction_path.write_text(
                 json.dumps(correction, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )

@@ -66,12 +66,12 @@ backtest/experiments/.registry.jsonl.lock
 # Frozen Phase S prediction evidence belongs to the permanent experiment archive.
 !backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl
 # Permanent CSV evidence moved with its experiment must remain versioned.
-!backtest/experiments/diag/bt-v5-300k-current-cost-20261029/data/bench_ew_all.csv
-!backtest/experiments/diag/bt-v5-300k-current-cost-20261029/data/portfolio_daily.csv
-!backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029/data/bench_ew_all.csv
-!backtest/experiments/diag/bt-v5-300k-risk1-current-cost-20261029/data/portfolio_daily.csv
-!backtest/experiments/baseline/phase-m-v1-bt-v5/configs/bench_ew_all.csv
-!backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv
+!backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/bench_ew_all.csv
+!backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/portfolio_daily.csv
+!backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/data/bench_ew_all.csv
+!backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1/data/portfolio_daily.csv
+!backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/bench_ew_all.csv
+!backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv
 backtest/diagnostics/.write.lock
 live_trading/data/
 live_trading/.locks/

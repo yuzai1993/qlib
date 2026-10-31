@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-31",
+  "events": 150,
+  "experiments": 147,
+  "model_archives": 91,
+  "strategy_archives": 56,
+  "numeric_leaves": 33935,
+  "numeric_sha256": "379f6b2dd53ab5253719e0190dd5318bef07d2122451df2809c39771766c911f",
+  "history_detail_hashes_unchanged": true,
+  "numeric_values_and_types_unchanged": true,
+  "moved_files": 726,
+  "immutable_asset_files_checked": 573,
+  "html_reports_checked": 53,
+  "html_bodies_unchanged": true,
+  "original_available_links_preserved": 134,
+  "platform_records": 147,
+  "original_platform_records_exact": 36,
+  "original_resources_preserved": true,
+  "directory_errors": [],
+  "source_statuses": {
+    "historical_summary": 45,
+    "available": 66,
+    "missing": 36
+  },
+  "current_baselines": [
+    "regime-adapt/m0-h20-rankices-v1",
+    "baseline/b6-m",
+    "baseline/b4-s-on-b6-m",
+    "baseline/phase-m-v1-bt-v5"
+  ],
+  "cleanup_plan_unchanged": true,
+  "cleanup_errors": [],
+  "moved_assets_ignored_by_git": [],
+  "training_or_backtests_run": false,
+  "temporary_tools_cleaned": true,
+  "tests": "tests.json",
+  "runtime": "runtime.json",
+  "preexisting_failures": 23,
+  "guide": "docs/developer/repository-directory-guide.md",
+  "review": "review.json",
+  "cleanup": "cleanup.json"
+}

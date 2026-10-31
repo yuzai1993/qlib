@@ -113,26 +113,6 @@ def test_forward_holdout_rows_are_diagnostic_and_not_best_highlighted():
     assert " best" not in expanded_row
 
 
-def test_current_b6_baseline_has_complete_phase_m_metrics():
-    registry = ROOT / "backtest" / "experiments" / "registry.jsonl"
-    rows = report.load_registry(registry)
-    baseline = [
-        row
-        for row in rows
-        if row.get("direction") == "baseline"
-        and row.get("phase") == "M"
-        and row.get("conclusion") == "baseline"
-    ][-1]
-
-    assert baseline["exp_id"] == "baseline/b6-m"
-    assert baseline["baseline_ref"] == "B6 v1.0"
-
-    for pool in ("csi1000", "csi300", "csi500"):
-        metrics = baseline["metrics_summary"][pool]
-        for metric in report.PHASE_M_METRIC_KEYS:
-            assert metric in metrics, f"{pool} missing {metric}"
-
-
 def test_canonical_report_routes_phase_s_to_only_unified_report():
     rows = [
         {

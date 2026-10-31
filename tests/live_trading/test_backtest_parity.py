@@ -12,43 +12,39 @@ from live_trading.modules.backtest_parity import (
 from live_trading.modules.live_config import load_live_config
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LIVE_PATH = REPO_ROOT / "live_trading/configs/csi300_topk10_live.yaml"
-BACKTEST_PATH = REPO_ROOT / "backtest/configs/csi300_live_parity.yaml"
-NEW_LIVE_PATH = (
-    REPO_ROOT / "live_trading/configs/csi1000_b6m_b2s_postclose.yaml"
-)
-NEW_BACKTEST_PATH = (
-    REPO_ROOT / "backtest/configs/csi1000_b6m_b2s_postclose_parity.yaml"
-)
-REAL_LIVE_PATH = (
-    REPO_ROOT / "live_trading/configs/csi1000_b6m_b2s_postclose_real.yaml"
-)
-REAL_BACKTEST_PATH = (
-    REPO_ROOT / "backtest/configs/csi1000_b6m_b2s_postclose_real_parity.yaml"
+TOP5_LIVE_PATH = (
+    REPO_ROOT / "live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml"
 )
 LADDER_LIVE_PATH = (
-    REPO_ROOT / "live_trading/configs/alla_v4_ladder_k3h5_postclose_real.yaml"
-)
-LADDER_BACKTEST_PATH = (
-    REPO_ROOT / "backtest/configs/alla_v4_ladder_k3h5_parity.yaml"
-)
-OBSERVATION_LADDER_LIVE_PATH = (
     REPO_ROOT / "live_trading/configs/alla_v4_ladder_k1h5_postclose_real.yaml"
 )
-OBSERVATION_LADDER_BACKTEST_PATH = (
-    REPO_ROOT / "backtest/configs/alla_v4_ladder_k1h5_parity.yaml"
+LADDER_BACKTEST_PATH = (
+    REPO_ROOT
+    / "backtest/experiments/_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml"
 )
 
 
 def _configs():
-    live = load_live_config(LIVE_PATH, REPO_ROOT)
-    backtest = yaml.safe_load(BACKTEST_PATH.read_text(encoding="utf-8"))
+    """Exercise the single-model schema with one model from the current pair."""
+    live, backtest = _top5_configs()
+    member = live["model"].pop("members")[0]
+    backtest_member = backtest["parity"].pop("model_members")[0]
+    live["model"].update(
+        experiment_id="single-model-fixture", recorder_id="seed42",
+        model_path=member["model_path"], sha256=member["sha256"],
+    )
+    backtest["parity"].update(
+        model_experiment_id="single-model-fixture", model_recorder_id="seed42",
+        model_path=backtest_member["model_path"],
+        model_sha256=backtest_member["sha256"],
+    )
     return live, backtest
 
 
-def _new_configs():
-    live = load_live_config(NEW_LIVE_PATH, REPO_ROOT)
-    backtest = yaml.safe_load(NEW_BACKTEST_PATH.read_text(encoding="utf-8"))
+def _top5_configs():
+    live = load_live_config(TOP5_LIVE_PATH, REPO_ROOT)
+    backtest_path = validate_configured_backtest(live, REPO_ROOT)
+    backtest = yaml.safe_load(backtest_path.read_text(encoding="utf-8"))
     return live, backtest
 
 
@@ -66,32 +62,38 @@ def _set_path(mapping, path, value):
     current[parts[-1]] = value
 
 
-def test_real_live_and_designated_backtest_configs_match():
+def test_single_model_live_and_backtest_configs_match():
     live, backtest = _configs()
 
     validate_backtest_parity(live, backtest)
 
 
-def test_new_csi1000_live_and_parity_configs_match():
-    live, backtest = _new_configs()
-
-    validate_backtest_parity(live, backtest)
-
-
-def test_csi1000_real_live_and_designated_parity_configs_match():
-    live = load_live_config(REAL_LIVE_PATH, REPO_ROOT)
-    backtest = yaml.safe_load(
-        REAL_BACKTEST_PATH.read_text(encoding="utf-8")
+@pytest.mark.parametrize(
+    "config_name",
+    [
+        "csi1000_b6m_b2s_postclose",
+        "csi1000_b6m_b2s_postclose_real",
+        "csi300_topk10_live",
+        "alla_v4_ladder_k3h5_postclose_real",
+    ],
+)
+def test_retired_configs_reject_signal_publication(config_name):
+    live = load_live_config(
+        REPO_ROOT / "live_trading/configs" / f"{config_name}.yaml", REPO_ROOT,
     )
 
-    assert live["parity"]["backtest_config"] == str(
-        REAL_BACKTEST_PATH.relative_to(REPO_ROOT)
-    )
+    with pytest.raises(ParityError, match=r"parity\.backtest_config is required"):
+        validate_configured_backtest(live, REPO_ROOT)
+
+
+def test_top5_live_and_parity_configs_match():
+    live, backtest = _top5_configs()
+
     validate_backtest_parity(live, backtest)
 
 
 def test_parity_uses_economic_opening_value_after_account_adjustment():
-    live, backtest = _new_configs()
+    live, backtest = _top5_configs()
     live = copy.deepcopy(live)
     backtest = copy.deepcopy(backtest)
     live["account"] = {
@@ -116,7 +118,7 @@ def test_parity_uses_economic_opening_value_after_account_adjustment():
         ("live", "strategy.only_tradable", True, "strategy.only_tradable"),
         (
             "live",
-            "monitor.performance_baseline.opening_total_value",
+            "account.opening_cash",
             9_000_000.0,
             "backtest.account",
         ),
@@ -140,11 +142,12 @@ def test_parity_gate_reports_each_critical_drift(
 
 
 def test_live_config_points_to_designated_backtest():
-    live, _ = _configs()
+    live, _ = _top5_configs()
 
-    assert live["parity"]["backtest_config"] == (
-        "backtest/configs/csi300_live_parity.yaml"
-    )
+    path = validate_configured_backtest(live, REPO_ROOT)
+    assert path.is_file()
+    assert path.parent == REPO_ROOT / "backtest/experiments/_shared/deployment-parity"
+    assert path.name == "alla_v2_top5d1f100_parity.yaml"
 
 
 @pytest.mark.parametrize(
@@ -156,10 +159,10 @@ def test_live_config_points_to_designated_backtest():
         ("account.opening_value_adjustment", 1.0, "backtest.account"),
     ],
 )
-def test_new_parity_gate_reports_initialization_and_handler_drift(
+def test_top5_parity_gate_reports_initialization_and_handler_drift(
     path, value, reported_path,
 ):
-    live, backtest = _new_configs()
+    live, backtest = _top5_configs()
     live = copy.deepcopy(live)
     _set_path(live, path, value)
 
@@ -211,15 +214,15 @@ def test_parity_ignores_handler_start_time_drift():
 
 
 def test_observation_ladder_pair_passes_parity_as_shipped():
-    live = load_live_config(OBSERVATION_LADDER_LIVE_PATH, REPO_ROOT)
+    live = load_live_config(LADDER_LIVE_PATH, REPO_ROOT)
     backtest = yaml.safe_load(
-        OBSERVATION_LADDER_BACKTEST_PATH.read_text(encoding="utf-8")
+        LADDER_BACKTEST_PATH.read_text(encoding="utf-8")
     )
 
     validate_backtest_parity(live, backtest)
     assert (
         validate_configured_backtest(live, REPO_ROOT)
-        == OBSERVATION_LADDER_BACKTEST_PATH
+        == LADDER_BACKTEST_PATH
     )
 
 
@@ -318,6 +321,14 @@ def test_universe_filter_missing_on_one_side_only_fails_closed():
 def test_after_hours_channel_requires_close_deal_price():
     """盘后固定价恒以收盘价撮合。回测改 vwap 则通道语义不再对应，必须 fail。"""
     live, backtest = _ladder_configs()
+    live["live"].update(
+        execution_session="AFTER_HOURS_FIXED_PRICE", close_auction_price_type=49,
+    )
+    backtest["parity"].update(
+        execution_session="AFTER_HOURS_FIXED_PRICE",
+        close_auction_price_type=49, signal_price_type="AFTER_HOURS_CLOSE",
+    )
+    validate_backtest_parity(live, backtest)
     backtest["backtest"]["exchange_kwargs"]["deal_price"] = "vwap"
 
     with pytest.raises(ParityError, match="deal_price"):
@@ -326,9 +337,9 @@ def test_after_hours_channel_requires_close_deal_price():
 
 def test_close_auction_channel_requires_close_deal_price():
     """收盘集合竞价对照也按收盘价撮合。回测改 vwap 必须 fail。"""
-    live = load_live_config(OBSERVATION_LADDER_LIVE_PATH, REPO_ROOT)
+    live = load_live_config(LADDER_LIVE_PATH, REPO_ROOT)
     backtest = yaml.safe_load(
-        OBSERVATION_LADDER_BACKTEST_PATH.read_text(encoding="utf-8")
+        LADDER_BACKTEST_PATH.read_text(encoding="utf-8")
     )
     backtest["backtest"]["exchange_kwargs"]["deal_price"] = "vwap"
 
@@ -338,7 +349,7 @@ def test_close_auction_channel_requires_close_deal_price():
 
 def test_execution_session_mismatch_is_caught():
     live, backtest = _ladder_configs()
-    backtest["parity"]["execution_session"] = "CLOSE_AUCTION"
+    backtest["parity"]["execution_session"] = "AFTER_HOURS_FIXED_PRICE"
 
     with pytest.raises(ParityError, match="execution_session"):
         validate_backtest_parity(live, backtest)
@@ -348,7 +359,7 @@ def test_signal_price_type_is_derived_from_the_profile_not_trusted():
     """live 配置里没有 signal_price_type 字段；它必须由 profile 推出来再比，
     否则改了 execution_session 却忘了改 parity 配置就查不出来。"""
     live, backtest = _ladder_configs()
-    backtest["parity"]["signal_price_type"] = "CLOSE_AUCTION_LIMIT"
+    backtest["parity"]["signal_price_type"] = "AFTER_HOURS_CLOSE"
 
     with pytest.raises(ParityError, match="signal_price_type"):
         validate_backtest_parity(live, backtest)
@@ -378,24 +389,21 @@ def test_live_only_deviation_missing_on_backtest_side_fails_closed(marker):
         validate_backtest_parity(live, backtest)
 
 
-_LEGACY_PAIRS = [
-    (NEW_LIVE_PATH, NEW_BACKTEST_PATH),
-    (REAL_LIVE_PATH, REAL_BACKTEST_PATH),
-    (LIVE_PATH, BACKTEST_PATH),
+_TOPK_LIVE_PATHS = [
+    REPO_ROOT / "live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml",
+    TOP5_LIVE_PATH,
 ]
 
 
-@pytest.mark.parametrize("live_path,backtest_path", _LEGACY_PAIRS)
-def test_shipped_topk_dropout_pairs_still_pass(live_path, backtest_path):
+@pytest.mark.parametrize("live_path", _TOPK_LIVE_PATHS)
+def test_shipped_topk_dropout_pairs_still_pass(live_path):
     live = load_live_config(live_path, REPO_ROOT)
-    backtest = yaml.safe_load(backtest_path.read_text(encoding="utf-8"))
 
-    validate_backtest_parity(live, backtest)
+    validate_configured_backtest(live, REPO_ROOT)
 
 
 def test_topk_dropout_still_compares_its_own_fields():
-    live = load_live_config(REAL_LIVE_PATH, REPO_ROOT)
-    backtest = yaml.safe_load(REAL_BACKTEST_PATH.read_text(encoding="utf-8"))
+    live, backtest = _configs()
     backtest["strategy"]["kwargs"]["hold_thresh"] = 99
 
     with pytest.raises(ParityError, match=r"strategy\.hold_thresh"):
@@ -403,9 +411,11 @@ def test_topk_dropout_still_compares_its_own_fields():
 
 
 def test_live_config_without_execution_session_still_passes():
-    """csi300_topk10_live 没有 live.execution_session；两侧都没有才放行。"""
-    live = load_live_config(LIVE_PATH, REPO_ROOT)
-    backtest = yaml.safe_load(BACKTEST_PATH.read_text(encoding="utf-8"))
+    """两侧都没有 execution_session 时，兼容无通道声明的配置。"""
+    live, backtest = _top5_configs()
+    live["live"].pop("execution_session")
+    backtest["parity"].pop("execution_session")
+    backtest["parity"].pop("signal_price_type")
 
     assert "execution_session" not in live["live"]
     validate_backtest_parity(live, backtest)

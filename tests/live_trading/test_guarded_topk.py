@@ -77,11 +77,10 @@ def test_guarded_new_target_config_passes_designated_parity():
 
 
 def test_parity_checks_force_rank_and_execution_contract():
-    live = guarded_config()
+    live = load_live_config(
+        ROOT / "live_trading/configs/alla_v2_top5d1f100_postclose_real.yaml"
+    )
     backtest = yaml.safe_load((ROOT / live["parity"]["backtest_config"]).read_text())
-    backtest["strategy"].update(topk=5, n_drop=1)
-    backtest["strategy"]["kwargs"].update(hold_thresh=1, initial_buy_count=None, force_sell_rank=100)
-    backtest["parity"].update(execution_policy="post_sell_cash_v1", max_positions=5)
     validate_backtest_parity(live, backtest)
     for section, key, value in (("kwargs", "force_sell_rank", 99), ("parity", "max_positions", 6)):
         target = backtest["strategy"][section] if section == "kwargs" else backtest[section]

@@ -1,0 +1,24 @@
+{
+  "files_changed": [
+    "quant_platform/static/js/platform.js",
+    "quant_platform/static/js/helpers.js",
+    "tests/quant_platform/test_research_page.cjs"
+  ],
+  "frontend_tests_passed": 85,
+  "initial_red_failures": 7,
+  "pending_return_red_then_green": true,
+  "inline_model_and_strategy_editing": true,
+  "csrf_and_revision_forwarded": true,
+  "blank_and_length_validation": true,
+  "http_errors_and_conflicts_preserve_draft": true,
+  "duplicate_save_prevented": true,
+  "cancel_does_not_write": true,
+  "draft_survives_filter_and_module_navigation": true,
+  "late_response_cannot_render_other_scope": true,
+  "late_response_cannot_replace_newer_refreshed_revision": true,
+  "csv_details_search_follow_saved_analysis": true,
+  "original_registry_conclusion_unchanged": true,
+  "manual_conclusion_hides_long_note_in_table_only": true,
+  "git_diff_check": "passed",
+  "temporary_scripts_created": []
+}

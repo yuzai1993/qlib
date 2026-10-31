@@ -1,3 +1,5 @@
+> 2026-10-31 归档清理说明：只检查旧 CSI1000 归档配置的测试已随归档删除；下方命令改用当前归档完整性测试，训练执行功能测试继续保留。
+
 # Label Horizon Experiments Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -357,7 +359,7 @@ then diagnostic rows.
 - [ ] **Step 6: Run the complete relevant test suite**
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest/test_analyze_holding_duration.py tests/backtest/test_label_horizons.py tests/backtest/test_label_horizon_dataset.py tests/backtest/test_label_horizon_configs.py tests/backtest/test_eval_ic_multi_pool.py tests/backtest/test_build_experiment_report.py tests/backtest/test_phase_m_train_only_configs.py tests/backtest/test_run_train_only.py -q
+/opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest/test_analyze_holding_duration.py tests/backtest/test_label_horizons.py tests/backtest/test_label_horizon_dataset.py tests/backtest/test_label_horizon_configs.py tests/backtest/test_eval_ic_multi_pool.py tests/backtest/test_build_experiment_report.py tests/backtest/test_research_archive.py tests/backtest/test_run_train_only.py -q
 ```
 
 - [ ] **Step 7: Run artifact cleanup dry-run, inspect, then apply**

@@ -1,0 +1,318 @@
+{
+  "head": "b163d514d876885622578e8edf373d727ab9068b",
+  "preexisting_diff_sha256": "d1aff558a0da016c7c375e61f3e65620bb1c83b63f78580951ce015d67cdb258",
+  "snapshot": "/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_snapshot",
+  "files": {
+    "backtest/configs/baseline-strategy/b3-s/topk-t20-d2-h10_csi1000_full.yaml": {
+      "source": "HEAD",
+      "sha256": "3918d833097235ed5a5b550df2c9e0eae3b344ef86fd97389bfd9518964b7214"
+    },
+    "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s1000.yaml": {
+      "source": "HEAD",
+      "sha256": "51daac302c584caa1c61a166a3ab8a2ec1ea0a765bccb8e9573974325855e772"
+    },
+    "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s2000.yaml": {
+      "source": "HEAD",
+      "sha256": "10cb2a34bcf851ff6f25d610a604b21bc0c8b9e0b6918611760059570f33e020"
+    },
+    "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s3000.yaml": {
+      "source": "HEAD",
+      "sha256": "bcd3827a6e14fdaad8e0277a2953f2badf5e0db2738d128e0021592151016546"
+    },
+    "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml": {
+      "source": "HEAD",
+      "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+    },
+    "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s42.yaml": {
+      "source": "HEAD",
+      "sha256": "d1abdb4693c776fb2f64d9dbe8cdd9f2ed18e6182f5cefc186eb77013d99f461"
+    },
+    "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml": {
+      "source": "HEAD",
+      "sha256": "f036e3c94aabe9135a77a7782c535fefc11ebc6dccb0921a39d41400155e075a"
+    },
+    "backtest/experiments/_catalog/path_map.json": {
+      "source": "HEAD plus preexisting.diff",
+      "sha256": "1b05d9816dfadd93ff8b35b935deaf64110077b2caf3a0c1a8e6b1ae46ed80f5"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s1000.yaml": {
+      "source": "HEAD",
+      "sha256": "72ff6d25d9f2649440a77ed77f4bd58808b339663df2a070a4d6a5da49056b84"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s2000.yaml": {
+      "source": "HEAD",
+      "sha256": "abe15852c2bb64489007fa410710774b004b5c3d63d075d4253f1c3d73829b9e"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s3000.yaml": {
+      "source": "HEAD",
+      "sha256": "2392f851be1f76138d38510ba89779288672e5dba255d20910714f68782f3d79"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s4000.yaml": {
+      "source": "HEAD",
+      "sha256": "9c78c97698c07d85e1ddecf03cf3b67da60cbd837da0e5ab13b28440ba0f5c2a"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_base_s42.yaml": {
+      "source": "HEAD",
+      "sha256": "5dfd162cd47717464c59d2dae26b1d4e333a72e6cff70a4378d338474776ab19"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s1000.yaml": {
+      "source": "HEAD",
+      "sha256": "618446b702602045b2f81c0ad165185475587d82205ec8929ee2dbd285366153"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s2000.yaml": {
+      "source": "HEAD",
+      "sha256": "658d705c402cd46916e232062f00033db35f54a99d63f1cb0e5a162d7828feb2"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s3000.yaml": {
+      "source": "HEAD",
+      "sha256": "327479d215fb044b29c5df4fed8dc132f9b45132f7ea6a9687019dcf8b890290"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s4000.yaml": {
+      "source": "HEAD",
+      "sha256": "d6438dad92a5f1696de401c459769ee08c18aebaabbab593034aa64850a04eee"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_l1low_s42.yaml": {
+      "source": "HEAD",
+      "sha256": "577fbc515af3f146ca352f8f2a2de61ea7cad6b9f20dfc6d3d278e9a962bd763"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s1000.yaml": {
+      "source": "HEAD",
+      "sha256": "48c2d566f4ae6018d041ee67a393123abaaf3d8373b01a20a9b33977dc137db0"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s2000.yaml": {
+      "source": "HEAD",
+      "sha256": "6834d30cb5e57658ef6b1d4eb62a3737002686c265a275da545dec2f4d5ce223"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s3000.yaml": {
+      "source": "HEAD",
+      "sha256": "b846be54f68d10b738b7decde5e2cd0de94ba203017af22d6916c8096e89d4a9"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s4000.yaml": {
+      "source": "HEAD",
+      "sha256": "acecf16a6e574df55bf4b5e7288c6c8dfbacccd2c4b8e01ca46ee14c3e0aa34c"
+    },
+    "backtest/experiments/model-hyperparam/valid-rankic-search-v1/configs/mh_rankic_es_leaves128_s42.yaml": {
+      "source": "HEAD",
+      "sha256": "bf76a31610bef96920855ad982162d5aee8185e190391a87c4d4471b33c608c4"
+    },
+    "backtest/models/baselines/b6-m/manifest.json": {
+      "source": "HEAD",
+      "sha256": "9aa8479902a54290f1dd764e709fdce98f8acf64982579bba04a50f721cd30a7"
+    },
+    "backtest/scripts/build_experiment_report.py": {
+      "source": "HEAD",
+      "sha256": "0b5c57b199f677e78f6449d739c13226e98728834e6475ab7a0c27a7217748b0"
+    },
+    "backtest/scripts/build_strategy_stability_report.py": {
+      "source": "HEAD",
+      "sha256": "a8939a1d081f175ca5e84eba54b1732d704361ed51fa1b15c9decfd48d90f2dc"
+    },
+    "backtest/scripts/cleanup_experiment_artifacts.py": {
+      "source": "HEAD",
+      "sha256": "6db164517ea8c511c2665d95a30fa9789d2bf3d24fe53020b4f88df7caf2c5ee"
+    },
+    "backtest/scripts/config_loader.py": {
+      "source": "HEAD plus preexisting.diff",
+      "sha256": "93331d59bff9e55587f11ce4560f261a3536925acf3f78e31a66bdb2471184a9"
+    },
+    "backtest/scripts/ensemble_preds.py": {
+      "source": "HEAD",
+      "sha256": "62b4e0d32090af074c6c326a27255d4db3a03cc4aa1a5551c4b6b5bd7c968de0"
+    },
+    "backtest/scripts/eval_frozen_b5_rankic.py": {
+      "source": "HEAD",
+      "sha256": "a39960dff9b3ce53982ed83392a022b7a3f2ad33c9f835a8525b7694cfc47e52"
+    },
+    "backtest/scripts/eval_ic_multi_pool.py": {
+      "source": "HEAD",
+      "sha256": "8ca3b34b782f9ad75568a5adc4120dee819628734cdc7b0505ede5cc69abc730"
+    },
+    "backtest/scripts/eval_protocol.py": {
+      "source": "HEAD",
+      "sha256": "037130b71c4e3fa9a70b639eab3d621dd2c6ab8d991bfea44b348a3e1d480991"
+    },
+    "backtest/scripts/experiment_registry.py": {
+      "source": "HEAD",
+      "sha256": "77504aabb86a762aab29812b4dfeea7be22dd6a468c8193eab6b4803097c6b82"
+    },
+    "backtest/scripts/finalize_strategy_neighborhood.py": {
+      "source": "HEAD",
+      "sha256": "98621f0f8526f6df5afec183c4dff111691ea492b94e0f4b524aa21c548d0e73"
+    },
+    "backtest/scripts/finalize_strategy_neighborhood_full.py": {
+      "source": "HEAD",
+      "sha256": "691c63a8e2e5542637d30bbbf7f1b727db31af6aae5060db0de0d23d671a5f48"
+    },
+    "backtest/scripts/freeze_b5_rankic_selection.py": {
+      "source": "HEAD",
+      "sha256": "310ecc84e2f17aad25421d45f47798d5cd3f0e048bde6b22e53a0f6e91776945"
+    },
+    "backtest/scripts/generate_b5_rankic_hyperparams.py": {
+      "source": "HEAD",
+      "sha256": "67124d39a52277d145a0a13a6ccb9a6dfd43dbca688ac4df74e8a663e70ef6fc"
+    },
+    "backtest/scripts/generate_phase_s_predictions.py": {
+      "source": "HEAD",
+      "sha256": "0c968eb954ab0585349718d1a59b692a9c48da71506f1ac8ad46de1f1fb8f988"
+    },
+    "backtest/scripts/phase_s_prediction_validation.py": {
+      "source": "HEAD",
+      "sha256": "242bbe1c30d8243cf611419c8f66b62fe82f8af9ce0599ba4c3b7ba65878663b"
+    },
+    "backtest/scripts/phase_s_protocol.py": {
+      "source": "HEAD",
+      "sha256": "332c0afca18c33361af73b56fe09b9b66add207d794a966258a48c8e7ac53f96"
+    },
+    "backtest/scripts/register_b5_rankic_hyperparams.py": {
+      "source": "HEAD",
+      "sha256": "88c773f854f228397e11e8119de6972f3de6dd191be624edc4796ab8f1bb9cc7"
+    },
+    "backtest/scripts/report_utils.py": {
+      "source": "HEAD",
+      "sha256": "bf6bdf8c3200cf67f99c6b8136b7d0a8a5c5e90f09ca0ef14d0b0d2b274bcc95"
+    },
+    "backtest/scripts/research_layout.py": {
+      "source": "HEAD",
+      "sha256": "bbc02b742db582b8c07aab177fa35e199971ca03202a8a4acf42af607d0dcd4b"
+    },
+    "backtest/scripts/run_strategy_neighborhood.py": {
+      "source": "HEAD",
+      "sha256": "3aaa4e544eb866c8618cb87674e9db1077b99a4689aa5d181f62424b103027a2"
+    },
+    "backtest/scripts/run_strategy_neighborhood_full.py": {
+      "source": "HEAD",
+      "sha256": "f254b186910454082a1986ebc16638b3fd78e5fac068020f41cb861a81d07b1b"
+    },
+    "backtest/scripts/run_strategy_sweep.py": {
+      "source": "HEAD",
+      "sha256": "2578fd347097d8f7a5932376783e1da3fe67d9303d9047113b03347b1882dc60"
+    },
+    "backtest/scripts/strategy_neighborhood_protocol.py": {
+      "source": "HEAD",
+      "sha256": "850ef86048d5beb767fff1ce0267317948e10980324fe5b813da002800e07efc"
+    },
+    "backtest/scripts/strategy_stability_metrics.py": {
+      "source": "HEAD",
+      "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb"
+    },
+    "backtest/scripts/universe_filter.py": {
+      "source": "HEAD",
+      "sha256": "e681bfbf63ec5ce70dbfd5ab05964a1d0f9b2e8122d9f5050a41dfa46da4eea8"
+    },
+    "scripts/data_collector/tushare/st_calendar.py": {
+      "source": "HEAD",
+      "sha256": "0f96b6b56b91d7535f6a2f22d2ee408f7eea87d1562d64ba27f620a30155f420"
+    },
+    "tests/backtest/test_finalize_strategy_neighborhood.py": {
+      "source": "HEAD",
+      "sha256": "796924490fc862d4f712b6e334b7c47df8c286939f8580a4accf1ace237b0d38"
+    },
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py": {
+      "source": "HEAD",
+      "sha256": "414296b38a872e5c24a336158fb8f850d4098d722e2c950963646791a5557c4e"
+    },
+    "tests/backtest/test_phase_s_protocol.py": {
+      "source": "HEAD",
+      "sha256": "18d2a628a52c4a81220465fdebbd463eb0a279e1a64132551d7042fd5105d3f2"
+    },
+    "tests/backtest/test_register_b5_rankic_hyperparams.py": {
+      "source": "HEAD",
+      "sha256": "af293d511514a1de54c9c855cbf3ec8ccba9c63fc3fb89947354806bf9f1d218"
+    },
+    "tests/backtest/test_run_strategy_neighborhood_full.py": {
+      "source": "HEAD",
+      "sha256": "3e1c8a73ee61fa5bc735d2a66973dca76a49be9e74367772d55593f980ed144d"
+    },
+    "tests/backtest/test_run_strategy_sweep.py": {
+      "source": "HEAD",
+      "sha256": "c426074170f7c491f5274a0f6e34cb217814a3fce6577110f1be64d171ed44ab"
+    },
+    "tests/conftest.py": {
+      "source": "HEAD",
+      "sha256": "7cee4a35fee33bddaba3f802cf285dc32b0255f8401dc03781efb916725c8946"
+    },
+    "tests/pytest.ini": {
+      "source": "HEAD",
+      "sha256": "88204bc5476b3a6ad0853f72f00d4fd47af890819ec80f04252ad3c7bd8efb35"
+    }
+  },
+  "copied_retained_model": {
+    "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+    "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+    "size_bytes": 3391157,
+    "matches_frozen_head_manifest": true
+  },
+  "reproduced_nodes": [
+    "tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+    "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+    "tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample",
+    "tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+    "tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs",
+    "tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate"
+  ],
+  "patched_paths": [
+    "backtest/experiments/_catalog/path_map.json",
+    "backtest/scripts/config_loader.py"
+  ],
+  "snapshot_total_bytes": 4142009,
+  "absence_check": {
+    "path": "backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml",
+    "in_HEAD": false,
+    "mentioned_in_preexisting_patch": false
+  },
+  "command": [
+    "/opt/anaconda3/envs/qlib/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "--junitxml=/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_before.junit.xml",
+    "--basetemp=/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_pytest_tmp",
+    "tests/backtest/test_finalize_strategy_neighborhood.py::test_complete_row_verifies_prediction_and_config_contracts",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_preregistered_row_freezes_full_period_contract",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_baseline_comparison_correction_preserves_completed_result",
+    "tests/backtest/test_finalize_strategy_neighborhood_full.py::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+    "tests/backtest/test_phase_s_protocol.py::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+    "tests/backtest/test_register_b5_rankic_hyperparams.py::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+    "tests/backtest/test_run_strategy_neighborhood_full.py::test_protocol_is_versioned_full_history_in_sample",
+    "tests/backtest/test_run_strategy_neighborhood_full.py::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+    "tests/backtest/test_run_strategy_sweep.py::test_valid_config_uses_csi1000_dates_500k_and_live_costs",
+    "tests/backtest/test_run_strategy_sweep.py::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+    "tests/backtest/test_run_strategy_sweep.py::test_resume_summary_rejects_an_omitted_requested_candidate"
+  ],
+  "environment": {
+    "PYTHONPATH": "/private/tmp/qlib-experiment-kind-layout-20261031/old_failures_snapshot:/Users/yuxianqi/Project/qlib",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  }
+}

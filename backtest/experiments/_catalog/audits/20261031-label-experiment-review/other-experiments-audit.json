@@ -1,0 +1,1658 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-31",
+  "review_scope": {
+    "excluded": "regime-adapt/m0-label-k123-h2345",
+    "reviewed_count": 32,
+    "model_count": 10,
+    "strategy_count": 22
+  },
+  "method": "只读核对EXPERIMENT_STANDARD、目录元数据、冻结登记、选定源JSON、平台投影、相关报告/策略及训练实现；未训练、回测、改动元数据或原指标。",
+  "all_core_numbers_equal_source": true,
+  "actual_issues": [
+    {
+      "code": "core_metric_window_mismatch",
+      "priority": "P2",
+      "experiment_ids": [
+        "diag/bt-v5-300k-current-cost-20261029",
+        "diag/bt-v5-300k-risk1-current-cost-20261029"
+      ],
+      "finding": "平台主指标取ensemble.full_period历史复算，但window由含四个日期的eval_protocol取最后两个日期，错误标成新增诊断窗2026-08-03~2026-10-28。",
+      "evidence": [
+        "quant_platform/research.py:745-757",
+        "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metrics/bt_v5_300k_current_cost.json",
+        "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metrics/bt_v5_300k_risk1_current_cost.json"
+      ],
+      "proposed_fix": "保持所有源数值不变，主指标窗口应取主表连续净值2020-08-03~2026-07-31。另行展示源JSON diagnostic_periods，窗口2026-08-03~2026-10-28，核心用57日区间收益15.59%/16.25%及回撤12.82%/13.36%，不要把该段短窗折年值当主指标。确保仍为诊断、不可与正式基线直接选型比较。",
+      "recommended_main_results": [
+        {
+          "risk_degree": 0.9,
+          "main_window": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "cagr": 0.35726948459578844,
+          "sharpe": 1.203549370722813,
+          "max_drawdown": -0.3272630653200411
+        },
+        {
+          "risk_degree": 1.0,
+          "main_window": [
+            "2020-08-03",
+            "2026-07-31"
+          ],
+          "cagr": 0.372295975153784,
+          "sharpe": 1.2086470017635766,
+          "max_drawdown": -0.33678893341843985
+        }
+      ]
+    },
+    {
+      "code": "minimum_holding_mislabeled_as_ladder_equivalence",
+      "priority": "P2",
+      "experiment_ids": [
+        "regime-adapt/m0h20es-all-top25d5h5-bt"
+      ],
+      "finding": "metadata.title与平台name仍称“主格阶梯等价”，但该实现是TopkDropout最短持5日，不能等同于每日Top5五日到期阶梯。现有strategy_summary与analysis.limitations已正确解释两者区别，标题与说明矛盾。",
+      "evidence": [
+        "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metadata.json:title",
+        "qlib/contrib/strategy/signal_strategy.py:176-187",
+        "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/reports/all_top25d5h5_m0h20es.html:title"
+      ],
+      "proposed_fix": "仅将展示标题改为“v2 · Top25换5·最短持5日”或删去“主格阶梯等价”括注。保留冻结登记和数值，若重新生成正式展示报告，同步标题。",
+      "recommended_main_results": {
+        "cagr": 0.24617713037402922,
+        "sharpe": 0.9927614111453632,
+        "max_drawdown": -0.34097919402058063
+      }
+    }
+  ],
+  "confirmed_consistent": [
+    "H1/H5/H10训练目标实验均对照v3 H20并固定Top3×H5主评估，不把训练H换成评估h。三者净年化-39.79%、24.77%、24.37%，对照H20 v3 29.70%。",
+    "H20 v1与v2原JSON primary_cell仍为Top5×H5是历史协议；平台主指标已明确取head[3][5]，当前文案已说明历史/现行区别，应保留原文件不改。",
+    "早停v1=499日次日RankIC，v2=全评估窗Top5×H5净年化，v3=Top3×H5净年化，v4=评估窗H5 dailyRankIC；现有model_profile已正确分离。",
+    "DE三条均明示结构与冻结超参同时改变；两条单种子标为不可直接比较，现有结论使用同种子对照而未冒充五种子胜出。v3 seed42=33.11%，v4 seed42=24.30%。",
+    "BT v2/v4/v5与对应晋升候选均在变更说明标明模型替换；v4/v5也明确执行规则变化，未把收益差异归因于一个策略参数。",
+    "F100/F100补票两条登记基线仍为历史BT v3，但现有change_summary明确直接对照原v4阶梯/F100阶梯；保留历史锚点，不据此改冻结registry。",
+    "除标题残留等价字样的一条外，TopkDropout最短持有与cohort ladder到期退出的summary已区分；F100提前卖出受成交约束、F100r只使用实际回款。",
+    "延长至2026-08-30实验已正确说明末交易日08-28，scope=extended_window_diagnostic且comparable=false。",
+    "失败诊断无有效指标，status=failed/comparable=false，未参与比较。",
+    "两条资金/费用诊断内容已明确30万与当前固定费率近似、历史持仓承接、非实际实盘收益；仅其平台window推断错误需修正。"
+  ],
+  "records": [
+    {
+      "id": "regime-adapt/m0-h20-label-v4",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/training-target/h20-v1",
+      "title": "H20训练目标（v1）",
+      "experiment_type": "training_target",
+      "change_summary": "训练目标改为未来20日累计收益（H20）。",
+      "comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": true
+      },
+      "metrics_source": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+      "metrics_source_sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+      "projected_core_metrics": {
+        "net_ann": 0.2933431911523481,
+        "net_ann_vol": 0.5665444606764577,
+        "net_sharpe": 0.5177761173449555,
+        "ann": 0.33295729879845576,
+        "turnover": 0.18091938091938092,
+        "rank_ic_mean": 0.09889293530789339
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来20日累计收益（H20）：Ref($close,-21)/Ref($close,-1)-1；标签按交易日截面CSRankNorm。",
+      "early_stopping": "冻结499个分层交易日（2020-08-03～2026-07-23）的次日收益标签日RankIC，valid_frame_70；不是全评估窗H5 RankIC。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "raw_historical_primary_cell": {
+        "k": 5,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h20-t5h5-es-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/early-stopping/top5-v2",
+      "title": "Top5早停（v2）",
+      "experiment_type": "early_stopping",
+      "change_summary": "早停由499天次日RankIC改为评估窗Top5×H5扣费净年化。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-label-v4",
+        "version": "v1",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+      "metrics_source_sha256": "dae3c1acc9984e3645d7d51abf948eb670532424bdeea3e3540a4f11d6eff102",
+      "projected_core_metrics": {
+        "net_ann": 0.30193985577577165,
+        "net_ann_vol": 0.5820114423686474,
+        "net_sharpe": 0.5187868034809567,
+        "ann": 0.3410481653160812,
+        "turnover": 0.17860937860937862,
+        "rank_ic_mean": 0.0975632090210084
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来20日累计收益（H20）：Ref($close,-21)/Ref($close,-1)-1；标签按交易日截面CSRankNorm。",
+      "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按Top5×H5扣费净年化早停（top5_h5_net_ann）。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "raw_historical_primary_cell": {
+        "k": 5,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h20-t3h5es-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/early-stopping/top3-v3",
+      "title": "Top3早停（v3）",
+      "experiment_type": "early_stopping",
+      "change_summary": "扣费净年化早停与主评估格由Top5×H5改为Top3×H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+      "metrics_source_sha256": "bf4aa5a3bd889d33628a89359a378b8c7153f893508b784dd7c62dcfa0886db7",
+      "projected_core_metrics": {
+        "net_ann": 0.2969937650578606,
+        "net_ann_vol": 0.5763272178720751,
+        "net_sharpe": 0.5153214282581099,
+        "ann": 0.33615265440875,
+        "turnover": 0.17884037884037887,
+        "rank_ic_mean": 0.09837344126849204
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来20日累计收益（H20）：Ref($close,-21)/Ref($close,-1)-1；标签按交易日截面CSRankNorm。",
+      "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按Top3×H5扣费净年化早停（top3_h5_net_ann）。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h20-rankices-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/early-stopping/rankic-v4",
+      "title": "RankIC早停（v4）",
+      "experiment_type": "early_stopping",
+      "change_summary": "早停由Top3×H5扣费净年化改为评估窗日RankIC。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/early-stopping/rankic-v4/metrics/eval_m0h20_rankices.json",
+      "metrics_source_sha256": "1420687eda4740bc0467a2e3524f608ea5c055f1a7bcae2415fa0840621f915c",
+      "projected_core_metrics": {
+        "net_ann": 0.3057020241234104,
+        "net_ann_vol": 0.5780583290124371,
+        "net_sharpe": 0.5288428671993638,
+        "ann": 0.34557914678453305,
+        "turnover": 0.18212058212058213,
+        "rank_ic_mean": 0.09989260967760683
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来20日累计收益（H20）：Ref($close,-21)/Ref($close,-1)-1；标签按交易日截面CSRankNorm。",
+      "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按日RankIC早停（daily_rank_ic；H5标签，valid_frame_t5h5es）。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h1-t3h5es-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/training-target/h1",
+      "title": "H1训练目标",
+      "experiment_type": "training_target",
+      "change_summary": "训练标签由H20改为H1。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/training-target/h1/metrics/eval_m0h1.json",
+      "metrics_source_sha256": "b83c3f1808491102fba70d6a0c5890a73c7b4c207895e39b0c167750e0820b5e",
+      "projected_core_metrics": {
+        "net_ann": -0.3979450067859733,
+        "net_ann_vol": 0.6714861665495863,
+        "net_sharpe": -0.5926332166019191,
+        "ann": -0.3551241391491056,
+        "turnover": 0.19556479556479556,
+        "rank_ic_mean": null
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来1个交易日累计收益，经日截面CSRankNorm标准化。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h10-t3h5es-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/training-target/h10",
+      "title": "H10训练目标",
+      "experiment_type": "training_target",
+      "change_summary": "训练标签由H20改为H10。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/training-target/h10/metrics/eval_m0h10.json",
+      "metrics_source_sha256": "47848f51908e0d243cd9a1b56adc5da889987d5a02f5440f6e2e2227b1bb66f9",
+      "projected_core_metrics": {
+        "net_ann": 0.24370402110020561,
+        "net_ann_vol": 0.6925605752765835,
+        "net_sharpe": 0.35188838319720855,
+        "ann": 0.28300453392071845,
+        "turnover": 0.17948717948717952,
+        "rank_ic_mean": null
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来10个交易日累计收益，经日截面CSRankNorm标准化。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/model-structure/de-v3-s42",
+      "title": "集成模型（v3，单种子）",
+      "experiment_type": "model_structure",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/model-structure/de-v3-s42/metrics/eval_densemble_s42_vs_v3.json",
+      "metrics_source_sha256": "22c5a4aa2eff548206ce018da3c07ffff49848bf465900e8e42a8cb4d2004f85",
+      "projected_core_metrics": {
+        "net_ann": 0.24927462005079482,
+        "net_ann_vol": 0.6188435389294311,
+        "net_sharpe": 0.40280717882589134,
+        "ann": 0.28885837981055457,
+        "turnover": 0.1807807807807808,
+        "rank_ic_mean": null
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "single_seed_diagnostic",
+      "comparable": false,
+      "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/model-structure/de-v3-5seed",
+      "title": "集成模型（v3，五种子）",
+      "experiment_type": "model_structure",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（五种子）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/model-structure/de-v3-5seed/metrics/eval_densemble_vs_v3.json",
+      "metrics_source_sha256": "afec0bb06e1ca442f91ce36dc2685c021edd3005a40af3d3c29c1d767ee1c398",
+      "projected_core_metrics": {
+        "net_ann": 0.1923612105353774,
+        "net_ann_vol": 0.6621992012710493,
+        "net_sharpe": 0.2904884363589571,
+        "ann": 0.2300128215309884,
+        "turnover": 0.17195657195657196,
+        "rank_ic_mean": null
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "每个种子内3个子模型等权平均；5个种子的分数分别做每日截面z-score后等权平均，只评估一次合成信号（主格Top3×H5）。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h5-t3h5es-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/training-target/h5",
+      "title": "H5训练目标",
+      "experiment_type": "training_target",
+      "change_summary": "训练标签由H20改为H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/training-target/h5/metrics/eval_m0h5.json",
+      "metrics_source_sha256": "8422bad9f322134a76fbd88354f60779e52251395cec8217979ca6d827f27ef6",
+      "projected_core_metrics": {
+        "net_ann": 0.24768385502744275,
+        "net_ann_vol": 0.6637351822223707,
+        "net_sharpe": 0.37316668102198236,
+        "ann": 0.2898269532025409,
+        "turnover": 0.1924693924693925,
+        "rank_ic_mean": null
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "training_target": "未来5个交易日累计收益，经日截面CSRankNorm标准化。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ]
+    },
+    {
+      "id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+      "kind": "model",
+      "archive_path": "backtest/experiments/models/model-structure/de-v4-s42",
+      "title": "集成模型（v4，单种子）",
+      "experiment_type": "model_structure",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/models/model-structure/de-v4-s42/metrics/eval_densemble_s42_vs_v4.json",
+      "metrics_source_sha256": "5b380e49b2e6223983aebc548b277257b3e57eb90f7389f9dbc62068cd47b8c0",
+      "projected_core_metrics": {
+        "net_ann": 0.2878579908011152,
+        "net_ann_vol": 0.5707705481868389,
+        "net_sharpe": 0.5043322429924788,
+        "ann": 0.3285949702420946,
+        "turnover": 0.18604758604758603,
+        "rank_ic_mean": 0.099112597900139
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "pools.all.ensemble.head[3][5]; H5 RankIC=pools.all.ensemble.h5.rank_ic_mean",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "single_seed_diagnostic",
+      "comparable": false,
+      "training_target": "未来20个交易日累计收益，经日截面CSRankNorm标准化。",
+      "early_stopping": "同一评估窗内日RankIC（H5标签）",
+      "prediction_signal": "seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+      "raw_historical_primary_cell": {
+        "k": 3,
+        "h": 5
+      },
+      "seeds": [
+        42
+      ]
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v1",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v1",
+      "title": "M0 H20 top5d1",
+      "experiment_type": null,
+      "change_summary": "初始执行基线：v1模型信号配Top5换1、最短持有1日。",
+      "comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": true
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/bt-v1/metrics/all_top5d1_m0h20.json",
+      "metrics_source_sha256": "df3975588d24e4b0bffa7fb9e06ed4bea52510a3e2ff8fe669c57f34cc12302f",
+      "projected_core_metrics": {
+        "annualized_return": 0.2247618555706936,
+        "sharpe_ratio": 0.8388149199056628,
+        "alpha": 0.1470704866423557,
+        "beta": 0.923734012339162,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.381931281425104,
+        "calmar_ratio": 0.5884876848317777,
+        "annualized_volatility": 0.2929042460649895,
+        "annualized_one_way_turnover": 49.20295527089292,
+        "annualized_return_arith": 0.24569245170303272
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-label-v4",
+        "version": "v1",
+        "name": "H20训练目标"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持1",
+        "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v2",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v2",
+      "title": "M0 H20 ES top5d1",
+      "experiment_type": null,
+      "change_summary": "策略保持Top5换1，模型信号从v1改为v2。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v1",
+        "version": "v1",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metrics/all_top5d1_m0h20es.json",
+      "metrics_source_sha256": "d6e7e819cb69877fdf33fcf1bb00320d473d8cbc1875eb0cbf7bcf03df94ef1e",
+      "projected_core_metrics": {
+        "annualized_return": 0.23130372925034037,
+        "sharpe_ratio": 0.8550332914136377,
+        "alpha": 0.1530863066073424,
+        "beta": 0.9216253031911962,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.3915376314579322,
+        "calmar_ratio": 0.5907573389282053,
+        "annualized_volatility": 0.29412087107635365,
+        "annualized_one_way_turnover": 49.28892160954971,
+        "annualized_return_arith": 0.25148313646986087
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持1",
+        "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v3",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v3",
+      "title": "M0 H20 ES hold5 + 掉出前100必卖",
+      "experiment_type": null,
+      "change_summary": "最短持有从1日改为5日，并增加F100提前强卖。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/all_top5d1h5f100_m0h20es.json",
+      "metrics_source_sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52",
+      "projected_core_metrics": {
+        "annualized_return": 0.30083257960449616,
+        "sharpe_ratio": 1.063632414322577,
+        "alpha": 0.20995392163959622,
+        "beta": 0.8805258880135014,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.346694968870247,
+        "calmar_ratio": 0.8677154461883319,
+        "annualized_volatility": 0.28577804742510626,
+        "annualized_one_way_turnover": 58.14329410295107,
+        "annualized_return_arith": 0.30396279454315767
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持5·F100",
+        "description": "常规最多换1只、最短持有5日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v4",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/cohort-ladder/bt-v4",
+      "title": "v4 RankIC ES 真阶梯 k3×h5",
+      "experiment_type": null,
+      "change_summary": "从v2模型的Top5轮换，改为v4模型的Top3×H5真阶梯。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+      "metrics_source_sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7",
+      "projected_core_metrics": {
+        "annualized_return": 0.2634041974432082,
+        "sharpe_ratio": 1.0384087313597832,
+        "alpha": 0.17403166896830952,
+        "beta": 0.8707829727525177,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.32955049506103196,
+        "calmar_ratio": 0.7992832703662799,
+        "annualized_volatility": 0.25712451821736354,
+        "annualized_one_way_turnover": 44.25754382759521,
+        "annualized_return_arith": 0.2670003447635879
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "阶梯3×5日",
+        "description": "每日按排名选至多3只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v5",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v5",
+      "title": "v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+      "experiment_type": null,
+      "change_summary": "从v4模型真阶梯，改为v2模型Top5换1、最短持1日并启用F100。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+      "metrics_source_sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04",
+      "projected_core_metrics": {
+        "annualized_return": 0.3483992380540464,
+        "sharpe_ratio": 1.1773900944016509,
+        "alpha": 0.24674697308104526,
+        "beta": 0.8835077769150542,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.330239863785206,
+        "calmar_ratio": 1.0549884379817076,
+        "annualized_volatility": 0.28968666151630157,
+        "annualized_one_way_turnover": 73.32794962840944,
+        "annualized_return_arith": 0.3410742057495774
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持1·F100",
+        "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1",
+      "title": "M0 H20 ES top5d1",
+      "experiment_type": null,
+      "change_summary": "策略保持Top5换1，模型信号从v1改为v2。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v1",
+        "version": "v1",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1/metrics/all_top5d1_m0h20es.json",
+      "metrics_source_sha256": "d6e7e819cb69877fdf33fcf1bb00320d473d8cbc1875eb0cbf7bcf03df94ef1e",
+      "projected_core_metrics": {
+        "annualized_return": 0.23130372925034037,
+        "sharpe_ratio": 0.8550332914136377,
+        "alpha": 0.1530863066073424,
+        "beta": 0.9216253031911962,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.3915376314579322,
+        "calmar_ratio": 0.5907573389282053,
+        "annualized_volatility": 0.29412087107635365,
+        "annualized_one_way_turnover": 49.28892160954971,
+        "annualized_return_arith": 0.25148313646986087
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "promoted",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持1",
+        "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5",
+      "title": "M0 H20 ES 真阶梯 k5×h5（按持有天数到期退出）",
+      "experiment_type": null,
+      "change_summary": "从Top5排名轮换改为每天Top5建层、持满5日发出卖单，允许同票多层。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/cohort-ladder/v2-k5-h5/metrics/all_ladder_k5h5_m0h20es.json",
+      "metrics_source_sha256": "9e0d7acb7b8b3790dabbdeedde6df53a26be6ba130b9dd497f684dfc3cb7f2fa",
+      "projected_core_metrics": {
+        "annualized_return": 0.23449630189369053,
+        "sharpe_ratio": 0.983221126875794,
+        "alpha": 0.15056781579044562,
+        "beta": 0.844720705688597,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.33354125841193905,
+        "calmar_ratio": 0.7030503602767986,
+        "annualized_volatility": 0.24486248421394344,
+        "annualized_one_way_turnover": 43.72911437733879,
+        "annualized_return_arith": 0.2407539676584398
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "阶梯5×5日",
+        "description": "每日按排名选至多5只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5",
+      "title": "M0 H20 ES top25 drop5 hold5（主格阶梯等价）",
+      "experiment_type": null,
+      "change_summary": "从Top5换1、最短持1日，改为Top25换5、最短持5日。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5/metrics/all_top25d5h5_m0h20es.json",
+      "metrics_source_sha256": "10652d6106867270c5d57f863cda4318da4758aab2eaaf2e0a4ada5371577ba3",
+      "projected_core_metrics": {
+        "annualized_return": 0.24617713037402922,
+        "sharpe_ratio": 0.9927614111453632,
+        "alpha": 0.15370950426073215,
+        "beta": 0.9268252068053455,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.34097919402058063,
+        "calmar_ratio": 0.7219711193263323,
+        "annualized_volatility": 0.2545037470228683,
+        "annualized_one_way_turnover": 44.409088297205415,
+        "annualized_return_arith": 0.2526614990362053
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top25换5·持5",
+        "description": "排名轮换：常规每日最多换5只、最短持有5日，不按5日到期退出；100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100",
+      "title": "M0 H20 ES top25 drop5 hold5 + 掉出前100必卖",
+      "experiment_type": null,
+      "change_summary": "从Top5换1、最短持1日，改为Top25换5、最短持5日并增加F100。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top25-drop5-hold5-f100/metrics/all_top25d5h5f100_m0h20es.json",
+      "metrics_source_sha256": "3e35eb3f71f886c42532d53f1485b0a06c1bbaf8c3e225041b3150cbf65aa73c",
+      "projected_core_metrics": {
+        "annualized_return": 0.22941704468493196,
+        "sharpe_ratio": 0.9556400035645664,
+        "alpha": 0.1428946198700412,
+        "beta": 0.8874227729571048,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.3300805963051119,
+        "calmar_ratio": 0.6950334168472873,
+        "annualized_volatility": 0.24867087407306948,
+        "annualized_one_way_turnover": 65.41891162562753,
+        "annualized_return_arith": 0.23763983498559196
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top25换5·持5·F100",
+        "description": "常规最多换5只、最短持有5日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100",
+      "title": "M0 H20 ES hold5 + 掉出前100必卖",
+      "experiment_type": null,
+      "change_summary": "最短持有从1日改为5日，并增加F100提前强卖。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "version": "v2",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5-f100/metrics/all_top5d1h5f100_m0h20es.json",
+      "metrics_source_sha256": "85d43469996e2fdefd96897e29067e10c09f65b575042d7db7ad582111af6f52",
+      "projected_core_metrics": {
+        "annualized_return": 0.30083257960449616,
+        "sharpe_ratio": 1.063632414322577,
+        "alpha": 0.20995392163959622,
+        "beta": 0.8805258880135014,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.346694968870247,
+        "calmar_ratio": 0.8677154461883319,
+        "annualized_volatility": 0.28577804742510626,
+        "annualized_one_way_turnover": 58.14329410295107,
+        "annualized_return_arith": 0.30396279454315767
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持5·F100",
+        "description": "常规最多换1只、最短持有5日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100",
+      "title": "M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+      "experiment_type": null,
+      "change_summary": "保留F100提前强卖，最短持有从5日改为1日。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-f100/metrics/all_top5d1f100_m0h20es.json",
+      "metrics_source_sha256": "d823c5b4759473d6d35b9035eda06722a86566e5b184e6560fe0feffec395b04",
+      "projected_core_metrics": {
+        "annualized_return": 0.3483992380540464,
+        "sharpe_ratio": 1.1773900944016509,
+        "alpha": 0.24674697308104526,
+        "beta": 0.8835077769150542,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.330239863785206,
+        "calmar_ratio": 1.0549884379817076,
+        "annualized_volatility": 0.28968666151630157,
+        "annualized_one_way_turnover": 73.32794962840944,
+        "annualized_return_arith": 0.3410742057495774
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持1·F100",
+        "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5",
+      "title": "M0 H20 ES top5d1 hold5（无强制卖出）",
+      "experiment_type": null,
+      "change_summary": "最短持有维持5日，从启用F100改为不设强卖排名。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metrics/all_top5d1h5_m0h20es.json",
+      "metrics_source_sha256": "5b3533224f27d9ece937352a28454b405ff7ea58735ef27e19459054e2665f9a",
+      "projected_core_metrics": {
+        "annualized_return": 0.3129497107556747,
+        "sharpe_ratio": 1.053793810959309,
+        "alpha": 0.2194371916511586,
+        "beta": 0.9236992743891491,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.33395789816211907,
+        "calmar_ratio": 0.9370933057069187,
+        "annualized_volatility": 0.30181943054281735,
+        "annualized_one_way_turnover": 45.77203565122022,
+        "annualized_return_arith": 0.31805544793328394
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持5",
+        "description": "排名轮换：常规每日最多换1只，最短持有5日；仅开hold5、不设f100。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5",
+      "title": "v4 RankIC ES 真阶梯 k3×h5",
+      "experiment_type": null,
+      "change_summary": "从v2模型的Top5轮换，改为v4模型的Top3×H5真阶梯。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5/metrics/all_ladder_k3h5_m0h20rankices.json",
+      "metrics_source_sha256": "9994c92710e2d976149a73067bc20bb76f274804abd13a4fa46a1b791d37e2b7",
+      "projected_core_metrics": {
+        "annualized_return": 0.2634041974432082,
+        "sharpe_ratio": 1.0384087313597832,
+        "alpha": 0.17403166896830952,
+        "beta": 0.8707829727525177,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.32955049506103196,
+        "calmar_ratio": 0.7992832703662799,
+        "annualized_volatility": 0.25712451821736354,
+        "annualized_one_way_turnover": 44.25754382759521,
+        "annualized_return_arith": 0.2670003447635879
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "promoted",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "阶梯3×5日",
+        "description": "每日按排名选至多3只可买股票建层，持满5交易日发出卖单，同票可叠层；100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100",
+      "title": "v4 RankIC ES 真阶梯 k3×h5 + f100",
+      "experiment_type": null,
+      "change_summary": "直接对照为v4模型原真阶梯：从无F100改为启用F100提前强卖。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100/metrics/all_ladder_k3h5f100_m0h20rankices.json",
+      "metrics_source_sha256": "c61c8cdb725ee4e8d12826a8ed96c90b6b5db52c846fb403611850b903a18178",
+      "projected_core_metrics": {
+        "annualized_return": 0.18243897871401904,
+        "sharpe_ratio": 0.9263012409579879,
+        "alpha": 0.12005965863769756,
+        "beta": 0.6397060761160608,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.29750409691871416,
+        "calmar_ratio": 0.6132318196742887,
+        "annualized_volatility": 0.20334371315056923,
+        "annualized_one_way_turnover": 44.20959166482156,
+        "annualized_return_arith": 0.1883575338323774
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "阶梯3×5日·F100",
+        "description": "每日选Top3建5日层；掉出前100或缺有效分数时触发该股各层提前卖出（受成交约束），不额外补票。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace",
+      "title": "v4 RankIC ES 真阶梯 k3×h5 + f100 补新票",
+      "experiment_type": null,
+      "change_summary": "直接对照为v4模型F100真阶梯：从只强卖改为用实际回款补入未持有新票。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "version": "v3",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-replace/metrics/all_ladder_k3h5f100r_m0h20rankices.json",
+      "metrics_source_sha256": "b95130f7a640d9aa8cf0181c583f918547ca38b3921cbb09f517bbdede3a2e12",
+      "projected_core_metrics": {
+        "annualized_return": 0.254839415670407,
+        "sharpe_ratio": 0.971028711545241,
+        "alpha": 0.16520748715894115,
+        "beta": 0.9268290733737494,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.3468664477032761,
+        "calmar_ratio": 0.7346903033077652,
+        "annualized_volatility": 0.2720412811750347,
+        "annualized_one_way_turnover": 65.66900981163909,
+        "annualized_return_arith": 0.2641598947465105
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "阶梯3×5日·F100补票",
+        "description": "Top3建5日层；掉出前100或缺分数时触发该股各层提前卖出（受成交约束），用实际强卖所得补未持有新票，归当日层。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100",
+      "title": "v4 RankIC ES top15d3 + f100",
+      "experiment_type": null,
+      "change_summary": "从Top3×H5真阶梯改为Top15最多换3、最短持1日并启用F100的排名轮换。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100/metrics/all_top15d3f100_m0h20rankices.json",
+      "metrics_source_sha256": "c20e80cc3941c9a85957f4401689af8f4f4a5da7627b5723af261eacfa506f3f",
+      "projected_core_metrics": {
+        "annualized_return": 0.19392855286656796,
+        "sharpe_ratio": 0.8207259722640688,
+        "alpha": 0.11465118831357717,
+        "beta": 0.8951861761931553,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.3569199611190097,
+        "calmar_ratio": 0.5433390507456246,
+        "annualized_volatility": 0.25614549326455716,
+        "annualized_one_way_turnover": 83.02091843946477,
+        "annualized_return_arith": 0.21022525900061317
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "Top15换3·持1·F100",
+        "description": "常规最多换3只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100",
+      "title": "v4 RankIC ES top3d1 + f100",
+      "experiment_type": null,
+      "change_summary": "从Top3×H5真阶梯改为Top3最多换1、最短持1日并启用F100的排名轮换。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v4-top3-drop1-f100/metrics/all_top3d1f100_m0h20rankices.json",
+      "metrics_source_sha256": "f27e09db6d000f83aaa502be3840db0c8b239d975044a405683f25fbcceb3dc0",
+      "projected_core_metrics": {
+        "annualized_return": 0.14794609957558302,
+        "sharpe_ratio": 0.5964389522256313,
+        "alpha": 0.09056044161527957,
+        "beta": 0.9041559795008658,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.42280311069232024,
+        "calmar_ratio": 0.3499172447745908,
+        "annualized_volatility": 0.31368200857863476,
+        "annualized_one_way_turnover": 97.71251703388266,
+        "annualized_return_arith": 0.1870921685286724
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "Top3换1·持1·F100",
+        "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100",
+      "title": "v4 RankIC ES top5d1 + f100",
+      "experiment_type": null,
+      "change_summary": "从Top3×H5真阶梯改为Top5最多换1、最短持1日并启用F100的排名轮换。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100/metrics/all_top5d1f100_m0h20rankices.json",
+      "metrics_source_sha256": "631f96364f26f7133d32156d298bd2ff4c6a558908d4a12a5323fdb1b2fb75c5",
+      "projected_core_metrics": {
+        "annualized_return": 0.23585666290325746,
+        "sharpe_ratio": 0.8654499228915159,
+        "alpha": 0.15578238706682399,
+        "beta": 0.93400053500148,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.39789605146533014,
+        "calmar_ratio": 0.5927594959403822,
+        "annualized_volatility": 0.29522268722927403,
+        "annualized_one_way_turnover": 75.94068970572314,
+        "annualized_return_arith": 0.2555004518984013
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "standard",
+      "comparable": true,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持1·F100",
+        "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830",
+      "title": "v4 RankIC ES 真阶梯 k3×h5 延长至 2026-08-30",
+      "experiment_type": null,
+      "change_summary": "只将回测截止从2026-07-31延至2026-08-30，末交易日为08-28。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-extended-20260830/metrics/all_ladder_k3h5_e20260830_m0h20rankices.json",
+      "metrics_source_sha256": "576441888b9cfef1d549573a6c62654ef12f66e23a0addf0864936db7bfd05e0",
+      "projected_core_metrics": {
+        "annualized_return": 0.3109868137048106,
+        "sharpe_ratio": 1.1673219237765013,
+        "alpha": 0.1991855121247441,
+        "beta": 0.8824024360912327,
+        "benchmark_cumulative_return": 0.726052953816732,
+        "max_drawdown": -0.32955048426510813,
+        "calmar_ratio": 0.9436697214944345,
+        "annualized_volatility": 0.261348700141826,
+        "annualized_one_way_turnover": 44.266863880476066,
+        "annualized_return_arith": 0.3050780674260443
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-08-30"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "extended_window_diagnostic",
+      "comparable": false,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4",
+        "name": "RankIC早停"
+      },
+      "strategy_summary": {
+        "name": "阶梯3×5日（延窗）",
+        "description": "同BT v4真阶梯，100万、risk=0.90、历史费率；仅延窗至2026-08-30，末交易日08-28，不改官方窗。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-08-28"
+      }
+    },
+    {
+      "id": "diag/bt-v5-300k-current-cost-20261029",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k",
+      "title": "BT v5 · 30万元/当前费率复算 + 8月后冻结诊断",
+      "experiment_type": null,
+      "change_summary": "固定BT v5规则，资金从100万改30万、改用当前费率近似并作后续区间诊断。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "version": "v5",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/bt-v5-300k/metrics/bt_v5_300k_current_cost.json",
+      "metrics_source_sha256": "5735379d8f49afea6390671c4267b6103d543075e5efe3b9fdd3c4e0dc2e2101",
+      "projected_core_metrics": {
+        "annualized_return": 0.35726948459578844,
+        "sharpe_ratio": 1.203549370722813,
+        "alpha": 0.2533395724093843,
+        "beta": 0.8802462995804207,
+        "benchmark_cumulative_return": 0.5861752007260437,
+        "max_drawdown": -0.3272630653200411,
+        "calmar_ratio": 1.0916889880207015,
+        "annualized_volatility": 0.28857860461595425,
+        "annualized_one_way_turnover": 73.13515464989503,
+        "annualized_return_arith": 0.34731859798959924
+      },
+      "projected_window": {
+        "start": "2026-08-03",
+        "end": "2026-10-28"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "extended_window_diagnostic",
+      "comparable": false,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·F100（30万）",
+        "description": "BT v5规则，30万、risk=0.90、当前费率近似；7月后区间承接历史持仓和现金，非独立实盘收益。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "diagnostic_periods": [
+        {
+          "name": "8月以后冻结参数诊断（单列）",
+          "start": "2026-08-03",
+          "end": "2026-10-28",
+          "metrics": {
+            "n_days": 57,
+            "annualized_return": 0.8881840590760341,
+            "annualized_return_arith": 0.6993915872454247,
+            "sharpe_ratio": 1.9386972109926768,
+            "alpha": 0.7123526276121074,
+            "beta": 1.1639337517309716,
+            "calmar_ratio": 6.929152448034451,
+            "annualized_volatility": 0.36075338803799756,
+            "max_drawdown": -0.12818076463709205,
+            "annualized_one_way_turnover": 72.45215948920428,
+            "cumulative_return": 0.1559474905636702,
+            "benchmark_annualized_return": -0.03442874124265227,
+            "benchmark_annualized_return_arith": -0.01113554817652399,
+            "benchmark_cumulative_return": -0.007956245643547799
+          },
+          "note": "承接连续回测7月底持仓和现金，不是实际实盘账本，也不是8月重新投入30万元。固定模型与参数，未用本段调参；短窗以区间收益展示，不将折年收益当长期预期。"
+        }
+      ]
+    },
+    {
+      "id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1",
+      "title": "BT v5 · risk=1.00 · 30万元/当前费率复算 + 8月后冻结诊断",
+      "experiment_type": null,
+      "change_summary": "固定BT v5规则，资金从100万改30万、改用当前费率近似，risk从0.90改1.00。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "version": "v5",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1/metrics/bt_v5_300k_risk1_current_cost.json",
+      "metrics_source_sha256": "376a93414bba8bb32548cfa00f9432f8c2c824a14d73f2610ad6fdab9fc2dca5",
+      "projected_core_metrics": {
+        "annualized_return": 0.372295975153784,
+        "sharpe_ratio": 1.2086470017635766,
+        "alpha": 0.26340544645222075,
+        "beta": 0.9178987802437627,
+        "benchmark_cumulative_return": 0.5861752007260437,
+        "max_drawdown": -0.33678893341843985,
+        "calmar_ratio": 1.105428172401463,
+        "annualized_volatility": 0.2990156914909567,
+        "annualized_one_way_turnover": 75.7210474934484,
+        "annualized_return_arith": 0.36140441900080744
+      },
+      "projected_window": {
+        "start": "2026-08-03",
+        "end": "2026-10-28"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "completed",
+      "scope": "extended_window_diagnostic",
+      "comparable": false,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·F100（30万，risk1）",
+        "description": "BT v5规则，30万、risk=1.00、当前费率近似；7月后区间承接历史持仓和现金，非独立实盘收益。"
+      },
+      "main_nav_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "diagnostic_periods": [
+        {
+          "name": "8月以后冻结参数risk=1.00诊断（单列）",
+          "start": "2026-08-03",
+          "end": "2026-10-28",
+          "metrics": {
+            "n_days": 57,
+            "annualized_return": 0.9353396339847397,
+            "annualized_return_arith": 0.7291569346033933,
+            "sharpe_ratio": 1.9434924971053043,
+            "alpha": 0.742548016629752,
+            "beta": 1.2025525653590943,
+            "calmar_ratio": 7.002172284017451,
+            "annualized_volatility": 0.3751786722559626,
+            "max_drawdown": -0.13357849479363204,
+            "annualized_one_way_turnover": 74.47676063915033,
+            "cumulative_return": 0.16246701724474222,
+            "benchmark_annualized_return": -0.03442874124265227,
+            "benchmark_annualized_return_arith": -0.01113554817652399,
+            "benchmark_cumulative_return": -0.007956245643547799
+          },
+          "note": "承接连续回测7月底持仓和现金，不是实际实盘账本，也不是8月重新投入30万元。固定模型与参数，未用本段调参；短窗以区间收益展示，不将折年收益当长期预期。"
+        }
+      ]
+    },
+    {
+      "id": "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1",
+      "kind": "strategy",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1",
+      "title": "BT v5 · risk=1.00 · 诊断失败尝试1",
+      "experiment_type": null,
+      "change_summary": "固定BT v5规则，尝试30万及当前费率近似、risk从0.90改1.00；校验失败。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "version": "v5",
+        "initial": false
+      },
+      "metrics_source": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1-failed-1/metrics/bt_v5_300k_risk1_current_cost_failed_1.json",
+      "metrics_source_sha256": "38fbbb4d22b4657b7626351e3ae09f1d785a6b649e4eff6d02daa36c31bc7b66",
+      "projected_core_metrics": {
+        "annualized_return": null,
+        "sharpe_ratio": null,
+        "alpha": null,
+        "beta": null,
+        "benchmark_cumulative_return": null,
+        "max_drawdown": null,
+        "calmar_ratio": null,
+        "annualized_volatility": null,
+        "annualized_one_way_turnover": null,
+        "annualized_return_arith": null
+      },
+      "projected_window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "core_numeric_source": "ensemble.full_period",
+      "core_numeric_mismatches": {},
+      "status": "failed",
+      "scope": "standard",
+      "comparable": false,
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·F100（失败尝试）",
+        "description": "BT v5规则，30万、risk=1.00、当前费率近似；基准缓存校验失败，无有效回测指标。"
+      }
+    }
+  ]
+}

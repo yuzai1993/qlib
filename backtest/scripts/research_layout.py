@@ -28,7 +28,7 @@ def _relative(value: object) -> str:
 
 
 @lru_cache(maxsize=16)
-def _read_map(path: Path, mtime_ns: int, size: int) -> dict[str, str]:
+def _read_map(path: Path, mtime_ns: int, size: int) -> dict[str, dict[str, str]]:
     del mtime_ns  # Part of the cache key, invalidated on an atomic map update.
     if size > MAX_MAP_BYTES:
         raise ValueError("research layout map exceeds 8 MiB")
@@ -38,17 +38,57 @@ def _read_map(path: Path, mtime_ns: int, size: int) -> dict[str, str]:
     paths = document.get("paths")
     if not isinstance(paths, dict):
         raise ValueError("research layout map must contain a paths object")
-    return {_relative(old): _relative(new) for old, new in paths.items()}
+    directories = document.get("directories", {})
+    if not isinstance(directories, dict):
+        raise ValueError("research layout directories must be an object")
+    directories = {_relative(old): _relative(new) for old, new in directories.items()}
+    for old, new in directories.items():
+        if old == new or new.startswith(old + "/"):
+            raise ValueError("research layout directory alias is recursive")
+        if not old.startswith("backtest/experiments/") or not new.startswith("backtest/experiments/"):
+            raise ValueError("directory aliases must stay in the experiment archive")
+    return {
+        "paths": {_relative(old): _relative(new) for old, new in paths.items()},
+        "directories": directories,
+    }
 
 
-def _mapping(root: Path) -> dict[str, str]:
+def _maps(root: Path) -> dict[str, dict[str, str]]:
     path = root / MAP_PATH
     if path.is_symlink() or not path.resolve().is_relative_to(root):
         raise ValueError("research layout map escapes repository root")
     if not path.exists():
-        return {}
+        return {"paths": {}, "directories": {}}
     stat = path.stat()
     return _read_map(path, stat.st_mtime_ns, stat.st_size)
+
+
+def _mapping(root: Path) -> dict[str, str]:
+    return _maps(root)["paths"]
+
+
+def _directory_target(key: str, directories: dict[str, str]) -> str | None:
+    candidates = [source for source in directories if key == source or key.startswith(source + "/")]
+    if not candidates:
+        return None
+    source = max(candidates, key=len)
+    return directories[source] + key[len(source):]
+
+
+def _resolve_key(key: str, paths: dict[str, str], directories: dict[str, str]) -> str:
+    visited = set()
+    # Explicit directory cycles can grow the suffix and never repeat a full key.
+    for _ in range(len(paths) + len(directories) + 2):
+        if key in visited:
+            raise ValueError("research layout map contains a path cycle")
+        visited.add(key)
+        target = paths.get(key)
+        if target is None:
+            target = _directory_target(key, directories)
+        if target is None:
+            return key
+        key = target
+    raise ValueError("research layout map contains a recursive directory cycle")
 
 
 def relocate_path(raw: str, repo_root: Path) -> str:
@@ -65,15 +105,11 @@ def relocate_path(raw: str, repo_root: Path) -> str:
             return raw
     else:
         key = path.as_posix()
-    mapping = _mapping(root)
-    if key not in mapping:
+    maps = _maps(root)
+    mapping, directories = maps["paths"], maps["directories"]
+    if key not in mapping and _directory_target(key, directories) is None:
         return raw
-    visited = set()
-    while key in mapping:
-        if key in visited:
-            raise ValueError("research layout map contains a path cycle")
-        visited.add(key)
-        key = mapping[key]
+    key = _resolve_key(key, mapping, directories)
     if not (root / key).resolve().is_relative_to(root):
         raise ValueError("mapped research path escapes repository root")
     return str(root / key) if absolute else key
@@ -107,34 +143,46 @@ def research_path_identity(raw: str, repo_root: Path) -> str:
             return raw
     else:
         key = path.as_posix()
-    mapping = _mapping(root)
+    maps = _maps(root)
+    mapping, directories = maps["paths"], maps["directories"]
     predecessors: dict[str, list[str]] = {}
     for source, destination in mapping.items():
         predecessors.setdefault(destination, []).append(source)
-    if key not in mapping and key not in predecessors:
+    def previous(current: str) -> set[str]:
+        candidates = set(predecessors.get(current, []))
+        for source, destination in directories.items():
+            if current == destination or current.startswith(destination + "/"):
+                candidate = source + current[len(destination):]
+                # Invert only the actual next hop: an exact alias or a longer
+                # directory rule can override this apparent directory edge.
+                next_step = mapping.get(candidate)
+                if next_step is None:
+                    next_step = _directory_target(candidate, directories)
+                if next_step == current:
+                    candidates.add(candidate)
+        return candidates
+
+    if key not in mapping and not previous(key) and _directory_target(key, directories) is None:
         return raw
 
     # The canonical asset still has to respect the same path boundary as the
     # read resolver, even when this call starts with the final destination.
-    canonical, visited = key, set()
-    while canonical in mapping:
-        if canonical in visited:
-            raise ValueError("research layout map contains a path cycle")
-        visited.add(canonical)
-        canonical = mapping[canonical]
+    canonical = _resolve_key(key, mapping, directories)
     if not (root / canonical).resolve().is_relative_to(root):
         raise ValueError("mapped research path escapes repository root")
 
     visited = set()
-    while key in predecessors:
+    for _ in range(len(mapping) + len(directories) + 2):
+        sources = previous(key)
+        if not sources:
+            return str(root / key) if absolute else key
         if key in visited:
             raise ValueError("research layout map contains a path cycle")
         visited.add(key)
-        sources = predecessors[key]
         if len(sources) != 1:
             raise ValueError("research layout path has ambiguous original identities")
-        key = sources[0]
-    return str(root / key) if absolute else key
+        key = next(iter(sources))
+    raise ValueError("research layout map contains a recursive directory cycle")
 
 
 def report_href(target: Path | str, output: Path | str, repo_root: Path) -> str:

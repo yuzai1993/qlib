@@ -1,0 +1,1004 @@
+{
+  "date": "2026-10-31",
+  "scope": "11 retained all-A model archives after requested removal of two missing-report archives",
+  "standards_read": [
+    "backtest/EXPERIMENT_STANDARD.md §1.5–1.5.3",
+    "backtest/EXPERIMENT_STANDARD.md §5.1.2"
+  ],
+  "notes": [
+    "Conclusions describe retained historical evaluation evidence, not new independent out-of-sample evidence or a new promotion decision.",
+    "The current model table uses top3×h5. The older v2 detail report uses its contemporary top5×h5; its values must not be substituted for current table metrics.",
+    "Single-seed DoubleEnsemble comparisons distinguish the matching seed 42 control from the official five-seed ensemble. Model structure and frozen hyperparameters change together.",
+    "The two missing-report model archives are deliberately excluded: regime-adapt/m0-h20es-densemble-s42-v1 and diag/eval-window-edge-lookahead."
+  ],
+  "experiments": [
+    {
+      "exp_id": "regime-adapt/m0-h20-label-v4",
+      "metadata_path": "backtest/experiments/models/training-target/h20-v1/metadata.json",
+      "analysis": {
+        "conclusion": "初始H20基线：主格净年化29.33%、夏普0.52，保留作后续版本对照。",
+        "evidence": [
+          "records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json"
+        ],
+        "limitations": "现行主格为Top3×H5；这是历史研究窗口重评结果，没有可核实的更早同轨道基线版本。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "",
+          "version": "",
+          "initial": true
+        },
+        "metrics": {
+          "net_ann": 0.2933431911523481,
+          "net_ann_vol": 0.5665444606764577,
+          "net_sharpe": 0.5177761173449555,
+          "ann": 0.33295729879845576,
+          "turnover": 0.18091938091938092,
+          "rank_ic_mean": 0.09889293530789339
+        },
+        "source": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+        "source_sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": null,
+        "baseline_source": null,
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.21162129209147734,
+          "ir": 0.5804618679490232,
+          "ann": 0.3012955778595712,
+          "beta": 1.0281148782495242,
+          "ann_alpha": 0.20910011046499427,
+          "appraisal_ir": 0.5738635549835328,
+          "turnover_period": 0.9279279279279279,
+          "turnover": 0.18558558558558558,
+          "ann_cost": 0.04063581981981982,
+          "net_ann_excess": 0.17098547227165753,
+          "net_ann": 0.26065975803975133,
+          "net_ann_alpha": 0.16846429064517446,
+          "net_ann_vol": 0.5771001497373467,
+          "net_sharpe": 0.45167161741057316
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t5h5-es-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+      "analysis": {
+        "conclusion": "现行Top3×H5口径下净年化30.19%，较v1略升，夏普基本持平。",
+        "evidence": [
+          "metrics/eval_m0h20es_k123h2345.json",
+          "records/ce5c4daad76093a340dc5b651e195eb9de90ae1e1d689915c863e0ace9786e0e.json"
+        ],
+        "limitations": "历史晋升时采用Top5×H5，旧详细报告仍保存该口径；这里使用现行Top3×H5 JSON，不据此重述当时晋升依据。评估窗也用于早停，不是独立验证。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-label-v4",
+          "version": "v1",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.30193985577577165,
+          "net_ann_vol": 0.5820114423686474,
+          "net_sharpe": 0.5187868034809567,
+          "ann": 0.3410481653160812,
+          "turnover": 0.17860937860937862,
+          "rank_ic_mean": 0.0975632090210084
+        },
+        "source": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+        "source_sha256": "dae3c1acc9984e3645d7d51abf948eb670532424bdeea3e3540a4f11d6eff102",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.2933431911523481,
+          "net_ann_vol": 0.5665444606764577,
+          "net_sharpe": 0.5177761173449555,
+          "ann": 0.33295729879845576,
+          "turnover": 0.18091938091938092,
+          "rank_ic_mean": 0.09889293530789339
+        },
+        "baseline_source": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.21162129209147734,
+          "ir": 0.5804618679490232,
+          "ann": 0.3012955778595712,
+          "beta": 1.0281148782495242,
+          "ann_alpha": 0.20910011046499427,
+          "appraisal_ir": 0.5738635549835328,
+          "turnover_period": 0.9279279279279279,
+          "turnover": 0.18558558558558558,
+          "ann_cost": 0.04063581981981982,
+          "net_ann_excess": 0.17098547227165753,
+          "net_ann": 0.26065975803975133,
+          "net_ann_alpha": 0.16846429064517446,
+          "net_ann_vol": 0.5771001497373467,
+          "net_sharpe": 0.45167161741057316
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+      "analysis": {
+        "conclusion": "主格净年化29.70%，略低于v2；H20仍优于同批H1、H5和H10标签。",
+        "evidence": [
+          "metrics/eval_m0h20.json",
+          "records/bc74b6823ef6b724d1baf4b5f1f988ca0830492553c340178bc42134e2c3f9d7.json"
+        ],
+        "limitations": "v3曾是经批准的历史基线；本结论比较当前同口径数值，不否定或重做历史晋升。标签选择与早停使用该历史研究窗口。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+          "version": "v2",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.2969937650578606,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099,
+          "ann": 0.33615265440875,
+          "turnover": 0.17884037884037887,
+          "rank_ic_mean": 0.09837344126849204
+        },
+        "source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+        "source_sha256": "bf4aa5a3bd889d33628a89359a378b8c7153f893508b784dd7c62dcfa0886db7",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.30193985577577165,
+          "net_ann_vol": 0.5820114423686474,
+          "net_sharpe": 0.5187868034809567,
+          "ann": 0.3410481653160812,
+          "turnover": 0.17860937860937862,
+          "rank_ic_mean": 0.0975632090210084
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-rankices-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+      "analysis": {
+        "conclusion": "净年化30.57%、RankIC为0.0999，较v3小幅改善；现行模型基线。",
+        "evidence": [
+          "metrics/eval_m0h20_rankices.json",
+          "reports/regime_adapt_m0h20_rankices_report.html",
+          "records/54599b63162c804e96069151221e010b76c6af3b0ac81a0ce6041aa658922513.json"
+        ],
+        "limitations": "早停使用评估窗日RankIC，不是v1的499天次日协议；同一历史窗口已用于早停与模型比较，不能当作独立样本外改善。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.3057020241234104,
+          "net_ann_vol": 0.5780583290124371,
+          "net_sharpe": 0.5288428671993638,
+          "ann": 0.34557914678453305,
+          "turnover": 0.18212058212058213,
+          "rank_ic_mean": 0.09989260967760683
+        },
+        "source": "backtest/experiments/models/early-stopping/rankic-v4/metrics/eval_m0h20_rankices.json",
+        "source_sha256": "1420687eda4740bc0467a2e3524f608ea5c055f1a7bcae2415fa0840621f915c",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.2969937650578606,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099,
+          "ann": 0.33615265440875,
+          "turnover": 0.17884037884037887,
+          "rank_ic_mean": 0.09837344126849204
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.19403748673041105,
+          "ir": 0.5207655896668987,
+          "ann": 0.2837117724985049,
+          "beta": 1.0360142745964551,
+          "ann_alpha": 0.19080793237851792,
+          "appraisal_ir": 0.5125127778298071,
+          "turnover_period": 0.9306999306999307,
+          "turnover": 0.18613998613998614,
+          "ann_cost": 0.04075721136521136,
+          "net_ann_excess": 0.15328027536519967,
+          "net_ann": 0.2429545611332935,
+          "net_ann_alpha": 0.15005072101330658,
+          "net_ann_vol": 0.584356974496035,
+          "net_sharpe": 0.41576394521999843
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h1-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h1/metadata.json",
+      "analysis": {
+        "conclusion": "主格净年化−39.79%，明显弱于v3；本轮缩短至H1未带来改善。",
+        "evidence": [
+          "metrics/eval_m0h1.json",
+          "records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json"
+        ],
+        "limitations": "只针对相同Top3×H5评估与本次训练配方的历史标签对照，不推断H1在其它策略或未来窗口的表现。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": -0.3979450067859733,
+          "net_ann_vol": 0.6714861665495863,
+          "net_sharpe": -0.5926332166019191,
+          "ann": -0.3551241391491056,
+          "turnover": 0.19556479556479556,
+          "rank_ic_mean": null
+        },
+        "source": "backtest/experiments/models/training-target/h1/metrics/eval_m0h1.json",
+        "source_sha256": "b83c3f1808491102fba70d6a0c5890a73c7b4c207895e39b0c167750e0820b5e",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.2969937650578606,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099,
+          "ann": 0.33615265440875,
+          "turnover": 0.17884037884037887,
+          "rank_ic_mean": 0.09837344126849204
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": -0.31014868669236906,
+          "ir": -0.7381125654332548,
+          "ann": -0.22047440092427517,
+          "beta": 1.1111142525488846,
+          "ann_alpha": -0.3201127779283458,
+          "appraisal_ir": -0.7692264560970509,
+          "turnover_period": 0.9847539847539848,
+          "turnover": 0.19695079695079695,
+          "ann_cost": 0.0431243465003465,
+          "net_ann_excess": -0.3532730331927156,
+          "net_ann": -0.2635987474246217,
+          "net_ann_alpha": -0.3632371244286923,
+          "net_ann_vol": 0.6462439506235991,
+          "net_sharpe": -0.4078935627486488
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h5-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h5/metadata.json",
+      "analysis": {
+        "conclusion": "主格净年化24.77%，低于v3，且波动更高；本轮未见缩短标签的收益。",
+        "evidence": [
+          "metrics/eval_m0h5.json",
+          "records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json"
+        ],
+        "limitations": "同一历史窗口内的训练标签比较；评估持有期仍是H5，不能把训练标签H5等同于执行层持仓策略。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.24768385502744275,
+          "net_ann_vol": 0.6637351822223707,
+          "net_sharpe": 0.37316668102198236,
+          "ann": 0.2898269532025409,
+          "turnover": 0.1924693924693925,
+          "rank_ic_mean": null
+        },
+        "source": "backtest/experiments/models/training-target/h5/metrics/eval_m0h5.json",
+        "source_sha256": "8422bad9f322134a76fbd88354f60779e52251395cec8217979ca6d827f27ef6",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.2969937650578606,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099,
+          "ann": 0.33615265440875,
+          "turnover": 0.17884037884037887,
+          "rank_ic_mean": 0.09837344126849204
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.21162216989336194,
+          "ir": 0.5211292326579581,
+          "ann": 0.3012964556614558,
+          "beta": 1.1644906678047067,
+          "ann_alpha": 0.19687158674245803,
+          "appraisal_ir": 0.49457269647424934,
+          "turnover_period": 0.9690459690459692,
+          "turnover": 0.19380919380919384,
+          "ann_cost": 0.04243646107646108,
+          "net_ann_excess": 0.16918570881690087,
+          "net_ann": 0.2588599945849947,
+          "net_ann_alpha": 0.15443512566599693,
+          "net_ann_vol": 0.6518218982614543,
+          "net_sharpe": 0.3971330132900238
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h10-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h10/metadata.json",
+      "analysis": {
+        "conclusion": "主格净年化24.37%，低于v3，且波动更高；H10未优于H20对照。",
+        "evidence": [
+          "metrics/eval_m0h10.json",
+          "records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json"
+        ],
+        "limitations": "这是固定配方与Top3×H5主格下的历史对照，不构成对其它窗口或模型的标签期限结论。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.24370402110020561,
+          "net_ann_vol": 0.6925605752765835,
+          "net_sharpe": 0.35188838319720855,
+          "ann": 0.28300453392071845,
+          "turnover": 0.17948717948717952,
+          "rank_ic_mean": null
+        },
+        "source": "backtest/experiments/models/training-target/h10/metrics/eval_m0h10.json",
+        "source_sha256": "47848f51908e0d243cd9a1b56adc5da889987d5a02f5440f6e2e2227b1bb66f9",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.2969937650578606,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099,
+          "ann": 0.33615265440875,
+          "turnover": 0.17884037884037887,
+          "rank_ic_mean": 0.09837344126849204
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.17828719854645408,
+          "ir": 0.4209060850299069,
+          "ann": 0.2679614843145479,
+          "beta": 1.1093869496765494,
+          "ann_alpha": 0.16847800196185908,
+          "appraisal_ir": 0.40037870920737706,
+          "turnover_period": 0.9343959343959344,
+          "turnover": 0.18687918687918686,
+          "ann_cost": 0.04091906675906676,
+          "net_ann_excess": 0.13736813178738733,
+          "net_ann": 0.22704241755548116,
+          "net_ann_alpha": 0.12755893520279232,
+          "net_ann_vol": 0.6412611763670433,
+          "net_sharpe": 0.3540560787443138
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+      "analysis": {
+        "conclusion": "同种子净年化24.93%，低于v3的33.11%；单种子侦察不支持替换。",
+        "evidence": [
+          "metrics/eval_densemble_s42_vs_v3.json",
+          "reports/regime_adapt_m0h20_t3h5es_densemble_s42_report.html",
+          "records/0a3822a6a1fc5668f324b3c3e364bc1b1ac3bc81cd3a9b415c84324bf016fe71.json"
+        ],
+        "limitations": "只比较种子42，不能与五种子正式结论等同；DoubleEnsemble结构与超参同时改变，不把差异单独归因于结构。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "single_seed_diagnostic",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.24927462005079482,
+          "net_ann_vol": 0.6188435389294311,
+          "net_sharpe": 0.40280717882589134,
+          "ann": 0.28885837981055457,
+          "turnover": 0.1807807807807808,
+          "rank_ic_mean": null
+        },
+        "source": "backtest/experiments/models/model-structure/de-v3-s42/metrics/eval_densemble_s42_vs_v3.json",
+        "source_sha256": "22c5a4aa2eff548206ce018da3c07ffff49848bf465900e8e42a8cb4d2004f85",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.2969937650578606,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099,
+          "ann": 0.33615265440875,
+          "turnover": 0.17884037884037887,
+          "rank_ic_mean": 0.09837344126849204
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.19918409404246068,
+          "ir": 0.48581181109604615,
+          "ann": 0.28885837981055457,
+          "beta": 1.0721317503941616,
+          "ann_alpha": 0.19271573084466181,
+          "appraisal_ir": 0.4712109684230374,
+          "turnover_period": 0.903903903903904,
+          "turnover": 0.1807807807807808,
+          "ann_cost": 0.039583759759759765,
+          "net_ann_excess": 0.15960033428270093,
+          "net_ann": 0.24927462005079482,
+          "net_ann_alpha": 0.15313197108490206,
+          "net_ann_vol": 0.6188435389294311,
+          "net_sharpe": 0.40280717882589134
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+      "analysis": {
+        "conclusion": "五种子合成净年化19.24%、夏普0.29，均低于v3；未见替换收益。",
+        "evidence": [
+          "metrics/eval_densemble_vs_v3.json",
+          "reports/regime_adapt_m0h20_t3h5es_densemble_report.html",
+          "records/c51bab99399e38301282d33a1f0c3dbf9ac274819d3755e994ae9ddd14a332e5.json"
+        ],
+        "limitations": "读取官方五种子合成信号而非种子指标平均；模型结构及冻结超参一起改变，结果仅描述本配方的历史表现。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t3h5es-v1",
+          "version": "v3",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.1923612105353774,
+          "net_ann_vol": 0.6621992012710493,
+          "net_sharpe": 0.2904884363589571,
+          "ann": 0.2300128215309884,
+          "turnover": 0.17195657195657196,
+          "rank_ic_mean": null
+        },
+        "source": "backtest/experiments/models/model-structure/de-v3-5seed/metrics/eval_densemble_vs_v3.json",
+        "source_sha256": "afec0bb06e1ca442f91ce36dc2685c021edd3005a40af3d3c29c1d767ee1c398",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.2969937650578606,
+          "net_ann_vol": 0.5763272178720751,
+          "net_sharpe": 0.5153214282581099,
+          "ann": 0.33615265440875,
+          "turnover": 0.17884037884037887,
+          "rank_ic_mean": 0.09837344126849204
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.19918409404246068,
+          "ir": 0.48581181109604615,
+          "ann": 0.28885837981055457,
+          "beta": 1.0721317503941616,
+          "ann_alpha": 0.19271573084466181,
+          "appraisal_ir": 0.4712109684230374,
+          "turnover_period": 0.903903903903904,
+          "turnover": 0.1807807807807808,
+          "ann_cost": 0.039583759759759765,
+          "net_ann_excess": 0.15960033428270093,
+          "net_ann": 0.24927462005079482,
+          "net_ann_alpha": 0.15313197108490206,
+          "net_ann_vol": 0.6188435389294311,
+          "net_sharpe": 0.40280717882589134
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+      "analysis": {
+        "conclusion": "净年化28.79%，优于v4同种子对照，但低于五种子合成；仅作侦察。",
+        "evidence": [
+          "metrics/eval_densemble_s42_vs_v4.json",
+          "reports/regime_adapt_m0h20_rankices_densemble_s42_report.html",
+          "records/50615f6e0c075baa892b1d5be7e569acec91298b741274fc3a5625e285158386.json"
+        ],
+        "limitations": "v4种子42净年化24.30%，官方五种子合成30.57%；单种子改善不能推出五种子晋升结论。结构与超参同时改变。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "single_seed_diagnostic",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-rankices-v1",
+          "version": "v4",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.2878579908011152,
+          "net_ann_vol": 0.5707705481868389,
+          "net_sharpe": 0.5043322429924788,
+          "ann": 0.3285949702420946,
+          "turnover": 0.18604758604758603,
+          "rank_ic_mean": 0.099112597900139
+        },
+        "source": "backtest/experiments/models/model-structure/de-v4-s42/metrics/eval_densemble_s42_vs_v4.json",
+        "source_sha256": "5b380e49b2e6223983aebc548b277257b3e57eb90f7389f9dbc62068cd47b8c0",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.3057020241234104,
+          "net_ann_vol": 0.5780583290124371,
+          "net_sharpe": 0.5288428671993638,
+          "ann": 0.34557914678453305,
+          "turnover": 0.18212058212058213,
+          "rank_ic_mean": 0.09989260967760683
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/rankic-v4/metrics/eval_m0h20_rankices.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.2389206844740007,
+          "ir": 0.6214303900613843,
+          "ann": 0.3285949702420946,
+          "beta": 0.9849148624653619,
+          "ann_alpha": 0.2402734334081328,
+          "appraisal_ir": 0.6252282450637622,
+          "turnover_period": 0.9302379302379302,
+          "turnover": 0.18604758604758603,
+          "ann_cost": 0.04073697944097944,
+          "net_ann_excess": 0.19818370503302124,
+          "net_ann": 0.2878579908011152,
+          "net_ann_alpha": 0.19953645396715336,
+          "net_ann_vol": 0.5707705481868389,
+          "net_sharpe": 0.5043322429924788
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.19403748673041105,
+          "ir": 0.5207655896668987,
+          "ann": 0.2837117724985049,
+          "beta": 1.0360142745964551,
+          "ann_alpha": 0.19080793237851792,
+          "appraisal_ir": 0.5125127778298071,
+          "turnover_period": 0.9306999306999307,
+          "turnover": 0.18613998613998614,
+          "ann_cost": 0.04075721136521136,
+          "net_ann_excess": 0.15328027536519967,
+          "net_ann": 0.2429545611332935,
+          "net_ann_alpha": 0.15005072101330658,
+          "net_ann_vol": 0.584356974496035,
+          "net_sharpe": 0.41576394521999843
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0-label-k123-h2345",
+      "metadata_path": "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+      "analysis": {
+        "conclusion": "v2在网格中Top3×H5净年化最高（30.19%）；仅重评信号，不等同执行回测。",
+        "evidence": [
+          "records/3b360b429878f9fa1ef287d5512325a332446767e9f338a37044af1f402cd65f.json"
+        ],
+        "limitations": "仅对既有v1/v2信号做K=1–5、H=2–5网格重评，没有重训；网格筛选来自同一历史窗口，不能当作真实账户回测或独立选型验证。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "supporting_metrics": {
+        "scope": "standard",
+        "comparison_baseline": {
+          "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+          "version": "v2",
+          "initial": false
+        },
+        "metrics": {
+          "net_ann": 0.2933431911523481,
+          "net_ann_vol": 0.5665444606764577,
+          "net_sharpe": 0.5177761173449555,
+          "ann": 0.33295729879845576,
+          "turnover": 0.18091938091938092,
+          "rank_ic_mean": 0.09889293530789339
+        },
+        "source": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+        "source_sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+        "primary_cell": {
+          "k": 3,
+          "h": 5
+        },
+        "baseline_metrics": {
+          "net_ann": 0.30193985577577165,
+          "net_ann_vol": 0.5820114423686474,
+          "net_sharpe": 0.5187868034809567,
+          "ann": 0.3410481653160812,
+          "turnover": 0.17860937860937862,
+          "rank_ic_mean": 0.0975632090210084
+        },
+        "baseline_source": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+        "seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.21162129209147734,
+          "ir": 0.5804618679490232,
+          "ann": 0.3012955778595712,
+          "beta": 1.0281148782495242,
+          "ann_alpha": 0.20910011046499427,
+          "appraisal_ir": 0.5738635549835328,
+          "turnover_period": 0.9279279279279279,
+          "turnover": 0.18558558558558558,
+          "ann_cost": 0.04063581981981982,
+          "net_ann_excess": 0.17098547227165753,
+          "net_ann": 0.26065975803975133,
+          "net_ann_alpha": 0.16846429064517446,
+          "net_ann_vol": 0.5771001497373467,
+          "net_sharpe": 0.45167161741057316
+        },
+        "baseline_seed42_head": {
+          "n_days": 1448,
+          "ann_excess": 0.28134841758643603,
+          "ir": 0.7337583789103901,
+          "ann": 0.3710227033545299,
+          "beta": 1.0792466860731804,
+          "ann_alpha": 0.2742420276133352,
+          "appraisal_ir": 0.7187363856977184,
+          "turnover_period": 0.9122199122199123,
+          "turnover": 0.18244398244398247,
+          "ann_cost": 0.0399479343959344,
+          "net_ann_excess": 0.2414004831905016,
+          "net_ann": 0.3310747689585955,
+          "net_ann_alpha": 0.2342940932174008,
+          "net_ann_vol": 0.6080351444891763,
+          "net_sharpe": 0.5444993960616186
+        },
+        "grid_comparison_source": {
+          "path": "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json",
+          "sha256": "dae3c1acc9984e3645d7d51abf948eb670532424bdeea3e3540a4f11d6eff102",
+          "cells": [
+            {
+              "k": 1,
+              "h": 2,
+              "net_ann": 0.2201942007413879,
+              "net_sharpe": 0.4324201169823889
+            },
+            {
+              "k": 1,
+              "h": 3,
+              "net_ann": 0.18811732533837863,
+              "net_sharpe": 0.3428639148275457
+            },
+            {
+              "k": 1,
+              "h": 4,
+              "net_ann": 0.22503049559806645,
+              "net_sharpe": 0.3643566520323186
+            },
+            {
+              "k": 1,
+              "h": 5,
+              "net_ann": 0.2815566656491503,
+              "net_sharpe": 0.40661698714749167
+            },
+            {
+              "k": 2,
+              "h": 2,
+              "net_ann": 0.26458001594802927,
+              "net_sharpe": 0.6304071862912103
+            },
+            {
+              "k": 2,
+              "h": 3,
+              "net_ann": 0.2400850254283904,
+              "net_sharpe": 0.5040611224092871
+            },
+            {
+              "k": 2,
+              "h": 4,
+              "net_ann": 0.2582322947641025,
+              "net_sharpe": 0.4767512928112584
+            },
+            {
+              "k": 2,
+              "h": 5,
+              "net_ann": 0.26788510946362226,
+              "net_sharpe": 0.43650482402772295
+            },
+            {
+              "k": 3,
+              "h": 2,
+              "net_ann": 0.2683472069022001,
+              "net_sharpe": 0.6870406666753374
+            },
+            {
+              "k": 3,
+              "h": 3,
+              "net_ann": 0.29126719710819815,
+              "net_sharpe": 0.6396475752084047
+            },
+            {
+              "k": 3,
+              "h": 4,
+              "net_ann": 0.2851036327937029,
+              "net_sharpe": 0.5503581427207187
+            },
+            {
+              "k": 3,
+              "h": 5,
+              "net_ann": 0.30193985577577165,
+              "net_sharpe": 0.5187868034809567
+            },
+            {
+              "k": 4,
+              "h": 2,
+              "net_ann": 0.2565671998540051,
+              "net_sharpe": 0.6791298889492144
+            },
+            {
+              "k": 4,
+              "h": 3,
+              "net_ann": 0.28049248736174337,
+              "net_sharpe": 0.6223539791400761
+            },
+            {
+              "k": 4,
+              "h": 4,
+              "net_ann": 0.2692817658497625,
+              "net_sharpe": 0.5297563789246567
+            },
+            {
+              "k": 4,
+              "h": 5,
+              "net_ann": 0.28340110572819854,
+              "net_sharpe": 0.4972439625664929
+            },
+            {
+              "k": 5,
+              "h": 2,
+              "net_ann": 0.2554346827336644,
+              "net_sharpe": 0.6925941628567723
+            },
+            {
+              "k": 5,
+              "h": 3,
+              "net_ann": 0.2832273009717186,
+              "net_sharpe": 0.6429305573143032
+            },
+            {
+              "k": 5,
+              "h": 4,
+              "net_ann": 0.2789472749205945,
+              "net_sharpe": 0.5596568954313879
+            },
+            {
+              "k": 5,
+              "h": 5,
+              "net_ann": 0.2856381915141073,
+              "net_sharpe": 0.5093456352517931
+            }
+          ],
+          "highest_net_ann": {
+            "k": 3,
+            "h": 5,
+            "net_ann": 0.30193985577577165,
+            "net_sharpe": 0.5187868034809567
+          }
+        }
+      }
+    }
+  ],
+  "validation": {
+    "conclusions": 11,
+    "min_chars": 33,
+    "max_chars": 41,
+    "analysis_schema": "all pass _validate_analysis",
+    "local_evidence_exists": true,
+    "metadata_written": false,
+    "raw_metrics_and_registry_modified": false
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "status": "clean",
+  "findings": [],
+  "old_record_fields_identical": 35,
+  "registry_rows_identical": 35,
+  "catalog_warnings": [],
+  "metadata_only_two_editorial_fields_added": 13,
+  "preexisting_research_file_changes": [
+    "backtest/experiments/README.md",
+    "backtest/experiments/models/training-target/h10/metadata.json",
+    "backtest/experiments/models/training-target/h20-v1/metadata.json",
+    "backtest/experiments/models/training-target/h5/metadata.json",
+    "backtest/experiments/models/training-target/h1/metadata.json",
+    "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+    "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+    "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+    "backtest/experiments/models/evaluation/window-edge/metadata.json",
+    "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+    "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+    "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+    "backtest/experiments/models/model-structure/de-v2-s42/metadata.json",
+    "backtest/experiments/models/model-structure/de-v3-s42/metadata.json"
+  ],
+  "unexpected_research_file_changes": [],
+  "historical_baseline_versions_reviewed": {
+    "v1": "initial",
+    "v2": "v1",
+    "v3": "v2",
+    "v4": "v3"
+  },
+  "source_spot_checks": [
+    "EXPERIMENT_STANDARD.md §1.5.1–1.5.3 establishes v1→v2→v3→v4 chronology and distinct early stop protocols",
+    "promote_phase_m_v1_es.py:38 rewrote initial model baseline_ref to later ES_ID; :63 sets promoted ES row self",
+    "register_regime_ablation.py:72–87 confirms DE-v2 changes both model hyperparameters and RankIC stopping",
+    "register_eval_window_edge_diag.py confirms m0h20es frozen five-seed BT v2 signal, no training"
+  ],
+  "frontend_review": {
+    "model_content": "short title, explicit change, historical version only",
+    "original_hypothesis_and_identity": "retained in details",
+    "csv_and_search": "use new summary and historical version",
+    "unknown_baseline": "not guessed from self/current",
+    "strategy_and_benchmark": "unchanged"
+  },
+  "independent_python_tests_passed": 17,
+  "independent_frontend_tests_passed": 75,
+  "git_diff_check": "passed",
+  "metadata": [
+    {
+      "path": "backtest/experiments/models/training-target/h10/metadata.json",
+      "change_summary": "训练标签由H20改为H10。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/training-target/h20-v1/metadata.json",
+      "change_summary": "训练目标改为未来20日累计收益（H20）。",
+      "comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": true
+      }
+    },
+    {
+      "path": "backtest/experiments/models/training-target/h5/metadata.json",
+      "change_summary": "训练标签由H20改为H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/training-target/h1/metadata.json",
+      "change_summary": "训练标签由H20改为H1。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+      "change_summary": "早停由Top3×H5扣费净年化改为评估窗日RankIC。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+      "change_summary": "扣费净年化早停与主评估格由Top5×H5改为Top3×H5。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+      "change_summary": "早停由499天次日RankIC改为评估窗Top5×H5扣费净年化。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-label-v4",
+        "version": "v1"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/evaluation/window-edge/metadata.json",
+      "change_summary": "增加评估末端标签取价越界检查（不重训）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+      "change_summary": "评估网格改为K=1–5、H=2–5，复用现有信号。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（五种子）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-rankices-v1",
+        "version": "v4"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/de-v2-s42/metadata.json",
+      "change_summary": "改用三子模型DoubleEnsemble及其超参，早停改为RankIC（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2"
+      }
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+      "change_summary": "单LGBM改为三子模型DoubleEnsemble及其超参（种子42）。",
+      "comparison_baseline": {
+        "ref": "regime-adapt/m0-h20-t3h5es-v1",
+        "version": "v3"
+      }
+    }
+  ]
+}

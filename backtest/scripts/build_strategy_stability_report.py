@@ -45,7 +45,7 @@ STABILITY_B6_EXP_ID_A10M = f"{STABILITY_B6_EXP_ID}-a10m"
 FULL_NEIGHBORHOOD_EXP_ID = "strategy-neighborhood/b3-s-local-full-v1"
 DEFAULT_NEIGHBORHOOD_RESULTS = (
     REPO_ROOT
-    / "backtest/experiments/strategy-neighborhood/b3-s-local-full-v1/data/full_results.json"
+    / "backtest/experiments/strategies/strategy-neighborhood/b3-s-local-full-v1/data/full_results.json"
 )
 BETA_OVERLAY_PREFIX = "strategy-beta-overlay/"
 METRICS = (
@@ -462,7 +462,7 @@ def _account_diag_section(rows: Sequence[dict[str, Any]]) -> str:
     )
 
 
-def _extended_history_section(rows: Sequence[dict[str, Any]]) -> str:
+def _extended_history_section(rows: Sequence[dict[str, Any]], *, output_path: Path = DEFAULT_OUTPUT) -> str:
     matches = [
         row
         for row in rows
@@ -477,7 +477,7 @@ def _extended_history_section(rows: Sequence[dict[str, Any]]) -> str:
         segment = row.get("test_segment") or row.get("selection_segment") or ["—", "—"]
         report = row.get("report_html") or ""
         link = (
-            f'<a href="{_esc(_layout_href(report, DEFAULT_OUTPUT, REPO_ROOT))}">report</a>' if report else "—"
+            f'<a href="{_esc(_layout_href(report, output_path, REPO_ROOT))}">report</a>' if report else "—"
         )
         body.append(
             "<tr>"
@@ -497,7 +497,7 @@ def _extended_history_section(rows: Sequence[dict[str, Any]]) -> str:
     )
 
 
-def build_html(rows: Sequence[dict]) -> str:
+def build_html(rows: Sequence[dict], *, output_path: Path = DEFAULT_OUTPUT) -> str:
     phase_s_rows = [row for row in rows if str(row.get("phase") or "").upper() == "S"]
     b6_matches = _prefer_exp_rows(
         phase_s_rows,
@@ -589,7 +589,7 @@ def build_html(rows: Sequence[dict]) -> str:
         sections.append(_neighborhood_section(neighborhood, correction))
     sections.append(_beta_section(phase_s_rows))
     sections.append(_account_diag_section(phase_s_rows))
-    sections.append(_extended_history_section(phase_s_rows))
+    sections.append(_extended_history_section(phase_s_rows, output_path=output_path))
     css = """
 body{font-family:-apple-system,'PingFang SC',sans-serif;max-width:1500px;margin:24px auto;color:#172033;background:#f7f8fa}
 h1{font-size:24px}h2{margin-top:34px;border-bottom:2px solid #355f9d;padding-bottom:7px}h3{font-size:15px;margin-top:20px}
@@ -624,9 +624,10 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
+    args.output = _resolve_research_path(args.output, _RESEARCH_ROOT)
     rows = _load_registry_rows(args.registry)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(build_html(rows), encoding="utf-8")
+    args.output.write_text(build_html(rows, output_path=args.output), encoding="utf-8")
     print(args.output)
 
 

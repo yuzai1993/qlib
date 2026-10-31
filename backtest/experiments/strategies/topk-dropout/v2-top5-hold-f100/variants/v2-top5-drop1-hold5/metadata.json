@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+  "event_numbers": [
+    128
+  ],
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/reports/all_top5d1h5_m0h20es.html",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/reports/phase_m_v1_bt_m0h20es_h5.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metrics/all_top5d1h5_m0h20es.json",
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/metrics/m0h20es.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/v2-top5-drop1-hold5/records/3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "M0 H20 ES top5d1 hold5（无强制卖出）",
+  "metrics_source": {
+    "path": "metrics/all_top5d1h5_m0h20es.json",
+    "sha256": "5b3533224f27d9ece937352a28454b405ff7ea58735ef27e19459054e2665f9a"
+  },
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "Top5换1·持5",
+    "description": "排名轮换：常规每日最多换1只，最短持有5日；仅开hold5、不设f100。100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/v2-top5-drop1-hold5",
+  "analysis": {
+    "conclusion": "仅开hold5的CAGR31.3%，高于叠加F100；换手更低，但夏普未提升，未晋升。",
+    "evidence": [
+      "metrics/all_top5d1h5_m0h20es.json",
+      "metrics/m0h20es.json",
+      "records/3a44777af5fd011d622c5c65a73f66fc1b2ed7cd734d116b55a03bf8c4f258f4.json",
+      "reports/all_top5d1h5_m0h20es.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "最短持有维持5日，从启用F100改为不设强卖排名。",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v3",
+    "version": "v3"
+  }
+}

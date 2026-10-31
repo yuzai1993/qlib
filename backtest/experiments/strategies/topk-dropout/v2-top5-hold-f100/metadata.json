@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "entity_type": "experiment_group",
+  "exp_id": "strategy-group/v2-top5-hold-force100",
+  "kind": "strategy",
+  "track": "all_a",
+  "archive_path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100",
+  "title": "Top5持有期 × F100",
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "strategy_summary": {
+    "name": "持有期 × F100",
+    "description": "固定Top5换1，对比最短持1/5日与F100开关，共4个组合。"
+  },
+  "change_summary": "从最短持1日、关闭F100，改为持1/5日与F100开关的四格对照。",
+  "experiment_group": {
+    "control_ref": "baseline/phase-m-v1-bt-v2",
+    "members": [
+      {
+        "ref": "baseline/phase-m-v1-bt-v2",
+        "label": "持1 · 不强制F100"
+      },
+      {
+        "ref": "regime-adapt/m0h20es-all-top5d1h5-bt",
+        "label": "持5 · 不强制F100"
+      },
+      {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "label": "持1 · F100"
+      },
+      {
+        "ref": "baseline/phase-m-v1-bt-v3",
+        "label": "持5 · F100"
+      }
+    ],
+    "axes": [
+      "hold_thresh",
+      "force_sell_rank"
+    ],
+    "fixed_summary": "TopkDropout topk5/drop1。五种子日截面zscore后等权融合信号，单次回测；全A、日频ST、日成交额≥1000万、上市≥60日、近60日持续成交；等权全A基准；2020-08-03～2026-07-31历史选型窗；100万、risk0.90、历史费率。旧运行config多数缺失，固定口径来自冻结登记协议和实验规范，不宣称逐项重新认证。"
+  },
+  "analysis": {
+    "conclusion": "持1+F100（BT v5）CAGR34.8%、夏普1.18，高于持1无F100的23.1%/0.86；持5时加F100未提高收益。",
+    "limitations": "hold_thresh为常规卖出的最短持有期，不是5日到期退出。；无F100为冻结协议未启用该条款的登记含义；BT v2的hold1及risk0.9由规范/历史规则说明确认，原运行config未留存。；展示四格即可沿单轴对比；禁止归纳为只改一个参数。",
+    "evidence": [
+      "variants/bt-v2/metadata.json",
+      "variants/v2-top5-drop1-hold5/metadata.json",
+      "variants/bt-v5/metadata.json",
+      "variants/bt-v3/metadata.json"
+    ],
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "reports": [
+    "reports/summary.html"
+  ],
+  "docs": [
+    "README.md"
+  ]
+}

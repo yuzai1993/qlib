@@ -1,0 +1,97 @@
+{
+  "schema_version": 2,
+  "exp_id": "regime-adapt/m0-h5-t3h5es-v1",
+  "event_numbers": [
+    132
+  ],
+  "phase": "M",
+  "direction": "regime-adapt",
+  "records_directory": "backtest/experiments/models/training-target/h5/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+  ],
+  "docs": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+  ],
+  "data": [
+    "backtest/experiments/models/training-target/h5/metrics/eval_m0h5.json"
+  ],
+  "shared_assets": [
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+  ],
+  "records": [
+    "backtest/experiments/models/training-target/h5/records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "model",
+  "track": "all_a",
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "H5训练目标",
+  "metrics_source": {
+    "path": "metrics/eval_m0h5.json",
+    "sha256": "8422bad9f322134a76fbd88354f60779e52251395cec8217979ca6d827f27ef6"
+  },
+  "archive_path": "backtest/experiments/models/training-target/h5",
+  "experiment_type": "training_target",
+  "analysis": {
+    "conclusion": "主格净年化24.77%，低于v3，且波动更高；本轮未见缩短标签的收益。",
+    "evidence": [
+      "metrics/eval_m0h5.json",
+      "records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json"
+    ],
+    "limitations": "同一历史窗口内的训练标签比较；评估持有期仍是H5，不能把训练标签H5等同于执行层持仓策略。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "训练标签由H20改为H5。",
+  "comparison_baseline": {
+    "ref": "regime-adapt/m0-h20-t3h5es-v1",
+    "version": "v3"
+  },
+  "model_profile": {
+    "structure": "单LightGBM；B3-M冻结超参（学习率0.2）。",
+    "training_sample": {
+      "pool": "全A（沪深A股；代码SH60/SH68/SZ00/SZ30）",
+      "time_range": "2004-01-02 ~ 2020-07-31（声明训练窗；冻结抽样日期清单为2004-01-07 ~ 2020-07-30）",
+      "filters": "沿用共用H40缓存的有效行，剔除上市不足60个交易日及新标签缺失的样本；只取冻结抽样日期，M0补偿较少抽样日期的权重；训练期未套用评估期的ST、成交额过滤。"
+    },
+    "training_target": "未来5个交易日累计收益，经日截面CSRankNorm标准化。",
+    "evaluation_sample": {
+      "pool": "全A（沪深A股）",
+      "time_range": "2020-08-03 ~ 2026-07-31（H5有效标签最晚2026-07-23）",
+      "filters": "上市≥60个交易日、按日剔除ST、当日成交额≥1000万元；头部评估剔除次日涨停封板或零成交量标的，并剔除前瞻取价越出评估窗的标签。"
+    },
+    "changes": "从H20训练标签改为H5训练标签。",
+    "model_paths": [
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000
+      },
+      {
+        "path": "backtest/result/regimeadaptfast_m0h5_t3h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000
+      }
+    ],
+    "features": "Alpha158＋range技术扩展；不含regime特征。",
+    "early_stopping": "评估窗Top3×H5扣费净年化",
+    "prediction_signal": "5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。"
+  }
+}

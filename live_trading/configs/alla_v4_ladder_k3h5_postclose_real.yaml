@@ -1,6 +1,8 @@
 # All-A real account: BT v4 true ladder (CohortLadderStrategy k3 x h5) on the
 # v4 RankIC ES five-seed ensemble, executed via after-hours fixed price.
 # QMT start/stop and local account settings are the only execution switches.
+# Retired: retained for historical configuration and ledger access only.
+# The paired backtest was removed; the publication parity gate rejects this config.
 
 data:
   qlib_dir: "~/.qlib/qlib_data/cn_data"
@@ -88,9 +90,6 @@ exchange:
   close_cost: 0.00071
   min_cost: 5.0
   trade_unit: 100
-
-parity:
-  backtest_config: "backtest/configs/alla_v4_ladder_k3h5_parity.yaml"
 
 live:
   bridge_root: "/Volumes/qmt_bridge"

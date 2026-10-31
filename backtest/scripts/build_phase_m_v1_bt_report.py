@@ -12,9 +12,11 @@ from typing import Any, Optional
 if __package__:
     from .research_layout import resolve_research_path as _resolve_research_path
     from .research_layout import report_href as _layout_href
+    from .research_labels import strategy_display_version, strategy_reference_text
 else:
     from research_layout import resolve_research_path as _resolve_research_path
     from research_layout import report_href as _layout_href
+    from research_labels import strategy_display_version, strategy_reference_text
 
 _RESEARCH_ROOT = Path(__file__).resolve().parents[2]
 
@@ -187,13 +189,13 @@ def _matrix_table(
     bucket: str,
 ) -> str:
     parts = [
-        f"<h3>{title}</h3>",
+        f"<h3>{escape(title)}</h3>",
         "<table><thead><tr><th class='l'>版本</th>"
-        + "".join(f"<th>{c}</th>" for c in columns)
+        + "".join(f"<th>{escape(c)}</th>" for c in columns)
         + "</tr></thead><tbody>",
     ]
     for name, ens in rows:
-        cells = [f"<td class='l'>{name}</td>"]
+        cells = [f"<td class='l'>{escape(name)}</td>"]
         src = ens.get(bucket) or {}
         for col in columns:
             cells.append(f"<td>{fmt((src.get(col) or {}).get(key), kind)}</td>")
@@ -202,12 +204,47 @@ def _matrix_table(
     return "".join(parts)
 
 
+def _strategy_version(item: dict) -> str:
+    value = item.get("display_version") or item.get("bt_version") or item.get("version") or ""
+    return strategy_display_version(value, kind=item.get("kind", "strategy"), track=item.get("track", "all_a"))
+
+
+def _model_label(item: dict) -> str:
+    summary = item.get("model_summary") or {}
+    return " · ".join(str(summary[key]) for key in ("version", "name") if summary.get(key))
+
+
+def _strategy_label(item: dict) -> str:
+    value = (item.get("strategy_summary") or {}).get("name") or item.get("display_name", "")
+    return strategy_reference_text(value, kind=item.get("kind", "strategy"), track=item.get("track", "all_a"))
+
+
+def _benchmark_label(item: dict) -> str:
+    return " · ".join(part for part in (_strategy_version(item), _model_label(item), _strategy_label(item)) if part)
+
+
+def enrich_strategy_labels(baselines: list[dict], experiments: list[dict], snapshot: dict) -> tuple[list[dict], list[dict]]:
+    """Attach catalogue display labels without changing registry-owned versions."""
+    sources = {record["id"]: record for record in snapshot.get("records", [])}
+
+    def enrich(items):
+        return [{**item, **{key: sources[item["exp_id"]][key]
+                            for key in ("display_version", "model_summary", "strategy_summary", "kind", "track")
+                            if key in sources.get(item["exp_id"], {})}} for item in items]
+
+    baselines, experiments = enrich(baselines), enrich(experiments)
+    names = {item["exp_id"]: _benchmark_label(item) for item in baselines}
+    experiments = [{**item, "baseline_name": names.get(item.get("baseline_ref"), item.get("baseline_name", ""))}
+                   for item in experiments]
+    return baselines, experiments
+
+
 def render_hub(baselines: list[dict], experiments: list[dict], *, output_path: Path | None = None) -> str:
     output_path = output_path or HUB_OUT
     # 锚点与策略参数一律由 current baseline 派生，避免晋升后页头留着旧版本
     cur = next((b for b in baselines if b.get("current")), None)
     anchor = (
-        f"BT {cur['bt_version']} · {cur['display_name']}" if cur else "未设定（无 current baseline）"
+        _benchmark_label(cur) if cur else "未设定（无 current baseline）"
     )
     strategy = (cur or {}).get("strategy") or ""
     H = [
@@ -217,18 +254,18 @@ def render_hub(baselines: list[dict], experiments: list[dict], *, output_path: P
         "<h1>Phase M v1 执行层回测</h1>",
         "<p class='meta'>官方指标只认<b>五种子均值信号</b>："
         "先对五种子 pred 做日截面 z-score，再等权平均，回测一次。"
-        f"不是五次回测指标的算术平均。当前对照锚点是 <b>{anchor}</b>。"
-        + (f"策略 {strategy}。" if strategy else "")
+        f"不是五次回测指标的算术平均。当前对照锚点是 <b>{escape(anchor)}</b>。"
+        + (f"策略 {escape(strategy)}。" if strategy else "")
         + "日频 ST / 等权全A / 窗 2020-08-03~2026-07-31。"
         "主年化是扣费净值累乘后再折年（CAGR）；算术年化（日均×250）只作审计。"
         "夏普分子仍是算术年化。</p>",
     ]
     if cur and cur["doc"].get("selection_limitation"):
-        H.append(f"<p class='note'>{escape(cur['doc']['selection_limitation'])}</p>")
+        H.append(f"<p class='note'>{escape(strategy_reference_text(cur['doc']['selection_limitation']))}</p>")
 
     H.append("<h2>1. 历史 baseline</h2>")
     H.append(
-        "<table><thead><tr><th class='l'>版本</th><th class='l'>名称</th>"
+        "<table><thead><tr><th class='l'>策略版本</th><th class='l'>模型</th><th class='l'>策略</th>"
         + "".join(f"<th>{lab}</th>" for _, lab, _ in FULL_COLS)
         + "<th>带图报告</th></tr></thead><tbody>"
     )
@@ -239,14 +276,16 @@ def render_hub(baselines: list[dict], experiments: list[dict], *, output_path: P
         tag = " · 当前" if item.get("current") else ""
         H.append(
             f"<tr class='{cls}'><td class='l'>"
-            f"{item['bt_version']}{tag}</td><td class='l'>{item['display_name']}</td>"
+            f"{escape(_strategy_version(item))}{tag}</td>"
+            f"<td class='l'>{escape(_model_label(item) or '未登记')}</td>"
+            f"<td class='l'>{escape(_strategy_label(item))}</td>"
             + "".join(_row_metrics(ens["full_period"], FULL_COLS))
-            + f"<td><a href='{href}'>report.html</a></td></tr>"
+            + f"<td><a href='{escape(href, quote=True)}'>report.html</a></td></tr>"
         )
     H.append("</tbody></table>")
 
     named = [
-        (f"{item['bt_version']} {item['display_name']}", ensemble_of(item["doc"]))
+        (_benchmark_label(item), ensemble_of(item["doc"]))
         for item in baselines
     ]
     H.append("<h2>2. 历史 baseline 分年</h2>")
@@ -263,18 +302,29 @@ def render_hub(baselines: list[dict], experiments: list[dict], *, output_path: P
         "<th>累乘年化</th><th>夏普</th><th>Alpha</th><th>回撤</th><th>详细报告</th></tr></thead><tbody>"
     )
     for exp in experiments:
-        ens = ensemble_of(exp["doc"])
-        fp = ens["full_period"]
         detail = exp.get("detail_report") or ""
         link = _layout_href(detail, output_path, EXP_ROOT) if detail else ""
+        if exp.get("group_summary"):
+            count = exp["group_summary"]["variant_count"]
+            H.append(
+                f"<tr><td class='l'>{escape(strategy_reference_text(exp['display_name']))}</td>"
+                f"<td class='l'>{escape(strategy_reference_text(exp.get('baseline_name', '')))}</td>"
+                f"<td colspan='4'>{count}个变体，逐项结果见组报告</td>"
+                f"<td><a href='{escape(link, quote=True)}'>summary.html</a></td></tr>"
+            )
+            continue
+        ens = ensemble_of(exp["doc"])
+        fp = ens["full_period"]
+        detail_link = (f"<a href='{escape(link, quote=True)}'>{escape(Path(detail).name)}</a>"
+                       if detail else "—")
         H.append(
-            f"<tr><td class='l'>{exp['display_name']}</td>"
-            f"<td class='l'>{exp.get('baseline_name', '')}</td>"
+            f"<tr><td class='l'>{escape(strategy_reference_text(exp['display_name']))}</td>"
+            f"<td class='l'>{escape(strategy_reference_text(exp.get('baseline_name', '')))}</td>"
             f"<td>{fmt(fp.get('annualized_return'), 'pct')}</td>"
             f"<td>{fmt(fp.get('sharpe_ratio'), 'num')}</td>"
             f"<td>{fmt(fp.get('alpha'), 'pct')}</td>"
             f"<td>{fmt(fp.get('max_drawdown'), 'pct')}</td>"
-            f"<td><a href='{link}'>{Path(detail).name if detail else '—'}</a></td></tr>"
+            f"<td>{detail_link}</td></tr>"
         )
     if not experiments:
         H.append("<tr><td class='l' colspan='7'>暂无实验</td></tr>")
@@ -297,7 +347,7 @@ def render_experiment(experiment: dict, baseline: dict, *, output_path: Path | N
         f"<style>{CSS}</style></head><body><div class='wrap'>",
         f"<h1>{experiment['display_name']} 对照回测</h1>",
         "<p class='meta'>实验组对比基准组。指标来自五种子均值信号单次回测，"
-        f"对照 <b>{baseline['display_name']}</b>（{baseline['bt_version']}）。"
+        f"对照 <b>{baseline['display_name']}</b>（{_strategy_version(baseline)}）。"
         "主年化是扣费净值累乘后再折年（CAGR）；算术年化（日均×250）只作审计。"
         "夏普分子仍是算术年化。"
         f" <a href='{_layout_href(HUB_OUT, output_path, EXP_ROOT)}'>返回总报告</a></p>",
@@ -389,6 +439,7 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
         kind = rec.get("report_kind")
         if kind == "phase_m_v1_bt_baseline":
             item = {
+                "exp_id": rec["exp_id"],
                 "bt_version": rec["bt_version"],
                 "display_name": rec.get("display_name") or rec["exp_id"],
                 "eval_output": rec["eval_output"],
@@ -401,7 +452,7 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 else None,
                 "doc": _load_doc(rec.get("portable_eval_output") or rec["eval_output"]),
             }
-            names[rec["exp_id"]] = f"{item['bt_version']} {item['display_name']}"
+            names[rec["exp_id"]] = _benchmark_label(item)
             baselines.append(item)
         elif kind == "phase_m_v1_bt":
             experiments.append(rec)
@@ -425,11 +476,56 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     return baselines, resolved
 
 
+def fold_strategy_experiments(items: list[dict], snapshot: dict) -> list[dict]:
+    """Keep raw history authoritative while displaying each study once."""
+    if "experiment_records" not in snapshot:
+        return items
+    by_id = {item["exp_id"]: item for item in items}
+    result = []
+    for record in snapshot["experiment_records"]:
+        if record.get("kind") != "strategy":
+            continue
+        summary = record.get("group_summary")
+        if summary:
+            control = next((row for row in snapshot.get("records", [])
+                            if row["id"] == summary.get("control_ref")), {})
+            control_version = _strategy_version(control)
+            control_label = summary.get("control_label", "")
+            result.append({"exp_id": record["id"], "display_name": record["name"],
+                           "baseline_name": " · ".join(part for part in (control_version, control_label) if part),
+                           "detail_report": f"{record['directory']}/reports/summary.html",
+                           "group_summary": summary})
+        elif record["id"] in by_id:
+            item = dict(by_id[record["id"]])
+            if item.get("bt_version"):
+                # A standalone initial Benchmark is also a history row. Its
+                # original report is more useful than linking back to this hub.
+                item["detail_report"] = (item["doc"]["ensemble"].get("portable_report")
+                                         or item.get("detail_report"))
+                if record.get("comparison_baseline", {}).get("initial"):
+                    item["baseline_name"] = "初始基准，无前版"
+            result.append(item)
+    return result
+
+
 def write_all() -> list[Path]:
     baselines, experiments = catalog_from_registry(load_registry())
-    written = [HUB_OUT]
-    HUB_OUT.parent.mkdir(parents=True, exist_ok=True)
-    _resolve_research_path(HUB_OUT, _RESEARCH_ROOT).write_text(render_hub(baselines, experiments), encoding="utf-8")
+    if __package__:
+        from .build_strategy_group_reports import load_catalog, write_all as write_groups
+    else:
+        from build_strategy_group_reports import load_catalog, write_all as write_groups
+    group_outputs = []
+    displayed = experiments
+    if (EXP_ROOT / "backtest/experiments").is_dir():
+        snapshot, resource_paths = load_catalog(EXP_ROOT)
+        baselines, experiments = enrich_strategy_labels(baselines, experiments, snapshot)
+        group_outputs = write_groups(EXP_ROOT, snapshot=snapshot, resource_paths=resource_paths)
+        if "experiment_records" in snapshot:
+            displayed = fold_strategy_experiments(baselines + experiments, snapshot)
+    hub = _resolve_research_path(HUB_OUT, _RESEARCH_ROOT)
+    written = [hub, *group_outputs]
+    hub.parent.mkdir(parents=True, exist_ok=True)
+    hub.write_text(render_hub(baselines, displayed, output_path=hub), encoding="utf-8")
     by_id = {f"{b['bt_version']}": b for b in baselines}
     # also index by registry exp later via baseline_ref matching display
     base_by_ref = {item["display_name"]: item for item in baselines}
@@ -443,6 +539,8 @@ def write_all() -> list[Path]:
         if base is None or not exp.get("detail_report"):
             continue
         dest = _resolve_research_path(EXP_ROOT / exp["detail_report"], EXP_ROOT)
+        if dest.exists():
+            continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(render_experiment(exp, base, output_path=dest), encoding="utf-8")
         written.append(dest)
@@ -452,6 +550,8 @@ def write_all() -> list[Path]:
         item = next(b for b in baselines if b["bt_version"] == rec["bt_version"])
         base = by_id[rec["comparison_baseline_ref"]]
         dest = _resolve_research_path(EXP_ROOT / rec["detail_report"], EXP_ROOT)
+        if dest.exists():
+            continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(render_experiment(item, base, output_path=dest), encoding="utf-8")
         written.append(dest)
@@ -462,6 +562,8 @@ def write_all() -> list[Path]:
             continue
         seen.add(portable)
         dest = _resolve_research_path(EXP_ROOT / portable, EXP_ROOT)
+        if dest.exists():
+            continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(render_snapshot(item, output_path=dest), encoding="utf-8")
         written.append(dest)

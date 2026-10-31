@@ -1,0 +1,20 @@
+{
+  "python": {
+    "passed": 637,
+    "command": "python -m pytest tests/quant_platform tests/backtest/test_experiment_archive.py tests/backtest/test_experiment_registry.py tests/backtest/test_research_archive.py tests/backtest/test_research_layout.py tests/backtest/test_research_output_paths.py tests/backtest/test_bt_v5_promotion.py tests/backtest/test_bt_v5_diagnostics.py tests/backtest/test_cleanup_experiment_artifacts.py tests/live_trading/test_backtest_parity.py tests/live_trading/test_bt_v5_package.py -q",
+    "summary": "637 passed in 10.31s"
+  },
+  "frontend": {
+    "passed": 69,
+    "command": "node --test tests/quant_platform/*.cjs",
+    "red_then_green": true
+  },
+  "parity_cli": {
+    "passed": [
+      "alla_v2_top5d1f100_postclose_real_active",
+      "alla_v2_top5d1f100_postclose_real",
+      "alla_v4_ladder_k1h5_postclose_real"
+    ]
+  },
+  "git_diff_check": "passed"
+}

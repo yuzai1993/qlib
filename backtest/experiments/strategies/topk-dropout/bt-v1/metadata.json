@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "exp_id": "baseline/phase-m-v1-bt-v1",
+  "event_numbers": [
+    118
+  ],
+  "phase": "M",
+  "direction": "phase-m-v1-bt",
+  "records_directory": "backtest/experiments/strategies/topk-dropout/bt-v1/records",
+  "configs": [],
+  "reports": [
+    "backtest/experiments/strategies/topk-dropout/bt-v1/reports/all_top5d1_m0h20.html",
+    "backtest/experiments/reports/phase_m_v1_bt_report.html"
+  ],
+  "docs": [],
+  "data": [
+    "backtest/experiments/strategies/topk-dropout/bt-v1/metrics/all_top5d1_m0h20.json"
+  ],
+  "shared_assets": [],
+  "records": [
+    "backtest/experiments/strategies/topk-dropout/bt-v1/records/e9a6e2033ccccd6444f849d4d9f82368a4ee18bedc621e2e2a4c21371b1f820c.json"
+  ],
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "kind": "strategy",
+  "track": "all_a",
+  "activity": "execution_backtest",
+  "role": "baseline",
+  "changed_axes": [],
+  "entity_type": "experiment",
+  "title": "M0 H20 top5d1",
+  "metrics_source": {
+    "path": "metrics/all_top5d1_m0h20.json",
+    "sha256": "df3975588d24e4b0bffa7fb9e06ed4bea52510a3e2ff8fe669c57f34cc12302f"
+  },
+  "model_ref": "regime-adapt/m0-h20-label-v4",
+  "strategy_summary": {
+    "name": "Top5换1·持1",
+    "description": "排名轮换：常规每日最多换1只，最短持有1日；100万、risk=0.90、历史费率。"
+  },
+  "archive_path": "backtest/experiments/strategies/topk-dropout/bt-v1",
+  "analysis": {
+    "conclusion": "历史初始执行基线：CAGR22.5%、夏普0.84，最大回撤38.2%；作为后续比较起点。",
+    "evidence": [
+      "metrics/all_top5d1_m0h20.json",
+      "records/e9a6e2033ccccd6444f849d4d9f82368a4ee18bedc621e2e2a4c21371b1f820c.json",
+      "reports/all_top5d1_m0h20.html"
+    ],
+    "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。",
+    "review_status": "draft",
+    "updated_at": "2026-10-31"
+  },
+  "change_summary": "初始执行基线：v1模型信号配Top5换1、最短持有1日。",
+  "comparison_baseline": {
+    "ref": "",
+    "version": "",
+    "initial": true
+  }
+}

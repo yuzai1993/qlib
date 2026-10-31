@@ -1,0 +1,35 @@
+{
+  "url": "http://127.0.0.1:8090/#model-experiments",
+  "profiles": 11,
+  "field_order": [
+    "模型版本",
+    "实验 ID",
+    "模型结构",
+    "使用特征",
+    "模型种子",
+    "训练样本",
+    "训练目标",
+    "评估样本",
+    "训练早停",
+    "预测信号",
+    "变更内容",
+    "模型地址"
+  ],
+  "old_combined_card_absent": true,
+  "features_not_in_structure": true,
+  "early_stopping_and_signal_separate": true,
+  "metric_views_unchanged": 3,
+  "v4_metrics_unchanged": "30.57% / 57.81% / 0.53 / 34.56% / 18.21% / 0.0999",
+  "screenshots": [
+    {
+      "path": "/Users/yuxianqi/.codex/visualizations/2026/10/31/qlib-model-profile-fields.jpg",
+      "sha256": "1254d852392feb0f63aad45b0afc820f439a6ff47c4b4d69bb5c5cee43063112"
+    },
+    {
+      "path": "/Users/yuxianqi/.codex/visualizations/2026/10/31/qlib-model-profile-signal.jpg",
+      "sha256": "80d14fef6f901afdfa31f0c2f003f20515e6a8ab821f3ef85133957404bee7c0"
+    }
+  ],
+  "monitor_reloaded": true,
+  "trading_schedule_unchanged": true
+}

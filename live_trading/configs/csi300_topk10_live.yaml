@@ -1,6 +1,8 @@
 # 实盘信号桥接配置：CSI300 TopkDropout topk=10 / n_drop=2
 # 当前基线模型：B1-M（CSI1000-full-v2，train_start_2016，seed=2000）。
 # 本文件是实盘完整配置；不得通过其他交易系统配置隐式继承关键参数。
+# Retired: retained for historical configuration and ledger access only.
+# The paired backtest was removed; the publication parity gate rejects this config.
 
 data:
   qlib_dir: "~/.qlib/qlib_data/cn_data"
@@ -45,9 +47,6 @@ exchange:
   close_cost: 0.00071
   min_cost: 5.0
   trade_unit: 100
-
-parity:
-  backtest_config: "backtest/configs/csi300_live_parity.yaml"
 
 live:
   # 共享目录：Mac 侧挂载点；Windows 侧对应 D:\qmt_bridge

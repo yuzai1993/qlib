@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-31",
+  "model_profiles_reorganized": 11,
+  "independent_fields": [
+    "structure",
+    "features",
+    "early_stopping",
+    "prediction_signal"
+  ],
+  "legacy_combined_field_removed_from_current_profiles": true,
+  "input_features_removed_from_structure": true,
+  "de_internal_feature_selection_preserved_in_structure": true,
+  "historical_events_unchanged": 33,
+  "registry_index_bytes_unchanged": true,
+  "registry_sha256": "7792d98d545962fe54994165a813f3aa02a9c580edcd4843e3d52fdd941dbe4b",
+  "original_record_fields_unchanged_except_model_profile_and_revision": 33,
+  "strategy_records_unchanged": 22,
+  "source_metric_and_report_bytes_unchanged": true,
+  "comparison_permissions_model_paths_and_results_unchanged": true,
+  "training_or_backtests_run": false,
+  "temporary_tools_cleaned": true,
+  "tests": "tests.json",
+  "runtime": "runtime.json",
+  "independent_review": "independent_review.json",
+  "temporary_cleanup": "temporary_cleanup.json"
+}

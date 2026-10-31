@@ -1,0 +1,754 @@
+{
+  "model_counts": {
+    "v1": 1,
+    "v2": 13,
+    "v4": 8
+  },
+  "suggestions_count": 22,
+  "scope": "read-only source inspection; no training or backtests; suggestions only, no archive or registry edits",
+  "common_semantics": {
+    "topk": "Target maximum names, ordinary turnover is at most n_drop per day rather than mandatory daily turnover.",
+    "hold_thresh": "Ordinary-sell minimum hold gate, not fixed expiry.",
+    "force_sell_rank_100": "Exit held names outside finite-score top100 or lacking a finite score; bypasses n_drop and minimum-hold gate, still subject to tradability.",
+    "topk_risk_degree": "TopkDropout allocates this fraction of post-sale cash; risk=0.90 does not promise a daily 90% portfolio allocation.",
+    "cohort": "Daily TopK cohort, expiry after horizon trading days; same stock may be held in multiple cohorts; execution remains subject to trading constraints.",
+    "ladder_force_sell": "All cohorts of that name are removed on forced exit; f100 alone adds no replacement beyond ordinary daily cohort creation.",
+    "ladder_refill": "f100r uses forced-sale proceeds for unheld replacements after ordinary picks; replacements join current cohort and expire with it.",
+    "diagnostics": "All three use modelv2/top5/drop1/hold1/f100 and 300000 current-fee proxy. First completed diagnostic risk=.90, risk1 completed/failed use1.00. Completed forward slices carry positions/cash, are not actual live returns.",
+    "diagnostic_missing_risk_field": "The original .90 portable JSON provenance and archived summary both omit risk_degree. The explicit .90 assertion is supported by live_trading/BT_V5_CUTOVER.md:69-71; original raw replay config is absent locally. This is documentary evidence, not an inference from its null field."
+  },
+  "rows": [
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v1",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-label-v4",
+      "model_version": "v1",
+      "registry_model_ref": null,
+      "registry_hypothesis": "修复后的 M0 H20 × top5d1 五种子均值信号单次回测，作为 Phase M v1 执行层对照锚点 BT v1",
+      "registry_note": "官方数字来自 ensemble，不是五种子算术平均；含执行层修复与日频 ST；ensemble 已按 market_cn 重跑",
+      "portable_json": "backtest/experiments/strategies/baseline/phase-m-v1-bt-v1/metrics/all_top5d1_m0h20.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20_all_top5d1_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1-bt",
+      "state": "promoted",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "同一套 top5d1 / 日频ST / 账户100万，把冻结模型换成 M0 H20 ES 五种子均值信号，对照 BT v1（修复后 M0 H20）",
+      "registry_note": "2026-08-19 晋升为 BT v2；本行保留为对照 BT v1 的实验记录。官方数字来自 ensemble，不是 CSI1000 B4-S",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1-bt/metrics/all_top5d1_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v2",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "用户确认将 M0 H20 ES × top5d1 五种子均值信号单次回测提升为 Phase M v1 执行层对照锚点 BT v2",
+      "registry_note": "官方数字来自 ensemble，不是五种子算术平均；含执行层修复与日频 ST；ensemble 已按 market_cn 重跑",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1-bt/metrics/all_top5d1_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1h5f100-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "在冻结的 BT v2 均值信号上，把最短持仓改成 5 天，减少 2026 那种卖早赢家、扛久输家；同时对当日排名掉出前 100 的持仓放开 n_drop=1 和持仓天数，避免死扛已经掉出信号头部的票。预期 2026 年化好于 BT v2，全期夏普不显著变差。",
+      "registry_note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5f100-bt/metrics/all_top5d1h5f100_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1h5f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 5,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top25d5h5-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "评估口径 ann = mean(p)×238/h 等价于「k·h 个等额仓位、每日 k 进 k 出、每只持满 h 天」的阶梯组合算术年化，k=5/h=5 即 25 槽、每日 5 进 5 出。 因此把执行层从 top5d1 换成 25 槽阶梯，应当在结构上对齐主格 top5×h5，把 2025/2026 的评估-回测缺口压下去（尤其 2026 的单票 20% 重仓风险摊薄到 4%）。",
+      "registry_note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5-bt/metrics/all_top25d5h5_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top25d5h5_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 25,
+        "n_drop": 5,
+        "hold_thresh": 5,
+        "horizon": null,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top25d5h5f100-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "评估口径 ann = mean(p)×238/h 等价于「k·h 个等额仓位、每日 k 进 k 出、每只持满 h 天」的阶梯组合算术年化，k=5/h=5 即 25 槽、每日 5 进 5 出。 在 25 槽阶梯上再叠加「掉出前 100 必卖」，用于排除「阶梯里仍有票靠打分赖着不走」这一条对 2026 缺口的贡献。",
+      "registry_note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top25d5h5f100-bt/metrics/all_top25d5h5f100_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top25d5h5f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 25,
+        "n_drop": 5,
+        "hold_thresh": 5,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-ladder-k5h5-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "评估口径 ann = mean(p)×238/h 等价于「k·h 个等额仓位、每日 k 进 k 出、每只持满 h 天」的阶梯组合算术年化，k=5/h=5 即 25 槽、每日 5 进 5 出。 但 top25d5h5 实测失败，原因是 TopkDropout 按打分退出、槽位被前排常驻票占住，入场中位名次掉到 6~7。改用新策略类 CohortLadderStrategy：按**持有天数**到期退出（第 5 天无条件卖），并允许同一只票被多个分层同时持有（连续上榜自动加仓）。这样入场应恒为当日 top5，预期分年偏差显著收窄，尤其修好 2026。",
+      "registry_note": "只改策略；信号与 BT v2 同一条 ensemble pred；官方只跑均值信号一次",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-ladder-k5h5-bt/metrics/all_ladder_k5h5_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_ladder_k5h5_ensemble.yaml",
+      "parameters": {
+        "class": "CohortLadderStrategy",
+        "topk": 5,
+        "n_drop": null,
+        "hold_thresh": null,
+        "horizon": 5,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v3",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "用户于 2026-08-22 明确要求将 M0 H20 ES × top5d1 + hold_thresh=5 + force_sell_rank=100 五种子均值信号单次回测提升为 Phase M v1 执行层对照锚点 BT v3。该决定作于查明 2026 主格缺口真因（评估窗口末端前视）之后：真阶梯虽结构最贴主格，但绝对指标不如 h5f100，故不晋升真阶梯。",
+      "registry_note": "官方数字来自 ensemble，不是五种子算术平均；每维度均优于 BT v2（CAGR +30.1/23.1、夏普 1.064/0.855、回撤 −34.7/−39.2、Calmar 0.868/0.591），代价是单边年换手 58.1 vs 49.3",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5f100-bt/metrics/all_top5d1h5f100_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1h5f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 5,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1h5-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "BT v3（hold5 + 掉出前100必卖）相对 BT v2（top5d1）多出约 7pp CAGR。本臂只开 hold_thresh=5、不开 force_sell_rank，检验最短持仓本身是否就是收益来源。若 hold5 单独接近组合，则强制卖出只是配角；若 hold5 单独接近 top5d1，则收益来自强制卖出。",
+      "registry_note": "2×2 消融；信号与 BT v2/v3 同一条 ensemble pred；只改 hold_thresh / force_sell_rank",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1h5-bt/metrics/all_top5d1h5_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1h5_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 5,
+        "horizon": null,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20es-all-top5d1f100-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": null,
+      "registry_hypothesis": "与 hold5 单臂对称：只开 force_sell_rank=100、hold_thresh 保持 1。若本臂接近或超过组合，则 BT v3 的超额主要来自「掉出前100必卖」而不是最短持仓。",
+      "registry_note": "2×2 消融；信号与 BT v2/v3 同一条 ensemble pred；只改 hold_thresh / force_sell_rank",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-bt",
+      "state": "promoted",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "用当前模型基线 v4 的官方合成信号，跑主格 top3×h5 的执行层等价物：CohortLadderStrategy topk=3 horizon=5。每日买当日 top3，持满 5 天到期无条件卖，允许同一票多层持有。对照当前执行层基线 BT v3；本行只作诊断，不晋升。",
+      "registry_note": "2026-08-23 用户明确要求晋升为执行层基线 BT v4。原始登记作诊断、对照 BT v3。",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metrics/all_ladder_k3h5_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_ladder_k3h5_ensemble.yaml",
+      "parameters": {
+        "class": "CohortLadderStrategy",
+        "topk": 3,
+        "n_drop": null,
+        "hold_thresh": null,
+        "horizon": 5,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "在刚跑完的 v4 × 真阶梯 k3h5 上再加掉出前 100 必卖：持仓当日名次 > 100 或没有有限分数时，立刻清掉该票全部层，不等到期。对照当前执行层基线 BT v3，并对照无 f100 的同信号真阶梯；本行只作诊断，不晋升。",
+      "registry_note": "只改策略（真阶梯 + f100）+ 复用 v4 合成 pred；官方只跑均值信号一次；不晋升执行层基线",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100-bt/metrics/all_ladder_k3h5f100_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_ladder_k3h5f100_ensemble.yaml",
+      "parameters": {
+        "class": "CohortLadderStrategy",
+        "topk": 3,
+        "n_drop": null,
+        "hold_thresh": null,
+        "horizon": 5,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "在 v4 × 真阶梯 k3h5 + 掉出前 100 必卖上，按 TopkDropout 的方式补新票：强平几只就从当日 top3 之后顺延补几只还没拿着的票，用强平所得资金买入，并进当天分层、持满 5 天到期。对照无 f100 真阶梯、只强平不补人的 f100、以及执行层基线 BT v3；不晋升。",
+      "registry_note": "只改策略（真阶梯 + f100 + 补新票）+ 复用 v4 合成 pred；官方只跑均值信号一次；不晋升",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5f100r-bt/metrics/all_ladder_k3h5f100r_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_ladder_k3h5f100r_ensemble.yaml",
+      "parameters": {
+        "class": "CohortLadderStrategy",
+        "topk": 3,
+        "n_drop": null,
+        "hold_thresh": null,
+        "horizon": 5,
+        "force_sell_rank": 100,
+        "refill_force_sell": true,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v4",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "用户于 2026-08-23 明确要求将 v4 RankIC ES × CohortLadderStrategy topk=3 horizon=5 五种子均值信号单次回测提升为 Phase M v1 执行层对照锚点 BT v4。该行是主格 top3×h5 的执行层等价物：每日买当日 top3，持满 5 天到期无条件卖，允许同一票多层持有。晋升依据是组合规则对齐主格，不是对 BT v3 逐维占优。",
+      "registry_note": "官方数字来自 ensemble，不是五种子算术平均；相对 BT v3：CAGR +26.3/30.1、夏普 1.04/1.06、回撤 −33.0/−34.7、换手 44.3/58.1。冻结模型切到 v4，策略切到真阶梯。",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metrics/all_ladder_k3h5_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_ladder_k3h5_ensemble.yaml",
+      "parameters": {
+        "class": "CohortLadderStrategy",
+        "topk": 3,
+        "n_drop": null,
+        "hold_thresh": null,
+        "horizon": 5,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-top15d3f100-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "用当前模型基线 v4 的官方合成信号，跑 TopkDropout TopkDropout topk=15 n_drop=3 hold_thresh=1 force_sell_rank=100。对照当前执行层基线 BT v4（同信号真阶梯 k3h5）；本行只作诊断，不晋升。",
+      "registry_note": "只改策略 + 复用 v4 合成 pred；官方只跑均值信号一次；不晋升执行层基线",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top15d3f100-bt/metrics/all_top15d3f100_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_top15d3f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 15,
+        "n_drop": 3,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-top5d1f100-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "用当前模型基线 v4 的官方合成信号，跑 TopkDropout TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100。对照当前执行层基线 BT v4（同信号真阶梯 k3h5）；本行只作诊断，不晋升。",
+      "registry_note": "只改策略 + 复用 v4 合成 pred；官方只跑均值信号一次；不晋升执行层基线",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_top5d1f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-top3d1f100-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "用当前模型基线 v4 的官方合成信号，跑 TopkDropout TopkDropout topk=3 n_drop=1 hold_thresh=1 force_sell_rank=100。对照当前执行层基线 BT v4（同信号真阶梯 k3h5）；本行只作诊断，不晋升。",
+      "registry_note": "只改策略 + 复用 v4 合成 pred；官方只跑均值信号一次；不晋升执行层基线",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-top3d1f100-bt/metrics/all_top3d1f100_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_top3d1f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 3,
+        "n_drop": 1,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-rankices-v1",
+      "model_version": "v4",
+      "registry_model_ref": null,
+      "registry_hypothesis": "把 BT v4 官方窗从 2026-07-31 延长到 2026-08-30（实际最后交易日 2026-08-28），复用 v4 RankIC ES 官方合成信号与真阶梯 k3×h5，看多出约一个月后的全期/2026 年化与回撤。对照官方 BT v4（截止 2026-07-31）。本行只作诊断，不晋升、不改写官方窗。",
+      "registry_note": "只延长回测窗；官方只跑均值信号一次；不晋升、不改写 BT v4 官方窗",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20rankices-all-ladder-k3h5-e20260830-bt/metrics/all_ladder_k3h5_e20260830_m0h20rankices.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": [
+        "backtest/result/phase_s_regime/preds_e20260830/regimeadaptfast_m0h20_rankices_s42_pred.pkl",
+        "backtest/result/phase_s_regime/preds_e20260830/regimeadaptfast_m0h20_rankices_s1000_pred.pkl",
+        "backtest/result/phase_s_regime/preds_e20260830/regimeadaptfast_m0h20_rankices_s2000_pred.pkl",
+        "backtest/result/phase_s_regime/preds_e20260830/regimeadaptfast_m0h20_rankices_s3000_pred.pkl",
+        "backtest/result/phase_s_regime/preds_e20260830/regimeadaptfast_m0h20_rankices_s4000_pred.pkl"
+      ],
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20rankices_all_ladder_k3h5_ensemble.yaml",
+      "parameters": {
+        "class": "CohortLadderStrategy",
+        "topk": 3,
+        "n_drop": null,
+        "hold_thresh": null,
+        "horizon": 5,
+        "force_sell_rank": null,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "baseline/phase-m-v1-bt-v5",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "registry_hypothesis": "用户于2026-10-29批准将现有五种子合成信号的 top5d1/hold1/f100 历史回测提升为 BT v5；模型研究基线仍为 v4。",
+      "registry_note": "历史选型窗口：2020-08-03~2026-07-31 已用于模型早停及策略比较，不是独立样本外检验。100万历史成本口径；30万当前费用与新增期间结果另作诊断，不用于调参，不代表实盘已切换。",
+      "portable_json": "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": null,
+      "config": "backtest/configs/regime-adapt/phase-s/bt_m0h20es_all_top5d1f100_ensemble.yaml",
+      "parameters": {
+        "class": "TopkDropoutStrategy",
+        "topk": 5,
+        "n_drop": 1,
+        "hold_thresh": 1,
+        "horizon": null,
+        "force_sell_rank": 100,
+        "refill_force_sell": null,
+        "risk_degree": 0.9,
+        "account": 1000000,
+        "fees": {
+          "open_cost": 0.00021,
+          "close_cost": 0.00071,
+          "min_cost": 5.0
+        }
+      }
+    },
+    {
+      "exp_id": "diag/bt-v5-300k-current-cost-20261029",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "registry_hypothesis": "固定BT v5模型与策略，检查30万元/当前费率近似口径及7月后区间，不据此调参。",
+      "registry_note": null,
+      "portable_json": "backtest/experiments/strategies/diag/bt-v5-300k-current-cost-20261029/metrics/bt_v5_300k_current_cost.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": "v2",
+      "diagnostic_contract": {
+        "account": 300000,
+        "risk_degree": null,
+        "fee_proxy": {
+          "open_cost": 9.54e-05,
+          "close_cost": 0.0005954,
+          "min_cost": 5
+        },
+        "status": "completed",
+        "error": null,
+        "forward_start": "2026-08-03",
+        "actual_end": "2026-10-28",
+        "forward_initialization": "carry holdings and cash from continuous 2020-08-03 replay, not actual live ledger"
+      },
+      "additional_evidence": [
+        "backtest/scripts/run_bt_v5_cutover_diagnostics.py::validate_frozen_config",
+        "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+        "live_trading/BT_V5_CUTOVER.md:59-71"
+      ]
+    },
+    {
+      "exp_id": "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1",
+      "state": "failed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "registry_hypothesis": "固定v2五种子与top5/drop1/hold1/f100，仅以risk=1.0复算30万元当前费率；不训练、不调参、不晋升。",
+      "registry_note": null,
+      "portable_json": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029-failed-1/metrics/bt_v5_300k_risk1_current_cost_failed_1.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": "v2",
+      "diagnostic_contract": {
+        "account": 300000,
+        "risk_degree": 1.0,
+        "fee_proxy": null,
+        "status": "failed",
+        "error": "cached benchmark differs from authenticated daily report",
+        "forward_start": null,
+        "actual_end": null,
+        "forward_initialization": null
+      },
+      "additional_evidence": [
+        "backtest/scripts/run_bt_v5_cutover_diagnostics.py::validate_frozen_config",
+        "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+        "live_trading/BT_V5_CUTOVER.md:59-71"
+      ]
+    },
+    {
+      "exp_id": "diag/bt-v5-300k-risk1-current-cost-20261029",
+      "state": "completed",
+      "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "model_version": "v2",
+      "registry_model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+      "registry_hypothesis": "固定v2五种子与top5/drop1/hold1/f100，仅以risk=1.0复算30万元当前费率；不训练、不调参、不晋升。",
+      "registry_note": null,
+      "portable_json": "backtest/experiments/strategies/diag/bt-v5-300k-risk1-current-cost-20261029/metrics/bt_v5_300k_risk1_current_cost.json",
+      "ensemble_model_ref": null,
+      "ensemble_model_baseline_version": null,
+      "prediction_sources": null,
+      "provenance_model": "v2",
+      "diagnostic_contract": {
+        "account": 300000,
+        "risk_degree": 1.0,
+        "fee_proxy": {
+          "open_cost": 9.54e-05,
+          "close_cost": 0.0005954,
+          "min_cost": 5
+        },
+        "status": "completed",
+        "error": null,
+        "forward_start": "2026-08-03",
+        "actual_end": "2026-10-28",
+        "forward_initialization": "carry holdings and cash from continuous 2020-08-03 replay, not actual live ledger"
+      },
+      "additional_evidence": [
+        "backtest/scripts/run_bt_v5_cutover_diagnostics.py::validate_frozen_config",
+        "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+        "live_trading/BT_V5_CUTOVER.md:59-71"
+      ]
+    }
+  ]
+}

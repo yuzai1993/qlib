@@ -2,6 +2,8 @@ import pandas as pd
 import pytest
 
 from backtest.scripts.research_layout import resolve_research_path
+from backtest.scripts.experiment_registry import load_registry
+from backtest.scripts.experiment_archive import archive_directory
 
 from backtest.scripts.run_bt_v5_cutover_diagnostics import (
     combine_frozen_scores,
@@ -136,7 +138,7 @@ def test_failed_attempt_registration_preserves_existing_rows(tmp_path, monkeypat
     registry.write_text(old)
     register.register_failure(result, summary, attempt=1)
     assert registry.read_text().startswith(old)
-    record = json.loads(registry.read_text().splitlines()[-1])
+    record = load_registry(registry)[-1]
     assert record["exp_id"] == "diag/bt-v5-300k-risk1-current-cost-20261029-failed-1"
     assert record["state"] == "failed" and record["metrics"] == {}
     assert record["detail_report"] == (
@@ -149,6 +151,85 @@ def test_failed_attempt_registration_preserves_existing_rows(tmp_path, monkeypat
         == {}
     )
     assert reports == [True]
+
+
+def test_failed_attempt_resolves_each_destination_before_mkdir(tmp_path, monkeypatch):
+    import json
+    from backtest.scripts import register_bt_v5_cutover_diagnostics as register
+
+    monkeypatch.setattr(register, "ROOT", tmp_path)
+    monkeypatch.setattr(register, "_RESEARCH_ROOT", tmp_path)
+    monkeypatch.setattr(register, "write_all", lambda: [])
+    result = tmp_path / "backtest/result/failed_run"
+    result.mkdir(parents=True)
+    summary = {
+        "status": "failed", "risk_degree": 1.0, "error": "cache guard failed",
+        "hypothesis": "fixed risk1 replay", "requested_end": "2026-10-28",
+    }
+    (result / "summary.json").write_text(json.dumps(summary))
+    registry = tmp_path / "backtest/experiments/registry.jsonl"
+    registry.parent.mkdir(parents=True)
+    registry.write_text("")
+    identity = register.diagnostic_identity(summary)
+    old_summary = identity["destination"] / "failed_attempt_1/summary.json"
+    old_output = identity["eval_output"].with_stem(identity["eval_output"].stem + "_failed_1")
+    archive = "backtest/experiments/strategies/topk-dropout/failed"
+    mappings = {
+        str(old_summary.relative_to(tmp_path)): f"{archive}/data/summary.json",
+        str(old_output.relative_to(tmp_path)): f"{archive}/metrics/failed.json",
+        str(old_output.with_suffix(".html").relative_to(tmp_path)): f"{archive}/reports/failed.html",
+    }
+    mapping_path = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    mapping_path.parent.mkdir(parents=True)
+    stable_id = identity["exp_id"] + "-failed-1"
+    logical_archive = f"backtest/experiments/strategies/{stable_id}"
+    mapping_path.write_text(json.dumps({"schema_version": 1, "paths": mappings,
+                                       "directories": {logical_archive: archive}}))
+
+    register.register_failure(result, summary, attempt=1)
+
+    record = load_registry(registry)[-1]
+    assert record["source_summary"] == mappings[str(old_summary.relative_to(tmp_path))]
+    assert record["eval_output"] == mappings[str(old_output.relative_to(tmp_path))]
+    assert (tmp_path / record["source_summary"]).is_file()
+    doc = json.loads((tmp_path / record["eval_output"]).read_text())
+    assert doc["ensemble"]["portable_report"] == f"{archive}/reports/failed.html"
+    assert not old_summary.parent.exists()
+    assert not old_output.parent.exists()
+    assert archive_directory(tmp_path, stable_id, "strategy") == tmp_path / archive
+    assert not (tmp_path / logical_archive).exists()
+
+
+def test_frozen_research_inputs_resolve_from_relocated_archive_without_changing_bytes(tmp_path):
+    import json
+    from backtest.scripts.run_bt_v5_cutover_diagnostics import (
+        load_historical_benchmark, load_historical_regimes,
+    )
+
+    directory = tmp_path / "backtest/experiments/strategies/topk-dropout/bt-v5/configs"
+    directory.mkdir(parents=True)
+    inputs = {
+        "bench_ew_all.csv": "datetime,bench\n2020-01-02,0.01\n2020-01-03,-0.02\n",
+        "monthly_regime_labels_eval_window_v1.csv": "datetime,regime3\n2020-01-31,D\n2020-02-28,T\n",
+    }
+    mappings = {}
+    for name, content in inputs.items():
+        target = directory / name
+        target.write_text(content)
+        mappings[f"backtest/configs/regime-adapt/{name}"] = target.relative_to(tmp_path).as_posix()
+    path_map = tmp_path / "backtest/experiments/_catalog/path_map.json"
+    path_map.parent.mkdir()
+    path_map.write_text(json.dumps({"schema_version": 1, "paths": mappings}))
+    before = {name: (directory / name).read_bytes() for name in inputs}
+
+    benchmark = load_historical_benchmark(tmp_path)
+    regimes = load_historical_regimes(tmp_path)
+
+    assert benchmark.tolist() == [.01, -.02]
+    assert list(benchmark.index) == list(pd.to_datetime(["2020-01-02", "2020-01-03"]))
+    assert regimes.tolist() == ["D", "T"]
+    assert {name: (directory / name).read_bytes() for name in inputs} == before
+    assert not (tmp_path / "backtest/configs/regime-adapt").exists()
 
 
 @pytest.mark.parametrize(

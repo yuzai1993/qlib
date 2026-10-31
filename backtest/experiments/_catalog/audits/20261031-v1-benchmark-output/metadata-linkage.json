@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "producer_exp_id": "regime-adapt/m0-label-k123-h2345",
+  "benchmark_outputs": [
+    {
+      "ref": "regime-adapt/m0-h20-label-v4",
+      "version": "v1"
+    }
+  ],
+  "authorization": "用户明确要求训练目标期限对比标记产出v1并恢复Benchmark中的v1",
+  "historical_baseline_receipt": {
+    "path": "baseline-records/f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f.json",
+    "sha256": "f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f",
+    "profile": {
+      "path": "baseline-profiles/v1.json",
+      "sha256": "ffe8eb4976a033cbd2430f3e4e71c81628c32877eed2e534b5ebf84d83652561"
+    }
+  },
+  "formal_profile_path": "backtest/experiments/models/training-target/horizon-comparison/baseline-profiles/v1.json",
+  "profile_source_audit": "backtest/experiments/_catalog/audits/20261031-v1-consolidation-v2-current/removed-v1-metadata.json",
+  "profile_original_bytes_unchanged": true,
+  "group_metadata_before_sha256": "6a14e91d67f7c6a9a5ec4d76162be147bcf3129ff8479c5f58e573f23200531a",
+  "group_metadata_after_sha256": "469a66d37ba868376fe3d0c7f0de96a46391dee37fc24d0bb76254c6ac254f9b",
+  "active_experiment_restored": false,
+  "current_model_unchanged": "v2",
+  "metrics_changed": false,
+  "scope_note": "产出关联为用户确认的研究归属；旧event130及v1/v3不同早停口径仍按冻结来源分别保留",
+  "protected_source_files_unchanged": 73,
+  "registry_bytes_unchanged": true,
+  "model_manifest_count": 6,
+  "profile_recipe_check": "499-day next-day RankIC v1; distinct from H20-v3 Top3 early stopping",
+  "temporary_scripts_created": []
+}

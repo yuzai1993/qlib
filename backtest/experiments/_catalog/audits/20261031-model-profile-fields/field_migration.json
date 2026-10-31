@@ -1,0 +1,381 @@
+{
+  "date": "2026-10-31",
+  "scope": "11个模型介绍的展示字段拆分，暂不修改真实元数据。",
+  "notes": [
+    "DE结构中的特征选择是算法机制，保留在模型结构；Alpha158与range是输入特征，迁到features。",
+    "早停与信号内容逐项从现有已审核evaluation_method分离，保留原主格、H5 RankIC及历史窗口限制。",
+    "未读取或反序列化任何trained_model；未训练、回测或改写指标。"
+  ],
+  "experiments": [
+    {
+      "exp_id": "regime-adapt/m0-h20-rankices-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+      "structure": "每个种子一个单LightGBM（B3-M冻结超参）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按日RankIC早停（daily_rank_ic；H5标签，valid_frame_t5h5es）。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "original_structure": "每个种子一个单LightGBM（B3-M冻结超参），特征为Alpha158＋range，不含regime特征。",
+      "original_evaluation_method": "训练早停：全评估窗2020-08-03～2026-07-31，1454日，按日RankIC早停（daily_rank_ic；H5标签，valid_frame_t5h5es）。 评估融合：五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+          "sha256": "8d037ac065a41e01204efa546e22e2aeae724e71a9ddf29d4cdac59a8f36ba83",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+      "structure": "每个种子一个单LightGBM（B3-M冻结超参）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按Top3×H5扣费净年化早停（top3_h5_net_ann）。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "original_structure": "每个种子一个单LightGBM（B3-M冻结超参），特征为Alpha158＋range，不含regime特征。",
+      "original_evaluation_method": "训练早停：全评估窗2020-08-03～2026-07-31，1454日，按Top3×H5扣费净年化早停（top3_h5_net_ann）。 评估融合：五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+          "sha256": "e66ac6e8fd17bc3cbf837bc096640c5160ca0aed8a2e6dbfb4f9a84dfa0693ef",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t5h5-es-v1",
+      "metadata_path": "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+      "structure": "每个种子一个单LightGBM（B3-M冻结超参）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "全评估窗2020-08-03～2026-07-31，1454日，按Top5×H5扣费净年化早停（top5_h5_net_ann）。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "original_structure": "每个种子一个单LightGBM（B3-M冻结超参），特征为Alpha158＋range，不含regime特征。",
+      "original_evaluation_method": "训练早停：全评估窗2020-08-03～2026-07-31，1454日，按Top5×H5扣费净年化早停（top5_h5_net_ann）。 评估融合：五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+          "sha256": "fbc7a32a1aa2d9acc0ec5246e5e297687bfdd0b2e7ace50bece133a57a320e3b",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-label-k123-h2345",
+      "metadata_path": "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+      "structure": "复用v1/v2的单LightGBM模型，各5个种子；本实验未训练新模型。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "复用v1的499天次日RankIC与v2的评估窗Top5×H5净年化模型",
+      "prediction_signal": "各版本5个种子分别做每日截面z-score后等权平均，再在K=1–5、H=2–5的20格网格上评估；不混合v1/v2信号。",
+      "original_structure": "复用v1/v2的单LightGBM模型，各5个种子；Alpha158+range特征，本实验未训练新模型。",
+      "original_evaluation_method": "训练早停：复用v1的499天次日RankIC与v2的评估窗Top5×H5净年化模型；评估融合：各版本5个种子分别做每日截面z-score后等权平均，再在K=1–5、H=2–5的20格网格上评估；不混合v1/v2信号。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/evaluation/kh-grid/metadata.json",
+          "sha256": "60d8e9fec5f35fef6ada56f3f8ab2159104af7965f522664a24f5f496c6dc3f7",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+      "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；B6-M冻结超参（学习率0.1）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "每个种子内3个子模型等权平均；5个种子的分数分别做每日截面z-score后等权平均，只评估一次合成信号（主格Top3×H5）。",
+      "original_structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；Alpha158+range特征，B6-M冻结超参（学习率0.1）。",
+      "original_evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：每个种子内3个子模型等权平均；5个种子的分数分别做每日截面z-score后等权平均，只评估一次合成信号（主格Top3×H5）。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+          "sha256": "2a0184b22bd9194b9910ce69d4cf12f0ea864a027dfe964db9315aa93c334942",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-t3h5es-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+      "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；B6-M冻结超参（学习率0.1）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+      "original_structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；Alpha158+range特征，B6-M冻结超参（学习率0.1）。",
+      "original_evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/model-structure/de-v3-s42/metadata.json",
+          "sha256": "a70a260d4d5fb0d8b80b5ebd9de22eda7b6c7c3a2fb5ba6dd67e13d8cfa1bacc",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+      "metadata_path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+      "structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；B6-M冻结超参（学习率0.1）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "同一评估窗内日RankIC（H5标签）",
+      "prediction_signal": "seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+      "original_structure": "DoubleEnsemble：3个LightGBM子模型，启用样本重加权与特征选择；Alpha158+range特征，B6-M冻结超参（学习率0.1）。",
+      "original_evaluation_method": "训练早停：同一评估窗内日RankIC（H5标签）；评估融合：seed42内的3个子模型等权平均，再对该分数做每日截面z-score；直接评估单种子信号（主格Top3×H5），无跨种子融合。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+          "sha256": "0fdef47ac40e103ce1b99e376308ea0572e5e382d4b552d3e5894062513762b4",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h1-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h1/metadata.json",
+      "structure": "单LightGBM；B3-M冻结超参（学习率0.2）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "original_structure": "单LightGBM；Alpha158+range特征，B3-M冻结超参（学习率0.2）。",
+      "original_evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/h1/metadata.json",
+          "sha256": "0c632980c70e785ac259d81379121d3ce36baa4dc6aaa719b4be9cb9a1e8d7ee",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h10-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h10/metadata.json",
+      "structure": "单LightGBM；B3-M冻结超参（学习率0.2）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "original_structure": "单LightGBM；Alpha158+range特征，B3-M冻结超参（学习率0.2）。",
+      "original_evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/h10/metadata.json",
+          "sha256": "f92ec4f4d9b2d2095e77dfd4288d25924c1bf71c00f57a4cc5a9e9b27583264a",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h20-label-v4",
+      "metadata_path": "backtest/experiments/models/training-target/h20-v1/metadata.json",
+      "structure": "每个种子一个单LightGBM（B3-M冻结超参）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "冻结499个分层交易日（2020-08-03～2026-07-23）的次日收益标签日RankIC，valid_frame_70；不是全评估窗H5 RankIC。",
+      "prediction_signal": "五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "original_structure": "每个种子一个单LightGBM（B3-M冻结超参），特征为Alpha158＋range，不含regime特征。",
+      "original_evaluation_method": "训练早停：冻结499个分层交易日（2020-08-03～2026-07-23）的次日收益标签日RankIC，valid_frame_70；不是全评估窗H5 RankIC。 评估融合：五种子预测先逐交易日截面z-score标准化，再等权平均成一条信号，只对该合成信号评估一次；不是平均五个模型的指标。现行主格统一Top3×H5扣费净年化/波动/夏普，另报合成信号全宇宙H5 RankIC；同一历史窗已用于早停与选型。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/h20-v1/metadata.json",
+          "sha256": "80be2280cdd70e335ceec0c787ea35a4cb5e5e510fe059c086d38f90d477fa2f",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    },
+    {
+      "exp_id": "regime-adapt/m0-h5-t3h5es-v1",
+      "metadata_path": "backtest/experiments/models/training-target/h5/metadata.json",
+      "structure": "单LightGBM；B3-M冻结超参（学习率0.2）。",
+      "features": "Alpha158＋range技术扩展；不含regime特征。",
+      "early_stopping": "评估窗Top3×H5扣费净年化",
+      "prediction_signal": "5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "original_structure": "单LightGBM；Alpha158+range特征，B3-M冻结超参（学习率0.2）。",
+      "original_evaluation_method": "训练早停：评估窗Top3×H5扣费净年化；评估融合：5个种子的分数分别做每日截面z-score后等权平均，再只评估一次合成信号（主格Top3×H5），不平均各种子的指标。",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/h5/metadata.json",
+          "sha256": "05a8c06eeae156173cea73b5ae452c880514aaaa40e858d27928b8bb62d32e71",
+          "note": "沿用已审核model_profile，只拆分输入特征、训练早停和预测信号，不修改科学协议。"
+        },
+        {
+          "path": "backtest/EXPERIMENT_STANDARD.md",
+          "sha256": "23d29354ecd027315df093de4a10defbbbfbb7cf9a7652a245ae369a3fe37eb1"
+        },
+        {
+          "path": "backtest/scripts/prepare_regime_train_chunks.py",
+          "sha256": "3044fa80236ced7d9b66d39e168aa555a272e6cea670e691aa75dc4582463615"
+        },
+        {
+          "path": "backtest/scripts/train_regime_arm.py",
+          "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
+        },
+        {
+          "path": "qlib/contrib/model/double_ensemble.py",
+          "sha256": "699cfd4bf09bae95fc9d95994551d0660d62ebcebde88c7358857aca95641669"
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "profiles": 11,
+    "source_metadata_bytes_unchanged": true,
+    "all_original_signal_and_evaluation_text_preserved": true,
+    "de_feature_selection_retained_as_model_mechanism": true,
+    "all_input_feature_clauses_removed_from_structure": true
+  }
+}

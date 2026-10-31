@@ -18,7 +18,7 @@
         --report backtest/result/<session>/run_01/report_normal.csv \
         --pred backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl \
         --config strategy-stability/b6-m/topk-t30-d2-h20_csi1000_full.yaml \
-        --output backtest/experiments/signal-style-diagnostic/b2s-on-b6-m/metrics/b2s_style_regime.json
+        --output backtest/experiments/strategies/signal-style-diagnostic/b2s-on-b6-m/metrics/b2s_style_regime.json
 """
 
 from __future__ import annotations
@@ -433,6 +433,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
+    args.output = _resolve_research_path(args.output, _RESEARCH_ROOT)
     report = pd.read_csv(args.report, index_col=0, parse_dates=True)
     excess = daily_excess_with_cost(report)
 
@@ -477,7 +478,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    _resolve_research_path(args.output, _RESEARCH_ROOT).write_text(
+    args.output.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print(f"written: {args.output}")

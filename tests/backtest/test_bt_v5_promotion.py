@@ -25,7 +25,7 @@ def promotion_fixture(tmp_path, request):
     repo, source = tmp_path / "repo", tmp_path / "source"
     exp = repo / "backtest/experiments"
     exp.mkdir(parents=True)
-    labels = repo / "backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv"
+    labels = repo / "backtest/experiments/strategies/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv"
     labels.parent.mkdir(parents=True)
     labels.write_text("datetime,regime3\n2020-08-01,D\n2024-02-01,F\n2026-07-01,T\n")
     returns = pd.DataFrame(
@@ -94,6 +94,60 @@ def test_promotion_preserves_history_and_model_baseline_and_is_idempotent(promot
     assert promote.promote(repo_root=repo, source_root=source) == result
     assert snapshots == {str(p): p.read_bytes() for p in repo.rglob("*") if p.is_file()}
     assert source_hashes == {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in source.rglob("*") if p.is_file()}
+
+
+def test_promotion_writes_to_mapped_archive_without_recreating_old_directory(promotion_fixture):
+    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    repo, source, _ = promotion_fixture
+    old_directory = "backtest/experiments/phase_m_v1_bt_metrics"
+    new_directory = "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/metrics"
+    _write_json(repo / "backtest/experiments/_catalog/path_map.json", {
+        "schema_version": 1, "paths": {}, "directories": {old_directory: new_directory},
+    })
+
+    result = promote.promote(repo_root=repo, source_root=source)
+
+    assert not (repo / old_directory).exists()
+    assert (repo / new_directory / Path(result["eval_output"]).name).is_file()
+
+
+def test_fingerprint_resolves_relocated_source_for_both_content_and_file_size(tmp_path, monkeypatch):
+    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    monkeypatch.setattr(promote, "_RESEARCH_ROOT", tmp_path)
+    old = tmp_path / promote.LABELS
+    actual = tmp_path / "backtest/experiments/strategies/topk-dropout/bt-v5/configs/labels.csv"
+    actual.parent.mkdir(parents=True)
+    payload = b"datetime,regime3\n2020-01-31,D\n"
+    actual.write_bytes(payload)
+    _write_json(tmp_path / "backtest/experiments/_catalog/path_map.json", {
+        "schema_version": 1, "paths": {old.relative_to(tmp_path).as_posix(): actual.relative_to(tmp_path).as_posix()},
+    })
+
+    result = promote.fingerprint(old)
+
+    assert result == {"path": str(old), "sha256": hashlib.sha256(payload).hexdigest(), "bytes": len(payload)}
+    assert not old.exists() and actual.read_bytes() == payload
+
+
+def test_promotion_reads_regime_labels_through_category_directory_alias(promotion_fixture):
+    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    repo, source, _ = promotion_fixture
+    old = repo / promote.LABELS
+    old_archive = old.parent.parent
+    physical = repo / "backtest/experiments/strategies/topk-dropout/bt-v5"
+    physical.parent.mkdir(parents=True)
+    before = old.read_bytes()
+    old_archive.rename(physical)
+    _write_json(repo / "backtest/experiments/_catalog/path_map.json", {
+        "schema_version": 1, "paths": {}, "directories": {
+            old_archive.relative_to(repo).as_posix(): physical.relative_to(repo).as_posix()},
+    })
+
+    promote.promote(repo_root=repo, source_root=source)
+
+    assert not old_archive.exists()
+    assert (physical / "configs" / old.name).read_bytes() == before
+    assert json.loads((physical / "metadata.json").read_text())["exp_id"] == promote.BASELINE
 
 
 @pytest.mark.parametrize("change", ["prediction_hash", "cost_basis", "metrics"])

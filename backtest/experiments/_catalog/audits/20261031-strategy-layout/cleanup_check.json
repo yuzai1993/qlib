@@ -1,0 +1,31 @@
+{
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "result_root": "/Users/yuxianqi/Project/qlib/backtest/result",
+  "mlruns_root": "/Users/yuxianqi/Project/qlib/mlruns",
+  "scope": "all_a",
+  "baseline_exp_id": null,
+  "candidate_exp_id": null,
+  "phase_m_v1_baseline_exp_ids": [
+    "regime-adapt/m0-h20-label-v4",
+    "regime-adapt/m0-h20-t5h5-es-v1",
+    "regime-adapt/m0-h20-t3h5es-v1",
+    "regime-adapt/m0-h20-rankices-v1"
+  ],
+  "current_bt_exp_ids": [
+    "baseline/phase-m-v1-bt-v5"
+  ],
+  "warnings": [
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/bt_v5_cutover_audit",
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/bt_v5_operator_preview_20261030",
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/phase_s_regime"
+  ],
+  "errors": [],
+  "counts": {
+    "keep_result_dirs": 24,
+    "delete_result_dirs": 6,
+    "keep_mlruns_dirs": 1,
+    "delete_mlruns_dirs": 7
+  },
+  "applied": false,
+  "dry_run_sha256": "3053b8e8face116282c041e702e16599caa2c7ba278ea7dc40d06aea865c2bc5"
+}

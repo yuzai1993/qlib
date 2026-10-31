@@ -1,0 +1,101 @@
+{
+  "removed_experiments": [
+    {
+      "id": "regime-adapt/m0-h20es-densemble-s42-v1",
+      "directory": "backtest/experiments/models/model-structure/de-v2-s42",
+      "reports": [
+        {
+          "id": "4a1dab7f6d3ab08d0ef3f163",
+          "name": "regime_adapt_m0h20es_densemble_report.html",
+          "available": false,
+          "kind": "report"
+        }
+      ]
+    },
+    {
+      "id": "diag/eval-window-edge-lookahead",
+      "directory": "backtest/experiments/models/evaluation/window-edge",
+      "reports": []
+    }
+  ],
+  "deleted_files": {
+    "backtest/experiments/models/evaluation/window-edge/metadata.json": "fec3469bfd2f902bed879011e074a3c73c575edd6e0fdd2cc74e4433a3f54713",
+    "backtest/experiments/models/evaluation/window-edge/records/5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439.json": "5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439",
+    "backtest/experiments/models/model-structure/de-v2-s42/metadata.json": "900e693abd86f0230e762479ced80353b721526b7a764823079b66489e6edecb",
+    "backtest/experiments/models/model-structure/de-v2-s42/records/ff48f7392ea9d74d8eb468cdc04c0925b9812296d71ae1dd4087c102f10060cd.json": "ff48f7392ea9d74d8eb468cdc04c0925b9812296d71ae1dd4087c102f10060cd"
+  },
+  "deleted_aliases": [
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/registry_records/5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439.json",
+      "target": "backtest/experiments/diag/eval-window-edge-lookahead/records/5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/registry_records/792ec6ab493a881f7200507e566a9f8a9ca6fffbf69ad6eeb5093fbabd74f25d.json",
+      "target": "backtest/experiments/regime-adapt/m0-h20es-densemble-s42-v1/records/ff48f7392ea9d74d8eb468cdc04c0925b9812296d71ae1dd4087c102f10060cd.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/regime-adapt/m0-h20es-densemble-s42-v1/metadata.json",
+      "target": "backtest/experiments/models/regime-adapt/m0-h20es-densemble-s42-v1/metadata.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/regime-adapt/m0-h20es-densemble-s42-v1/records/ff48f7392ea9d74d8eb468cdc04c0925b9812296d71ae1dd4087c102f10060cd.json",
+      "target": "backtest/experiments/models/regime-adapt/m0-h20es-densemble-s42-v1/records/ff48f7392ea9d74d8eb468cdc04c0925b9812296d71ae1dd4087c102f10060cd.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/diag/eval-window-edge-lookahead/metadata.json",
+      "target": "backtest/experiments/models/diag/eval-window-edge-lookahead/metadata.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/diag/eval-window-edge-lookahead/records/5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439.json",
+      "target": "backtest/experiments/models/diag/eval-window-edge-lookahead/records/5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/models/regime-adapt/m0-h20es-densemble-s42-v1/metadata.json",
+      "target": "backtest/experiments/models/model-structure/de-v2-s42/metadata.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/models/regime-adapt/m0-h20es-densemble-s42-v1/records/ff48f7392ea9d74d8eb468cdc04c0925b9812296d71ae1dd4087c102f10060cd.json",
+      "target": "backtest/experiments/models/model-structure/de-v2-s42/records/ff48f7392ea9d74d8eb468cdc04c0925b9812296d71ae1dd4087c102f10060cd.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/models/diag/eval-window-edge-lookahead/metadata.json",
+      "target": "backtest/experiments/models/evaluation/window-edge/metadata.json"
+    },
+    {
+      "kind": "paths",
+      "source": "backtest/experiments/models/diag/eval-window-edge-lookahead/records/5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439.json",
+      "target": "backtest/experiments/models/evaluation/window-edge/records/5042311e6ac25fa934177dd8196c7cd84db2f5cb05f2c072ec68f91411d1c439.json"
+    },
+    {
+      "kind": "directories",
+      "source": "backtest/experiments/regime-adapt/m0-h20es-densemble-s42-v1",
+      "target": "backtest/experiments/models/regime-adapt/m0-h20es-densemble-s42-v1"
+    },
+    {
+      "kind": "directories",
+      "source": "backtest/experiments/diag/eval-window-edge-lookahead",
+      "target": "backtest/experiments/models/diag/eval-window-edge-lookahead"
+    },
+    {
+      "kind": "directories",
+      "source": "backtest/experiments/models/regime-adapt/m0-h20es-densemble-s42-v1",
+      "target": "backtest/experiments/models/model-structure/de-v2-s42"
+    },
+    {
+      "kind": "directories",
+      "source": "backtest/experiments/models/diag/eval-window-edge-lookahead",
+      "target": "backtest/experiments/models/evaluation/window-edge"
+    }
+  ],
+  "retained_events_unchanged": 33,
+  "retained_index_lines_byte_identical": true
+}

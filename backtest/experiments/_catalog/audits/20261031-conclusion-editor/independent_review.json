@@ -1,0 +1,54 @@
+{
+  "status": "clean",
+  "findings": [],
+  "retained_registry_rows_identical": 33,
+  "catalog_old_fields_unchanged_except_analysis": 33,
+  "retained_readable_reports": 33,
+  "analysis_evidence_paths_exist": true,
+  "source_sha256_and_displayed_metrics_verified": 33,
+  "metadata_does_not_persist_transport_revisions": true,
+  "revision_hash_matches_exact_discovery_payload": true,
+  "backend_review": {
+    "writes_only_editorial_conclusion_date_draft_status": true,
+    "preserves_evidence_limitations_and_scientific_authority": true,
+    "same_origin_csrf_existing_boundary_preserved": true,
+    "symlinks_traversal_duplicates_rejected_via_validated_scan": true,
+    "concurrent_same_revision_save_results": [
+      200,
+      409
+    ],
+    "stale_replay_status": 409,
+    "winner_persists": true,
+    "registry_bytes_unchanged_by_edits": true
+  },
+  "frontend_review": {
+    "cancel_does_not_write": true,
+    "conflict_and_http_error_keep_draft": true,
+    "duplicate_save_disabled": true,
+    "late_save_does_not_replace_newer_refreshed_revision": true,
+    "cross_page_late_responses_do_not_overwrite_page": true,
+    "manual_conclusions_remain_separate_from_registry_text": true
+  },
+  "deletion_scope": {
+    "removed": [
+      "regime-adapt/m0-h20es-densemble-s42-v1",
+      "diag/eval-window-edge-lookahead"
+    ],
+    "only_no_readable_report_archives_removed": true,
+    "retained_primary_reports_all_available": true
+  },
+  "scientific_summary_spot_checks": [
+    "v2 model conclusion explicitly uses current Top3×H5 rather than older detail-report Top5×H5 values",
+    "v3/v4 single-seed DoubleEnsemble conclusions distinguish matching seed42 from five-seed official signal",
+    "BT v4 conclusion states rule-alignment promotion and does not claim comprehensive dominance",
+    "capital/risk/fee diagnostics and extended-window records are not described as live performance or official-window replacements",
+    "failed diagnostic states failure and absence of valid metrics"
+  ],
+  "tests": {
+    "backend_editor_passed": 19,
+    "frontend_passed": 85,
+    "git_diff_check": "passed",
+    "extra_parallel_save_probe": "passed"
+  },
+  "temporary_probe_fixture_removed": true
+}

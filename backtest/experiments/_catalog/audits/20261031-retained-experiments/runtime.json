@@ -1,0 +1,35 @@
+{
+  "url": "http://127.0.0.1:8090",
+  "discovery": {
+    "mode": "typed",
+    "count": 35,
+    "errors": []
+  },
+  "records": 35,
+  "warnings": [],
+  "kind_track_counts": {
+    "model:all_a": 13,
+    "strategy:all_a": 22
+  },
+  "ui": {
+    "models": 13,
+    "strategies": 22,
+    "model_tracks": [
+      "all_a"
+    ],
+    "strategy_tracks": [
+      "all_a"
+    ],
+    "strategy_directions": [
+      "phase-m-v1-bt"
+    ],
+    "dates_descending_verified": true,
+    "duplicate_notices": 0
+  },
+  "parity": {
+    "active_top5": "passed",
+    "historical_k1": "passed"
+  },
+  "service_reloaded": "qlib-live-monitor only",
+  "scheduler_or_trading_changed": false
+}

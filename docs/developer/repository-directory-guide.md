@@ -28,6 +28,8 @@
 | `backtest/` | `datasets/` | **确认保留。**研究用数据读取与样本选择源码，维持现状。 |
 | `backtest/` | `diagnostics/` | **确认保留。**平台分析档案及其元数据、报告和代码，维持现状。 |
 | `backtest/` | `experiments/` | **完成。**23源、9 Benchmark保留；共享资料归属和审计精简完成，CSI1000冻结预测已删除。当前模型v2、策略s5。 |
+| `backtest/` | `features/` | **确认保留。**特征计算源码，整目录维持现状。 |
+| `backtest/` | `label_design/` | **确认保留。**训练标签与样本边界处理源码，整目录维持现状。 |
 
 ## 先理解几组容易混淆的名字
 
@@ -90,8 +92,8 @@
 | `backtest/datasets/` | 19.28 KiB | 研究用的数据读取和样本选择代码，决定给模型喂哪些股票、怎样组织时间序列，并非原始数据目录。<br>例：liquidity_segment.py 按成交活跃程度分组训练样本；lean_mts.py 降低序列数据加载的内存占用。 | **保留。**保留源码；如果以后产生 regime-adapt-cache 等大缓存，应另列缓存子目录并设置生命周期，别和这些 Python 模块一起删。<br>注意：删除这些代码可能使历史配置无法加载；__pycache__ 才是可重建缓存。 |
 | `backtest/diagnostics/` | 48.05 KiB | 独立分析档案：一份分析一个目录，报告、元数据和代码放在一起，平台分析页从这里读取。<br>例：20260809_style_regimes/REPORT.md、metadata.json；20260809_a0b_regime_features/code/。 | **保留。**保持现布局；新增分析按 README 补元数据，检查缺失附件；较旧分析可标记 archived，优先保留结论与复现代码。<br>注意：是长期研究记录，不应按运行结果清理规则删除；旧报告中的缺图/缺代码提示要保留。 |
 | `backtest/experiments/` | 原快照 44.28 MiB | 实验档案柜，按 models/ 与 strategies/ 分组；源实验保存配置、报告、指标、文档和历史登记，同类策略的参数变体归在同一组。<br>例：models/early-stopping/top5-v2/metadata.json；strategies/topk-dropout/v2-top5-hold-f100/variants/。 | **完成。**23个源实验按目录发现，平台显示14个入口（6模型、8策略）；保留源实验的原ID、指标和历史Benchmark。详见下一级目录说明。 |
-| `backtest/features/` | 24.17 KiB | 额外特征的计算代码，也就是把价格、成交量、市场状态加工成模型输入的规则。<br>例：technical.py 定义布林带/动量/趋势特征；regime.py 将每日市场状态特征拼到股票样本。 | **保留。**保留被配置和模型依赖的模块；可补模块用途索引，未来确认完全无引用的废弃特征再归档。 |
-| `backtest/label_design/` | 14.99 KiB | 训练目标的定义和防止未来信息泄漏的代码，例如让模型预测未来若干天的收益。<br>例：horizons.py 的 cumulative_label(20) 生成20日收益表达式；dataset.py 切掉跨训练边界的标签样本。 | **保留。**保留；如实验方向停止，先保留必要标签生成器和测试，重复的试验说明归到实验文档。 |
+| `backtest/features/` | 24.17 KiB | 额外特征的计算代码，也就是把价格、成交量、市场状态加工成模型输入的规则。<br>例：technical.py 定义布林带/动量/趋势特征；regime.py 将每日市场状态特征拼到股票样本。 | **确认保留。**2026-11-01用户确认整目录保留，维持现状。 |
+| `backtest/label_design/` | 14.99 KiB | 训练目标的定义和防止未来信息泄漏的代码，例如让模型预测未来若干天的收益。<br>例：horizons.py 的 cumulative_label(20) 生成20日收益表达式；dataset.py 切掉跨训练边界的标签样本。 | **确认保留。**2026-11-01用户确认整目录保留，维持现状。 |
 | `backtest/models/` | 3.42 MiB | 研究用模型扩展源码，以及 CSI 策略回测使用的冻结基线模型与清单。<br>例：regime_adapt.py、rankic_early_stop.py；baselines/b6-m/manifest.json 绑定 seed4000 的冻结模型。 | **保留。**保留源码和被清单引用的模型；后续可将“模型实现”和“冻结权重”在说明上分开，审查没有引用的重复导出。<br>注意：不是全部可重训缓存。Python模型原件还可能依赖这里的类定义；Phase S 必须按manifest读取固定模型。 |
 | `backtest/result/` | 1.07 GiB | 训练、预测、回测每次运行生成的工作目录，包含模型原件、元数据、信号、日收益和临时图表等。<br>例：regimeadaptfast_m0h20_rankices_s42/；20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/。 | **清理器管理。**本轮仅缩减实验归档，没有删除本目录。纯全A dry-run 保留 24 个目录；额外提出的旧 CSI session 删除尚未执行，后续单独讨论。<br>注意：按完整五种子、版本化模型基线、当前BT依赖与正式回测保留；不能按文件夹日期或大小直接删。 |
 | `backtest/scripts/` | 3.08 MiB | 研究运行入口和工具：准备数据、训练评估、登记实验、生成报告、晋升基线、清理产物。<br>例：experiment_registry.py、research_layout.py、build_phase_m_v1_report.py、cleanup_experiment_artifacts.py。 | **保留。**有明显的可整理空间：可按准备/训练/评估/报告/登记/维护分类，再查重复入口；一次性工具任务结束后删除。 |

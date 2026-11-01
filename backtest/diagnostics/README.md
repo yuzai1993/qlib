@@ -61,3 +61,6 @@ backtest/diagnostics/<analysis-name>/
 
 三份现有历史分析保留原报告及原 ID。恢复说明中的历史缺图和缺数据仍表示资料缺失，
 本次目录整理没有重新运行研究、重建数据或修改结论。
+历史报告和 `code/` 是冻结快照，运行脚本迁移时不要批量改写其中的旧路径；
+当前脚本入口见 [运行脚本说明](../scripts/README.md)，旧路径映射见
+[`path_map.json`](../experiments/_catalog/path_map.json)。补充研究内容应新建分析。

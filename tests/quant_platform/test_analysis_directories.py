@@ -1,5 +1,6 @@
 import io
 import json
+import shutil
 import zipfile
 from pathlib import Path
 
@@ -37,6 +38,19 @@ def test_canonical_diagnostics_scans_new_directories_on_every_read(tmp_path):
     assert [row["id"] for row in store.list()] == ["new-analysis"]
     manual_analysis(root, "another")
     assert {row["id"] for row in store.list()} == {"new-analysis", "another"}
+
+
+def test_shipped_historical_analyses_load_with_their_registered_checksums(tmp_path):
+    source = Path(__file__).resolve().parents[2] / "backtest/diagnostics"
+    research = tmp_path / "research"
+    shutil.copytree(source, research / "backtest/diagnostics")
+
+    records = AnalysisStore(None, research).list()
+
+    expected_ids = {json.loads(path.read_text(encoding="utf-8"))["id"]
+                    for path in source.glob("*/metadata.json")}
+    assert expected_ids
+    assert {row["id"] for row in records} == expected_ids
 
 
 def test_metadata_is_separate_and_updates_publish_whole_revisions(tmp_path):

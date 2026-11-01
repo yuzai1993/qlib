@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-01",
+  "purpose": "Move operational handoff evidence out of research experiment result storage.",
+  "moves": [
+    {
+      "source": "backtest/result/bt_v5_cutover_audit",
+      "destination": "live_trading/logs/bt_v5_cutover_audit",
+      "files": [
+        {
+          "before": "backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/manual_liquidation_preview.json",
+          "after": "live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/manual_liquidation_preview.json",
+          "bytes": 2569,
+          "sha256": "ffc385fd97a180db2df87db96f249f2d8400bead2ffd1d092b8dc920304a83ba"
+        },
+        {
+          "before": "backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_audit.json",
+          "after": "live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_audit.json",
+          "bytes": 16203,
+          "sha256": "64e656ff6b088dddcf3b2872cbcc608d25cd1d3390e7859c9eda80ad1e675f4e"
+        },
+        {
+          "before": "backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_file_evidence.json",
+          "after": "live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_file_evidence.json",
+          "bytes": 9670,
+          "sha256": "1f3d5cbc5d096d5536e1981be388e10b1bfda9e6922c5c45224ee591027b483f"
+        },
+        {
+          "before": "backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_snapshot.db",
+          "after": "live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_snapshot.db",
+          "bytes": 14176256,
+          "sha256": "2fd8d1b07c95d904a46b7bf2e1396c86a6084677d4017b891f963abb116da1eb"
+        },
+        {
+          "before": "backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/v2_scores_20261029.json",
+          "after": "live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/v2_scores_20261029.json",
+          "bytes": 418,
+          "sha256": "947ce5920916dae494a287e26b0c1191bd8b15840fc74fb7b9fc8a9502deef02"
+        },
+        {
+          "before": "backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/v2_scores_20261029.pkl",
+          "after": "live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/v2_scores_20261029.pkl",
+          "bytes": 116056,
+          "sha256": "b1684a7c3cde59c54819d4ee86044c07c3f99f6f1562a92934c5883f6f5cbd1e"
+        }
+      ]
+    },
+    {
+      "source": "backtest/result/bt_v5_operator_preview_20261030",
+      "destination": "live_trading/logs/bt_v5_operator_preview_20261030",
+      "files": [
+        {
+          "before": "backtest/result/bt_v5_operator_preview_20261030/offline_review.json",
+          "after": "live_trading/logs/bt_v5_operator_preview_20261030/offline_review.json",
+          "bytes": 2916,
+          "sha256": "a6151e49da51c80ca89bcd2038221f75e6ab916d5cd9bc1da2b8f04c15a852cc"
+        },
+        {
+          "before": "backtest/result/bt_v5_operator_preview_20261030/v2_scores_20261029.json",
+          "after": "live_trading/logs/bt_v5_operator_preview_20261030/v2_scores_20261029.json",
+          "bytes": 418,
+          "sha256": "947ce5920916dae494a287e26b0c1191bd8b15840fc74fb7b9fc8a9502deef02"
+        },
+        {
+          "before": "backtest/result/bt_v5_operator_preview_20261030/v2_scores_20261029.pkl",
+          "after": "live_trading/logs/bt_v5_operator_preview_20261030/v2_scores_20261029.pkl",
+          "bytes": 116056,
+          "sha256": "b1684a7c3cde59c54819d4ee86044c07c3f99f6f1562a92934c5883f6f5cbd1e"
+        }
+      ]
+    }
+  ],
+  "file_count": 9,
+  "total_bytes": 14440562,
+  "all_file_bytes_unchanged": true,
+  "embedded_historical_paths_unchanged": true,
+  "new_locations_remain_gitignored": true,
+  "no_large_database_copied_into_git": true,
+  "document_update": {
+    "path": "live_trading/BT_V5_CUTOVER.md",
+    "sha256_before": "1d0524fe6055b045662145241f52b3ef3d03af42df08ef76b19e003bdf4f17bd",
+    "sha256_after": "ee5a1e0d56fe7be656381c4144ad9c6851e5dae3b12c5f3a3deca56b5038d7d3",
+    "change": "Only replace the two current evidence directory prefixes."
+  },
+  "runtime_default_review": {
+    "backtest/scripts/run_bt_v5_cutover_diagnostics.py": "--output is required; no directory default to update.",
+    "live_trading/scripts/preview_bt_v5_cutover.py": "--snapshot-manifest, --pred and --output are required; no directory default to update.",
+    "direct_source_basename_hits": "Only BT_V5_CUTOVER.md; no formal Python runtime defaults contain either moved basename."
+  },
+  "path_aliases_added": [],
+  "compatibility": "Evidence is immutable historical documentation, not a current runtime input. Its old worktree paths remain historical; current documentation points directly at live_trading/logs.",
+  "protected_scope": "No active production configuration, live model, production account ledger, CSI1000 result session or mlruns artifact was modified."
+}

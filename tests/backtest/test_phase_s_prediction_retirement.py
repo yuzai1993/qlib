@@ -9,12 +9,12 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import phase_s_prediction_validation as validation
-import prepare_strategy_stability_predictions as prepare
-import run_strategy_neighborhood_full as neighborhood
-import run_strategy_sweep as sweep
+import backtest.scripts.maintenance.phase_s_prediction_validation as validation
+import backtest.scripts.prepare.prepare_strategy_stability_predictions as prepare
+import backtest.scripts.evaluate.run_strategy_neighborhood_full as neighborhood
+import backtest.scripts.evaluate.run_strategy_sweep as sweep
 
 
 def retired_manifest(tmp_path):

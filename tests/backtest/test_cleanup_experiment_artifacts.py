@@ -9,9 +9,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import cleanup_experiment_artifacts as cleanup  # noqa: E402
+import backtest.scripts.maintenance.cleanup_experiment_artifacts as cleanup  # noqa: E402
 
 POOLS = ("csi300", "csi500", "csi1000")
 
@@ -917,6 +917,251 @@ def _local_phase_m_baseline(root, version, suffix):
     return row
 
 
+def _platform_archive(root, **values):
+    directory = root / "backtest/experiments/models/research/ordinary"
+    directory.mkdir(parents=True)
+    metadata = {
+        "schema_version": 2,
+        "entity_type": "experiment",
+        "exp_id": "research/ordinary",
+        "kind": "model",
+        "track": "all_a",
+        "title": "普通模型实验",
+        **values,
+    }
+    (directory / "metadata.json").write_text(json.dumps(metadata))
+    return directory
+
+
+def _ordinary_result(root, name, **metadata):
+    session = root / "backtest/result" / name
+    session.mkdir(parents=True)
+    (session / "meta.json").write_text(json.dumps(metadata))
+    return session
+
+
+def test_platform_result_retention_keeps_all_archive_sources_and_prediction_dependencies(tmp_path):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    metadata_session = _ordinary_result(tmp_path, "metadata-source")
+    record_session = _ordinary_result(tmp_path, "record-source")
+    registry_session = _ordinary_result(tmp_path, "registry-source")
+    prediction = tmp_path / "backtest/result/shared-predictions/signal.pkl"
+    prediction.parent.mkdir()
+    prediction.write_bytes(b"required-prediction")
+    (metadata_session / "meta.json").write_text(json.dumps({"source_pred": str(prediction)}))
+    archive = _platform_archive(
+        tmp_path,
+        recipe_session_metadata=["backtest/result/metadata-source/meta.json"],
+        records=["records/event.json"],
+    )
+    (archive / "records").mkdir()
+    (archive / "records/event.json").write_text(json.dumps({
+        "ensemble_session": "backtest/result/record-source",
+    }))
+    ordinary = {
+        "exp_id": "research/ordinary", "phase": "M", "phase_m_protocol": "v1",
+        "result_dirs": ["backtest/result/registry-source"],
+    }
+    orphan = _ordinary_result(tmp_path, "unregistered")
+    mlruns = tmp_path / "mlruns/999"
+    mlruns.mkdir(parents=True)
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline, ordinary], result_retention="platform", only_result=True
+    )
+
+    assert plan["errors"] == []
+    assert {metadata_session, record_session, registry_session, prediction.parent} <= set(plan["keep_result_dirs"])
+    assert plan["delete_result_dirs"] == [orphan]
+    assert plan["delete_mlruns_dirs"] == []
+    cleanup.apply_cleanup(plan, apply=False)
+    assert orphan.is_dir()
+    cleanup.apply_cleanup(plan, apply=True)
+    assert not orphan.exists()
+    assert mlruns.is_dir()
+    assert prediction.read_bytes() == b"required-prediction"
+
+
+@pytest.mark.parametrize("unsafe", ["backtest/result/../escape", "absolute"])
+def test_platform_result_retention_rejects_unsafe_references(tmp_path, unsafe):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    raw = str(tmp_path.parent / "elsewhere/backtest/result/session") if unsafe == "absolute" else unsafe
+    _platform_archive(tmp_path)
+    ordinary = {
+        "exp_id": "research/ordinary", "phase": "M", "phase_m_protocol": "v1",
+        "result_dirs": [raw],
+    }
+    _ordinary_result(tmp_path, "orphan")
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline, ordinary], result_retention="platform", only_result=True
+    )
+
+    assert any("unsafe platform result" in message for message in plan["errors"])
+    assert plan["delete_result_dirs"] == []
+
+
+def test_platform_result_retention_warns_for_previously_missing_history(tmp_path):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    _platform_archive(tmp_path, recipe_session_metadata=[
+        "backtest/result/old-removed/run_01/artifacts_root/artifacts/trained_model"
+    ])
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline], result_retention="platform", only_result=True
+    )
+
+    assert plan["errors"] == []
+    assert any("historical result session missing" in message for message in plan["warnings"])
+
+
+@pytest.mark.parametrize("breakage", ["missing_model", "symlink_model"])
+def test_platform_result_retention_refuses_incomplete_existing_training_session(tmp_path, breakage):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    session = _ordinary_result(tmp_path, "ordinary-train", mode="train_only")
+    artifacts = session / "run_01/artifacts_root/artifacts"
+    artifacts.mkdir(parents=True)
+    if breakage == "symlink_model":
+        outside = tmp_path / "outside-model"
+        outside.write_bytes(b"model")
+        (artifacts / "trained_model").symlink_to(outside)
+    _platform_archive(tmp_path, recipe_session_metadata=[
+        "backtest/result/ordinary-train/meta.json"
+    ])
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline], result_retention="platform", only_result=True
+    )
+
+    assert plan["errors"]
+    assert plan["delete_result_dirs"] == []
+
+
+def test_platform_retention_requires_result_only_and_preserves_csi_contract(tmp_path):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    with pytest.raises(ValueError, match="only-result"):
+        cleanup.build_cleanup_plan(tmp_path, [baseline], result_retention="platform")
+    _platform_archive(tmp_path)
+    with pytest.raises(ValueError, match="all-A"):
+        cleanup.build_cleanup_plan(
+            tmp_path, [baseline, _baseline()], result_retention="platform", only_result=True
+        )
+
+
+def test_platform_retention_reads_historical_profiles_and_merged_target_records(tmp_path):
+    import hashlib
+
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    historical = _local_phase_m_baseline(tmp_path, "v1", "historical")
+    profile_source = _ordinary_result(tmp_path, "profile-source")
+    target_source = _ordinary_result(tmp_path, "target-source")
+    archive = _platform_archive(tmp_path)
+
+    def receipt(name, value):
+        path = archive / name
+        path.write_text(json.dumps(value))
+        return {"path": name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+
+    source = receipt("historical.json", historical)
+    source["profile"] = receipt("profile.json", {"source": "backtest/result/profile-source"})
+    target = receipt("target.json", {"result_dirs": ["backtest/result/target-source"]})
+    metadata_path = archive / "metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    metadata.update(
+        historical_baselines=[source],
+        training_target_comparison={
+            "refs": ["research/target-a", "research/target-b"],
+            "control_ref": "research/target-a", "archived_records": [target],
+        },
+    )
+    metadata_path.write_text(json.dumps(metadata))
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline], result_retention="platform", only_result=True
+    )
+    assert plan["errors"] == []
+    assert {profile_source, target_source} <= set(plan["keep_result_dirs"])
+
+    (archive / "profile.json").write_text("{}")
+    broken = cleanup.build_cleanup_plan(
+        tmp_path, [baseline], result_retention="platform", only_result=True
+    )
+    assert any("SHA256 mismatch" in message for message in broken["errors"])
+    assert broken["delete_result_dirs"] == []
+
+
+def test_result_only_apply_ignores_mlruns_targets_even_if_plan_contains_them(tmp_path):
+    result = _ordinary_result(tmp_path, "orphan")
+    mlruns = tmp_path / "mlruns/999"
+    mlruns.mkdir(parents=True)
+    cleanup.apply_cleanup({
+        "only_result": True, "errors": [], "result_root": result.parent,
+        "mlruns_root": mlruns.parent, "delete_result_dirs": [result],
+        "delete_mlruns_dirs": [mlruns],
+    }, apply=True)
+    assert not result.exists()
+    assert mlruns.is_dir()
+
+
+@pytest.mark.parametrize("breakage", ["outside", "sha256"])
+def test_platform_retention_validates_existing_runtime_prediction_binding(tmp_path, breakage):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    prediction = (tmp_path.parent / "outside-prediction.pkl" if breakage == "outside"
+                  else tmp_path / "backtest/result/prediction/signal.pkl")
+    prediction.parent.mkdir(parents=True, exist_ok=True)
+    prediction.write_bytes(b"prediction")
+    _ordinary_result(tmp_path, "analysis", source_pred=str(prediction), source_pred_sha256="0" * 64)
+    _platform_archive(tmp_path, recipe_session_metadata=["backtest/result/analysis/meta.json"])
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline], result_retention="platform", only_result=True
+    )
+
+    assert plan["errors"]
+    assert plan["delete_result_dirs"] == []
+
+
+def test_platform_retention_keeps_local_provenance_but_does_not_follow_old_workspace(tmp_path):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    session = _ordinary_result(tmp_path, "provenance-source")
+    legacy = str(tmp_path.parent / "qlib_exp/backtest/result/old-session/meta.json")
+    _platform_archive(tmp_path, provenance={
+        "local_report": {"path": "backtest/result/provenance-source/meta.json"},
+        "legacy_report": {"path": legacy},
+    })
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline], result_retention="platform", only_result=True
+    )
+
+    assert plan["errors"] == []
+    assert session in plan["keep_result_dirs"]
+    assert session not in plan["delete_result_dirs"]
+    assert any(legacy in warning for warning in plan["warnings"])
+
+
+@pytest.mark.parametrize("breakage", ["traversal", "symlink"])
+def test_platform_retention_rejects_unsafe_local_provenance(tmp_path, breakage):
+    baseline = _local_phase_m_baseline(tmp_path, "v2", "baseline")
+    session = _ordinary_result(tmp_path, "provenance-source")
+    artifact = session / "report.json"
+    if breakage == "symlink":
+        outside = tmp_path / "outside.json"
+        outside.write_text("{}")
+        artifact.symlink_to(outside)
+        raw = str(artifact)
+    else:
+        raw = str(session / "../../escaped.json")
+    _platform_archive(tmp_path, provenance={"report": {"path": raw}})
+
+    plan = cleanup.build_cleanup_plan(
+        tmp_path, [baseline], result_retention="platform", only_result=True
+    )
+
+    assert any("unsafe platform result" in error for error in plan["errors"])
+    assert plan["delete_result_dirs"] == []
+
+
 def test_current_full_period_phase_s_retains_one_formal_session():
     row = _phase_s_baseline_row(["old-a", "old-b", "old-c"])
     row.update(
@@ -1146,7 +1391,7 @@ def test_phase_m_v1_bt_missing_model_ref_blocks_deletion(tmp_path):
 
 
 def test_legacy_script_export_refuses_incomplete_retention(tmp_path, monkeypatch):
-    import plan_artifact_cleanup as legacy
+    import backtest.scripts.maintenance.plan_artifact_cleanup as legacy
 
     (tmp_path / "backtest/experiments").mkdir(parents=True)
     (tmp_path / "backtest/experiments/registry.jsonl").write_text(
@@ -1194,8 +1439,8 @@ def test_historical_versioned_model_keeps_its_original_baseline_ref(tmp_path):
 def _full_period_fixture(root, monkeypatch):
     import pandas as pd
     import yaml
-    import phase_s_prediction_validation as prediction_validation
-    from phase_s_protocol import sha256_file
+    import backtest.scripts.maintenance.phase_s_prediction_validation as prediction_validation
+    from backtest.scripts.maintenance.phase_s_protocol import sha256_file
 
     relative_config = "backtest/configs/b4-full.yaml"
     config_path = root / relative_config
@@ -1329,7 +1574,7 @@ def test_full_period_cleanup_binds_config_model_prediction_and_backtest(
 
 
 def test_retired_full_prediction_blocks_all_cleanup_instead_of_relaxing_its_gate(tmp_path, monkeypatch):
-    import phase_s_prediction_validation as prediction_validation
+    import backtest.scripts.maintenance.phase_s_prediction_validation as prediction_validation
 
     baseline = _complete_baseline(tmp_path)
     row, _ = _full_period_fixture(tmp_path, monkeypatch)

@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import strategy_neighborhood_protocol as protocol  # noqa: E402
+import backtest.scripts.maintenance.strategy_neighborhood_protocol as protocol  # noqa: E402
 
 
 def _success(candidate: dict, ir: float = 1.0) -> dict:

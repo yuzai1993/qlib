@@ -13,7 +13,7 @@ from qlib.data import D
 from qlib.data.dataset import DatasetH
 from qlib.data.dataset.handler import DataHandlerLP
 
-from backtest.scripts.eval_protocol import daily_ic
+from backtest.scripts.evaluate.eval_protocol import daily_ic
 
 VALID_SEGMENT = ("2020-01-13", "2021-07-15")
 TEST_SEGMENT = ("2021-07-16", "2026-07-16")

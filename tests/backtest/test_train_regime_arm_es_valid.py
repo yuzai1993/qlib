@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-from train_regime_arm import resolve_es_valid_source  # noqa: E402
+from backtest.scripts.train.train_regime_arm import resolve_es_valid_source  # noqa: E402
 
 
 def test_auto_head_metrics_use_eval_window():

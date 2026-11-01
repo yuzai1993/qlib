@@ -2,7 +2,7 @@
 
 import re
 
-from backtest.scripts.research_labels import strategy_display_version, strategy_reference_text
+from backtest.scripts.report.research_labels import strategy_display_version, strategy_reference_text
 
 
 def _available(source, owner):

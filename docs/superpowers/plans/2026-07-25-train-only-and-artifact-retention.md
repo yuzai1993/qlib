@@ -22,7 +22,7 @@
 ### Task 1: Train-only configuration contract
 
 **Files:**
-- Modify: `backtest/scripts/config_loader.py`
+- Modify: `backtest/scripts/maintenance/config_loader.py`
 - Modify: `tests/misc/test_backtest_config_loader.py`
 
 **Interfaces:**
@@ -37,7 +37,7 @@
 ### Task 2: Train-only execution
 
 **Files:**
-- Modify: `backtest/scripts/run_backtest.py`
+- Modify: `backtest/scripts/train/run_backtest.py`
 - Create: `tests/backtest/test_run_train_only.py`
 
 **Interfaces:**
@@ -52,8 +52,8 @@
 
 **Files:**
 - Modify: all tracked Phase M YAML under `backtest/configs/`
-- Modify: `backtest/scripts/generate_liquidity_configs.py`
-- Modify: `backtest/scripts/generate_liquidity_trim_configs.py`
+- Modify: `backtest/scripts/prepare/generate_liquidity_configs.py`
+- Modify: `backtest/scripts/prepare/generate_liquidity_trim_configs.py`
 - Modify: structural config tests under `tests/backtest/`
 
 **Interfaces:**
@@ -67,7 +67,7 @@
 ### Task 4: Registry-driven cleanup
 
 **Files:**
-- Create: `backtest/scripts/cleanup_experiment_artifacts.py`
+- Create: `backtest/scripts/maintenance/cleanup_experiment_artifacts.py`
 - Create: `tests/backtest/test_cleanup_experiment_artifacts.py`
 
 **Interfaces:**

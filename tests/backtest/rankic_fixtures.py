@@ -7,7 +7,7 @@ evidence. Keep this protocol fixture explicit so contract drift is still tested.
 
 from pathlib import Path
 
-from backtest.scripts.generate_b5_rankic_hyperparams import generate_configs
+from backtest.scripts.prepare.generate_b5_rankic_hyperparams import generate_configs
 
 
 def base_config() -> dict:

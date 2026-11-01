@@ -8,9 +8,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import analyze_holding_duration as holding  # noqa: E402
+import backtest.scripts.evaluate.analyze_holding_duration as holding  # noqa: E402
 
 
 def _scores() -> pd.Series:

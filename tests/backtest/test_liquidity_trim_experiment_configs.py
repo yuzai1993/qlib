@@ -13,7 +13,7 @@ ARMS = {
 
 
 def test_trim_generator_changes_only_mode_note_and_cutoff_for_each_seed(tmp_path, monkeypatch):
-    from backtest.scripts import generate_liquidity_trim_configs as generator
+    import backtest.scripts.prepare.generate_liquidity_trim_configs as generator
 
     source_root = tmp_path / "backtest/configs/source"
     output_root = tmp_path / "backtest/configs/generated"

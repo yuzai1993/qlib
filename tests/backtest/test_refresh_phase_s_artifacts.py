@@ -4,9 +4,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import refresh_phase_s_artifacts as refresh  # noqa: E402
+import backtest.scripts.maintenance.refresh_phase_s_artifacts as refresh  # noqa: E402
 
 
 def test_normalize_result_row_removes_wrong_yearly_ir_and_nulls_non_finite_metrics():

@@ -6,9 +6,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import build_experiment_report as report  # noqa: E402
+import backtest.scripts.report.build_experiment_report as report  # noqa: E402
 from bs4 import BeautifulSoup
 
 

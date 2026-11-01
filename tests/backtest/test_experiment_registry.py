@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backtest/scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-import experiment_registry as registry
+import backtest.scripts.register.experiment_registry as registry
 
 
 def rows():
@@ -279,10 +279,10 @@ def test_concurrent_appends_keep_every_event(tmp_path, monkeypatch):
 def test_independent_processes_append_without_losing_events(tmp_path):
     path = tmp_path / "registry.jsonl"
     registry.write_registry(path, [{"exp_id": "initial"}], indexed=True)
-    script_dir = Path(registry.__file__).parent
+    script_dir = Path(registry.__file__).resolve().parents[3]
     code = (
         "import sys; from pathlib import Path; sys.path.insert(0,sys.argv[2]); "
-        "from experiment_registry import append_registry; "
+        "from backtest.scripts.register.experiment_registry import append_registry; "
         "[append_registry(Path(sys.argv[1]), {'exp_id':sys.argv[3]+'-'+str(n)}) for n in range(8)]"
     )
     workers = [

@@ -21,7 +21,7 @@
 
 **Files:**
 - Modify: `tests/backtest/test_build_experiment_report.py`
-- Modify: `backtest/scripts/build_experiment_report.py`
+- Modify: `backtest/scripts/report/build_experiment_report.py`
 - Regenerate: `backtest/experiments/reports/report.html`
 
 **Interfaces:**

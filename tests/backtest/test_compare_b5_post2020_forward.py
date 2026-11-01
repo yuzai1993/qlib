@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from backtest.scripts import compare_b5_post2020_forward as compare
+import backtest.scripts.evaluate.compare_b5_post2020_forward as compare
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]

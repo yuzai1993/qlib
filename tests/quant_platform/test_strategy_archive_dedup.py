@@ -4,7 +4,7 @@ from pathlib import Path
 import hashlib
 
 from quant_platform.research import ResearchCatalog
-from backtest.scripts.research_layout import resolve_research_path
+from backtest.scripts.maintenance.research_layout import resolve_research_path
 
 
 ROOT = Path(__file__).resolve().parents[2]

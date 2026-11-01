@@ -6,9 +6,9 @@ from pathlib import Path
 import plotly.graph_objects as go
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import report_utils  # noqa: E402
+import backtest.scripts.report.report_utils as report_utils  # noqa: E402
 
 
 def test_save_plotly_htmls_writes_self_contained_hoverable_chart(tmp_path):

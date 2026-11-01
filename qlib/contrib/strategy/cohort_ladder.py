@@ -1,7 +1,7 @@
 """真阶梯（cohort ladder）组合簿记：按持有天数到期退出，而不是按打分排名。
 
 Phase M 主格 top-k × h 的评估年化 ``mean(p) × 238/h``（见
-``backtest/scripts/eval_ic_multi_pool.py``）恒等于这样一条组合的算术年化：k·h 个
+``backtest/scripts/evaluate/eval_ic_multi_pool.py``）恒等于这样一条组合的算术年化：k·h 个
 等额仓位、每日买入当日 top-k、每只持满 h 天无条件卖出。
 
 与 ``TopkDropoutStrategy`` 有两处根本区别，这也是 25 槽 TopkDropout 复刻不了主格的

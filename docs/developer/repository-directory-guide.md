@@ -31,6 +31,8 @@
 | `backtest/` | `features/` | **确认保留。**特征计算源码，整目录维持现状。 |
 | `backtest/` | `label_design/` | **确认保留。**训练标签与样本边界处理源码，整目录维持现状。 |
 | `backtest/` | `models/` | **本轮完成。**删除旧B1/B6研究baseline副本；保留当前模型依赖。其余3个旧实验模块待与配置、入口一起整理。 |
+| `backtest/` | `result/` | **完成。**保留平台实验所需22目录；删除6个旧CSI目录，约79.8 MiB。两份实盘切换审计迁到live_trading/logs。 |
+| `backtest/` | `scripts/` | **完成。**150个模块/入口按准备、训练、评估、报告、登记、维护分类；删除6个一次性入口，引用与测试同步。 |
 
 ## 先理解几组容易混淆的名字
 
@@ -74,7 +76,7 @@
 1. **数据输出是否重复：**`scripts/data_collector/` 约 3.37 GiB，是当前最大一项；但其中有实盘使用的 ST 名单。先分采集程序、原始数据、标准化数据和正式数据源，再谈迁移或删副本。
 2. **本地运行记录和修复副本：**`examples/mlruns/` 约 79 MiB，`logs/data/` 约 183 MiB；先核对保留价值、修复回退和实验引用。
    `examples/` 根下另有两份合计约 40.70 MiB 的本地 Notebook，单元格源码相同、保存输出不同，值得先确认输出价值再讨论合并。
-3. **阅读负担：**`backtest/scripts/` 有 152 份已跟踪文件，`docs/superpowers/` 有 102 份历史文档。这里更适合分类和补入口，不能期待省下很多磁盘空间。
+3. **阅读负担：**`backtest/scripts/` 已整理为六类150个模块/入口；`docs/superpowers/` 初始有102份历史文档，后续更适合按主题补入口，不能期待省下很多磁盘空间。
 4. **纯残留：**`examples/Users/` 是没有文件的旧路径套娃；各处 `__pycache__/` 和 `.pytest_cache/` 可重建。清理它们主要让目录更整齐，体积收益很小。
 5. **需要保留规则的地方：**`backtest/result/` 虽约 1.07 GiB，但保留当前/历史基线产物；根目录 `mlruns/` 的 7 组也都有明确用途。以 [实验规范](../../backtest/EXPERIMENT_STANDARD.md) 和清理器计划为准。
 
@@ -96,8 +98,8 @@
 | `backtest/features/` | 24.17 KiB | 额外特征的计算代码，也就是把价格、成交量、市场状态加工成模型输入的规则。<br>例：technical.py 定义布林带/动量/趋势特征；regime.py 将每日市场状态特征拼到股票样本。 | **确认保留。**2026-11-01用户确认整目录保留，维持现状。 |
 | `backtest/label_design/` | 14.99 KiB | 训练目标的定义和防止未来信息泄漏的代码，例如让模型预测未来若干天的收益。<br>例：horizons.py 的 cumulative_label(20) 生成20日收益表达式；dataset.py 切掉跨训练边界的标签样本。 | **确认保留。**2026-11-01用户确认整目录保留，维持现状。 |
 | `backtest/models/` | 源码约35 KiB | 本地研究模型的实现代码，负责训练、早停和预测。<br>例：regime_adapt.py 用于当前全A模型；rankic_early_stop.py 提供其依赖的早停逻辑。旧 baselines/ 两份模型及清单已删除，约3.35 MiB。 | **本轮完成。**当前模型依赖保留；3个旧实验模块暂留，建议与对应旧配置和生成器一起清理。逐文件说明见下文。<br>注意：加载已训练模型仍需要原类路径；删除权重副本不代表同名模型代码可以删除。 |
-| `backtest/result/` | 1.07 GiB | 训练、预测、回测每次运行生成的工作目录，包含模型原件、元数据、信号、日收益和临时图表等。<br>例：regimeadaptfast_m0h20_rankices_s42/；20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/。 | **清理器管理。**本轮仅缩减实验归档，没有删除本目录。纯全A dry-run 保留 24 个目录；额外提出的旧 CSI session 删除尚未执行，后续单独讨论。<br>注意：按完整五种子、版本化模型基线、当前BT依赖与正式回测保留；不能按文件夹日期或大小直接删。 |
-| `backtest/scripts/` | 3.08 MiB | 研究运行入口和工具：准备数据、训练评估、登记实验、生成报告、晋升基线、清理产物。<br>例：experiment_registry.py、research_layout.py、build_phase_m_v1_report.py、cleanup_experiment_artifacts.py。 | **保留。**有明显的可整理空间：可按准备/训练/评估/报告/登记/维护分类，再查重复入口；一次性工具任务结束后删除。 |
+| `backtest/result/` | 约1005 MiB | 当前平台实验需要的运行产物：v1–v4四组完整五种子训练、s5正式回测及其融合预测，共22目录。<br>例：regimeadaptfast_m0h20_rankices_s42/；20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/；phase_s_regime/。 | **完成，按平台档案管理。**删除6个无当前实验依赖的旧CSI目录；已有缺失的普通历史产物只记录，不补造。运行清理器须用`--result-retention platform --only-result`，保留元数据、历史Benchmark及现存模型/预测依赖；本轮mlruns未变。 |
+| `backtest/scripts/` | 150个模块/入口 | 正式工具实际归入prepare/、train/、evaluate/、report/、register/、maintenance/六类，源码导入和命令均指向分类后的真实位置。<br>例：train/train_regime_arm.py、evaluate/eval_ic_multi_pool.py、register/experiment_registry.py、maintenance/cleanup_experiment_artifacts.py。 | **完成。**删除6个确认已完成的一次性入口；两份兼容入口复用同一实现，其余历史工具按复用价值保留。用途、调用方法和重复检查见[scripts入口说明](../../backtest/scripts/README.md)。以后一次性工具仍须任务收尾删除。 |
 
 ### `backtest/models/` 逐文件评估
 
@@ -313,7 +315,7 @@ Qlib bin 则是“便于训练快速读取的格式”。三者可能内容重�
 
 ## 9. `mlruns/`
 
-数字编号不是无用目录。以下用途已从各目录 `meta.yaml` 的实验名称核对：5 组是 B6-M 的五个随机种子训练，另 2 组是正式回测记录。这里不涵盖独立的 `examples/mlruns/`。本轮仅缩减 experiments 归档，没有删除这里；纯全A清理器提出的旧运行目录候选需后续单独讨论。
+数字编号不是无用目录。以下用途已从各目录 `meta.yaml` 的实验名称核对：5 组是 B6-M 的五个随机种子训练，另 2 组是正式回测记录。这里不涵盖独立的 `examples/mlruns/`。本轮result清理显式使用`--only-result`，没有删除这里；mlruns保留策略仍需后续单独讨论。
 
 | 二级目录 | 内容大小 | 内容作用与示例 | 后续整理建议 |
 |---|---:|---|---|

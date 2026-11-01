@@ -10,9 +10,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import analyze_b2s_style_regime as regime  # noqa: E402
+import backtest.scripts.evaluate.analyze_b2s_style_regime as regime  # noqa: E402
 
 
 def _report(returns, bench, cost) -> pd.DataFrame:

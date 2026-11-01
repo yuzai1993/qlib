@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-from phase_s_protocol import load_frozen_model  # noqa: E402
+from backtest.scripts.maintenance.phase_s_protocol import load_frozen_model  # noqa: E402
 
 
 @pytest.mark.parametrize("model_ref", ["b1-m", "b6-m"])

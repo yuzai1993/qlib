@@ -8,9 +8,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-from universe_filter import (  # noqa: E402
+from backtest.scripts.evaluate.universe_filter import (
     DEFAULT_ST_DAILY_REL,
     build_keep_mask,
     default_universe_filter,

@@ -10,13 +10,13 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest/scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import finalize_strategy_neighborhood_full as finalizer  # noqa: E402
-import build_strategy_stability_report as stability_report  # noqa: E402
-import run_strategy_neighborhood_full as runner  # noqa: E402
-import strategy_neighborhood_protocol as neighborhood  # noqa: E402
-from phase_s_protocol import load_frozen_model  # noqa: E402
+import backtest.scripts.register.finalize_strategy_neighborhood_full as finalizer  # noqa: E402
+import backtest.scripts.report.build_strategy_stability_report as stability_report  # noqa: E402
+import backtest.scripts.evaluate.run_strategy_neighborhood_full as runner  # noqa: E402
+import backtest.scripts.maintenance.strategy_neighborhood_protocol as neighborhood  # noqa: E402
+from backtest.scripts.maintenance.phase_s_protocol import load_frozen_model  # noqa: E402
 
 
 def _write_json(path: Path, payload: dict) -> None:

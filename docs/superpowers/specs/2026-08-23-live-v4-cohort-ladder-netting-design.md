@@ -108,7 +108,7 @@ Git 跟踪目录。`RegimeSingleLGBMModel` 继承 `LGBModel`，pickle 后 `.pred
 时走多模型分支。handler 只构建一次，五个模型共享同一份特征帧，所以增量成本只是 5 次
 单日截面 predict。
 
-**合成**。复用 `backtest/scripts/ensemble_preds.py` 的 `blend_score_series`：各成员分数在
+**合成**。复用 `backtest/scripts/evaluate/ensemble_preds.py` 的 `blend_score_series`：各成员分数在
 当日截面上 z-score，再等权平均。该函数按 `datetime` 分组，对单日输入退化为「该日截面
 标准化后平均」，与研究口径在同一日上逐点相等，不引入前视。
 
@@ -135,7 +135,7 @@ handler:
 `ProcessInf` 无拟合状态，所以 `fit_*` 窗口不影响推理结果，保留只为与回测配置字段一致、
 便于 parity 逐项比对。`start_time: 2020-02-03` 给出六年以上回看，足够 Alpha158 的最长窗口。
 
-**过滤**。复用 `backtest/scripts/universe_filter.py` 的 `build_keep_mask`。该函数接受任意
+**过滤**。复用 `backtest/scripts/evaluate/universe_filter.py` 的 `build_keep_mask`。该函数接受任意
 `(datetime, instrument)` 两级索引，可以直接对 signal_date 的单日索引调用，一次拿齐四项：
 
 ```python

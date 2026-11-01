@@ -38,9 +38,9 @@
 
 **Files:**
 - Modify: `tests/backtest/test_run_strategy_stability.py`
-- Modify: `backtest/scripts/run_strategy_stability.py`
+- Modify: `backtest/scripts/evaluate/run_strategy_stability.py`
 - Modify: `tests/backtest/test_register_strategy_stability.py`
-- Modify: `backtest/scripts/register_strategy_stability.py`
+- Modify: `backtest/scripts/register/register_strategy_stability.py`
 
 **Interfaces:**
 - Produces: `select_resume_candidates(..., retry_invalid: bool = False)` and CLI `--retry-invalid`.

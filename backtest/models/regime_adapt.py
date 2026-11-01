@@ -26,7 +26,7 @@ from backtest.models.rankic_early_stop import (
     load_valid_dates,
     mean_daily_rank_ic,
 )
-from backtest.scripts.eval_ic_multi_pool import daily_head_panel, summarize_head_series
+from backtest.scripts.evaluate.eval_ic_multi_pool import daily_head_panel, summarize_head_series
 
 ES_METRICS = ("daily_rank_ic", "top5_h5_net_ann", "top3_h5_net_ann")
 HEAD_ES_METRICS = ("top5_h5_net_ann", "top3_h5_net_ann")

@@ -30,7 +30,7 @@
 ### Task 1: Rolling fold generation and parent-session runner
 
 **Files:**
-- Create: `backtest/scripts/run_rolling_retrain.py`
+- Create: `backtest/scripts/train/run_rolling_retrain.py`
 - Create: `tests/backtest/test_run_rolling_retrain.py`
 
 **Interfaces:**
@@ -80,7 +80,7 @@ Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest/test_run_roll
 ### Task 2: Canonical rolling multi-pool IC evaluation
 
 **Files:**
-- Modify: `backtest/scripts/eval_ic_multi_pool.py`
+- Modify: `backtest/scripts/evaluate/eval_ic_multi_pool.py`
 - Modify: `tests/backtest/test_eval_ic_multi_pool.py`
 
 **Interfaces:**
@@ -116,7 +116,7 @@ Run: `/opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest/test_eval_ic_
 ### Task 3: Rolling-aware cleanup retention
 
 **Files:**
-- Modify: `backtest/scripts/cleanup_experiment_artifacts.py`
+- Modify: `backtest/scripts/maintenance/cleanup_experiment_artifacts.py`
 - Modify: `tests/backtest/test_cleanup_experiment_artifacts.py`
 
 **Interfaces:**
@@ -166,7 +166,7 @@ Run the phase-M config tests and a focused Qlib expression load over a short his
 
 - [ ] **Step 3: Train all five seeds**
 
-Run each YAML through `backtest/scripts/run_backtest.py`; require exit code zero and capture all five session names.
+Run each YAML through `backtest/scripts/train/run_backtest.py`; require exit code zero and capture all five session names.
 
 - [ ] **Step 4: Evaluate all three pools**
 

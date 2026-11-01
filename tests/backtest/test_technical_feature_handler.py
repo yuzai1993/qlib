@@ -94,7 +94,7 @@ def test_eval_cli_bootstrap_can_import_project_feature_handler(tmp_path):
         Path(__file__).resolve().parents[2]
         / "backtest"
         / "scripts"
-        / "eval_ic_multi_pool.py"
+        / "evaluate/eval_ic_multi_pool.py"
     )
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)

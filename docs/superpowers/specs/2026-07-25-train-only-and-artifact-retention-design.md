@@ -26,7 +26,7 @@ data、segments 和 model；即使历史 YAML 仍带 strategy/backtest 字段，
 
 ## 产物保留
 
-新增 `backtest/scripts/cleanup_experiment_artifacts.py`，默认只输出计划，传
+新增 `backtest/scripts/maintenance/cleanup_experiment_artifacts.py`，默认只输出计划，传
 `--apply` 才删除。
 
 当前 baseline 取 registry 中最后一个 `direction=baseline` 且

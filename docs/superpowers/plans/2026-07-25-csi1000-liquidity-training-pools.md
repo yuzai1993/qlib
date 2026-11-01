@@ -34,7 +34,7 @@
 
 **Files:**
 - Create: `backtest/datasets/liquidity_segment.py`
-- Modify: `backtest/scripts/config_loader.py`
+- Modify: `backtest/scripts/maintenance/config_loader.py`
 - Test: `tests/backtest/test_sample_dataset.py`
 - Test: `tests/misc/test_backtest_config_loader.py`
 
@@ -48,8 +48,8 @@
 ### Task 3: Segment-aware IC evaluation and valid selection
 
 **Files:**
-- Modify: `backtest/scripts/eval_ic_multi_pool.py`
-- Create: `backtest/scripts/select_valid_model.py`
+- Modify: `backtest/scripts/evaluate/eval_ic_multi_pool.py`
+- Create: `backtest/scripts/train/select_valid_model.py`
 - Test: `tests/backtest/test_eval_ic_multi_pool.py`
 - Test: `tests/backtest/test_select_valid_model.py`
 

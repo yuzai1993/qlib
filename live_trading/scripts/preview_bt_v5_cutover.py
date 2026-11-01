@@ -19,7 +19,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
 
 def build_liquidation_inventory(scores, positions, cash, *, topk, risk_degree):
@@ -104,7 +104,7 @@ def main():
     from live_trading.modules.code_map import qmt_to_qlib
     from live_trading.modules.order_manager import OrderManager
     from qlib.contrib.strategy.topk_dropout import stable_rank_scores
-    from universe_filter import parse_universe_filter, filter_pred
+    from backtest.scripts.evaluate.universe_filter import parse_universe_filter, filter_pred
 
     manifest = json.loads(args.snapshot_manifest.read_text())
     snapshot = Path(manifest["snapshot"]["path"])

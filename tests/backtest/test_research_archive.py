@@ -3,9 +3,9 @@ import hashlib
 import json
 from pathlib import Path
 
-from backtest.scripts.experiment_registry import load_registry
-from backtest.scripts.experiment_archive import scan_experiment_archives
-from backtest.scripts.research_layout import resolve_research_path
+from backtest.scripts.register.experiment_registry import load_registry
+from backtest.scripts.maintenance.experiment_archive import scan_experiment_archives
+from backtest.scripts.maintenance.research_layout import resolve_research_path
 
 ROOT = Path(__file__).resolve().parents[2]
 ARCHIVE = ROOT / "backtest/experiments"

@@ -7,10 +7,10 @@ import pytest
 from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import build_strategy_stability_report as report  # noqa: E402
-import phase_s_protocol as protocol  # noqa: E402
+import backtest.scripts.report.build_strategy_stability_report as report  # noqa: E402
+import backtest.scripts.maintenance.phase_s_protocol as protocol  # noqa: E402
 
 
 def _row(model_ref: str):
@@ -128,7 +128,7 @@ def test_report_keeps_only_baseline_grid_and_baseline_yearly():
     baseline_rows = first_table.select("tbody tr")
     assert len(baseline_rows) == 2
     assert len(baseline_rows[0].select("td.num")) == len(baseline_rows[1].select("td.num"))
-    assert len(METRICS := __import__("build_strategy_stability_report", fromlist=["METRICS"]).METRICS) == len(
+    assert len(METRICS := __import__("backtest.scripts.report.build_strategy_stability_report", fromlist=["METRICS"]).METRICS) == len(
         baseline_rows[0].select("td.num")
     )
     assert [section.get("id") for section in soup.select("section")] == [

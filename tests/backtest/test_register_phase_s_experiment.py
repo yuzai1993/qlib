@@ -9,10 +9,10 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import phase_s_protocol as protocol  # noqa: E402
-import register_phase_s_experiment as register  # noqa: E402
+import backtest.scripts.maintenance.phase_s_protocol as protocol  # noqa: E402
+import backtest.scripts.register.register_phase_s_experiment as register  # noqa: E402
 
 
 def _prediction_manifest(model_ref: str, tmp_path: Path) -> dict:
@@ -289,8 +289,8 @@ def test_strategy_baseline_promotion_matches_cleanup_retention_schema():
 
 
 def test_strategy_baseline_promotion_is_accepted_by_cleanup_selector():
-    sys.path.insert(0, str(SCRIPTS))
-    import cleanup_experiment_artifacts as cleanup  # noqa: PLC0415
+    sys.path.insert(0, str(SCRIPTS.parents[1]))
+    import backtest.scripts.maintenance.cleanup_experiment_artifacts as cleanup  # noqa: PLC0415
 
     row = register.build_strategy_baseline_promotion(
         _completed_sweep_row(), baseline_ref="B2-S v1.0"

@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from backtest.scripts import compare_b5_post2020_forward as comparator
-from backtest.scripts import register_b5_post2020_forward as register
-from backtest.scripts.experiment_registry import load_registry, write_registry
+import backtest.scripts.evaluate.compare_b5_post2020_forward as comparator
+import backtest.scripts.register.register_b5_post2020_forward as register
+from backtest.scripts.register.experiment_registry import load_registry, write_registry
 
 
 SEEDS = [42, 1000, 2000, 3000, 4000]
@@ -37,11 +37,11 @@ GROUPS = {
 }
 
 
-@pytest.mark.parametrize("module_name", ["register_b5_post2020_forward", "register_b5_rankic_hyperparams"])
+@pytest.mark.parametrize("module_name", ["backtest.scripts.register.register_b5_post2020_forward", "backtest.scripts.register.register_b5_rankic_hyperparams"])
 def test_atomic_writer_resolves_destination_before_mkdir(tmp_path, monkeypatch, module_name):
     import importlib
 
-    module = importlib.import_module(f"backtest.scripts.{module_name}")
+    module = importlib.import_module(module_name)
     monkeypatch.setattr(module, "_RESEARCH_ROOT", tmp_path)
     old = "backtest/experiments/old/report.html"
     new = "backtest/experiments/models/example/reports/report.html"

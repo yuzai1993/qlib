@@ -4,9 +4,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import build_phase_m_v1_bt_report as report  # noqa: E402
+import backtest.scripts.report.build_phase_m_v1_bt_report as report  # noqa: E402
 
 
 def _ens(ann: float, sharpe: float, *, year_ann=0.1, d_ann=0.2, session="backtest/result/dummy"):

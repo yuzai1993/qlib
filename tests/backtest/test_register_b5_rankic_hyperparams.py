@@ -11,12 +11,12 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import build_experiment_report as report  # noqa: E402
-import cleanup_experiment_artifacts as cleanup  # noqa: E402
-import register_b5_rankic_hyperparams as register  # noqa: E402
-from experiment_registry import load_registry, write_registry  # noqa: E402
+import backtest.scripts.report.build_experiment_report as report  # noqa: E402
+import backtest.scripts.maintenance.cleanup_experiment_artifacts as cleanup  # noqa: E402
+import backtest.scripts.register.register_b5_rankic_hyperparams as register  # noqa: E402
+from backtest.scripts.register.experiment_registry import load_registry, write_registry  # noqa: E402
 from tests.backtest.rankic_fixtures import write_candidate_configs  # noqa: E402
 
 

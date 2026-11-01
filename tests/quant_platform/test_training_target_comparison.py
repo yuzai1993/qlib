@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from quant_platform.research import ResearchCatalog
-from backtest.scripts.research_layout import resolve_research_path
+from backtest.scripts.maintenance.research_layout import resolve_research_path
 from tests.quant_platform.test_directory_catalog import manifest
 from tests.quant_platform.test_research import catalog, model_doc, row
 

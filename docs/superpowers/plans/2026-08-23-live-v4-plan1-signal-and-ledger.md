@@ -23,8 +23,8 @@
 
 ## 前置事实（已在写计划时验证，实施时不必重复验证）
 
-- `backtest/` 与 `backtest/scripts/` **都没有** `__init__.py`。`from backtest.scripts.universe_filter import ...` 靠 PEP 420 命名空间包可用，但 `build_keep_mask` 内部是 `from eval_ic_multi_pool import ...` 这样的**裸模块导入**，所以必须把 `backtest/scripts` 目录本身插进 `sys.path`，否则运行时才会炸。
-- `build_keep_mask` 对单日索引调用是正确的：`recent_trading_mask` 内部用 `D.calendar` 向前扩 `window-1` 个交易日再滚动（`backtest/scripts/eval_ic_multi_pool.py:1229-1246`），`_listing_age_mask` 用日历位置差，`amount_mask` 只用当日。不会因为窗口只有一天就把整个宇宙判掉。
+- `backtest/` 与 `backtest/scripts/` **都没有** `__init__.py`。`from backtest.scripts.evaluate.universe_filter import ...` 靠 PEP 420 命名空间包可用，但 `build_keep_mask` 内部是 `from eval_ic_multi_pool import ...` 这样的**裸模块导入**，所以必须把 `backtest/scripts` 目录本身插进 `sys.path`，否则运行时才会炸。
+- `build_keep_mask` 对单日索引调用是正确的：`recent_trading_mask` 内部用 `D.calendar` 向前扩 `window-1` 个交易日再滚动（`backtest/scripts/evaluate/eval_ic_multi_pool.py:1229-1246`），`_listing_age_mask` 用日历位置差，`amount_mask` 只用当日。不会因为窗口只有一天就把整个宇宙判掉。
 - `SignalGenerator.predict` 返回的 Series 是**单层 instrument 索引**（`self._features.loc[target_ts]` 掉了 datetime 层）。而 `blend_score_series` 和 `build_keep_mask` 都要求两层 `(datetime, instrument)` MultiIndex。索引形状转换必须显式做。
 - 信号 schema **无需改动**即可支撑 bridge 侧抵销：`live_trading/modules/signal_schema.py:169-187` 已强制 BUY 的 `quantity == 0` 且 `target_value > 0`，SELL 的 `quantity > 0` 且 `target_value == 0`。spec 4.4 里 bridge 需要的 `V` 就是 BUY 的 `target_value`，`S` 就是 SELL 的 `quantity`，两者都已在批次里。
 - `LiveRecorder._conn()` 是 `@contextmanager`，正常退出 `commit()`、异常 `rollback()`（`fill_importer.py:172-189`）。所以「清表 + 重写」放在一个 `with self._conn() as conn:` 块里天然原子。
@@ -880,7 +880,7 @@ git commit -m "feat(live): persist cohort ladder layers in three dedicated table
 - Consumes: 无
 - Produces: `SignalGenerator.predict(target_date, allow_stale=False) -> pd.Series`（单层 instrument 索引，语义不变；配置含 `model.members` 时返回五成员合成分数）
 
-合成口径必须与研究一致：复用 `backtest/scripts/ensemble_preds.py` 的 `blend_score_series`——各成员分数在当日截面 z-score 后等权平均。该函数按 `datetime` 分组，对单日输入退化为「该日截面标准化后平均」，与研究口径在同一日上逐点相等，不引入前视。
+合成口径必须与研究一致：复用 `backtest/scripts/evaluate/ensemble_preds.py` 的 `blend_score_series`——各成员分数在当日截面 z-score 后等权平均。该函数按 `datetime` 分组，对单日输入退化为「该日截面标准化后平均」，与研究口径在同一日上逐点相等，不引入前视。
 
 注意 `_score_features` 现在返回单层 instrument 索引的 Series，而 `blend_score_series` 要求含 `datetime` 的 MultiIndex，所以要先套上单日的 datetime 层、合成后再摘掉。
 
@@ -1342,11 +1342,11 @@ Expected: FAIL，报 `ModuleNotFoundError: No module named 'live_trading.modules
 创建 `live_trading/modules/universe_gate.py`：
 
 ```python
-"""实盘选股宇宙过滤：与回测共用 backtest/scripts/universe_filter.py 的同一实现。
+"""实盘选股宇宙过滤：与回测共用 backtest/scripts/evaluate/universe_filter.py 的同一实现。
 
 ``build_keep_mask`` 内部是 ``from eval_ic_multi_pool import ...`` 这样的裸模块导入，
 所以必须把 backtest/scripts 目录本身插进 sys.path，仅靠命名空间包导入
-``backtest.scripts.universe_filter`` 会在运行时才炸。
+``backtest.scripts.evaluate.universe_filter`` 会在运行时才炸。
 
 单日调用是安全的：``recent_trading_mask`` 自己用 D.calendar 向前扩 window-1 个交易日
 再滚动，``_listing_age_mask`` 用日历位置差，``amount_mask`` 只用当日。

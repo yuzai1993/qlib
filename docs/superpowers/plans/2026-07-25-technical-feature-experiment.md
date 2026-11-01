@@ -17,7 +17,7 @@
 - Train pool is CSI1000 and seeds are exactly `[42, 1000, 2000, 3000, 4000]`.
 - Valid is `2020-01-13` through `2021-07-15`; test is `2021-07-16` through `2026-07-16`.
 - Test pools are exactly `csi300`, `csi500`, and `csi1000`.
-- Evaluation uses `backtest/scripts/eval_ic_multi_pool.py`.
+- Evaluation uses `backtest/scripts/evaluate/eval_ic_multi_pool.py`.
 - Test results must not change the pre-registered feature definitions.
 
 ---
@@ -63,7 +63,7 @@
 - Consumes: twenty YAML configs
 - Produces: five trained sessions and one three-pool evaluation JSON per variant
 
-- [ ] Run every YAML with `/opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config <path>`.
+- [ ] Run every YAML with `/opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config <path>`.
 - [ ] Confirm each session `metrics.json` reports `status: success` and capture exact session names.
 - [ ] Run `eval_ic_multi_pool.py` per variant with all five `session:seed` inputs and the three default pools.
 - [ ] Validate each evaluation JSON contains five seeds for every pool and the fixed test segment.

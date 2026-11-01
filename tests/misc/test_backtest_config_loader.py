@@ -10,9 +10,9 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import config_loader as cl  # noqa: E402
+import backtest.scripts.maintenance.config_loader as cl  # noqa: E402
 
 CONFIGS = ROOT / "backtest" / "configs"
 TRAINING_YAML = CONFIGS / "csi300_lgbm_train_start_2006.yaml"
@@ -31,7 +31,7 @@ def test_load_config_without_argument_requires_explicit_path():
 
 
 def test_run_backtest_requires_config(monkeypatch, capsys):
-    import run_backtest as rb
+    import backtest.scripts.train.run_backtest as rb
 
     monkeypatch.setattr(sys, "argv", ["run_backtest.py"])
     with pytest.raises(SystemExit) as exc:
@@ -104,7 +104,7 @@ def test_train_only_does_not_require_strategy_or_backtest():
 
 
 def test_tracked_parity_model_loads_without_session_or_mlruns(monkeypatch):
-    import run_backtest as rb
+    import backtest.scripts.train.run_backtest as rb
 
     raw = yaml.safe_load(TRAINING_YAML.read_text(encoding="utf-8"))
     live = yaml.safe_load(

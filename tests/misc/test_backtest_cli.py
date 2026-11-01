@@ -3,9 +3,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest" / "scripts"))
+sys.path.insert(0, str(ROOT))
 
-import run_backtest as rb  # noqa: E402
+import backtest.scripts.train.run_backtest as rb  # noqa: E402
 
 
 def test_failed_runs_produce_nonzero_exit_code():

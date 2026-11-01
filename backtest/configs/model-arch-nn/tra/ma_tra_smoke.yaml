@@ -1,5 +1,5 @@
 # EXPERIMENT_STANDARD v1.8 | exp: model-arch-nn/tra | baseline B5 v1.0 | seed 42
-# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config model-arch-nn/tra/ma_tra_smoke.yaml
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config model-arch-nn/tra/ma_tra_smoke.yaml
 run:
   mode: train_only
   note: ma_tra_smoke

@@ -672,7 +672,7 @@ git commit -m "feat: report A-share style regime history"
 - Create: `backtest/market_regime/pipeline.py`
 - Create: `backtest/scripts/analyze_a_share_style_regimes.py`
 - Create: `tests/backtest/test_market_regime_pipeline.py`
-- Modify: `backtest/scripts/build_experiment_report.py`
+- Modify: `backtest/scripts/report/build_experiment_report.py`
 - Modify: `tests/backtest/test_build_experiment_report.py`
 
 **Interfaces:**
@@ -738,7 +738,7 @@ Expected: PASS。
 - [ ] **Step 5: 提交流水线**
 
 ```bash
-git add backtest/market_regime/pipeline.py backtest/scripts/analyze_a_share_style_regimes.py tests/backtest/test_market_regime_pipeline.py backtest/scripts/build_experiment_report.py tests/backtest/test_build_experiment_report.py
+git add backtest/market_regime/pipeline.py backtest/scripts/analyze_a_share_style_regimes.py tests/backtest/test_market_regime_pipeline.py backtest/scripts/report/build_experiment_report.py tests/backtest/test_build_experiment_report.py
 git commit -m "feat: orchestrate frozen market regime diagnostic"
 ```
 
@@ -866,7 +866,7 @@ Run:
 
 ```bash
 cd tests && /opt/anaconda3/envs/qlib/bin/python -m pytest backtest/test_market_regime_*.py misc/test_market_regime_backfill.py backtest/test_build_experiment_report.py -q
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_experiment_report.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/report/build_experiment_report.py
 git diff --check
 ```
 

@@ -10,11 +10,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from backtest.scripts.generate_b5_rankic_hyperparams import (  # noqa: E402
-    SEEDS,
-    VARIANTS,
-    generate_configs,
-)
+from backtest.scripts.prepare.generate_b5_rankic_hyperparams import SEEDS, VARIANTS, generate_configs
 
 
 B5_TEMPLATE = (
@@ -116,7 +112,7 @@ def test_rendered_header_is_an_exact_runnable_command(tmp_path):
     lines = path.read_text(encoding="utf-8").splitlines()
     assert lines[:2] == [
         "# EXPERIMENT_STANDARD v1.8 | exp: model-hyperparam/rankic-es-base | seed 42",
-        "# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config model-hyperparam/rankic-es-base/mh_rankic_es_base_s42.yaml",
+        "# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config model-hyperparam/rankic-es-base/mh_rankic_es_base_s42.yaml",
     ]
 
 

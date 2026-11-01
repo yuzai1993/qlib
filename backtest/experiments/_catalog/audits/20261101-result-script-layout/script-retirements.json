@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "source_commit": "9b5f2347923292bb5e51e772e18aa7ebf4ef36e6",
+  "retired": [
+    {
+      "original_path": "backtest/scripts/archive_phase_m_v1_side_models.py",
+      "original_bytes": 1690,
+      "original_sha256": "bb21d37c1d31a773bb7e5c38700bd4e7e54b90acefec4bef0f133cdbe7bb2c71",
+      "retired_path": "backtest/scripts/maintenance/archive_phase_m_v1_side_models.py",
+      "reason": "已完成的历史模型归档补丁，当前版本归档与来源已正式维护。"
+    },
+    {
+      "original_path": "backtest/scripts/patch_official_rank_ic.py",
+      "original_bytes": 3586,
+      "original_sha256": "a99ba6e51ddfdb7745a945b9cbda7057da980a39c86be035d7643af18f59fe7e",
+      "retired_path": "backtest/scripts/maintenance/patch_official_rank_ic.py",
+      "reason": "已完成的官方RankIC补丁，四代Benchmark指标均已登记。"
+    },
+    {
+      "original_path": "backtest/scripts/run_patch_official_rank_ic.sh",
+      "original_bytes": 1389,
+      "original_sha256": "4f5f89dcacb9e6046d313513a439c98addede242ca4e455c5e44d04bb6af3ef9",
+      "retired_path": "backtest/scripts/maintenance/run_patch_official_rank_ic.sh",
+      "reason": "只执行同删RankIC补丁和固定晋升的旧包装入口。"
+    },
+    {
+      "original_path": "backtest/scripts/collect_h5f100_ablation.py",
+      "original_bytes": 3706,
+      "original_sha256": "a17513b9db7c2f293af9c9ddc453374bb41234fb7378da02cdeb0026cf1e407e",
+      "retired_path": "backtest/scripts/evaluate/collect_h5f100_ablation.py",
+      "reason": "固定H5/F100实验收集，结果已归当前参数组；通用指标函数保留。"
+    },
+    {
+      "original_path": "backtest/scripts/collect_top25_ladder_bt.py",
+      "original_bytes": 4479,
+      "original_sha256": "cc28e4c8a0245a7396408766db1024957dfe73811c5c10442fd3cad9cd987835",
+      "retired_path": "backtest/scripts/evaluate/collect_top25_ladder_bt.py",
+      "reason": "固定Top25/阶梯实验收集，结果已归当前档案；通用指标函数保留。"
+    },
+    {
+      "original_path": "backtest/scripts/diagnose_vol20_label.py",
+      "original_bytes": 1512,
+      "original_sha256": "212c9817b502fbfeba11540aa21035336e2c4eb9df212d94e9e9df6965d2cf5f",
+      "retired_path": "backtest/scripts/evaluate/diagnose_vol20_label.py",
+      "reason": "已完成的固定日期H40标签缩放终端探针，无当前实验或可复用入口依赖。"
+    }
+  ],
+  "logic_preserved": "通用指标/宇宙过滤/训练/登记模块均保留；不恢复或改写已登记历史指标。",
+  "reviewed_duplicates": [
+    {
+      "files": [
+        "plan_artifact_cleanup.py",
+        "cleanup_experiment_artifacts.py"
+      ],
+      "finding": "First is an explicit compatibility CLI delegating to the second; retain one implementation, optionally a thin old entry point until consumers migrate."
+    },
+    {
+      "files": [
+        "build_strategy_report.py",
+        "build_strategy_stability_report.py"
+      ],
+      "finding": "Old main already delegates to unified builder; historical build_html renderer remains tested. Consolidate only after preserving tested rendering semantics."
+    },
+    {
+      "files": [
+        "run_backtest.py",
+        "run_pred_backtest.py"
+      ],
+      "finding": "Workflow dispatcher versus implementation of pred-only backtests; internal dependency, not a disposable duplicate."
+    },
+    {
+      "files": [
+        "collect_h5f100_ablation.py",
+        "collect_top25_ladder_bt.py",
+        "run_regime_phase_s.py",
+        "strategy_stability_metrics.py"
+      ],
+      "finding": "Fixed collectors overlap generic regime collection/official metrics; favor generic metric functions and current catalog-driven parameter reports over the fixed collectors."
+    },
+    {
+      "files": [
+        "build_regime_head_report.py",
+        "build_regime_m0_label_report.py",
+        "build_regime_phase_m_detail_report.py",
+        "report_utils.py"
+      ],
+      "finding": "Repeated format/grid/year-table helpers; can centralize display helpers but must not merge distinct original evaluation protocols or recompute historical values."
+    },
+    {
+      "files": [
+        "eval_loss_design_batch.sh",
+        "eval_model_arch_batch.sh",
+        "eval_tra_batch.sh",
+        "resume_after_reboot.sh",
+        "run_loss_design_batch.sh",
+        "run_m0_h20_ensemble_reeval.sh",
+        "run_m0_h20_rankices.sh",
+        "run_m0_h20_rankices_densemble.sh",
+        "run_m0_h20_rankices_densemble_s42.sh",
+        "run_m0_h20_st_daily_reeval.sh",
+        "run_m0_h20_t3h5es_densemble.sh",
+        "run_m0_h20_t3h5es_densemble_s42.sh",
+        "run_m0_h20_t5h5es.sh",
+        "run_m0_h20es_densemble_s42.sh",
+        "run_m0_label_eval.sh",
+        "run_m0_label_k123_h2345.sh",
+        "run_m0_label_reeval.sh",
+        "run_m0_t3h5es_labels.sh",
+        "run_model_arch_batch.sh",
+        "run_patch_official_rank_ic.sh",
+        "run_regime_ablation.sh",
+        "run_regime_densemble.sh",
+        "run_regime_eval_queue.sh",
+        "run_regime_train_queue.sh",
+        "run_tra_batch.sh",
+        "run_v4_ladder_k3h5.sh",
+        "run_v4_ladder_k3h5_e20260830.sh",
+        "run_v4_ladder_k3h5f100.sh",
+        "run_v4_ladder_k3h5f100r.sh",
+        "run_v4_topk_f100_grid.sh"
+      ],
+      "finding": "30 shell files mainly repeat train/evaluate/register/report chains with fixed seeds/arms/paths. Prefer metadata-backed recipes plus reusable Python CLIs; many still cd into the removed qlib_exp checkout."
+    }
+  ],
+  "pickle_compatibility": {
+    "trained_models_checked": 37,
+    "backtest_scripts_module_refs": {},
+    "errors": [],
+    "method": "Full pickletools opcode walk only, no pickle loading or model execution; primary models still depend on backtest.models classes, whose imports must be rewritten to canonical script modules."
+  }
+}

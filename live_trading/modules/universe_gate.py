@@ -1,8 +1,6 @@
-"""实盘选股宇宙过滤：与回测共用 backtest/scripts/universe_filter.py 的同一实现。
+"""实盘选股宇宙过滤：与回测共用 backtest/scripts/evaluate/universe_filter.py 的同一实现。
 
-``build_keep_mask`` 内部是 ``from eval_ic_multi_pool import ...`` 这样的裸模块导入，
-所以必须把 backtest/scripts 目录本身插进 sys.path，仅靠命名空间包导入
-``backtest.scripts.universe_filter`` 会在运行时才炸。
+通过明确的Python包路径导入评估模块，实盘与研究共用同一份过滤实现。
 
 单日调用是安全的：``recent_trading_mask`` 自己用 D.calendar 向前扩 window-1 个交易日
 再滚动，``_listing_age_mask`` 用日历位置差，``amount_mask`` 只用当日。
@@ -11,20 +9,13 @@
 from __future__ import annotations
 
 import logging
-import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
-_BACKTEST_SCRIPTS = Path(__file__).resolve().parents[2] / "backtest" / "scripts"
-if str(_BACKTEST_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(_BACKTEST_SCRIPTS))
-from universe_filter import (  # noqa: E402
-    build_keep_mask,
-    parse_universe_filter,
-)
+from backtest.scripts.evaluate.universe_filter import build_keep_mask, parse_universe_filter
 
 logger = logging.getLogger("live_trading.universe")
 

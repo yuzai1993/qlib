@@ -6,10 +6,10 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import build_regime_m0h20_top5d1_report as report  # noqa: E402
-from ensemble_preds import ensemble_preds  # noqa: E402
+import backtest.scripts.report.build_regime_m0h20_top5d1_report as report  # noqa: E402
+from backtest.scripts.evaluate.ensemble_preds import ensemble_preds  # noqa: E402
 
 
 def _seed_rec(ann: float, sharpe: float, year_ann: float, year: str = "2021") -> dict:

@@ -8,11 +8,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest/scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import phase_s_protocol as protocol  # noqa: E402
-import run_strategy_stability as stability  # noqa: E402
-from strategy_stability_metrics import IncompletePortfolioError  # noqa: E402
+import backtest.scripts.maintenance.phase_s_protocol as protocol  # noqa: E402
+import backtest.scripts.evaluate.run_strategy_stability as stability  # noqa: E402
+from backtest.scripts.evaluate.strategy_stability_metrics import IncompletePortfolioError  # noqa: E402
 
 BASE_CONFIG = ROOT / "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml"
 

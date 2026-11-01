@@ -57,7 +57,7 @@
 - 成功实验包含五个训练 session、三个统一 IC JSON、五种子均值与标准差。
 - 失败实验保留错误与诊断证据，不伪造空指标。
 - 两个实验均追加至 `backtest/experiments/registry.jsonl`。
-- 运行 `backtest/scripts/build_experiment_report.py` 重建 HTML。
+- 运行 `backtest/scripts/report/build_experiment_report.py` 重建 HTML。
 - 最终报告明确区分：
   - 年代效应；
   - 截面/股票池效应；

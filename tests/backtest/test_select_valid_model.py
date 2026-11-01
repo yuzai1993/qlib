@@ -6,7 +6,7 @@ import pytest
 
 
 def _selector():
-    return importlib.import_module("backtest.scripts.select_valid_model")
+    return importlib.import_module("backtest.scripts.train.select_valid_model")
 
 
 def _valid_result():

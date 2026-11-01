@@ -1,5 +1,5 @@
 # EXPERIMENT_STANDARD v1.7 | exp: loss-design/cs-rank-norm | seed 4000
-# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config loss-design/cs-rank-norm/ls_rank_norm_s4000.yaml
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config loss-design/cs-rank-norm/ls_rank_norm_s4000.yaml
 run:
   mode: train_only
   note: ls_rank_norm_s4000

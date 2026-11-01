@@ -16,7 +16,7 @@ from backtest.label_design.horizons import (  # noqa: E402
     select_horizon_anchors,
     survival_weighted_label,
 )
-from backtest.scripts.freeze_label_horizon_manifest import build_manifest  # noqa: E402
+from backtest.scripts.prepare.freeze_label_horizon_manifest import build_manifest  # noqa: E402
 
 
 def test_cumulative_label_uses_next_close_as_entry():

@@ -9,11 +9,15 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from backtest.scripts.experiment_archive import (
-    MAX_METADATA_BYTES, _load_object_with_revision, _safe_path, _validate_metadata,
-    experiment_parts, scan_experiment_archives,
+from backtest.scripts.maintenance.experiment_archive import (
+    MAX_METADATA_BYTES,
+    _load_object_with_revision,
+    _safe_path,
+    _validate_metadata,
+    experiment_parts,
+    scan_experiment_archives,
 )
-from backtest.scripts.experiment_registry import _atomic_write, _registry_lock
+from backtest.scripts.register.experiment_registry import _atomic_write, _registry_lock
 from .analyses import ConflictError
 
 

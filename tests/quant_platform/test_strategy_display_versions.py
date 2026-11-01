@@ -43,7 +43,7 @@ def test_group_baseline_and_core_rows_gain_display_versions_without_rewriting_th
     ('model-v2', 'strategy', 'all_a', 'model-v2'), ('', 'strategy', 'all_a', ''),
 ])
 def test_shared_strategy_label_only_converts_declared_whole_all_a_versions(value, kind, track, expected):
-    from backtest.scripts.research_labels import strategy_display_version
+    from backtest.scripts.report.research_labels import strategy_display_version
     assert strategy_display_version(value, kind=kind, track=track) == expected
 
 
@@ -82,5 +82,5 @@ def test_display_names_convert_explicit_strategy_labels_and_keep_raw_text(tmp_pa
     ('s5对应v2模型', 'strategy', 'all_a', 's5对应v2模型'),
 ])
 def test_shared_strategy_reference_text_never_relabels_bare_model_versions(value, kind, track, expected):
-    from backtest.scripts.research_labels import strategy_reference_text
+    from backtest.scripts.report.research_labels import strategy_reference_text
     assert strategy_reference_text(value, kind=kind, track=track) == expected

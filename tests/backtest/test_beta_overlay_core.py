@@ -8,9 +8,9 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-from beta_overlay_core import (  # noqa: E402
+from backtest.scripts.evaluate.beta_overlay_core import (
     apply_beta_overlay,
     discrete_lots,
     overlay_from_gap,
@@ -18,7 +18,7 @@ from beta_overlay_core import (  # noqa: E402
     rolling_beta_lagged,
     slice_im_window,
 )
-from strategy_stability_metrics import summarize_period  # noqa: E402
+from backtest.scripts.evaluate.strategy_stability_metrics import summarize_period  # noqa: E402
 
 
 def test_rolling_beta_is_lagged_one_day():

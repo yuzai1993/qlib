@@ -6,7 +6,7 @@ import hashlib
 from datetime import datetime, timezone
 import pytest
 
-from backtest.scripts.experiment_registry import V2_SCHEMA, _index, _json_bytes
+from backtest.scripts.register.experiment_registry import V2_SCHEMA, _index, _json_bytes
 from quant_platform.research import ResearchCatalog
 
 

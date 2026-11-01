@@ -8,9 +8,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import register_b5_followups as register  # noqa: E402
+import backtest.scripts.register.register_b5_followups as register  # noqa: E402
 
 
 def test_upsert_registry_row_appends_then_replaces_without_duplicate(tmp_path):

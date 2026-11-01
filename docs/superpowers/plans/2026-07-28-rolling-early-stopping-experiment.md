@@ -22,7 +22,7 @@ pytest.
 
 **Files:**
 
-- Modify: `backtest/scripts/eval_ic_multi_pool.py`
+- Modify: `backtest/scripts/evaluate/eval_ic_multi_pool.py`
 - Modify: `tests/backtest/test_eval_ic_multi_pool.py`
 
 1. Write a failing unit test for extracting three finite positive
@@ -39,7 +39,7 @@ pytest.
 
 - Create:
   `backtest/configs/train-schedule/expanding-annual-es5/ts_expanding_annual_es5_s{seed}.yaml`
-- Modify: `backtest/scripts/register_b5_followups.py`
+- Modify: `backtest/scripts/register/register_b5_followups.py`
 - Modify: `tests/backtest/test_register_b5_followups.py`
 
 1. Add failing tests for the pending ES5 row and direct-control comparison.

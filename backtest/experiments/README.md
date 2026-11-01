@@ -199,7 +199,7 @@ models/model-structure/new-model/
 
 ```python
 from pathlib import Path
-from backtest.scripts.experiment_registry import load_registry, append_registry
+from backtest.scripts.register.experiment_registry import load_registry, append_registry
 
 registry = Path("backtest/experiments/registry.jsonl")
 rows = load_registry(registry)  # 完整逻辑事件，不含索引传输字段

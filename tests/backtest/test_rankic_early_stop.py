@@ -13,7 +13,7 @@ from backtest.models.rankic_early_stop import (
     fixed_next_day_valid_frame,
     mean_daily_rank_ic,
 )
-from backtest.scripts.eval_protocol import daily_ic
+from backtest.scripts.evaluate.eval_protocol import daily_ic
 
 
 def test_mean_daily_rank_ic_is_equal_weighted_by_day():

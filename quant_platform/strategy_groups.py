@@ -8,7 +8,7 @@ import json
 import re
 import yaml
 
-from backtest.scripts.experiment_archive import _safe_path
+from backtest.scripts.maintenance.experiment_archive import _safe_path
 
 
 def authenticated_group_protocol(root, record: dict, manifest: dict, axes: list[str], source_path) -> dict | None:

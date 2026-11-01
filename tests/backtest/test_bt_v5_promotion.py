@@ -11,8 +11,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from backtest.scripts.strategy_stability_metrics import summarize_stability  # noqa: E402
-from backtest.scripts.experiment_registry import append_registry, load_registry, write_registry  # noqa: E402
+from backtest.scripts.evaluate.strategy_stability_metrics import summarize_stability  # noqa: E402
+from backtest.scripts.register.experiment_registry import append_registry, load_registry, write_registry  # noqa: E402
 
 
 def _write_json(path, data):
@@ -72,7 +72,7 @@ def promotion_fixture(tmp_path, request):
 
 
 def test_promotion_preserves_history_and_model_baseline_and_is_idempotent(promotion_fixture):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     repo, source, before = promotion_fixture
     source_hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in source.rglob("*") if p.is_file()}
     result = promote.promote(repo_root=repo, source_root=source)
@@ -97,7 +97,7 @@ def test_promotion_preserves_history_and_model_baseline_and_is_idempotent(promot
 
 
 def test_promotion_writes_to_mapped_archive_without_recreating_old_directory(promotion_fixture):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     repo, source, _ = promotion_fixture
     old_directory = "backtest/experiments/phase_m_v1_bt_metrics"
     new_directory = "backtest/experiments/strategies/regime-adapt/m0h20es-all-top5d1f100-bt/metrics"
@@ -112,7 +112,7 @@ def test_promotion_writes_to_mapped_archive_without_recreating_old_directory(pro
 
 
 def test_fingerprint_resolves_relocated_source_for_both_content_and_file_size(tmp_path, monkeypatch):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     monkeypatch.setattr(promote, "_RESEARCH_ROOT", tmp_path)
     old = tmp_path / promote.LABELS
     actual = tmp_path / "backtest/experiments/strategies/topk-dropout/bt-v5/configs/labels.csv"
@@ -130,7 +130,7 @@ def test_fingerprint_resolves_relocated_source_for_both_content_and_file_size(tm
 
 
 def test_promotion_reads_regime_labels_through_category_directory_alias(promotion_fixture):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     repo, source, _ = promotion_fixture
     old = repo / promote.LABELS
     old_archive = old.parent.parent
@@ -152,7 +152,7 @@ def test_promotion_reads_regime_labels_through_category_directory_alias(promotio
 
 @pytest.mark.parametrize("change", ["prediction_hash", "cost_basis", "metrics"])
 def test_promotion_rejects_mismatched_provenance_before_writing(promotion_fixture, change):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     repo, source, _ = promotion_fixture
     if change == "prediction_hash":
         (source / "backtest/result/ensemble.pkl").write_bytes(b"changed")
@@ -174,7 +174,7 @@ def test_promotion_rejects_mismatched_provenance_before_writing(promotion_fixtur
 
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
 def test_promotion_rejects_nonfinite_history_before_writing(promotion_fixture, invalid):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     repo, source, _ = promotion_fixture
     registry = repo / "backtest/experiments/registry.jsonl"
     rows = load_registry(registry)
@@ -189,7 +189,7 @@ def test_promotion_rejects_nonfinite_history_before_writing(promotion_fixture, i
 @pytest.mark.parametrize("flag", ["only_tradable", "forbid_all_trade_at_limit"])
 @pytest.mark.parametrize("change", ["enabled", "missing"])
 def test_promotion_rejects_changed_execution_flags_before_writing(promotion_fixture, flag, change):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     repo, source, _ = promotion_fixture
     meta_path = source / "backtest/result/candidate/meta.json"
     meta = json.loads(meta_path.read_text())
@@ -205,8 +205,8 @@ def test_promotion_rejects_changed_execution_flags_before_writing(promotion_fixt
 
 
 def test_portable_catalog_works_without_original_artifacts(promotion_fixture, monkeypatch):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
-    from backtest.scripts import build_phase_m_v1_bt_report as report
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
+    import backtest.scripts.report.build_phase_m_v1_bt_report as report
 
     repo, source, _ = promotion_fixture
     promote.promote(repo_root=repo, source_root=source)
@@ -226,7 +226,7 @@ def test_portable_catalog_works_without_original_artifacts(promotion_fixture, mo
 
 
 def test_promotion_preserves_unrelated_legacy_registry_duplicates(promotion_fixture):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
     repo, source, before = promotion_fixture
     registry = repo / "backtest/experiments/registry.jsonl"
     append_registry(registry, before[0])
@@ -236,8 +236,8 @@ def test_promotion_preserves_unrelated_legacy_registry_duplicates(promotion_fixt
 
 
 def test_extended_diagnostic_discloses_days_without_canonical_regime_labels(promotion_fixture):
-    promote = importlib.import_module("backtest.scripts.promote_bt_v5_top5d1f100")
-    from backtest.scripts.strategy_stability_metrics import load_regime_labels
+    promote = importlib.import_module("backtest.scripts.register.promote_bt_v5_top5d1f100")
+    from backtest.scripts.evaluate.strategy_stability_metrics import load_regime_labels
 
     repo, source, rows = promotion_fixture
     csv = source / "backtest/result/candidate/run_01/report_normal.csv"

@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import run_regime_phase_s as rps  # noqa: E402
+import backtest.scripts.evaluate.run_regime_phase_s as rps  # noqa: E402
 
 
 def test_v4_arm_points_at_rankices_sessions():

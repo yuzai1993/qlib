@@ -26,7 +26,7 @@
 
 **Files:**
 - Modify: `backtest/EXPERIMENT_STANDARD.md`
-- Create: `backtest/scripts/phase_s_protocol.py`
+- Create: `backtest/scripts/maintenance/phase_s_protocol.py`
 - Create: `tests/backtest/test_phase_s_protocol.py`
 
 **Interfaces:**
@@ -135,8 +135,8 @@ Commit: `feat(backtest): define single-artifact Phase S protocol`
 ### Task 2: Add Phase S execution diagnostics without duplicating predictions
 
 **Files:**
-- Modify: `backtest/scripts/run_backtest.py`
-- Modify: `backtest/scripts/run_pred_backtest.py`
+- Modify: `backtest/scripts/train/run_backtest.py`
+- Modify: `backtest/scripts/evaluate/run_pred_backtest.py`
 - Create: `tests/backtest/test_phase_s_metrics.py`
 
 **Interfaces:**
@@ -179,7 +179,7 @@ Commit: `feat(backtest): record Phase S turnover and immutable predictions`
 ### Task 3: Generate and validate frozen predictions
 
 **Files:**
-- Create: `backtest/scripts/generate_phase_s_predictions.py`
+- Create: `backtest/scripts/prepare/generate_phase_s_predictions.py`
 - Create: `tests/backtest/test_generate_phase_s_predictions.py`
 - Create at runtime: `backtest/experiments/strategy/20260801_b1_b6/prediction_manifest.json`
 - Create at runtime, ignored: `backtest/experiments/strategy/20260801_b1_b6/predictions/**/*.pkl`
@@ -246,7 +246,7 @@ Commit: `feat(backtest): freeze Phase S prediction bundles`
 ### Task 4: Make strategy sweep model-aware and valid-only
 
 **Files:**
-- Modify: `backtest/scripts/run_strategy_sweep.py`
+- Modify: `backtest/scripts/evaluate/run_strategy_sweep.py`
 - Create: `tests/backtest/test_run_strategy_sweep.py`
 - Create at runtime: `backtest/configs/strategy-sweep/b1-m/*.yaml`
 - Create at runtime: `backtest/configs/strategy-sweep/b6-m/*.yaml`
@@ -296,11 +296,11 @@ Commit: `feat(backtest): run model-aware valid strategy sweeps`
 ### Task 5: Preregister and render Phase S results
 
 **Files:**
-- Create: `backtest/scripts/register_phase_s_experiment.py`
-- Create: `backtest/scripts/build_strategy_report.py`
+- Create: `backtest/scripts/register/register_phase_s_experiment.py`
+- Create: `backtest/scripts/report/build_strategy_report.py`
 - Create: `tests/backtest/test_register_phase_s_experiment.py`
 - Create: `tests/backtest/test_build_strategy_report.py`
-- Modify: `backtest/scripts/build_experiment_report.py`
+- Modify: `backtest/scripts/report/build_experiment_report.py`
 
 **Interfaces:**
 - Produces/updates exactly two registry rows: `strategy-sweep/b1-m` and `strategy-sweep/b6-m`.
@@ -334,7 +334,7 @@ Commit: `feat(backtest): register and report Phase S experiments`
 ### Task 6: Add independent Phase S retention
 
 **Files:**
-- Modify: `backtest/scripts/cleanup_experiment_artifacts.py`
+- Modify: `backtest/scripts/maintenance/cleanup_experiment_artifacts.py`
 - Modify: `tests/backtest/test_cleanup_experiment_artifacts.py`
 
 **Interfaces:**
@@ -438,8 +438,8 @@ For each model, run baseline and winner once on CSI1000/CSI300/CSI500 with the c
 Run:
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_strategy_report.py
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_experiment_report.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/report/build_strategy_report.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/report/build_experiment_report.py
 ```
 
 - [ ] **Step 7: Dry-run and apply cleanup**
@@ -447,8 +447,8 @@ Run:
 Run:
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/cleanup_experiment_artifacts.py
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/cleanup_experiment_artifacts.py --apply
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/cleanup_experiment_artifacts.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/cleanup_experiment_artifacts.py --apply
 ```
 
 Inspect the dry-run plan before apply; abort if it includes retained baseline/winner sessions or `backtest/models/baselines/`.

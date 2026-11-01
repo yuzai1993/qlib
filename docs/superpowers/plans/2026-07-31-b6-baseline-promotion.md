@@ -22,8 +22,8 @@
 ### Task 1: Correct pre-merge registry semantics
 
 **Files:**
-- Modify: `backtest/scripts/register_b5_post2020_forward.py`
-- Modify: `backtest/scripts/register_b5_rankic_hyperparams.py`
+- Modify: `backtest/scripts/register/register_b5_post2020_forward.py`
+- Modify: `backtest/scripts/register/register_b5_rankic_hyperparams.py`
 - Modify: `tests/backtest/test_register_b5_post2020_forward.py`
 - Modify: `tests/backtest/test_register_b5_rankic_hyperparams.py`
 - Modify: `backtest/experiments/registry.jsonl`

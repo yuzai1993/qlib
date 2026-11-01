@@ -1,0 +1,789 @@
+{
+  "schema_version": 1,
+  "source_commit": "9b5f2347923292bb5e51e772e18aa7ebf4ef36e6",
+  "moves": [
+    {
+      "from": "backtest/scripts/analyze_b2s_style_regime.py",
+      "to": "backtest/scripts/evaluate/analyze_b2s_style_regime.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/analyze_holding_duration.py",
+      "to": "backtest/scripts/evaluate/analyze_holding_duration.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/analyze_score_style_exposure.py",
+      "to": "backtest/scripts/evaluate/analyze_score_style_exposure.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/archive_phase_m_v1_side_models.py",
+      "to": "backtest/scripts/maintenance/archive_phase_m_v1_side_models.py",
+      "status": "retired"
+    },
+    {
+      "from": "backtest/scripts/baseline_references.py",
+      "to": "backtest/scripts/maintenance/baseline_references.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/beta_overlay_core.py",
+      "to": "backtest/scripts/evaluate/beta_overlay_core.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_equal_weight_benchmark.py",
+      "to": "backtest/scripts/prepare/build_equal_weight_benchmark.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_experiment_report.py",
+      "to": "backtest/scripts/report/build_experiment_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_im_continuous.py",
+      "to": "backtest/scripts/prepare/build_im_continuous.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_phase_m_v1_bt_report.py",
+      "to": "backtest/scripts/report/build_phase_m_v1_bt_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_phase_m_v1_report.py",
+      "to": "backtest/scripts/report/build_phase_m_v1_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_alt_labels.py",
+      "to": "backtest/scripts/prepare/build_regime_alt_labels.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_day_weights.py",
+      "to": "backtest/scripts/prepare/build_regime_day_weights.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_features.py",
+      "to": "backtest/scripts/prepare/build_regime_features.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_head_report.py",
+      "to": "backtest/scripts/report/build_regime_head_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_m0_label_report.py",
+      "to": "backtest/scripts/report/build_regime_m0_label_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_m0h20_top5d1_report.py",
+      "to": "backtest/scripts/report/build_regime_m0h20_top5d1_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_phase_m_detail_report.py",
+      "to": "backtest/scripts/report/build_regime_phase_m_detail_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_phase_s_report.py",
+      "to": "backtest/scripts/report/build_regime_phase_s_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_regime_stage1_report.py",
+      "to": "backtest/scripts/report/build_regime_stage1_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_strategy_group_reports.py",
+      "to": "backtest/scripts/report/build_strategy_group_reports.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_strategy_report.py",
+      "to": "backtest/scripts/report/build_strategy_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/build_strategy_stability_report.py",
+      "to": "backtest/scripts/report/build_strategy_stability_report.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/cleanup_experiment_artifacts.py",
+      "to": "backtest/scripts/maintenance/cleanup_experiment_artifacts.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/collect_h5f100_ablation.py",
+      "to": "backtest/scripts/evaluate/collect_h5f100_ablation.py",
+      "status": "retired"
+    },
+    {
+      "from": "backtest/scripts/collect_top25_ladder_bt.py",
+      "to": "backtest/scripts/evaluate/collect_top25_ladder_bt.py",
+      "status": "retired"
+    },
+    {
+      "from": "backtest/scripts/combine_phase_s_test_results.py",
+      "to": "backtest/scripts/evaluate/combine_phase_s_test_results.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/compare_b5_post2020_forward.py",
+      "to": "backtest/scripts/evaluate/compare_b5_post2020_forward.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/compute_style_premiums.py",
+      "to": "backtest/scripts/prepare/compute_style_premiums.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/compute_tra_purge_dates.py",
+      "to": "backtest/scripts/prepare/compute_tra_purge_dates.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/config_loader.py",
+      "to": "backtest/scripts/maintenance/config_loader.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_delist_risk.py",
+      "to": "backtest/scripts/evaluate/diag_delist_risk.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_entry_rank.py",
+      "to": "backtest/scripts/evaluate/diag_entry_rank.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_eval_2026_replication.py",
+      "to": "backtest/scripts/evaluate/diag_eval_2026_replication.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_eval_bt_gap.py",
+      "to": "backtest/scripts/evaluate/diag_eval_bt_gap.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_eval_edge_days.py",
+      "to": "backtest/scripts/evaluate/diag_eval_edge_days.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_eval_holding_span.py",
+      "to": "backtest/scripts/evaluate/diag_eval_holding_span.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_eval_window_edge.py",
+      "to": "backtest/scripts/evaluate/diag_eval_window_edge.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_head_k_ladder.py",
+      "to": "backtest/scripts/evaluate/diag_head_k_ladder.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_low_price_exposure.py",
+      "to": "backtest/scripts/evaluate/diag_low_price_exposure.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_phase_s_attrib.py",
+      "to": "backtest/scripts/evaluate/diag_phase_s_attrib.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_phase_s_freeze.py",
+      "to": "backtest/scripts/evaluate/diag_phase_s_freeze.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_phasem_label_censoring.py",
+      "to": "backtest/scripts/evaluate/diag_phasem_label_censoring.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_sell_rule_gap.py",
+      "to": "backtest/scripts/evaluate/diag_sell_rule_gap.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diag_stuck_name_trace.py",
+      "to": "backtest/scripts/evaluate/diag_stuck_name_trace.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/diagnose_vol20_label.py",
+      "to": "backtest/scripts/evaluate/diagnose_vol20_label.py",
+      "status": "retired"
+    },
+    {
+      "from": "backtest/scripts/dump_regime_preds.py",
+      "to": "backtest/scripts/evaluate/dump_regime_preds.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/ensemble_preds.py",
+      "to": "backtest/scripts/evaluate/ensemble_preds.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/eval_b5_rankic_valid.py",
+      "to": "backtest/scripts/evaluate/eval_b5_rankic_valid.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/eval_frozen_b5_rankic.py",
+      "to": "backtest/scripts/evaluate/eval_frozen_b5_rankic.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/eval_ic_multi_pool.py",
+      "to": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/eval_loss_design_batch.sh",
+      "to": "backtest/scripts/evaluate/eval_loss_design_batch.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/eval_model_arch_batch.sh",
+      "to": "backtest/scripts/evaluate/eval_model_arch_batch.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/eval_protocol.py",
+      "to": "backtest/scripts/evaluate/eval_protocol.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/eval_tra_batch.sh",
+      "to": "backtest/scripts/evaluate/eval_tra_batch.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/experiment_archive.py",
+      "to": "backtest/scripts/maintenance/experiment_archive.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/experiment_registry.py",
+      "to": "backtest/scripts/register/experiment_registry.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/finalize_strategy_neighborhood.py",
+      "to": "backtest/scripts/register/finalize_strategy_neighborhood.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/finalize_strategy_neighborhood_full.py",
+      "to": "backtest/scripts/register/finalize_strategy_neighborhood_full.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/freeze_b5_rankic_selection.py",
+      "to": "backtest/scripts/train/freeze_b5_rankic_selection.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/freeze_h40_survival_weight_manifest.py",
+      "to": "backtest/scripts/prepare/freeze_h40_survival_weight_manifest.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/freeze_label_horizon_manifest.py",
+      "to": "backtest/scripts/prepare/freeze_label_horizon_manifest.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_b5_post2020_forward.py",
+      "to": "backtest/scripts/prepare/generate_b5_post2020_forward.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_b5_rankic_hyperparams.py",
+      "to": "backtest/scripts/prepare/generate_b5_rankic_hyperparams.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_extended_csi1000_predictions.py",
+      "to": "backtest/scripts/prepare/generate_extended_csi1000_predictions.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_feature_b2_configs.py",
+      "to": "backtest/scripts/prepare/generate_feature_b2_configs.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_label_horizon_configs.py",
+      "to": "backtest/scripts/prepare/generate_label_horizon_configs.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_liquidity_configs.py",
+      "to": "backtest/scripts/prepare/generate_liquidity_configs.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_liquidity_trim_configs.py",
+      "to": "backtest/scripts/prepare/generate_liquidity_trim_configs.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_loss_design_configs.py",
+      "to": "backtest/scripts/prepare/generate_loss_design_configs.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_model_arch_configs.py",
+      "to": "backtest/scripts/prepare/generate_model_arch_configs.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_phase_s_predictions.py",
+      "to": "backtest/scripts/prepare/generate_phase_s_predictions.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/generate_tra_configs.py",
+      "to": "backtest/scripts/prepare/generate_tra_configs.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/patch_official_rank_ic.py",
+      "to": "backtest/scripts/maintenance/patch_official_rank_ic.py",
+      "status": "retired"
+    },
+    {
+      "from": "backtest/scripts/phase_s_prediction_validation.py",
+      "to": "backtest/scripts/maintenance/phase_s_prediction_validation.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/phase_s_protocol.py",
+      "to": "backtest/scripts/maintenance/phase_s_protocol.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/plan_artifact_cleanup.py",
+      "to": "backtest/scripts/maintenance/plan_artifact_cleanup.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/prepare_regime_train_chunks.py",
+      "to": "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/prepare_strategy_stability_predictions.py",
+      "to": "backtest/scripts/prepare/prepare_strategy_stability_predictions.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_b3s_and_refresh_metrics.py",
+      "to": "backtest/scripts/register/promote_b3s_and_refresh_metrics.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_b4s_t22_d2_h2_r090.py",
+      "to": "backtest/scripts/register/promote_b4s_t22_d2_h2_r090.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_bt_v3_h5f100.py",
+      "to": "backtest/scripts/register/promote_bt_v3_h5f100.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_bt_v4_ladder_k3h5.py",
+      "to": "backtest/scripts/register/promote_bt_v4_ladder_k3h5.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_bt_v5_top5d1f100.py",
+      "to": "backtest/scripts/register/promote_bt_v5_top5d1f100.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_phase_m_v1_es.py",
+      "to": "backtest/scripts/register/promote_phase_m_v1_es.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_phase_m_v1_rankices.py",
+      "to": "backtest/scripts/register/promote_phase_m_v1_rankices.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+      "to": "backtest/scripts/register/promote_phase_m_v1_t3h5es.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/refresh_phase_s_artifacts.py",
+      "to": "backtest/scripts/maintenance/refresh_phase_s_artifacts.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_b4s_diagnostics.py",
+      "to": "backtest/scripts/register/register_b4s_diagnostics.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_b5_followups.py",
+      "to": "backtest/scripts/register/register_b5_followups.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_b5_post2020_forward.py",
+      "to": "backtest/scripts/register/register_b5_post2020_forward.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_b5_rankic_hyperparams.py",
+      "to": "backtest/scripts/register/register_b5_rankic_hyperparams.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_bt_v5_cutover_diagnostics.py",
+      "to": "backtest/scripts/register/register_bt_v5_cutover_diagnostics.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_eval_window_edge_diag.py",
+      "to": "backtest/scripts/register/register_eval_window_edge_diag.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_h5f100_ablation.py",
+      "to": "backtest/scripts/register/register_h5f100_ablation.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_loss_design.py",
+      "to": "backtest/scripts/register/register_loss_design.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_model_arch.py",
+      "to": "backtest/scripts/register/register_model_arch.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_phase_s_experiment.py",
+      "to": "backtest/scripts/register/register_phase_s_experiment.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_regime_ablation.py",
+      "to": "backtest/scripts/register/register_regime_ablation.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_regime_head_eval.py",
+      "to": "backtest/scripts/register/register_regime_head_eval.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_regime_m0_labels.py",
+      "to": "backtest/scripts/register/register_regime_m0_labels.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_regime_phase_s.py",
+      "to": "backtest/scripts/register/register_regime_phase_s.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_strategy_stability.py",
+      "to": "backtest/scripts/register/register_strategy_stability.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_top25_ladder_bt.py",
+      "to": "backtest/scripts/register/register_top25_ladder_bt.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_tra.py",
+      "to": "backtest/scripts/register/register_tra.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_v4_ladder_k3h5.py",
+      "to": "backtest/scripts/register/register_v4_ladder_k3h5.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_v4_ladder_k3h5_e20260830.py",
+      "to": "backtest/scripts/register/register_v4_ladder_k3h5_e20260830.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_v4_ladder_k3h5f100.py",
+      "to": "backtest/scripts/register/register_v4_ladder_k3h5f100.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_v4_ladder_k3h5f100r.py",
+      "to": "backtest/scripts/register/register_v4_ladder_k3h5f100r.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/register_v4_topk_f100_grid.py",
+      "to": "backtest/scripts/register/register_v4_topk_f100_grid.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/report_utils.py",
+      "to": "backtest/scripts/report/report_utils.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/research_labels.py",
+      "to": "backtest/scripts/report/research_labels.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/research_layout.py",
+      "to": "backtest/scripts/maintenance/research_layout.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/resume_after_reboot.sh",
+      "to": "backtest/scripts/maintenance/resume_after_reboot.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_backtest.py",
+      "to": "backtest/scripts/train/run_backtest.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_beta_overlay_experiment.py",
+      "to": "backtest/scripts/evaluate/run_beta_overlay_experiment.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_bt_v5_cutover_diagnostics.py",
+      "to": "backtest/scripts/evaluate/run_bt_v5_cutover_diagnostics.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_loss_design_batch.sh",
+      "to": "backtest/scripts/train/run_loss_design_batch.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_ensemble_reeval.sh",
+      "to": "backtest/scripts/evaluate/run_m0_h20_ensemble_reeval.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_rankices.sh",
+      "to": "backtest/scripts/train/run_m0_h20_rankices.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_rankices_densemble.sh",
+      "to": "backtest/scripts/train/run_m0_h20_rankices_densemble.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_rankices_densemble_s42.sh",
+      "to": "backtest/scripts/train/run_m0_h20_rankices_densemble_s42.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_st_daily_reeval.sh",
+      "to": "backtest/scripts/evaluate/run_m0_h20_st_daily_reeval.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_t3h5es_densemble.sh",
+      "to": "backtest/scripts/train/run_m0_h20_t3h5es_densemble.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_t3h5es_densemble_s42.sh",
+      "to": "backtest/scripts/train/run_m0_h20_t3h5es_densemble_s42.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20_t5h5es.sh",
+      "to": "backtest/scripts/train/run_m0_h20_t5h5es.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_h20es_densemble_s42.sh",
+      "to": "backtest/scripts/train/run_m0_h20es_densemble_s42.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_label_eval.sh",
+      "to": "backtest/scripts/train/run_m0_label_eval.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_label_k123_h2345.sh",
+      "to": "backtest/scripts/evaluate/run_m0_label_k123_h2345.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_label_reeval.sh",
+      "to": "backtest/scripts/evaluate/run_m0_label_reeval.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_m0_t3h5es_labels.sh",
+      "to": "backtest/scripts/train/run_m0_t3h5es_labels.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_model_arch_batch.sh",
+      "to": "backtest/scripts/train/run_model_arch_batch.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_patch_official_rank_ic.sh",
+      "to": "backtest/scripts/maintenance/run_patch_official_rank_ic.sh",
+      "status": "retired"
+    },
+    {
+      "from": "backtest/scripts/run_pred_backtest.py",
+      "to": "backtest/scripts/evaluate/run_pred_backtest.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_regime_ablation.sh",
+      "to": "backtest/scripts/train/run_regime_ablation.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_regime_densemble.sh",
+      "to": "backtest/scripts/train/run_regime_densemble.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_regime_eval_queue.sh",
+      "to": "backtest/scripts/evaluate/run_regime_eval_queue.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_regime_phase_s.py",
+      "to": "backtest/scripts/evaluate/run_regime_phase_s.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_regime_train_queue.sh",
+      "to": "backtest/scripts/train/run_regime_train_queue.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_rolling_retrain.py",
+      "to": "backtest/scripts/train/run_rolling_retrain.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_strategy_neighborhood.py",
+      "to": "backtest/scripts/evaluate/run_strategy_neighborhood.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_strategy_neighborhood_full.py",
+      "to": "backtest/scripts/evaluate/run_strategy_neighborhood_full.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_strategy_stability.py",
+      "to": "backtest/scripts/evaluate/run_strategy_stability.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_strategy_sweep.py",
+      "to": "backtest/scripts/evaluate/run_strategy_sweep.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_tra_batch.sh",
+      "to": "backtest/scripts/train/run_tra_batch.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_v4_ladder_k3h5.sh",
+      "to": "backtest/scripts/evaluate/run_v4_ladder_k3h5.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_v4_ladder_k3h5_e20260830.sh",
+      "to": "backtest/scripts/evaluate/run_v4_ladder_k3h5_e20260830.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_v4_ladder_k3h5f100.sh",
+      "to": "backtest/scripts/evaluate/run_v4_ladder_k3h5f100.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_v4_ladder_k3h5f100r.sh",
+      "to": "backtest/scripts/evaluate/run_v4_ladder_k3h5f100r.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/run_v4_topk_f100_grid.sh",
+      "to": "backtest/scripts/evaluate/run_v4_topk_f100_grid.sh",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/sample_regime_test_dates.py",
+      "to": "backtest/scripts/prepare/sample_regime_test_dates.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/select_valid_model.py",
+      "to": "backtest/scripts/train/select_valid_model.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/strategy_neighborhood_protocol.py",
+      "to": "backtest/scripts/maintenance/strategy_neighborhood_protocol.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/strategy_stability_metrics.py",
+      "to": "backtest/scripts/evaluate/strategy_stability_metrics.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/train_regime_arm.py",
+      "to": "backtest/scripts/train/train_regime_arm.py",
+      "status": "active"
+    },
+    {
+      "from": "backtest/scripts/universe_filter.py",
+      "to": "backtest/scripts/evaluate/universe_filter.py",
+      "status": "active"
+    }
+  ],
+  "updated_reference_files_count": 311,
+  "updated_reference_file_list_sha256": "d73b4cc6a1e76d44e9ff56c788c653498fc01712454bcea66d732e67be235f22",
+  "reference_review": "具体改动见本次Git diff；不另复制整仓库文件列表。"
+}

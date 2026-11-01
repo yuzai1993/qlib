@@ -26,7 +26,7 @@
 ### Task 1: Pure Stability Metric Contract
 
 **Files:**
-- Create: `backtest/scripts/strategy_stability_metrics.py`
+- Create: `backtest/scripts/evaluate/strategy_stability_metrics.py`
 - Create: `tests/backtest/test_strategy_stability_metrics.py`
 
 **Interfaces:**
@@ -79,7 +79,7 @@ Commit: `feat(backtest): add full-period stability metrics`
 ### Task 2: Hash-Verified Full Prediction Bundle
 
 **Files:**
-- Create: `backtest/scripts/prepare_strategy_stability_predictions.py`
+- Create: `backtest/scripts/prepare/prepare_strategy_stability_predictions.py`
 - Create: `tests/backtest/test_prepare_strategy_stability_predictions.py`
 
 **Interfaces:**
@@ -119,10 +119,10 @@ Commit: `feat(backtest): compose frozen full-period predictions`
 ### Task 3: Diagnostic Runner and Config Generation
 
 **Files:**
-- Create: `backtest/scripts/run_strategy_stability.py`
+- Create: `backtest/scripts/evaluate/run_strategy_stability.py`
 - Create: `tests/backtest/test_run_strategy_stability.py`
-- Modify: `backtest/scripts/run_strategy_sweep.py`
-- Modify: `backtest/scripts/phase_s_protocol.py`
+- Modify: `backtest/scripts/evaluate/run_strategy_sweep.py`
+- Modify: `backtest/scripts/maintenance/phase_s_protocol.py`
 
 **Interfaces:**
 - Consumes: composed prediction, composed manifest entry, frozen source config, `strategy_grid(model_ref)`, and Task 1 metric functions.
@@ -161,8 +161,8 @@ Commit: `feat(backtest): run continuous strategy stability diagnostics`
 ### Task 4: Diagnostic Registry Lifecycle and Separate HTML
 
 **Files:**
-- Create: `backtest/scripts/register_strategy_stability.py`
-- Create: `backtest/scripts/build_strategy_stability_report.py`
+- Create: `backtest/scripts/register/register_strategy_stability.py`
+- Create: `backtest/scripts/report/build_strategy_stability_report.py`
 - Create: `tests/backtest/test_register_strategy_stability.py`
 - Create: `tests/backtest/test_build_strategy_stability_report.py`
 
@@ -195,7 +195,7 @@ Commit: `feat(backtest): register and report strategy stability`
 ### Task 5: Diagnostic-Aware Cleanup
 
 **Files:**
-- Modify: `backtest/scripts/cleanup_experiment_artifacts.py`
+- Modify: `backtest/scripts/maintenance/cleanup_experiment_artifacts.py`
 - Modify: `tests/backtest/test_cleanup_experiment_artifacts.py`
 
 **Interfaces:**

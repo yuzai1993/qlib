@@ -14,12 +14,12 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import config_loader  # noqa: E402
-import phase_s_protocol as protocol  # noqa: E402
-import run_strategy_sweep as sweep  # noqa: E402
-from generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
+import backtest.scripts.maintenance.config_loader as config_loader  # noqa: E402
+import backtest.scripts.maintenance.phase_s_protocol as protocol  # noqa: E402
+import backtest.scripts.evaluate.run_strategy_sweep as sweep  # noqa: E402
+from backtest.scripts.prepare.generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
 
 BASE_CONFIG = ROOT / "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml"
 
@@ -439,7 +439,7 @@ def test_pred_backtest_mode_is_accepted_and_aligned(tmp_path):
 def test_backtest_command_references_frozen_prediction_without_copy(tmp_path):
     command = sweep.build_backtest_command(
         Path(sys.executable),
-        ROOT / "backtest/scripts/run_pred_backtest.py",
+        ROOT / "backtest/scripts/evaluate/run_pred_backtest.py",
         tmp_path / "pred.pkl",
         tmp_path / "candidate.yaml",
         "valid-b1",
@@ -447,7 +447,7 @@ def test_backtest_command_references_frozen_prediction_without_copy(tmp_path):
 
     assert command == [
         sys.executable,
-        str(ROOT / "backtest/scripts/run_pred_backtest.py"),
+        str(ROOT / "backtest/scripts/evaluate/run_pred_backtest.py"),
         "--pred",
         str(tmp_path / "pred.pkl"),
         "--config",

@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-from combine_phase_s_test_results import combine_payloads  # noqa: E402
+from backtest.scripts.evaluate.combine_phase_s_test_results import combine_payloads  # noqa: E402
 
 
 def test_combine_payloads_builds_complete_pool_matrix():

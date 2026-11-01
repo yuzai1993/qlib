@@ -1,5 +1,5 @@
 # EXPERIMENT_STANDARD v1.3 | exp: label-design/cum-h40 | seed 3000
-# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config label-design/cum-h40/ld_cum_h40_lgbm_s3000.yaml
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config label-design/cum-h40/ld_cum_h40_lgbm_s3000.yaml
 run:
   mode: train_only
   note: ld_cum_h40_lgbm_s3000

@@ -1,5 +1,5 @@
 # EXPERIMENT_STANDARD v1.6 | exp: model-arch/double-ensemble | seed 42
-# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config model-arch/double-ensemble/ma_double_ensemble_s42.yaml
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config model-arch/double-ensemble/ma_double_ensemble_s42.yaml
 run:
   mode: train_only
   note: ma_double_ensemble_s42

@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import run_strategy_neighborhood as runner  # noqa: E402
-import strategy_neighborhood_protocol as protocol  # noqa: E402
+import backtest.scripts.evaluate.run_strategy_neighborhood as runner  # noqa: E402
+import backtest.scripts.maintenance.strategy_neighborhood_protocol as protocol  # noqa: E402
 
 
 def test_pending_candidates_skip_only_successful_checkpoints():

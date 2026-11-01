@@ -77,7 +77,7 @@
 
 ## 入模型形态（2026-08-09 定稿）
 
-- 特征文件：`backtest/configs/regime-adapt/regime_features_v1.csv`（生成脚本 `backtest/scripts/build_regime_features.py`）。
+- 特征文件：`backtest/configs/regime-adapt/regime_features_v1.csv`（生成脚本 `backtest/scripts/prepare/build_regime_features.py`）。
 - 11 列：7 个 Tier-1 因果 z（250 日滚动、shift(1)、clip±5）+ 2 个 Tier-2 z（NaN 哨兵）+ `idx_dd250`/`idx_uplow60` 原始值。Tier-1 z 自 2003-09-30 全有效，覆盖 2004-01 训练起点。
 - 注入方式：`Alpha158RegimeTechnical` handler（`backtest/features/regime.py`）以 day 级广播列并入个股面板。
 - FS 存活检查（csi300 迷你训练，B6-M 超参）：REGIME 列存活率与总体特征相当（5/11、6/11 vs 44%/47%），无系统性被筛；`idx_dd250_z`、`idx_uplow60`、`lowvol_highvol_cum20_z` 在全部子模型稳定存活。

@@ -19,7 +19,7 @@
 - H40 MSE training label and `DropnaLabel + CSRankNorm` remain unchanged.
 - Early stopping uses only fixed-next-day valid RankIC through the safe anchor `2021-07-13`.
 - No test prediction or metric may be produced before the selection manifest is frozen.
-- Final test evaluation uses `backtest/scripts/eval_ic_multi_pool.py` semantics on csi1000/csi300/csi500.
+- Final test evaluation uses `backtest/scripts/evaluate/eval_ic_multi_pool.py` semantics on csi1000/csi300/csi500.
 - Do not modify `live_trading/configs/csi300_topk10_live.yaml` or its artifact.
 - Run Qlib multiprocessing entry points from files, never heredoc/stdin.
 - Use `/opt/anaconda3/envs/qlib/bin/python` and `MLFLOW_ALLOW_FILE_STORE=true`.
@@ -35,7 +35,7 @@
 **Interfaces:**
 - Produces: `mean_daily_rank_ic(pred: np.ndarray, label: np.ndarray, index: pd.MultiIndex, min_count: int = 20) -> float`
 - Produces: `fixed_next_day_valid_frame(dataset: DatasetH) -> pd.DataFrame`
-- Uses: `backtest.scripts.eval_protocol.daily_ic`
+- Uses: `backtest.scripts.evaluate.eval_protocol.daily_ic`
 
 - [ ] **Step 1: Write failing metric-equivalence tests**
 
@@ -199,7 +199,7 @@ Expected: all pass.
 ### Task 3: Generate and Validate the Four Candidate Grids
 
 **Files:**
-- Create: `backtest/scripts/generate_b5_rankic_hyperparams.py`
+- Create: `backtest/scripts/prepare/generate_b5_rankic_hyperparams.py`
 - Create: `tests/backtest/test_b5_rankic_hyperparams.py`
 - Create: `backtest/configs/model-hyperparam/rankic-es-base/*.yaml`
 - Create: `backtest/configs/model-hyperparam/rankic-es-l1low/*.yaml`
@@ -257,9 +257,9 @@ Run the generator, then the Task 3 pytest command.
 ### Task 4: Freeze Valid-Only Selection and Guard Test Evaluation
 
 **Files:**
-- Create: `backtest/scripts/eval_b5_rankic_valid.py`
-- Create: `backtest/scripts/freeze_b5_rankic_selection.py`
-- Create: `backtest/scripts/eval_frozen_b5_rankic.py`
+- Create: `backtest/scripts/evaluate/eval_b5_rankic_valid.py`
+- Create: `backtest/scripts/train/freeze_b5_rankic_selection.py`
+- Create: `backtest/scripts/evaluate/eval_frozen_b5_rankic.py`
 - Create: `tests/backtest/test_freeze_b5_rankic_selection.py`
 
 **Interfaces:**
@@ -357,7 +357,7 @@ Task 4 pytest command.
 ### Task 5: Pre-Registration and Reporting Support
 
 **Files:**
-- Create: `backtest/scripts/register_b5_rankic_hyperparams.py`
+- Create: `backtest/scripts/register/register_b5_rankic_hyperparams.py`
 - Create: `tests/backtest/test_register_b5_rankic_hyperparams.py`
 - Modify: `backtest/experiments/registry.jsonl`
 - Modify: `backtest/experiments/reports/report.html`
@@ -421,7 +421,7 @@ Run:
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/register_b5_rankic_hyperparams.py \
+  backtest/scripts/register/register_b5_rankic_hyperparams.py \
   --stage pending --data-version <current-qlib-calendar-version>
 ```
 
@@ -443,7 +443,7 @@ For each candidate and seed:
 
 ```bash
 MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/run_backtest.py \
+  backtest/scripts/train/run_backtest.py \
   --config model-hyperparam/<candidate>/mh_<candidate_slug>_s<seed>.yaml
 ```
 
@@ -457,7 +457,7 @@ anchor is 2021-07-13 and its next-day label never reads test prices:
 
 ```bash
 MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/eval_b5_rankic_valid.py \
+  backtest/scripts/evaluate/eval_b5_rankic_valid.py \
   --config model-hyperparam/<candidate>/mh_<candidate_slug>_s42.yaml \
   --sessions <five session:seed values> \
   --output backtest/experiments/ic/mh_<candidate_slug>_valid_1d.json
@@ -488,7 +488,7 @@ seeds, finite valid RankIC/RankICIR, and hashes matching disk.
 
 ```bash
 MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/eval_frozen_b5_rankic.py \
+  backtest/scripts/evaluate/eval_frozen_b5_rankic.py \
   --manifest backtest/experiments/b5_rankic_hyperparam_selection.json \
   --output backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json
 ```
@@ -497,9 +497,9 @@ MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python \
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/register_b5_rankic_hyperparams.py --stage final
+  backtest/scripts/register/register_b5_rankic_hyperparams.py --stage final
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/build_experiment_report.py
+  backtest/scripts/report/build_experiment_report.py
 ```
 
 - [ ] **Step 3: Verify report ordering and metrics**
@@ -535,11 +535,11 @@ selected experiment, with all 12 Phase M metric cells populated.
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/cleanup_experiment_artifacts.py
+  backtest/scripts/maintenance/cleanup_experiment_artifacts.py
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/cleanup_experiment_artifacts.py --apply
+  backtest/scripts/maintenance/cleanup_experiment_artifacts.py --apply
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/cleanup_experiment_artifacts.py
+  backtest/scripts/maintenance/cleanup_experiment_artifacts.py
 ```
 
 The final dry-run must have empty delete lists and no warnings/errors.

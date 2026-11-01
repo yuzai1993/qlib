@@ -116,9 +116,9 @@ lots_t = round(target_notional_t / (settle_t * 200))   # 可另报 floor/ceil
 
 ## 7. 实现落点
 
-1. `backtest/scripts/build_im_continuous.py`  
+1. `backtest/scripts/prepare/build_im_continuous.py`
    从 `cffex_daily/` 生成/校验 `backtest/data/im/im_continuous_daily.csv`。
-2. `backtest/scripts/run_beta_overlay_experiment.py`  
+2. `backtest/scripts/evaluate/run_beta_overlay_experiment.py`
    输入：280 万 B2-S `report_normal` + IM 连续收益；输出 JSON/CSV artifact、
    对照表、registry 行所需字段。
 3. 配置：`backtest/configs/strategy-beta-overlay/b2s-im-target1-roll60_csi1000_imwindow.yaml`

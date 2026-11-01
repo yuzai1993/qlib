@@ -8,11 +8,11 @@ import pytest
 from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import finalize_strategy_neighborhood as finalizer  # noqa: E402
-import run_strategy_neighborhood as runner  # noqa: E402
-import strategy_neighborhood_protocol as protocol  # noqa: E402
+import backtest.scripts.register.finalize_strategy_neighborhood as finalizer  # noqa: E402
+import backtest.scripts.evaluate.run_strategy_neighborhood as runner  # noqa: E402
+import backtest.scripts.maintenance.strategy_neighborhood_protocol as protocol  # noqa: E402
 
 
 def _metrics(candidate_id: str, ir: float) -> dict:

@@ -11,10 +11,10 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import config_loader as cl  # noqa: E402
-import eval_protocol as ep  # noqa: E402
+import backtest.scripts.maintenance.config_loader as cl  # noqa: E402
+import backtest.scripts.evaluate.eval_protocol as ep  # noqa: E402
 
 TRAINING_YAML = ROOT / "backtest" / "configs" / "csi300_lgbm_train_start_2006.yaml"
 

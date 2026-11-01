@@ -157,9 +157,9 @@ The repository-wide `*.csv` ignore rule must have the narrow exception
 **Files:**
 - Create: `backtest/configs/csi300_lgbm_train_start_2006.yaml`
 - Create: `backtest/configs/csi300_live_parity.yaml`
-- Create: `backtest/scripts/config_loader.py`
-- Create: `backtest/scripts/report_utils.py`
-- Create: `backtest/scripts/run_backtest.py`
+- Create: `backtest/scripts/maintenance/config_loader.py`
+- Create: `backtest/scripts/report/report_utils.py`
+- Create: `backtest/scripts/train/run_backtest.py`
 - Modify: `qlib/contrib/evaluate.py`
 - Modify: `qlib/contrib/report/analysis_position/cumulative_return.py`
 - Modify: `qlib/contrib/report/analysis_position/report.py`
@@ -177,8 +177,8 @@ Run:
 
 ```bash
 git restore --source=a4299b66 -- \
-  backtest/scripts/config_loader.py backtest/scripts/report_utils.py \
-  backtest/scripts/run_backtest.py \
+  backtest/scripts/maintenance/config_loader.py backtest/scripts/report/report_utils.py \
+  backtest/scripts/train/run_backtest.py \
   backtest/configs/csi300_lgbm_train_start_2006.yaml \
   qlib/contrib/evaluate.py \
   qlib/contrib/report/analysis_position/cumulative_return.py \
@@ -196,7 +196,7 @@ Run:
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python -m pytest tests/misc/test_backtest_config_loader.py -q
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --help
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --help
 ```
 
 Expected: all tests pass and the CLI exits 0 after printing `--config` help.
@@ -377,7 +377,7 @@ Expected: the baseline model and prior session resolve without copying or tracki
 Run:
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py \
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py \
   --config csi300_live_parity.yaml
 ```
 

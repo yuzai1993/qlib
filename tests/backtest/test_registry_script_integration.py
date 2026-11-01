@@ -9,26 +9,26 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-from experiment_registry import load_registry, write_registry  # noqa: E402
+from backtest.scripts.register.experiment_registry import load_registry, write_registry  # noqa: E402
 
 
 READERS = [
-    ("build_experiment_report", "load_registry", None),
-    ("build_phase_m_v1_report", "load_registry", None),
-    ("build_phase_m_v1_bt_report", "load_registry", None),
-    ("build_strategy_report", "load_registry", None),
-    ("cleanup_experiment_artifacts", "load_registry", None),
-    ("finalize_strategy_neighborhood", "load_registry", None),
-    ("finalize_strategy_neighborhood_full", "load_registry", None),
-    ("register_phase_s_experiment", "load_registry", None),
-    ("register_strategy_stability", "load_registry", None),
-    ("register_regime_m0_labels", "load_registry", "REG"),
-    ("register_regime_ablation", "load_registry", "REG"),
-    ("promote_b3s_and_refresh_metrics", "_load_registry", "REGISTRY"),
-    ("promote_b4s_t22_d2_h2_r090", "_load_registry", "REGISTRY"),
-    ("register_b4s_diagnostics", "_load", "REGISTRY"),
+    ("backtest.scripts.report.build_experiment_report", "load_registry", None),
+    ("backtest.scripts.report.build_phase_m_v1_report", "load_registry", None),
+    ("backtest.scripts.report.build_phase_m_v1_bt_report", "load_registry", None),
+    ("backtest.scripts.report.build_strategy_report", "load_registry", None),
+    ("backtest.scripts.maintenance.cleanup_experiment_artifacts", "load_registry", None),
+    ("backtest.scripts.register.finalize_strategy_neighborhood", "load_registry", None),
+    ("backtest.scripts.register.finalize_strategy_neighborhood_full", "load_registry", None),
+    ("backtest.scripts.register.register_phase_s_experiment", "load_registry", None),
+    ("backtest.scripts.register.register_strategy_stability", "load_registry", None),
+    ("backtest.scripts.register.register_regime_m0_labels", "load_registry", "REG"),
+    ("backtest.scripts.register.register_regime_ablation", "load_registry", "REG"),
+    ("backtest.scripts.register.promote_b3s_and_refresh_metrics", "_load_registry", "REGISTRY"),
+    ("backtest.scripts.register.promote_b4s_t22_d2_h2_r090", "_load_registry", "REGISTRY"),
+    ("backtest.scripts.register.register_b4s_diagnostics", "_load", "REGISTRY"),
 ]
 
 
@@ -51,7 +51,7 @@ def test_script_readers_hydrate_ordered_history(tmp_path, monkeypatch, module_na
 
 
 def test_cleanup_selects_same_candidate_from_index(tmp_path):
-    cleanup = importlib.import_module("cleanup_experiment_artifacts")
+    cleanup = importlib.import_module("backtest.scripts.maintenance.cleanup_experiment_artifacts")
     pools = ("csi300", "csi500", "csi1000")
     baseline = {
         "exp_id": "baseline/b6-m", "direction": "baseline", "phase": "M",
@@ -74,10 +74,10 @@ def test_cleanup_selects_same_candidate_from_index(tmp_path):
 
 
 RAW_WRITERS = [
-    ("analyze_b2s_style_regime", "upsert_registry", "target", "completed"),
-    ("finalize_strategy_neighborhood", "upsert_registry_transition", None, "test_complete"),
-    ("finalize_strategy_neighborhood_full", "upsert_registry_transition", None, "complete"),
-    ("register_bt_v5_cutover_diagnostics", "save_record", "target", "completed"),
+    ("backtest.scripts.evaluate.analyze_b2s_style_regime", "upsert_registry", "target", "completed"),
+    ("backtest.scripts.register.finalize_strategy_neighborhood", "upsert_registry_transition", None, "test_complete"),
+    ("backtest.scripts.register.finalize_strategy_neighborhood_full", "upsert_registry_transition", None, "complete"),
+    ("backtest.scripts.register.register_bt_v5_cutover_diagnostics", "save_record", "target", "completed"),
 ]
 
 
@@ -124,8 +124,8 @@ def test_raw_writers_reject_broken_bystander_details_before_writing(tmp_path, mo
 
 
 @pytest.mark.parametrize("module_name,state", [
-    ("finalize_strategy_neighborhood", "test_complete"),
-    ("finalize_strategy_neighborhood_full", "complete"),
+    ("backtest.scripts.register.finalize_strategy_neighborhood", "test_complete"),
+    ("backtest.scripts.register.finalize_strategy_neighborhood_full", "complete"),
 ])
 def test_rejected_completed_transition_creates_no_detail(tmp_path, module_name, state):
     module = importlib.import_module(module_name)
@@ -139,9 +139,9 @@ def test_rejected_completed_transition_creates_no_detail(tmp_path, module_name, 
 
 
 @pytest.mark.parametrize("module_name,function", [
-    ("promote_b3s_and_refresh_metrics", "_write_registry"),
-    ("promote_b4s_t22_d2_h2_r090", "_write_registry"),
-    ("register_b4s_diagnostics", "_write"),
+    ("backtest.scripts.register.promote_b3s_and_refresh_metrics", "_write_registry"),
+    ("backtest.scripts.register.promote_b4s_t22_d2_h2_r090", "_write_registry"),
+    ("backtest.scripts.register.register_b4s_diagnostics", "_write"),
 ])
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
 def test_strict_registry_writers_reject_nonfinite_without_changes(tmp_path, monkeypatch, module_name, function, invalid):
@@ -158,7 +158,7 @@ def test_strict_registry_writers_reject_nonfinite_without_changes(tmp_path, monk
 
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
 def test_stability_writer_rejects_nonfinite_before_detail_write(tmp_path, invalid):
-    module = importlib.import_module("register_strategy_stability")
+    module = importlib.import_module("backtest.scripts.register.register_strategy_stability")
     path = tmp_path / "registry.jsonl"
     pending = {"exp_id": "diagnostic", "state": "preregistered"}
     write_registry(path, [pending], indexed=True)

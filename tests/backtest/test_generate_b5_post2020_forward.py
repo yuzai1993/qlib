@@ -12,7 +12,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from backtest.scripts.generate_b5_post2020_forward import (  # noqa: E402
+from backtest.scripts.prepare.generate_b5_post2020_forward import (
     FORWARD_PROTOCOL_ID,
     GROUPS,
     SEEDS,
@@ -20,7 +20,7 @@ from backtest.scripts.generate_b5_post2020_forward import (  # noqa: E402
     VALID_SEGMENT,
     generate_configs,
 )
-from backtest.scripts.research_layout import resolve_research_path  # noqa: E402
+from backtest.scripts.maintenance.research_layout import resolve_research_path  # noqa: E402
 
 
 WINNER_TEMPLATE = (
@@ -139,7 +139,7 @@ def test_rendered_header_uses_v19_and_exact_runnable_command(tmp_path):
 
     assert path.read_text(encoding="utf-8").splitlines()[:2] == [
         "# EXPERIMENT_STANDARD v1.9 | exp: train-recency/rankic-winner-stale | seed 42",
-        "# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config train-recency/rankic-winner-stale/tr_rankic_winner_stale_s42.yaml",
+        "# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config train-recency/rankic-winner-stale/tr_rankic_winner_stale_s42.yaml",
     ]
 
 
@@ -158,7 +158,7 @@ def test_generation_is_deterministic_and_refuses_changed_existing_file(tmp_path)
 
 
 def test_generation_resolves_each_output_before_creating_directories(tmp_path, monkeypatch):
-    from backtest.scripts import generate_b5_post2020_forward as generator
+    import backtest.scripts.prepare.generate_b5_post2020_forward as generator
 
     monkeypatch.setattr(generator, "BACKTEST_ROOT", tmp_path / "backtest")
     output_root = tmp_path / "backtest/configs/train-recency"

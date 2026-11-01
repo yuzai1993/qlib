@@ -7,9 +7,9 @@ from types import SimpleNamespace
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import run_pred_backtest  # noqa: E402
+import backtest.scripts.evaluate.run_pred_backtest as run_pred_backtest  # noqa: E402
 
 
 def test_load_configured_pred_label_fetches_only_configured_raw_label():

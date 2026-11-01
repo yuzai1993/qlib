@@ -74,9 +74,9 @@ ST天龙 20220613~20250421 / *ST天龙 20250422~20260617 / 天龙退 20260618~No
 | `scripts/data_collector/tushare/st_calendar.csv` | 由日频压出的区间，**仅审计人读**（gitignore） |
 | `scripts/data_collector/tushare/run_update_to_bin.sh` | 日更多一步 ST 名单 |
 | `scripts/data_collector/tushare/README.md` | 文档 |
-| `backtest/scripts/universe_filter.py` | 按日查日频名单，替换静态 ST 集合 |
-| `backtest/scripts/eval_ic_multi_pool.py` | `--st-daily`；`--st-names` 仅保留为兼容报错 |
-| `backtest/scripts/run_regime_phase_s.py` | `DEFAULT_UNIVERSE_FILTER` 改指向日频名单 |
+| `backtest/scripts/evaluate/universe_filter.py` | 按日查日频名单，替换静态 ST 集合 |
+| `backtest/scripts/evaluate/eval_ic_multi_pool.py` | `--st-daily`；`--st-names` 仅保留为兼容报错 |
+| `backtest/scripts/evaluate/run_regime_phase_s.py` | `DEFAULT_UNIVERSE_FILTER` 改指向日频名单 |
 | `live_trading/scripts/run_publish_signals.py` | 发布前按 `signal_date` 查同一份日频名单置 NaN |
 | `tests/misc/test_st_calendar.py` | 展开/合并/查询/拉取契约 |
 | `tests/backtest/test_universe_filter.py` | 按日 ST 掩码 |
@@ -539,9 +539,9 @@ git commit -m "feat(data): build ST daily index from stock_st and namechange"
 ### Task 3: 回测 / Phase M 按日过滤
 
 **Files:**
-- Modify: `backtest/scripts/universe_filter.py`
-- Modify: `backtest/scripts/eval_ic_multi_pool.py`
-- Modify: `backtest/scripts/run_regime_phase_s.py`
+- Modify: `backtest/scripts/evaluate/universe_filter.py`
+- Modify: `backtest/scripts/evaluate/eval_ic_multi_pool.py`
+- Modify: `backtest/scripts/evaluate/run_regime_phase_s.py`
 - Modify: `tests/backtest/test_universe_filter.py`
 - Modify: `backtest/configs/regime-adapt/phase-s/*.yaml` 里的 `universe_filter.st_names`
 
@@ -649,8 +649,8 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backtest/scripts/universe_filter.py backtest/scripts/eval_ic_multi_pool.py \
-  backtest/scripts/run_regime_phase_s.py backtest/configs/regime-adapt \
+git add backtest/scripts/evaluate/universe_filter.py backtest/scripts/evaluate/eval_ic_multi_pool.py \
+  backtest/scripts/evaluate/run_regime_phase_s.py backtest/configs/regime-adapt \
   backtest/scripts/dump_st_names.py tests/backtest/test_universe_filter.py
 git commit -m "feat(backtest): filter ST by daily index instead of static names"
 ```

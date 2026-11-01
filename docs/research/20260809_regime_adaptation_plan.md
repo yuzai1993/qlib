@@ -67,7 +67,7 @@
 
 - 候选期：2020-08-03 ~ 2026-07-31（自然构成：D 50 / T 15 / F 7 个月）。
 - 第一步：按**全历史占比 D/F/T = 69.6/19.1/11.3** 生成完整分层清单（F 稀缺约束，136 个交易日全取，反推总量 713 天）。
-- 第二步：**分层内随机 70/30 拆分**（seed=42），**已于 2026-08-09 生成并冻结**（脚本 `backtest/scripts/sample_regime_test_dates.py`）：
+- 第二步：**分层内随机 70/30 拆分**（seed=42），**已于 2026-08-09 生成并冻结**（脚本 `backtest/scripts/prepare/sample_regime_test_dates.py`）：
   - `test_dates_stratified_70.csv`（**499 天：D 347 / F 95 / T 57**）——本实验的 valid+test；
   - `test_dates_reserved_30.csv`（**214 天**）——**封存**，本实验不评估、不查看，留给后续"增加最新样本"实验作未污染评估集。
 - 注意：靠近数据终点（2026-08-07）的采样日在 h40 口径下无完整前视窗，仅在 h40 一列中剔除，其余期限不受影响。
@@ -115,7 +115,7 @@ Pearson IC/ICIR 落盘作附录，不进主表。
 
 ### 4.4 工程
 
-扩展 `backtest/scripts/eval_ic_multi_pool.py`：`--horizons 1,5,10,20,40`、`--date-list <csv>`、`--regime-labels <csv>`（仅全A切分）、`--tail-topk 22,50`、汇总输出五期限均值列。内部仍走 `eval_protocol.daily_ic`；改动配对拍测试（h1 全窗口径与现版本逐位一致）。
+扩展 `backtest/scripts/evaluate/eval_ic_multi_pool.py`：`--horizons 1,5,10,20,40`、`--date-list <csv>`、`--regime-labels <csv>`（仅全A切分）、`--tail-topk 22,50`、汇总输出五期限均值列。内部仍走 `eval_protocol.daily_ic`；改动配对拍测试（h1 全窗口径与现版本逐位一致）。
 
 ## 5. A0 前置任务
 
@@ -235,9 +235,9 @@ Gate 2 (M3 vs B6-M 参考行，现役基线对照)：
 
 **落地记录（2026-08-09，W3 前置完成）**：
 
-- `backtest/scripts/build_regime_day_weights.py`：训练时代 4029 交易日（D 2771/F 937/T 321），D 态日下采样至 1718 天（f_D=0.62，seed=42），保留日集共 2976 天，冻结为 `configs/regime-adapt/train_dates_v1.csv`。**两臂共用保留日集**（行数/内存对齐）：M0 权重 = 仅 1/f_D 补偿（期望还原自然分布，质量占比 68.8/23.3/8.0），M3 权重 = 55/30/15 精确 + 48m 半衰期 + 补偿（ESS 1747 天）。`day_weights_{m0,m3}_v1.csv` 冻结。
-- `backtest/scripts/prepare_regime_train_chunks.py`：逐年 handler（前置 6 个月 warmup，后延 3 个月供 H40 标签；2020 年 handler 止于 2020-07-31，标签窗跨界行由 DropnaLabel 自动 purge），DK_L 裁剪本年 + 剔次新（<60 交易日）后 float32 pickle 落盘 `backtest/datasets/regime-adapt-cache/<arm>/year=YYYY.pkl`。实测单年 ~82 万行 × 176 列、峰值 RSS ~4.7GB、~370s/年。缓存保留全部训练日（下采样在组装阶段做，与采样协议解耦）。
-- `backtest/scripts/train_regime_arm.py`：驱动器顺序 = 先建 valid 帧（独立推理 handler 2020-02~2026-07-31 → `fixed_next_day_valid_frame` 过滤 70% 日集 → 剔次新 → float32 → 释放 handler），再拼接年度块过滤到保留日集，`RegimeWeightedDEnsembleModel.fit_prepared`（B6-M 冻结超参）训练；产物写成 `load_session_model_info` 兼容 session（meta.json + run_01/mlruns_link.json + artifacts/trained_model + train_summary.json）。端到端冒烟（2019 单年块 + csi300 小 valid 池）通过：valid 帧覆盖全部 499 采样日、权重表覆盖校验通过、3 子模型 RankIC 早停正常、session 可被评估脚本加载。
+- `backtest/scripts/prepare/build_regime_day_weights.py`：训练时代 4029 交易日（D 2771/F 937/T 321），D 态日下采样至 1718 天（f_D=0.62，seed=42），保留日集共 2976 天，冻结为 `configs/regime-adapt/train_dates_v1.csv`。**两臂共用保留日集**（行数/内存对齐）：M0 权重 = 仅 1/f_D 补偿（期望还原自然分布，质量占比 68.8/23.3/8.0），M3 权重 = 55/30/15 精确 + 48m 半衰期 + 补偿（ESS 1747 天）。`day_weights_{m0,m3}_v1.csv` 冻结。
+- `backtest/scripts/prepare/prepare_regime_train_chunks.py`：逐年 handler（前置 6 个月 warmup，后延 3 个月供 H40 标签；2020 年 handler 止于 2020-07-31，标签窗跨界行由 DropnaLabel 自动 purge），DK_L 裁剪本年 + 剔次新（<60 交易日）后 float32 pickle 落盘 `backtest/datasets/regime-adapt-cache/<arm>/year=YYYY.pkl`。实测单年 ~82 万行 × 176 列、峰值 RSS ~4.7GB、~370s/年。缓存保留全部训练日（下采样在组装阶段做，与采样协议解耦）。
+- `backtest/scripts/train/train_regime_arm.py`：驱动器顺序 = 先建 valid 帧（独立推理 handler 2020-02~2026-07-31 → `fixed_next_day_valid_frame` 过滤 70% 日集 → 剔次新 → float32 → 释放 handler），再拼接年度块过滤到保留日集，`RegimeWeightedDEnsembleModel.fit_prepared`（B6-M 冻结超参）训练；产物写成 `load_session_model_info` 兼容 session（meta.json + run_01/mlruns_link.json + artifacts/trained_model + train_summary.json）。端到端冒烟（2019 单年块 + csi300 小 valid 池）通过：valid 帧覆盖全部 499 采样日、权重表覆盖校验通过、3 子模型 RankIC 早停正常、session 可被评估脚本加载。
 - registry 已预登记：`regime-adapt/m0-anchor`、`regime-adapt/m3-feat-sample`、`regime-adapt/b6m-reference`（2026-08-09，preregistered）。
 
 ### 7.3 算力估计
@@ -317,7 +317,7 @@ DoubleEnsemble 在全A 553 万行上的 SR/FS 机制开销实测 ~7 小时/种�
   m3 0.0548~0.0575（18~88 轮）。
 - **评估协议落地**：
   - 配置 `backtest/configs/regime-adapt/eval_{m0fast,m3fast,b6m_ref}.yaml`；
-    队列 `backtest/scripts/run_regime_eval_queue.sh`，产物
+    队列 `backtest/scripts/evaluate/run_regime_eval_queue.sh`，产物
     `backtest/result/eval_regime_fast/eval_*.json`。
   - **月度风格标签重建**：原 `monthly_regime_3style.csv` 在 2026-08-11 清理事故中
     丢失；由两份冻结清单（70%/30%）的 regime 列精确重建评估窗 2020-08..2026-07
@@ -514,7 +514,7 @@ m3（regime 特征 + 风格平衡权重）在 F 态 NS 仅 0.50、基本没补�
 
 **执行**
 
-- Phase S 回测：`backtest/scripts/run_regime_phase_s.py`（生成 `mode: backtest_only` 配置，
+- Phase S 回测：`backtest/scripts/evaluate/run_regime_phase_s.py`（生成 `mode: backtest_only` 配置，
   从 session 加载模型做推理 + TopkDropout），报告 `build_regime_phase_s_report.py`，
   登记 `register_regime_phase_s.py`。五臂 × 五种子 = 25 次回测，约 2 分钟/次。
 - 策略 = B4-S（`topk=22, n_drop=2, hold_thresh=2, risk_degree=0.90`，与实盘 live 配置同参），
@@ -621,4 +621,4 @@ B6-M 的低波防御风格，正是它前段夏普高、后段（小盘高波）
 评估宇宙加三道过滤：ST 名单、成交额 ≥ 1000 万（`$volume × 未复权收盘 × 100`）、上市 ≥ 60 日；
 并保留 t+1 涨停/零量剔除。本轮只做 M0：复用已有 H1/H5/H10/H40，补训 H2/H3/H20。
 报告 `backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html`，只留 M0 行。
-执行 `backtest/scripts/run_m0_label_eval.sh`。
+执行 `backtest/scripts/train/run_m0_label_eval.sh`。

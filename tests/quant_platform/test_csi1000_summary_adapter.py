@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from backtest.scripts.experiment_registry import write_registry
+from backtest.scripts.register.experiment_registry import write_registry
 from quant_platform.research import ResearchCatalog
 
 

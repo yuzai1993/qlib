@@ -27,7 +27,7 @@
 ### Task 1: Pure Holding-Duration Diagnostic
 
 **Files:**
-- Create: `backtest/scripts/analyze_holding_duration.py`
+- Create: `backtest/scripts/evaluate/analyze_holding_duration.py`
 - Test: `tests/backtest/test_analyze_holding_duration.py`
 
 **Interfaces:**
@@ -64,7 +64,7 @@ Run the same pytest command. Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backtest/scripts/analyze_holding_duration.py tests/backtest/test_analyze_holding_duration.py
+git add backtest/scripts/evaluate/analyze_holding_duration.py tests/backtest/test_analyze_holding_duration.py
 git commit -m "feat(backtest): analyze topk holding durations"
 ```
 
@@ -73,7 +73,7 @@ git commit -m "feat(backtest): analyze topk holding durations"
 **Files:**
 - Create: `backtest/label_design/__init__.py`
 - Create: `backtest/label_design/horizons.py`
-- Create: `backtest/scripts/freeze_label_horizon_manifest.py`
+- Create: `backtest/scripts/prepare/freeze_label_horizon_manifest.py`
 - Test: `tests/backtest/test_label_horizons.py`
 - Create at runtime: `backtest/experiments/label_horizon_manifest.json`
 
@@ -108,7 +108,7 @@ hypotheses.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backtest/label_design backtest/scripts/freeze_label_horizon_manifest.py tests/backtest/test_label_horizons.py
+git add backtest/label_design backtest/scripts/prepare/freeze_label_horizon_manifest.py tests/backtest/test_label_horizons.py
 git commit -m "feat(backtest): freeze label horizon designs"
 ```
 
@@ -154,7 +154,7 @@ git commit -m "feat(backtest): purge horizon labels at split boundaries"
 ### Task 4: Label-Design Config Generator
 
 **Files:**
-- Create: `backtest/scripts/generate_label_horizon_configs.py`
+- Create: `backtest/scripts/prepare/generate_label_horizon_configs.py`
 - Test: `tests/backtest/test_label_horizon_configs.py`
 - Create at runtime: `backtest/configs/label-design/<variant>/*.yaml`
 
@@ -187,14 +187,14 @@ provided.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backtest/scripts/generate_label_horizon_configs.py tests/backtest/test_label_horizon_configs.py
+git add backtest/scripts/prepare/generate_label_horizon_configs.py tests/backtest/test_label_horizon_configs.py
 git commit -m "feat(backtest): generate label horizon configs"
 ```
 
 ### Task 5: Dual-Label IC Evaluation
 
 **Files:**
-- Modify: `backtest/scripts/eval_ic_multi_pool.py`
+- Modify: `backtest/scripts/evaluate/eval_ic_multi_pool.py`
 - Test: `tests/backtest/test_eval_ic_multi_pool.py`
 
 **Interfaces:**
@@ -225,14 +225,14 @@ explicitly marked `self`. Do not alter official one-day outputs.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backtest/scripts/eval_ic_multi_pool.py tests/backtest/test_eval_ic_multi_pool.py
+git add backtest/scripts/evaluate/eval_ic_multi_pool.py tests/backtest/test_eval_ic_multi_pool.py
 git commit -m "feat(backtest): evaluate candidate self labels"
 ```
 
 ### Task 6: Two-Row Registry Report
 
 **Files:**
-- Modify: `backtest/scripts/build_experiment_report.py`
+- Modify: `backtest/scripts/report/build_experiment_report.py`
 - Test: `tests/backtest/test_build_experiment_report.py`
 
 **Interfaces:**
@@ -263,7 +263,7 @@ registry/report behavior for prior directions.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backtest/scripts/build_experiment_report.py tests/backtest/test_build_experiment_report.py
+git add backtest/scripts/report/build_experiment_report.py tests/backtest/test_build_experiment_report.py
 git commit -m "feat(backtest): render dual label metrics"
 ```
 
@@ -365,8 +365,8 @@ then diagnostic rows.
 - [ ] **Step 7: Run artifact cleanup dry-run, inspect, then apply**
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/cleanup_experiment_artifacts.py
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/cleanup_experiment_artifacts.py --apply
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/cleanup_experiment_artifacts.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/cleanup_experiment_artifacts.py --apply
 ```
 
 - [ ] **Step 8: Commit tracked results**

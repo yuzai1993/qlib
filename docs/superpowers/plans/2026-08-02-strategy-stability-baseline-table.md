@@ -22,7 +22,7 @@
 
 **Files:**
 - Modify: `tests/backtest/test_build_strategy_stability_report.py`
-- Modify: `backtest/scripts/build_strategy_stability_report.py`
+- Modify: `backtest/scripts/report/build_strategy_stability_report.py`
 - Modify: `backtest/experiments/reports/strategy_stability_report.html`
 
 **Interfaces:**
@@ -62,7 +62,7 @@ Expected: all tests pass.
 Run:
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_strategy_stability_report.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/report/build_strategy_stability_report.py
 ```
 
 Confirm `backtest/experiments/reports/strategy_stability_report.html` has `#current-baseline` and its first table has class `baseline`.
@@ -81,7 +81,7 @@ Expected: the full backtest suite passes and the diff has no whitespace errors.
 - [x] **Step 7: Commit the implementation**
 
 ```bash
-git add backtest/scripts/build_strategy_stability_report.py \
+git add backtest/scripts/report/build_strategy_stability_report.py \
   tests/backtest/test_build_strategy_stability_report.py \
   backtest/experiments/reports/strategy_stability_report.html \
   docs/superpowers/plans/2026-08-02-strategy-stability-baseline-table.md

@@ -20,4 +20,4 @@
 
 目录示例：`strategies/topk-dropout/v2-top5-hold-f100/{metadata.json,README.md,reports/summary.html,variants/}`。
 
-一次性工具原位置为 `/private/tmp/qlib-experiment-groups-20261031`，完成核验后整体删除。正式报告生成器保留为 `backtest/scripts/build_strategy_group_reports.py`。
+一次性工具原位置为 `/private/tmp/qlib-experiment-groups-20261031`，完成核验后整体删除。正式报告生成器保留为 `backtest/scripts/report/build_strategy_group_reports.py`。

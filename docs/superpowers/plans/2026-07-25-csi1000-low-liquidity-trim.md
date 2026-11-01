@@ -59,7 +59,7 @@ Expected: all tests pass.
 ### Task 2: Explicit experiment configs
 
 **Files:**
-- Create: `backtest/scripts/generate_liquidity_trim_configs.py`
+- Create: `backtest/scripts/prepare/generate_liquidity_trim_configs.py`
 - Create: `backtest/configs/liquidity-trim/drop-low-10pct/*.yaml`
 - Create: `backtest/configs/liquidity-trim/drop-low-20pct/*.yaml`
 - Create: `backtest/configs/liquidity-trim/drop-low-third/*.yaml`
@@ -106,13 +106,13 @@ Expected: all tests pass.
 - [ ] **Step 1: Run all 15 trainings serially**
 
 For each explicit config run:
-`MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config <relative-config>`
+`MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config <relative-config>`
 
 Expected: each summary reports one successful run and zero failures.
 
 - [ ] **Step 2: Evaluate each arm on three pools**
 
-Run `backtest/scripts/eval_ic_multi_pool.py` with the arm's seed-42 config, all five
+Run `backtest/scripts/evaluate/eval_ic_multi_pool.py` with the arm's seed-42 config, all five
 `SESSION:SEED` arguments, pools `csi300 csi500 csi1000`, and the arm-specific IC JSON output.
 
 - [ ] **Step 3: Validate result completeness**
@@ -132,7 +132,7 @@ and fixed test segment present.
 
 - [ ] **Step 1: Compute CSI300 paired comparisons**
 
-Use `backtest/scripts/eval_protocol.py:pairwise_win_count` on matching seed RankIC means for
+Use `backtest/scripts/evaluate/eval_protocol.py:pairwise_win_count` on matching seed RankIC means for
 each arm versus `td_csi1000_full_v2_lgbm_csi300.json`.
 
 - [ ] **Step 2: Append pre-registered rows**
@@ -143,7 +143,7 @@ config/result paths, metrics, pairwise results, and a conclusion based on three-
 - [ ] **Step 3: Rebuild and inspect HTML**
 
 Run:
-`/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_experiment_report.py`
+`/opt/anaconda3/envs/qlib/bin/python backtest/scripts/report/build_experiment_report.py`
 
 Confirm the `liquidity-trim` table starts with the B1 row and then contains all three arms.
 

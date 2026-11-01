@@ -22,7 +22,7 @@
 ### Task 1: Freeze grid and robust selection contract
 
 **Files:**
-- Create: `backtest/scripts/strategy_neighborhood_protocol.py`
+- Create: `backtest/scripts/maintenance/strategy_neighborhood_protocol.py`
 - Create: `tests/backtest/test_strategy_neighborhood_protocol.py`
 
 - [x] Write failing tests for the exact 540 unique candidates, baseline inclusion, axial-neighbor membership, incomplete-neighbor rejection, and preregistered ranking order.
@@ -33,8 +33,8 @@
 ### Task 2: Build restartable valid/test runner
 
 **Files:**
-- Modify: `backtest/scripts/run_strategy_sweep.py`
-- Create: `backtest/scripts/run_strategy_neighborhood.py`
+- Modify: `backtest/scripts/evaluate/run_strategy_sweep.py`
+- Create: `backtest/scripts/evaluate/run_strategy_neighborhood.py`
 - Create: `tests/backtest/test_run_strategy_neighborhood.py`
 
 - [x] Write failing tests for per-candidate risk propagation, checkpoint resume, valid completeness gating, and winner-only test planning.
@@ -45,7 +45,7 @@
 ### Task 3: Publish baseline-first report and registry row
 
 **Files:**
-- Create: `backtest/scripts/finalize_strategy_neighborhood.py`
+- Create: `backtest/scripts/register/finalize_strategy_neighborhood.py`
 - Create: `tests/backtest/test_finalize_strategy_neighborhood.py`
 - Create during execution: `backtest/experiments/strategy_neighborhood_report.html`
 - Modify during execution: `backtest/experiments/registry.jsonl`

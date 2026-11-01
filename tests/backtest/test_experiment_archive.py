@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backtest/scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 
 def manifest(root, folder="models/group/arm", **changes):
@@ -21,7 +21,7 @@ def manifest(root, folder="models/group/arm", **changes):
 
 
 def test_discovery_retains_editorial_metadata_and_ignores_system_roots(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, description="Editorial", metrics_source={"path": "metrics/a.json"})
     manifest(tmp_path, "_shared/ignored", exp_id="ignored")
     result = archive.scan_experiment_archives(tmp_path)
@@ -35,7 +35,7 @@ def test_discovery_retains_editorial_metadata_and_ignores_system_roots(tmp_path)
 
 
 def test_category_manifest_preserves_stable_id_and_declares_its_physical_directory(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     relative = "backtest/experiments/models/training-target/h1"
     manifest(tmp_path, "models/training-target/h1", archive_path=relative,
              experiment_type="training_target", analysis={"conclusion": "", "limitations": "",
@@ -56,7 +56,7 @@ def test_category_manifest_preserves_stable_id_and_declares_its_physical_directo
     {"archive_path": "backtest/experiments/models"},
 ])
 def test_category_directory_requires_matching_safe_kind_local_declaration(tmp_path, changes):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, "models/training-target/h1", **changes)
     result = archive.scan_experiment_archives(tmp_path)
     assert not result["experiments"] and result["errors"]
@@ -72,7 +72,7 @@ def test_category_directory_requires_matching_safe_kind_local_declaration(tmp_pa
     {"analysis": {"current": True}},
 ])
 def test_editorial_category_fields_are_strict_and_cannot_define_authority(tmp_path, changes):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, **changes)
     result = archive.scan_experiment_archives(tmp_path)
     assert not result["experiments"] and result["errors"]
@@ -80,13 +80,13 @@ def test_editorial_category_fields_are_strict_and_cannot_define_authority(tmp_pa
 
 @pytest.mark.parametrize("updated", [None, "", "2026-10-31", "2026-10-31T08:30:00Z"])
 def test_analysis_accepts_empty_or_valid_date_strings(tmp_path, updated):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, experiment_type="evaluation_method", analysis={"updated_at": updated})
     assert not archive.scan_experiment_archives(tmp_path)["errors"]
 
 
 def test_duplicate_exp_id_remains_invalid_across_physical_categories(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path)
     manifest(tmp_path, "models/training-target/h1",
              archive_path="backtest/experiments/models/training-target/h1")
@@ -97,7 +97,7 @@ def test_duplicate_exp_id_remains_invalid_across_physical_categories(tmp_path):
 
 
 def test_analysis_evidence_cannot_follow_an_archive_internal_symlink(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     path = manifest(tmp_path, analysis={"evidence": ["docs/link.md"]})
     asset = path.parent / "docs/link.md"
     asset.parent.mkdir()
@@ -111,7 +111,7 @@ def test_analysis_evidence_cannot_follow_an_archive_internal_symlink(tmp_path):
     {"metrics_source": {"path": "../escape.json"}}, {"metrics_source": {"path": "/tmp/a"}},
     {"schema_version": 1}, {"entity_type": "shared"}])
 def test_discovery_invalid_manifests_are_not_offered(tmp_path, change):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, **change)
     result = archive.scan_experiment_archives(tmp_path)
     assert not result["experiments"] and result["errors"]
@@ -123,7 +123,7 @@ def test_discovery_invalid_manifests_are_not_offered(tmp_path, change):
     "records", "shared_assets", "recipe_sources", "recipe_session_metadata", "archived"])
 @pytest.mark.parametrize("invalid", [None, 1, True, "asset.json", {"path": "asset.json"}])
 def test_inventory_fields_require_lists_and_keep_other_archives_visible(tmp_path, field, invalid):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, **{field: invalid})
     manifest(tmp_path, "models/group/good", exp_id="group/good")
     result = archive.scan_experiment_archives(tmp_path)
@@ -133,7 +133,7 @@ def test_inventory_fields_require_lists_and_keep_other_archives_visible(tmp_path
 
 @pytest.mark.parametrize("invalid", [None, 1, True, [], {}, {"path": None}, {"path": 1}])
 def test_inventory_entries_require_local_paths(tmp_path, invalid):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, data=[invalid])
     result = archive.scan_experiment_archives(tmp_path)
     assert not result["experiments"] and result["errors"]
@@ -141,14 +141,14 @@ def test_inventory_entries_require_local_paths(tmp_path, invalid):
 
 @pytest.mark.parametrize("invalid", [1, None, {}, {"sha256": "a" * 64}])
 def test_declared_metrics_source_requires_a_local_path(tmp_path, invalid):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, metrics_source=invalid)
     result = archive.scan_experiment_archives(tmp_path)
     assert not result["experiments"] and result["errors"]
 
 
 def test_duplicate_ids_are_all_excluded_even_if_one_directory_disagrees(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path)
     manifest(tmp_path, "strategies/other/name", kind="strategy")
     result = archive.scan_experiment_archives(tmp_path)
@@ -157,7 +157,7 @@ def test_duplicate_ids_are_all_excluded_even_if_one_directory_disagrees(tmp_path
 
 
 def test_symlink_and_oversize_metadata_are_not_read(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     path = manifest(tmp_path)
     target = tmp_path / "target.json"
     path.rename(target)
@@ -169,7 +169,7 @@ def test_symlink_and_oversize_metadata_are_not_read(tmp_path):
 
 
 def test_metadata_read_is_bounded_even_when_file_size_stat_is_stale(tmp_path, monkeypatch):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     path = manifest(tmp_path)
     path.write_text(path.read_text() + " " * archive.MAX_METADATA_BYTES)
     real_stat = Path.stat
@@ -188,7 +188,7 @@ def test_metadata_read_is_bounded_even_when_file_size_stat_is_stale(tmp_path, mo
 
 
 def test_repository_inventory_boundary_and_metrics_symlink_are_checked(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     path = manifest(tmp_path, inventory_kind="asset_snapshot", data=["../escape"])
     assert archive.scan_experiment_archives(tmp_path)["errors"]
     path = manifest(tmp_path, metrics_source={"path": "metrics/a.json"})
@@ -197,7 +197,7 @@ def test_repository_inventory_boundary_and_metrics_symlink_are_checked(tmp_path)
 
 
 def test_malformed_track_and_symlinked_experiments_root_are_reported(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, track=[])
     assert archive.scan_experiment_archives(tmp_path)["errors"]
     base = tmp_path / "backtest/experiments"
@@ -216,8 +216,8 @@ def test_nonregular_metadata_is_rejected_without_blocking(tmp_path, entry_type):
         path.mkdir()
     else:
         os.mkfifo(path)
-    scripts = str(Path(__file__).resolve().parents[2] / "backtest/scripts")
-    code = "import sys,json;sys.path.insert(0,sys.argv[1]);import experiment_archive as a;print(json.dumps(a.scan_experiment_archives(sys.argv[2])))"
+    scripts = str(Path(__file__).resolve().parents[2])
+    code = "import sys,json;sys.path.insert(0,sys.argv[1]);import backtest.scripts.maintenance.experiment_archive as a;print(json.dumps(a.scan_experiment_archives(sys.argv[2])))"
     process = subprocess.run([sys.executable, "-c", code, scripts, str(tmp_path)],
                              capture_output=True, text=True, timeout=2, check=True)
     result = json.loads(process.stdout)
@@ -225,7 +225,7 @@ def test_nonregular_metadata_is_rejected_without_blocking(tmp_path, entry_type):
 
 
 def test_symlinked_backtest_ancestor_is_rejected(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path)
     base = tmp_path / "backtest"
     target = tmp_path / "other"
@@ -236,7 +236,7 @@ def test_symlinked_backtest_ancestor_is_rejected(tmp_path):
 
 
 def test_metadata_refresh_merges_owned_assets_and_preserves_dependencies(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     import hashlib
     path = manifest(tmp_path, inventory_kind="asset_snapshot", title="Editorial title",
         configs=[{"path": "backtest/experiments/_shared/config.yaml", "shared": True, "sha256": "a" * 64}],
@@ -262,7 +262,7 @@ def test_metadata_refresh_merges_owned_assets_and_preserves_dependencies(tmp_pat
 
 @pytest.mark.parametrize("new_path", ["metrics/first.json", "metrics/second.json"])
 def test_formal_refresh_updates_latest_metrics_source_and_hash(tmp_path, new_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     import hashlib
     path = manifest(tmp_path, metrics_source={"path": "metrics/first.json", "sha256": "0" * 64})
     asset = path.parent / new_path
@@ -277,7 +277,7 @@ def test_formal_refresh_updates_latest_metrics_source_and_hash(tmp_path, new_pat
 @pytest.mark.parametrize("portable", [None, "", {}, "backtest/experiments/_shared/source.json",
     "backtest/experiments/models/group/arm/metrics/../unsafe.json"])
 def test_authoritative_portable_source_never_falls_back_to_old_eval_output(tmp_path, portable):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     path = manifest(tmp_path, metrics_source={"path": "metrics/old.json", "sha256": "0" * 64})
     fallback = path.parent / "metrics/fallback.json"
     fallback.parent.mkdir(parents=True)
@@ -289,7 +289,7 @@ def test_authoritative_portable_source_never_falls_back_to_old_eval_output(tmp_p
 
 
 def test_authoritative_missing_local_source_clears_hash_and_keeps_declared_path(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     manifest(tmp_path, metrics_source={"path": "metrics/missing.json", "sha256": "0" * 64})
     metadata = archive.ensure_experiment_metadata(tmp_path, {"exp_id": "group/arm", "phase": "M",
         "portable_eval_output": "backtest/experiments/models/group/arm/metrics/missing.json",
@@ -298,7 +298,7 @@ def test_authoritative_missing_local_source_clears_hash_and_keeps_declared_path(
 
 
 def test_formal_refresh_converts_local_inventory_to_repository_scope(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     path = manifest(tmp_path, reports=["backtest/report.html"],
         configs=[{"path": "configs/a.yaml", "sha256": "a" * 64}],
         sources={"nested": [{"role": "source", "path": "docs/source.md"}]})
@@ -314,7 +314,7 @@ def test_formal_refresh_converts_local_inventory_to_repository_scope(tmp_path):
 
 
 def test_local_inventory_conversion_preserves_resource_annotations(tmp_path):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     labels = ["baseline", "reviewed"]
     annotations = {"path": "editorial source description", "values": ["first", "second"]}
     manifest(tmp_path, configs=[{"path": "configs/a.yaml", "labels": labels, "annotations": annotations}])
@@ -334,6 +334,6 @@ def test_local_inventory_conversion_preserves_resource_annotations(tmp_path):
     ({"phase": "M"}, ("model", "csi1000")),
 ])
 def test_historical_classification_follows_research_protocol(row, expected):
-    import experiment_archive as archive
+    import backtest.scripts.maintenance.experiment_archive as archive
     actual = archive.classify_experiment(row)
     assert (actual["kind"], actual["track"]) == expected

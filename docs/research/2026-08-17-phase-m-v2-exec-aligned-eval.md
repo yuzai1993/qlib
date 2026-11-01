@@ -90,8 +90,8 @@
 | 新增 | `tests/backtest/test_exec_path_eval.py` | 单元 + 回归（含死锁用例） |
 | 复用 | `qlib/contrib/strategy/topk_dropout.py::select_topk_dropout` | 粘性选股，纯函数、无价格依赖 |
 | 复用 | `qlib/contrib/strategy/topk_dropout.py::select_daily_topk` | 每日全量重选 = v1 语义，作阶梯对照臂 |
-| 复用 | `backtest/scripts/eval_ic_multi_pool.py` 的掩码 | `entry_tradable_mask` / `amount_mask` / `_listing_age_mask` / `_load_st_symbols` |
-| 复用 | `backtest/scripts/eval_ic_multi_pool.py::hac_vol` / `appraisal` | 波动与 beta/alpha 口径与 v1 一致，保证可对读 |
+| 复用 | `backtest/scripts/evaluate/eval_ic_multi_pool.py` 的掩码 | `entry_tradable_mask` / `amount_mask` / `_listing_age_mask` / `_load_st_symbols` |
+| 复用 | `backtest/scripts/evaluate/eval_ic_multi_pool.py::hac_vol` / `appraisal` | 波动与 beta/alpha 口径与 v1 一致，保证可对读 |
 
 `select_daily_topk` 的存在让阶梯第一步几乎零成本：把 v1 的"截面 top5 标签均值"换成"`select_daily_topk` 递推 + 逐日收益"，语义等价但走的是 v2 的会计管线，可以直接量出会计口径本身贡献了多少差异。
 

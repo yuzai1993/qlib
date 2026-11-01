@@ -11,8 +11,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from backtest.scripts import build_strategy_group_reports as groups
-from backtest.scripts import build_phase_m_v1_bt_report as hub
+import backtest.scripts.report.build_strategy_group_reports as groups
+import backtest.scripts.report.build_phase_m_v1_bt_report as hub
 
 
 def _fixture(tmp_path):

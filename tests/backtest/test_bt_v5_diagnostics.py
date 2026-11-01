@@ -1,14 +1,11 @@
 import pandas as pd
 import pytest
 
-from backtest.scripts.research_layout import resolve_research_path
-from backtest.scripts.experiment_registry import load_registry
-from backtest.scripts.experiment_archive import archive_directory
+from backtest.scripts.maintenance.research_layout import resolve_research_path
+from backtest.scripts.register.experiment_registry import load_registry
+from backtest.scripts.maintenance.experiment_archive import archive_directory
 
-from backtest.scripts.run_bt_v5_cutover_diagnostics import (
-    combine_frozen_scores,
-    validate_frozen_config,
-)
+from backtest.scripts.evaluate.run_bt_v5_cutover_diagnostics import combine_frozen_scores, validate_frozen_config
 
 
 def scores(dates, values):
@@ -65,7 +62,7 @@ def test_explicit_risk_contract_preserves_legacy_replay():
 
 
 def test_diagnostic_identity_requires_recorded_risk_and_uses_separate_paths():
-    from backtest.scripts.register_bt_v5_cutover_diagnostics import diagnostic_identity
+    from backtest.scripts.register.register_bt_v5_cutover_diagnostics import diagnostic_identity
 
     old = diagnostic_identity({"risk_degree": 0.9})
     new = diagnostic_identity({"risk_degree": 1.0})
@@ -80,7 +77,7 @@ def test_diagnostic_identity_requires_recorded_risk_and_uses_separate_paths():
 def test_cached_forward_and_benchmark_provenance_rejects_changed_inputs(tmp_path):
     import hashlib
     import json
-    from backtest.scripts.run_bt_v5_cutover_diagnostics import load_frozen_reuse
+    from backtest.scripts.evaluate.run_bt_v5_cutover_diagnostics import load_frozen_reuse
 
     forward = scores(["2026-07-31", "2026-08-03"], [1, 2])
     forward.to_pickle(tmp_path / "forward_pred.pkl")
@@ -117,7 +114,7 @@ def test_cached_forward_and_benchmark_provenance_rejects_changed_inputs(tmp_path
 
 def test_failed_attempt_registration_preserves_existing_rows(tmp_path, monkeypatch):
     import json
-    from backtest.scripts import register_bt_v5_cutover_diagnostics as register
+    import backtest.scripts.register.register_bt_v5_cutover_diagnostics as register
 
     monkeypatch.setattr(register, "ROOT", tmp_path)
     reports = []
@@ -155,7 +152,7 @@ def test_failed_attempt_registration_preserves_existing_rows(tmp_path, monkeypat
 
 def test_failed_attempt_resolves_each_destination_before_mkdir(tmp_path, monkeypatch):
     import json
-    from backtest.scripts import register_bt_v5_cutover_diagnostics as register
+    import backtest.scripts.register.register_bt_v5_cutover_diagnostics as register
 
     monkeypatch.setattr(register, "ROOT", tmp_path)
     monkeypatch.setattr(register, "_RESEARCH_ROOT", tmp_path)
@@ -202,8 +199,9 @@ def test_failed_attempt_resolves_each_destination_before_mkdir(tmp_path, monkeyp
 
 def test_frozen_research_inputs_resolve_from_relocated_archive_without_changing_bytes(tmp_path):
     import json
-    from backtest.scripts.run_bt_v5_cutover_diagnostics import (
-        load_historical_benchmark, load_historical_regimes,
+    from backtest.scripts.evaluate.run_bt_v5_cutover_diagnostics import (
+        load_historical_benchmark,
+        load_historical_regimes,
     )
 
     directory = tmp_path / "backtest/experiments/strategies/topk-dropout/bt-v5/configs"
@@ -243,7 +241,7 @@ def test_registered_metrics_recompute_from_durable_daily_returns(directory_name,
     import hashlib
     import json
     from pathlib import Path
-    from backtest.scripts.strategy_stability_metrics import summarize_period
+    from backtest.scripts.evaluate.strategy_stability_metrics import summarize_period
     import yaml
 
     root = Path(__file__).resolve().parents[2]

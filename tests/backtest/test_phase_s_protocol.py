@@ -10,9 +10,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import phase_s_protocol as protocol  # noqa: E402
+import backtest.scripts.maintenance.phase_s_protocol as protocol  # noqa: E402
 
 
 def test_phase_s_full_segment_is_the_selection_contract():

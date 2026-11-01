@@ -6,10 +6,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import phase_s_protocol as protocol  # noqa: E402
-import register_strategy_stability as register  # noqa: E402
+import backtest.scripts.maintenance.phase_s_protocol as protocol  # noqa: E402
+import backtest.scripts.register.register_strategy_stability as register  # noqa: E402
 
 
 def _manifest(tmp_path: Path, model_ref: str):

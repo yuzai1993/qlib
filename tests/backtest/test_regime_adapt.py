@@ -18,7 +18,7 @@ from backtest.models.regime_adapt import (
     top3_h5_net_ann,
     top5_h5_net_ann,
 )
-from backtest.scripts.eval_ic_multi_pool import (
+from backtest.scripts.evaluate.eval_ic_multi_pool import (
     EVAL_LABEL_EXPR,
     HEAD_H_CORE,
     HEAD_K_CORE,

@@ -7,9 +7,12 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-from build_im_continuous import select_active_contracts, settle_to_settle_returns  # noqa: E402
+from backtest.scripts.prepare.build_im_continuous import ( # noqa: E402
+    select_active_contracts,
+    settle_to_settle_returns,
+)
 
 
 def test_select_active_picks_higher_volume():

@@ -13,7 +13,7 @@
 - Follow `backtest/EXPERIMENT_STANDARD.md` v1.0.
 - Keep valid `2020-01-13~2021-07-15` and test `2021-07-16~2026-07-16` unchanged.
 - Use fixed seeds `[42, 1000, 2000, 3000, 4000]`.
-- Evaluate successful variants on `csi300`, `csi500`, and `csi1000` with `backtest/scripts/eval_ic_multi_pool.py`.
+- Evaluate successful variants on `csi300`, `csi500`, and `csi1000` with `backtest/scripts/evaluate/eval_ic_multi_pool.py`.
 - Do not run Qlib training through heredoc or stdin on macOS.
 - Do not run two training processes concurrently on the 16GB host.
 
@@ -27,7 +27,7 @@
 
 **Interfaces:**
 - Consumes: B0 config structure from `backtest/configs/baseline/b0-m/`.
-- Produces: Five configs accepted by `backtest/scripts/config_loader.py`.
+- Produces: Five configs accepted by `backtest/scripts/maintenance/config_loader.py`.
 
 - [ ] **Step 1: Generate five configs**
 
@@ -86,7 +86,7 @@ Expected: `instruments: all`, Alpha158, model parameters, valid, test, strategy,
 Run:
 
 ```bash
-MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config train-data/csi300-start2016/td_csi300_start2016_lgbm_s<seed>.yaml
+MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config train-data/csi300-start2016/td_csi300_start2016_lgbm_s<seed>.yaml
 ```
 
 Expected: exit code 0 and `summary.json` reports `success_runs: 1`.
@@ -173,7 +173,7 @@ On success, include five seeds and metrics. On failure, include attempted result
 Run:
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_experiment_report.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/report/build_experiment_report.py
 ```
 
 Expected: exit code 0 and both new exp ids appear in the generated HTML.

@@ -6,10 +6,15 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backtest/scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-import config_loader
-from research_layout import relocate_path, report_href, research_path_identity, resolve_research_path
+import backtest.scripts.maintenance.config_loader as config_loader
+from backtest.scripts.maintenance.research_layout import (
+    relocate_path,
+    report_href,
+    research_path_identity,
+    resolve_research_path,
+)
 
 
 def _map(root: Path, paths: dict):

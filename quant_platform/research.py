@@ -15,14 +15,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from backtest.scripts.experiment_registry import decode_registry_line
-from backtest.scripts.research_layout import research_path_identity, relocate_path, resolve_research_path
-from backtest.scripts.experiment_archive import (
-    EXPERIMENT_TYPES, _load_object_with_revision, _validate_model_profile,
-    classify_experiment, scan_experiment_archives,
+from backtest.scripts.register.experiment_registry import decode_registry_line
+from backtest.scripts.maintenance.research_layout import research_path_identity, relocate_path, resolve_research_path
+from backtest.scripts.maintenance.experiment_archive import (
+    EXPERIMENT_TYPES,
+    _load_object_with_revision,
+    _validate_model_profile,
+    classify_experiment,
+    scan_experiment_archives,
 )
-from backtest.scripts.baseline_references import load_historical_baseline_sources
-from backtest.scripts.research_labels import strategy_display_version, strategy_reference_text
+from backtest.scripts.maintenance.baseline_references import load_historical_baseline_sources
+from backtest.scripts.report.research_labels import strategy_display_version, strategy_reference_text
 from .model_profiles import project_model_profile
 from .research_groups import baseline_results, training_target_results
 from .strategy_groups import authenticated_group_protocol, collapse_strategy_groups, strategy_parameter_group

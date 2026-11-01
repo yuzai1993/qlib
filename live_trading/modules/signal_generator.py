@@ -1,7 +1,6 @@
 """Signal generation: load model, prepare features, predict scores."""
 
 import logging
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -11,10 +10,7 @@ from qlib.utils import init_instance_by_config
 
 from live_trading.modules.model_artifact import load_model_artifact
 
-_BACKTEST_SCRIPTS = Path(__file__).resolve().parents[2] / "backtest" / "scripts"
-if str(_BACKTEST_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(_BACKTEST_SCRIPTS))
-from ensemble_preds import blend_score_series  # noqa: E402
+from backtest.scripts.evaluate.ensemble_preds import blend_score_series  # noqa: E402
 
 logger = logging.getLogger("live_trading.signal")
 # 每晚只出一天信号。Qlib 会按表达式自动向前取滚动窗，这里只决定输出多少天。

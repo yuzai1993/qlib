@@ -20,7 +20,7 @@ def _diagnostic() -> dict:
 
 def test_manifest_freezes_three_h40_survival_power_candidates():
     freezer = importlib.import_module(
-        "backtest.scripts.freeze_h40_survival_weight_manifest"
+        "backtest.scripts.prepare.freeze_h40_survival_weight_manifest"
     )
 
     manifest = freezer.build_manifest(
@@ -52,7 +52,7 @@ def test_manifest_freezes_three_h40_survival_power_candidates():
 
 def test_manifest_power_changes_weight_shape_without_changing_support():
     freezer = importlib.import_module(
-        "backtest.scripts.freeze_h40_survival_weight_manifest"
+        "backtest.scripts.prepare.freeze_h40_survival_weight_manifest"
     )
     manifest = freezer.build_manifest(
         _diagnostic(),

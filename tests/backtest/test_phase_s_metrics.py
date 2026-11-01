@@ -9,11 +9,11 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import run_backtest  # noqa: E402
-import run_pred_backtest  # noqa: E402
-from eval_protocol import yearly_ir  # noqa: E402
+import backtest.scripts.train.run_backtest as run_backtest  # noqa: E402
+import backtest.scripts.evaluate.run_pred_backtest as run_pred_backtest  # noqa: E402
+from backtest.scripts.evaluate.eval_protocol import yearly_ir  # noqa: E402
 
 
 def test_extract_metrics_adds_turnover_and_cumulative_cost_diagnostics():

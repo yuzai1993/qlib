@@ -8,9 +8,9 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-import run_rolling_retrain as rolling  # noqa: E402
+import backtest.scripts.train.run_rolling_retrain as rolling  # noqa: E402
 
 
 def _config() -> dict:

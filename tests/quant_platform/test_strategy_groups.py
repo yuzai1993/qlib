@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from backtest.scripts.experiment_archive import scan_experiment_archives
+from backtest.scripts.maintenance.experiment_archive import scan_experiment_archives
 from quant_platform.analyses import ConflictError
 from quant_platform.research_annotations import ResearchAnnotations
 from tests.quant_platform.test_directory_catalog import manifest

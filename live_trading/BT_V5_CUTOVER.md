@@ -12,7 +12,7 @@
 
 Mac旧策略LaunchAgent `com.yuxianqi.qlib-live-scheduler` 已禁用并卸载。旧10月30日批次 `20261030_alla_v4_ladder_k1h5_postclose_real_001` 的 `.done` 与 `.jsonl` 已从共享 `inbox` 移入 `/Volumes/qmt_bridge/quarantine/20261030T002153+0800_old_1030_disabled/`，逐文件SHA校验一致；本地记录为 `live_trading/logs/old_1030_withdrawal_20261030.json`。这只证明共享入口已撤下，不撤销Windows本地journal、已有剪贴板请求或券商委托；旧QMT继续保持停止，Windows任务与手动中转进程还须停用。
 
-此前的离线核对文件 `backtest/result/bt_v5_operator_preview_20261030/offline_review.json` 保留为历史预览，仍为 `publishable=false`。本次正式批次使用新跑的五模型评分，5216只、过滤后4934只，5个买入候选与原预览一致；执行价格与股数由新版relay在窗口内查询真实账户后确定。原始资金300,000元与当前可用现金244,607元是不同口径。
+此前的离线核对文件 `live_trading/logs/bt_v5_operator_preview_20261030/offline_review.json` 保留为历史预览，仍为 `publishable=false`。本次正式批次使用新跑的五模型评分，5216只、过滤后4934只，5个买入候选与原预览一致；执行价格与股数由新版relay在窗口内查询真实账户后确定。原始资金300,000元与当前可用现金244,607元是不同口径。
 
 ## 停止Windows旧中转
 
@@ -98,7 +98,7 @@ QMT源版本须为 `2026-10-29-topk-cash-v1` 或经验证的后续版。模板�
 
 本节保留清仓前证据，不代表用户10月30日确认的当前账户状态。最新空仓/现金假设见开头的离线核对文件；原账本没有据口头余额回填或伪造成交。审计目录已按逐文件哈希复制到生产根，原工作区副本保留。
 
-只读来源：生产 `live_trading/data/alla_v4_ladder_k1h5_postclose_real.db`。最新隔离快照位于 `backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_snapshot.db`，同目录`source_audit.json`保留审计，`source_file_evidence.json`记录读取前后文件哈希。
+只读来源：生产 `live_trading/data/alla_v4_ladder_k1h5_postclose_real.db`。最新隔离快照位于 `live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/source_snapshot.db`，同目录`source_audit.json`保留审计，`source_file_evidence.json`记录读取前后文件哈希。
 
 快照生成于上海时间2026-10-29 23:48:40，SHA-256：`2fd8d1b07c95d904a46b7bf2e1396c86a6084677d4017b891f963abb116da1eb`。23张表、现金51,839.06711849991、4只持仓合计13,400股和历史记录均一致；读取前后生产主数据库、WAL和SHM字节哈希一致。这是账本观察，不等于已核对实时券商状态。原有分层记录完整保留为历史；新策略不应继续运行阶梯到期逻辑。
 
@@ -110,7 +110,7 @@ QMT源版本须为 `2026-10-29-topk-cash-v1` 或经验证的后续版。模板�
 
 上次`hypothetical_20261029_intents.json`的1卖2买预览已经过时，不用于本次切换。新预览使用`preview_bt_v5_cutover.py --mode manual_liquidation`，列出全部正持仓的账面股数，包括零股；券商可卖数量保持未知，卖出所得不提前计入可用现金。输出始终`publishable=false`、`ready_for_activation=false`，没有可提交订单或批次身份。清仓后候选允许包含原持仓中的股票，实际启用前必须按最新信号重算。
 
-清仓前清单在`backtest/result/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/manual_liquidation_preview.json`：4只原持仓全部列入人工核对清单。采用2026-10-29当天v2五种子评分（5216只，过滤后4934只），没有使用过期日期替代；评分文件及来源哈希位于同目录`v2_scores_20261029.pkl/.json`。这份历史清单不再作为当前持仓状态；用户已确认的空仓状态用于新的离线预览。
+清仓前清单在`live_trading/logs/bt_v5_cutover_audit/20261029T154840002290Z_risk1_final/manual_liquidation_preview.json`：4只原持仓全部列入人工核对清单。采用2026-10-29当天v2五种子评分（5216只，过滤后4934只），没有使用过期日期替代；评分文件及来源哈希位于同目录`v2_scores_20261029.pkl/.json`。这份历史清单不再作为当前持仓状态；用户已确认的空仓状态用于新的离线预览。
 
 ## 人工启用与回退顺序
 

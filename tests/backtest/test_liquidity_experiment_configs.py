@@ -17,7 +17,7 @@ ARMS = {
 
 @pytest.fixture
 def generated_configs(tmp_path, monkeypatch):
-    from backtest.scripts import generate_liquidity_configs as generator
+    import backtest.scripts.prepare.generate_liquidity_configs as generator
 
     source_root = tmp_path / "backtest/configs/source"
     config_root = tmp_path / "backtest/configs/generated"
@@ -89,7 +89,8 @@ def test_generator_preserves_source_fields_outside_mode_note_and_sampling(genera
 
 @pytest.mark.parametrize("trim", [False, True])
 def test_generator_resolves_source_and_output_without_recreating_old_directories(tmp_path, monkeypatch, trim):
-    from backtest.scripts import generate_liquidity_configs, generate_liquidity_trim_configs
+    import backtest.scripts.prepare.generate_liquidity_configs as generate_liquidity_configs
+    import backtest.scripts.prepare.generate_liquidity_trim_configs as generate_liquidity_trim_configs
 
     generator = generate_liquidity_trim_configs if trim else generate_liquidity_configs
     monkeypatch.setattr(generator, "BACKTEST_ROOT", tmp_path / "backtest")

@@ -24,10 +24,10 @@
 
 | 路径 | 职责 |
 |---|---|
-| `backtest/scripts/build_im_continuous.py` | CFFEX 分合约 → 连主力 CSV |
+| `backtest/scripts/prepare/build_im_continuous.py` | CFFEX 分合约 → 连主力 CSV |
 | `backtest/data/im/im_continuous_daily.csv` | 固化 IM 行情（生成物） |
-| `backtest/scripts/beta_overlay_core.py` | 纯函数：滚动 β、overlay、离散手数 |
-| `backtest/scripts/run_beta_overlay_experiment.py` | CLI：跑对照、写 artifact、可选 registry |
+| `backtest/scripts/evaluate/beta_overlay_core.py` | 纯函数：滚动 β、overlay、离散手数 |
+| `backtest/scripts/evaluate/run_beta_overlay_experiment.py` | CLI：跑对照、写 artifact、可选 registry |
 | `backtest/configs/strategy-beta-overlay/b2s-im-target1-roll60_csi1000_imwindow.yaml` | 280 万 B2-S pred_backtest 配置 |
 | `tests/backtest/test_build_im_continuous.py` | 连主力构造测试 |
 | `tests/backtest/test_beta_overlay_core.py` | overlay / β / 手数测试 |
@@ -39,7 +39,7 @@
 ### Task 1: IM 连主力构建器
 
 **Files:**
-- Create: `backtest/scripts/build_im_continuous.py`
+- Create: `backtest/scripts/prepare/build_im_continuous.py`
 - Create: `tests/backtest/test_build_im_continuous.py`
 - Create: `backtest/data/im/.gitkeep`（若目录需入库；大 CSV 若太大则 gitignore + 文档说明由脚本生成）
 
@@ -107,7 +107,7 @@ Expected: FAIL import error
 Run:
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_im_continuous.py \
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/prepare/build_im_continuous.py \
   --cffex-dir backtest/experiments/ic/cffex_daily \
   --output backtest/data/im/im_continuous_daily.csv \
   --write-hash
@@ -118,7 +118,7 @@ Expected: 约 975+ 行，`fut_ret` 自 2022-07-25 起非空；打印 path + sha2
 - [ ] **Step 5: Commit（仅用户要求时）**
 
 ```bash
-git add backtest/scripts/build_im_continuous.py tests/backtest/test_build_im_continuous.py backtest/data/im/
+git add backtest/scripts/prepare/build_im_continuous.py tests/backtest/test_build_im_continuous.py backtest/data/im/
 # git commit only if user asks
 ```
 
@@ -127,7 +127,7 @@ git add backtest/scripts/build_im_continuous.py tests/backtest/test_build_im_con
 ### Task 2: Overlay 纯函数核心
 
 **Files:**
-- Create: `backtest/scripts/beta_overlay_core.py`
+- Create: `backtest/scripts/evaluate/beta_overlay_core.py`
 - Create: `tests/backtest/test_beta_overlay_core.py`
 
 **Interfaces:**
@@ -239,9 +239,9 @@ Expected: PASS
 ### Task 3: 实验 Runner + Registry 行
 
 **Files:**
-- Create: `backtest/scripts/run_beta_overlay_experiment.py`
+- Create: `backtest/scripts/evaluate/run_beta_overlay_experiment.py`
 - Create: `tests/backtest/test_run_beta_overlay_experiment.py`
-- Modify（如需）: `backtest/scripts/build_strategy_stability_report.py` — 仅当要在稳定性 HTML 增加 `strategy-beta-overlay` 区块；否则 runner 写独立小结进 JSON，并在 `registry` 后手动/小脚本刷新报告。优先：**registry 行 + JSON artifact**；HTML 最小改动：在 `build_strategy_stability_report.py` 增加识别 `direction==strategy-beta-overlay` 的 section（若改动面过大则只保证 JSON + registry，HTML 作为 Task 3b）。
+- Modify（如需）: `backtest/scripts/report/build_strategy_stability_report.py` — 仅当要在稳定性 HTML 增加 `strategy-beta-overlay` 区块；否则 runner 写独立小结进 JSON，并在 `registry` 后手动/小脚本刷新报告。优先：**registry 行 + JSON artifact**；HTML 最小改动：在 `build_strategy_stability_report.py` 增加识别 `direction==strategy-beta-overlay` 的 section（若改动面过大则只保证 JSON + registry，HTML 作为 Task 3b）。
 
 **Interfaces:**
 - Consumes: `beta_overlay_core.*`，`strategy_stability_metrics.summarize_period`，`analyze_b2s_style_regime.upsert_registry` / `sha256_of`
@@ -301,7 +301,7 @@ port_discrete = net + notional_frac * fut_ret
 CLI：
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_beta_overlay_experiment.py \
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/evaluate/run_beta_overlay_experiment.py \
   --report backtest/result/<session>/run_01/report_normal.csv \
   --im backtest/data/im/im_continuous_daily.csv \
   --output backtest/experiments/ic/b2s_im_beta_overlay.json \
@@ -340,7 +340,7 @@ Expected: PASS
 然后（示例，以实际 CLI 为准，对照 `run_pred_backtest.py -h`）：
 
 ```bash
-MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_pred_backtest.py \
+MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python backtest/scripts/evaluate/run_pred_backtest.py \
   --config backtest/configs/strategy-beta-overlay/b2s-im-target1-roll60_csi1000_imwindow.yaml \
   --pred <manifest_full_pred_path>
 ```
@@ -350,7 +350,7 @@ Expected: 生成 `backtest/result/<timestamp>_.../run_01/report_normal.csv`
 - [ ] **Step 3: 跑 overlay 实验**
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_beta_overlay_experiment.py \
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/evaluate/run_beta_overlay_experiment.py \
   --report backtest/result/<session>/run_01/report_normal.csv \
   --im backtest/data/im/im_continuous_daily.csv \
   --output backtest/experiments/ic/b2s_im_beta_overlay.json \
@@ -364,7 +364,7 @@ Expected: JSON 含双方夏普与 `promote.eligible` true/false
 - [ ] **Step 4: 重建报告（若 Task 3 接了 HTML）**
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/build_strategy_stability_report.py
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/report/build_strategy_stability_report.py
 ```
 
 若未接 HTML：在 JSON `hypothesis`/`findings` 写清结论即可，并在回复用户时贴表。
@@ -374,7 +374,7 @@ Expected: JSON 含双方夏普与 `promote.eligible` true/false
 ### Task 5: 晋升门闩（人工确认，不自动执行）
 
 **Files:**
-- Modify: `backtest/scripts/register_phase_s_experiment.py` **仅当**现有 `promote-baseline` 无法表达 overlay 锚点时，增加 `promote-beta-overlay-baseline` 子命令；否则复用并扩展 metadata 字段（`overlay: {...}`, `account: 2800000`, `evaluation_mode: im_window_in_sample`）。
+- Modify: `backtest/scripts/register/register_phase_s_experiment.py` **仅当**现有 `promote-baseline` 无法表达 overlay 锚点时，增加 `promote-beta-overlay-baseline` 子命令；否则复用并扩展 metadata 字段（`overlay: {...}`, `account: 2800000`, `evaluation_mode: im_window_in_sample`）。
 - Test: `tests/backtest/test_register_phase_s_experiment.py` 增补一条 overlay 晋升 schema 测试
 
 - [ ] **Step 1: 若 `promote.eligible` 为 false** — 登记 `conclusion=rejected_vs_baseline`，**停止**，不改 baseline。
@@ -386,7 +386,7 @@ Expected: JSON 含双方夏普与 `promote.eligible` true/false
 - [ ] **Step 4: 验证 cleanup dry-run 接受新锚点**
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/cleanup_experiment_artifacts.py --dry-run
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/cleanup_experiment_artifacts.py --dry-run
 ```
 
 ---

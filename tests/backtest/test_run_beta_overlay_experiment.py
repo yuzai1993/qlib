@@ -10,13 +10,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "backtest" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1]))
 
-from run_beta_overlay_experiment import (  # noqa: E402
-    build_registry_row,
-    decide_promotion,
-    run_experiment,
-)
+from backtest.scripts.evaluate.run_beta_overlay_experiment import build_registry_row, decide_promotion, run_experiment
 
 
 def _synthetic_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:

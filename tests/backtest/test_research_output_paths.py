@@ -8,7 +8,7 @@ import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
 
 def archive_alias(root, filename):
@@ -22,7 +22,7 @@ def archive_alias(root, filename):
     return old / filename, new / filename
 
 
-@pytest.mark.parametrize("module_name", ["register_strategy_stability", "register_phase_s_experiment"])
+@pytest.mark.parametrize("module_name", ["backtest.scripts.register.register_strategy_stability", "backtest.scripts.register.register_phase_s_experiment"])
 def test_protocol_writer_creates_only_current_archive_directory(tmp_path, monkeypatch, module_name):
     module = importlib.import_module(module_name)
     monkeypatch.setattr(module, "_RESEARCH_ROOT", tmp_path)
@@ -34,7 +34,7 @@ def test_protocol_writer_creates_only_current_archive_directory(tmp_path, monkey
     assert not (tmp_path / "backtest/experiments/legacy").exists()
 
 
-@pytest.mark.parametrize("module_name", ["build_experiment_report", "build_phase_m_v1_report"])
+@pytest.mark.parametrize("module_name", ["backtest.scripts.report.build_experiment_report", "backtest.scripts.report.build_phase_m_v1_report"])
 def test_model_report_main_creates_only_current_archive_directory(tmp_path, monkeypatch, module_name):
     module = importlib.import_module(module_name)
     monkeypatch.setattr(module, "_RESEARCH_ROOT", tmp_path)
@@ -50,7 +50,7 @@ def test_model_report_main_creates_only_current_archive_directory(tmp_path, monk
 
 
 def test_execution_hub_writer_returns_actual_destination(tmp_path, monkeypatch):
-    module = importlib.import_module("build_phase_m_v1_bt_report")
+    module = importlib.import_module("backtest.scripts.report.build_phase_m_v1_bt_report")
     monkeypatch.setattr(module, "_RESEARCH_ROOT", tmp_path)
     monkeypatch.setattr(module, "EXP_ROOT", tmp_path)
     monkeypatch.setattr(module, "load_registry", lambda: [])
@@ -66,7 +66,7 @@ def test_execution_hub_writer_returns_actual_destination(tmp_path, monkeypatch):
 
 
 def test_csi_model_report_links_from_its_actual_output_directory(tmp_path, monkeypatch):
-    module = importlib.import_module("build_experiment_report")
+    module = importlib.import_module("backtest.scripts.report.build_experiment_report")
     monkeypatch.setattr(module, "_RESEARCH_ROOT", tmp_path)
     old, current = archive_alias(tmp_path, "reports/hub.html")
     monkeypatch.setattr(module, "load_registry", lambda path: [{"phase": "S"}])
@@ -90,10 +90,10 @@ def test_csi_model_report_links_from_its_actual_output_directory(tmp_path, monke
     assert reports / "strategy_stability_report.html" in links.targets
 
 
-@pytest.mark.parametrize("module_name", ["build_strategy_stability_report", "build_strategy_report"])
+@pytest.mark.parametrize("module_name", ["backtest.scripts.report.build_strategy_stability_report", "backtest.scripts.report.build_strategy_report"])
 def test_strategy_report_main_writes_at_resolved_output_with_working_links(tmp_path, monkeypatch, module_name):
     module = importlib.import_module(module_name)
-    unified = importlib.import_module("build_strategy_stability_report")
+    unified = importlib.import_module("backtest.scripts.report.build_strategy_stability_report")
     from tests.backtest.test_build_strategy_stability_report import _baseline_row, _row
 
     rows = [_row("b6-m"), _baseline_row(), {
@@ -104,7 +104,7 @@ def test_strategy_report_main_writes_at_resolved_output_with_working_links(tmp_p
         monkeypatch.setattr(target, "_RESEARCH_ROOT", tmp_path)
     monkeypatch.setattr(unified, "REPO_ROOT", tmp_path)
     old, current = archive_alias(tmp_path, "reports/hub.html")
-    if module_name == "build_strategy_report":
+    if module_name == "backtest.scripts.report.build_strategy_report":
         monkeypatch.setattr(module, "UNIFIED_REPORT", old)
         monkeypatch.setattr(module, "load_registry", lambda path: rows)
         module.main([])
@@ -117,7 +117,7 @@ def test_strategy_report_main_writes_at_resolved_output_with_working_links(tmp_p
 
 
 def test_correction_writer_resolves_before_creating_parent(tmp_path, monkeypatch):
-    module = importlib.import_module("finalize_strategy_neighborhood_full")
+    module = importlib.import_module("backtest.scripts.register.finalize_strategy_neighborhood_full")
     monkeypatch.setattr(module, "_RESEARCH_ROOT", tmp_path)
     old, current = archive_alias(tmp_path, "data/correction.json")
     results = tmp_path / "results.json"

@@ -8,10 +8,10 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-from generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
-from prepare_strategy_stability_predictions import compose_prediction  # noqa: E402
+from backtest.scripts.prepare.generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
+from backtest.scripts.prepare.prepare_strategy_stability_predictions import compose_prediction  # noqa: E402
 
 
 def _write_pred(path: Path, tuples: list[tuple[str, str]], values: list[float]):

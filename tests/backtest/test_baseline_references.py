@@ -22,7 +22,7 @@ def receipt(root, row=None):
 
 
 def test_receipt_rows_are_returned_unchanged_and_not_registered(tmp_path):
-    from backtest.scripts.baseline_references import load_historical_baselines
+    from backtest.scripts.maintenance.baseline_references import load_historical_baselines
 
     _, row = receipt(tmp_path)
     assert load_historical_baselines(tmp_path) == [row]
@@ -31,7 +31,7 @@ def test_receipt_rows_are_returned_unchanged_and_not_registered(tmp_path):
 
 @pytest.mark.parametrize("failure", ["missing", "sha", "kind", "version", "symlink"])
 def test_invalid_historical_baseline_does_not_silently_remove_protection(tmp_path, failure):
-    from backtest.scripts.baseline_references import load_historical_baselines
+    from backtest.scripts.maintenance.baseline_references import load_historical_baselines
 
     bad = {"exp_id": "regime-adapt/h20-v1", "phase": "M", "phase_m_protocol": "v1",
            "baseline_version": "v1", "state": "completed"}

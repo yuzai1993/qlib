@@ -8,9 +8,9 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-from strategy_stability_metrics import (  # noqa: E402
+from backtest.scripts.evaluate.strategy_stability_metrics import (
     IncompletePortfolioError,
     summarize_period,
     summarize_regimes,

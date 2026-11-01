@@ -70,14 +70,14 @@ All production changes followed a failing behavioral test first.
 
 ## Implementation Summary
 
-- `backtest/scripts/phase_s_prediction_validation.py`
+- `backtest/scripts/maintenance/phase_s_prediction_validation.py`
   - New dependency-neutral authoritative full-prediction validator shared by both Phase S full entry points.
-- `backtest/scripts/run_strategy_neighborhood_full.py`
+- `backtest/scripts/evaluate/run_strategy_neighborhood_full.py`
   - Reuses shared prediction validation.
   - Validates completed checkpoint content and all artifact identities in memory.
   - Returns a clear byte-preserving no-op for valid completion.
   - Fails read-only when a completed checkpoint's protocol is missing.
-- `backtest/scripts/run_strategy_sweep.py`
+- `backtest/scripts/evaluate/run_strategy_sweep.py`
   - General full mode invokes the shared actual-DataFrame validator.
   - Adds run identity: model, pool, segment, evaluation mode, prediction path/SHA, base-config path/SHA, requested candidate IDs.
   - Adds per-row candidate-definition, prediction-SHA, and effective-config-SHA validation.

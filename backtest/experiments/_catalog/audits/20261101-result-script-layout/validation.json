@@ -1,0 +1,48 @@
+{
+  "source_commit": "9b5f2347923292bb5e51e772e18aa7ebf4ef36e6",
+  "protected_files_checked": 375,
+  "protected_files_unchanged": 372,
+  "only_expected_documentation_and_path_map_updates": [
+    "backtest/experiments/README.md",
+    "backtest/experiments/_catalog/audits/20261031-strategy-experiment-groups/README.md",
+    "backtest/experiments/_catalog/path_map.json"
+  ],
+  "production_configs_and_models_unchanged": true,
+  "all_frozen_records_metrics_profiles_and_html_unchanged": true,
+  "model_source_algorithms_unchanged": true,
+  "catalog_equal_except_document_modified_at": true,
+  "document_modified_at": {
+    "before": "2026-11-01T01:22:58.909851+00:00",
+    "after": "2026-11-01T04:39:59.809560+00:00"
+  },
+  "registry_events": 24,
+  "raw_entities": 23,
+  "history_entries": 14,
+  "benchmarks": 9,
+  "script_counts": {
+    "evaluate": 49,
+    "maintenance": 11,
+    "prepare": 23,
+    "register": 33,
+    "report": 14,
+    "train": 20
+  },
+  "result_directories": 22,
+  "final_dry_run_errors": [],
+  "final_dry_run_delete_candidates": 0,
+  "python_tests": {
+    "cases": 3022,
+    "skipped": 1,
+    "passed": 2963,
+    "preexisting_failed": 58
+  },
+  "frontend_tests_passed": 148,
+  "cleanup_target_tests_passed": 93,
+  "layout_target_tests_passed": 10,
+  "tests_directory_execution_checks_passed": 226,
+  "temporary_tools_directory": "/private/tmp/qlib-result-scripts-20261101",
+  "temporary_tools_policy": "审计压缩完成后、提交前删除本目录的一次性脚本/XML/工作快照；不遗留任务工具。",
+  "temporary_tools_removed": true,
+  "obsolete_flat_bytecode_cache_removed": true,
+  "prepare_default_paths_checked_against_current_root": true
+}

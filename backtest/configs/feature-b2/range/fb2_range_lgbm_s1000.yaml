@@ -1,5 +1,5 @@
 # EXPERIMENT_STANDARD v1.5 | exp: feature-b2/range | seed 1000
-# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_backtest.py --config feature-b2/range/fb2_range_lgbm_s1000.yaml
+# /opt/anaconda3/envs/qlib/bin/python backtest/scripts/train/run_backtest.py --config feature-b2/range/fb2_range_lgbm_s1000.yaml
 run:
   mode: train_only
   note: fb2_range_lgbm_s1000

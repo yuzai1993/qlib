@@ -1,0 +1,251 @@
+{
+  "source_commit": "9b5f2347923292bb5e51e772e18aa7ebf4ef36e6",
+  "before": {
+    "cases": 2998,
+    "skipped": 1,
+    "passed": 2939
+  },
+  "final": {
+    "cases": 3022,
+    "skipped": 1,
+    "passed": 2963,
+    "failed_count": 58
+  },
+  "new_failures": [],
+  "same_preexisting_failure_ids": true,
+  "failures": [
+    {
+      "id": "backtest.test_bt_v5_promotion::test_portable_catalog_works_without_original_artifacts[indexed-registry]",
+      "message": "assert 'BT v5' in \"<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'><title>Phase M v1 执行层回测</title><style>\\nbody{font-family:-...g_works_wi1/repo/backtest/experiments/candidate.html'>candidate.html</a></td></tr></tbody></table></div></body></html>\""
+    },
+    {
+      "id": "backtest.test_bt_v5_promotion::test_portable_catalog_works_without_original_artifacts[inline-registry]",
+      "message": "assert 'BT v5' in \"<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'><title>Phase M v1 执行层回测</title><style>\\nbody{font-family:-...g_works_wi0/repo/backtest/experiments/candidate.html'>candidate.html</a></td></tr></tbody></table></div></body></html>\""
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood::test_complete_row_verifies_prediction_and_config_contracts",
+      "message": "FileNotFoundError: [Errno 2] No such file or directory: '/Users/yuxianqi/Project/qlib/backtest/configs/baseline-strategy/b2-s/topk-t30-d2-h20_csi1000_full.yaml'"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_recomputes_winner_and_records_robust_top50",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_artifact_identity_tampering[effective_config-effective config SHA]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_artifact_identity_tampering[manifest-prediction manifest SHA]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_artifact_identity_tampering[prediction-prediction file SHA]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_artifact_identity_tampering[preregistered_prediction_model-prediction artifact]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_artifact_identity_tampering[protocol-protocol SHA]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_base_config_identity_tampering",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_non_exact_540_candidate_set",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_complete_row_rejects_stored_winner_tampering",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_full_baseline_comparison_correction_preserves_completed_result",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_full_neighborhood_report_shows_same_run_baseline_before_winner",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_preregistered_row_freezes_full_period_contract",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_preregistration_rejects_mutated_protocol_contract[schema_version-1-schema_version]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_preregistration_rejects_mutated_protocol_contract[selection_rule-value1-selection_rule]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_preregistration_uses_authoritative_prediction_validation[coverage-coverage]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_preregistration_uses_authoritative_prediction_validation[data_version-data_version]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_preregistration_uses_authoritative_prediction_validation[model-seed-4000 model binding]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_finalize_strategy_neighborhood_full::test_preregistration_uses_authoritative_prediction_validation[schema-schema_version]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_phase_s_protocol::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t10-i050-0.0475]",
+      "message": "assert 0.045 == 0.0475 ± 4.7e-08\n  \n  comparison failed\n  Obtained: 0.045\n  Expected: 0.0475 ± 4.7e-08"
+    },
+    {
+      "id": "backtest.test_phase_s_protocol::test_soft_topk_grid_precomputes_absolute_impact_limits[b1-m-soft-t30-i100-0.03166666666666666]",
+      "message": "assert 0.030000000000000002 == 0.03166666666666666 ± 3.2e-08\n  \n  comparison failed\n  Obtained: 0.030000000000000002\n  Expected: 0.03166666666666666 ± 3.2e-08"
+    },
+    {
+      "id": "backtest.test_phase_s_protocol::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t10-i025-0.02375]",
+      "message": "assert 0.0225 == 0.02375 ± 2.4e-08\n  \n  comparison failed\n  Obtained: 0.0225\n  Expected: 0.02375 ± 2.4e-08"
+    },
+    {
+      "id": "backtest.test_phase_s_protocol::test_soft_topk_grid_precomputes_absolute_impact_limits[b6-m-soft-t20-i050-0.02375]",
+      "message": "assert 0.0225 == 0.02375 ± 2.4e-08\n  \n  comparison failed\n  Obtained: 0.0225\n  Expected: 0.02375 ± 2.4e-08"
+    },
+    {
+      "id": "backtest.test_register_b5_rankic_hyperparams::test_final_winner_paths_are_cleanup_compatible_repo_relative_sessions",
+      "message": "AssertionError: assert ['train recor...nk.json', ...] == []\n  \n  Left contains 20 more items, first extra item: 'train recorder validation failed: /private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/pytest-of-yuxianqi/pytest-...T/pytest-of-yuxianqi/pytest-315/test_final_winner_paths_are_cl0/bac"
+    },
+    {
+      "id": "backtest.test_register_phase_s_experiment::test_bind_valid_results_rejects_candidate_set_changed_after_preregistration",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b1-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_register_phase_s_experiment::test_preregistered_row_freezes_grid_selection_account_and_predictions",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b1-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_register_phase_s_experiment::test_registry_upsert_preserves_unrelated_rows_and_prevents_duplicates",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_register_strategy_stability::test_completed_diagnostic_repair_preserves_previous_result_identity",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b1-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_register_strategy_stability::test_preregister_and_finalize_diagnostic_without_selection",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b1-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_canonical_manifest_binds_model_and_actual_prediction_frame",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_canonical_manifest_rejects_self_declared_identity_tampering[coverage-coverage]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_canonical_manifest_rejects_self_declared_identity_tampering[data_version-data_version]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_canonical_manifest_rejects_self_declared_identity_tampering[manifest_path-authoritative manifest]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_canonical_manifest_rejects_self_declared_identity_tampering[model-seed-4000 model binding]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_canonical_manifest_rejects_self_declared_identity_tampering[schema-schema_version]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_prediction_artifact_requires_exact_full_coverage_and_sha",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_protocol_is_versioned_full_history_in_sample",
+      "message": "AssertionError: assert 'strategy-nei...local-full-v1' == 'strategy-nei...local-full-v2'\n  \n  - strategy-neighborhood/b2-s-local-full-v2\n  ?                        ^               ^\n  + strategy-neighborhood/b3-s-local-full-v1\n  ?                        ^               ^"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_result_metrics_include_excess_yearly_ir_and_absolute_portfolio_metrics",
+      "message": "assert 3.0284392620292646 == 1.4166666666666667 ± 1.4e-06\n  \n  comparison failed\n  Obtained: 3.0284392620292646\n  Expected: 1.4166666666666667 ± 1.4e-06"
+    },
+    {
+      "id": "backtest.test_run_strategy_neighborhood_full::test_self_consistent_endpoint_only_prediction_is_rejected_by_tracked_manifest",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_full_prediction_contract_rejects_self_consistent_tampering[data_version-data_version]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_full_prediction_contract_rejects_self_consistent_tampering[index-canonical coverage]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_full_prediction_contract_rejects_self_consistent_tampering[truncate-canonical coverage]",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_full_prediction_contract_requires_b6_seed4000_model_binding",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_full_prediction_contract_validates_the_actual_canonical_dataframe",
+      "message": "FileNotFoundError: frozen model manifest missing: /Users/yuxianqi/Project/qlib/backtest/models/baselines/b6-m/manifest.json; 本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_an_omitted_requested_candidate",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_mismatched_run_or_candidate_identity[base_config-base config]",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_mismatched_run_or_candidate_identity[effective_config-effective config]",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_mismatched_run_or_candidate_identity[evaluation_mode-evaluation_mode]",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_mismatched_run_or_candidate_identity[model_ref-model_ref]",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_mismatched_run_or_candidate_identity[pool-pool]",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_mismatched_run_or_candidate_identity[prediction-prediction SHA]",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_rejects_mismatched_run_or_candidate_identity[segment-segment]",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_reuses_only_rows_with_matching_complete_identity",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_resume_summary_with_all_matching_successes_runs_no_candidates",
+      "message": "StopIteration"
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_soft_topk_config_uses_precomputed_absolute_impact_limit",
+      "message": "AssertionError: assert {'class': 'So...degree': 0.9}} == {'class': 'So...egree': 0.95}}\n  \n  Omitting 3 identical items, use -vv to show\n  Differing items:\n  {'kwargs': {'trade_impact_limit': 0.0225, 'risk_degree': 0.9}} != {'kwargs': {'trade_impact_limit': 0.02375 ± 2.4e-08, 'risk_degree': 0.95}}\n "
+    },
+    {
+      "id": "backtest.test_run_strategy_sweep::test_valid_config_uses_csi1000_dates_500k_and_live_costs",
+      "message": "AssertionError: assert {'risk_degree...limit': False} == {'risk_degree...limit': False}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'risk_degree': 0.9} != {'risk_degree': 0.95}\n  Use -v to get more diff"
+    }
+  ],
+  "policy": "既有旧CSI输入退役/风险参数/旧版本显示断言保持原失败事实；本轮不恢复已删模型或改评测口径。"
+}

@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
 
 class Links(HTMLParser):
@@ -24,7 +24,7 @@ class Links(HTMLParser):
 
 
 def test_model_hub_links_to_experiment_directory_and_keeps_metrics(tmp_path, monkeypatch):
-    report = importlib.import_module("build_phase_m_v1_report")
+    report = importlib.import_module("backtest.scripts.report.build_phase_m_v1_report")
     monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
     output = tmp_path / "backtest/experiments/reports/phase_m_v1_report.html"
     detail = "backtest/experiments/group/model/reports/detail.html"
@@ -41,7 +41,7 @@ def test_model_hub_links_to_experiment_directory_and_keeps_metrics(tmp_path, mon
 
 
 def test_model_hub_navigation_resolves_to_shared_reports_from_archive_directory(tmp_path, monkeypatch):
-    report = importlib.import_module("build_phase_m_v1_report")
+    report = importlib.import_module("backtest.scripts.report.build_phase_m_v1_report")
     monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
     output = tmp_path / "backtest/experiments/models/group/arm/reports/hub.html"
     shared = tmp_path / "backtest/experiments/reports"
@@ -59,7 +59,7 @@ def test_model_hub_navigation_resolves_to_shared_reports_from_archive_directory(
 
 
 def test_backtest_detail_resolves_hub_reports_and_figures_from_its_directory(tmp_path, monkeypatch):
-    report = importlib.import_module("build_phase_m_v1_bt_report")
+    report = importlib.import_module("backtest.scripts.report.build_phase_m_v1_bt_report")
     monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
     hub = tmp_path / "backtest/experiments/reports/phase_m_v1_bt_report.html"
     monkeypatch.setattr(report, "HUB_OUT", hub)
@@ -90,7 +90,7 @@ def test_backtest_detail_resolves_hub_reports_and_figures_from_its_directory(tmp
 
 
 def test_portable_snapshot_links_to_metrics_in_data_directory(tmp_path, monkeypatch):
-    report = importlib.import_module("build_phase_m_v1_bt_report")
+    report = importlib.import_module("backtest.scripts.report.build_phase_m_v1_bt_report")
     monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
     output = tmp_path / "backtest/experiments/group/arm/reports/nav.html"
     metrics = "backtest/experiments/group/arm/data/metrics.json"

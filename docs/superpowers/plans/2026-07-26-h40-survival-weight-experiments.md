@@ -27,8 +27,8 @@
 
 **Files:**
 - Modify: `backtest/EXPERIMENT_STANDARD.md`
-- Modify: `backtest/scripts/build_experiment_report.py`
-- Modify: `backtest/scripts/cleanup_experiment_artifacts.py`
+- Modify: `backtest/scripts/report/build_experiment_report.py`
+- Modify: `backtest/scripts/maintenance/cleanup_experiment_artifacts.py`
 - Modify: `tests/backtest/test_build_experiment_report.py`
 - Modify: `tests/backtest/test_cleanup_experiment_artifacts.py`
 
@@ -66,8 +66,8 @@ Run the command from Step 2. Expected: all pass.
 
 ```bash
 git add backtest/EXPERIMENT_STANDARD.md \
-  backtest/scripts/build_experiment_report.py \
-  backtest/scripts/cleanup_experiment_artifacts.py \
+  backtest/scripts/report/build_experiment_report.py \
+  backtest/scripts/maintenance/cleanup_experiment_artifacts.py \
   tests/backtest/test_build_experiment_report.py \
   tests/backtest/test_cleanup_experiment_artifacts.py
 git commit -m "feat(backtest): prioritize CSI1000 experiments"
@@ -79,7 +79,7 @@ git commit -m "feat(backtest): prioritize CSI1000 experiments"
 
 **Files:**
 - Modify: `backtest/label_design/horizons.py`
-- Create: `backtest/scripts/freeze_h40_survival_weight_manifest.py`
+- Create: `backtest/scripts/prepare/freeze_h40_survival_weight_manifest.py`
 - Modify: `tests/backtest/test_label_horizons.py`
 - Create: `tests/backtest/test_h40_survival_weight_manifest.py`
 
@@ -120,7 +120,7 @@ Run the command from Step 3. Expected: all pass.
 
 ```bash
 git add backtest/label_design/horizons.py \
-  backtest/scripts/freeze_h40_survival_weight_manifest.py \
+  backtest/scripts/prepare/freeze_h40_survival_weight_manifest.py \
   tests/backtest/test_label_horizons.py \
   tests/backtest/test_h40_survival_weight_manifest.py
 git commit -m "feat(backtest): define H40 survival power labels"

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "policy": "旧recipe来源路径通过正式research_layout显式映射；原recipe SHA记录原Git版本，不重写冻结来源。日常CLI和导入均使用分类后的真实路径，不创建平铺wrapper。",
+  "aliases_added_count": 150,
+  "mapping": "backtest/experiments/_catalog/path_map.json",
+  "mapping_sha256": "9a0c129dd682e5b342f2d584e2d821db0519d117bd0aaa6e164e0d77de0d660e",
+  "moves_receipt": "script-moves.json"
+}

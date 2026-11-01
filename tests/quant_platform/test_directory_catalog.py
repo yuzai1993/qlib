@@ -5,7 +5,7 @@ import json
 import pytest
 
 from quant_platform.research import ResearchCatalog
-from backtest.scripts.experiment_registry import write_registry
+from backtest.scripts.register.experiment_registry import write_registry
 from tests.quant_platform.test_research import catalog, model_doc, row, write_json, write_legacy_registry
 
 

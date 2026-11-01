@@ -9,9 +9,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from backtest.scripts.generate_label_horizon_configs import (  # noqa: E402
-    generate_configs,
-)
+from backtest.scripts.prepare.generate_label_horizon_configs import generate_configs
 
 
 def _base_config() -> dict:

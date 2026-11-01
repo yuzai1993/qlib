@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "backtest/scripts"))
+sys.path.insert(0, str(ROOT))
 
-import build_phase_m_v1_report as report  # noqa: E402
+import backtest.scripts.report.build_phase_m_v1_report as report  # noqa: E402
 
 
 def _cell(ann: float, sharpe: float) -> dict:

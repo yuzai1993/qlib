@@ -1,5 +1,5 @@
 # 训练起点 2006-01-02（终点 2020-01-10），对应结果 session: 20260711_223223_train_start_2006
-# python backtest/scripts/run_backtest.py --config csi300_lgbm_train_start_2006.yaml
+# python backtest/scripts/train/run_backtest.py --config csi300_lgbm_train_start_2006.yaml
 
 run:
   mode: train_only

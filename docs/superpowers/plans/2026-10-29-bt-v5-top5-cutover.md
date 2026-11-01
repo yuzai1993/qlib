@@ -13,7 +13,7 @@ Spec: docs/superpowers/specs/2026-10-29-bt-v5-top5-cutover-design.md
 
 ### Task 1: Baseline promotion and portable reporting
 
-Own backtest/scripts/promote_bt_v5_top5d1f100.py, promotion tests, registry.jsonl, BT report HTML, durable baseline metric summaries, EXPERIMENT_STANDARD.md and root AGENTS.md. Promote baseline/phase-m-v1-bt-v5 from regime-adapt/m0h20es-all-top5d1f100-bt; mark previous current BT false, preserve history, model baseline v4 unchanged. Bind v2 model explicitly. Compute missing regimes from original returns and canonical monthly labels. Use original artifacts in /Users/yuxianqi/Project/qlib_exp read-only; include source paths and hashes. Produce repeatable idempotent promotion and portable reports; no hand-entered metrics. Record historical selection limitation. Verify exact registered metrics and current flags. Do not edit production activation docs or live code.
+Own backtest/scripts/register/promote_bt_v5_top5d1f100.py, promotion tests, registry.jsonl, BT report HTML, durable baseline metric summaries, EXPERIMENT_STANDARD.md and root AGENTS.md. Promote baseline/phase-m-v1-bt-v5 from regime-adapt/m0h20es-all-top5d1f100-bt; mark previous current BT false, preserve history, model baseline v4 unchanged. Bind v2 model explicitly. Compute missing regimes from original returns and canonical monthly labels. Use original artifacts in /Users/yuxianqi/Project/qlib_exp read-only; include source paths and hashes. Produce repeatable idempotent promotion and portable reports; no hand-entered metrics. Record historical selection limitation. Verify exact registered metrics and current flags. Do not edit production activation docs or live code.
 
 ### Task 2: Live execution parity with guarded protocol
 

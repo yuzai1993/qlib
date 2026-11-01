@@ -25,8 +25,8 @@
 
 **Files:**
 - Modify: `backtest/EXPERIMENT_STANDARD.md`
-- Modify: `backtest/scripts/phase_s_protocol.py`
-- Modify: `backtest/scripts/run_strategy_sweep.py`
+- Modify: `backtest/scripts/maintenance/phase_s_protocol.py`
+- Modify: `backtest/scripts/evaluate/run_strategy_sweep.py`
 - Test: `tests/backtest/test_phase_s_protocol.py`
 - Test: `tests/backtest/test_run_strategy_sweep.py`
 
@@ -75,8 +75,8 @@ Run the command from Step 2. Expected: all tests pass.
 - [ ] **Step 5: Commit Task 1**
 
 ```bash
-git add backtest/EXPERIMENT_STANDARD.md backtest/scripts/phase_s_protocol.py \
-  backtest/scripts/run_strategy_sweep.py tests/backtest/test_phase_s_protocol.py \
+git add backtest/EXPERIMENT_STANDARD.md backtest/scripts/maintenance/phase_s_protocol.py \
+  backtest/scripts/evaluate/run_strategy_sweep.py tests/backtest/test_phase_s_protocol.py \
   tests/backtest/test_run_strategy_sweep.py
 git commit -m "feat(backtest): adopt full-period Phase S selection"
 ```
@@ -86,10 +86,10 @@ git commit -m "feat(backtest): adopt full-period Phase S selection"
 ### Task 2: Add a restartable full-period neighborhood runner
 
 **Files:**
-- Create: `backtest/scripts/run_strategy_neighborhood_full.py`
+- Create: `backtest/scripts/evaluate/run_strategy_neighborhood_full.py`
 - Create: `tests/backtest/test_run_strategy_neighborhood_full.py`
-- Reuse: `backtest/scripts/strategy_neighborhood_protocol.py`
-- Reuse: `backtest/scripts/run_strategy_neighborhood.py`
+- Reuse: `backtest/scripts/maintenance/strategy_neighborhood_protocol.py`
+- Reuse: `backtest/scripts/evaluate/run_strategy_neighborhood.py`
 
 **Interfaces:**
 - Consumes: one `b6-m/csi1000/full` entry from the stability prediction manifest.
@@ -152,7 +152,7 @@ Expected: all pass.
 - [ ] **Step 5: Commit Task 2**
 
 ```bash
-git add backtest/scripts/run_strategy_neighborhood_full.py \
+git add backtest/scripts/evaluate/run_strategy_neighborhood_full.py \
   tests/backtest/test_run_strategy_neighborhood_full.py
 git commit -m "feat(backtest): add full-period neighborhood runner"
 ```
@@ -162,11 +162,11 @@ git commit -m "feat(backtest): add full-period neighborhood runner"
 ### Task 3: Add immutable full-period registration and unified Phase S reporting
 
 **Files:**
-- Create: `backtest/scripts/finalize_strategy_neighborhood_full.py`
+- Create: `backtest/scripts/register/finalize_strategy_neighborhood_full.py`
 - Create: `tests/backtest/test_finalize_strategy_neighborhood_full.py`
-- Modify: `backtest/scripts/build_strategy_stability_report.py`
+- Modify: `backtest/scripts/report/build_strategy_stability_report.py`
 - Modify: `tests/backtest/test_build_strategy_stability_report.py`
-- Modify: `backtest/scripts/build_experiment_report.py`
+- Modify: `backtest/scripts/report/build_experiment_report.py`
 - Modify: `tests/backtest/test_build_experiment_report.py`
 
 **Interfaces:**
@@ -225,9 +225,9 @@ Run the Step 2 command. Expected: all pass.
 - [ ] **Step 5: Commit Task 3**
 
 ```bash
-git add backtest/scripts/finalize_strategy_neighborhood_full.py \
-  backtest/scripts/build_strategy_stability_report.py \
-  backtest/scripts/build_experiment_report.py \
+git add backtest/scripts/register/finalize_strategy_neighborhood_full.py \
+  backtest/scripts/report/build_strategy_stability_report.py \
+  backtest/scripts/report/build_experiment_report.py \
   tests/backtest/test_finalize_strategy_neighborhood_full.py \
   tests/backtest/test_build_strategy_stability_report.py \
   tests/backtest/test_build_experiment_report.py
@@ -253,7 +253,7 @@ git commit -m "feat(backtest): unify Phase S stability reporting"
 - [ ] **Step 1: Verify and freeze input artifacts**
 
 ```bash
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_strategy_neighborhood_full.py \
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/evaluate/run_strategy_neighborhood_full.py \
   --prediction-manifest backtest/experiments/_shared/phase-s/prediction_manifest.json \
   --prepare-only
 ```
@@ -264,14 +264,14 @@ Verify exact coverage, model SHA, prediction SHA, protocol SHA, and 540 candidat
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/finalize_strategy_neighborhood_full.py preregister
+  backtest/scripts/register/finalize_strategy_neighborhood_full.py preregister
 ```
 
 - [ ] **Step 3: Run or resume all 540 candidates**
 
 ```bash
 MLFLOW_ALLOW_FILE_STORE=true MPLCONFIGDIR=/private/tmp/qlib_mpl_cache \
-/opt/anaconda3/envs/qlib/bin/python backtest/scripts/run_strategy_neighborhood_full.py \
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/evaluate/run_strategy_neighborhood_full.py \
   --prediction-manifest backtest/experiments/_shared/phase-s/prediction_manifest.json \
   --workers 3 --max-runtime-hours 5
 ```
@@ -282,11 +282,11 @@ Require 540 successful rows and a finite robust winner score. Failed or invalid 
 
 ```bash
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/finalize_strategy_neighborhood_full.py finalize
+  backtest/scripts/register/finalize_strategy_neighborhood_full.py finalize
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/build_strategy_stability_report.py
+  backtest/scripts/report/build_strategy_stability_report.py
 /opt/anaconda3/envs/qlib/bin/python \
-  backtest/scripts/build_experiment_report.py
+  backtest/scripts/report/build_experiment_report.py
 ```
 
 - [ ] **Step 5: Clean generated runtime artifacts**

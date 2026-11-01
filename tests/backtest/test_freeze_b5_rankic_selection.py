@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from backtest.scripts import eval_b5_rankic_valid as valid_cli
-from backtest.scripts import eval_frozen_b5_rankic as frozen_cli
-from backtest.scripts import freeze_b5_rankic_selection as freeze
+import backtest.scripts.evaluate.eval_b5_rankic_valid as valid_cli
+import backtest.scripts.evaluate.eval_frozen_b5_rankic as frozen_cli
+import backtest.scripts.train.freeze_b5_rankic_selection as freeze
 from tests.backtest.rankic_fixtures import write_candidate_configs
 
 

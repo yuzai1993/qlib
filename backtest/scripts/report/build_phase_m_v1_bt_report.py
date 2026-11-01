@@ -316,6 +316,15 @@ def render_hub(baselines: list[dict], experiments: list[dict], *, output_path: P
                 f"<td><a href='{escape(link, quote=True)}'>summary.html</a></td></tr>"
             )
             continue
+        if exp.get("state") in {"failed", "interrupted", "invalid", "cancelled"}:
+            detail_link = f"<a href='{escape(link, quote=True)}'>详情</a>" if detail else "—"
+            H.append(
+                f"<tr><td class='l'>{escape(exp['display_name'])}</td>"
+                f"<td class='l'>{escape(exp.get('baseline_name') or '')}</td>"
+                f"<td colspan='4'>{escape(exp['state'])} · 无有效回测指标</td>"
+                f"<td>{detail_link}</td></tr>"
+            )
+            continue
         ens = ensemble_of(exp["doc"])
         fp = ens["full_period"]
         detail_link = (f"<a href='{escape(link, quote=True)}'>{escape(Path(detail).name)}</a>"
@@ -338,6 +347,20 @@ def render_hub(baselines: list[dict], experiments: list[dict], *, output_path: P
 
 def render_experiment(experiment: dict, baseline: dict, *, output_path: Path | None = None) -> str:
     output_path = output_path or experiment.get("detail_report") or HUB_OUT
+    if experiment.get("state") in {"failed", "interrupted", "invalid", "cancelled"}:
+        name = escape(experiment["display_name"])
+        notes = "".join(
+            f"<p>{escape(str(experiment[key]))}</p>"
+            for key in ("hypothesis", "conclusion", "note") if experiment.get(key)
+        )
+        return (
+            "<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'>"
+            f"<title>{name}</title><style>{CSS}</style></head><body><div class='wrap'>"
+            f"<h1>{name}</h1><p>状态：{escape(experiment['state'])}；无有效回测指标。</p>"
+            f"<p>对照：{escape(baseline['display_name'])}</p>{notes}"
+            f"<a href='{escape(_layout_href(HUB_OUT, output_path, EXP_ROOT), quote=True)}'>返回总报告</a>"
+            "</div></body></html>"
+        )
     exp_ens = ensemble_of(experiment["doc"])
     base_ens = ensemble_of(baseline["doc"])
     rows = [
@@ -438,7 +461,8 @@ def render_snapshot(item: dict, *, output_path: Path | None = None) -> str:
 def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     baselines, experiments = [], []
     names = {}
-    for rec in rows:
+    # New attempts append events; only the latest event supplies current output.
+    for rec in {rec["exp_id"]: rec for rec in rows}.values():
         kind = rec.get("report_kind")
         if kind == "phase_m_v1_bt_baseline":
             item = {
@@ -468,12 +492,16 @@ def catalog_from_registry(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 "baseline_ref": rec.get("baseline_ref"),
                 "baseline_name": names.get(rec.get("baseline_ref"), rec.get("baseline_ref") or ""),
                 "detail_report": rec.get("detail_report"),
-                "eval_output": rec["eval_output"],
+                "eval_output": rec.get("eval_output"),
                 "portable_eval_output": rec.get("portable_eval_output"),
                 "hypothesis": rec.get("hypothesis"),
                 "eval_protocol": rec.get("eval_protocol"),
                 "conclusion": rec.get("conclusion"),
-                "doc": _load_doc(rec.get("portable_eval_output") or rec["eval_output"]),
+                "state": rec.get("state"),
+                "note": rec.get("note"),
+                "harness": rec.get("harness"),
+                "doc": {} if rec.get("state") in {"failed", "interrupted", "invalid", "cancelled"}
+                else _load_doc(rec.get("portable_eval_output") or rec["eval_output"]),
             }
         )
     return baselines, resolved
@@ -542,7 +570,7 @@ def write_all() -> list[Path]:
         if base is None or not exp.get("detail_report"):
             continue
         dest = _resolve_research_path(EXP_ROOT / exp["detail_report"], EXP_ROOT)
-        if dest.exists():
+        if dest.exists() and not exp.get("harness"):
             continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(render_experiment(exp, base, output_path=dest), encoding="utf-8")
@@ -560,6 +588,8 @@ def write_all() -> list[Path]:
         written.append(dest)
     seen = set()
     for item in baselines + experiments:
+        if item.get("state") in {"failed", "interrupted", "invalid", "cancelled"}:
+            continue
         portable = ensemble_of(item["doc"]).get("portable_report")
         if not portable or portable in seen:
             continue

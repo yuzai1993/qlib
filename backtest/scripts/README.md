@@ -1,6 +1,6 @@
 # 研究脚本入口
 
-脚本按使用阶段分为六类，共150个正式模块/入口（121个Python文件、29个shell文件，不含包标记）。同一功能只维护一份实现，跨目录使用明确的Python包导入。
+脚本按使用阶段分为六类，共151个正式模块/入口（122个Python文件、29个shell文件，不含包标记）。同一功能只维护一份实现，跨目录使用明确的Python包导入。
 
 | 目录 | 数量 | 放什么 | 常用入口 |
 |---|---:|---|---|
@@ -9,7 +9,7 @@
 | `evaluate/` | 49 | 预测、回测、计算指标、比较参数和诊断持仓；宇宙过滤也由这里统一提供。 | `eval_ic_multi_pool.py`、`run_pred_backtest.py`、`run_regime_phase_s.py` |
 | `report/` | 14 | 从登记和指标生成报告，以及报告共用的显示工具。 | `build_phase_m_v1_report.py`、`build_phase_m_v1_bt_report.py`、`build_strategy_group_reports.py` |
 | `register/` | 33 | 维护实验登记、完成结果登记及经批准的版本晋升。 | `experiment_registry.py`、`register_regime_ablation.py` |
-| `maintenance/` | 11 | 路径解析、配置加载、实验档案校验、协议检查与产物清理。 | `research_layout.py`、`experiment_archive.py`、`cleanup_experiment_artifacts.py` |
+| `maintenance/` | 12 | 路径解析、配置加载、实验档案校验、协议检查、实验进度与产物清理。 | `research_layout.py`、`experiment_archive.py`、`experiment_harness.py`、`cleanup_experiment_artifacts.py` |
 
 `train/run_backtest.py`是训练/工作流调度入口，`evaluate/run_pred_backtest.py`是免重训回测实现，二者有调用关系，不是两份重复回测器。
 
@@ -30,6 +30,10 @@ from backtest.scripts.evaluate.universe_filter import build_keep_mask
 ```
 
 不再把平铺的`scripts/`目录塞进`sys.path`后裸导入。没有保留旧文件路径的CLI包装文件；旧recipe中的来源路径由正式`_catalog/path_map.json`显式映射，原SHA仍表示当时Git版本的源码指纹。日常命令使用本页的新路径。
+
+## AI 实验迭代与续跑
+
+`maintenance/experiment_harness.py` 的 `init`、`check`、`status`、`event` 管理冻结计划、输入指纹、累计预算与进度；它不启动训练、不计算指标、不直接登记或清理。入口是项目技能 [qlib-experiment-harness](../../.agents/skills/qlib-experiment-harness/SKILL.md)，合同、CLI 及恢复流程见 [操作协议](../../docs/research/experiment_harness.md)。每次研究启动前先检查状态；续跑沿用原状态和累计预算。
 
 ## 当前平台的result清理
 

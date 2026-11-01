@@ -1,12 +1,52 @@
 from __future__ import annotations
 
 import sys
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 import backtest.scripts.report.build_phase_m_v1_bt_report as report  # noqa: E402
+
+
+def test_failed_strategy_without_eval_file_rebuilds_hub_and_details(tmp_path, monkeypatch):
+    """Real failed registry rows must remain reportable without fabricated metrics."""
+    baseline_doc = tmp_path / "baseline.json"
+    baseline_doc.write_text(json.dumps({"ensemble": _ens(0.28, 0.95)}))
+    baseline = {"exp_id": "baseline/s5", "report_kind": "phase_m_v1_bt_baseline", "bt_version": "v5", "current_bt": True, "display_name": "对照", "eval_output": "baseline.json"}
+    failed = {"exp_id": "strategy/failed", "report_kind": "phase_m_v1_bt", "state": "failed", "display_name": "失败候选", "baseline_ref": "baseline/s5", "detail_report": "details/failed.html", "hypothesis": "减小持仓", "note": "预测输入校验失败 <unsafe>", "harness": {"campaign_id": "example", "attempt_id": "a1"}}
+    monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
+    monkeypatch.setattr(report, "_RESEARCH_ROOT", tmp_path)
+    monkeypatch.setattr(report, "HUB_OUT", tmp_path / "hub.html")
+    monkeypatch.setattr(report, "load_registry", lambda: [baseline, failed])
+    report.write_all()
+    hub = (tmp_path / "hub.html").read_text()
+    detail = (tmp_path / "details/failed.html").read_text()
+    assert "失败候选" in hub and "details/failed.html" in hub
+    assert "failed" in hub and "无有效回测指标" in detail
+    assert "预测输入校验失败 &lt;unsafe&gt;" in detail
+    assert "0.00" not in detail
+
+
+def test_latest_retry_supersedes_failed_report_without_losing_raw_history(tmp_path, monkeypatch):
+    doc = tmp_path / "evaluation.json"
+    doc.write_text(json.dumps({"ensemble": _ens(0.28, 0.95)}))
+    baseline = {"exp_id": "baseline/s5", "report_kind": "phase_m_v1_bt_baseline", "bt_version": "v5", "current_bt": True, "display_name": "对照", "eval_output": "evaluation.json"}
+    failed = {"exp_id": "strategy/retry", "report_kind": "phase_m_v1_bt", "state": "failed", "display_name": "重试候选", "baseline_ref": "baseline/s5", "detail_report": "details/retry.html", "note": "第一次失败", "harness": {"attempt_id": "a1"}}
+    completed = {**failed, "state": "completed", "eval_output": "evaluation.json", "note": "重试完成", "harness": {"attempt_id": "a2"}}
+    monkeypatch.setattr(report, "EXP_ROOT", tmp_path)
+    monkeypatch.setattr(report, "_RESEARCH_ROOT", tmp_path)
+    monkeypatch.setattr(report, "HUB_OUT", tmp_path / "hub.html")
+    rows = [baseline, failed]
+    monkeypatch.setattr(report, "load_registry", lambda: rows)
+    report.write_all()
+    assert "无有效回测指标" in (tmp_path / "details/retry.html").read_text()
+    rows.append(completed)
+    report.write_all()
+    assert "+28.0%" in (tmp_path / "details/retry.html").read_text()
+    assert len(rows) == 3
+    assert len(report.catalog_from_registry(rows)[1]) == 1
 
 
 def _ens(ann: float, sharpe: float, *, year_ann=0.1, d_ann=0.2, session="backtest/result/dummy"):

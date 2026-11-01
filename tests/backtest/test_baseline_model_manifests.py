@@ -1,53 +1,24 @@
 from __future__ import annotations
 
-import hashlib
-import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "backtest/scripts"))
 
-B6_MANIFEST = ROOT / "backtest/models/baselines/b6-m/manifest.json"
-STANDARD = ROOT / "backtest/EXPERIMENT_STANDARD.md"
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+from phase_s_protocol import load_frozen_model  # noqa: E402
 
 
-def test_b6_manifest_is_single_model_phase_s_contract_selected_on_valid():
-    manifest = json.loads(B6_MANIFEST.read_text(encoding="utf-8"))
-
-    assert manifest["baseline_exp_id"] == "baseline/b6-m"
-    assert manifest["baseline_ref"] == "B6 v1.0"
-    assert manifest["retention_scope"] == "phase_s_single_model"
-    assert manifest["selection"] == {
-        "metric": "valid.csi1000.rank_ic_mean",
-        "direction": "max",
-        "selected_seed": 4000,
-        "selected_value": 0.049698109941383316,
-        "selection_segment": ["2020-01-13", "2021-07-15"],
-        "result": "backtest/experiments/ic/mh_rankic_es_lr010_valid_1d.json",
-    }
-
-    config = manifest["config"]
-    config_path = ROOT / config["path"]
-    assert config_path.is_file()
-    assert _sha256(config_path) == config["sha256"]
-
-    model = manifest["model"]
-    model_path = ROOT / model["path"]
-    assert model_path.is_file()
-    assert model_path.stat().st_size == model["size_bytes"]
-    assert _sha256(model_path) == model["sha256"]
-
-
-def test_frozen_models_resolve_inside_canonical_baseline_directory():
-    sys.path.insert(0, str(ROOT / "backtest/scripts"))
-    from phase_s_protocol import load_frozen_model
-
-    for model_ref in ("b1-m", "b6-m"):
-        frozen = load_frozen_model(ROOT, model_ref)
-        expected_dir = (ROOT / "backtest/models/baselines" / model_ref).resolve()
-        assert frozen.model_path.is_relative_to(expected_dir)
+@pytest.mark.parametrize("model_ref", ["b1-m", "b6-m"])
+def test_removed_research_models_do_not_fall_back_to_live_copies(model_ref):
+    """Old live exports remain independent and must not replace removed research inputs."""
+    live_copy = {
+        "b1-m": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model",
+        "b6-m": "live_trading/models/b6_m/seed4000/trained_model",
+    }[model_ref]
+    assert (ROOT / live_copy).is_file()
+    assert not (ROOT / "backtest/models/baselines").exists()
+    with pytest.raises(FileNotFoundError, match="frozen model manifest missing"):
+        load_frozen_model(ROOT, model_ref)

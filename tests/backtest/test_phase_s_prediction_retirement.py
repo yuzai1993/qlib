@@ -48,16 +48,29 @@ def test_explicit_new_manifest_and_prediction_still_validate(tmp_path):
         names=["datetime", "instrument"]))
     pred = tmp_path / "new.pkl"
     frame.to_pickle(pred)
-    model = ROOT / "backtest/models/baselines/b6-m/seed4000/trained_model"
+    model = tmp_path / "backtest/models/baselines/b6-m/seed4000/trained_model"
+    model.parent.mkdir(parents=True)
+    model.write_bytes(b"explicitly-rebuilt-research-model")
+    model_sha = hashlib.sha256(model.read_bytes()).hexdigest()
+    config = tmp_path / "backtest/configs/b6-m.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text("run: {mode: train_only}\n")
+    (model.parents[1] / "manifest.json").write_text(json.dumps({
+        "baseline_exp_id": "baseline/b6-m",
+        "model": {"path": str(model.relative_to(tmp_path)), "sha256": model_sha,
+                  "size_bytes": model.stat().st_size},
+        "config": {"path": str(config.relative_to(tmp_path)),
+                   "sha256": hashlib.sha256(config.read_bytes()).hexdigest()},
+    }))
     entry = {"model_ref": "b6-m", "pool": "csi1000", "segment": "full", "data_version": "2026-07-31",
              "path": str(pred), "prediction_sha256": hashlib.sha256(pred.read_bytes()).hexdigest(),
-             "model_path": str(model), "model_sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
+             "model_path": str(model), "model_sha256": model_sha,
              "coverage": validation.prediction_coverage(frame)}
     manifest = {"schema_version": 1, "data_version": "2026-07-31", "predictions": [entry]}
     path = tmp_path / "new_manifest.json"
     path.write_text(json.dumps(manifest))
     verified, coverage = validation.validate_full_prediction_manifest(
-        manifest, path, repo_root=ROOT, authoritative_manifest_path=path, expected_coverage=entry["coverage"])
+        manifest, path, repo_root=tmp_path, authoritative_manifest_path=path, expected_coverage=entry["coverage"])
     assert verified == entry
     assert coverage == entry["coverage"]
 
@@ -111,7 +124,7 @@ def test_prepare_accepts_explicit_fresh_output_and_keeps_its_manifest_active(tmp
     assert (output / "predictions/b6-m/csi1000_full.pkl").is_file()
 
 
-def test_repository_retirement_keeps_the_model_and_historical_prediction_identity():
+def test_repository_retirement_keeps_historical_identity_after_model_removal():
     path = ROOT / "backtest/experiments/_shared/phase-s/prediction_manifest.json"
     manifest = json.loads(path.read_text())
     assert manifest["status"] == "retired" and manifest["retired_at"] == "2026-11-01"
@@ -119,5 +132,6 @@ def test_repository_retirement_keeps_the_model_and_historical_prediction_identit
     assert entry["status"] == "retired"
     assert entry["prediction_sha256"] == "951f5fa34fd5641217041edf30fc549931bc1fb07e5d5fdacefa7573bee4ae1f"
     assert not (ROOT / "backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl").exists()
-    model = ROOT / entry["model_path"]
-    assert hashlib.sha256(model.read_bytes()).hexdigest() == entry["model_sha256"]
+    assert entry["model_path"] == "backtest/models/baselines/b6-m/seed4000/trained_model"
+    assert entry["model_sha256"] == "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325"
+    assert not (ROOT / entry["model_path"]).exists()

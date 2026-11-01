@@ -315,12 +315,14 @@ def build_registry_row(
     result_dir: Optional[str],
 ) -> dict:
     """诊断行：不选型、不占清理额度、不给可比策略指标。"""
-    manifest_path = QLIB_ROOT / BASELINE_MANIFEST
-    manifest = (
-        json.loads(_resolve_research_path(manifest_path, _RESEARCH_ROOT).read_text(encoding="utf-8"))
-        if _resolve_research_path(manifest_path, _RESEARCH_ROOT).is_file()
-        else {}
-    )
+    manifest_path = _resolve_research_path(QLIB_ROOT / BASELINE_MANIFEST, _RESEARCH_ROOT)
+    if not manifest_path.is_file():
+        raise FileNotFoundError(
+            f"frozen model manifest missing: {manifest_path}; "
+            "B6-M 研究副本已于 2026-11-01 按用户要求移除。"
+            "登记新诊断须显式重建并验证研究模型清单，不得使用空模型信息或自动改用实盘副本。"
+        )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     findings = {}
     for name, block in payload.get("segments", {}).items():
         cluster = block.get("cluster_summary") or {}

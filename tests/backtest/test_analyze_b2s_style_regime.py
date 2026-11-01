@@ -140,7 +140,25 @@ def _payload() -> dict:
     }
 
 
-def test_registry_row_is_a_non_selecting_diagnostic(tmp_path: Path):
+@pytest.fixture
+def frozen_manifest(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(regime, "QLIB_ROOT", tmp_path)
+    manifest_path = tmp_path / regime.BASELINE_MANIFEST
+    manifest_path.parent.mkdir(parents=True)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "model": {
+                    "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+                    "sha256": "a" * 64,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_registry_row_is_a_non_selecting_diagnostic(tmp_path: Path, frozen_manifest):
     output = tmp_path / "diag.json"
     output.write_text("{}", encoding="utf-8")
 
@@ -152,6 +170,8 @@ def test_registry_row_is_a_non_selecting_diagnostic(tmp_path: Path):
     assert row["state"] == "complete"
     assert row["baseline_ref"] == "B2-S v1.0"
     assert row["frozen_model_ref"] == "B6 v1.0"
+    assert row["model_path"] == "backtest/models/baselines/b6-m/seed4000/trained_model"
+    assert row["model_sha256"] == "a" * 64
     # 诊断不得占用清理保留额度，也不得给出可比的策略指标
     assert row["cleanup_retention_eligible"] is False
     assert row["metrics_summary"] == {}
@@ -160,7 +180,7 @@ def test_registry_row_is_a_non_selecting_diagnostic(tmp_path: Path):
     assert row["diagnostic_findings"]["valid"]["rank_icir_ex_size"] == 0.4682
 
 
-def test_registry_row_records_selection_constraint(tmp_path: Path):
+def test_registry_row_records_selection_constraint(tmp_path: Path, frozen_manifest):
     output = tmp_path / "diag.json"
     output.write_text("{}", encoding="utf-8")
 
@@ -168,6 +188,18 @@ def test_registry_row_records_selection_constraint(tmp_path: Path):
 
     assert "valid" in row["selection_constraint"]
     assert row["result_dirs"] == []
+
+
+def test_registry_row_rejects_missing_frozen_manifest(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(regime, "QLIB_ROOT", tmp_path)
+    output = tmp_path / "diag.json"
+    output.write_text("{}", encoding="utf-8")
+    live_model = tmp_path / "live_trading/models/b6_m/trained_model"
+    live_model.parent.mkdir(parents=True)
+    live_model.write_bytes(b"independent-live-copy")
+
+    with pytest.raises(FileNotFoundError, match="2026-11-01"):
+        regime.build_registry_row(_payload(), output, result_dir=None)
 
 
 def test_upsert_registry_preserves_unrelated_lines_verbatim(tmp_path: Path):

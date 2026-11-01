@@ -30,6 +30,7 @@
 | `backtest/` | `experiments/` | **完成。**23源、9 Benchmark保留；共享资料归属和审计精简完成，CSI1000冻结预测已删除。当前模型v2、策略s5。 |
 | `backtest/` | `features/` | **确认保留。**特征计算源码，整目录维持现状。 |
 | `backtest/` | `label_design/` | **确认保留。**训练标签与样本边界处理源码，整目录维持现状。 |
+| `backtest/` | `models/` | **本轮完成。**删除旧B1/B6研究baseline副本；保留当前模型依赖。其余3个旧实验模块待与配置、入口一起整理。 |
 
 ## 先理解几组容易混淆的名字
 
@@ -37,7 +38,7 @@
 |---|---|
 | `qlib/backtest/` 与 `backtest/` | 前者是通用回测“发动机”的源码；后者是我们使用这台发动机做研究的工作台。 |
 | `qlib/data/`、`backtest/datasets/` 与行情数据 | 前两者主要是读数据、加工样本的程序；真实行情常在 `scripts/data_collector/` 的输出及仓库外 `~/.qlib/`。 |
-| `qlib/model/`、`backtest/models/`、`live_trading/models/` | 分别是通用模型接口、本地研究模型实现及冻结研究模型、给实盘加载的模型导出。 |
+| `qlib/model/`、`backtest/models/`、`live_trading/models/` | 分别是通用模型接口、本地研究模型实现、给实盘加载的模型导出；旧研究baseline副本已删除。 |
 | `backtest/experiments/` 与 `backtest/result/` | 前者是长期档案柜；后者是每次运行的工作目录，里面仍可能有必须保留的模型和预测。 |
 | `backtest/diagnostics/` 与实验报告 | diagnostics 放独立分析，平台“分析档案”页读取；模型/策略实验按 experiments 下的分类目录与元数据展示，登记表保存历史事件。 |
 | `tests/` 与 `qlib/tests/` | 前者主要是自动检查；后者还提供被框架示例导入的测试辅助工具。 |
@@ -94,9 +95,22 @@
 | `backtest/experiments/` | 原快照 44.28 MiB | 实验档案柜，按 models/ 与 strategies/ 分组；源实验保存配置、报告、指标、文档和历史登记，同类策略的参数变体归在同一组。<br>例：models/early-stopping/top5-v2/metadata.json；strategies/topk-dropout/v2-top5-hold-f100/variants/。 | **完成。**23个源实验按目录发现，平台显示14个入口（6模型、8策略）；保留源实验的原ID、指标和历史Benchmark。详见下一级目录说明。 |
 | `backtest/features/` | 24.17 KiB | 额外特征的计算代码，也就是把价格、成交量、市场状态加工成模型输入的规则。<br>例：technical.py 定义布林带/动量/趋势特征；regime.py 将每日市场状态特征拼到股票样本。 | **确认保留。**2026-11-01用户确认整目录保留，维持现状。 |
 | `backtest/label_design/` | 14.99 KiB | 训练目标的定义和防止未来信息泄漏的代码，例如让模型预测未来若干天的收益。<br>例：horizons.py 的 cumulative_label(20) 生成20日收益表达式；dataset.py 切掉跨训练边界的标签样本。 | **确认保留。**2026-11-01用户确认整目录保留，维持现状。 |
-| `backtest/models/` | 3.42 MiB | 研究用模型扩展源码，以及 CSI 策略回测使用的冻结基线模型与清单。<br>例：regime_adapt.py、rankic_early_stop.py；baselines/b6-m/manifest.json 绑定 seed4000 的冻结模型。 | **保留。**保留源码和被清单引用的模型；后续可将“模型实现”和“冻结权重”在说明上分开，审查没有引用的重复导出。<br>注意：不是全部可重训缓存。Python模型原件还可能依赖这里的类定义；Phase S 必须按manifest读取固定模型。 |
+| `backtest/models/` | 源码约35 KiB | 本地研究模型的实现代码，负责训练、早停和预测。<br>例：regime_adapt.py 用于当前全A模型；rankic_early_stop.py 提供其依赖的早停逻辑。旧 baselines/ 两份模型及清单已删除，约3.35 MiB。 | **本轮完成。**当前模型依赖保留；3个旧实验模块暂留，建议与对应旧配置和生成器一起清理。逐文件说明见下文。<br>注意：加载已训练模型仍需要原类路径；删除权重副本不代表同名模型代码可以删除。 |
 | `backtest/result/` | 1.07 GiB | 训练、预测、回测每次运行生成的工作目录，包含模型原件、元数据、信号、日收益和临时图表等。<br>例：regimeadaptfast_m0h20_rankices_s42/；20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/。 | **清理器管理。**本轮仅缩减实验归档，没有删除本目录。纯全A dry-run 保留 24 个目录；额外提出的旧 CSI session 删除尚未执行，后续单独讨论。<br>注意：按完整五种子、版本化模型基线、当前BT依赖与正式回测保留；不能按文件夹日期或大小直接删。 |
 | `backtest/scripts/` | 3.08 MiB | 研究运行入口和工具：准备数据、训练评估、登记实验、生成报告、晋升基线、清理产物。<br>例：experiment_registry.py、research_layout.py、build_phase_m_v1_report.py、cleanup_experiment_artifacts.py。 | **保留。**有明显的可整理空间：可按准备/训练/评估/报告/登记/维护分类，再查重复入口；一次性工具任务结束后删除。 |
+
+### `backtest/models/` 逐文件评估
+
+2026-11-01按用户要求删除`baselines/`中的B1-M、B6-M研究副本和两份清单，另清除该目录的Finder缓存。当前实盘模型包、研究训练原件及历史指标保持原样。原清单、文件指纹与核验见[删除凭证](../../backtest/experiments/_catalog/audits/20261101-model-baseline-retirement/README.md)。旧CSI1000入口缺少研究清单时明确报错，不会自动改用实盘模型。
+
+- **保留 `__init__.py`**：空的Python包标记文件，让其他代码能正常导入这里的模型。
+- **必须保留 `regime_adapt.py`**：当前全A模型的训练与预测实现，生产v2和历史v4模型都依赖它。例如“用Top5收益早停”就在这里实现。
+- **必须保留 `rankic_early_stop.py`**：提供按预测排名质量选择训练轮次的逻辑；`regime_adapt.py`直接导入它，现存模型也保存了这里的类路径。
+- **清理候选 `lgbm_ranker.py`**：旧排序模型，直接学习股票先后顺序。当前模型未使用，但`generate_loss_design_configs.py`仍生成引用它的配置。
+- **清理候选 `loss_design.py`**：旧损失函数实验，尝试降低异常样本影响、提高头部股票权重；同一旧配置生成器仍引用它。
+- **清理候选 `tra_device.py`**：旧TRA神经网络的CPU/GPU选择适配；`generate_tra_configs.py`和TRA smoke配置仍引用它。
+
+后三个候选合计仅9.4 KB，建议在整理旧配置和研究入口时一起删除，避免留下不能运行的配置。本轮只评估，暂不删除。已安全检查37个现存模型文件的序列化类引用：30个依赖`regime_adapt`，6个依赖`rankic_early_stop`，1个为Qlib原生模型，未发现后三个候选的引用；检查没有加载或执行模型。
 
 ### 实验档案内容示例
 
@@ -130,7 +144,7 @@ backtest/experiments/models/<类型>/<简名>/  # 策略侧使用 strategies/<�
 | `_shared/` | — | 保留两份工具仍使用的指标、已退役CSI1000预测的小清单/协议及实盘parity；有归属资料已迁实验，文档迁docs。 |
 | `_catalog/` | — | 保留路径映射、最终核验及删除/归并凭证；27份日志和重复快照已压缩为摘要，平台不把它当实验。 |
 
-共享资料整理已完成：历史v1指标归训练目标汇总，三份报告归对应模型/策略实验，三份文档在`docs/research/`；删除10份无活动引用旧指标、1份修复前报告及CSI1000冻结预测。历史记录和正式指标保留，预测退役不删除B6-M或生产模型；调用旧预测会明确报退役。旧路径及旧报告/文档入口继续兼容，核验见[共享目录整理审计](../../backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/README.md)。
+共享资料整理已完成：历史v1指标归训练目标汇总，三份报告归对应模型/策略实验，三份文档在`docs/research/`；删除10份无活动引用旧指标、1份修复前报告及CSI1000冻结预测。历史记录和正式指标保留；后续models整理另删除B1/B6研究副本，生产模型保留。调用旧预测会明确报退役。旧路径及旧报告/文档入口继续兼容，核验见[共享目录整理审计](../../backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/README.md)。
 
 保留的方向目录如下，目录名称与登记字段 `direction` 可不同：
 

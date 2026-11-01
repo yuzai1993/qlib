@@ -26,7 +26,7 @@
 
 ## 环境注意事项
 
-- 2026-11-01用户明确删除CSI1000 full冻结预测（`_shared/phase-s/predictions/b6-m/csi1000_full.pkl`）。该处只保留已标`retired`的清单和历史协议；默认研究调用与清理门禁应明确拒绝退役输入，不得自动替代或静默恢复。B6-M模型、当前全A模型、历史结果与实盘parity继续保留。新预测须显式指定输出目录并重新验证。
+- 2026-11-01用户明确删除CSI1000 full冻结预测（`_shared/phase-s/predictions/b6-m/csi1000_full.pkl`）及`backtest/models/baselines/`中的B1-M/B6-M研究副本。预测处只保留已标`retired`的清单和历史协议；模型原清单与指纹在`_catalog/audits/20261101-model-baseline-retirement/`，审计不作为运行时输入。默认研究调用与清理门禁应明确拒绝退役或缺失输入，不得自动替代或静默恢复。当前全A模型、`live_trading/models/`全部模型、历史结果与实盘parity继续保留。重启旧研究须显式重建并验证模型清单及预测输入。
 - `_shared`中有归属的历史v1指标与三份报告已归所属实验，研究文档在`docs/research/`；旧路径仍由`_catalog/path_map.json`兼容。旧审计日志及重复快照已压缩，历史字段的退役引用见`_catalog/audits/README.md`与`20261101-shared-catalog-cleanup/audit-compaction.json`，不可把旧快照当当前目录状态。
 
 - 全A模型版本使用`vN`，执行层策略版本展示使用`sN`（当前模型v2、策略s5）。冻结原始登记的`bt_version: vN`与`baseline/phase-m-v1-bt-vN` ID保留审计和兼容用途；平台、CSV及新生成报告使用统一展示字段，禁止把策略版本当作模型版本。

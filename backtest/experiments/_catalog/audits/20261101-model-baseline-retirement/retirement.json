@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "retired_at": "2026-11-01",
+  "reason": "用户明确要求删除backtest/models中的全部baseline；仅删除旧B1-M/B6-M研究副本。",
+  "source_commit": "9b72971286b9dfa9fa0dbc749c42f0467e2ab673",
+  "deleted_files": [
+    {
+      "path": "backtest/models/baselines/.DS_Store",
+      "bytes": 6148,
+      "sha256": "0afc86a8217e83e92ad7420a75696e6c0720708ecc29e45163dfa5bba7859824"
+    },
+    {
+      "path": "backtest/models/baselines/b1-m/manifest.json",
+      "bytes": 1127,
+      "sha256": "28d7bdaf3b7d1c4dafeab4aa2917ce1a865ea4ad667b2b75e92c3e6fa9cb2f2e"
+    },
+    {
+      "path": "backtest/models/baselines/b1-m/seed2000/trained_model",
+      "bytes": 121245,
+      "sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352"
+    },
+    {
+      "path": "backtest/models/baselines/b6-m/manifest.json",
+      "bytes": 1027,
+      "sha256": "9aa8479902a54290f1dd764e709fdce98f8acf64982579bba04a50f721cd30a7"
+    },
+    {
+      "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+      "bytes": 3391157,
+      "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325"
+    }
+  ],
+  "original_manifests": {
+    "b1-m": {
+      "schema_version": 1,
+      "baseline_exp_id": "baseline/b1-m",
+      "baseline_ref": "B1 v1.0",
+      "retention_scope": "best_available_seed_model",
+      "selection": {
+        "candidate_seeds": [
+          42,
+          1000,
+          2000,
+          3000,
+          4000
+        ],
+        "metric": "valid.csi1000.rank_ic_mean",
+        "direction": "max",
+        "tie_breaker": "valid.csi1000.rank_icir",
+        "selected_seed": 2000,
+        "selected_value": 0.049554970987230315,
+        "selected_rank_icir": 0.54488734852271,
+        "selection_segment": [
+          "2020-01-13",
+          "2021-07-15"
+        ]
+      },
+      "source": {
+        "model": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model",
+        "metadata": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/metadata.json",
+        "session": "backtest/result/20260725_004255_td_csi1000_full_v2_lgbm_s2000",
+        "config": "backtest/configs/train-data/csi1000-full-v2/td_csi1000_full_v2_lgbm_s2000.yaml"
+      },
+      "retained_model": {
+        "path": "backtest/models/baselines/b1-m/seed2000/trained_model",
+        "sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352",
+        "size_bytes": 121245
+      }
+    },
+    "b6-m": {
+      "schema_version": 1,
+      "baseline_exp_id": "baseline/b6-m",
+      "baseline_ref": "B6 v1.0",
+      "retention_scope": "phase_s_single_model",
+      "selection": {
+        "metric": "valid.csi1000.rank_ic_mean",
+        "direction": "max",
+        "selected_seed": 4000,
+        "selected_value": 0.049698109941383316,
+        "selection_segment": [
+          "2020-01-13",
+          "2021-07-15"
+        ],
+        "result": "backtest/experiments/ic/mh_rankic_es_lr010_valid_1d.json"
+      },
+      "config": {
+        "path": "backtest/configs/model-hyperparam/rankic-es-lr010/mh_rankic_es_lr010_s4000.yaml",
+        "sha256": "370a209436b618248e392f5f985294014b89b4879cbd584f43e8773d30ad9a11"
+      },
+      "model": {
+        "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+        "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+        "size_bytes": 3391157
+      },
+      "source": {
+        "model": "mlruns/657807164385264418/6c0d30716b31441887bb4d16593414b9/artifacts/trained_model",
+        "session": "backtest/result/20260731_040103_mh_rankic_es_lr010_s4000"
+      }
+    }
+  },
+  "preserved_live_models": [
+    {
+      "path": "live_trading/models/b1_m/csi1000_full_v2_s2000_20260725/trained_model",
+      "bytes": 121245,
+      "sha256": "2cf09f7c8bb4dd9b8cc11f8a406abee0b11e769fdb8babfdca68317ebe0c0352"
+    },
+    {
+      "path": "live_trading/models/b6_m/seed4000/trained_model",
+      "bytes": 3391157,
+      "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325"
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s1000/trained_model",
+      "bytes": 1104746,
+      "sha256": "676455aa793707bd2a0d668cb8ee9af77727ea9c3484f69b0523b4bfa2fdae48"
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s2000/trained_model",
+      "bytes": 766495,
+      "sha256": "39065cee3f74afe99ff6c036fa0cf2bd9405bb712dc5aafd6d40ce3f73a61c99"
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s3000/trained_model",
+      "bytes": 1014131,
+      "sha256": "6fa11817e16b41bb7f1bd42cc87f36f639433beaa438584cd1134a5d95e3118e"
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s4000/trained_model",
+      "bytes": 853202,
+      "sha256": "ca466c67956890db036a81be55f8ac68c3557dc34dd6f860dc4649ae958c111c"
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s42/trained_model",
+      "bytes": 666569,
+      "sha256": "ad5e9df845aac1aa1a904c91abe79e810be5a5ce188e17128980517178ef0da0"
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s1000/trained_model",
+      "bytes": 1644041,
+      "sha256": "38f9dea415b528916105a6f472adf9b1ff3032fca92250c4d66db0323f5acdbc"
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s2000/trained_model",
+      "bytes": 1740025,
+      "sha256": "ff605722c4beece2cfa38324c0e3480c0fbb96fcfc35774a2838f39c4e131729"
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s3000/trained_model",
+      "bytes": 1729741,
+      "sha256": "75d8f5a38ce13683a7f75760b220e678ecb9c055d93be2bb83df4edcc636b260"
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s4000/trained_model",
+      "bytes": 2068678,
+      "sha256": "ff795a6fe4500e0e2affc9c8aa14be603173290a93ee3b04fc91907796ff5525"
+    },
+    {
+      "path": "live_trading/models/v4_rankices/s42/trained_model",
+      "bytes": 1347896,
+      "sha256": "3c75ee96fb8868d1200145b97141529b8852a204c6f4615d321a93da71368ecd"
+    }
+  ],
+  "runtime_policy": "审计仅记录来源；正式代码不读取本文件。缺失研究manifest时拒绝运行，不隐式转用live_trading或mlruns副本。"
+}

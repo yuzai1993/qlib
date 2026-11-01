@@ -1,0 +1,39 @@
+{
+  "protected_files_checked": 403,
+  "protected_files_unchanged": 402,
+  "documentation_updates": [
+    {
+      "before": {
+        "path": "backtest/experiments/_shared/phase-s/README.md",
+        "bytes": 1034,
+        "sha256": "ab6552424b6d84f0b7829b87e21ee6947c478186b8f9cb76ff7cfdb6d3fb07d2"
+      },
+      "after": {
+        "path": "backtest/experiments/_shared/phase-s/README.md",
+        "bytes": 1311,
+        "sha256": "dc7b3d29abf07027ec3d9887e95447067089d84f23ae3392b48f6d356b07ceae"
+      }
+    }
+  ],
+  "research_and_production_assets_changed": 0,
+  "platform_snapshot_unchanged": true,
+  "platform_snapshot_sha256": "3c1f03ea58b5c9e5ba1ce0750d4991b6e3ccde262659a6093eae5889e221b95e",
+  "registry_events": 24,
+  "raw_source_entities": 23,
+  "platform_history_entries": 14,
+  "benchmarks": 9,
+  "source_modules_unchanged": true,
+  "tests": {
+    "passed": 295,
+    "deselected_preexisting": 4,
+    "deselected_name": "test_soft_topk_grid_precomputes_absolute_impact_limits",
+    "preexisting_reason": "旧测试期望risk_degree=0.95，既有协议为0.90；本次没有修改相关策略网格或风险参数。",
+    "previous_head_evidence": "../20261101-shared-catalog-cleanup/preexisting-csi-test-failures.json",
+    "new_missing_manifest_cases": 3,
+    "retired_prediction_tests": 10
+  },
+  "temporary_tools": {
+    "directory": "/private/tmp/qlib-model-baseline-cleanup-20261101",
+    "policy": "仅为本次迁移核验创建；提交前删除脚本和before工作快照，不保留一次性工具。"
+  }
+}

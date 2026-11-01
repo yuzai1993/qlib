@@ -86,6 +86,20 @@ def test_load_frozen_model_accepts_model_and_config_schema_used_by_b6(tmp_path):
     assert frozen.source_config == config.resolve()
 
 
+@pytest.mark.parametrize("model_ref", ["b1-m", "b6-m"])
+def test_missing_research_model_explains_removal_without_using_live_copy(tmp_path, model_ref):
+    live_model = tmp_path / "live_trading/models" / model_ref / "trained_model"
+    live_model.parent.mkdir(parents=True)
+    live_model.write_bytes(b"live-model-must-not-be-used")
+
+    with pytest.raises(FileNotFoundError, match="2026-11-01") as error:
+        protocol.load_frozen_model(tmp_path, model_ref)
+
+    assert "frozen model manifest missing" in str(error.value)
+    assert "显式重建" in str(error.value)
+    assert live_model.read_bytes() == b"live-model-must-not-be-used"
+
+
 def test_load_frozen_model_rejects_retained_path_outside_model_baseline(tmp_path):
     repo, _model, _digest = _write_frozen_repo(tmp_path, "b6-m")
     manifest_path = repo / "backtest/models/baselines/b6-m/manifest.json"

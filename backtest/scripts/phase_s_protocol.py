@@ -78,7 +78,11 @@ def load_frozen_model(repo_root: Path, model_ref: str) -> FrozenModel:
     baseline_dir = (root / "backtest" / "models" / "baselines" / model_ref).resolve()
     manifest_path = baseline_dir / "manifest.json"
     if not manifest_path.is_file():
-        raise FileNotFoundError(f"frozen model manifest missing: {manifest_path}")
+        raise FileNotFoundError(
+            f"frozen model manifest missing: {manifest_path}; "
+            "本仓库的 B1-M/B6-M 研究副本已于 2026-11-01 按用户要求移除。"
+            "重新运行须显式重建清单和模型并完成验证，不得自动改用实盘模型副本。"
+        )
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("baseline_exp_id") != f"baseline/{model_ref}":
         raise ValueError(

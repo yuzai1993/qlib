@@ -162,6 +162,7 @@ def _authoritative_full_prediction_entry() -> dict[str, Any]:
 
 def validate_prediction_artifact(entry: dict[str, Any], path: Path) -> dict[str, Any]:
     """Verify the score against its entry and the tracked coverage authority."""
+    authoritative = _authoritative_full_prediction_entry()
     actual = full_prediction_validation.validate_prediction_artifact(
         entry,
         path,
@@ -169,7 +170,6 @@ def validate_prediction_artifact(entry: dict[str, Any], path: Path) -> dict[str,
         expected_coverage=FULL_PREDICTION_COVERAGE,
     )
     declared = entry.get("coverage") or {}
-    authoritative = _authoritative_full_prediction_entry()
     same_identity = (
         (
             entry.get("model_ref"),

@@ -1,0 +1,50 @@
+{
+  "records": 23,
+  "benchmarks": 9,
+  "warnings": [],
+  "documents": [
+    {
+      "reference": "docs/research/20260809_regime_adaptation_plan.md",
+      "resource_id": "62c6118506d67794af2bbb29",
+      "http_status": 200,
+      "registered_in_experiment": true,
+      "content_matches_current_file": true
+    },
+    {
+      "reference": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+      "resource_id": "b190c4e2c8127e9500529cf8",
+      "http_status": 200,
+      "registered_in_experiment": true,
+      "content_matches_current_file": true
+    },
+    {
+      "reference": "docs/research/LESSONS.md",
+      "resource_id": "7bc506b2fa6a1b15ee4a01ca",
+      "http_status": 404,
+      "registered_in_experiment": false,
+      "content_matches_current_file": false
+    },
+    {
+      "reference": "backtest/experiments/_shared/docs/LESSONS.md",
+      "resource_id": "f6af14219643a330a8756013",
+      "http_status": 404,
+      "registered_in_experiment": false,
+      "content_matches_current_file": false
+    },
+    {
+      "reference": "docs/research/2026-08-17-phase-m-v2-exec-aligned-eval.md",
+      "resource_id": "11abe496108db140b2a5bf97",
+      "http_status": 404,
+      "registered_in_experiment": false,
+      "content_matches_current_file": false
+    },
+    {
+      "reference": "backtest/experiments/_shared/docs/2026-08-17-phase-m-v2-exec-aligned-eval.md",
+      "resource_id": "fa42c1c5bb1c6c033c1b28bc",
+      "http_status": 404,
+      "registered_in_experiment": false,
+      "content_matches_current_file": false
+    }
+  ],
+  "policy": "Only explicitly registered experiment documents receive resource URLs; other research docs remain local files."
+}

@@ -35,7 +35,7 @@ REG = EXP_ROOT / "backtest" / "experiments" / "registry.jsonl"
 BASELINE_ID = "regime-adapt/m0-h20-t5h5-es-v1"
 H20_ID = "regime-adapt/m0-h20-label-v4"
 EVAL_FILES = {"m0h20": "eval_m0h20_st_daily.json"}
-DETAIL_REPORT = "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+DETAIL_REPORT = "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html"
 HYPOTHESIS = "不同训练标签期限在同一把 top5×h5 尺子下的净年化/波动/夏普"
 GRID_ID = "regime-adapt/m0-label-k123-h2345"
 GRID_FILES = {
@@ -138,7 +138,7 @@ def build_row(exp_id: str, key: str, hh: int, note: str, metrics: dict) -> dict:
             f"backtest/result/regimeadaptfast_m0h20_s{s}"
             for s in (42, 1000, 2000, 3000, 4000)
         ],
-        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+        "plan": "docs/research/20260809_regime_adaptation_plan.md",
     }
 
 
@@ -208,7 +208,7 @@ def build_grid_row(metrics: dict) -> dict:
             f"backtest/result/regimeadaptfast_m0h20_s{s}"
             for s in (42, 1000, 2000, 3000, 4000)
         ],
-        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+        "plan": "docs/research/20260809_regime_adaptation_plan.md",
     }
 
 

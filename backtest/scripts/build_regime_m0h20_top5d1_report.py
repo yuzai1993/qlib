@@ -33,7 +33,8 @@ EXEC_FIX_JSON = (
     / "all_top5d1"
     / "m0h20_exec_fix_old_st.json"
 )
-OUT = EXP_ROOT / "backtest" / "experiments" / "_shared" / "reports" / "regime_adapt_m0h20_top5d1_bt_report.html"
+OUT = (EXP_ROOT / "backtest/experiments/strategies/topk-dropout/bt-v1/reports"
+       / "regime_adapt_m0h20_top5d1_bt_report.html")
 EXP_DIR = EXP_ROOT / "backtest" / "experiments"
 
 FULL_COLS = [
@@ -466,7 +467,9 @@ def main() -> None:
         raise SystemExit(f"missing {RES_JSON}")
     doc = json.loads(_resolve_research_path(RES_JSON, _RESEARCH_ROOT).read_text(encoding="utf-8"))
     html = render_html(doc, compare_runs=default_compare_runs())
-    _resolve_research_path(OUT, _RESEARCH_ROOT).write_text(html, encoding="utf-8")
+    destination = _resolve_research_path(OUT, _RESEARCH_ROOT)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(html, encoding="utf-8")
     print(f"written: {OUT}")
 
 

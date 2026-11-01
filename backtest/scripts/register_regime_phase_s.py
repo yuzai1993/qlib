@@ -238,7 +238,7 @@ def main() -> None:
                 "baseline_ref": baseline_ref,
                 "eval_output": rel,
                 "report": "backtest/experiments/_shared/reports/regime_adapt_phase_s_report.html",
-                "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+                "plan": "docs/research/20260809_regime_adaptation_plan.md",
             }
         )
     if rows:

@@ -96,6 +96,8 @@ launchctl kickstart -k gui/$(id -u)/com.yuxianqi.qlib-live-monitor
 
 原始 HTML 在沙箱中展示，不执行脚本；依赖脚本的旧报告图形可能不显示，可下载原文件在本机自行查看。平台仅向注册资源发放读取入口，不提供任意本地路径读取或代码执行接口。
 
+迁至`docs/research/`的Markdown/TXT研究文档由实验清单明确登记后提供预览/下载，兼容原共享文档资源入口；路径边界及读取时的校验继续生效。历史指标仍取原JSON，与CSI1000预测文件退役无关。
+
 ## 验证
 
 ```bash

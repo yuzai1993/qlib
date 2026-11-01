@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-01",
+  "scope": "owned shared assets, obsolete CSI1000 metrics, and superseded report only",
+  "moved_paths": [
+    {
+      "sha256": "ecf9b1df6fff756d607c2941d90691b877eafada2f94a3d3fe2e247df6b11d41",
+      "bytes": 1262812,
+      "owner": "regime-adapt/m0-label-k123-h2345; historical Benchmark regime-adapt/m0-h20-label-v4",
+      "active_catalog_refs": [
+        {
+          "record_id": "regime-adapt/m0-label-k123-h2345",
+          "resource_kind": "metrics",
+          "current": false,
+          "is_baseline": false
+        },
+        {
+          "record_id": "regime-adapt/m0-h20-label-v4",
+          "resource_kind": "metrics",
+          "current": false,
+          "is_baseline": true
+        }
+      ],
+      "code_config_model_refs": [
+        "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+        "backtest/scripts/patch_official_rank_ic.py",
+        "backtest/scripts/register_regime_m0_labels.py",
+        "backtest/scripts/run_m0_label_k123_h2345.sh"
+      ],
+      "historical_document_refs": [
+        "backtest/experiments/_shared/docs/LESSONS.md"
+      ],
+      "source": "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+      "destination": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h20_k123h2345.json"
+    },
+    {
+      "sha256": "b55a4b0d13927ffd16ef3bf28d54b3437257866f11507050ad3c100d196a85d1",
+      "bytes": 17223,
+      "owner": "regime-adapt/m0-label-k123-h2345; shared original report also referenced by model v3",
+      "active_catalog_refs": [
+        {
+          "record_id": "regime-adapt/m0-h20-t3h5es-v1",
+          "resource_kind": "report",
+          "current": false,
+          "is_baseline": true
+        },
+        {
+          "record_id": "regime-adapt/m0-label-k123-h2345",
+          "resource_kind": "report",
+          "current": false,
+          "is_baseline": false
+        },
+        {
+          "record_id": "regime-adapt/m0-h20-label-v4",
+          "resource_kind": "report",
+          "current": false,
+          "is_baseline": true
+        }
+      ],
+      "code_config_model_refs": [
+        "backtest/scripts/build_regime_m0_label_report.py",
+        "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+        "backtest/scripts/register_regime_m0_labels.py"
+      ],
+      "historical_document_refs": [
+        "backtest/experiments/_shared/docs/LESSONS.md",
+        "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+      ],
+      "source": "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html",
+      "destination": "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html"
+    },
+    {
+      "sha256": "c76e8c82524737738caf303dc140647ea985baa7609c3ace7088a948421b938a",
+      "bytes": 9977,
+      "owner": "regime-adapt/m0-h20-t5h5-es-v1",
+      "active_catalog_refs": [
+        {
+          "record_id": "regime-adapt/m0-h20-t5h5-es-v1",
+          "resource_kind": "report",
+          "current": true,
+          "is_baseline": true
+        }
+      ],
+      "code_config_model_refs": [
+        "backtest/scripts/register_regime_ablation.py",
+        "backtest/scripts/build_regime_phase_m_detail_report.py"
+      ],
+      "historical_document_refs": [
+        "docs/superpowers/specs/2026-08-17-m0-h20-t5h5-early-stop-design.md"
+      ],
+      "source": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
+      "destination": "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html"
+    },
+    {
+      "sha256": "ea2031aef886fe63d68c94b4ffd4cc5458efb5a594469c5fa09602ae66d632fa",
+      "bytes": 17261,
+      "owner": "baseline/phase-m-v1-bt-v1; original execution-defect and ST-filter repair comparison",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [
+        "backtest/scripts/build_regime_m0h20_top5d1_report.py"
+      ],
+      "historical_document_refs": [
+        "backtest/experiments/_shared/docs/LESSONS.md"
+      ],
+      "source": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report.html",
+      "destination": "backtest/experiments/strategies/topk-dropout/bt-v1/reports/regime_adapt_m0h20_top5d1_bt_report.html"
+    },
+    {
+      "sha256": "b83886fabbbb3240c305f0468711f99d3b77d4548109f3b16b6c3fdb24288785",
+      "bytes": 46115,
+      "owner": "cross-experiment research documentation",
+      "active_catalog_refs": [
+        {
+          "record_id": "regime-adapt/m0-h20-t5h5-es-v1",
+          "resource_kind": "plan",
+          "current": true,
+          "is_baseline": true
+        },
+        {
+          "record_id": "regime-adapt/m0-h20-t3h5es-v1",
+          "resource_kind": "plan",
+          "current": false,
+          "is_baseline": true
+        },
+        {
+          "record_id": "regime-adapt/m0-h20-rankices-v1",
+          "resource_kind": "plan",
+          "current": false,
+          "is_baseline": true
+        },
+        {
+          "record_id": "regime-adapt/m0-h20-t3h5es-densemble-v1",
+          "resource_kind": "plan",
+          "current": false,
+          "is_baseline": false
+        },
+        {
+          "record_id": "regime-adapt/m0-label-k123-h2345",
+          "resource_kind": "plan",
+          "current": false,
+          "is_baseline": false
+        },
+        {
+          "record_id": "regime-adapt/m0-h20-rankices-densemble-s42-v1",
+          "resource_kind": "plan",
+          "current": false,
+          "is_baseline": false
+        },
+        {
+          "record_id": "regime-adapt/m0-h20-label-v4",
+          "resource_kind": "plan",
+          "current": false,
+          "is_baseline": true
+        }
+      ],
+      "code_config_model_refs": [
+        "backtest/scripts/build_regime_stage1_report.py",
+        "backtest/scripts/register_regime_ablation.py",
+        "backtest/scripts/register_regime_m0_labels.py",
+        "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+        "backtest/scripts/register_regime_head_eval.py",
+        "backtest/scripts/register_regime_phase_s.py"
+      ],
+      "historical_document_refs": [],
+      "source": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+      "destination": "docs/research/20260809_regime_adaptation_plan.md"
+    },
+    {
+      "sha256": "81cd13222cd08da44d34f0bd09749f7f8322dff65dd37521e7c389c20e4e1717",
+      "bytes": 37399,
+      "owner": "cross-experiment research documentation",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [
+        "docs/superpowers/specs/2026-08-23-live-v4-cohort-ladder-netting-design.md",
+        "docs/superpowers/plans/2026-08-24-live-v4-plan3-preflight-observability.md",
+        "docs/superpowers/plans/2026-08-24-live-v4-plan4-cutover-runbook.md",
+        "docs/superpowers/plans/2026-08-23-live-v4-plan2-bridge-execution.md"
+      ],
+      "source": "backtest/experiments/_shared/docs/LESSONS.md",
+      "destination": "docs/research/LESSONS.md"
+    },
+    {
+      "sha256": "09399a94c878264cb0078ab8e118f56570e7c1f7b043d95dc847d6ca1983eda4",
+      "bytes": 18079,
+      "owner": "cross-experiment research documentation",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "source": "backtest/experiments/_shared/docs/2026-08-17-phase-m-v2-exec-aligned-eval.md",
+      "destination": "docs/research/2026-08-17-phase-m-v2-exec-aligned-eval.md"
+    }
+  ],
+  "removed_paths": [
+    {
+      "path": "backtest/experiments/_shared/metrics/ld_cum_h40_test_1d.json",
+      "sha256": "a78cf61ad0a0537ad17d93687217733147be8c276e5a78b8cb56febbfb7a8a9e",
+      "bytes": 6585,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/ld_cum_h40_test_self.json",
+      "sha256": "6f98db6b12e20d32137f71ad1b78a92189f8903cf52908e64d47a2d480b543b0",
+      "bytes": 6545,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/ld_cum_h40_valid_1d.json",
+      "sha256": "95defbc88ef45d3e3185a148a3c5c54a4bc08e057356052011a6e8378bb1775e",
+      "bytes": 6514,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/ld_cum_h40_valid_self.json",
+      "sha256": "309da6a021edf3a6b53c1709b1d32a563ec645e348cf2c9ebd28204debaa65a7",
+      "bytes": 6445,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi1000.json",
+      "sha256": "5bcb1d676e3c2225e10ddb15696eff2b480125416572eaa6c087eb8de129f5d9",
+      "bytes": 2833,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi300.json",
+      "sha256": "fdceb5fa7222780da13cb3fc4e96e672b1d9ca01898c47c3192808f9421cade2",
+      "bytes": 2839,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [
+        "docs/superpowers/plans/2026-07-25-csi1000-low-liquidity-trim.md"
+      ],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi500.json",
+      "sha256": "3c779e236f37f7570558e614bae274698ce10781e7703fd0a1dad55bd1eb4039",
+      "bytes": 2830,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_comparison.json",
+      "sha256": "4ca11c9d28340beb60a0579404421382a0f74d79271872765c2803e33830b47d",
+      "bytes": 3961,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [
+        "docs/superpowers/plans/2026-08-01-experiment-metadata-cleanup.md"
+      ],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_test_1d.json",
+      "sha256": "c2cb2405a272abb00f7f2d3b36691b9f6983e9c0afa5f753e7a77f6480da11dc",
+      "bytes": 22927,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/tr_rankic_winner_stale_forward_test_1d.json",
+      "sha256": "d690ab0c6331ef6be08705f1992f52af557fcc4116684d7867c133ac58dbaa6b",
+      "bytes": 22892,
+      "owner": "retired CSI1000 historical metric without retained active archive",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization to remove unreferenced old CSI1000 metrics"
+    },
+    {
+      "path": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report_before_fix.html",
+      "sha256": "2f76ba0f5ad178ff6bbf5aa3c15a08ba68892a9342a2b699f5915d989d035c24",
+      "bytes": 14331,
+      "owner": "superseded execution-repair report",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [],
+      "historical_document_refs": [],
+      "removal_reason": "explicit user authorization; only layout/audit aliases remain"
+    }
+  ],
+  "retained_shared_metrics": [
+    {
+      "path": "backtest/experiments/_shared/metrics/ls_rank_norm_test_1d.json",
+      "sha256": "fb8c6b8b7f6a015487c3b5287837d0a70a2a3b258c48d2c0a474fc1ebac3f08e",
+      "bytes": 6569,
+      "owner": "formal CSI1000 research-tool input",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [
+        "backtest/scripts/register_tra.py",
+        "backtest/scripts/register_b5_rankic_hyperparams.py",
+        "backtest/scripts/register_b5_followups.py"
+      ],
+      "historical_document_refs": []
+    },
+    {
+      "path": "backtest/experiments/_shared/metrics/mh_valid_rankic_selected_test_1d.json",
+      "sha256": "735c9e53068c8e581bfd524591c95a62e736f84554d3e404f6d39a1d8ebd67bb",
+      "bytes": 38793,
+      "owner": "formal CSI1000 research-tool input",
+      "active_catalog_refs": [],
+      "code_config_model_refs": [
+        "backtest/scripts/register_b5_rankic_hyperparams.py"
+      ],
+      "historical_document_refs": [
+        "docs/superpowers/plans/2026-08-01-experiment-metadata-cleanup.md",
+        "docs/superpowers/plans/2026-07-31-b6-baseline-promotion.md",
+        "docs/superpowers/plans/2026-07-31-b5-rankic-hyperparam-experiment.md"
+      ]
+    }
+  ],
+  "bytes_identical_immediately_after_move": true,
+  "frozen_registry_and_records_untouched": true,
+  "frozen_record_files_checked": 31,
+  "registry_sha256": "9cfd4d1b1c4d19f9725046c2ed7f7b11b3de94c53246097d05b5cdb42fdbde0a",
+  "root_followup": "Root updates path_map, active inventories and necessary link-only HTML/Markdown edits; this child did not edit those.",
+  "phase_s_artifacts": "Handled separately; not touched by this migration.",
+  "generator_update": {
+    "path": "backtest/scripts/build_regime_m0h20_top5d1_report.py",
+    "output": "backtest/experiments/strategies/topk-dropout/bt-v1/reports/regime_adapt_m0h20_top5d1_bt_report.html",
+    "test": "tests/backtest/test_regime_m0h20_top5d1_report.py::test_cli_writes_the_s1_owned_report_without_recreating_shared_reports"
+  }
+}

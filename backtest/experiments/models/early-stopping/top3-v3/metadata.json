@@ -9,16 +9,20 @@
   "records_directory": "backtest/experiments/models/early-stopping/top3-v3/records",
   "configs": [],
   "reports": [
+    "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
   ],
   "docs": [
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
   ],
   "data": [
     "backtest/experiments/models/early-stopping/top3-v3/metrics/eval_m0h20.json"
   ],
   "shared_assets": [
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
   ],
   "recipe_sources": [

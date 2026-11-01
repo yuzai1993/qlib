@@ -18,11 +18,13 @@ experiments/
     data/                          # 其他研究证据
     records/<SHA-256>.json          # 完整登记事件
     variants/<variant>/            # 参数组的源实验；各自保留完整资产和 metadata.json
-  _shared/                         # 公共资料、冻结预测与无独立实验的实盘对照
+  _shared/                         # 确实共用的工具输入、历史凭证及实盘对照
+    metrics/                       # 两份仍被研究工具引用的指标
+    phase-s/                       # 已退役CSI1000预测的清单与历史协议，无预测pkl
     deployment-parity/             # 当前及历史实盘对照配置、来源和哈希元数据
   _catalog/
     path_map.json                  # 旧路径到现路径的明确映射
-    audits/                        # 长期迁移清单与核验结果
+    audits/                        # 精简后的长期迁移清单、删除凭证与核验摘要
 ```
 
 没有对应资产的实验不会创建空子目录。公共研究基线和多实验共享研究配置仍可位于
@@ -32,6 +34,12 @@ experiments/
 
 现存对照为 [旧 K1×H5](_shared/deployment-parity/alla_v4_ladder_k1h5_parity.yaml)
 与 [当前 Top5](_shared/deployment-parity/alla_v2_top5d1f100_parity.yaml)。
+
+2026-11-01整理后，共享历史v1指标归入`models/training-target/horizon-comparison/metrics/`，模型原报告归训练目标及Top5早停实验，执行缺陷修复报告归s1。三份研究文档移到`docs/research/`。活动清单优先列当前路径，并保留旧资源拼写以兼容原入口；实际文件仅一份。
+
+十份无活动引用的旧CSI1000指标及修复前报告已删除。用户同时删除19,052,371字节的CSI1000冻结预测，保留[退役说明](_shared/phase-s/README.md)与历史manifest；B6-M及生产模型未删除。新研究预测须显式指定新输出目录，不能静默重建退役输入。
+
+`_catalog/path_map.json`及实盘parity保留；27份审计日志/XML、重复映射/平台快照及哈希清单合并为摘要，保留每个原件的SHA、大小和Git来源。详情见[审计索引](_catalog/audits/README.md)与[本次整理](_catalog/audits/20261101-shared-catalog-cleanup/README.md)。
 
 ## 按文件夹维护与平台发现
 

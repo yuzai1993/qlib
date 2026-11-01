@@ -1,0 +1,286 @@
+{
+  "added_aliases": {
+    "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json": "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h20_k123h2345.json",
+    "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html": "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
+    "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html": "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
+    "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report.html": "backtest/experiments/strategies/topk-dropout/bt-v1/reports/regime_adapt_m0h20_top5d1_bt_report.html",
+    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md": "docs/research/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/_shared/docs/LESSONS.md": "docs/research/LESSONS.md",
+    "backtest/experiments/_shared/docs/2026-08-17-phase-m-v2-exec-aligned-eval.md": "docs/research/2026-08-17-phase-m-v2-exec-aligned-eval.md"
+  },
+  "retired_aliases": [
+    {
+      "source": "backtest/experiments/ic/ld_cum_h40_test_1d.json",
+      "destination": "backtest/experiments/_shared/metrics/ld_cum_h40_test_1d.json",
+      "removed_target": "backtest/experiments/_shared/metrics/ld_cum_h40_test_1d.json"
+    },
+    {
+      "source": "backtest/experiments/ic/ld_cum_h40_test_self.json",
+      "destination": "backtest/experiments/_shared/metrics/ld_cum_h40_test_self.json",
+      "removed_target": "backtest/experiments/_shared/metrics/ld_cum_h40_test_self.json"
+    },
+    {
+      "source": "backtest/experiments/ic/ld_cum_h40_valid_1d.json",
+      "destination": "backtest/experiments/_shared/metrics/ld_cum_h40_valid_1d.json",
+      "removed_target": "backtest/experiments/_shared/metrics/ld_cum_h40_valid_1d.json"
+    },
+    {
+      "source": "backtest/experiments/ic/ld_cum_h40_valid_self.json",
+      "destination": "backtest/experiments/_shared/metrics/ld_cum_h40_valid_self.json",
+      "removed_target": "backtest/experiments/_shared/metrics/ld_cum_h40_valid_self.json"
+    },
+    {
+      "source": "backtest/experiments/ic/td_csi1000_full_v2_lgbm_csi1000.json",
+      "destination": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi1000.json",
+      "removed_target": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi1000.json"
+    },
+    {
+      "source": "backtest/experiments/ic/td_csi1000_full_v2_lgbm_csi300.json",
+      "destination": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi300.json",
+      "removed_target": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi300.json"
+    },
+    {
+      "source": "backtest/experiments/ic/td_csi1000_full_v2_lgbm_csi500.json",
+      "destination": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi500.json",
+      "removed_target": "backtest/experiments/_shared/metrics/td_csi1000_full_v2_lgbm_csi500.json"
+    },
+    {
+      "source": "backtest/experiments/ic/tr_rankic_winner_post2020_forward_comparison.json",
+      "destination": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_comparison.json",
+      "removed_target": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_comparison.json"
+    },
+    {
+      "source": "backtest/experiments/ic/tr_rankic_winner_post2020_forward_test_1d.json",
+      "destination": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_test_1d.json",
+      "removed_target": "backtest/experiments/_shared/metrics/tr_rankic_winner_post2020_forward_test_1d.json"
+    },
+    {
+      "source": "backtest/experiments/ic/tr_rankic_winner_stale_forward_test_1d.json",
+      "destination": "backtest/experiments/_shared/metrics/tr_rankic_winner_stale_forward_test_1d.json",
+      "removed_target": "backtest/experiments/_shared/metrics/tr_rankic_winner_stale_forward_test_1d.json"
+    },
+    {
+      "source": "backtest/experiments/regime_adapt_m0h20_top5d1_bt_report_before_fix.html",
+      "destination": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report_before_fix.html",
+      "removed_target": "backtest/experiments/_shared/reports/regime_adapt_m0h20_top5d1_bt_report_before_fix.html"
+    },
+    {
+      "source": "backtest/experiments/repository_migration_20261030/catalog_destination_after.json",
+      "destination": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_after.json",
+      "removed_target": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_after.json"
+    },
+    {
+      "source": "backtest/experiments/repository_migration_20261030/catalog_destination_before.json",
+      "destination": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_before.json",
+      "removed_target": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_before.json"
+    },
+    {
+      "source": "backtest/experiments/repository_migration_20261030/catalog_parity_after.json",
+      "destination": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_after.json",
+      "removed_target": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_after.json"
+    },
+    {
+      "source": "backtest/experiments/repository_migration_20261030/catalog_parity_before.json",
+      "destination": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_before.json",
+      "removed_target": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_before.json"
+    },
+    {
+      "source": "backtest/experiments/repository_migration_20261030/catalog_source_snapshot.json",
+      "destination": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_source_snapshot.json",
+      "removed_target": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_source_snapshot.json"
+    }
+  ],
+  "existing_directory_aliases_preserved": true,
+  "metadata_changes": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-comparison/baseline-profiles/v1.json",
+      "sha256_before": "ffe8eb4976a033cbd2430f3e4e71c81628c32877eed2e534b5ebf84d83652561",
+      "sha256_after": "88139f0b52d9fa2313dd6cf854c095fdc8d37c2faf1dfeb3c5adcfb58a3d6105"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-comparison/metadata.json",
+      "sha256_before": "469a66d37ba868376fe3d0c7f0de96a46391dee37fc24d0bb76254c6ac254f9b",
+      "sha256_after": "a056e83a726d009139647e6e2aa38df91b3e47bf34b0a7acc0c28fed1c820f06"
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/rankic-v4/metadata.json",
+      "sha256_before": "51d4c646d1b179e59a3da31c790b05e690242dbdd9dc99efad1244e377add373",
+      "sha256_after": "fae5d1dca4c65dee1fc935b88b83aee9912c52a0137f776b46932c85dfefec59"
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/top3-v3/metadata.json",
+      "sha256_before": "89f8adf53815b1cae82d478fb813c0bb930b6e84d7b9caf868f5cd078634fc6a",
+      "sha256_after": "7f712f74379890bdedd01d616fa3fcf320e08f9ebcc5cebb2d3f25e403a0752c"
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/top5-v2/metadata.json",
+      "sha256_before": "feb13d0cea3313a893f9e562e3479e784ed4a42c20c138cc58da54db09b95167",
+      "sha256_after": "1e7d445078c0db9c3a6d87a6051356dd2594a01a30ebadc0af740865ce3a1918"
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/de-v3-5seed/metadata.json",
+      "sha256_before": "89e04025a10c7b0850dcaff533b67bffdde6f87147a2ec1dce357d65be227a81",
+      "sha256_after": "9fc93006054edbb7c5a9ec9ee73deeb02c38ad1186172c842e53590dffd09024"
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/de-v4-s42/metadata.json",
+      "sha256_before": "d13a57e25a3c31d4c316c0b600f0cb574b279baf5f626b86058d373b62d985a4",
+      "sha256_after": "198a4dcc5bfa167172c79a131f88add212d46127e026ed5be10c82bb8e6513d2"
+    }
+  ],
+  "report_link_changes": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
+      "sha256_before": "b55a4b0d13927ffd16ef3bf28d54b3437257866f11507050ad3c100d196a85d1",
+      "sha256_after": "cc4ea9710ed0628c8a6d0580edca6d5d927e9c63d36a9f4a0646c5ffc37ea87a",
+      "table_cells_unchanged": 644,
+      "attributes": [
+        {
+          "before": "../../reports/phase_m_v1_report.html",
+          "after": "../../../../reports/phase_m_v1_report.html"
+        }
+      ]
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
+      "sha256_before": "c76e8c82524737738caf303dc140647ea985baa7609c3ace7088a948421b938a",
+      "sha256_after": "1b6b9ac40de00b0e84f03ac965a30f1337e9d284a6e05c5ab298ae250c1f13be",
+      "table_cells_unchanged": 254,
+      "attributes": [
+        {
+          "before": "../../reports/phase_m_v1_report.html",
+          "after": "../../../../reports/phase_m_v1_report.html"
+        }
+      ]
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/bt-v1/reports/regime_adapt_m0h20_top5d1_bt_report.html",
+      "sha256_before": "ea2031aef886fe63d68c94b4ffd4cc5458efb5a594469c5fa09602ae66d632fa",
+      "sha256_after": "4aef722ca00999a53294691159497d7ea5c96bfa180397178c5eb760bdac563b",
+      "table_cells_unchanged": 467,
+      "attributes": [
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/report_graph.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/report_graph.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_01.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_01.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_02.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_02.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_03.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_03.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_04.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_04.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_05.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/risk_analysis_05.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/score_ic.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/score_ic.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_01.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_01.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_02.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_02.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_03.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_03.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_04.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_04.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_05.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_05.html"
+        },
+        {
+          "before": "../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_06.html",
+          "after": "../../../../../result/20260819_225400_phase_s_m0h20_all_top5d1_ensemble/run_01/figures/model_performance_06.html"
+        }
+      ]
+    }
+  ],
+  "text_reference_changes": [
+    {
+      "path": "docs/research/20260809_regime_adaptation_plan.md",
+      "sha256_before": "b83886fabbbb3240c305f0468711f99d3b77d4548109f3b16b6c3fdb24288785",
+      "sha256_after": "82314d57cd997bf7b9b93eebd34e940ec99ffb4176cf7bb6406fd8e10c8e5b96"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-24-live-v4-plan4-cutover-runbook.md",
+      "sha256_before": "5688e509dbbd670d8af7550d5d9d710c81e1fbbc0f1484e85d8087ab68b12c2f",
+      "sha256_after": "5148edcc8f5adde9e57692216d6226e60255e0933bbdbe75471c2ea0ba7dc5f8"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-24-live-v4-plan3-preflight-observability.md",
+      "sha256_before": "614bc14290312fc6c8b6235a18f739d6e1e676c1e5cb008f8a605170484ec765",
+      "sha256_after": "c93583b010b51990e0daf0ee7c610c0a8d324f286c93b51fc82f5ba7f23164c8"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-23-live-v4-cohort-ladder-netting-design.md",
+      "sha256_before": "953e2c269b7ad36758fb1e32adff46a09ca1f7492e581b54c71f44d0de5ae186",
+      "sha256_after": "c5721f4fde61fc897e220e3944e178d9cb619c85cecad275fc609773c7dbdf3f"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-17-m0-h20-t5h5-early-stop-design.md",
+      "sha256_before": "d304ef783ab1f8e3e391b803085dc76676ec809676148973d1f281df2e022929",
+      "sha256_after": "6b8b160361fcfb0905a5f3563db8d8e8151cfdf594b39005887f9f08885e825a"
+    },
+    {
+      "path": "backtest/scripts/build_regime_stage1_report.py",
+      "sha256_before": "53ea5409318513f36eb93670121e2c021caddb0e95951ef0a354cfeec737908d",
+      "sha256_after": "2a4559387b5d4c61c1e3be6bdce8187f1169e429275a9c9fcbd85ee5e772f08d"
+    },
+    {
+      "path": "backtest/scripts/register_regime_m0_labels.py",
+      "sha256_before": "b305bc565e6dd57ff0b614c350cb8cbb7657a3e4b22ef499f49f5fb882a11361",
+      "sha256_after": "70a67591702359fc1cbbd73f86b09cdac3c5b1cfe3ac2fbc2cb0109aee4e8e75"
+    },
+    {
+      "path": "backtest/scripts/register_regime_head_eval.py",
+      "sha256_before": "137703c1cbc8fb9f4a9b85b8b45da43ba322984a0316789ad6dd7ff63a276c13",
+      "sha256_after": "6ede4c49da1afa5234e4540a0ca04dee6e407239ee1476390b766c804da38cc3"
+    },
+    {
+      "path": "backtest/scripts/register_regime_phase_s.py",
+      "sha256_before": "8077e58637965ca1d12784ef5db5b6e62cdc660e3a59269b7299a1ddc28a3ba4",
+      "sha256_after": "5614a16eb454fc30c08881b7bb278b3125a1e71160d8b95d7618e4f1994bae68"
+    },
+    {
+      "path": "backtest/scripts/build_regime_phase_m_detail_report.py",
+      "sha256_before": "c06177287743999580e48ce7f3151af2a17c57da5a48390080db3e31dacd2260",
+      "sha256_after": "3a842eb1c20e963c693a180fd00891a9c39b1167428e6e38dceb54d18b2e815a"
+    },
+    {
+      "path": "backtest/scripts/promote_phase_m_v1_t3h5es.py",
+      "sha256_before": "03ddc9113f9ad3636eebbe569086b041127432c44ae14ebec3f33d449bc146cc",
+      "sha256_after": "268b34c38bf6a990f8b853edba3fe46a26c574fe8388660559fef69bd823daba"
+    },
+    {
+      "path": "backtest/scripts/register_regime_ablation.py",
+      "sha256_before": "c51c0b9e1cf4a240973ceb6cfeb47c5eefb364524f427350dfb4aa6f0567c109",
+      "sha256_after": "797d8a56ae471e52aeb48adec425df8f7a02a3b4277aa838967e561bcac7e56b"
+    }
+  ],
+  "finder_files_removed": [
+    {
+      "path": "backtest/experiments/_shared/.DS_Store",
+      "bytes": 6148
+    }
+  ],
+  "frozen_registry_policy": "No index, frozen record or numeric source JSON was rewritten."
+}

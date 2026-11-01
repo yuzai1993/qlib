@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "retired_at": "2026-11-01",
+  "reason": "用户于2026-11-01明确要求删除已不再使用的CSI1000冻结预测；保留原结果、模型和来源元数据，不自动恢复输入。",
+  "deleted_prediction": {
+    "path": "backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl",
+    "sha256": "951f5fa34fd5641217041edf30fc549931bc1fb07e5d5fdacefa7573bee4ae1f",
+    "bytes": 19052371,
+    "deleted": true
+  },
+  "manifest": {
+    "path": "backtest/experiments/_shared/phase-s/prediction_manifest.json",
+    "before_sha256": "27830c80209de47b9fd3edac3120e9bdbb91dfc93f89d98c9c1ee25af2e3e9a6",
+    "before_bytes": 1884,
+    "after_sha256": "2dbf83a7841762b435d77dfca21cef009b805e1804bb9215bbd877c9415f42e6",
+    "original_prediction_entry": {
+      "model_ref": "b6-m",
+      "model_path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+      "model_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "pool": "csi1000",
+      "segment": "full",
+      "sources": [
+        {
+          "segment": "valid",
+          "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_valid.pkl",
+          "prediction_sha256": "b46a14b98884310f5fee354a5eb798edc6ead4c76fc18c4f697d7abc33bc32dc",
+          "index_sha256": "8dbd2f3b8d14fbf2065da1b6e49677c74774ed146c7a944b66a95afcc84bdf74"
+        },
+        {
+          "segment": "test",
+          "path": "/Users/yuxianqi/Project/qlib_exp/backtest/experiments/strategy/20260801_b1_b6/predictions/b6-m/csi1000_test.pkl",
+          "prediction_sha256": "864a5fe42a79e093cde71aff3530c5141afc338a6c9289121f013050c308991a",
+          "index_sha256": "ccea5530aeb10eb7ad7f792b063a98fc6701b1f6c0f37f1d297b916394c1c4d3"
+        }
+      ],
+      "coverage": {
+        "start": "2020-01-13",
+        "end": "2026-07-31",
+        "n_dates": 1587,
+        "n_rows": 1584284,
+        "index_sha256": "e6336cd92cc988f71f61afe2907980451ad20201388b6b39a542e469c1313abd"
+      },
+      "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/strategy-stability/20260801_full_period/predictions/b6-m/csi1000_full.pkl",
+      "prediction_sha256": "951f5fa34fd5641217041edf30fc549931bc1fb07e5d5fdacefa7573bee4ae1f",
+      "data_version": "2026-07-31"
+    }
+  },
+  "preserved_protocol": {
+    "path": "backtest/experiments/_shared/phase-s/protocol.json",
+    "sha256": "818ad6b9a4579f27e2a1523ca92a03e8d8b0da625dd03bc55d5089fce83807f4"
+  },
+  "preserved_models": [
+    {
+      "path": "backtest/models/baselines/b6-m/seed4000/trained_model",
+      "expected_sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "role": "B6-M historical frozen model",
+      "sha256": "368a503c7df8233022e6d7f9f1398711c64c819d1d55c487ef974a3c060e6325",
+      "bytes": 3391157
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s42/trained_model",
+      "expected_sha256": "ad5e9df845aac1aa1a904c91abe79e810be5a5ce188e17128980517178ef0da0",
+      "role": "active production model",
+      "seed": 42,
+      "sha256": "ad5e9df845aac1aa1a904c91abe79e810be5a5ce188e17128980517178ef0da0",
+      "bytes": 666569
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s1000/trained_model",
+      "expected_sha256": "676455aa793707bd2a0d668cb8ee9af77727ea9c3484f69b0523b4bfa2fdae48",
+      "role": "active production model",
+      "seed": 1000,
+      "sha256": "676455aa793707bd2a0d668cb8ee9af77727ea9c3484f69b0523b4bfa2fdae48",
+      "bytes": 1104746
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s2000/trained_model",
+      "expected_sha256": "39065cee3f74afe99ff6c036fa0cf2bd9405bb712dc5aafd6d40ce3f73a61c99",
+      "role": "active production model",
+      "seed": 2000,
+      "sha256": "39065cee3f74afe99ff6c036fa0cf2bd9405bb712dc5aafd6d40ce3f73a61c99",
+      "bytes": 766495
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s3000/trained_model",
+      "expected_sha256": "6fa11817e16b41bb7f1bd42cc87f36f639433beaa438584cd1134a5d95e3118e",
+      "role": "active production model",
+      "seed": 3000,
+      "sha256": "6fa11817e16b41bb7f1bd42cc87f36f639433beaa438584cd1134a5d95e3118e",
+      "bytes": 1014131
+    },
+    {
+      "path": "live_trading/models/v2_t5h5es/s4000/trained_model",
+      "expected_sha256": "ca466c67956890db036a81be55f8ac68c3557dc34dd6f860dc4649ae958c111c",
+      "role": "active production model",
+      "seed": 4000,
+      "sha256": "ca466c67956890db036a81be55f8ac68c3557dc34dd6f860dc4649ae958c111c",
+      "bytes": 853202
+    }
+  ],
+  "input_recreation": "No automatic fallback or canonical regeneration; new explicitly selected prediction input must pass the existing validation contract.",
+  "verification": {
+    "retirement_regressions": 11,
+    "broader_related_tests": {
+      "passed": 135,
+      "preexisting_failed": 14
+    },
+    "head_failure_evidence": "preexisting-csi-test-failures.json",
+    "temporary_script_removed": "/private/tmp/qlib-shared-catalog-cleanup-20261101/baseline_guard_plugin.py"
+  }
+}

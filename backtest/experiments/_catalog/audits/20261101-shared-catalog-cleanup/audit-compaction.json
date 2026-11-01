@@ -1,0 +1,762 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-01",
+  "status": "completed",
+  "purpose": "Compact reviewed historical audit logs, catalog/mapping snapshots and repeated hash inventories; preserve source research records, unique provenance and current resolver map.",
+  "source_git_commit": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787",
+  "removed_files": [
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-conclusion-editor/file_hashes.json",
+      "bytes": 79541,
+      "sha256": "b57009dadf8fb4674c79320568617508dc69ee0369444fcc993fdce5bc55aea4",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-conclusion-editor/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 273,
+        "comparable_hash_pairs": 273,
+        "unchanged_hash_pairs": 236,
+        "changed_hash_pairs": 37
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-conclusion-editor/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-experiment-detail-summary/file_hashes.json",
+      "bytes": 84981,
+      "sha256": "349902d0147e99fce2dd4f04efd10d8c3e7c23e0d9fcb01bbc187345168f6e26",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-experiment-detail-summary/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 292,
+        "comparable_hash_pairs": 292,
+        "unchanged_hash_pairs": 269,
+        "changed_hash_pairs": 23
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-experiment-detail-summary/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.junit.xml",
+      "bytes": 90434,
+      "sha256": "8e17f8c27e52c34c79786938e29146a3f91bd2a81d82f33d20f200258c298375",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.junit.xml",
+      "summary": {
+        "result_status": "historical_test_run",
+        "suites": [
+          {
+            "name": "pytest",
+            "errors": "0",
+            "failures": "0",
+            "skipped": "0",
+            "tests": "598",
+            "time": "9.104",
+            "timestamp": "2026-10-31T13:53:13.946617+08:00",
+            "hostname": "yuzai-mac"
+          }
+        ],
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.log",
+      "bytes": 740,
+      "sha256": "3bd9ca58f946275dc2343b785056798edb564879eed1ae9e43403d284df7cf9c",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.log",
+      "summary": {
+        "result_status": "historical_test_run",
+        "test_result_lines": [
+          "598 passed in 9.12s"
+        ],
+        "failed_node_count": 0,
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/frontend-tests.log",
+      "bytes": 12036,
+      "sha256": "6ec03797bd0c45ca2a7b25b3fd5f42dabecc8f3bdc7de73ff9f19221870150a3",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/frontend-tests.log",
+      "summary": {
+        "result_status": "historical_test_run",
+        "test_result_lines": [
+          "# tests 51",
+          "# suites 0",
+          "# pass 51",
+          "# fail 0",
+          "# cancelled 0",
+          "# skipped 0",
+          "# todo 0",
+          "# duration_ms 149.945625"
+        ],
+        "failed_node_count": 0,
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/integration-before-final-fixes.log",
+      "bytes": 46644,
+      "sha256": "a63c0d1b28b1b5478e3fd81ee779b747e94ccd8a2cbf3529113d8ff405dc1b46",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/integration-before-final-fixes.log",
+      "summary": {
+        "result_status": "historical_intermediate_run",
+        "test_result_lines": [
+          "39 failed, 2560 passed, 1 skipped, 2 warnings in 85.84s (0:01:25)"
+        ],
+        "failed_node_count": 39,
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/mapping.json",
+      "bytes": 374580,
+      "sha256": "4e7050f59c972c6e02c362467f54fca38c05848a5afd3092579132d65977ae28",
+      "category": "historical_mapping_snapshots",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/mapping.json",
+      "summary": {
+        "collection_counts": {
+          "directories": 147,
+          "files": 777
+        },
+        "result_status": "historical_completed_mapping_replaced_by_live_path_map"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.junit.xml",
+      "bytes": 16106,
+      "sha256": "56f371ba150cc0b1a92e3dfa21c78afa0316547b13a0cf9f7fb299c9de7b9107",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.junit.xml",
+      "summary": {
+        "result_status": "historical_test_run",
+        "suites": [
+          {
+            "name": "pytest",
+            "errors": "0",
+            "failures": "23",
+            "skipped": "0",
+            "tests": "23",
+            "time": "6.450",
+            "timestamp": "2026-10-31T13:44:42.915920+08:00",
+            "hostname": "yuzai-mac"
+          }
+        ],
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.log",
+      "bytes": 14255,
+      "sha256": "c7da3a614193cadf125e2155918ab8309a70c2ea60b50d037e84963cc5dd6f68",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.log",
+      "summary": {
+        "result_status": "historical_test_run",
+        "test_result_lines": [
+          "23 failed in 6.45s"
+        ],
+        "failed_node_count": 23,
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.junit.xml",
+      "bytes": 395545,
+      "sha256": "13a0bc874fbaff64cbb89ac6184870dc824f8c7a827fe8dbab6604df281548f0",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.junit.xml",
+      "summary": {
+        "result_status": "historical_test_run",
+        "suites": [
+          {
+            "name": "pytest",
+            "errors": "0",
+            "failures": "23",
+            "skipped": "1",
+            "tests": "2685",
+            "time": "91.298",
+            "timestamp": "2026-10-31T13:49:55.207936+08:00",
+            "hostname": "yuzai-mac"
+          }
+        ],
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.log",
+      "bytes": 17315,
+      "sha256": "7c2d5e5f8f1abc7649a99813b39769a0d458e6099eb230db1dafd7e0322356de",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.log",
+      "summary": {
+        "result_status": "historical_test_run",
+        "test_result_lines": [
+          "23 failed, 2661 passed, 1 skipped, 2 warnings in 91.37s (0:01:31)"
+        ],
+        "failed_node_count": 23,
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-kind-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-layout/mapping.json",
+      "bytes": 473913,
+      "sha256": "7de681138a58b376d6b311467b5d966562d3c32bf5efa2cb12a3a52cce1db846",
+      "category": "historical_mapping_snapshots",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-layout/mapping.json",
+      "summary": {
+        "schema_version": 1,
+        "copied_source_files_preserved": false,
+        "copied_files": 478,
+        "mapped_registry_records": 150,
+        "experiment_directories": 147,
+        "source_copies_retained": false,
+        "collection_counts": {
+          "files": 628,
+          "metadata_files": 147,
+          "unmoved_configs": 80,
+          "temporary_repository_files_removed": 9
+        },
+        "result_status": "historical_completed_mapping_replaced_by_live_path_map"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-model-benchmark-profile/file_hashes.json",
+      "bytes": 82373,
+      "sha256": "ef516d60e3e70b158cb5f848a158d35029f307e0e4112abb70eac356d66cc611",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-model-benchmark-profile/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 283,
+        "comparable_hash_pairs": 283,
+        "unchanged_hash_pairs": 271,
+        "changed_hash_pairs": 12
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-model-benchmark-profile/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-model-categories/file_hashes.json",
+      "bytes": 84206,
+      "sha256": "7a53e6b590eb54e33e2bb0a207fab4d6c6cae7d2e55b509fea87f5a8558d0bc1",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-model-categories/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 199,
+        "comparable_hash_pairs": 199,
+        "unchanged_hash_pairs": 184,
+        "changed_hash_pairs": 15
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-model-categories/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-model-categories/python-tests.log",
+      "bytes": 17395,
+      "sha256": "c8f4e7e78bcea80cf77ddf6535dbce00fbdfdc245ce08e4c76fa4c928abceea7",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-model-categories/python-tests.log",
+      "summary": {
+        "result_status": "historical_test_run",
+        "test_result_lines": [
+          "23 failed, 2725 passed, 1 skipped, 2 warnings in 83.56s (0:01:23)"
+        ],
+        "failed_node_count": 23,
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-model-categories/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-model-content/file_hashes.json",
+      "bytes": 78508,
+      "sha256": "c2b4fc82579d68d748210badb8e6c06e091a70f51d38eeea1455d1e0c746e728",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-model-content/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 269,
+        "comparable_hash_pairs": 269,
+        "unchanged_hash_pairs": 255,
+        "changed_hash_pairs": 14
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-model-content/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-model-profile-fields/file_hashes.json",
+      "bytes": 87312,
+      "sha256": "85898896afc79c9ba9e4072c256d7d0233fce244ca203b4fb8599835598bd9f0",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-model-profile-fields/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 300,
+        "comparable_hash_pairs": 300,
+        "unchanged_hash_pairs": 288,
+        "changed_hash_pairs": 12
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-model-profile-fields/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-retained-experiments/legacy_registry_backup_hashes.json",
+      "bytes": 26431,
+      "sha256": "b153ecce13622840cb9435b4e0d25fd54f0adecd45f7f61a040eb04ddbb9b61e",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-retained-experiments/legacy_registry_backup_hashes.json",
+      "summary": {
+        "path": "backtest/experiments/_catalog/audits/repository_migration_20261030/registry.before.jsonl",
+        "bytes": 1699425,
+        "sha256": "bdb87c4e57f6a316e3829706cfe1bb50de3497a54eadbea0a09fd014c31cf65f",
+        "deleted": true,
+        "reason": "User requested deletion of out-of-scope historical registry entries; this complete old payload contained all 115 removed events. Hash evidence retained instead of the raw backup.",
+        "event_count": 150,
+        "result_status": "deleted_registry_backup_receipt_preserved_in_compact_form"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-retained-experiments/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-retained-experiments/python-tests.log",
+      "bytes": 17315,
+      "sha256": "8f78b20e1461db4f8b0efc799d6d7145ade1eaeb7952da236ba5634dff6d9338",
+      "category": "test_logs_and_xml",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-retained-experiments/python-tests.log",
+      "summary": {
+        "result_status": "historical_test_run",
+        "test_result_lines": [
+          "23 failed, 2658 passed, 1 skipped, 2 warnings in 78.83s (0:01:18)"
+        ],
+        "failed_node_count": 23,
+        "detailed_failure_evidence_retained": "20261031-kind-layout/preexisting-failures.json"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-retained-experiments/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-retained-experiments/retained_file_hashes.json",
+      "bytes": 37074,
+      "sha256": "10c185da95e52c08227783f5a06bb2c925d50aed93fc4b89a909e37345541286",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-retained-experiments/retained_file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 165
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-retained-experiments/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-strategy-columns/file_hashes.json",
+      "bytes": 59990,
+      "sha256": "704b6dcbd4c571b1c161986d2a5ee028658cf749cb1a19d9457f93975a001067",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-strategy-columns/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 199,
+        "comparable_hash_pairs": 199,
+        "unchanged_hash_pairs": 176,
+        "changed_hash_pairs": 23
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-strategy-columns/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/20261031-strategy-layout/file_hashes.json",
+      "bytes": 90969,
+      "sha256": "aad913e58057283ba804af74950d7864cce115de75ae933df27270cded3e701c",
+      "category": "repeated_hash_inventories",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/20261031-strategy-layout/file_hashes.json",
+      "summary": {
+        "result_status": "historical_hash_inventory_retired",
+        "entry_count": 195,
+        "comparable_hash_pairs": 195,
+        "unchanged_hash_pairs": 152,
+        "changed_hash_pairs": 43
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/20261031-strategy-layout/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_after.json",
+      "bytes": 264436,
+      "sha256": "359468d703b9db0d2f82bf26cb7fe50dc9d712fe645d6354ebcf1b3a2181431a",
+      "category": "historical_catalog_snapshots",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_after.json",
+      "summary": {
+        "record_count": 36,
+        "kind_counts": {
+          "model": 12,
+          "strategy": 24
+        },
+        "source_status_counts": {
+          "available": 35,
+          "missing": 1
+        },
+        "warning_count": 0,
+        "result_status": "historical_catalog_snapshot_retired"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/repository_migration_20261030/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_before.json",
+      "bytes": 255190,
+      "sha256": "e2d0570e7b60caf56b6b4018b61082c28166295b31253f697631f5aec7513069",
+      "category": "historical_catalog_snapshots",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_before.json",
+      "summary": {
+        "record_count": 36,
+        "kind_counts": {
+          "model": 12,
+          "strategy": 24
+        },
+        "source_status_counts": {
+          "available": 33,
+          "missing": 3
+        },
+        "warning_count": 0,
+        "result_status": "historical_catalog_snapshot_retired"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/repository_migration_20261030/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_after.json",
+      "bytes": 10659,
+      "sha256": "93856a6f0441e0e4e82817526462861d549c3471e1ef0c1cfe66fd6b22331e4c",
+      "category": "historical_catalog_snapshots",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_after.json",
+      "summary": {
+        "source_catalog_snapshot": "backtest/experiments/repository_migration_20261030/catalog_source_snapshot.json",
+        "source_records": 32,
+        "source_available": 31,
+        "destination_root": "/Users/yuxianqi/Project/qlib",
+        "destination_records": 36,
+        "destination_available": 35,
+        "old_available_records_preserved": true,
+        "old_metric_values_checked": 2623,
+        "old_metric_values_preserved": true,
+        "warning_count": null,
+        "result_status": "historical_catalog_snapshot_retired"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/repository_migration_20261030/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_before.json",
+      "bytes": 11417,
+      "sha256": "b6bae5b08ee981c7cf1f02b172b31122a5300cccbf061ea59546a6f0d0bf0441",
+      "category": "historical_catalog_snapshots",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_before.json",
+      "summary": {
+        "source_catalog_snapshot": "backtest/experiments/repository_migration_20261030/catalog_source_snapshot.json",
+        "source_records": 32,
+        "source_available": 31,
+        "destination_root": "/Users/yuxianqi/Project/qlib",
+        "destination_records": 36,
+        "destination_available": 33,
+        "old_available_records_preserved": false,
+        "warning_count": null,
+        "result_status": "historical_catalog_snapshot_retired"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/repository_migration_20261030/validation.json"
+    },
+    {
+      "path": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_source_snapshot.json",
+      "bytes": 218065,
+      "sha256": "511b238cf89c53e6828dacc814ed9699599c193001028f7501a1e5309349ad36",
+      "category": "historical_catalog_snapshots",
+      "status": "retired_to_compact_audit",
+      "git_source": "d61bad18dd36b7ca57a9c0e4633840e1d44ba787:backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_source_snapshot.json",
+      "summary": {
+        "record_count": 32,
+        "kind_counts": {
+          "model": 12,
+          "strategy": 20
+        },
+        "source_status_counts": {
+          "available": 31,
+          "missing": 1
+        },
+        "warning_count": 0,
+        "result_status": "historical_catalog_snapshot_retired"
+      },
+      "retained_validation": "backtest/experiments/_catalog/audits/repository_migration_20261030/validation.json"
+    }
+  ],
+  "removed_paths": [
+    "backtest/experiments/_catalog/audits/20261031-conclusion-editor/file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-experiment-detail-summary/file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.junit.xml",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.log",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/frontend-tests.log",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/integration-before-final-fixes.log",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/mapping.json",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.junit.xml",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.log",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.junit.xml",
+    "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.log",
+    "backtest/experiments/_catalog/audits/20261031-layout/mapping.json",
+    "backtest/experiments/_catalog/audits/20261031-model-benchmark-profile/file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-model-categories/file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-model-categories/python-tests.log",
+    "backtest/experiments/_catalog/audits/20261031-model-content/file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-model-profile-fields/file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-retained-experiments/legacy_registry_backup_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-retained-experiments/python-tests.log",
+    "backtest/experiments/_catalog/audits/20261031-retained-experiments/retained_file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-strategy-columns/file_hashes.json",
+    "backtest/experiments/_catalog/audits/20261031-strategy-layout/file_hashes.json",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_after.json",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_destination_before.json",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_after.json",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_parity_before.json",
+    "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_source_snapshot.json"
+  ],
+  "retired_references": [
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.json",
+      "json_pointer": "/evidence_files/old_failures_before.log/path",
+      "historical_value": "preexisting-failures.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.json",
+      "json_pointer": "/evidence_files/old_failures_before.junit.xml/path",
+      "historical_value": "preexisting-failures.junit.xml",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.junit.xml",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.json",
+      "json_pointer": "/evidence_files/integration-final-tests.log/path",
+      "historical_value": "integration-before-final-fixes.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/integration-before-final-fixes.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/tests.json",
+      "json_pointer": "/python_integration/log",
+      "historical_value": "python-tests.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/tests.json",
+      "json_pointer": "/python_integration/junit",
+      "historical_value": "python-tests.junit.xml",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.junit.xml",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/tests.json",
+      "json_pointer": "/final_focused/log",
+      "historical_value": "focused-tests.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/tests.json",
+      "json_pointer": "/final_focused/junit",
+      "historical_value": "focused-tests.junit.xml",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/focused-tests.junit.xml",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-kind-layout/tests.json",
+      "json_pointer": "/frontend/log",
+      "historical_value": "frontend-tests.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/frontend-tests.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-model-categories/validation.json",
+      "json_pointer": "/file_hashes",
+      "historical_value": "file_hashes.json",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-model-categories/file_hashes.json",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-retained-experiments/validation.json",
+      "json_pointer": "/retained_file_hashes",
+      "historical_value": "retained_file_hashes.json",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-retained-experiments/retained_file_hashes.json",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-retained-experiments/validation.json",
+      "json_pointer": "/legacy_registry_backup_evidence",
+      "historical_value": "legacy_registry_backup_hashes.json",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-retained-experiments/legacy_registry_backup_hashes.json",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-columns/validation.json",
+      "json_pointer": "/file_hashes",
+      "historical_value": "file_hashes.json",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-strategy-columns/file_hashes.json",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-version-labels/whitespace-normalization.json",
+      "json_pointer": "/files/0/path",
+      "historical_value": "backtest/experiments/_catalog/audits/20261031-kind-layout/integration-before-final-fixes.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/integration-before-final-fixes.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-version-labels/whitespace-normalization.json",
+      "json_pointer": "/files/1/path",
+      "historical_value": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.junit.xml",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.junit.xml",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-version-labels/whitespace-normalization.json",
+      "json_pointer": "/files/2/path",
+      "historical_value": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/preexisting-failures.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-version-labels/whitespace-normalization.json",
+      "json_pointer": "/files/3/path",
+      "historical_value": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.junit.xml",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.junit.xml",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-version-labels/whitespace-normalization.json",
+      "json_pointer": "/files/4/path",
+      "historical_value": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-kind-layout/python-tests.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-version-labels/whitespace-normalization.json",
+      "json_pointer": "/files/5/path",
+      "historical_value": "backtest/experiments/_catalog/audits/20261031-model-categories/python-tests.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-model-categories/python-tests.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/20261031-strategy-version-labels/whitespace-normalization.json",
+      "json_pointer": "/files/6/path",
+      "historical_value": "backtest/experiments/_catalog/audits/20261031-retained-experiments/python-tests.log",
+      "retired_path": "backtest/experiments/_catalog/audits/20261031-retained-experiments/python-tests.log",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    },
+    {
+      "source": "backtest/experiments/_catalog/audits/repository_migration_20261030/validation.json",
+      "json_pointer": "/catalog_parity/source_catalog_snapshot",
+      "historical_value": "backtest/experiments/repository_migration_20261030/catalog_source_snapshot.json",
+      "retired_path": "backtest/experiments/_catalog/audits/repository_migration_20261030/catalog_source_snapshot.json",
+      "status": "historical_reference_retired",
+      "replacement_summary": "backtest/experiments/_catalog/audits/20261101-shared-catalog-cleanup/audit-compaction.json"
+    }
+  ],
+  "historical_fact_policy": "Existing validation/tests/whitespace evidence JSON is byte-identical. Its old artifact fields remain historical facts, explicitly retired by this manifest rather than silently rewritten.",
+  "path_alias_policy": "The parent task owns path_map.json. Retired artifact aliases must be removed, not mapped to a summary as if it were the original content.",
+  "runtime_reference_check": {
+    "active_runtime_audit_readers": [],
+    "active_registry_audit_references": 0,
+    "active_experiment_metadata_audit_references": 0,
+    "scope": "Previously inspected active runtime Python modules, registry events, experiment/group metadata and platform resources; retired references below are historical evidence only."
+  },
+  "preserved_evidence": {
+    "old_audit_file_count": 159,
+    "old_audit_bytes": 2497749,
+    "old_audit_content_sha256": "5d04a54a9920c1985e8cbab5c9178f74ff8690a2a97e8507c6965ac0442c5237",
+    "protected_categories": [
+      "README/validation summaries",
+      "migration manifest and source whitelist",
+      "deletion/consolidation original records",
+      "unique model/benchmark source evidence",
+      "structured preexisting-failure evidence",
+      "all current-task audit files"
+    ]
+  },
+  "counts": {
+    "removed_files": 27,
+    "removed_bytes": 2947430,
+    "categories": {
+      "test_logs_and_xml": {
+        "files": 10,
+        "bytes": 627785
+      },
+      "historical_mapping_snapshots": {
+        "files": 2,
+        "bytes": 848493
+      },
+      "historical_catalog_snapshots": {
+        "files": 5,
+        "bytes": 759767
+      },
+      "repeated_hash_inventories": {
+        "files": 10,
+        "bytes": 711385
+      }
+    },
+    "historical_references_marked_retired": 20,
+    "compact_json_bytes": 39907,
+    "readme_bytes": 790,
+    "net_logical_bytes_reclaimed": 2906733
+  },
+  "verification": {
+    "all_removed_payloads_match_parent_before_manifest": true,
+    "all_removed_payloads_match_recorded_git_commit": true,
+    "all_retained_old_audits_byte_identical": true,
+    "old_path_map_written_by_this_subtask": false,
+    "source_registry_metrics_and_models_written_by_this_subtask": false
+  }
+}

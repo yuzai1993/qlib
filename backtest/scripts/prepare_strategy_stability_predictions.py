@@ -22,6 +22,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from generate_phase_s_predictions import prediction_index_sha256  # noqa: E402
 from phase_s_protocol import CURRENT_MODEL_REFS, MODEL_REFS, sha256_file  # noqa: E402
+from phase_s_prediction_validation import reject_retired_prediction  # noqa: E402
 
 FULL_START = "2020-01-13"
 FULL_END = "2026-07-31"
@@ -71,6 +72,8 @@ def compose_prediction(
     valid_entry: dict[str, Any],
     test_entry: dict[str, Any],
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    reject_retired_prediction(valid_entry)
+    reject_retired_prediction(test_entry)
     valid_identity = (
         valid_entry.get("model_ref"),
         valid_entry.get("pool"),
@@ -146,8 +149,13 @@ def prepare_bundles(
     output_root: Path,
     model_refs: Sequence[str],
 ) -> dict[str, Any]:
+    output_root = resolve_research_path(Path(output_root).expanduser(), REPO_ROOT)
+    output_manifest = output_root / "prediction_manifest.json"
+    if output_manifest.is_file():
+        reject_retired_prediction(json.loads(output_manifest.read_text(encoding="utf-8")))
     source_manifest_path = resolve_research_path(source_manifest_path, REPO_ROOT)
     source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    reject_retired_prediction(source_manifest)
     entries = source_manifest.get("predictions") or []
     composed_entries = []
     for model_ref in model_refs:
@@ -200,7 +208,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=REPO_ROOT / "backtest/experiments/_shared/phase-s",
+        required=True,
+        help="显式指定新预测输出目录；已退役的历史预测目录不能覆盖",
     )
     parser.add_argument(
         "--model-ref",

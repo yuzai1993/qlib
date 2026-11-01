@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-01",
+  "python_relevant_tests": {
+    "passed": 770,
+    "failed": 0
+  },
+  "frontend_tests": {
+    "passed": 134,
+    "failed": 0
+  },
+  "retirement_extended_tests": {
+    "passed": 135,
+    "preexisting_failures": 14,
+    "same_failures_reproduced_on_HEAD": true
+  },
+  "independent_review": "passed; frozen scientific fields, source hashes, resource URLs, alias graph and relative report links verified",
+  "raw_records": 23,
+  "registry_events": 24,
+  "benchmarks": 9,
+  "history_entries": 14,
+  "legacy_resource_urls_available": 166,
+  "moved_files": 7,
+  "deleted_obsolete_metrics": 10,
+  "deleted_obsolete_reports": 1,
+  "retired_audit_files": 27,
+  "deleted_prediction_bytes": 19052371,
+  "parity_unchanged": true,
+  "counts_before_completion_receipt": {
+    "audits": {
+      "files": 169,
+      "bytes": 2603928
+    },
+    "shared": {
+      "files": 8,
+      "bytes": 61883
+    }
+  },
+  "runtime_registered_plan_new_and_legacy_links": "HTTP 200 with exact bytes",
+  "unregistered_doc_resource_policy": "HTTP 404",
+  "git_diff_cached_check": "passed",
+  "temporary_root": "/private/tmp/qlib-shared-catalog-cleanup-20261101",
+  "temporary_root_removed": true
+}

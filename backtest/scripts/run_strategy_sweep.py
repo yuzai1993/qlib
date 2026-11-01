@@ -99,6 +99,7 @@ def verify_prediction_contract(
     if segment == "full":
         _validate_full_selection_scope(model_ref, pool)
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    full_prediction_validation.reject_retired_prediction(manifest)
     if segment == "full":
         entry, _coverage = full_prediction_validation.validate_full_prediction_manifest(
             manifest,
@@ -122,6 +123,7 @@ def verify_prediction_contract(
     if len(matches) != 1:
         raise ValueError("prediction manifest must contain exactly one matching artifact")
     entry = matches[0]
+    full_prediction_validation.reject_retired_prediction(entry)
     declared = Path(entry["path"]).expanduser()
     if not declared.is_absolute():
         declared = REPO_ROOT / declared
@@ -502,8 +504,6 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parse_args(argv)
     pred_path = args.pred.expanduser().resolve()
-    if not pred_path.is_file():
-        raise FileNotFoundError(f"prediction file missing: {pred_path}")
     prediction_entry = verify_prediction_contract(
         pred_path,
         args.prediction_manifest,
@@ -511,6 +511,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         pool=args.pool,
         segment=args.segment,
     )
+    if not pred_path.is_file():
+        raise FileNotFoundError(f"prediction file missing: {pred_path}")
     base = load_config(args.config)
     all_candidates = strategy_grid(args.model_ref)
     by_id = {row["candidate_id"]: row for row in all_candidates}

@@ -9,17 +9,23 @@
   "records_directory": "backtest/experiments/models/training-target/h20-v1/records",
   "configs": [],
   "reports": [
+    "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
   ],
   "docs": [
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
   ],
   "data": [
+    "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h20_k123h2345.json",
     "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json"
   ],
   "shared_assets": [
+    "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h20_k123h2345.json",
     "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
   ],
   "recipe_sources": [

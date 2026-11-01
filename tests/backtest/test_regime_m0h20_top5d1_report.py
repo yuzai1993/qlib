@@ -180,3 +180,18 @@ def test_report_compares_before_and_after_fix():
     assert "日频 ST（当前）" in html
     assert "-24.8%" in html
     assert "+55.3%" in html
+
+
+def test_cli_writes_the_s1_owned_report_without_recreating_shared_reports(tmp_path, monkeypatch):
+    relative = Path("backtest/experiments/strategies/topk-dropout/bt-v1/reports/regime_adapt_m0h20_top5d1_bt_report.html")
+    assert report.OUT.relative_to(ROOT) == relative
+    source = tmp_path / "source.json"
+    source.write_text("{}")
+    destination = tmp_path / relative
+    monkeypatch.setattr(report, "RES_JSON", source)
+    monkeypatch.setattr(report, "OUT", destination)
+    monkeypatch.setattr(report, "default_compare_runs", lambda: [])
+    monkeypatch.setattr(report, "render_html", lambda doc, compare_runs: "<html>synthetic report</html>")
+    report.main()
+    assert destination.read_text() == "<html>synthetic report</html>"
+    assert not (tmp_path / "backtest/experiments/_shared/reports").exists()

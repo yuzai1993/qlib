@@ -106,7 +106,7 @@ def main():
     H = []
     H.append(f"<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'><title>regime-adapt 阶段1 快筛报告</title><style>{css}</style></head><body><div class='wrap'>")
     H.append("<h1>regime-adapt 阶段1（快筛）实验报告</h1>")
-    H.append("<p class='meta'>生成 2026-08-13 ｜ 计划 <code>backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md</code>（12.1/12.2 节）｜ "
+    H.append("<p class='meta'>生成 2026-08-13 ｜ 计划 <code>docs/research/20260809_regime_adaptation_plan.md</code>（12.1/12.2 节）｜ "
              "registry：<code>regime-adapt/m0-fast-anchor</code>、<code>regime-adapt/m3-fast-feat-sample</code>、<code>regime-adapt/b6m-reference</code></p>")
 
     # 协议

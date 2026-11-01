@@ -63,8 +63,6 @@ logs/
 
 backtest/result/
 backtest/experiments/.registry.jsonl.lock
-# Frozen Phase S prediction evidence belongs to the permanent experiment archive.
-!backtest/experiments/_shared/phase-s/predictions/b6-m/csi1000_full.pkl
 # Permanent CSV evidence moved with its experiment must remain versioned.
 !backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/bench_ew_all.csv
 !backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/portfolio_daily.csv

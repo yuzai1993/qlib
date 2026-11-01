@@ -66,7 +66,7 @@ SPECS = {
     },
     "t5h5es": {
         "title": "Phase M v1 详细报告 · M0 H20 top5×h5 早停",
-        "out": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
+        "out": "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
         "hypothesis": (
             "训练配方仍是 M0 H20，早停改为全A 1454 天 top5×h5 扣费净年化；"
             "2026-08-19 晋升为当前 baseline。2026-08-20 起官方主格改为"

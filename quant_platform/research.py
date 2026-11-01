@@ -158,13 +158,25 @@ class ResearchCatalog:
         path = Path(rel)
         if path.is_absolute() or ".." in path.parts:
             return None
-        if len(path.parts) < 3 or path.parts[0] != "backtest" or path.parts[1] not in _SOURCE_DIRS:
+        research_doc = path.parts[:2] == ("docs", "research") and path.suffix.lower() in {".md", ".txt"}
+        backtest_source = len(path.parts) >= 3 and path.parts[0] == "backtest" and path.parts[1] in _SOURCE_DIRS
+        if len(path.parts) < 3 or not (research_doc or backtest_source):
             return None
         if path.suffix.lower() not in _ALLOWED_SUFFIXES and path.name != "registry.jsonl":
             return None
         try:
             candidate = resolve_research_path(path, self.root)
-            candidate.relative_to(self.root / "backtest" / path.parts[1])
+            boundary = self.root / "docs/research" if research_doc else self.root / "backtest" / path.parts[1]
+            try:
+                candidate.relative_to(boundary)
+            except ValueError:
+                # A declared relocation may cross into the research-docs area;
+                # an arbitrary cross-directory symlink may not.
+                mapped = Path(relocate_path(path.as_posix(), self.root))
+                if (not backtest_source or mapped.parts[:2] != ("docs", "research")
+                        or mapped.suffix.lower() not in {".md", ".txt"}):
+                    raise
+                candidate.relative_to(self.root / "docs/research")
             # Also reject a symlinked allowed directory that escapes the root.
             candidate.relative_to(self.root)
             return candidate
@@ -716,7 +728,7 @@ class ResearchCatalog:
         raw = value.get("path") if isinstance(value, dict) else value
         if not isinstance(raw, str) or not raw:
             return None
-        if raw.startswith("backtest/") and manifest.get("inventory_kind") == "asset_snapshot":
+        if raw.startswith(("backtest/", "docs/")) and manifest.get("inventory_kind") == "asset_snapshot":
             return raw
         return (Path(manifest["directory"]) / raw).as_posix()
 

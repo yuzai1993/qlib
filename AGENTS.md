@@ -26,6 +26,9 @@
 
 ## 环境注意事项
 
+- 2026-11-01用户明确删除CSI1000 full冻结预测（`_shared/phase-s/predictions/b6-m/csi1000_full.pkl`）。该处只保留已标`retired`的清单和历史协议；默认研究调用与清理门禁应明确拒绝退役输入，不得自动替代或静默恢复。B6-M模型、当前全A模型、历史结果与实盘parity继续保留。新预测须显式指定输出目录并重新验证。
+- `_shared`中有归属的历史v1指标与三份报告已归所属实验，研究文档在`docs/research/`；旧路径仍由`_catalog/path_map.json`兼容。旧审计日志及重复快照已压缩，历史字段的退役引用见`_catalog/audits/README.md`与`20261101-shared-catalog-cleanup/audit-compaction.json`，不可把旧快照当当前目录状态。
+
 - 全A模型版本使用`vN`，执行层策略版本展示使用`sN`（当前模型v2、策略s5）。冻结原始登记的`bt_version: vN`与`baseline/phase-m-v1-bt-vN` ID保留审计和兼容用途；平台、CSV及新生成报告使用统一展示字段，禁止把策略版本当作模型版本。
 
 - 2026-10-31 按用户明确要求，`backtest/experiments/` 保留全A模型6个及 `phase-m-v1-bt` 策略源实验17个，共23个源实体、24条登记事件；当前失败策略已删除，后续实验仍须按规范登记失败事件。重复候选已归入s2/s3/s4/s5来源；14个策略变体归5组，另有3条独立策略，平台记录页显示6模型＋8策略入口，Benchmark单独保留4模型＋5策略版本。组元数据为 `entity_type: experiment_group`，成员在 `<规则族>/<组名>/variants/<变体>/`，组本身不进registry、不决定晋升；结论编辑只写组的 `metadata.json.analysis`。审计见 `backtest/experiments/_catalog/audits/20261031-strategy-experiment-groups/`。H1/H5/H10及H20 v1已归入训练目标汇总，v1冻结来源由 `historical_baselines` 保留，供历史对照与模型产物保护；v3重复单种子集成已删除。CSI1000条款保留历史研究定义，不表示旧归档仍存在。历史范围审计见 `backtest/experiments/_catalog/audits/20261031-retained-experiments/validation.json`。

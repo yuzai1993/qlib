@@ -92,7 +92,7 @@ SPECS = [
         "display_name": "M0 H20 ES",
         "arm": "m0-h20-t5h5es",
         "eval": "backtest/result/eval_regime_m0_t5h5es/eval_m0h20.json",
-        "detail_report": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
+        "detail_report": "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
         "hypothesis": (
             "训练配方仍是 M0 H20，早停改为全A 1454 天 top5×h5 扣费净年化"
             "（上市>=60 + 日频 ST + 成交额>=1000万 + 剔t+1涨停）；"
@@ -110,7 +110,7 @@ SPECS = [
         "display_name": "M0 H20（日频 ST 重评）",
         "arm": "m0-h20-st-daily",
         "eval": "backtest/result/eval_regime_m0_labels/eval_m0h20_st_daily.json",
-        "detail_report": "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html",
+        "detail_report": "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
         "hypothesis": (
             "同一组 regimeadaptfast_m0h20_s*，仅把评估 ST 从静态 st_names 换成日频 st_daily；"
             "官方数字已并入 regime-adapt/m0-h20-label-v4"
@@ -324,7 +324,7 @@ def build_row(spec: dict, *, state: str, metrics: dict | None) -> dict:
             "baseline_ref",
             "self" if spec["exp_id"] == BASELINE_ID else BASELINE_ID,
         ),
-        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+        "plan": "docs/research/20260809_regime_adaptation_plan.md",
     }
     if spec.get("result_dirs"):
         row["result_dirs"] = list(spec["result_dirs"])

@@ -38,6 +38,16 @@ FULL_PREDICTION_COVERAGE = {
 }
 
 
+def reject_retired_prediction(metadata: Mapping[str, Any]) -> None:
+    """Keep retired source evidence readable without treating it as runnable input."""
+    if metadata.get("status") == "retired":
+        retired_at = metadata.get("retired_at") or "2026-11-01"
+        raise ValueError(
+            f"用户于{retired_at}删除的CSI1000冻结预测，原结果保留；"
+            "重新运行须显式提供重新验证的预测输入"
+        )
+
+
 def prediction_path(entry: Mapping[str, Any], repo_root: Path = REPO_ROOT) -> Path:
     raw = entry.get("path")
     if not isinstance(raw, str) or not raw.strip():
@@ -46,6 +56,7 @@ def prediction_path(entry: Mapping[str, Any], repo_root: Path = REPO_ROOT) -> Pa
 
 
 def full_prediction_entry(manifest: Mapping[str, Any]) -> dict[str, Any]:
+    reject_retired_prediction(manifest)
     matches = [
         entry
         for entry in manifest.get("predictions") or []
@@ -56,6 +67,7 @@ def full_prediction_entry(manifest: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError(
             "prediction manifest requires exactly one b6-m/csi1000/full artifact"
         )
+    reject_retired_prediction(matches[0])
     return copy.deepcopy(matches[0])
 
 
@@ -95,6 +107,7 @@ def validate_prediction_artifact(
     repo_root: Path = REPO_ROOT,
     expected_coverage: Mapping[str, Any] = FULL_PREDICTION_COVERAGE,
 ) -> dict[str, Any]:
+    reject_retired_prediction(entry)
     resolved = resolve_research_path(Path(path).expanduser(), repo_root)
     if not resolved.is_file():
         raise FileNotFoundError(f"full prediction file missing: {resolved}")
@@ -122,6 +135,7 @@ def validate_full_prediction_manifest(
     expected_coverage: Mapping[str, Any] = FULL_PREDICTION_COVERAGE,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Validate the canonical manifest, model binding, and actual DataFrame."""
+    reject_retired_prediction(manifest)
     declared_path = resolve_research_path(Path(manifest_path).expanduser(), repo_root)
     authoritative_path = resolve_research_path(Path(authoritative_manifest_path).expanduser(), repo_root)
     if declared_path != authoritative_path:
@@ -133,6 +147,7 @@ def validate_full_prediction_manifest(
             f"authoritative full prediction manifest missing: {authoritative_path}"
         )
     authoritative = json.loads(authoritative_path.read_text(encoding="utf-8"))
+    reject_retired_prediction(authoritative)
     if dict(manifest) != authoritative:
         raise ValueError("full prediction manifest differs from authoritative manifest")
     if manifest.get("schema_version") != 1:

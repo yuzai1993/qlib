@@ -9,21 +9,27 @@
   "records_directory": "backtest/experiments/models/training-target/horizon-comparison/records",
   "configs": [],
   "reports": [
+    "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
   ],
   "docs": [
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
     "backtest/experiments/models/training-target/horizon-comparison/README.md"
   ],
   "data": [
+    "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h20_k123h2345.json",
     "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
     "backtest/experiments/models/training-target/horizon-comparison/source-records/42cb0bcafc432b1e4e8875d2b233f42141264c342679343edcd4c48c3e48ac85.json",
     "backtest/experiments/models/training-target/horizon-comparison/source-records/6e8e4fc26f375c27cee8416e19f31218dc4305b6d74fe132e9440062f7e690e5.json",
     "backtest/experiments/models/training-target/horizon-comparison/source-records/1c5f4c6263be31bf7891c34c63ffad9693472148724198c38b86bc342c7728f1.json"
   ],
   "shared_assets": [
+    "backtest/experiments/models/training-target/horizon-comparison/metrics/eval_m0h20_k123h2345.json",
     "backtest/experiments/_shared/data/research_eval_sources_20261030/eval_regime_m0_labels/eval_m0h20_k123h2345.json",
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
   ],
   "recipe_sources": [
@@ -248,7 +254,7 @@
       "sha256": "f8b616d897bf754cb5dbdc9daf441f5911b3b0b8f22f093522bc8d9a7a35825f",
       "profile": {
         "path": "baseline-profiles/v1.json",
-        "sha256": "ffe8eb4976a033cbd2430f3e4e71c81628c32877eed2e534b5ebf84d83652561"
+        "sha256": "88139f0b52d9fa2313dd6cf854c095fdc8d37c2faf1dfeb3c5adcfb58a3d6105"
       }
     }
   ],

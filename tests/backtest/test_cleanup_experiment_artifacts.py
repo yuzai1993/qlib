@@ -1328,6 +1328,22 @@ def test_full_period_cleanup_binds_config_model_prediction_and_backtest(
     assert session in plan["keep_result_dirs"]
 
 
+def test_retired_full_prediction_blocks_all_cleanup_instead_of_relaxing_its_gate(tmp_path, monkeypatch):
+    import phase_s_prediction_validation as prediction_validation
+
+    baseline = _complete_baseline(tmp_path)
+    row, _ = _full_period_fixture(tmp_path, monkeypatch)
+    manifest_path = tmp_path / "backtest/experiments/strategy-stability/20260801_full_period/prediction_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest.update(status="retired", retired_at="2026-11-01")
+    manifest_path.write_text(json.dumps(manifest))
+    monkeypatch.setattr(prediction_validation.pd, "read_pickle", lambda *_: pytest.fail("retired pickle read"))
+    plan = cleanup.build_cleanup_plan(tmp_path, [baseline, row])
+    assert any("2026-11-01" in error and "CSI1000" in error for error in plan["errors"])
+    assert plan["delete_result_dirs"] == []
+    assert plan["delete_mlruns_dirs"] == []
+
+
 @pytest.mark.parametrize(
     "field,value",
     [

@@ -9,16 +9,20 @@
   "records_directory": "backtest/experiments/models/early-stopping/top5-v2/records",
   "configs": [],
   "reports": [
+    "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html"
   ],
   "docs": [
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
   ],
   "data": [
     "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json"
   ],
   "shared_assets": [
+    "docs/research/20260809_regime_adaptation_plan.md",
     "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+    "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
     "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html"
   ],
   "recipe_sources": [

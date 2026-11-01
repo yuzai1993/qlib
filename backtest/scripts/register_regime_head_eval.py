@@ -170,7 +170,7 @@ def main() -> None:
                 "baseline_ref": BASELINE_REF.get(
                     key, "regime-adapt/m0-fast-head-eval-v3" if key != "m0fast" else "self"
                 ),
-                "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+                "plan": "docs/research/20260809_regime_adaptation_plan.md",
             }
         )
     for row in rows:

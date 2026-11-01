@@ -19,7 +19,7 @@ from register_regime_m0_labels import load_registry, write_registry
 
 EXP_ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = EXP_ROOT / "backtest" / "result" / "eval_regime_m0_t3h5es"
-DETAIL_REPORT = "backtest/experiments/_shared/reports/regime_adapt_m0_label_report.html"
+DETAIL_REPORT = "backtest/experiments/models/training-target/horizon-comparison/reports/regime_adapt_m0_label_report.html"
 V1_ID = "regime-adapt/m0-h20-label-v4"
 V2_ID = "regime-adapt/m0-h20-t5h5-es-v1"
 HORIZONS = (1, 5, 10, 20)
@@ -96,7 +96,7 @@ def build_row(hh: int, metrics: dict, *, winner: bool) -> dict:
         "baseline_ref": "self" if winner else f"regime-adapt/m0-h{winner_horizon()}-t3h5es-v1",
         "baseline_version": "v3" if winner else None,
         "result_dirs": sessions,
-        "plan": "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
+        "plan": "docs/research/20260809_regime_adaptation_plan.md",
     }
 
 

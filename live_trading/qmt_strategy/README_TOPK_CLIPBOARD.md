@@ -87,6 +87,6 @@ bash live_trading/run_import_cron.sh alla_v2_top5d1f100_postclose_real_active
 
 实际共享配置为 `live_trading/configs/alla_v2_top5d1f100_postclose_real_active.yaml`，桥指向 `/Volumes/qmt_bridge`，与离线准备配置使用同一新策略账本及策略ID。人工调用 wrapper 时显式传这个配置 ID，并以实际日期核对导入范围。Mac 调度与 Windows relay/QMT 的启停分别管理；当前状态及部署证据见 `live_trading/BT_V5_CUTOVER.md`，Windows 执行器仍须现场核验。
 
-该配置的收益统计从新策略交接余额244607元开始，首份快照日为2026-10-30；基准起点为旧账本2026-10-29快照保存的中证全指收盘5070.46923828125。原始资本30万元和旧策略历史保留，不把此前损益当作新策略首日损益。
+该配置的收益统计从新策略交接余额244607元开始，首份快照日为2026-10-30；中证全指以该日收盘4952.4951171875为基准，首日净值为1、基准收益为0，后续按收盘价连续计算。2026-11-03修正了此前误用10月29日收盘价的起点，并同步修正已有快照的基准收益及日超额收益；审计见`live_trading/logs/benchmark_rebase_audit/20261103-v2.json`。原始资本30万元和旧策略历史保留，不把此前损益当作新策略首日损益。
 
 停止relay或QMT不会撤销已提交到券商的委托；出现UNKNOWN、会话变化或未导出前日journal时，保留状态并核对券商，不能删除state或换编号重放。

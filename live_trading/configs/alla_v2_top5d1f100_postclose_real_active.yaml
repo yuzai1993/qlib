@@ -1,6 +1,6 @@
 # Operational configuration for the user-authorized 2026-10-30 handoff.
 # Same strategy ledger as the prepared package; weekday 20:00 scheduler uses this config.
-# Performance starts from confirmed handoff cash; benchmark is 2026-10-29 close.
+# Performance starts from confirmed handoff cash; benchmark starts at the first snapshot close.
 data:
   qlib_dir: ~/.qlib/qlib_data/cn_data
   region: cn
@@ -120,7 +120,7 @@ monitor:
   performance_baseline:
     first_snapshot_date: '2026-10-30'
     opening_total_value: 244607.0
-    benchmark_close: 5070.46923828125
+    benchmark_close: 4952.4951171875
 web:
   host: 127.0.0.1
   port: 8083

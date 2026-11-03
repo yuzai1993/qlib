@@ -5,12 +5,14 @@
 
 产出: backtest/datasets/regime-adapt-cache/labels/h{1,5,10}_csrank.pkl
 """
+
 from __future__ import annotations
 
 # Support direct CLI execution from any working directory.
 if __package__ in (None, ""):
     import sys as _sys
     from pathlib import Path as _Path
+
     _sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
 
 
@@ -24,8 +26,13 @@ import pandas as pd
 EXP_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(EXP_ROOT))
 
-from backtest.scripts.evaluate.eval_ic_multi_pool import _horizon_label_expr  # noqa: E402
-from backtest.scripts.prepare.prepare_regime_train_chunks import CACHE_ROOT, TRAIN_END  # noqa: E402
+from backtest.scripts.evaluate.eval_ic_multi_pool import (
+    _horizon_label_expr,
+)  # noqa: E402
+from backtest.scripts.prepare.prepare_regime_train_chunks import (
+    CACHE_ROOT,
+    TRAIN_END,
+)  # noqa: E402
 
 
 def csranknorm(s: pd.Series) -> pd.Series:
@@ -57,11 +64,27 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--horizons", type=int, nargs="+", default=[1, 5, 10])
     parser.add_argument("--years", type=int, nargs="*", default=None)
+    parser.add_argument(
+        "--feature-manifest",
+        type=Path,
+        help="共享纯特征 manifest；标签按原基础样本协议独立构建",
+    )
     args = parser.parse_args()
 
     import qlib
 
     qlib.init(provider_uri="~/.qlib/qlib_data/cn_data", region="cn")
+
+    if args.feature_manifest is not None:
+        from backtest.scripts.prepare.prepare_regime_train_chunks import (
+            prepare_shared_labels,
+        )
+
+        if args.years is not None:
+            parser.error("共享模式的年份由 feature manifest 决定")
+        for horizon in args.horizons:
+            print(prepare_shared_labels(args.feature_manifest, horizon), flush=True)
+        return
 
     years = args.years or list(range(2004, 2021))
     out_dir = CACHE_ROOT / "labels"
@@ -84,7 +107,10 @@ def main() -> None:
             parts.append(part)
         s = pd.concat(parts)
         s.to_pickle(out)
-        print(f"[h{h}] 写入 {out}  rows={len(s)} non-null={int(s.notna().sum())}", flush=True)
+        print(
+            f"[h{h}] 写入 {out}  rows={len(s)} non-null={int(s.notna().sum())}",
+            flush=True,
+        )
         del raw, parts, s
         gc.collect()
 

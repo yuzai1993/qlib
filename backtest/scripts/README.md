@@ -35,7 +35,36 @@ from backtest.scripts.evaluate.universe_filter import build_keep_mask
 
 `maintenance/experiment_harness.py` 的 `init`、`check`、`status`、`event` 管理冻结计划、输入指纹、累计预算与进度；它不启动训练、不计算指标、不直接登记或清理。入口是项目技能 [qlib-experiment-harness](../../.agents/skills/qlib-experiment-harness/SKILL.md)，合同、CLI 及恢复流程见 [操作协议](../../docs/research/experiment_harness.md)。每次研究启动前先检查状态；续跑沿用原状态和累计预算。
 
-## 当前平台的result清理
+## 年度共享缓存（2026-11-03）
+
+新全A任务可显式使用 `regime-adapt-cache/shared-v1/`。先执行
+`prepare/prepare_regime_train_chunks.py --arm m0 --shared`，保存输出的特征 manifest；
+再执行 `prepare/build_regime_alt_labels.py --feature-manifest <特征manifest> --horizons 20`，
+保存标签 manifest。训练时在原命令增加 `--feature-manifest <特征manifest> --label-manifest <标签manifest>`；
+此模式同时启用有内容身份的早停缓存，训练摘要保存两份输入清单及实际矩阵签名。
+这些参数只改变数据准备和复用方式，训练的 H、早停、种子等参数仍须显式按实验合同指定。
+
+纯特征保留标签筛选前的全部行；标签仍使用显式 `legacy-h40-base-v1` 基础协议。
+H40 先排名再过滤上市龄；其它 H 在原 H40 有效且满足上市龄的基础索引上各自排名，不取七 H 共同交集。
+新样本协议属于另一个研究改动，不由缓存优化隐式引入。未传 manifest 的旧命令保持历史兼容行为，
+旧年度 pickle 不自动导入共享层，也不被当作完整纯特征缓存。
+
+共享输入以真实数据文件/代码的 SHA-256 校验，不凭文件名、mtime 或日期文本命中。
+准备命令在独立 Python 进程中运行，期间保持数据源只读；标签命令也须先初始化同一 Qlib provider。
+冷构建按年提交回执，完成后提交总清单；损坏、未登记块或来源漂移明确拒绝复用。
+活动读写由 `.references/` 回执保护；异常退出遗留的回执需核对正式任务终态与进程身份后人工处理，不能按超时自动删除。
+
+共享缓存属于后续研究可复用数据，不随单次实验的临时目录一并清理。
+独立检查：`maintenance/cleanup_experiment_artifacts.py --only-shared-cache`，默认 20 GiB 软上限；
+核对精确候选后增加 `--apply`。保护最新配方版本、活动引用及其父依赖，未知/未完整关闭任务阻止删除；
+剩余保护数据超限会明确报告。该模式与 `--only-result` 互斥，不处理模型、预测、result 或 mlruns。
+中断删除通过精确文件清单恢复，遇到新增未知文件或引用则拒绝继续。
+
+详见[优化方案及验收记录](../../docs/research/2026-11-03-annual-cache-reuse-plan.md)。
+已验收的 M0 17 年缓存准备（含 H20 标签、验证集及内容校验）实测约 141 分钟冷构建、71 秒热复用，
+共享数据约 10.01 GiB。该结果不代表训练耗时或历史模型科学复现；新数据/源码依赖变化会失效并需重建。
+
+## 当前平台的result清理命令
 
 当前平台维护的模型、策略、历史Benchmark及其现存模型/融合预测依赖都受保护；不按“当前基线”单独筛掉其它仍在展示的实验。先查看计划：
 

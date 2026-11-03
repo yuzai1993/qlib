@@ -1,0 +1,254 @@
+{
+  "status": "complete",
+  "created_at": 1793658650.587839,
+  "scope": "engineering cache reuse; no model fit, tuning, new registry event, baseline or production change",
+  "branch": "codex/annual-cache-reuse",
+  "head": "8756a546d67e15dec92cf64698d98dc3297a858a",
+  "committed_or_pushed_by_task": false,
+  "source_before": [
+    {
+      "path": "backtest/scripts/README.md",
+      "sha256": "2864382ba41c1a5b66b3702cc6003d354d1984084fbcc5b0a8e483ee0dc74895",
+      "size": 5051
+    },
+    {
+      "path": "backtest/scripts/maintenance/cleanup_experiment_artifacts.py",
+      "sha256": "702be9e98c2c997c2fa9641fa204d87fd283a4d4b3547bc47e2278954d352b9e",
+      "size": 51016
+    },
+    {
+      "path": "backtest/scripts/prepare/build_regime_alt_labels.py",
+      "sha256": "b1c5d23c349ee43ba1c541422149e395030e9d578cdd5cd8b95871ef9c7bd2e5",
+      "size": 2993
+    },
+    {
+      "path": "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "sha256": "b4ef4c7d519ce0bae7dee3d480d5a2ba285aa66b59f2c0f7777121e7dfa735fc",
+      "size": 5977
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "34210dbe0cc26f1a0aebd946030cceef8e0e7b8932599a2487cc6ca0012c7e47",
+      "size": 22513
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "0ced14562b7c525922c72a35813ede2805beadee1062014ad4ef64a25b11ce21",
+      "size": 47162
+    }
+  ],
+  "source_after": [
+    {
+      "path": ".gitignore",
+      "size": 1823,
+      "sha256": "4d4ac29f0e5b0a2f51eade3688f371acbf345b0ec10e7a1b78e8f085c479fb58"
+    },
+    {
+      "path": "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "size": 28674,
+      "sha256": "6ef9da9ce5869c7415c628acfeef0e24e223948013f4c60f17d66683ae143b64"
+    },
+    {
+      "path": "backtest/scripts/prepare/build_regime_alt_labels.py",
+      "size": 3632,
+      "sha256": "e63ed693553a0506ab7902ca71ec57eea745e18b52fbae88c39130e0ba3201ff"
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "size": 32125,
+      "sha256": "48d4c1c14d475be585a888943c95e7226eb0875dfbb5efdd4bc77645f5fb94c9"
+    },
+    {
+      "path": "backtest/scripts/maintenance/cleanup_experiment_artifacts.py",
+      "size": 62868,
+      "sha256": "7f5fe9fbde6554bdf7651537c701afc130c97da50e2253d2ad7df533fddc319c"
+    },
+    {
+      "path": "tests/backtest/test_regime_cache.py",
+      "size": 21903,
+      "sha256": "49049fa9f6c38e573905c491c6255c9a563bd58149c955e84566ef9de8525578"
+    },
+    {
+      "path": "backtest/scripts/README.md",
+      "size": 7662,
+      "sha256": "665c42312256bae1e699502f3e3161ddc741df93c953285cbdda93740eebf377"
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "size": 49144,
+      "sha256": "e1eca88ced245bcf0bdff828b5050fcee8d3eac8f316f5c3412607b4b155daa9"
+    },
+    {
+      "path": "docs/research/2026-11-03-annual-cache-reuse-plan.md",
+      "size": 20162,
+      "sha256": "255af400d9768f89c0400377db087b52a57f0816a8d27da7a64c2b7c9e40f384"
+    }
+  ],
+  "preexisting_dirty_status": [
+    " M .agents/skills/qlib-experiment-harness/SKILL.md",
+    " M .gitignore",
+    " M backtest/experiments/_catalog/path_map.json",
+    " M backtest/experiments/registry.jsonl",
+    " M backtest/experiments/reports/phase_m_v1_bt_report.html",
+    " M backtest/experiments/reports/phase_m_v1_report.html",
+    " M backtest/scripts/maintenance/experiment_archive.py",
+    " M backtest/scripts/maintenance/experiment_harness.py",
+    " M backtest/scripts/train/train_regime_arm.py",
+    " M docs/research/experiment_harness.md",
+    " M tests/backtest/test_experiment_archive.py",
+    " M tests/backtest/test_experiment_harness.py",
+    " M tests/backtest/test_train_regime_arm_es_valid.py",
+    "?? backtest/experiments/models/training-target/h20-legacy-rebuild-20261102-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-anchor-defensive-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-anchor-half-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-broad-equal-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-medium-equal-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h10-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h15-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h30-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h40-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h5-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h7-common-v1/",
+    "?? backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/",
+    "?? backtest/experiments/strategies/topk-dropout/h20-legacy-rebuild-20261102-v1/",
+    "?? docs/research/2026-11-03-annual-cache-reuse-plan.md"
+  ],
+  "validation_process_receipt": {
+    "create_time": 1793647262.730909,
+    "pid": 82850,
+    "cmdline": [
+      "/opt/anaconda3/envs/qlib/bin/python",
+      "/private/tmp/qlib-cache-reuse-20261103.SDOd4N/validate_real_cache.py"
+    ],
+    "exec_session_id": 18775,
+    "task_root": "/private/tmp/qlib-cache-reuse-20261103.SDOd4N",
+    "log": "/private/tmp/qlib-cache-reuse-20261103.SDOd4N/real-validation.log"
+  },
+  "validation_process_absent": true,
+  "validation_exec_session_exit_code": 0,
+  "validation_exec_session_exit_code_confirmed_by_tool": true,
+  "tests": {
+    "command": "/opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest/test_regime_cache.py tests/backtest/test_train_regime_arm_es_valid.py tests/backtest/test_cleanup_experiment_artifacts.py tests/backtest/test_script_layout.py --basetemp=/private/tmp/qlib-cache-reuse-20261103.SDOd4N/pytest-final -q",
+    "exit_code": 0,
+    "output": "........................................................................ [ 44%]\n........................................................................ [ 89%]\n.................                                                        [100%]\n161 passed in 6.14s"
+  },
+  "cli_help_checks": [
+    {
+      "script": "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "exit_code": 0
+    },
+    {
+      "script": "backtest/scripts/prepare/build_regime_alt_labels.py",
+      "exit_code": 0
+    },
+    {
+      "script": "backtest/scripts/train/train_regime_arm.py",
+      "exit_code": 0
+    },
+    {
+      "script": "backtest/scripts/maintenance/cleanup_experiment_artifacts.py",
+      "exit_code": 0
+    }
+  ],
+  "black_check": {
+    "files": [
+      "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "backtest/scripts/prepare/build_regime_alt_labels.py",
+      "backtest/scripts/train/train_regime_arm.py",
+      "backtest/scripts/maintenance/cleanup_experiment_artifacts.py",
+      "tests/backtest/test_regime_cache.py"
+    ],
+    "exit_code": 0,
+    "summary": "5 files would be left unchanged"
+  },
+  "shared_cache_cleanup_cli_dry_run": {
+    "root": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1",
+    "max_gib": 20,
+    "total_bytes": 10747714540,
+    "remaining_bytes": 10747714540,
+    "over_limit_protected": false,
+    "protected": [
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/c441a27a3e71119e2c28e40fbadde7b6cb7564ab316f8dc531301c5d41cf47a9/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/9de007863bfa7d0f3a3001349f8dd2eeb88fdc1743498853b5c4f2a625947667/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/df8476bc2982cc8e2e192282373620db7df005f5b04df6ff1c578154c24299d7/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json"
+    ],
+    "candidates": [],
+    "result": "no_changes"
+  },
+  "git_diff_check_exit_code": 0,
+  "verification_limits": [
+    "Real data: M0 2004-2020; M3 was not validated on the full real dataset.",
+    "Exact old/new frame comparison: 2004 and 2020, H40 and H20 only; category/object index storage normalized to ordered logical labels.",
+    "H5 independent label construction tested; no assertion of historical H5 scientific reproduction.",
+    "Five seed operations assemble the same matrix only; no fitting, prediction or performance selection.",
+    "Timing measures first creation of shared cache then immediate warm reuse on this machine; OS page cache was not flushed; no training-speed claim.",
+    "H40/H5 timings reuse raw/base dependencies already built by the first H20 preparation.",
+    "Peak process-tree RSS sampled every second, not continuous peak tracking.",
+    "System swap before/after cannot be attributed to this job. macOS rusage I/O block counters returned 0 and are not evidence of zero disk traffic; byte-level I/O not measured."
+  ],
+  "unresolved_engineering_issues": [],
+  "historical_temporary_references": {
+    "fields": [
+      "validation.json:source_before",
+      "validation.json:task_script",
+      "closeout.json:validation_process_receipt",
+      "closeout.json:tests.command"
+    ],
+    "meaning": "Historical execution receipts only. Task scripts, snapshots and fixtures are intentionally removed; no runtime or reusable-test dependency on these paths."
+  },
+  "cache_recheck": "cache-recheck.json",
+  "validation": "validation.json",
+  "validation_log": "real-validation.log.gz",
+  "code_review": "code-review.json",
+  "automation": {
+    "id": "automation",
+    "status": "deleted",
+    "confirmed_at": 1793658728.514236,
+    "result": "Deleted automation in the app; automatic checks ended"
+  },
+  "completed_at": 1793658685.184006,
+  "cleanup": "cleanup.json",
+  "final_git_status": [
+    "M .agents/skills/qlib-experiment-harness/SKILL.md",
+    " M .gitignore",
+    " M backtest/experiments/_catalog/path_map.json",
+    " M backtest/experiments/registry.jsonl",
+    " M backtest/experiments/reports/phase_m_v1_bt_report.html",
+    " M backtest/experiments/reports/phase_m_v1_report.html",
+    " M backtest/scripts/README.md",
+    " M backtest/scripts/maintenance/cleanup_experiment_artifacts.py",
+    " M backtest/scripts/maintenance/experiment_archive.py",
+    " M backtest/scripts/maintenance/experiment_harness.py",
+    " M backtest/scripts/prepare/build_regime_alt_labels.py",
+    " M backtest/scripts/prepare/prepare_regime_train_chunks.py",
+    " M backtest/scripts/train/train_regime_arm.py",
+    " M docs/research/experiment_harness.md",
+    " M tests/backtest/test_experiment_archive.py",
+    " M tests/backtest/test_experiment_harness.py",
+    " M tests/backtest/test_train_regime_arm_es_valid.py",
+    "?? backtest/experiments/_catalog/audits/20261103-annual-cache-reuse/",
+    "?? backtest/experiments/models/training-target/h20-legacy-rebuild-20261102-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-anchor-defensive-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-anchor-half-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-broad-equal-v1/",
+    "?? backtest/experiments/models/training-target/horizon-blend-medium-equal-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h10-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h15-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h30-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h40-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h5-common-v1/",
+    "?? backtest/experiments/models/training-target/horizon-style-h7-common-v1/",
+    "?? backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/",
+    "?? backtest/experiments/strategies/topk-dropout/h20-legacy-rebuild-20261102-v1/",
+    "?? docs/research/2026-11-03-annual-cache-reuse-plan.md",
+    "?? tests/backtest/test_regime_cache.py"
+  ],
+  "temporary_cache_dependencies_checked": 8,
+  "temporary_cache_dependencies_found": 0,
+  "validation_log_storage": "lossless gzip; original log bytes retained"
+}

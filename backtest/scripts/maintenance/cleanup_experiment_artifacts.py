@@ -6,6 +6,7 @@ from __future__ import annotations
 if __package__ in (None, ""):
     import sys as _sys
     from pathlib import Path as _Path
+
     _sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
 
 
@@ -22,7 +23,9 @@ from typing import Any, Sequence
 import yaml
 
 if __package__:
-    from backtest.scripts.maintenance.baseline_references import load_historical_baselines
+    from backtest.scripts.maintenance.baseline_references import (
+        load_historical_baselines,
+    )
     from backtest.scripts.maintenance.experiment_archive import (
         _load_object_with_revision,
         _safe_path,
@@ -31,7 +34,9 @@ if __package__:
     )
     from backtest.scripts.maintenance.research_layout import resolve_research_path
 else:
-    from backtest.scripts.maintenance.baseline_references import load_historical_baselines
+    from backtest.scripts.maintenance.baseline_references import (
+        load_historical_baselines,
+    )
     from backtest.scripts.maintenance.experiment_archive import (
         _load_object_with_revision,
         _safe_path,
@@ -41,9 +46,13 @@ else:
     from backtest.scripts.maintenance.research_layout import resolve_research_path
 
 if __package__:
-    from backtest.scripts.register.experiment_registry import load_registry as _load_registry_rows
+    from backtest.scripts.register.experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
 else:
-    from backtest.scripts.register.experiment_registry import load_registry as _load_registry_rows
+    from backtest.scripts.register.experiment_registry import (
+        load_registry as _load_registry_rows,
+    )
 
 DEFAULT_POOLS = ("csi300", "csi500", "csi1000")
 PRIMARY_TEST_POOL = "csi1000"
@@ -850,9 +859,15 @@ def _platform_result_dirs(
     """Protect the current typed archives and their existing result dependencies."""
     scan = scan_experiment_archives(repo_root)
     if scan["errors"] or scan["mode"] != "typed":
-        errors.append(f"platform archive discovery failed: {scan['errors'] or 'typed archives required'}")
+        errors.append(
+            f"platform archive discovery failed: {scan['errors'] or 'typed archives required'}"
+        )
         return []
-    manifests = [item for item in [*scan["experiments"], *scan["groups"]] if item["track"] == "all_a"]
+    manifests = [
+        item
+        for item in [*scan["experiments"], *scan["groups"]]
+        if item["track"] == "all_a"
+    ]
     if not manifests:
         errors.append("platform retention requires at least one all-A archive")
         return []
@@ -870,10 +885,14 @@ def _platform_result_dirs(
     def safe(path: Path) -> bool:
         try:
             relative = path.relative_to(repo_root)
-            if ".." in relative.parts or any(
-                (repo_root / Path(*relative.parts[:index])).is_symlink()
-                for index in range(1, len(relative.parts) + 1)
-            ) or not path.resolve().is_relative_to(repo_root):
+            if (
+                ".." in relative.parts
+                or any(
+                    (repo_root / Path(*relative.parts[:index])).is_symlink()
+                    for index in range(1, len(relative.parts) + 1)
+                )
+                or not path.resolve().is_relative_to(repo_root)
+            ):
                 raise ValueError("path escapes the selected repository or is a symlink")
         except (OSError, RuntimeError, ValueError) as exc:
             errors.append(f"unsafe platform result reference: {path}: {exc}")
@@ -881,17 +900,33 @@ def _platform_result_dirs(
         return True
 
     def visit(
-        value: Any, owner: str, field: str = "", *, runtime: bool = False, provenance: bool = False
+        value: Any,
+        owner: str,
+        field: str = "",
+        *,
+        runtime: bool = False,
+        provenance: bool = False,
     ) -> None:
         if isinstance(value, dict):
             for key, item in value.items():
                 historical = provenance or key == "provenance"
-                visit(item, owner, f"{field}.{key}", runtime=runtime and not historical,
-                      provenance=historical)
+                visit(
+                    item,
+                    owner,
+                    f"{field}.{key}",
+                    runtime=runtime and not historical,
+                    provenance=historical,
+                )
             return
         if isinstance(value, list):
             for index, item in enumerate(value):
-                visit(item, owner, f"{field}[{index}]", runtime=runtime, provenance=provenance)
+                visit(
+                    item,
+                    owner,
+                    f"{field}[{index}]",
+                    runtime=runtime,
+                    provenance=provenance,
+                )
             return
         if not isinstance(value, str) or "backtest/result" not in value:
             return
@@ -902,7 +937,9 @@ def _platform_result_dirs(
         if provenance and raw.is_absolute() and not raw.is_relative_to(repo_root):
             # External old-workspace provenance remains audit text. Local
             # provenance still protects artifacts and undergoes boundary checks.
-            warn(f"historical external provenance result reference not followed: {value} ({owner}{field})")
+            warn(
+                f"historical external provenance result reference not followed: {value} ({owner}{field})"
+            )
             return
         path = raw if raw.is_absolute() else repo_root / raw
         if not safe(path):
@@ -915,7 +952,11 @@ def _platform_result_dirs(
             errors.append(f"unsafe platform result reference: {value}: {exc}")
             return
         session = result_root / relative.parts[0]
-        required = ("model" in field.lower() or "pred" in field.lower() or path.name == "trained_model")
+        required = (
+            "model" in field.lower()
+            or "pred" in field.lower()
+            or path.name == "trained_model"
+        )
         if not session.is_dir():
             message = f"historical result session missing: {value} ({owner}{field})"
             if runtime and required:
@@ -940,7 +981,9 @@ def _platform_result_dirs(
         try:
             if path not in documents:
                 documents[path] = _load_object_with_revision(
-                    path, max_bytes=16 * 1024 * 1024, label="platform retention document"
+                    path,
+                    max_bytes=16 * 1024 * 1024,
+                    label="platform retention document",
                 )
             value, digest = documents[path]
             if expected_sha is not None and digest != expected_sha:
@@ -956,34 +999,57 @@ def _platform_result_dirs(
     for manifest in manifests:
         visit(manifest, manifest["metadata_path"])
         directory = repo_root / manifest["directory"]
-        inventory_root = repo_root if manifest.get("inventory_kind") == "asset_snapshot" else directory
+        inventory_root = (
+            repo_root
+            if manifest.get("inventory_kind") == "asset_snapshot"
+            else directory
+        )
         references = [(inventory_root, item) for item in manifest.get("records") or []]
         try:
-            records = _safe_path(inventory_root, manifest.get("records_directory", "records"))
+            records = _safe_path(
+                inventory_root, manifest.get("records_directory", "records")
+            )
             if records.is_dir():
                 for path in records.glob("*.json"):
                     read_document(path, path.stem if len(path.stem) == 64 else None)
-            references.extend((directory, item) for item in
-                              (manifest.get("training_target_comparison") or {}).get("archived_records") or [])
+            references.extend(
+                (directory, item)
+                for item in (manifest.get("training_target_comparison") or {}).get(
+                    "archived_records"
+                )
+                or []
+            )
             for reference_root, reference in references:
                 raw = reference if isinstance(reference, str) else reference["path"]
-                expected = reference.get("sha256") if isinstance(reference, dict) else None
+                expected = (
+                    reference.get("sha256") if isinstance(reference, dict) else None
+                )
                 path = _safe_path(reference_root, raw)
                 path = resolve_research_path(path, repo_root)
-                read_document(path, expected or (path.stem if len(path.stem) == 64 else None))
+                read_document(
+                    path, expected or (path.stem if len(path.stem) == 64 else None)
+                )
             for source in manifest.get("historical_baselines") or []:
                 read_document(_safe_path(directory, source["path"]), source["sha256"])
                 if source.get("profile"):
                     profile = source["profile"]
-                    read_document(_safe_path(directory, profile["path"]), profile["sha256"])
+                    read_document(
+                        _safe_path(directory, profile["path"]), profile["sha256"]
+                    )
         except (OSError, ValueError, TypeError, KeyError) as exc:
-            errors.append(f"platform archive references invalid: {manifest['exp_id']}: {exc}")
+            errors.append(
+                f"platform archive references invalid: {manifest['exp_id']}: {exc}"
+            )
 
     while retained - visited_sessions:
         session = min(retained - visited_sessions)
         visited_sessions.add(session)
         meta_path = session / "meta.json"
-        meta = read_document(meta_path) if meta_path.exists() or meta_path.is_symlink() else None
+        meta = (
+            read_document(meta_path)
+            if meta_path.exists() or meta_path.is_symlink()
+            else None
+        )
         if meta is not None:
             visit(meta, str(meta_path), runtime=True)
             for field in ("source_pred", "model_path"):
@@ -996,7 +1062,11 @@ def _platform_result_dirs(
                 try:
                     if not artifact.is_file():
                         raise ValueError("required model/prediction artifact missing")
-                    expected = meta.get("model_sha256" if field == "model_path" else "source_pred_sha256")
+                    expected = meta.get(
+                        "model_sha256"
+                        if field == "model_path"
+                        else "source_pred_sha256"
+                    )
                     if expected is not None:
                         digest = hashlib.sha256()
                         with artifact.open("rb") as handle:
@@ -1010,8 +1080,14 @@ def _platform_result_dirs(
                 run_dirs = sorted(session.glob("run_*")) or [session / "run_01"]
                 for run in run_dirs:
                     model = run / "artifacts_root/artifacts/trained_model"
-                    if not safe(model) or not model.is_file() or model.stat().st_size == 0:
-                        errors.append(f"platform training model missing or unsafe: {model}")
+                    if (
+                        not safe(model)
+                        or not model.is_file()
+                        or model.stat().st_size == 0
+                    ):
+                        errors.append(
+                            f"platform training model missing or unsafe: {model}"
+                        )
         for link in session.glob("run_*/mlruns_link.json"):
             value = read_document(link)
             if value is not None:
@@ -1020,7 +1096,11 @@ def _platform_result_dirs(
 
 
 def build_cleanup_plan(
-    repo_root: Path, rows: Sequence[dict], *, result_retention: str = "baseline", only_result: bool = False
+    repo_root: Path,
+    rows: Sequence[dict],
+    *,
+    result_retention: str = "baseline",
+    only_result: bool = False,
 ) -> dict[str, Any]:
     if result_retention not in {"baseline", "platform"}:
         raise ValueError("result_retention must be baseline or platform")
@@ -1034,13 +1114,14 @@ def build_cleanup_plan(
         Path(repo_root), errors
     )
 
-    csi_rows = [
-        row for row in rows if classify_experiment(row)["track"] == "csi1000"
-    ]
+    csi_rows = [row for row in rows if classify_experiment(row)["track"] == "csi1000"]
     if result_retention == "platform" and csi_rows:
-        raise ValueError("platform result retention requires a pure all-A registry; CSI1000 contracts are unchanged")
+        raise ValueError(
+            "platform result retention requires a pure all-A registry; CSI1000 contracts are unchanged"
+        )
     scope = (
-        "csi1000_and_all_a" if csi_rows and len(csi_rows) < len(rows)
+        "csi1000_and_all_a"
+        if csi_rows and len(csi_rows) < len(rows)
         else "csi1000" if csi_rows else "all_a"
     )
     retained_rows = select_retained_rows(csi_rows) if csi_rows else []
@@ -1069,7 +1150,9 @@ def build_cleanup_plan(
     except (OSError, ValueError) as exc:
         historical_rows = []
         errors.append(f"historical model baseline reference validation failed: {exc}")
-    local_rows, current_bt = _phase_m_v1_retained_rows([*historical_rows, *rows], errors)
+    local_rows, current_bt = _phase_m_v1_retained_rows(
+        [*historical_rows, *rows], errors
+    )
     if not csi_rows and not local_rows:
         errors.append("all-A registry has no versioned Phase M v1 baseline")
     local_dirs = (
@@ -1093,9 +1176,14 @@ def build_cleanup_plan(
         set(phase_m_result_dirs + phase_s_result_dirs + local_dirs + bt_dirs)
     )
     if roots_safe and result_retention == "platform":
-        keep_result_dirs = sorted(set(keep_result_dirs + _platform_result_dirs(
-            repo_root, [*historical_rows, *rows], warnings, errors
-        )))
+        keep_result_dirs = sorted(
+            set(
+                keep_result_dirs
+                + _platform_result_dirs(
+                    repo_root, [*historical_rows, *rows], warnings, errors
+                )
+            )
+        )
     all_result_dirs = _safe_child_dirs(result_root, errors) if roots_safe else []
     for path in all_result_dirs:
         if path not in keep_result_dirs and not (path / "meta.json").is_file():
@@ -1196,6 +1284,232 @@ def _jsonable(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def cleanup_shared_cache(
+    root: Path,
+    *,
+    max_gib: float = 20,
+    apply: bool = False,
+    repo_root: Path | None = None,
+) -> dict:
+    """Independent, manifest-scoped cache GC. Never touches result or MLflow."""
+    import hashlib
+    import math
+    import re
+    from backtest.scripts.prepare.prepare_regime_train_chunks import (
+        _atomic_json,
+        _json_bytes,
+        _plain_path,
+        cache_lock,
+        fingerprint_files,
+        validate_cache_manifest,
+    )
+
+    root = _plain_path(root)
+    if not math.isfinite(max_gib) or max_gib < 0:
+        raise ValueError("max_gib must be finite and nonnegative")
+    if not root.exists():
+        return {
+            "root": str(root),
+            "candidates": [],
+            "protected": [],
+            "total_bytes": 0,
+            "result": "no_changes",
+        }
+    if repo_root is not None:
+        from backtest.scripts.maintenance.experiment_harness import inspect_state
+
+        for path in (repo_root / "backtest/experiments").glob(
+            "**/docs/harness-state.json"
+        ):
+            state = inspect_state(path, repo_root=repo_root, check_drift=False)
+            if state["status"] != "closed":
+                raise ValueError(
+                    f"research task not fully closed; refuse shared cache cleanup: {path}"
+                )
+    with cache_lock(root):
+        pinned = set()
+        for path in (root / ".references").glob("*.json"):
+            reference = json.loads(_plain_path(path).read_text())
+            if not reference.get("manifests"):
+                raise ValueError(f"unknown cache reference: {path}")
+            for value in reference["manifests"]:
+                item = _plain_path(Path(value))
+                if not item.is_relative_to(root) or item.name != "manifest.json":
+                    raise ValueError("cache reference outside root")
+                pinned.add(str(item))
+        journal = root / ".cleanup-journal.json"
+
+        def remove_journal(doc):
+            checksum = doc.get("checksum")
+            body = {k: v for k, v in doc.items() if k != "checksum"}
+            if (
+                body.get("root") != str(root)
+                or checksum != hashlib.sha256(_json_bytes(body)).hexdigest()
+            ):
+                raise ValueError("invalid cache cleanup journal")
+            target_manifests = {entry["manifest"] for entry in body["targets"]}
+            for other in root.glob("*/*/manifest.json"):
+                if str(other) in target_manifests:
+                    continue
+                other_spec = json.loads(_plain_path(other).read_text())["spec"]
+                validate_cache_manifest(other, other_spec, verify_sources=False)
+                if target_manifests.intersection(
+                    r["path"] for r in other_spec.get("parents", [])
+                ):
+                    raise ValueError(
+                        "new dependent cache protects a pending cleanup target"
+                    )
+            for entry in body["targets"]:
+                manifest = _plain_path(Path(entry["manifest"]))
+                relative = manifest.relative_to(root)
+                if (
+                    len(relative.parts) != 3
+                    or not re.fullmatch(r"[a-z][a-z0-9-]*", relative.parts[0])
+                    or not re.fullmatch(r"[a-f0-9]{64}", relative.parts[1])
+                    or relative.parts[2] != "manifest.json"
+                ):
+                    raise ValueError("invalid cleanup target")
+                if str(manifest) in pinned:
+                    raise ValueError(
+                        "cleanup target now has an active/unknown reference"
+                    )
+                directory = manifest.parent
+                expected = {Path(r["path"]).name: r for r in entry["files"]}
+                if any(
+                    _plain_path(Path(r["path"])).parent != directory
+                    for r in entry["files"]
+                ):
+                    raise ValueError("cleanup file outside entry")
+                if directory.exists():
+                    if set(p.name for p in directory.iterdir()) - set(expected):
+                        raise ValueError("unknown files in cleanup target")
+                    for name, receipt in expected.items():
+                        path = directory / name
+                        if path.exists() and fingerprint_files([path]) != [receipt]:
+                            raise ValueError(
+                                "cleanup target changed since journal was written"
+                            )
+            # Only after every surviving target is verified, perform exact deletions.
+            for entry in body["targets"]:
+                for receipt in entry["files"]:
+                    Path(receipt["path"]).unlink(missing_ok=True)
+                directory = Path(entry["manifest"]).parent
+                if directory.exists():
+                    directory.rmdir()
+            journal.unlink()
+
+        if journal.exists():
+            doc = json.loads(_plain_path(journal).read_text())
+            if apply:
+                remove_journal(doc)
+            return {
+                "root": str(root),
+                "candidates": doc["targets"],
+                "result": "applied" if apply else "pending_cleanup",
+            }
+
+        entries, groups, incomplete_bytes = {}, {}, 0
+        for kind in root.iterdir():
+            _plain_path(kind)
+            if kind.name in (".locks", ".references"):
+                continue
+            if not kind.is_dir() or not re.fullmatch(r"[a-z][a-z0-9-]*", kind.name):
+                raise ValueError(f"unknown file in shared cache root: {kind}")
+            for directory in kind.iterdir():
+                _plain_path(directory)
+                if not directory.is_dir() or not re.fullmatch(
+                    r"[a-f0-9]{64}", directory.name
+                ):
+                    raise ValueError(f"unknown cache directory: {directory}")
+                manifest = directory / "manifest.json"
+                if not manifest.exists():
+                    # Incomplete or crashed writers are never reclaimed by inference.
+                    incomplete_bytes += sum(
+                        p.stat().st_size
+                        for p in directory.iterdir()
+                        if _plain_path(p).is_file()
+                    )
+                    pinned.add(str(manifest))
+                    continue
+                spec = json.loads(manifest.read_text())["spec"]
+                doc = validate_cache_manifest(manifest, spec, verify_sources=False)
+                names = {
+                    "manifest.json",
+                    "access.json",
+                    *(r["path"] for r in doc["blocks"].values()),
+                }
+                if {p.name for p in directory.iterdir()} != names:
+                    raise ValueError(
+                        f"unknown or missing files in cache entry: {directory}"
+                    )
+                files = fingerprint_files(directory / name for name in names)
+                recipe = spec["recipe"]
+                group = (
+                    spec["kind"],
+                    recipe.get("arm"),
+                    recipe.get("horizon"),
+                    recipe.get("valid_source"),
+                )
+                item = {
+                    "manifest": str(manifest),
+                    "files": files,
+                    "bytes": sum(r["size"] for r in files),
+                    "created_at": doc["created_at"],
+                    "last_used": json.loads((directory / "access.json").read_text())[
+                        "last_used"
+                    ],
+                    "parents": [r["path"] for r in spec.get("parents", [])],
+                }
+                entries[str(manifest)] = item
+                if (
+                    group not in groups
+                    or groups[group]["created_at"] < item["created_at"]
+                ):
+                    groups[group] = item
+        protected = pinned | {r["manifest"] for r in groups.values()}
+        for item in entries.values():
+            if any(p not in entries for p in item["parents"]):
+                raise ValueError("unknown/missing cache parent; refuse cleanup")
+        while True:
+            expanded = protected | {
+                p
+                for key in protected
+                if key in entries
+                for p in entries[key]["parents"]
+            }
+            if expanded == protected:
+                break
+            protected = expanded
+        total = sum(r["bytes"] for r in entries.values()) + incomplete_bytes
+        remaining, candidates, kept = total, [], set(entries)
+        while remaining > max_gib * 1024**3:
+            used_parents = {p for key in kept for p in entries[key]["parents"]}
+            eligible = [entries[key] for key in kept - protected - used_parents]
+            if not eligible:
+                break
+            item = min(eligible, key=lambda r: r["last_used"])
+            candidates.append(item)
+            remaining -= item["bytes"]
+            kept.remove(item["manifest"])
+        plan = {
+            "root": str(root),
+            "max_gib": max_gib,
+            "total_bytes": total,
+            "remaining_bytes": remaining,
+            "over_limit_protected": remaining > max_gib * 1024**3,
+            "protected": sorted(protected),
+            "candidates": candidates,
+            "result": "dry_run" if candidates else "no_changes",
+        }
+        if apply and candidates:
+            doc = {"root": str(root), "targets": candidates}
+            doc["checksum"] = hashlib.sha256(_json_bytes(doc)).hexdigest()
+            _atomic_json(journal, doc)
+            remove_journal(doc)
+            plan["result"] = "applied"
+        return plan
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     repo_default = Path(__file__).resolve().parents[3]
     parser = argparse.ArgumentParser(
@@ -1208,8 +1522,23 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Explicit artifact/research root; no sibling fallback or cross-root deletion",
     )
     parser.add_argument("--registry", type=Path)
-    parser.add_argument("--result-retention", choices=("baseline", "platform"), default="baseline")
-    parser.add_argument("--only-result", action="store_true", help="Plan and delete result sessions only; leave mlruns untouched")
+    parser.add_argument(
+        "--result-retention", choices=("baseline", "platform"), default="baseline"
+    )
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument(
+        "--only-result",
+        action="store_true",
+        help="Plan and delete result sessions only; leave mlruns untouched",
+    )
+    modes.add_argument(
+        "--only-shared-cache",
+        action="store_true",
+        help="Only shared-v1 cache GC; never touch result/mlruns",
+    )
+    parser.add_argument(
+        "--cache-max-gib", type=float, default=20, help="Shared cache soft limit, GiB"
+    )
     parser.add_argument("--apply", action="store_true")
     return parser.parse_args(argv)
 
@@ -1217,13 +1546,24 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
     repo_root = args.repo_root.expanduser().absolute()
+    if args.only_shared_cache:
+        plan = cleanup_shared_cache(
+            repo_root / "backtest/datasets/regime-adapt-cache/shared-v1",
+            max_gib=args.cache_max_gib,
+            apply=args.apply,
+            repo_root=repo_root,
+        )
+        print(json.dumps(plan, ensure_ascii=False, indent=2))
+        return
     registry = (
         args.registry.resolve()
         if args.registry
         else repo_root / "backtest" / "experiments" / "registry.jsonl"
     )
     plan = build_cleanup_plan(
-        repo_root, load_registry(registry), result_retention=args.result_retention,
+        repo_root,
+        load_registry(registry),
+        result_retention=args.result_retention,
         only_result=args.only_result,
     )
     print(json.dumps(_jsonable(plan), ensure_ascii=False, indent=2))

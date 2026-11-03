@@ -1,0 +1,108 @@
+{
+  "status": "passed",
+  "checked_at": 1793658471.620476,
+  "seconds": 59.55362887494266,
+  "manifests": [
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449,
+      "kind": "features",
+      "key": "edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11",
+      "horizon": null,
+      "blocks": 17,
+      "block_bytes": 5652122930,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/manifest.json",
+      "sha256": "d822858527ee92949098c5d1b7113da882f520a688460a337cab3bf54973e993",
+      "size": 11111983,
+      "kind": "labels",
+      "key": "9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab",
+      "horizon": null,
+      "blocks": 17,
+      "block_bytes": 123662503,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/c441a27a3e71119e2c28e40fbadde7b6cb7564ab316f8dc531301c5d41cf47a9/manifest.json",
+      "sha256": "859650d702f1b9ed5d149864192e2325566fe2e8c286e2b6bedc9ef7c768fbf6",
+      "size": 11111693,
+      "kind": "labels",
+      "key": "c441a27a3e71119e2c28e40fbadde7b6cb7564ab316f8dc531301c5d41cf47a9",
+      "horizon": null,
+      "blocks": 17,
+      "block_bytes": 92873731,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985,
+      "kind": "labels",
+      "key": "d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a",
+      "horizon": null,
+      "blocks": 17,
+      "block_bytes": 123662503,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/manifest.json",
+      "sha256": "fb29e43170c1a0e33e9a9b8dd0dc54b2a638c6843108f9089d03da0cb8c3730a",
+      "size": 11105139,
+      "kind": "raw-labels",
+      "key": "88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1",
+      "horizon": null,
+      "blocks": 1,
+      "block_bytes": 103003981,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/9de007863bfa7d0f3a3001349f8dd2eeb88fdc1743498853b5c4f2a625947667/manifest.json",
+      "sha256": "4e3a5e5c6254e2c833d0a5770518e278757c947392a661b3fc4fcbc1dd1523c5",
+      "size": 11113079,
+      "kind": "raw-labels",
+      "key": "9de007863bfa7d0f3a3001349f8dd2eeb88fdc1743498853b5c4f2a625947667",
+      "horizon": null,
+      "blocks": 17,
+      "block_bytes": 103264155,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/df8476bc2982cc8e2e192282373620db7df005f5b04df6ff1c578154c24299d7/manifest.json",
+      "sha256": "6a240e72e20dca2e25ca08b8d7f73510a933e12a43e167a860a1b06b4cb7f97c",
+      "size": 11105142,
+      "kind": "raw-labels",
+      "key": "df8476bc2982cc8e2e192282373620db7df005f5b04df6ff1c578154c24299d7",
+      "horizon": null,
+      "blocks": 1,
+      "block_bytes": 103003982,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379,
+      "kind": "validation",
+      "key": "50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7",
+      "horizon": null,
+      "blocks": 1,
+      "block_bytes": 4357160645,
+      "sources_verified": true,
+      "block_bytes_verified": true
+    }
+  ],
+  "active_reference_files": [],
+  "incomplete_progress_files": [],
+  "total_cache_bytes": 10747714540,
+  "legacy_validation_builder_ast_unchanged": true,
+  "validation_builder_ast_sha256": "2aa5afd75997b9091d3daf4ad08286ab171b8eac8c397d7da86a7d859f6db118"
+}

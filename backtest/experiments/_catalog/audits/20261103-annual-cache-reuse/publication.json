@@ -1,0 +1,93 @@
+{
+  "record_type": "pre_commit_verification",
+  "checked_at": 1793669266.150838,
+  "authorization": "User requested commit and push in this chat.",
+  "branch": "codex/annual-cache-reuse",
+  "remote": "origin",
+  "base_commit": "8756a546d67e15dec92cf64698d98dc3297a858a",
+  "scope": "Only annual-cache optimization; real shared-v1 data is ignored and is not uploaded.",
+  "staging_provenance": "Compared task-before SHA-256 receipts to HEAD. Reconstructed preexisting trainer changes and removed the shared-cache document section to match both task-before hashes exactly before separating index content.",
+  "excluded_preexisting_changes": [
+    "Harness code/tests/skills and research artifacts",
+    ".gitignore Harness lock entries",
+    "train_regime_arm.validate_label_horizon and corresponding tests",
+    "Harness document sections outside annual shared cache"
+  ],
+  "preexisting_working_file_identities_preserved": {
+    ".agents/skills/qlib-experiment-harness/SKILL.md": "c3c1e4da64c975248eb2d00f2a2b27a52a12d098e3526f381d95b362fb0021bf",
+    ".gitignore": "4d4ac29f0e5b0a2f51eade3688f371acbf345b0ec10e7a1b78e8f085c479fb58",
+    "backtest/experiments/_catalog/path_map.json": "40987de12190b9882549a7fbf67040f1cfc214ac4ac9f73f8fb8b164a84366bc",
+    "backtest/experiments/registry.jsonl": "63daccc551d5cab767ef9c5c0905df92e93a77365ab802f32e000b48157fd35b",
+    "backtest/experiments/reports/phase_m_v1_bt_report.html": "613d401f39bf69a8b782e528b8eccda327e7adcf256eaa9293a1343f09ab4fee",
+    "backtest/experiments/reports/phase_m_v1_report.html": "b708439cd3562259053b622a8cc5868979d20634b41d619a42b45cb88161d3fe",
+    "backtest/scripts/README.md": "665c42312256bae1e699502f3e3161ddc741df93c953285cbdda93740eebf377",
+    "backtest/scripts/maintenance/cleanup_experiment_artifacts.py": "7f5fe9fbde6554bdf7651537c701afc130c97da50e2253d2ad7df533fddc319c",
+    "backtest/scripts/maintenance/experiment_archive.py": "39012f1c81b72e164d8ab9685470ea983d2672c690dcc54bc77fe2c8d6725560",
+    "backtest/scripts/maintenance/experiment_harness.py": "5a91f74b80a967e975c019f3e0ee06b020005c367086264a60dabb8918a120da",
+    "backtest/scripts/prepare/build_regime_alt_labels.py": "e63ed693553a0506ab7902ca71ec57eea745e18b52fbae88c39130e0ba3201ff",
+    "backtest/scripts/prepare/prepare_regime_train_chunks.py": "6ef9da9ce5869c7415c628acfeef0e24e223948013f4c60f17d66683ae143b64",
+    "backtest/scripts/train/train_regime_arm.py": "48d4c1c14d475be585a888943c95e7226eb0875dfbb5efdd4bc77645f5fb94c9",
+    "docs/research/experiment_harness.md": "e1eca88ced245bcf0bdff828b5050fcee8d3eac8f316f5c3412607b4b155daa9",
+    "tests/backtest/test_experiment_archive.py": "a2ee20707ba9072cccabf05b962e95164b18b31b5dbb76494638323944771999",
+    "tests/backtest/test_experiment_harness.py": "158b7f312b804e8820fd0163116d75ce3abfe9d3a639ddf4105d63f628157096",
+    "tests/backtest/test_train_regime_arm_es_valid.py": "ce0b2d604b21a40f372f6e56b151e0320ba110e1709db22176ddb7997e7e4589"
+  },
+  "tested_index_source_identities": [
+    {
+      "path": "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "sha256": "6ef9da9ce5869c7415c628acfeef0e24e223948013f4c60f17d66683ae143b64"
+    },
+    {
+      "path": "backtest/scripts/prepare/build_regime_alt_labels.py",
+      "sha256": "e63ed693553a0506ab7902ca71ec57eea745e18b52fbae88c39130e0ba3201ff"
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "667ee5f33577d0ffbfbfa96fca36e18180ea6be637611f02f12dd7237af5ae25"
+    },
+    {
+      "path": "backtest/scripts/maintenance/cleanup_experiment_artifacts.py",
+      "sha256": "7f5fe9fbde6554bdf7651537c701afc130c97da50e2253d2ad7df533fddc319c"
+    },
+    {
+      "path": "tests/backtest/test_regime_cache.py",
+      "sha256": "49049fa9f6c38e573905c491c6255c9a563bd58149c955e84566ef9de8525578"
+    },
+    {
+      "path": "tests/backtest/test_train_regime_arm_es_valid.py",
+      "sha256": "e2b5d45891f225f2edaff62f5a51b6f0a715b2bbdd4476acb23317af24089e1c"
+    },
+    {
+      "path": "tests/backtest/test_cleanup_experiment_artifacts.py",
+      "sha256": "12658f3dbdb69db4fb0702da11fdd425a2fb0903acf60da86e0effd222025634"
+    },
+    {
+      "path": "tests/backtest/test_script_layout.py",
+      "sha256": "4ee33881c026804dd620647dd6eeeb0b3cce5bc4d4c07a3062e5d9df52c1a12b"
+    }
+  ],
+  "cache_numerical_function_asts_match_real_validated_worktree": true,
+  "test_execution": {
+    "scope": "Exported staged tree; four relevant test files, no real data builds or fitting.",
+    "initial_result": "3 failed, 134 passed: snapshot lacks .git and generated _version.py; all failures were setuptools_scm LookupError during import.",
+    "environment_fix": "SETUPTOOLS_SCM_PRETEND_VERSION=0.1.dev2065, matching current canonical Qlib version; copied existing compiled .so dependencies into the temporary snapshot.",
+    "final_exit_code": 0,
+    "final_output": "........................................................................ [ 52%]\n.................................................................        [100%]\n137 passed in 9.67s",
+    "test_count_difference": "24 tests for preexisting horizon CLI changes remain uncommitted; the earlier 161-pass result applies to the full working tree.",
+    "logs": "publication-tests.json.gz"
+  },
+  "black_check": {
+    "exit_code": 0,
+    "files": 5
+  },
+  "staged_diff_check": {
+    "exit_code": 0
+  },
+  "validation_log": "real-validation.log.gz; lossless compression preserves original bytes and avoids raw warning-line whitespace in the Git diff.",
+  "temporary_materials": {
+    "path": "/private/tmp/qlib-cache-publish.lshw1L",
+    "type": "owned staging scripts, exported tree and isolated test fixtures",
+    "status": "cleaned"
+  },
+  "commit_and_push_receipt": "See enclosing Git commit and remote branch; this pre-commit record does not embed its own commit hash."
+}

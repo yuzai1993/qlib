@@ -1,0 +1,34 @@
+{
+  "status": "completed",
+  "created_at": 1793658651.9509308,
+  "roots": [
+    "/private/tmp/qlib-cache-reuse-20261103.SDOd4N",
+    "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/pytest-of-yuxianqi/pytest-270",
+    "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/pytest-of-yuxianqi/pytest-271",
+    "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/pytest-of-yuxianqi/pytest-272"
+  ],
+  "ownership": {
+    "/private/tmp/qlib-cache-reuse-20261103.SDOd4N": "Task ledger, original process receipt and source snapshots identify this task directory.",
+    "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/pytest-of-yuxianqi/pytest-270": "Review GREEN test run: directory mtime 1793647098.7606258 and review-green.log mtime 1793647098.9009402; contains this task cache and related regression fixtures.",
+    "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/pytest-of-yuxianqi/pytest-271": "Weight provenance regression run: contains only test_weight_identity_changes_w0 and its pytest-current link, added by this task.",
+    "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/pytest-of-yuxianqi/pytest-272": "Final pre-real-data regression: directory mtime 1793647159.606974 and tests-final.log mtime 1793647159.7478156; contains this task cache and related regression fixtures."
+  },
+  "inventory": {
+    "path": "cleanup-files.json.gz",
+    "sha256": "dc52a10f383aa96710e5b45eb216c393c9cb122828a7e2f243c093f8d0d0c7fc",
+    "entries": 13745
+  },
+  "regular_file_bytes": 502522839,
+  "reference_check": "rg found only historical validation/source receipts for the task path; no runtime/test/document instructions depend on removed scripts. Old pytest fixture paths are temporary output directories.",
+  "method": "Verify exact receipts; unlink regular files and symlinks without following symlinks; rmdir only empty inventoried directories.",
+  "preserved": [
+    "shared-v1 reusable data",
+    "reusable tests",
+    "formal scripts",
+    "audit JSON and real validation log",
+    "all unrelated research/production/model/prediction/report artifacts"
+  ],
+  "finished_at": 1793658685.160821,
+  "removed_entries": 13745,
+  "remaining_owned_roots": []
+}

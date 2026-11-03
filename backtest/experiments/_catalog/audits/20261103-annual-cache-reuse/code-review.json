@@ -1,0 +1,31 @@
+{
+  "review": "independent read-only review",
+  "issues_fixed": [
+    "alternate H labels preserve float64",
+    "validation dependencies include price limits, ST parser and named pools",
+    "raw alternate recipe freezes actual expression and provider module",
+    "source inventories detect newly appearing dependencies",
+    "producer transfers cache pins continuously to consumers",
+    "cleanup tombstones block new references and resume rescans child dependencies",
+    "hot hit recovers verified progress after manifest publication"
+  ],
+  "red_test_failures": 11,
+  "green_targeted_tests": 161,
+  "real_data_validation": "passed; see validation.json and cache-recheck.json",
+  "weight_receipt": "upgraded to required input provenance and fixed with RED-GREEN test",
+  "scope": "no new formal module, no fit, no registry or production changes",
+  "final_targeted_test_summary": "........................................................................ [ 44%]\n........................................................................ [ 89%]\n.................                                                        [100%]\n161 passed in 6.14s",
+  "red_failed_tests": [
+    "tests/backtest/test_regime_cache.py::test_legacy_h40_ranks_before_listing_and_h20_ranks_after_alignment",
+    "tests/backtest/test_regime_cache.py::test_cleanup_journal_resumes_after_partial_deletion",
+    "tests/backtest/test_regime_cache.py::test_alternate_labels_preserve_old_overlay_precision",
+    "tests/backtest/test_regime_cache.py::test_new_source_membership_is_detected[False]",
+    "tests/backtest/test_regime_cache.py::test_new_source_membership_is_detected[True]",
+    "tests/backtest/test_regime_cache.py::test_producer_transfers_pin_until_consumers_finish",
+    "tests/backtest/test_regime_cache.py::test_hot_read_recovers_committed_progress_after_crash",
+    "tests/backtest/test_regime_cache.py::test_new_child_cannot_reference_journaled_target",
+    "tests/backtest/test_regime_cache.py::test_validation_dependency_changes_invalidate_keys",
+    "tests/backtest/test_regime_cache.py::test_named_provider_pool_is_a_content_dependency",
+    "tests/backtest/test_regime_cache.py::test_label_expression_dependency_is_separate_from_features"
+  ]
+}

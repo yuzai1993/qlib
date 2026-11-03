@@ -24,10 +24,12 @@ from __future__ import annotations
 if __package__ in (None, ""):
     import sys as _sys
     from pathlib import Path as _Path
+
     _sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
 
 
 import argparse
+from contextlib import ExitStack
 import gc
 import json
 import pickle
@@ -73,10 +75,13 @@ HANDLER_NAME = {"m0": "Alpha158Technical", "m3": "Alpha158RegimeTechnical"}
 def resolve_es_valid_source(es_metric: str, es_valid: str = "auto") -> str:
     """决定早停 valid 帧：评估窗全样本，或 v1 的 70% 分层日集。"""
     if es_valid not in ("auto", "eval_window", "stratified70"):
-        raise ValueError(f"es_valid must be auto/eval_window/stratified70, got {es_valid!r}")
+        raise ValueError(
+            f"es_valid must be auto/eval_window/stratified70, got {es_valid!r}"
+        )
     if es_valid != "auto":
         return es_valid
     return "eval_window"
+
 
 # 阶段 1 筛选臂：B3-M 冻结超参（feature-b2/range 单 LGBModel，除 seed 外不动）
 # + cs-rank-norm 标签（分块缓存自带）；早停协议同 DoubleEnsemble 臂（RankIC 锚点）
@@ -157,7 +162,9 @@ def build_valid_frame(
     frame = frame[mask.to_numpy()].astype("float32")
     counts = frame.groupby(level="datetime").size()
     if (counts < 20).any():
-        raise ValueError("valid frame has days with <20 instruments after listing filter")
+        raise ValueError(
+            "valid frame has days with <20 instruments after listing filter"
+        )
     print(
         f"[valid] {frame.shape[0]} 行 x {frame.shape[1]} 列, "
         f"{counts.size} 天 (剔次新 {n_drop} 行), "
@@ -232,7 +239,11 @@ def build_t5h5es_valid_frame(
         features.columns = pd.MultiIndex.from_product([["feature"], features.columns])
 
     label = _fetch_label(pool, EVAL_START, VALID_END, expression=_horizon_label_expr(5))
-    mask = _stock_only_mask(label.index) if pool == "all" else pd.Series(True, index=label.index)
+    mask = (
+        _stock_only_mask(label.index)
+        if pool == "all"
+        else pd.Series(True, index=label.index)
+    )
     mask = mask & _listing_age_mask(label.index, pool, 60, VALID_END)
     mask = mask & _st_keep_for_eval(label.index)
     amt_ok = amount_mask(pool, EVAL_START, VALID_END, DEFAULT_MIN_AMOUNT)
@@ -269,7 +280,9 @@ def load_train_matrix(arm: str, years: list[int]) -> pd.DataFrame:
     for year in years:
         path = CACHE_ROOT / arm / f"year={year}.pkl"
         if not path.exists():
-            raise FileNotFoundError(f"缺少年度块: {path} (先跑 prepare_regime_train_chunks.py)")
+            raise FileNotFoundError(
+                f"缺少年度块: {path} (先跑 prepare_regime_train_chunks.py)"
+            )
         df = pd.read_pickle(path)
         if columns is None:
             columns = df.columns
@@ -290,6 +303,193 @@ def load_train_matrix(arm: str, years: list[int]) -> pd.DataFrame:
         flush=True,
     )
     return train
+
+
+def frame_signature(frame: pd.DataFrame | pd.Series) -> dict:
+    from backtest.scripts.prepare.prepare_regime_train_chunks import cache_value_summary
+
+    return cache_value_summary(frame)
+
+
+def load_shared_train_matrix(
+    feature_manifest: Path,
+    label_manifest: Path,
+    arm: str,
+    years: list[int],
+    horizon: int,
+    dates_csv: Path,
+    *,
+    weights_csv: Path | None = None,
+):
+    from backtest.scripts.prepare.prepare_regime_train_chunks import (
+        cache_lease,
+        fingerprint_files,
+        validate_cache_manifest,
+    )
+
+    feature_manifest, label_manifest = (
+        Path(feature_manifest).absolute(),
+        Path(label_manifest).absolute(),
+    )
+    root = feature_manifest.parents[2]
+    with cache_lease(root, [feature_manifest, label_manifest]):
+        fs, ls = (
+            json.loads(p.read_text())["spec"]
+            for p in (feature_manifest, label_manifest)
+        )
+        fdoc, ldoc = validate_cache_manifest(
+            feature_manifest, fs
+        ), validate_cache_manifest(label_manifest, ls)
+        if fs["kind"] != "features" or ls["kind"] != "labels":
+            raise ValueError("expected pure feature and label manifests")
+        if (
+            fs["recipe"]["arm"] != arm
+            or ls["recipe"]["arm"] != arm
+            or ls["recipe"]["horizon"] != horizon
+        ):
+            raise ValueError("shared cache arm/horizon mismatch")
+        if ls["recipe"].get("sample_protocol") != "legacy-h40-base-v1":
+            raise ValueError("unsupported sample protocol")
+        feature_receipt = fingerprint_files([feature_manifest])[0]
+        if feature_receipt not in ls["parents"]:
+            raise ValueError("label manifest is not paired with these features")
+        if (
+            not set(years).issubset(fs["recipe"]["years"])
+            or fs["recipe"]["years"] != ls["recipe"]["years"]
+        ):
+            raise ValueError("shared cache year coverage mismatch")
+        dates_receipt = fingerprint_files([dates_csv])[0]
+        weights_receipt = (
+            None if weights_csv is None else fingerprint_files([weights_csv])[0]
+        )
+        dates = pd.DatetimeIndex(
+            pd.to_datetime(pd.read_csv(dates_csv, comment="#")["date"])
+        )
+        parts = []
+        for year in years:
+            features = pd.read_pickle(
+                feature_manifest.parent / fdoc["blocks"][str(year)]["path"]
+            )
+            labels = pd.read_pickle(
+                label_manifest.parent / ldoc["blocks"][str(year)]["path"]
+            )
+            if (
+                list(features.columns) != fs["recipe"]["columns"]
+                or labels.index.has_duplicates
+                or not labels.index.is_monotonic_increasing
+                or not labels.index.isin(features.index).all()
+            ):
+                raise ValueError("shared cache columns/index mismatch")
+            keep = labels.index.get_level_values("datetime").isin(dates)
+            selected = labels.loc[keep]
+            selected_features = features.reindex(selected.index)
+            selected_features.columns = pd.MultiIndex.from_product(
+                [["feature"], features.columns]
+            )
+            selected_features[("label", "LABEL0")] = selected.to_numpy()
+            parts.append(selected_features)
+        train = pd.concat(parts, copy=False)
+        labels = train[("label", "LABEL0")]
+        if train.empty or labels.notna().mean() < 0.95:
+            raise ValueError("shared labels have less than 95% coverage")
+        train = train.loc[labels.notna().to_numpy()]
+        if fingerprint_files([dates_csv])[0] != dates_receipt:
+            raise ValueError("training dates changed during assembly")
+        if (
+            weights_csv is not None
+            and fingerprint_files([weights_csv])[0] != weights_receipt
+        ):
+            raise ValueError("day weights changed during assembly")
+        receipt = {
+            "feature_manifest": feature_receipt,
+            "label_manifest": fingerprint_files([label_manifest])[0],
+            "training_dates": dates_receipt,
+            "day_weights": weights_receipt,
+            "sample_protocol": ls["recipe"]["sample_protocol"],
+            "matrix": frame_signature(train),
+        }
+        return train, receipt
+
+
+def shared_validation_spec(arm: str, valid_source: str, instruments=None) -> dict:
+    from backtest.scripts.prepare.prepare_regime_train_chunks import (
+        fingerprint_files,
+        shared_feature_spec,
+    )
+
+    spec = shared_feature_spec(arm, [2020])
+    spec["kind"] = "validation"
+    extras = [
+        Path(__file__),
+        EXP_ROOT / "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+        EXP_ROOT / "backtest/scripts/evaluate/universe_filter.py",
+        EXP_ROOT / "backtest/models/rankic_early_stop.py",
+        EXP_ROOT / "qlib/backtest/cn_limit.py",
+        EXP_ROOT / "scripts/data_collector/tushare/st_calendar.py",
+    ]
+    if valid_source == "eval_window":
+        extras.append(ST_DAILY if ST_DAILY.exists() else ST_NAMES)
+    elif valid_source == "stratified70":
+        extras.append(VALID_DATES_CSV)
+    else:
+        raise ValueError("unsupported validation source")
+    receipts = {r["path"]: r for r in spec["sources"]}
+    receipts.update({r["path"]: r for r in fingerprint_files(extras)})
+    spec["sources"] = sorted(receipts.values(), key=lambda r: r["path"])
+    spec["recipe"].update(
+        valid_source=valid_source,
+        start=EVAL_START,
+        end=VALID_END,
+        warmup=VALID_WARMUP_START,
+        instruments=instruments or INSTRUMENTS,
+    )
+    return spec
+
+
+def load_shared_valid_frame(
+    arm: str, valid_source: str, instruments=None, *, leases: ExitStack | None = None
+):
+    from backtest.scripts.prepare.prepare_regime_train_chunks import (
+        SHARED_CACHE_ROOT,
+        cache_lease,
+        fingerprint_files,
+        get_or_build_cache,
+    )
+    from backtest.models.rankic_early_stop import load_valid_dates
+
+    if leases is None:
+        with ExitStack() as local_leases:
+            return load_shared_valid_frame(
+                arm, valid_source, instruments, leases=local_leases
+            )
+    spec = shared_validation_spec(arm, valid_source, instruments)
+
+    def build(key):
+        if valid_source == "eval_window":
+            frame, tradable = build_t5h5es_valid_frame(arm, instruments=instruments)
+        else:
+            dates = load_valid_dates(str(VALID_DATES_CSV), (EVAL_START, VALID_END))
+            frame, tradable = (
+                build_valid_frame(arm, dates, instruments=instruments),
+                None,
+            )
+        return {"frame": frame, "tradable": tradable}
+
+    manifest = get_or_build_cache(
+        SHARED_CACHE_ROOT, spec, ["frame"], build, lease_stack=leases
+    )
+    with cache_lease(SHARED_CACHE_ROOT, [manifest]):
+        cached = pd.read_pickle(manifest.parent / "frame.pkl")
+        receipt = {
+            "manifest": fingerprint_files([manifest])[0],
+            "frame": frame_signature(cached["frame"]),
+            "tradable": (
+                None
+                if cached["tradable"] is None
+                else frame_signature(cached["tradable"])
+            ),
+        }
+        return cached["frame"], cached["tradable"], receipt
 
 
 def save_session(
@@ -337,13 +537,19 @@ def save_session(
                 else str(VALID_DATES_CSV.relative_to(EXP_ROOT))
             ),
             "es_metric": summary.get("es_metric", "daily_rank_ic"),
-            "day_weights_csv": str(DAY_WEIGHTS_CSV[weight_arm or arm].relative_to(EXP_ROOT)),
-            "regime_csv": str(REGIME_CSV.relative_to(EXP_ROOT)) if arm == "m3" else None,
+            "day_weights_csv": str(
+                DAY_WEIGHTS_CSV[weight_arm or arm].relative_to(EXP_ROOT)
+            ),
+            "regime_csv": (
+                str(REGIME_CSV.relative_to(EXP_ROOT)) if arm == "m3" else None
+            ),
             "label": summary.get("label_expr", LABEL_EXPR),
             "label_horizon": summary.get("label_horizon", 40),
             "instruments": INSTRUMENTS,
             "model": summary.get("model", "densemble"),
-            "frozen_hyperparams": summary.get("frozen_hyperparams", "B6-M (mh_rankic_es_lr010)"),
+            "frozen_hyperparams": summary.get(
+                "frozen_hyperparams", "B6-M (mh_rankic_es_lr010)"
+            ),
         },
     }
     (session_dir / "meta.json").write_text(
@@ -351,7 +557,9 @@ def save_session(
     )
     (run_dir / "mlruns_link.json").write_text(
         json.dumps(
-            {"train_artifacts": f"backtest/result/{session_name}/run_01/artifacts_root"},
+            {
+                "train_artifacts": f"backtest/result/{session_name}/run_01/artifacts_root"
+            },
             ensure_ascii=False,
             indent=2,
         ),
@@ -380,10 +588,24 @@ def main() -> None:
         choices=["single", "densemble"],
         help="single=阶段1 B3-M 单 LGBM 筛选臂; densemble=阶段2 B6-M DoubleEnsemble 确认臂",
     )
-    parser.add_argument("--years", type=int, nargs="*", default=None, help="默认 2004..2020")
-    parser.add_argument("--epochs", type=int, default=None, help="冒烟用覆盖，正式跑勿用")
-    parser.add_argument("--early-stopping-rounds", type=int, default=None, help="冒烟用覆盖")
+    parser.add_argument(
+        "--years", type=int, nargs="*", default=None, help="默认 2004..2020"
+    )
+    parser.add_argument(
+        "--epochs", type=int, default=None, help="冒烟用覆盖，正式跑勿用"
+    )
+    parser.add_argument(
+        "--early-stopping-rounds", type=int, default=None, help="冒烟用覆盖"
+    )
     parser.add_argument("--session-name", default=None)
+    parser.add_argument(
+        "--feature-manifest", type=Path, help="已准备的共享纯特征 manifest"
+    )
+    parser.add_argument(
+        "--label-manifest",
+        type=Path,
+        help="与共享特征配对的标签 manifest；同时启用有身份校验的验证缓存",
+    )
     parser.add_argument(
         "--valid-instruments",
         default=None,
@@ -408,6 +630,26 @@ def main() -> None:
         help="早停 valid 帧；auto/eval_window=评估窗（v4），stratified70=v1 的 499 日集",
     )
     args = parser.parse_args()
+    if (args.feature_manifest is None) != (args.label_manifest is None):
+        parser.error(
+            "--feature-manifest and --label-manifest must be supplied together"
+        )
+
+    with ExitStack() as leases:
+        _run(args, leases)
+
+
+def _run(args, leases: ExitStack) -> None:
+    if args.feature_manifest is not None:
+        from backtest.scripts.prepare.prepare_regime_train_chunks import (
+            cache_lease,
+            fingerprint_files,
+        )
+
+        root = args.feature_manifest.absolute().parents[2]
+        leases.enter_context(
+            cache_lease(root, [args.feature_manifest, args.label_manifest])
+        )
 
     import qlib
 
@@ -438,7 +680,11 @@ def main() -> None:
         "top5_h5_net_ann": "t5h5es",
         "top3_h5_net_ann": "t3h5es",
     }.get(args.es_metric, "")
-    if not es_tag and args.es_metric == "daily_rank_ic" and es_valid_source == "eval_window":
+    if (
+        not es_tag
+        and args.es_metric == "daily_rank_ic"
+        and es_valid_source == "eval_window"
+    ):
         es_tag = "rankices"
     combo = args.arm if weight_arm == args.arm else f"{args.arm}w{weight_arm}"
     session_name = args.session_name or (
@@ -446,7 +692,12 @@ def main() -> None:
     )
     t_all = time.time()
     tradable = None
-    if es_valid_source == "eval_window":
+    cache_inputs = {}
+    if args.feature_manifest is not None:
+        df_valid, tradable, cache_inputs["validation"] = load_shared_valid_frame(
+            args.arm, es_valid_source, args.valid_instruments, leases=leases
+        )
+    elif es_valid_source == "eval_window":
         valid_cache = (
             CACHE_ROOT / args.arm / "valid_frame_t5h5es.pkl"
             if args.valid_instruments is None
@@ -477,15 +728,29 @@ def main() -> None:
         )
         if valid_cache is not None and valid_cache.exists():
             df_valid = pd.read_pickle(valid_cache)
-            print(f"[valid] 命中缓存 {valid_cache.name}: {df_valid.shape[0]} 行", flush=True)
+            print(
+                f"[valid] 命中缓存 {valid_cache.name}: {df_valid.shape[0]} 行",
+                flush=True,
+            )
         else:
             df_valid = build_valid_frame(
                 args.arm, valid_dates, instruments=args.valid_instruments
             )
             if valid_cache is not None:
                 df_valid.to_pickle(valid_cache)
-    df_train = load_train_matrix(args.arm, years)
-    if args.label_horizon != 40:
+    if args.feature_manifest is not None:
+        df_train, cache_inputs["training"] = load_shared_train_matrix(
+            args.feature_manifest,
+            args.label_manifest,
+            args.arm,
+            years,
+            args.label_horizon,
+            TRAIN_DATES_CSV,
+            weights_csv=DAY_WEIGHTS_CSV[weight_arm],
+        )
+    else:
+        df_train = load_train_matrix(args.arm, years)
+    if args.label_horizon != 40 and args.feature_manifest is None:
         lab_path = CACHE_ROOT / "labels" / f"h{args.label_horizon}_csrank.pkl"
         if not lab_path.exists():
             raise FileNotFoundError(
@@ -532,6 +797,14 @@ def main() -> None:
     model = model_cls(**model_kwargs)
     t0 = time.time()
     model.fit_prepared(df_train, df_valid)
+    if (
+        args.feature_manifest is not None
+        and fingerprint_files([DAY_WEIGHTS_CSV[weight_arm]])[0]
+        != cache_inputs["training"]["day_weights"]
+    ):
+        raise ValueError(
+            "day weights changed before/during fit; refuse to save this session"
+        )
     t_fit = time.time() - t0
     print(f"[fit] 完成 {t_fit:.0f}s, 峰值 RSS {rss_gb():.2f} GB", flush=True)
 
@@ -540,7 +813,11 @@ def main() -> None:
         "weight_arm": weight_arm,
         "seed": args.seed,
         "model": args.model,
-        "frozen_hyperparams": "B3-M (feature-b2/range) + cs-rank-norm" if single else "B6-M (mh_rankic_es_lr010)",
+        "frozen_hyperparams": (
+            "B3-M (feature-b2/range) + cs-rank-norm"
+            if single
+            else "B6-M (mh_rankic_es_lr010)"
+        ),
         "label_horizon": args.label_horizon,
         "label_expr": (
             LABEL_EXPR
@@ -559,6 +836,7 @@ def main() -> None:
         "fit_seconds": round(t_fit, 1),
         "total_seconds": round(time.time() - t_all, 1),
         "peak_rss_gb": round(rss_gb(), 2),
+        "cache_inputs": cache_inputs,
     }
     session_dir = save_session(
         args.arm, args.seed, session_name, model, summary, weight_arm=weight_arm

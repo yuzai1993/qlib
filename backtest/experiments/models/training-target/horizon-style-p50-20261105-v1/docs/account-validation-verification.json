@@ -1,0 +1,58 @@
+{
+  "archive_errors": [],
+  "total_typed_experiments": 24,
+  "selected_model_files": 15,
+  "selected_H": [
+    7,
+    15,
+    20
+  ],
+  "new_official_accounts": 2,
+  "observational_replays": 2,
+  "new_model_fits": 0,
+  "report_checks": [
+    {
+      "file": "detail.html",
+      "tables": 22,
+      "broken_links": [],
+      "sha256": "42e9076988e422f027e13b361e4fd148dc6165770c4013d8dba078f7c2fde07a"
+    },
+    {
+      "file": "account-gap-validation.html",
+      "tables": 10,
+      "broken_links": [],
+      "sha256": "24873053494156b699f3705ac0c2a259a2c670c0d3cdccd67bcb671658db8c47"
+    },
+    {
+      "file": "h7-ladder-account.html",
+      "tables": 2,
+      "broken_links": [],
+      "sha256": "47345c0d414669a3a03399e27ea2394ef0632c3212c4145bcba20fee871bde4b"
+    },
+    {
+      "file": "h15-ladder-account.html",
+      "tables": 2,
+      "broken_links": [],
+      "sha256": "38377893991e7d3a3e103a379a6c648fcff21c357ccfc257187c9322e27fe6f8"
+    }
+  ],
+  "numeric_focus_table_verified": true,
+  "source_plot_visual_review": "2026 account chart visually checked; axes, legends, sources and series consistent.",
+  "full_html_browser_review": "not_performed; inherited file-protocol restriction not bypassed",
+  "result_cleanup_errors": [],
+  "result_cleanup_remaining_deletions": [],
+  "result_directory_count": 45,
+  "archived_bytes_removed": 1532606151,
+  "runtime_bytes_removed": 9548871973,
+  "untracked_files_before_final_temp_cleanup": 123,
+  "platform_api": {
+    "experiment_entry_count": 15,
+    "new_entry_ids": [
+      "training-target/horizon-style-p50-20261105-v1"
+    ],
+    "warnings": []
+  },
+  "final_untracked_files": 124,
+  "task_temporary_directory_removed": true,
+  "git_diff_check": 0
+}

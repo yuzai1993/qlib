@@ -1,0 +1,80 @@
+{
+  "a": "new-s3000-r1-original",
+  "b": "archived-new",
+  "panel": "identical exit-bounded validation features",
+  "rows": 6483051,
+  "common_selected_trees": 45,
+  "different_leaf_index_rows": 0,
+  "first_four_trees_different_leaf_index_rows": 0,
+  "different_leaf_index_count_per_tree": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "leaf_index_stream_sha256": [
+    "f9b5cd70c3db4e7469ea058b158f1e930b1f08d1805e3a9f5571d42a7d3f261a",
+    "f9b5cd70c3db4e7469ea058b158f1e930b1f08d1805e3a9f5571d42a7d3f261a"
+  ],
+  "limitation": "Different leaf numbers may also reflect equivalent re-numbered topology; equal leaf indices are interpreted alongside tree split comparison, not alone.",
+  "selected_prediction": {
+    "exact": false,
+    "n": 6483051,
+    "changed": 513861,
+    "max_abs": 2.220446049250313e-16,
+    "mean_abs": 1.447114178633601e-18
+  },
+  "selected_heads": {
+    "3": {
+      "days": 1448,
+      "different_days": 0,
+      "mean_overlap": 1.0
+    },
+    "5": {
+      "days": 1448,
+      "different_days": 0,
+      "mean_overlap": 1.0
+    }
+  }
+}

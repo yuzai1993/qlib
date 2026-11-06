@@ -1,0 +1,509 @@
+{
+  "schema_version": 2,
+  "entity_type": "experiment",
+  "kind": "model",
+  "track": "all_a",
+  "exp_id": "training-target/horizon-style-p50-20261105-v1",
+  "archive_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+  "experiment_type": "training_target",
+  "title": "训练目标期限与风格复验 · patience50",
+  "inventory_kind": "asset_snapshot",
+  "analysis": {
+    "conclusion": "同输入seed3000重复拟合逐位稳定；106条标签变化稳定重现第5轮起的轨迹分叉。两组s5 CAGR差7.41个百分点，真阶梯差2.30个百分点（旧减新），绝对差距收窄。 D/H7、F/H15 的真阶梯回测均改善；2026 大回撤未发现账户计算错误，真阶梯不能普遍修复。 T：模型收益不支持预设规律（最大值H=20）；模型夏普不支持预设规律（最大值H=20）；账户收益不支持预设规律（最大值H=20）；账户夏普不支持预设规律（最大值H=40）。 D：模型收益不支持预设规律（最大值H=7）；模型夏普不支持预设规律（最大值H=7）；账户收益不支持预设规律（最大值H=7）；账户夏普不支持预设规律（最大值H=40）。 F：模型收益不支持预设规律（最大值H=15）；模型夏普不支持预设规律（最大值H=30）；账户收益不支持预设规律（最大值H=15）；账户夏普不支持预设规律（最大值H=30）。 上述仅为固定规则下的数值模式；本轮仍存在短轮、同分、反序敏感或轮数上限等训练诊断，不能将对应差异全部归因于H，详见汇总报告。",
+    "review_status": "reviewed",
+    "updated_at": "2026-11-06",
+    "limitations": "历史选型窗非独立样本外；F仅2024年136日；真阶梯改善指定D/F但不能普遍修复2026，部分执行残差未逐项因果消融；历史v2训练复现根因仍未解决。 同输入逐位重复检验限于本机seed3000；旧五种子恢复了选轮和账户表现，但旧预测没有逐位复原证明。",
+    "evidence": [
+      "docs/study-summary.json",
+      "docs/bridge-readiness.json",
+      "reports/detail.html",
+      "reports/account-gap-validation.html",
+      "docs/stability-20261106-summary.json",
+      "reports/stability-20261106.html"
+    ]
+  },
+  "shared_dependencies": {
+    "runtime_model_paths": [
+      "backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model"
+    ],
+    "runtime_prediction_paths": [
+      "backtest/result/20261105_horizon_p50/h7",
+      "backtest/result/20261105_horizon_p50/h15",
+      "backtest/result/20261105_horizon_p50/h20"
+    ],
+    "runtime_data_paths": [
+      "backtest/result/20261103_h20_causal_inputs"
+    ],
+    "runtime_account_paths": [
+      "backtest/result/20261105_150321_horizonp50_20261105_h7_s5",
+      "backtest/result/20261105_150523_horizonp50_20261105_h15_s5",
+      "backtest/result/20261105_112118_horizonp50_20261105_h20_s5",
+      "backtest/result/20261105_233401_horizonp50_20261105_h7_ladder_k3h5",
+      "backtest/result/20261105_233502_horizonp50_20261105_h15_ladder_k3h5"
+    ]
+  },
+  "change_summary": "仅更改训练标签H=5/7/10/15/20/30/40；统一patience50，其余配方固定，各H保留自己的有效标签样本。",
+  "comparison_baseline": {
+    "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "version": "v2"
+  },
+  "training_target_comparison": {
+    "refs": [
+      "training-target/horizon-style-p50-20261105-v1/arms/h7",
+      "training-target/horizon-style-p50-20261105-v1/arms/h15",
+      "training-target/horizon-style-p50-20261105-v1/arms/h20"
+    ],
+    "control_ref": "training-target/horizon-style-p50-20261105-v1/arms/h20",
+    "archived_records": [
+      {
+        "path": "source-records/h7.json",
+        "sha256": "e6af9bd626329593d7215ed5e85d19d9304c83bae2be480f58ac23c367d4494b"
+      },
+      {
+        "path": "source-records/h15.json",
+        "sha256": "a7ce9bd15c241b8d7c0b9e222d6ae1dc84300f6cfcccb52ccecd8c96801e87f1"
+      },
+      {
+        "path": "source-records/h20.json",
+        "sha256": "67cbf1f18c7c9a004af2cdf73e0010159e78b1eb128b8c5a3347cb20a3b9e392"
+      }
+    ]
+  },
+  "model_profile": {
+    "structure": "历史七H各五种子单LightGBM；当前完整保留H7/H15/H20，D/F执行验证复用原五种子合成信号。",
+    "features": "Alpha158＋range，冻结2026-11-02特征块；不新增风格特征。",
+    "training_target": "分别预测未来5/7/10/15/20/30/40日累计收益；原H40基础样本和按日截面排名顺序，各目标独立剔除缺失。",
+    "early_stopping": "共同Top5×H5净年化，patience50，上限200；H5退出边界修正至2026-07-23。",
+    "prediction_signal": "每H独立五种子按日z-score等权合成，各H之间不混合。",
+    "training_sample": {
+      "pool": "沪深A股 SH60/SH68/SZ00/SZ30",
+      "time_range": "原冻结M0训练日集，2004～2020",
+      "filters": "H40原始标签非空＋上市满60交易日；各H自己的标签非空掩码，无七H交集。"
+    },
+    "evaluation_sample": {
+      "pool": "沪深A股",
+      "time_range": "2020-08-03～2026-07-31；模型H5末端2026-07-23",
+      "filters": "上市满60交易日、日频ST剔除、日成交额≥1000万；模型头部另剔除t+1不可建仓。"
+    },
+    "evaluation_method": "正式Top3×H5模型及固定s5账户验证；历史选型窗口，非独立样本外。",
+    "model_paths": [
+      {
+        "path": "backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "H7"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "H7"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "H7"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "H7"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "H7"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "H15"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "H15"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "H15"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "H15"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "H15"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "H20"
+      },
+      {
+        "path": "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "H20"
+      }
+    ]
+  },
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [
+    "label_horizon"
+  ],
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "phase": "M",
+  "direction": "training-target",
+  "configs": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+      "sha256": "d3e269b8b9ad74b6ad3bcd74ed691a38fc48e9854e45bf4dd3c3334583fb4a5e"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+      "sha256": "55381bdc842e9300f320eea0a6f0d534e94d388be114f7c0d8e35dca8a291154"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/harness-plan.json",
+      "sha256": "3611df165eb36da2063ea3ff0e0dc9066b561a1b7d79aa03c2d8116e7542822b"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-account-validation.json",
+      "sha256": "17c172acdc13c33ded9dd5a1e8e8f70ea906495bd9b4c09217b73d99d839793b"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-account-verification.json",
+      "sha256": "3f9b391b9374617f2fb3e7e648a2c87460bd9c9e1d09e9954cf4e503a40603f5"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+      "sha256": "3c1e27921efa9ba6d7ae666705cef5285835d309ac96b8ad308a942c574fab80"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106-accounts.json",
+      "sha256": "ef2d228a07e8a5ec0ac3945c6e8312deb307ee79cb426dd8d853562b75d47650"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106.json",
+      "sha256": "68547c8b68790f2cad3664694abc6caabe1fc4d390b1944a8619b81b6c93e30c"
+    }
+  ],
+  "reports": [
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/early-stop-sensitivity.png",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/early-stop-sensitivity.svg",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h15-account.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-account.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-label-bridge.png",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-label-bridge.svg",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h7-account.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/horizon-style.png",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/horizon-style.svg",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/account-2026-validation.png",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/account-gap-validation.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h15-ladder-account.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h7-ladder-account.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/stability-20261106.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/stability-20261106.png"
+  ],
+  "records": [
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/records/d95f10810363fd882cf1c3c7d1532da4150921a4219f2ab79680feac4de34822.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/records/ced8444db90bf4dd6af302e32e358ea1361933d2b295414d6b3c1b4daf472427.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/records/3721e4b17469b17cc1b9995d932b8d45121b011e4a4a517abb6f4b4e37440041.json"
+  ],
+  "data": [
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-account-report.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h20-account-report.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-account-report.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s1000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s2000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s3000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s4000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s42.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s1000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s2000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s3000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s4000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s42.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s1000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s2000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s3000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s4000.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s42.npz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2004.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2005.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2006.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2007.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2008.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2009.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2010.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2011.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2012.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2013.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2014.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2015.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2016.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2017.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2018.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2019.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2020.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2004.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2005.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2006.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2007.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2008.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2009.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2010.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2011.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2012.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2013.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2014.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2015.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2016.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2017.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2018.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2019.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2020.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2004.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2005.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2006.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2007.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2008.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2009.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2010.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2011.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2012.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2013.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2014.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2015.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2016.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2017.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2018.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2019.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2020.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/manifest.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-model.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-s5.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-s5.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-model.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-s5.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/v2-model.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/v2-s5.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-ladder-account-report.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-ladder-cohort-audit.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-ladder-order-audit.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-ladder-overdue-pnl.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-ladder-account-report.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-ladder-cohort-audit.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-ladder-order-audit.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-ladder-overdue-pnl.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-ladder.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-ladder.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-2026-contributions.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h20-2026-contributions.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-2026-contributions.csv.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/1d8d9e1a13b3e793661baf718ef5d184e814cd018e955943da9058cb1ee2f01e.txt.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/54147918904bd0aeabce4e55db23418449dfd36a6a57f829047e6e7370c89e98.txt.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/60f350ce574f2ac2179b192d0ffd402ba394c03f7e91f01b3dfc702f6e16a042.txt.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/901dbcbd99e50efe26974d847ee89c4de932b242c9a7647fd406d2b28f7585e0.txt.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/c962582edac0c0adec7531d198ec695f4e57f92d3523e695ccc7df4b4c57d77c.txt.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/d8bd8c2886fad2a03646387ab5718d9157ac9fe32882045fb1c97fa755593f92.txt.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-new-ladder-account.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-old-ladder-account.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-old-s5-account.pkl",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-new-ladder.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-ladder.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-model.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-s5.json"
+  ],
+  "docs": [
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-input-bridge.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-label-change-audit.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-observed-label-effect.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/bridge-readiness.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/cache-retention.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/continuation-driver.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/execution-bridge.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/execution-study.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/final-input-verification.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/h15-account-input.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/h20-account-input.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/h7-account-input.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-state.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h15.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h20.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h7.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/preparation-operational-retry.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/regime-label-source.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/registration-failure-a1.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/reused-controls.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h15.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h20.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h7.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/study-summary.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s1000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s2000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s3000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s4000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s42.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s1000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s2000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s3000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s4000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s42.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s1000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s2000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s3000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s4000.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s42.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/final-verification.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-cleanup.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-trial-review.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/mlruns-retention-audit.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/owned-temporary-cleanup.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/publication-verification.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/registration-receipt.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/report-qa.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/result-cleanup-applied.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/result-cleanup-dry-run.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/result-cleanup-owned-plan.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/retention-20261105.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-2026-initial.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-integrity-20261105.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/derived-account-progress.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/gap-decomposition.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/ladder-delayed-exits.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/ladder-verification.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-validation-review.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-validation-verification.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-account.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-accounts_pipeline.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-closeout.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-common.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-compare.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-continue_initial.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-evaluate_old.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-fit.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-infer.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-publish.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-recover.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-report.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-report_v2.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-routes.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-setup.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-tree_differences.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-verify.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-cleanup.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-environment.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-execution-logs.json.gz",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2020.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2021.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2022.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2023.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2024.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2025.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2026.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-lessons.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-ladder-signal.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r1-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r1-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r2-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r2-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-account-gate.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-ladder-signal.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-repeat-preliminary.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s1000-r1-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s1000-r1-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s2000-r1-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s2000-r1-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r1-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r1-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r2-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r2-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s4000-r1-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s4000-r1-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s42-r1-original-inputs.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s42-r1-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s5-signal.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-original-comparison.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-preservation.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-progress.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-recovery-decision.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-routes-new-s3000-r1-original--archived-new.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-routes-old-s3000-r1-original--new-s3000-r1-original.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-runtime-libraries.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-summary.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-trees-new-s3000-r1-original--archived-new.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-trees-old-s3000-r1-original--archived-new.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-visual-review.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-registration.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-removed-results.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-result-cleanup-applied.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-result-cleanup-dry-run.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-temporary-cleanup-inventory.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-result-retention-final.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-verification.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/change-review-20261106.json"
+  ],
+  "records_directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/records",
+  "retention": {
+    "date": "2026-11-05",
+    "retained_H": [
+      7,
+      15,
+      20
+    ],
+    "style_return_choices": {
+      "D": 7,
+      "F": 15,
+      "T": 20
+    },
+    "audit": "docs/retention-20261105.json",
+    "previous_all_H_summary": "docs/study-summary.json"
+  },
+  "metrics_source": {
+    "path": "metrics/h20-model.json",
+    "sha256": "406966331a8d6e63f3b703cd0663b37e7538c0a398e6a5e0c7814ff55e97b872"
+  }
+}

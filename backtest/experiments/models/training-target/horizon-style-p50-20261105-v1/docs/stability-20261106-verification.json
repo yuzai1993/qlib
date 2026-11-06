@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "model_fits": 8,
+  "account_jobs": 3,
+  "cumulative_model_fits": 111,
+  "within_input_strict_repeatability": true,
+  "all_five_old_seed_selection_summaries_match": true,
+  "all_saved_model_annual_reference_predictions_exact": true,
+  "old_s5_reproduction_gate": {
+    "reconstructed_cagr": 0.30536295577360884,
+    "prior_cagr": 0.3053629557736084,
+    "absolute_error": 4.440892098500626e-16,
+    "tolerance": 1e-10,
+    "passed": true,
+    "account_source": {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-s5.json",
+      "sha256": "87f4142731b2b8ecf296d7dc093daf5faabd3ad964a39ac0768a0ed9f637e427",
+      "size": 9990
+    }
+  },
+  "report_local_links": 7,
+  "adapter_source_receipts": 17,
+  "non_temporary_frozen_files_unchanged": true,
+  "typed_archive_errors": [],
+  "registry_events": 27,
+  "registry_unique_experiments": 24,
+  "platform_experiment_entries": 15,
+  "platform_benchmarks": 9,
+  "platform_warnings": [],
+  "active_baselines": [
+    "baseline/phase-m-v1-bt-v5",
+    "regime-adapt/m0-h20-t5h5-es-v1"
+  ],
+  "final_result_cleanup_candidates": 0,
+  "temporary_root_absent": true,
+  "git_diff_check": "passed",
+  "visual_review": {
+    "scientific_png_reviewed": true,
+    "artifact": "reports/stability-20261106.png",
+    "review": "Viewed the generated scientific figure after correcting overlapping best-iteration labels. Confirmed old/new legend, best49/best45, four CAGR labels, axis units, full labels and historical-selection-window title.",
+    "revision": "report_v2.py preserves the original report.py source receipt; only chart label spacing and interpretation text changed, no training/account rerun or metric change.",
+    "html_browser_render": "Unavailable: earlier browser file-access restriction was not bypassed. HTML numeric and local-link checks are performed separately."
+  },
+  "browser_html_render": "Unavailable due browser file-access restriction; no alternate-browser workaround used. Scientific PNG visually reviewed; HTML numbers and local links statically checked."
+}

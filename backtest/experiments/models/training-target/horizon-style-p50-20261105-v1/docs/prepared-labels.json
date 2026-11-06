@@ -1,0 +1,2657 @@
+{
+  "feature_manifest": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+    "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+    "size": 11178449
+  },
+  "prior_H20_labels": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+    "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+    "size": 11111985
+  },
+  "validation_manifest": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+    "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+    "size": 11122379
+  },
+  "provider_snapshot": {
+    "path": "backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/evaluation-snapshot.json",
+    "sha256": "32c763b1b3a9e269d3b30bebbd677f6027610093b57b09672aa928ae7e20528a",
+    "size": 21467591
+  },
+  "provider_files_verified": 43855,
+  "feature_snapshot": "2026-11-02",
+  "raw_label_snapshot": "2026-11-03",
+  "horizons": {
+    "20": {
+      "horizon": 20,
+      "rank_order": "alternate-after-h40-and-listing",
+      "raw_signature": {
+        "shape": [
+          8577438
+        ],
+        "columns": [
+          "Ref($close, -21)/Ref($close, -1) - 1"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "4318c4516cd5c774e0d3f3b7db8fbbfc303ee3428a36fee9bef91bcff0bd7bec",
+        "values_sha256": "9f9f183ce7aabf488d488f00f713662efbf93d9b178c1f5d1b4f0065d39ccb60"
+      },
+      "blocks": [
+        {
+          "year": 2004,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2004.pkl",
+          "sha256": "84d57d79772977f89ae7a958cefbfc09626b6c506cb716fefef16860a73a68b5",
+          "size": 4174505,
+          "signature": {
+            "shape": [
+              259799
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+            "values_sha256": "45f0eba1920fc34080011542eb91fcf9cad665dcc834149bc8f518322c647e7f"
+          },
+          "training_rows": 164511,
+          "missing_before_target_drop": 2449
+        },
+        {
+          "year": 2005,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2005.pkl",
+          "sha256": "83e4bc56c7d8f8bcdcb1166755cbe09cd9ee0d52d40654fd1c0308c862ec89ea",
+          "size": 4112202,
+          "signature": {
+            "shape": [
+              255898
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+            "values_sha256": "1434fc1b2a1766d97698a205973984d29aacfe397a6f83d1ab837d65e7f63328"
+          },
+          "training_rows": 181374,
+          "missing_before_target_drop": 5766
+        },
+        {
+          "year": 2006,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2006.pkl",
+          "sha256": "72fd89b7f9a0251547525c3820536f92451a40bd8cf3a775643130b99f4a67b9",
+          "size": 3663732,
+          "signature": {
+            "shape": [
+              227810
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+            "values_sha256": "938720466ac26dfb9f39415b30a83d5aeb967ba395fc75e12d3876ce0f5c8b64"
+          },
+          "training_rows": 189847,
+          "missing_before_target_drop": 9669
+        },
+        {
+          "year": 2007,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2007.pkl",
+          "sha256": "167c814217d1fb57d9f9179e8ca27ef4eedea1856595ad132ff4d4a91db9bfc3",
+          "size": 4340102,
+          "signature": {
+            "shape": [
+              270001
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+            "values_sha256": "1220709de632fb531439f06df84ee1d0cb284debe13a909d80658c1c281bd229"
+          },
+          "training_rows": 244539,
+          "missing_before_target_drop": 6626
+        },
+        {
+          "year": 2008,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2008.pkl",
+          "sha256": "beb69cda8c28d601e2b0b5ed9a82d4795db8900d30653d31f42c5c68bb766dfd",
+          "size": 4981480,
+          "signature": {
+            "shape": [
+              310049
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+            "values_sha256": "90d4b12899905eb2fbe91bd95727e682ada77c58ae7464483a91de64c6700455"
+          },
+          "training_rows": 293576,
+          "missing_before_target_drop": 6208
+        },
+        {
+          "year": 2009,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2009.pkl",
+          "sha256": "d19f0ce5b53dc6f47502d28f6dae1c6d94f37d05111b682e344eb43d17ad9f4b",
+          "size": 5253230,
+          "signature": {
+            "shape": [
+              326911
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+            "values_sha256": "13b94d2e0474721f838b1145b329de3dbd602419e1a38ffa5c0452eeedda09cf"
+          },
+          "training_rows": 276265,
+          "missing_before_target_drop": 7458
+        },
+        {
+          "year": 2010,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2010.pkl",
+          "sha256": "9f2668e3e8c5aac501ddb8b6ef1b358bd36a24b00298e064f0c086a0e20a7cb9",
+          "size": 5861625,
+          "signature": {
+            "shape": [
+              364716
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+            "values_sha256": "197d0180d31b9f21e3d51dc24e2b0cfb775a84e0a979a32ecb6418de04148f29"
+          },
+          "training_rows": 227646,
+          "missing_before_target_drop": 6831
+        },
+        {
+          "year": 2011,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2011.pkl",
+          "sha256": "3184ec7c98b14af49459ba0259ac1f765becd5994656844cbcfb8d929340486c",
+          "size": 7059617,
+          "signature": {
+            "shape": [
+              439435
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+            "values_sha256": "0c3286634be62f14251e489151a36ced90b24fc470d78180a1208f6ec553e9f3"
+          },
+          "training_rows": 259801,
+          "missing_before_target_drop": 7906
+        },
+        {
+          "year": 2012,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2012.pkl",
+          "sha256": "2aa2be22ad668e7ba20cc6ccfdab6bf5c8c5313d6b196af87071edfbb9ab1540",
+          "size": 8013062,
+          "signature": {
+            "shape": [
+              498961
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+            "values_sha256": "8e8eab8278ddfd05e32f120ab878bd49094fae079bd18a8df980657e7795df2c"
+          },
+          "training_rows": 345673,
+          "missing_before_target_drop": 6125
+        },
+        {
+          "year": 2013,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2013.pkl",
+          "sha256": "8ba39a01c325fedb85daf9d88510ffd4d9bdf9e9832490aea4de926ee081a5f7",
+          "size": 8064986,
+          "signature": {
+            "shape": [
+              502177
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+            "values_sha256": "0e445f3d2e5a64400fb0e2edac8672fce1a50a50bf22afbeb26d5b0c05840bc0"
+          },
+          "training_rows": 294408,
+          "missing_before_target_drop": 5080
+        },
+        {
+          "year": 2014,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2014.pkl",
+          "sha256": "02d9ea34afd5665c8c361dcbb2d88b7f0d48e6a0393f3e3913f0f13ae75cb597",
+          "size": 7848754,
+          "signature": {
+            "shape": [
+              488561
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+            "values_sha256": "96b460c09acd6dfb586d94d81dc579c362bb268cf8ac6c87eff642d28e4c9785"
+          },
+          "training_rows": 336621,
+          "missing_before_target_drop": 8479
+        },
+        {
+          "year": 2015,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2015.pkl",
+          "sha256": "789540eab43a4402831a0f6efa30a3d82e9e944466b82c57fa62af38a79ddb7a",
+          "size": 7578544,
+          "signature": {
+            "shape": [
+              471555
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+            "values_sha256": "1ab90c49f4b59e8743d73b78cdd860a8f9ae2a6659144eaa81d46e66d6f44d42"
+          },
+          "training_rows": 398016,
+          "missing_before_target_drop": 14853
+        },
+        {
+          "year": 2016,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2016.pkl",
+          "sha256": "5cf49ee1473f8d134b2f432bbcda4faad64ae97ebdfe907fb836da28f380ae65",
+          "size": 8964343,
+          "signature": {
+            "shape": [
+              557939
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+            "values_sha256": "be4d5365d2c16dc65207806f419334d870cdcb9167545dda42a90d011b662215"
+          },
+          "training_rows": 418589,
+          "missing_before_target_drop": 8199
+        },
+        {
+          "year": 2017,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2017.pkl",
+          "sha256": "7bab6217657d3a619a34f759432a158f125e7b007e60bf5f341d17b377f1fd13",
+          "size": 10439959,
+          "signature": {
+            "shape": [
+              649933
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+            "values_sha256": "43672c00e9b23368bc19baa6a1262ee713b0ddc20f105f27fea5a25b866d4d54"
+          },
+          "training_rows": 369358,
+          "missing_before_target_drop": 5478
+        },
+        {
+          "year": 2018,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2018.pkl",
+          "sha256": "372b54d2f6dfd3c0545fcbb89680dd13c03df58fb674b3f7321b34a518c18bfa",
+          "size": 12107595,
+          "signature": {
+            "shape": [
+              754092
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+            "values_sha256": "b422abc7b33356cefc5fa9e25d372777b9c538655d11f6397c52a98be069c42b"
+          },
+          "training_rows": 478957,
+          "missing_before_target_drop": 3630
+        },
+        {
+          "year": 2019,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2019.pkl",
+          "sha256": "022aba9027979353ae4f4e4dbfffd4bfdf4ae40734381ca06dc2d4f573877484",
+          "size": 13227076,
+          "signature": {
+            "shape": [
+              823909
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+            "values_sha256": "e04899b6f70f033f2e7a248494d986d4932bbb7e249939c4e50edf14c10b51a1"
+          },
+          "training_rows": 599875,
+          "missing_before_target_drop": 1918
+        },
+        {
+          "year": 2020,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2020.pkl",
+          "sha256": "9f52dbc17bb5247a4a93f1cac90ea6c6c25e7ca2ae851f994b919e2534fe66c9",
+          "size": 7971691,
+          "signature": {
+            "shape": [
+              495447
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+            "values_sha256": "93e3c97575cc16695cf60691f826a9c9716ce7fd5102c222ba4835df6aa76562"
+          },
+          "training_rows": 369907,
+          "missing_before_target_drop": 1041
+        }
+      ],
+      "training_rows": 5448963
+    },
+    "5": {
+      "horizon": 5,
+      "rank_order": "alternate-after-h40-and-listing",
+      "raw_signature": {
+        "shape": [
+          8577438
+        ],
+        "columns": [
+          "Ref($close, -6)/Ref($close, -1) - 1"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "4318c4516cd5c774e0d3f3b7db8fbbfc303ee3428a36fee9bef91bcff0bd7bec",
+        "values_sha256": "9e3cf6ea615f00c02e3c96b88b286c6c69394340f2746a56af38ef44a0e73f26"
+      },
+      "blocks": [
+        {
+          "year": 2004,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2004.pkl",
+          "sha256": "e0f57adc1acc916774a510a17bab9344563dc65de5b461733833d7477f67d150",
+          "size": 4174505,
+          "signature": {
+            "shape": [
+              259799
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+            "values_sha256": "a54426a855b6f20e22021bfafcdba9464d7dc97ce93a7735b5ac0c30798c0e29"
+          },
+          "training_rows": 164482,
+          "missing_before_target_drop": 2388
+        },
+        {
+          "year": 2005,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2005.pkl",
+          "sha256": "a8f8a69e77f0ead00ea5a6da1f66c70fc1427eba077da979b1bd70da3021dfa4",
+          "size": 4112202,
+          "signature": {
+            "shape": [
+              255898
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+            "values_sha256": "7616f270b5baa8575d6dc1b494289cd9b291311d1172fa6cc03c0bbd714e1b3e"
+          },
+          "training_rows": 181777,
+          "missing_before_target_drop": 5147
+        },
+        {
+          "year": 2006,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2006.pkl",
+          "sha256": "80b5dafd08f85d2aff305d4d029a758d46a6ff2ac7904d70c62b50b8ed6286c6",
+          "size": 3663732,
+          "signature": {
+            "shape": [
+              227810
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+            "values_sha256": "471de489018546c039c3487267a39400eccbd9d0017adf682bdea30e277b1bda"
+          },
+          "training_rows": 190892,
+          "missing_before_target_drop": 8556
+        },
+        {
+          "year": 2007,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2007.pkl",
+          "sha256": "97afd672eca65aeda8fbd2be1a4395627a1e432ea927704f3354a32d1f155a02",
+          "size": 4340102,
+          "signature": {
+            "shape": [
+              270001
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+            "values_sha256": "7aed28c5dd2bf941d9016f85cc1185a43a6cce797a718963c9589254595db767"
+          },
+          "training_rows": 245568,
+          "missing_before_target_drop": 5517
+        },
+        {
+          "year": 2008,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2008.pkl",
+          "sha256": "15e2bdf902a0f7df8777ff1d24e8ffc353702968ad988dff55057ad18eecb685",
+          "size": 4981480,
+          "signature": {
+            "shape": [
+              310049
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+            "values_sha256": "3ab43ed54fca243b88318bdf0d1007c6bcbaa8db067f3fba62bee98856f82ad0"
+          },
+          "training_rows": 294448,
+          "missing_before_target_drop": 5300
+        },
+        {
+          "year": 2009,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2009.pkl",
+          "sha256": "5047b8335c9b67ed3b51a6e21ba4f5779185a20babb58c0ef96bbce778f294a1",
+          "size": 5253230,
+          "signature": {
+            "shape": [
+              326911
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+            "values_sha256": "6cc3d2992c5b6fafd796abe877db7fb52fac15eb64bc26f095ef06fa9328c901"
+          },
+          "training_rows": 277844,
+          "missing_before_target_drop": 5685
+        },
+        {
+          "year": 2010,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2010.pkl",
+          "sha256": "de780e53100ebbe4b419a49349edf7a5839fac55ffb9b25621bc43fe07167927",
+          "size": 5861625,
+          "signature": {
+            "shape": [
+              364716
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+            "values_sha256": "c6a166da34b1bfff3312fd4467e7b18248326033d435a5a40f0c8edb648bdb8d"
+          },
+          "training_rows": 228170,
+          "missing_before_target_drop": 6053
+        },
+        {
+          "year": 2011,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2011.pkl",
+          "sha256": "676dcaad68234a8653a56cb1653b4baf7a1a47a8245992b70a47e4bdc095c907",
+          "size": 7059617,
+          "signature": {
+            "shape": [
+              439435
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+            "values_sha256": "3fc83347d88cc1ac61f7fc9ba3f164744028ab6b409f0fddc1ee5cc2bd6a4204"
+          },
+          "training_rows": 260308,
+          "missing_before_target_drop": 7147
+        },
+        {
+          "year": 2012,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2012.pkl",
+          "sha256": "ec44c614de21058c193a39d9359286afcb758761c28e4afea02bd11cb4412b18",
+          "size": 8013062,
+          "signature": {
+            "shape": [
+              498961
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+            "values_sha256": "a1507423e39a6c351902e7c8cbeb523bd41c0f3b439cb2df4771ce5343c27b57"
+          },
+          "training_rows": 346005,
+          "missing_before_target_drop": 5556
+        },
+        {
+          "year": 2013,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2013.pkl",
+          "sha256": "a2e72f44a72496eb8ed0f9443921df21a9e17bcacd3b0a4475f8fbaeb39cbb04",
+          "size": 8064986,
+          "signature": {
+            "shape": [
+              502177
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+            "values_sha256": "56101d3687486aa7a72067df7954dada1c69e30ba1947b63c8cbabe36edbf25a"
+          },
+          "training_rows": 295559,
+          "missing_before_target_drop": 3252
+        },
+        {
+          "year": 2014,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2014.pkl",
+          "sha256": "0a7cabf910aea0d50dda57ff08d6e5aaee64aa77d1bfafde8b10b8b59955d263",
+          "size": 7848754,
+          "signature": {
+            "shape": [
+              488561
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+            "values_sha256": "880cc8d1e6de463c825d7953c25c67c920b267f5634f21e11c07c57edd27ef70"
+          },
+          "training_rows": 339156,
+          "missing_before_target_drop": 4878
+        },
+        {
+          "year": 2015,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2015.pkl",
+          "sha256": "dd8f88ea4844f5953f31e42436d7f9d5b4af348e5921ca2cee12e67dc6e26ec7",
+          "size": 7578544,
+          "signature": {
+            "shape": [
+              471555
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+            "values_sha256": "c3884d172a2e52ad5c76880f004afe2cd94b49f20e44ba90e7706a53e26f338a"
+          },
+          "training_rows": 402699,
+          "missing_before_target_drop": 9171
+        },
+        {
+          "year": 2016,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2016.pkl",
+          "sha256": "ed84641c52e23f3baf4eedbcfa51ed70f1f4c94e17a62cabe9158d07c657fd1c",
+          "size": 8964343,
+          "signature": {
+            "shape": [
+              557939
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+            "values_sha256": "81a8e7eb52bc5efa2cbe3cf6419bbadb3c0f79951d6a2d1bcee3d4c3844bff37"
+          },
+          "training_rows": 421283,
+          "missing_before_target_drop": 5001
+        },
+        {
+          "year": 2017,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2017.pkl",
+          "sha256": "549ac7f17c222b2bb894fb0213429116b05361c716d0777beb5ee9c832f86d91",
+          "size": 10439959,
+          "signature": {
+            "shape": [
+              649933
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+            "values_sha256": "c7139ed5de169a0f29f1d4dff1b12352b5a1b4448045a83df98f0cd019333fc7"
+          },
+          "training_rows": 370468,
+          "missing_before_target_drop": 3633
+        },
+        {
+          "year": 2018,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2018.pkl",
+          "sha256": "f26f8102db57c5905cc7ef6ade58fa257d08de2c646dc1496200633e83c0254e",
+          "size": 12107595,
+          "signature": {
+            "shape": [
+              754092
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+            "values_sha256": "8d2281a28cc621ff1f61786d604a07bc78cac4a428523c3dc763ca16ccc992c6"
+          },
+          "training_rows": 479868,
+          "missing_before_target_drop": 2430
+        },
+        {
+          "year": 2019,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2019.pkl",
+          "sha256": "b7e5b38f332473a4e26432d95ad4d088de634af6155f46611855bac9100ba752",
+          "size": 13227076,
+          "signature": {
+            "shape": [
+              823909
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+            "values_sha256": "66c8d78d712b0e1bfb90dc077b44a6f3dec2e16eee441ddb43548b2f103a7bc1"
+          },
+          "training_rows": 600360,
+          "missing_before_target_drop": 1294
+        },
+        {
+          "year": 2020,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2020.pkl",
+          "sha256": "abd7a05d9307eb6e523c974695d233646eee0b85b99ae50a02e3c80fb6a8d9e8",
+          "size": 7971691,
+          "signature": {
+            "shape": [
+              495447
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+            "values_sha256": "42fe94ad6ef927f6cb845a20cda39edae22130d03a67ce1b6b707c04c7906e62"
+          },
+          "training_rows": 370138,
+          "missing_before_target_drop": 707
+        }
+      ],
+      "training_rows": 5469025
+    },
+    "7": {
+      "horizon": 7,
+      "rank_order": "alternate-after-h40-and-listing",
+      "raw_signature": {
+        "shape": [
+          8577438
+        ],
+        "columns": [
+          "Ref($close, -8)/Ref($close, -1) - 1"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "4318c4516cd5c774e0d3f3b7db8fbbfc303ee3428a36fee9bef91bcff0bd7bec",
+        "values_sha256": "04bb316f109fed9429474c1fe6cb1d4cfe60c07ea3922587a18f24e1b94d13d9"
+      },
+      "blocks": [
+        {
+          "year": 2004,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2004.pkl",
+          "sha256": "49083e40eafb90cfbd492211ccd772d5a598cff227e73129f245ef4dd4bd398f",
+          "size": 4174505,
+          "signature": {
+            "shape": [
+              259799
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+            "values_sha256": "2ec320c91e9804a241743fd988dc0634923c919d61b39ac5ac86e6a4aaca1c82"
+          },
+          "training_rows": 164536,
+          "missing_before_target_drop": 2405
+        },
+        {
+          "year": 2005,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2005.pkl",
+          "sha256": "c685aa37f03d95665e9788bd35554b86c89b67bfd82cec829396de0d3e37213c",
+          "size": 4112202,
+          "signature": {
+            "shape": [
+              255898
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+            "values_sha256": "be2828ef023bb500b0fa3684c65a1aa3211e7f1ef32b7373e89874f69b3394b0"
+          },
+          "training_rows": 181285,
+          "missing_before_target_drop": 6039
+        },
+        {
+          "year": 2006,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2006.pkl",
+          "sha256": "05bbe26c2b65b4a8361144986d566e0f3dc60dff7db53f7a53d36e766f6078cc",
+          "size": 3663732,
+          "signature": {
+            "shape": [
+              227810
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+            "values_sha256": "c8d913d81a4ea3d1141b868889bf61c8a68512eecf5dba1348fcc3f59f3a3381"
+          },
+          "training_rows": 189447,
+          "missing_before_target_drop": 10070
+        },
+        {
+          "year": 2007,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2007.pkl",
+          "sha256": "5ed1fac04a3d947fd772a9a300350adaf3bcce5c62f9c325286a373c04349d8a",
+          "size": 4340102,
+          "signature": {
+            "shape": [
+              270001
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+            "values_sha256": "fd3b1994973cab2be21b1d56b954b1eb7b545a20e1f133e62a8ec36774fd23af"
+          },
+          "training_rows": 245188,
+          "missing_before_target_drop": 5877
+        },
+        {
+          "year": 2008,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2008.pkl",
+          "sha256": "7eb6b98f9b4f4d800918c145812421311acb691ebd16178b0bdfd1cefbaad416",
+          "size": 4981480,
+          "signature": {
+            "shape": [
+              310049
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+            "values_sha256": "1a6860d7a2ebdbee06a3107cfda26736ab46ca26c55a7456b49ce8e39b575cd6"
+          },
+          "training_rows": 294245,
+          "missing_before_target_drop": 5524
+        },
+        {
+          "year": 2009,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2009.pkl",
+          "sha256": "6c8c10e64c5f785376bb3cfe85220551d05aadeafcd577c46e12e61fbfa89143",
+          "size": 5253230,
+          "signature": {
+            "shape": [
+              326911
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+            "values_sha256": "94b26725af320edfc96258c1437da07659feb9e9613183d8fdcd41fe1b436ad5"
+          },
+          "training_rows": 277637,
+          "missing_before_target_drop": 6046
+        },
+        {
+          "year": 2010,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2010.pkl",
+          "sha256": "e51b01eacf22e4ce0beee001867caa1ff2ecf86b7c271f286ad12ad40e553e16",
+          "size": 5861625,
+          "signature": {
+            "shape": [
+              364716
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+            "values_sha256": "4744fbc911741a0482618b05c86a517a6602132676c86adb312938ad60c104f6"
+          },
+          "training_rows": 227937,
+          "missing_before_target_drop": 6258
+        },
+        {
+          "year": 2011,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2011.pkl",
+          "sha256": "974544b1ef97db1694dbd8401bc90a70ebfcf439c7c0195cbd1d12f6083bda7d",
+          "size": 7059617,
+          "signature": {
+            "shape": [
+              439435
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+            "values_sha256": "af0ac9fa8b0f92aeaf3d1f90da4d3ed45833473edf86e6807c5bca74b71c0bc9"
+          },
+          "training_rows": 260237,
+          "missing_before_target_drop": 7395
+        },
+        {
+          "year": 2012,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2012.pkl",
+          "sha256": "658fa2f4802208b043ab769bef83c5a8af66888c04770767cb7895ece2673cec",
+          "size": 8013062,
+          "signature": {
+            "shape": [
+              498961
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+            "values_sha256": "edbd38fa062ea3dbbd5a25310fa85468d70963a0d1e459049e01709e93f4bd3c"
+          },
+          "training_rows": 345993,
+          "missing_before_target_drop": 5788
+        },
+        {
+          "year": 2013,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2013.pkl",
+          "sha256": "67aad1a9a9ae8d5e7bf3fe17e636ca437bdb076b5014a6bc6b65cd6121856c18",
+          "size": 8064986,
+          "signature": {
+            "shape": [
+              502177
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+            "values_sha256": "bddba8ab54657258929c5a21f63239289f2cbc870c6a50482f71a7b8123d2dc4"
+          },
+          "training_rows": 295216,
+          "missing_before_target_drop": 3771
+        },
+        {
+          "year": 2014,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2014.pkl",
+          "sha256": "8a4fc5322a68db42de8713a41391ba4b140e60255d4625cdebab05d282042a1a",
+          "size": 7848754,
+          "signature": {
+            "shape": [
+              488561
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+            "values_sha256": "6af2d3415922409d3ff1841cc43481205c1573e444b1e28459b94b4e254dab57"
+          },
+          "training_rows": 338391,
+          "missing_before_target_drop": 5861
+        },
+        {
+          "year": 2015,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2015.pkl",
+          "sha256": "e9727e95e4d4ad7b84fe538055f2bfc4286441013847568418ca1c12d6a9fae6",
+          "size": 7578544,
+          "signature": {
+            "shape": [
+              471555
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+            "values_sha256": "ce1f7235ee6057b025ab16c2b5c5b6faed0ada1d52f0ffe2379ce030c2cf7e7b"
+          },
+          "training_rows": 401535,
+          "missing_before_target_drop": 11002
+        },
+        {
+          "year": 2016,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2016.pkl",
+          "sha256": "d03c0b1da70babf94f0109fa9ed0f6bcef804c9bac9ea6b4d38be68e62e7f6f6",
+          "size": 8964343,
+          "signature": {
+            "shape": [
+              557939
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+            "values_sha256": "018ad29bb320ef056b50c18ccf1c62c89ebe1e8c4ea22c68156d5fea1d1fb30e"
+          },
+          "training_rows": 420450,
+          "missing_before_target_drop": 6044
+        },
+        {
+          "year": 2017,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2017.pkl",
+          "sha256": "ab01a6bc0affc77d0b9bd7671daa9a8c8d2514e7acbfc3c271ff803447d398fd",
+          "size": 10439959,
+          "signature": {
+            "shape": [
+              649933
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+            "values_sha256": "d0eeaef453f1a6b3a3c7849bb875a6ded1d0a3947790e61a9075f14efd66c133"
+          },
+          "training_rows": 370067,
+          "missing_before_target_drop": 4306
+        },
+        {
+          "year": 2018,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2018.pkl",
+          "sha256": "806802dc162f99781d79484cc793e9131239811514f29393bc88dd5ca18046a6",
+          "size": 12107595,
+          "signature": {
+            "shape": [
+              754092
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+            "values_sha256": "7947ce69a2f5fb5402951f9ea33d164602439831fba7d8022381371e58ab96bb"
+          },
+          "training_rows": 479565,
+          "missing_before_target_drop": 2889
+        },
+        {
+          "year": 2019,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2019.pkl",
+          "sha256": "6eb9aa4bf7ffa01c870742b70bc81d722fba397a89dd1d576bfee330dfd3fb74",
+          "size": 13227076,
+          "signature": {
+            "shape": [
+              823909
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+            "values_sha256": "6b000de230d895ed798ea886824a41d2dbbb496bb0f37660a528dc815cb0751e"
+          },
+          "training_rows": 600087,
+          "missing_before_target_drop": 1590
+        },
+        {
+          "year": 2020,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2020.pkl",
+          "sha256": "3e3786057c21a59c9ebcf4d2ad6cd68a184d54bd82f71df2d6d6328ad34a420a",
+          "size": 7971691,
+          "signature": {
+            "shape": [
+              495447
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+            "values_sha256": "72947b0fb4f87f73bc5610bdf0e6e8fc9f9da2089dc19805a7ae8438a4574a77"
+          },
+          "training_rows": 370034,
+          "missing_before_target_drop": 837
+        }
+      ],
+      "training_rows": 5461850
+    },
+    "10": {
+      "horizon": 10,
+      "rank_order": "alternate-after-h40-and-listing",
+      "raw_signature": {
+        "shape": [
+          8577438
+        ],
+        "columns": [
+          "Ref($close, -11)/Ref($close, -1) - 1"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "4318c4516cd5c774e0d3f3b7db8fbbfc303ee3428a36fee9bef91bcff0bd7bec",
+        "values_sha256": "0689c2dccf53d17cbbbcf7281f2b7642ca8cc9b6617774c3ad98515f7e767c1e"
+      },
+      "blocks": [
+        {
+          "year": 2004,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2004.pkl",
+          "sha256": "e60031a9ef87aecf77edffeca83f3a49b1dc1a67151d25b11884cb5ac52cbd22",
+          "size": 4174505,
+          "signature": {
+            "shape": [
+              259799
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+            "values_sha256": "0cd37c534eef204c9d29b9bb90a5868c81f993172c1d2f1f2e5e0db7d6371acf"
+          },
+          "training_rows": 164533,
+          "missing_before_target_drop": 2420
+        },
+        {
+          "year": 2005,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2005.pkl",
+          "sha256": "2adb818b96b1ead46afb88c3428c16bee42e566081df79d7dc8da3b3614159a6",
+          "size": 4112202,
+          "signature": {
+            "shape": [
+              255898
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+            "values_sha256": "a88aa554f534c2fc41bd89b9b7aac4f486e7cbc86240280f4c997887d8f71d0b"
+          },
+          "training_rows": 180960,
+          "missing_before_target_drop": 6525
+        },
+        {
+          "year": 2006,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2006.pkl",
+          "sha256": "c6ebd6b8a7e233adf4bb78d559ee4f0b52eaa7cf2bcff563dd98ae9a5bc9cfe2",
+          "size": 3663732,
+          "signature": {
+            "shape": [
+              227810
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+            "values_sha256": "1985bb18ac3e3d9887c037c3d8ed7d67e5e178919cd360d44415f9bff722bd96"
+          },
+          "training_rows": 188633,
+          "missing_before_target_drop": 10940
+        },
+        {
+          "year": 2007,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2007.pkl",
+          "sha256": "eb39e5a10e522057e8fcf15bed4f8977dd8811e2c7e0fc537993229baf8a538a",
+          "size": 4340102,
+          "signature": {
+            "shape": [
+              270001
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+            "values_sha256": "f85c5ad3f59a41a606e91d961bdb4193d1a2b3989471b0715aba1b35e3095541"
+          },
+          "training_rows": 244857,
+          "missing_before_target_drop": 6240
+        },
+        {
+          "year": 2008,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2008.pkl",
+          "sha256": "b4bc0ef16cc03b4d97f20bce87160b035e8c742bbc152831820d08c6838781ec",
+          "size": 4981480,
+          "signature": {
+            "shape": [
+              310049
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+            "values_sha256": "ba94590f9ea40a5f1e6c962bf65a9171e6fe835484185c348005961506cda45f"
+          },
+          "training_rows": 293972,
+          "missing_before_target_drop": 5783
+        },
+        {
+          "year": 2009,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2009.pkl",
+          "sha256": "7245015d817298db6ebd23841dd9537e8402db9a422718f39cf46444a81d3e7d",
+          "size": 5253230,
+          "signature": {
+            "shape": [
+              326911
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+            "values_sha256": "47e202599b2fad80a43bec5c73f59786b15fc0f8a18f0c8f352d2b1f0c89543f"
+          },
+          "training_rows": 277209,
+          "missing_before_target_drop": 6451
+        },
+        {
+          "year": 2010,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2010.pkl",
+          "sha256": "a54d6896bd1e755e6d9c0e17123df05d28700fd4da6987c2591fb4ffc848ad54",
+          "size": 5861625,
+          "signature": {
+            "shape": [
+              364716
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+            "values_sha256": "a2637335481e5dfcc985ce22cc7da45a798b5394c02582e34ff7df6ed44e775a"
+          },
+          "training_rows": 227877,
+          "missing_before_target_drop": 6471
+        },
+        {
+          "year": 2011,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2011.pkl",
+          "sha256": "c881b2cd4fce9a00246ab87b50448b04a8cc2ad81de7da62bcfcaf2ee6921771",
+          "size": 7059617,
+          "signature": {
+            "shape": [
+              439435
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+            "values_sha256": "5d76971fa960428b633bb1270fa7c14521a674574d712f6d5de844be8dfe5f8b"
+          },
+          "training_rows": 259881,
+          "missing_before_target_drop": 7671
+        },
+        {
+          "year": 2012,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2012.pkl",
+          "sha256": "00cf58f20f82fcb70fe9addc5573d3ed4f90178ecf40b22b857980f025f350a6",
+          "size": 8013062,
+          "signature": {
+            "shape": [
+              498961
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+            "values_sha256": "e161103211ca47cdd7e0cf328535812207aac3447cd17e9df829a158e714a7e9"
+          },
+          "training_rows": 345799,
+          "missing_before_target_drop": 5952
+        },
+        {
+          "year": 2013,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2013.pkl",
+          "sha256": "4e683d9ab1aefbc4394c3e79006c251f9d9ba83828bc5c9ca8e7e99a19556538",
+          "size": 8064986,
+          "signature": {
+            "shape": [
+              502177
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+            "values_sha256": "e31c3dc38e41134be69cf1b8a27c881777d6a09730223601320844c2e38d324b"
+          },
+          "training_rows": 294897,
+          "missing_before_target_drop": 4334
+        },
+        {
+          "year": 2014,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2014.pkl",
+          "sha256": "45006943607dd3d4c97f6123174e21264a37855459aba7c2b12719c0a43c0de2",
+          "size": 7848754,
+          "signature": {
+            "shape": [
+              488561
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+            "values_sha256": "0dc761a5c1b6f19f24b92cffdd257b9060a4f082d5e867df8369991891738138"
+          },
+          "training_rows": 337606,
+          "missing_before_target_drop": 6952
+        },
+        {
+          "year": 2015,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2015.pkl",
+          "sha256": "2a54c89779a5da711e81091d64c284867483eeac3624e6df9658bdb21ad106b7",
+          "size": 7578544,
+          "signature": {
+            "shape": [
+              471555
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+            "values_sha256": "09585be662fe86357d2dfe4b7fb56436fc9d56107221615da894e9bb3f7eb01c"
+          },
+          "training_rows": 400671,
+          "missing_before_target_drop": 12828
+        },
+        {
+          "year": 2016,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2016.pkl",
+          "sha256": "1d51985ada21d7645b6a61c384d2b63f52b9df5c9e71ad33e1a977e4aad0945a",
+          "size": 8964343,
+          "signature": {
+            "shape": [
+              557939
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+            "values_sha256": "2d14a9b643f33ad0c5b40042b3036ae1413989034c949723b16d115d004e8ff0"
+          },
+          "training_rows": 419539,
+          "missing_before_target_drop": 7112
+        },
+        {
+          "year": 2017,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2017.pkl",
+          "sha256": "0f9df2baf6caa0ed8731cc668d8aa89a2151ab7fb2114f79815c36475d98bda1",
+          "size": 10439959,
+          "signature": {
+            "shape": [
+              649933
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+            "values_sha256": "14a9f2600a079ab9424c4df5c629fd746338ffda299dd97aed46d054afd06bf2"
+          },
+          "training_rows": 369654,
+          "missing_before_target_drop": 4995
+        },
+        {
+          "year": 2018,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2018.pkl",
+          "sha256": "da26095d0e8c8013f8cf01e9bb2016d434aa54d56bd8dbf066719ff646f10d55",
+          "size": 12107595,
+          "signature": {
+            "shape": [
+              754092
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+            "values_sha256": "714e9404547fad54ee5084c6b3511739fd207dd6057f47f9b215e64cd28ff285"
+          },
+          "training_rows": 479183,
+          "missing_before_target_drop": 3430
+        },
+        {
+          "year": 2019,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2019.pkl",
+          "sha256": "4e29c5554cbdf9cd3e33bf12889db8837886bc493704a493fc250dc7644bb3b8",
+          "size": 13227076,
+          "signature": {
+            "shape": [
+              823909
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+            "values_sha256": "3ff6cb5ceb7afcd542231fc159eff5e497bf5d8daa0d50b83254608a19256706"
+          },
+          "training_rows": 599788,
+          "missing_before_target_drop": 1959
+        },
+        {
+          "year": 2020,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h10/2020.pkl",
+          "sha256": "1189477fa18dd8b78ea11975e2a30a8cc1b651a7eef772339fef69070c586c1c",
+          "size": 7971691,
+          "signature": {
+            "shape": [
+              495447
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+            "values_sha256": "cb2a4f87737d9fc804c11e9f1eea02c65dd5b2ee254d1fbc629df18d2f193e03"
+          },
+          "training_rows": 369963,
+          "missing_before_target_drop": 984
+        }
+      ],
+      "training_rows": 5455022
+    },
+    "15": {
+      "horizon": 15,
+      "rank_order": "alternate-after-h40-and-listing",
+      "raw_signature": {
+        "shape": [
+          8577438
+        ],
+        "columns": [
+          "Ref($close, -16)/Ref($close, -1) - 1"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "4318c4516cd5c774e0d3f3b7db8fbbfc303ee3428a36fee9bef91bcff0bd7bec",
+        "values_sha256": "94cc05ea4df89d0d39faed2ecbc08c798ce73ae17dd59f0eb27a2053a3a121fb"
+      },
+      "blocks": [
+        {
+          "year": 2004,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2004.pkl",
+          "sha256": "7d81bdf1c819ebc96398ba04c9e17c196de21076b53110105aaebd7af91cdcd1",
+          "size": 4174505,
+          "signature": {
+            "shape": [
+              259799
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+            "values_sha256": "b7fad7c5fc36fdd68988e8e0f970ca4ad57a13f872dca3bd253f9f109ff85b58"
+          },
+          "training_rows": 164486,
+          "missing_before_target_drop": 2423
+        },
+        {
+          "year": 2005,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2005.pkl",
+          "sha256": "f7074e5e0b0633bd850d739eb7df7d7c04781beee1acc60cde60617e352b3400",
+          "size": 4112202,
+          "signature": {
+            "shape": [
+              255898
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+            "values_sha256": "1ad49b8ff7305c0af920e8b2a142c72e359b1e6898930b49ee017111942b92da"
+          },
+          "training_rows": 181121,
+          "missing_before_target_drop": 6116
+        },
+        {
+          "year": 2006,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2006.pkl",
+          "sha256": "9f95d6b091fc0e219e3302b3a27813b7a7de3e135922308652db3f6e5a58bbd2",
+          "size": 3663732,
+          "signature": {
+            "shape": [
+              227810
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+            "values_sha256": "98416538cec7e05c0b508f3f8381d83b3abc2496be1f94d5ae73ed89abe44d87"
+          },
+          "training_rows": 189205,
+          "missing_before_target_drop": 10377
+        },
+        {
+          "year": 2007,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2007.pkl",
+          "sha256": "3bbaa642931259716b7a7769ccf91548acf1fd6aa64a780493c54ac3ce5193ac",
+          "size": 4340102,
+          "signature": {
+            "shape": [
+              270001
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+            "values_sha256": "35c5d6e0d069fffc4d9a67b1593ef232ec761d522d77f4f114efbb5495d9ad09"
+          },
+          "training_rows": 244606,
+          "missing_before_target_drop": 6548
+        },
+        {
+          "year": 2008,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2008.pkl",
+          "sha256": "550c8ae87c38f706dee1c95566af59ade86b4b4dd83f704d55c0bc5211069f15",
+          "size": 4981480,
+          "signature": {
+            "shape": [
+              310049
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+            "values_sha256": "3866f746e36657553fd62840a75be63fed404be48b54e3eba8fa0ba129392cbd"
+          },
+          "training_rows": 293681,
+          "missing_before_target_drop": 6063
+        },
+        {
+          "year": 2009,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2009.pkl",
+          "sha256": "271094b4fdab1f5893e434ec9969c4e93752c4e50a4c317d989ed7437757b403",
+          "size": 5253230,
+          "signature": {
+            "shape": [
+              326911
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+            "values_sha256": "f029d2cabef97ba26b9c50d13b9f1ee7195a6ef9f353a24ac7663053847ab405"
+          },
+          "training_rows": 276644,
+          "missing_before_target_drop": 7040
+        },
+        {
+          "year": 2010,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2010.pkl",
+          "sha256": "9bcd6d4686a6a3e00ef1831f456ca3fb06f095557c107e8a2c222881dd179812",
+          "size": 5861625,
+          "signature": {
+            "shape": [
+              364716
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+            "values_sha256": "6fadecc4f4010695200fe13f4f6459a08b23536fecfb416f76ce971a359bcddd"
+          },
+          "training_rows": 227730,
+          "missing_before_target_drop": 6720
+        },
+        {
+          "year": 2011,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2011.pkl",
+          "sha256": "c298a752cab171e3511ca7447b4dce02ba99fad617fdf7172eaa7634730b1b00",
+          "size": 7059617,
+          "signature": {
+            "shape": [
+              439435
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+            "values_sha256": "a5c25b6786c4f87766d8e67c6d77f60b1a30e84980b63f3c6292511b7791bce3"
+          },
+          "training_rows": 260053,
+          "missing_before_target_drop": 7755
+        },
+        {
+          "year": 2012,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2012.pkl",
+          "sha256": "0e8862bf3111b2e655cf75accebe529dfc32c653f48c8b7ce8d39ec7d7890fdc",
+          "size": 8013062,
+          "signature": {
+            "shape": [
+              498961
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+            "values_sha256": "54ce39e36d8abe9a7a43002a44f830cbd9d8a57c2b49071a4118056f8cb2a4b6"
+          },
+          "training_rows": 345593,
+          "missing_before_target_drop": 6122
+        },
+        {
+          "year": 2013,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2013.pkl",
+          "sha256": "3a0e2c6dff90f21e78b3a0e892f817ef857dbed29edd190ba0bbc860ea891f76",
+          "size": 8064986,
+          "signature": {
+            "shape": [
+              502177
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+            "values_sha256": "c0a5540b1bf50323d77a0ac75a97ca6eb2fd8d74fcba6b3d96204e32dfde3dc0"
+          },
+          "training_rows": 294575,
+          "missing_before_target_drop": 4887
+        },
+        {
+          "year": 2014,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2014.pkl",
+          "sha256": "f079b13b9236a900a80e17866ac9dc30db26acaa249bad72da3e409991d16e29",
+          "size": 7848754,
+          "signature": {
+            "shape": [
+              488561
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+            "values_sha256": "f63e1b70a536d0fbd381a4e527d656ac9bd26dec0916c60efacf9b268142cfcc"
+          },
+          "training_rows": 336841,
+          "missing_before_target_drop": 8045
+        },
+        {
+          "year": 2015,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2015.pkl",
+          "sha256": "5a716d3b683619aa79205495342414a267eda9421923d24dcab8419ffe4445e5",
+          "size": 7578544,
+          "signature": {
+            "shape": [
+              471555
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+            "values_sha256": "90c2a368bade04196c90857c094703624eb90468b0d8c7143e0915222bdf203e"
+          },
+          "training_rows": 397697,
+          "missing_before_target_drop": 14299
+        },
+        {
+          "year": 2016,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2016.pkl",
+          "sha256": "e00d0fd0232a35cfbe1f3e8fd3d499daa2f49dd65662ea4d99abc7f2e43f39f4",
+          "size": 8964343,
+          "signature": {
+            "shape": [
+              557939
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+            "values_sha256": "7cb8f95ac202fe6fb4de9dbf400de967ebc295585d9c6ca2a4fcf9c50d9e7dfb"
+          },
+          "training_rows": 418789,
+          "missing_before_target_drop": 7913
+        },
+        {
+          "year": 2017,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2017.pkl",
+          "sha256": "3b9fcec60da701cb7fa6ec2a57589f6fc653e54a0943530d1c4fd9c9f5dd5118",
+          "size": 10439959,
+          "signature": {
+            "shape": [
+              649933
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+            "values_sha256": "d9b1764f0ffb05962b148b5d8d8481d1c519b775b3f5edb4184a4bbf34f727bd"
+          },
+          "training_rows": 369491,
+          "missing_before_target_drop": 5313
+        },
+        {
+          "year": 2018,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2018.pkl",
+          "sha256": "4e8ec9ee089cd24d873f8b318a8c9f86b7b79669497d7afcd4bf32c614209b63",
+          "size": 12107595,
+          "signature": {
+            "shape": [
+              754092
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+            "values_sha256": "abee3c688d0d567a94334dc798673a64a25eb33ec734b4faaca7381f3de75edc"
+          },
+          "training_rows": 479039,
+          "missing_before_target_drop": 3633
+        },
+        {
+          "year": 2019,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2019.pkl",
+          "sha256": "4632454fc5dc49a3c22e76a575664c541af07a8beab4e385151a20ead5ddcbe0",
+          "size": 13227076,
+          "signature": {
+            "shape": [
+              823909
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+            "values_sha256": "1ac123405be50f48d3005294b01c5972471e3e145c1545dee1ccb61275edd3cc"
+          },
+          "training_rows": 599857,
+          "missing_before_target_drop": 1951
+        },
+        {
+          "year": 2020,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2020.pkl",
+          "sha256": "276f35c81146231582a813d7f633caced8532ae851cf18f9493016d2684eb85d",
+          "size": 7971691,
+          "signature": {
+            "shape": [
+              495447
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+            "values_sha256": "8ff0efd74ea0104675d1bae2f8470882ae780865c9ae2be1daf132ba329fd6dc"
+          },
+          "training_rows": 369929,
+          "missing_before_target_drop": 1008
+        }
+      ],
+      "training_rows": 5449337
+    },
+    "30": {
+      "horizon": 30,
+      "rank_order": "alternate-after-h40-and-listing",
+      "raw_signature": {
+        "shape": [
+          8577438
+        ],
+        "columns": [
+          "Ref($close, -31)/Ref($close, -1) - 1"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "4318c4516cd5c774e0d3f3b7db8fbbfc303ee3428a36fee9bef91bcff0bd7bec",
+        "values_sha256": "d53cb6d2c00d5fa70e0b9248655781035d781d5b7370f6fd086e59c19fbfb10f"
+      },
+      "blocks": [
+        {
+          "year": 2004,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2004.pkl",
+          "sha256": "3eb1b75700e8e8f56015db12b67231dececc7c28082356d384fec01b610e3b8b",
+          "size": 4174505,
+          "signature": {
+            "shape": [
+              259799
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+            "values_sha256": "e55e9e1d34d9fcab20c7e2823862ae88615fb47f18d890de6e329b996568e474"
+          },
+          "training_rows": 164522,
+          "missing_before_target_drop": 2412
+        },
+        {
+          "year": 2005,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2005.pkl",
+          "sha256": "a89a6ec1b4a6e86087690fd524aec67c5dd5dd517ee20864cb81c0ffb564b1d5",
+          "size": 4112202,
+          "signature": {
+            "shape": [
+              255898
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+            "values_sha256": "869aa053bca648d3af528b3675631255fc375f8dd458b12681c4e8072492ce6f"
+          },
+          "training_rows": 180166,
+          "missing_before_target_drop": 7723
+        },
+        {
+          "year": 2006,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2006.pkl",
+          "sha256": "d8e70427216933fe7efc0e0767a27572d18d4ec2b8d0b2961fd2af903d441f47",
+          "size": 3663732,
+          "signature": {
+            "shape": [
+              227810
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+            "values_sha256": "b857a0f6b38088d3315e8bc4c13f6afeb4d926a4325f1de0aef093345e1ddf51"
+          },
+          "training_rows": 188968,
+          "missing_before_target_drop": 10677
+        },
+        {
+          "year": 2007,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2007.pkl",
+          "sha256": "c26e43196d0fc2d693cb383fb0c9be7bf1515fe5913e8deaf3739cf44b3381c8",
+          "size": 4340102,
+          "signature": {
+            "shape": [
+              270001
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+            "values_sha256": "b8a6665c97c217b4d9a518c70f0cbea2232ad2a2c5c1af1958b1971250d04224"
+          },
+          "training_rows": 244934,
+          "missing_before_target_drop": 6226
+        },
+        {
+          "year": 2008,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2008.pkl",
+          "sha256": "d0fbd9628ea196ddedb1c4f9fb894cc39455ba719b7e6fcdba97b9087a84775f",
+          "size": 4981480,
+          "signature": {
+            "shape": [
+              310049
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+            "values_sha256": "dd885844088983cc85e0cf7346b15e1455fc4c20fdfe7d48b8d4b294d0b46dd1"
+          },
+          "training_rows": 294142,
+          "missing_before_target_drop": 5632
+        },
+        {
+          "year": 2009,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2009.pkl",
+          "sha256": "33d0545586a1746bef9e07d0f46f8f87ffde41fccd2948d26ac4f3ae1e6b7135",
+          "size": 5253230,
+          "signature": {
+            "shape": [
+              326911
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+            "values_sha256": "de50a3df08ccf51c21a982502d57c2fbd3dfe8b1f669cff8db5eb85407b31e0f"
+          },
+          "training_rows": 276961,
+          "missing_before_target_drop": 6516
+        },
+        {
+          "year": 2010,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2010.pkl",
+          "sha256": "382e18f6a213556a5167b46571a4d4a52281854c546a34aa6051a0c9f5829ea1",
+          "size": 5861625,
+          "signature": {
+            "shape": [
+              364716
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+            "values_sha256": "1fb0492924cfcbab199b0a15a097d8f8dca75edaf12c1201325492d8d232d7ee"
+          },
+          "training_rows": 227834,
+          "missing_before_target_drop": 6497
+        },
+        {
+          "year": 2011,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2011.pkl",
+          "sha256": "0a3f2293962ffcedad30a797adb991f268870325f74bffef6d117a5f748376ed",
+          "size": 7059617,
+          "signature": {
+            "shape": [
+              439435
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+            "values_sha256": "9fa1afa6797d4688722b20e96058cd1f1a62c70383a345ce1da6fc7e9a358fda"
+          },
+          "training_rows": 259980,
+          "missing_before_target_drop": 7528
+        },
+        {
+          "year": 2012,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2012.pkl",
+          "sha256": "850c3ec635b48ba85dc3e7d5a17a56fa0ec2ef6c1dbc49f035c8e1df05b23705",
+          "size": 8013062,
+          "signature": {
+            "shape": [
+              498961
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+            "values_sha256": "66e82d6350102c38c94fb3e2ea4b56d05ef7c98064046f4de14a1c350bd925ab"
+          },
+          "training_rows": 345886,
+          "missing_before_target_drop": 5719
+        },
+        {
+          "year": 2013,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2013.pkl",
+          "sha256": "544282053ab232db870b100831b50abd0ecda51acc31d5649a7c41b32cc191cb",
+          "size": 8064986,
+          "signature": {
+            "shape": [
+              502177
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+            "values_sha256": "245d8f2124777e50e487f1d1f095341d700a2c63bd7e3a3a1737d610af710586"
+          },
+          "training_rows": 294809,
+          "missing_before_target_drop": 4481
+        },
+        {
+          "year": 2014,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2014.pkl",
+          "sha256": "3b3cd587e00e8c3933b94e264bf6b84fe2350140b1eb7052bd9a2441153131b0",
+          "size": 7848754,
+          "signature": {
+            "shape": [
+              488561
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+            "values_sha256": "9994c178fea0f0364c1a15190397c77dd74922508441b2b7f43f22b7e18f9d82"
+          },
+          "training_rows": 337562,
+          "missing_before_target_drop": 7177
+        },
+        {
+          "year": 2015,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2015.pkl",
+          "sha256": "a2d1b19b873b8856d495bdd5586382f7eeb355f6b31c351fa82dc2a9d2ce66b2",
+          "size": 7578544,
+          "signature": {
+            "shape": [
+              471555
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+            "values_sha256": "be505b92b341214975a3a4bb50dc1588775ac3f18e6892756cd53820e729b8f5"
+          },
+          "training_rows": 398696,
+          "missing_before_target_drop": 12752
+        },
+        {
+          "year": 2016,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2016.pkl",
+          "sha256": "d2381336e51c66f9f681ec5ef491f38ffb8b8811579c03e6f2a91ebf2f6182f4",
+          "size": 8964343,
+          "signature": {
+            "shape": [
+              557939
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+            "values_sha256": "b9ec3d5e3ef3016c5cf13dfbe49a1e7c08555665c9733d731a40a87429e38387"
+          },
+          "training_rows": 419654,
+          "missing_before_target_drop": 6928
+        },
+        {
+          "year": 2017,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2017.pkl",
+          "sha256": "b9dfc373a60d77f7f398c1523076788ca149ff476e654b448d5be824e6c909cc",
+          "size": 10439959,
+          "signature": {
+            "shape": [
+              649933
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+            "values_sha256": "fed84f63265d6a6057cab49c7524656a6efa31bccaf3ca7c9df6e0b7386cccb5"
+          },
+          "training_rows": 369415,
+          "missing_before_target_drop": 5343
+        },
+        {
+          "year": 2018,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2018.pkl",
+          "sha256": "38895d9e435b1a283ce5e72fec2a30790992f518bd1a9302618083ec102a5b00",
+          "size": 12107595,
+          "signature": {
+            "shape": [
+              754092
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+            "values_sha256": "27e94c344f15d03f22d3ba4bedfc634f6c30d88c7152fa8d6a95acbc0bb79c75"
+          },
+          "training_rows": 479432,
+          "missing_before_target_drop": 2853
+        },
+        {
+          "year": 2019,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2019.pkl",
+          "sha256": "39da362418f61150e28587c014c77266915ba04a60c7d6fbf2dc74c55574a258",
+          "size": 13227076,
+          "signature": {
+            "shape": [
+              823909
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+            "values_sha256": "f837a95a037247505b590a2037575f387f6a2b69c15fdc140b10d27fc3ca4aa1"
+          },
+          "training_rows": 599895,
+          "missing_before_target_drop": 1866
+        },
+        {
+          "year": 2020,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h30/2020.pkl",
+          "sha256": "b51344d86a2d10d2d46f13fab7ca40752bbbb055ac660d95f44a537769abfc45",
+          "size": 7971691,
+          "signature": {
+            "shape": [
+              495447
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float64"
+            ],
+            "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+            "values_sha256": "03e3e91f1e966eaa82fc0eaab2963356668cb91ce36f56ce99950a238b9b4723"
+          },
+          "training_rows": 369814,
+          "missing_before_target_drop": 1135
+        }
+      ],
+      "training_rows": 5452670
+    },
+    "40": {
+      "horizon": 40,
+      "rank_order": "h40-before-listing",
+      "raw_signature": null,
+      "blocks": [
+        {
+          "year": 2004,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2004.pkl",
+          "sha256": "c3746d90c0072e5f43e81aa2d467176252dc9d8f20df22d05d3bf8ffa9c4cb7e",
+          "size": 3135309,
+          "signature": {
+            "shape": [
+              259799
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+            "values_sha256": "761218e3ef333ba464c8e3dc7fd1d3dfd88e4fa2972468b8dfa18061eea81142"
+          },
+          "training_rows": 166032,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2005,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2005.pkl",
+          "sha256": "e3751de29c6d617c77647bc5b68d8a00ea446f26b8951cb0228ac90ef2668949",
+          "size": 3088610,
+          "signature": {
+            "shape": [
+              255898
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+            "values_sha256": "7f95399b10b7db183d0dfa92b7962efd6dfbe4d1d5626f0c8373f162871010ec"
+          },
+          "training_rows": 185391,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2006,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2006.pkl",
+          "sha256": "9159d1aeb56982e7ad5f79d3b016ccb89d818af2c460135b8e800268a3ce0c9a",
+          "size": 2752492,
+          "signature": {
+            "shape": [
+              227810
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+            "values_sha256": "0de7bf300859c09090e31cef8433cd497318c5f6f045867ea5b29356bfe6e47f"
+          },
+          "training_rows": 198771,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2007,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2007.pkl",
+          "sha256": "2c6b742f3f784b756caaefbd2584599119a1cccfd447162979f880f43d5182a6",
+          "size": 3260098,
+          "signature": {
+            "shape": [
+              270001
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+            "values_sha256": "a74b4f439fd00e74524d2ad1125804620c7639815f104b0e04f0ce97270832db"
+          },
+          "training_rows": 250723,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2008,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2008.pkl",
+          "sha256": "150513270075a40b0dd455a04f1b45eb0adeece6abd702948a33919f4c4d2d53",
+          "size": 3741284,
+          "signature": {
+            "shape": [
+              310049
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+            "values_sha256": "1167805a7c004a4f64c79bbbb2942847000d36506487c587d1e3775d522537a7"
+          },
+          "training_rows": 299621,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2009,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2009.pkl",
+          "sha256": "fb1a9668055283f9b3ce3240615aef8e7686df9d05f1d473bfe22b9c80e81fc7",
+          "size": 3945586,
+          "signature": {
+            "shape": [
+              326911
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+            "values_sha256": "ddf132d18207df0e4a9ab06fafd54ffc621aa83663e9af243d52a6d88807b025"
+          },
+          "training_rows": 282700,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2010,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2010.pkl",
+          "sha256": "b4ad4cbd881beca201a395a9fc4b0dfc53ec01f5fe04d10d38d18a5a8d4e13ac",
+          "size": 4402761,
+          "signature": {
+            "shape": [
+              364716
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+            "values_sha256": "8c5f5880b700ef4060c192b7a8036882cfa9bd58858a887060f0e2ec50fc9972"
+          },
+          "training_rows": 231904,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2011,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2011.pkl",
+          "sha256": "aa65a516034f27da019878212cf0fd200c915ce001ac066d0c3d22a41c2e10ef",
+          "size": 5301877,
+          "signature": {
+            "shape": [
+              439435
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+            "values_sha256": "fe32262021d1089d82b92a3eefd68b12ba077b01fc467956b45febcdadfc0d65"
+          },
+          "training_rows": 264539,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2012,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2012.pkl",
+          "sha256": "442d30f020fc707ad753e687362b62063e1982fb2c0e4ef7b3306323eb9829ea",
+          "size": 6017218,
+          "signature": {
+            "shape": [
+              498961
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+            "values_sha256": "0985c2762bc16dc0fd5da868034975198a26be8be5aabe87584a2c57bf5b4bf5"
+          },
+          "training_rows": 349947,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2013,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2013.pkl",
+          "sha256": "868cb1ed68a87ee79af7a21a968d574455e173ae7670d231744575a7dbf3425a",
+          "size": 6056278,
+          "signature": {
+            "shape": [
+              502177
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+            "values_sha256": "e7422cce8106c4fe6737baac5d5f9e06d9a000e21617159e5404897ee3fd7946"
+          },
+          "training_rows": 297469,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2014,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2014.pkl",
+          "sha256": "28f26a3e85b608bd77a652f66dbc3428bc94299e71019b52c4053ea278f47751",
+          "size": 5894510,
+          "signature": {
+            "shape": [
+              488561
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+            "values_sha256": "1f2cef6594d9961a17a1706e08166879e1f72f59182f72f1819f03f3e10c0fbf"
+          },
+          "training_rows": 342645,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2015,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2015.pkl",
+          "sha256": "7f456c92258241fdd7827a8630863c6c6179f8d7e0d2971e7b3315e46b719466",
+          "size": 5692324,
+          "signature": {
+            "shape": [
+              471555
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+            "values_sha256": "99571f2fcad5f2bb2f53cabf418a4b1f30eddf4b9b217e1a1c37e517710afffd"
+          },
+          "training_rows": 410166,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2016,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2016.pkl",
+          "sha256": "e3111c033ee3d3d91df5f2e6eb0bac4cfbe0185a977ebd7a987244cb6fc006bb",
+          "size": 6732587,
+          "signature": {
+            "shape": [
+              557939
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+            "values_sha256": "1edffe6e8fbcc22cbfae53021d02050b957c1c4843f730656fe9020ea8d8b1a8"
+          },
+          "training_rows": 425058,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2017,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2017.pkl",
+          "sha256": "72561b7976306a544a81e4288d48d05c8ab5818276b91360df731ce4ddea6f19",
+          "size": 7840227,
+          "signature": {
+            "shape": [
+              649933
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+            "values_sha256": "9d15e3349ff1663d87bff585f3b03b7b4a16b424b6ed7348657b93f8dc1e8286"
+          },
+          "training_rows": 372508,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2018,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2018.pkl",
+          "sha256": "dfc9fce06943d9d8d1e17b0f4cf21eac5df2bbac69309102c81e2388d0d35bf0",
+          "size": 9091227,
+          "signature": {
+            "shape": [
+              754092
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+            "values_sha256": "d44507fa3b9c7f56c1dc42b29fecf68290203ce9d756dc1f68bda6777c1f69d9"
+          },
+          "training_rows": 481330,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2019,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2019.pkl",
+          "sha256": "8adb6a289ee12e8c1eaaa9cc9878ee33f1a7c06d2c5f9685ce069302b111a5a1",
+          "size": 9931440,
+          "signature": {
+            "shape": [
+              823909
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+            "values_sha256": "d33e656a0cb0c511cc6773a04832123ad2d62798b9a19f8edb780d8739e23ed3"
+          },
+          "training_rows": 601304,
+          "missing_before_target_drop": 0
+        },
+        {
+          "year": 2020,
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h40/2020.pkl",
+          "sha256": "7b98ccce1d3f2cf8804f6cd06dc9223b69c8858ac77bd71fe8cb61a3e1658d36",
+          "size": 5989903,
+          "signature": {
+            "shape": [
+              495447
+            ],
+            "columns": [
+              "LABEL0"
+            ],
+            "dtypes": [
+              "float32"
+            ],
+            "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+            "values_sha256": "8359fc56888b347edea34f58804ce9a8c5c184641f9e7456ca6be7c7a9bc2d9b"
+          },
+          "training_rows": 370632,
+          "missing_before_target_drop": 0
+        }
+      ],
+      "training_rows": 5530740
+    }
+  },
+  "sample_protocol": "legacy-h40-base-v1 with all raw labels and listing spans from one frozen Nov3 snapshot; no all-H intersection",
+  "new_fits": 0,
+  "complete": true
+}

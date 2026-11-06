@@ -1,0 +1,20 @@
+{
+  "result": "no_changes",
+  "mlruns": "handled",
+  "temporary": "cleaned",
+  "result_audit": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/result-cleanup-applied.json",
+    "sha256": "0963da32f94c90f9c341351bd567059207346d82a8e04951120e92d9bf8dc396",
+    "size": 356
+  },
+  "mlruns_audit": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/mlruns-retention-audit.json",
+    "sha256": "474878f70ddc631f5245e273d7e250cd83a53f8fda382895bb89853a353709cf",
+    "size": 8357
+  },
+  "owned_cleanup": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/owned-temporary-cleanup.json",
+    "sha256": "99578d6403e4b6f4677a72b70c14b1b50aaf1ca349987d4ea5368c8ae0c2fb67",
+    "size": 94327
+  }
+}

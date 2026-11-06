@@ -404,8 +404,8 @@ class DailyTopkStrategy(TopkDropoutStrategy):
 class CohortLadderStrategy(BaseSignalStrategy):
     """真阶梯：每日买入当日 top-k，每只持满 ``horizon`` 天到期无条件卖出。
 
-    这是 Phase M 主格 top-k × h 的执行层等价物——评估年化 ``mean(p) × 238/h`` 恒等于
-    这条阶梯的算术年化。与 ``TopkDropoutStrategy`` 的区别见
+    这对齐 Phase M 主格 top-k × h 的分层选股与到期规则；动态资金、交易约束和收益
+    归属不同，实际账户年化不与标签年化恒等。与 ``TopkDropoutStrategy`` 的区别见
     ``qlib.contrib.strategy.cohort_ladder`` 的模块说明：退出看持有天数而非打分排名，
     且同一只票允许被多个分层同时持有。
     """

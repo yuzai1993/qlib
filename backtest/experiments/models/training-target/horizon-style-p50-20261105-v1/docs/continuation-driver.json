@@ -1,0 +1,41 @@
+{
+  "adapter": {
+    "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/continue_after_h20.py",
+    "sha256": "0fd6d067a20106fe2faee446aace99c322dad9b50e1657b70951c9ea896865f8",
+    "size": 2093
+  },
+  "pipeline": {
+    "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/pipeline.py",
+    "sha256": "cab5622985f2daf53b5fe63dcc56bc61d1c90c56b51ad50a28c58a10a8828b19",
+    "size": 3739
+  },
+  "existing_training_pid": 20077,
+  "started_at": 1793846584.6498659,
+  "stages": [
+    {
+      "phase": "bridge",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/pipeline.py",
+        "bridge"
+      ],
+      "started_at": 1793847746.123136,
+      "returncode": 0,
+      "finished_at": 1793849000.3412852
+    },
+    {
+      "phase": "study",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/pipeline.py",
+        "study"
+      ],
+      "started_at": 1793849000.563594,
+      "returncode": 0,
+      "finished_at": 1793862505.59618
+    }
+  ],
+  "policy": "Wait for the existing H20 process to exit; never duplicate its fits. Run frozen bridge; only if ready run frozen six-H study.",
+  "outcome": "study_complete",
+  "finished_at": 1793862505.601898
+}

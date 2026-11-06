@@ -1,0 +1,111 @@
+{
+  "a": "old-s3000-r1-original",
+  "b": "archived-new",
+  "tree_counts": [
+    49,
+    45
+  ],
+  "fields_changed": {
+    "default_left": 1424,
+    "leaf_value": 3497,
+    "split_gain": 5069,
+    "internal_value": 4911,
+    "leaf_index": 3478,
+    "split_index": 4890,
+    "internal_count": 4635,
+    "internal_weight": 4635,
+    "leaf_count": 3251,
+    "leaf_weight": 3251,
+    "split_feature": 4584,
+    "threshold": 4669,
+    "missing_type": 559,
+    "node_kind": 1495
+  },
+  "first_change_by_field": {
+    "default_left": {
+      "tree": 1,
+      "path": "root/left_child/left_child/left_child/left_child",
+      "a": false,
+      "b": true
+    },
+    "leaf_value": {
+      "tree": 1,
+      "path": "root/left_child/left_child/left_child/left_child/left_child/left_child/left_child/left_child",
+      "a": 0.027007892282564266,
+      "b": 0.0270078922825103
+    },
+    "split_gain": {
+      "tree": 1,
+      "path": "root/left_child/left_child/left_child/left_child/left_child/left_child",
+      "a": 304.2300109863281,
+      "b": 304.22900390625
+    },
+    "internal_value": {
+      "tree": 1,
+      "path": "root/left_child/left_child/left_child/right_child/right_child",
+      "a": -0.0012385,
+      "b": -0.00123849
+    },
+    "leaf_index": {
+      "tree": 5,
+      "path": "root/left_child/left_child/left_child/right_child/left_child/left_child/left_child",
+      "a": 105,
+      "b": 106
+    },
+    "split_index": {
+      "tree": 5,
+      "path": "root/left_child/left_child/left_child/right_child/left_child/left_child/right_child",
+      "a": 155,
+      "b": 153
+    },
+    "internal_count": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child",
+      "a": 271510,
+      "b": 328056
+    },
+    "internal_weight": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child",
+      "a": 286386,
+      "b": 345946
+    },
+    "leaf_count": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child/left_child/left_child/left_child/left_child",
+      "a": 44869,
+      "b": 10629
+    },
+    "leaf_weight": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child/left_child/left_child/left_child/left_child",
+      "a": 44192.981103658676,
+      "b": 10970.829506635666
+    },
+    "split_feature": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child/left_child/left_child/left_child",
+      "a": 141,
+      "b": 121
+    },
+    "threshold": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child/left_child/left_child/left_child",
+      "a": 2.7909818887710576,
+      "b": 0.4758016020059586
+    },
+    "missing_type": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child/left_child/left_child",
+      "a": "NaN",
+      "b": "None"
+    },
+    "node_kind": {
+      "tree": 5,
+      "path": "root/right_child/right_child/right_child/left_child/left_child/left_child/right_child"
+    }
+  },
+  "first_structural_difference_tree": 1,
+  "max_leaf_difference_at_corresponding_nodes": 0.0844172569771183,
+  "note": "Corresponding node fields; default-direction differences are not assumed behaviorally irrelevant. Full valid predictions and selected heads are evaluated separately."
+}

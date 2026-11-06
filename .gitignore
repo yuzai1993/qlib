@@ -64,6 +64,8 @@ logs/
 backtest/result/
 backtest/datasets/regime-adapt-cache/shared-v1/
 backtest/experiments/.registry.jsonl.lock
+backtest/experiments/.harness-campaigns.lock
+backtest/experiments/**/docs/.harness-state.json.lock
 # Permanent CSV evidence moved with its experiment must remain versioned.
 !backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/bench_ew_all.csv
 !backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k/data/portfolio_daily.csv

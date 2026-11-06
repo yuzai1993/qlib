@@ -1,0 +1,24 @@
+{
+  "source": {
+    "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+    "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+    "size": 1203
+  },
+  "historical_baseline_receipt": {
+    "path": "backtest/experiments/strategies/topk-dropout/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+    "shared": false,
+    "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f"
+  },
+  "matches_historical_baseline": true,
+  "month_count": 72,
+  "F_months": [
+    "2024-02-29",
+    "2024-03-31",
+    "2024-04-30",
+    "2024-09-30",
+    "2024-10-31",
+    "2024-11-30",
+    "2024-12-31"
+  ],
+  "purpose": "Same fixed monthly style classification for every H and both model/account evaluation; no relabeling based on results."
+}

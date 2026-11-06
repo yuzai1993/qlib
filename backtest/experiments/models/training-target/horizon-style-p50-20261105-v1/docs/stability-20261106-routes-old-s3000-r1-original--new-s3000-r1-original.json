@@ -1,0 +1,80 @@
+{
+  "a": "old-s3000-r1-original",
+  "b": "new-s3000-r1-original",
+  "panel": "identical exit-bounded validation features",
+  "rows": 6483051,
+  "common_selected_trees": 45,
+  "different_leaf_index_rows": 6483051,
+  "first_four_trees_different_leaf_index_rows": 0,
+  "different_leaf_index_count_per_tree": [
+    0,
+    0,
+    0,
+    0,
+    4308592,
+    3662704,
+    4402336,
+    6434036,
+    6445784,
+    6430781,
+    6390435,
+    6392034,
+    6420558,
+    6391013,
+    6426707,
+    6405804,
+    6343246,
+    6428909,
+    6462220,
+    6412302,
+    6446519,
+    6467697,
+    6468461,
+    6463098,
+    6458748,
+    6405420,
+    6442275,
+    6438315,
+    6415575,
+    6434148,
+    6313194,
+    6386918,
+    6441177,
+    6392229,
+    6343278,
+    6467004,
+    6457532,
+    6458002,
+    6381993,
+    6466970,
+    6391489,
+    6440206,
+    6426608,
+    6396339,
+    6433438
+  ],
+  "leaf_index_stream_sha256": [
+    "cbba4cdebd383499fbb36e44228adb049ea4cdb27e11c0954df9ab072e2fb3d6",
+    "f9b5cd70c3db4e7469ea058b158f1e930b1f08d1805e3a9f5571d42a7d3f261a"
+  ],
+  "limitation": "Different leaf numbers may also reflect equivalent re-numbered topology; equal leaf indices are interpreted alongside tree split comparison, not alone.",
+  "selected_prediction": {
+    "exact": false,
+    "n": 6483051,
+    "changed": 6483051,
+    "max_abs": 0.3978707263766482,
+    "mean_abs": 0.03461378827747159
+  },
+  "selected_heads": {
+    "3": {
+      "days": 1448,
+      "different_days": 1379,
+      "mean_overlap": 0.41942909760589314
+    },
+    "5": {
+      "days": 1448,
+      "different_days": 1439,
+      "mean_overlap": 0.4589779005524862
+    }
+  }
+}

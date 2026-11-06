@@ -52,6 +52,10 @@ HUBS = {
     "all_a_strategy": "backtest/experiments/reports/phase_m_v1_bt_report.html",
 }
 OUTCOMES = {"succeeded", "failed", "interrupted", "invalid", "cancelled"}
+COMPOSITE_SOURCE = "multihorizon_seed_groups_v1"
+BLEND_CONSTRUCTION = (
+    "per_seed_daily_zscore_horizon_weighted_then_daily_zscore_equal_seed"
+)
 STOP_REASONS = {
     "budget_exhausted",
     "hypotheses_exhausted",
@@ -207,7 +211,7 @@ def _archive(root, archive_path, exp_id, track):
 def _normalize_plan(root, raw):
     plan = copy.deepcopy(raw)
     _require(
-        type(plan.get("schema_version")) is int and plan["schema_version"] == 1,
+        type(plan.get("schema_version")) is int and plan["schema_version"] in {1, 2},
         "unsupported plan schema_version",
     )
     for key in ("campaign_id", "direction", "anchor_exp_id", "baseline_ref"):
@@ -242,6 +246,28 @@ def _normalize_plan(root, raw):
         _require(valid, f"invalid budget {key}")
     _require(budget["concurrency"] == 1, "first version supports concurrency=1")
     plan["budget"] = budget
+    if "execution_budget" in plan:
+        _require(plan["schema_version"] == 2, "execution_budget requires schema 2")
+        execution = plan["execution_budget"]
+        _require(
+            track == "all_a_model"
+            and isinstance(execution, dict)
+            and set(execution) == {"max_model_fits", "new_label_horizons"},
+            "invalid execution_budget fields/track",
+        )
+        _require(
+            type(execution["max_model_fits"]) is int
+            and execution["max_model_fits"] > 0,
+            "invalid execution max_model_fits",
+        )
+        horizons = execution["new_label_horizons"]
+        _require(
+            isinstance(horizons, list)
+            and bool(horizons)
+            and all(type(h) is int and h > 0 for h in horizons)
+            and len(set(horizons)) == len(horizons),
+            "invalid execution new_label_horizons",
+        )
     _archive(root, plan.get("archive_path"), plan["anchor_exp_id"], track)
     return plan
 
@@ -293,7 +319,14 @@ def _load(root, state_path):
         "state checksum mismatch; do not reset or repair silently",
     )
     state["checksum"] = checksum
-    _require(state.get("schema_version") == 1, "unsupported state schema")
+    _require(
+        type(state.get("schema_version")) is int
+        and state["schema_version"] in {1, 2}
+        and state["schema_version"] == state["plan"]["schema_version"],
+        "unsupported state schema",
+    )
+    if state["schema_version"] == 2:
+        _require(isinstance(state.get("jobs"), dict), "v2 jobs ledger missing")
     _require(
         state.get("repo_root") == str(root), "state belongs to another repository root"
     )
@@ -382,7 +415,7 @@ def initialize(plan_path: Path, *, repo_root: Path = ROOT) -> dict:
             )
             now = _now()
             state = {
-                "schema_version": 1,
+                "schema_version": plan["schema_version"],
                 "repo_root": str(root),
                 "state_path": _ref(root, path),
                 "plan": plan,
@@ -401,6 +434,8 @@ def initialize(plan_path: Path, *, repo_root: Path = ROOT) -> dict:
                 "cleanup": None,
                 "events": [],
             }
+            if plan["schema_version"] == 2:
+                state["jobs"] = {}
             _save(path, state)
     return state
 
@@ -417,6 +452,16 @@ def inspect_state(
 
 
 def _settled(root, state, *, round_number=None):
+    _require(
+        not any(job["outcome"] == "running" for job in state.get("jobs", {}).values()),
+        "running fit is not settled; reconcile and record fit_result",
+    )
+    for job in state.get("jobs", {}).values():
+        for frozen in job["evidence"]:
+            _require(
+                _fingerprint(root, frozen["path"]) == frozen,
+                "fit evidence changed",
+            )
     variants = [
         v
         for v in state["variants"].values()
@@ -469,23 +514,146 @@ def _settled(root, state, *, round_number=None):
         )
 
 
-def _evaluation(root, state, raw):
+def _source_file(root, item, path_key, sha_key):
+    _require(isinstance(item, dict), "source proof must be an object")
+    frozen = _fingerprint(root, _text(item.get(path_key), path_key))
+    _require(frozen["sha256"] == item.get(sha_key), f"source SHA mismatch: {path_key}")
+    return frozen
+
+
+def _composite_sources(root, state, variant, doc):
+    _require(
+        state["plan"]["schema_version"] == 2
+        and type(doc.get("schema_version")) is int
+        and doc["schema_version"] == 2,
+        "composite prediction source requires schema 2",
+    )
+    _require("sessions" not in doc, "composite sources must not fabricate sessions")
+    config_ref = doc["composition_config"]
+    config = _source_file(root, config_ref, "path", "sha256")
+    _require(
+        config in variant["configs"],
+        "composition_config is not a frozen variant config",
+    )
+    blend = _json(_path(root, config["path"]))["signal_blend"]
+    _require(
+        blend["construction"] == BLEND_CONSTRUCTION, "unsupported blend construction"
+    )
+    weights = blend["horizon_weights"]
+    _require(
+        isinstance(weights, dict)
+        and bool(weights)
+        and all(
+            isinstance(h, str) and re.fullmatch(r"[1-9][0-9]*", h) for h in weights
+        ),
+        "invalid config horizon weights",
+    )
+    _require(
+        all(
+            type(w) in (int, float) and math.isfinite(w) and w > 0
+            for w in weights.values()
+        )
+        and math.isclose(sum(weights.values()), 1.0, rel_tol=0, abs_tol=1e-12),
+        "config weights must be finite positive and normalized",
+    )
+    horizons = sorted(int(h) for h in weights)
+    groups = doc["seed_groups"]
+    _require(
+        isinstance(groups, list)
+        and len(groups) == 5
+        and all(type(group["seed"]) is int for group in groups)
+        and [group["seed"] for group in groups] == SEEDS,
+        "composite requires all five seed groups in canonical seed order",
+    )
+    source_files, sessions, group_files = set(), set(), set()
+    for group in groups:
+        prediction = _source_file(root, group, "prediction_path", "prediction_sha256")
+        _require(
+            prediction["path"] not in group_files, "duplicate group prediction source"
+        )
+        group_files.add(prediction["path"])
+        components = group["components"]
+        _require(
+            isinstance(components, list)
+            and all(type(leg["label_horizon"]) is int for leg in components)
+            and [leg["label_horizon"] for leg in components] == horizons,
+            "component horizon set/order differs from frozen config",
+        )
+        for leg in components:
+            _require(
+                type(leg["seed"]) is int and leg["seed"] == group["seed"],
+                "component seed mixup",
+            )
+            weight = leg["weight"]
+            _require(
+                type(weight) in (int, float)
+                and math.isfinite(weight)
+                and weight > 0
+                and math.isclose(
+                    weight, weights[str(leg["label_horizon"])], rel_tol=0, abs_tol=1e-12
+                ),
+                "component weight differs from frozen config",
+            )
+            session = _identifier(leg["session"], "session")
+            session_dir = _path(root, leg["session_dir"])
+            _require(
+                session_dir.is_relative_to(root / "backtest/result")
+                and session_dir.name == session
+                and _ref(root, session_dir) not in sessions,
+                "duplicate or mismatched real session source",
+            )
+            sessions.add(_ref(root, session_dir))
+            meta = _json(_path(root, str(session_dir / "meta.json")))
+            regime = meta["regime_adapt"]
+            _require(
+                meta["session_name"] == session
+                and type(regime["seed"]) is int
+                and regime["seed"] == group["seed"]
+                and type(regime["label_horizon"]) is int
+                and regime["label_horizon"] == leg["label_horizon"],
+                "real session metadata seed/horizon/session mismatch",
+            )
+            model = _source_file(root, leg, "model_path", "model_sha256")
+            _require(
+                _path(root, model["path"]).is_relative_to(session_dir),
+                "model outside real session",
+            )
+            pred = _source_file(root, leg, "prediction_path", "prediction_sha256")
+            for source in (model, pred):
+                _require(
+                    source["path"] not in source_files, "duplicate component source"
+                )
+                source_files.add(source["path"])
+    _require(
+        not group_files.intersection(source_files),
+        "group prediction aliases component source",
+    )
+
+
+def _evaluation(root, state, raw, variant):
     """Validate official output presence/finite cells, never recalculate metrics."""
     path = _path(root, _text(raw, "evaluation"))
     doc = _json(path, allow_nonfinite=True)
     try:
         if state["plan"]["track"] == "all_a_model":
-            sessions = doc["sessions"]
-            _require(
-                isinstance(sessions, list)
-                and len(sessions) == 5
-                and sorted(item["seed"] for item in sessions) == SEEDS,
-                "evaluation requires all five seeds",
-            )
-            _require(
-                len({_text(item["session"], "session") for item in sessions}) == 5,
-                "evaluation sessions must be distinct",
-            )
+            if doc.get("prediction_source_type") == COMPOSITE_SOURCE:
+                _composite_sources(root, state, variant, doc)
+            else:
+                _require(
+                    "prediction_source_type" not in doc,
+                    "unsupported prediction source type",
+                )
+                sessions = doc["sessions"]
+                _require(
+                    isinstance(sessions, list)
+                    and len(sessions) == 5
+                    and sorted(item["seed"] for item in sessions) == SEEDS,
+                    "evaluation requires all five seeds",
+                )
+                _require(
+                    len({_text(item["session"], "session") for item in sessions}) == 5,
+                    "evaluation sessions must be distinct",
+                )
             _require(
                 doc["data_version"] == state["plan"]["data_version"],
                 "evaluation data_version mismatch",
@@ -583,7 +751,7 @@ def _registry_receipt(root, state, variant, attempt):
         )
         raw = row.get("portable_eval_output") or row.get("eval_output")
         _require(
-            _evaluation(root, state, raw) == attempt["evaluation"],
+            _evaluation(root, state, raw, variant) == attempt["evaluation"],
             "registered evaluation mismatch",
         )
     else:
@@ -652,6 +820,79 @@ def _transition(root, state, data):
             "configs": configs,
             "attempts": [],
         }
+    elif kind in {"fit_start", "fit_result"}:
+        _require(state["plan"]["schema_version"] == 2, "fit events require schema 2")
+        execution = state["plan"].get("execution_budget")
+        _require(execution is not None, "fit events require execution_budget")
+        jobs = state["jobs"]
+        job_id = _identifier(data.get("job_id"), "job_id")
+        if kind == "fit_start":
+            _launch_guard(root, state)
+            exp_id = _identifier(data.get("exp_id"), "exp_id")
+            variant = state["variants"].get(exp_id)
+            _require(
+                variant is not None
+                and variant["attempts"]
+                and variant["attempts"][-1]["outcome"] == "running",
+                "fit_start requires a running parent attempt",
+            )
+            _require(
+                job_id not in jobs, "job_id already used; retries require a new job_id"
+            )
+            _require(
+                not any(job["outcome"] == "running" for job in jobs.values()),
+                "fit already running; default serial fit limit is 1",
+            )
+            _require(
+                len(jobs) < execution["max_model_fits"], "model fit budget exhausted"
+            )
+            _require(
+                type(data.get("seed")) is int and data["seed"] in SEEDS,
+                "invalid fit seed",
+            )
+            _require(
+                type(data.get("label_horizon")) is int
+                and data["label_horizon"] in execution["new_label_horizons"],
+                "fit label_horizon is outside execution budget",
+            )
+            command = data.get("command")
+            _require(
+                isinstance(command, list)
+                and command
+                and all(isinstance(v, str) and v for v in command),
+                "command must be an argv list; it is recorded, never executed",
+            )
+            jobs[job_id] = {
+                "job_id": job_id,
+                "exp_id": exp_id,
+                "attempt_id": variant["attempts"][-1]["attempt_id"],
+                "seed": data["seed"],
+                "label_horizon": data["label_horizon"],
+                "command": command,
+                "outcome": "running",
+                "started_at": _now(),
+            }
+        else:
+            job = jobs.get(job_id)
+            _require(
+                job is not None and job["outcome"] == "running",
+                "no running fit for job_id",
+            )
+            outcome = _text(data.get("outcome"), "fit outcome")
+            _require(
+                outcome in {"succeeded", "failed", "interrupted"}, "invalid fit outcome"
+            )
+            evidence = _files(root, data.get("evidence"))
+            archive = _path(root, state["variants"][job["exp_id"]]["archive_path"])
+            _require(
+                all(
+                    _path(root, ref["path"]).is_relative_to(archive)
+                    or _path(root, ref["path"]).is_relative_to(root / "backtest/result")
+                    for ref in evidence
+                ),
+                "fit evidence must be in its durable archive or real result model/log paths",
+            )
+            job.update(outcome=outcome, finished_at=_now(), evidence=evidence)
     elif kind in {"start", "result", "registered", "reported"}:
         variant = state["variants"].get(_identifier(data.get("exp_id"), "exp_id"))
         _require(variant is not None, "unknown variant")
@@ -699,6 +940,13 @@ def _transition(root, state, data):
                 }
             )
         elif kind == "result":
+            _require(
+                not any(
+                    job["outcome"] == "running" and job["exp_id"] == variant["exp_id"]
+                    for job in state.get("jobs", {}).values()
+                ),
+                "running fit must finish before parent attempt result",
+            )
             outcome = _text(data.get("outcome"), "outcome")
             _require(outcome in OUTCOMES, "invalid outcome")
             if not attempts and outcome == "cancelled":
@@ -721,7 +969,7 @@ def _transition(root, state, data):
                 "save durable result evidence in the experiment archive",
             )
             if outcome == "succeeded":
-                evaluation = _evaluation(root, state, data.get("evaluation"))
+                evaluation = _evaluation(root, state, data.get("evaluation"), variant)
                 _require(
                     evaluation in evidence,
                     "evaluation must be included in durable evidence",

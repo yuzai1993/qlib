@@ -1,6 +1,7 @@
 """Research lifecycle guards, exercised without running Qlib or live experiments."""
 
 import copy
+import hashlib
 import importlib
 import json
 import sys
@@ -849,3 +850,591 @@ def test_updated_registration_invalidates_the_previous_report_receipt(research):
                 "new_evidence": False,
             },
         )
+
+
+def initialized_v2(research, *, max_fits=2):
+    root, plan_path, plan = research
+    write_json(
+        plan_path,
+        {
+            **plan,
+            "schema_version": 2,
+            "execution_budget": {
+                "max_model_fits": max_fits,
+                "new_label_horizons": [1, 5, 10, 40],
+            },
+        },
+    )
+    return initialized(research)
+
+
+def file_proof(root, path):
+    return str(path.relative_to(root)), hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def composite_running(research, *, blend=None):
+    root, path, _ = initialized_v2(research)
+    archive = research[2]["archive_path"]
+    config = write_json(
+        root / archive / "configs/blend.json",
+        {
+            "signal_blend": (
+                blend
+                if blend is not None
+                else {
+                    # Deliberately unordered: JSON objects do not define leg order.
+                    "horizon_weights": {"20": 0.5, "5": 0.5},
+                    "construction": "per_seed_daily_zscore_horizon_weighted_then_daily_zscore_equal_seed",
+                }
+            )
+        },
+    )
+    event(
+        root,
+        path,
+        {
+            "type": "plan_variant",
+            "exp_id": "features/first",
+            "archive_path": archive,
+            "round": 1,
+            "hypothesis": "新特征改善排序",
+            "changed_axis": "features",
+            "configs": [str(config.relative_to(root))],
+        },
+    )
+    start(root, path)
+    config_path, config_sha = file_proof(root, config)
+    doc = {
+        "schema_version": 2,
+        "prediction_source_type": "multihorizon_seed_groups_v1",
+        "data_version": "2026-07-31",
+        "composition_config": {"path": config_path, "sha256": config_sha},
+        "seed_groups": [],
+        "pools": {
+            "all": {
+                "ensemble": {
+                    "head": {
+                        "3": {
+                            "5": {
+                                "net_ann": 0.2,
+                                "net_ann_vol": 0.5,
+                                "net_sharpe": 0.4,
+                                "ann": 0.25,
+                                "turnover": 0.1,
+                                "n_days": 100,
+                            }
+                        }
+                    },
+                    "h5": {"rank_ic_mean": 0.05},
+                }
+            }
+        },
+    }
+    for seed in [42, 1000, 2000, 3000, 4000]:
+        pred = root / archive / f"metrics/blend-s{seed}.pkl"
+        pred.parent.mkdir(parents=True, exist_ok=True)
+        pred.write_bytes(f"blend {seed}".encode())
+        pred_path, pred_sha = file_proof(root, pred)
+        group = {
+            "seed": seed,
+            "prediction_path": pred_path,
+            "prediction_sha256": pred_sha,
+            "components": [],
+        }
+        for horizon in [5, 20]:
+            session = f"real_h{horizon}_s{seed}"
+            session_dir = root / "backtest/result" / session
+            write_json(
+                session_dir / "meta.json",
+                {
+                    "session_name": session,
+                    "regime_adapt": {"seed": seed, "label_horizon": horizon},
+                },
+            )
+            model = session_dir / "run_01/artifacts_root/artifacts/trained_model"
+            model.parent.mkdir(parents=True)
+            model.write_bytes(f"model {seed} {horizon}".encode())
+            source = session_dir / "pred.pkl"
+            source.write_bytes(f"prediction {seed} {horizon}".encode())
+            model_path, model_sha = file_proof(root, model)
+            source_path, source_sha = file_proof(root, source)
+            group["components"].append(
+                {
+                    "label_horizon": horizon,
+                    "seed": seed,
+                    "session": session,
+                    "session_dir": str(session_dir.relative_to(root)),
+                    "model_path": model_path,
+                    "model_sha256": model_sha,
+                    "prediction_path": source_path,
+                    "prediction_sha256": source_sha,
+                    "weight": 0.5,
+                }
+            )
+        doc["seed_groups"].append(group)
+    evaluation = root / archive / "metrics/evaluation.json"
+    result = {
+        "type": "result",
+        "exp_id": "features/first",
+        "outcome": "succeeded",
+        "evaluation": str(evaluation.relative_to(root)),
+        "evidence": [str(evaluation.relative_to(root))],
+    }
+    return root, path, evaluation, doc, result
+
+
+def test_composite_proofs_complete_and_register_without_fake_sessions(research):
+    root, path, evaluation, doc, result = composite_running(research)
+    write_json(evaluation, doc)
+    state = event(root, path, result)
+    assert state["variants"]["features/first"]["attempts"][-1]["outcome"] == "succeeded"
+    state = register_and_report(root, path)
+    assert state["variants"]["features/first"]["attempts"][-1]["registered"]
+
+
+@pytest.mark.parametrize(
+    "broken",
+    [
+        "missing_seed",
+        "duplicate_group",
+        "seed_mixup",
+        "meta_seed",
+        "meta_horizon",
+        "meta_session",
+        "duplicate_source",
+        "wrong_hash",
+        "group_hash",
+        "config_hash",
+        "unfrozen_config",
+        "config_drift",
+        "wrong_order",
+        "wrong_weight",
+        "negative_weight",
+        "nan_weight",
+        "unnormalized",
+        "different_horizons",
+        "missing_model",
+        "fake_sessions",
+        "config_shape",
+        "outside_model",
+        "output_alias",
+        "schema_float",
+    ],
+)
+def test_composite_invalid_proof_cannot_finish_or_mutate_state(research, broken):
+    root, path, evaluation, doc, result = composite_running(research)
+    group = doc["seed_groups"][0]
+    leg = group["components"][0]
+    if broken == "missing_seed":
+        doc["seed_groups"].pop()
+    elif broken == "duplicate_group":
+        doc["seed_groups"][1] = copy.deepcopy(group)
+    elif broken == "seed_mixup":
+        leg["seed"] = 1000
+    elif broken.startswith("meta_"):
+        meta_path = root / leg["session_dir"] / "meta.json"
+        meta = json.loads(meta_path.read_text())
+        if broken == "meta_session":
+            meta["session_name"] = "fake"
+        else:
+            meta["regime_adapt"][
+                "seed" if broken == "meta_seed" else "label_horizon"
+            ] = 999
+        write_json(meta_path, meta)
+    elif broken == "duplicate_source":
+        other = group["components"][1]
+        other["prediction_path"] = leg["prediction_path"]
+        other["prediction_sha256"] = leg["prediction_sha256"]
+    elif broken == "wrong_hash":
+        leg["model_sha256"] = "0" * 64
+    elif broken == "group_hash":
+        group["prediction_sha256"] = "0" * 64
+    elif broken == "config_hash":
+        doc["composition_config"]["sha256"] = "0" * 64
+    elif broken == "unfrozen_config":
+        other = write_json(
+            root / research[2]["archive_path"] / "configs/other.json",
+            {"signal_blend": {"horizon_weights": {"5": 0.5, "20": 0.5}}},
+        )
+        raw, sha = file_proof(root, other)
+        doc["composition_config"] = {"path": raw, "sha256": sha}
+    elif broken == "config_drift":
+        config = root / doc["composition_config"]["path"]
+        config.write_text(config.read_text() + "\n")
+        doc["composition_config"]["sha256"] = file_proof(root, config)[1]
+    elif broken == "wrong_order":
+        group["components"].reverse()
+    elif broken == "wrong_weight":
+        group["components"][0]["weight"] = 0.25
+        group["components"][1]["weight"] = 0.75
+    elif broken == "negative_weight":
+        leg["weight"] = -0.5
+    elif broken == "nan_weight":
+        leg["weight"] = float("nan")
+    elif broken == "unnormalized":
+        for item in group["components"]:
+            item["weight"] = 1.0
+    elif broken == "different_horizons":
+        group["components"].pop()
+    elif broken == "missing_model":
+        (root / leg["model_path"]).unlink()
+    elif broken == "config_shape":
+        doc["composition_config"] = []
+    elif broken == "outside_model":
+        other = group["components"][1]
+        leg["model_path"] = other["model_path"]
+        leg["model_sha256"] = other["model_sha256"]
+    elif broken == "output_alias":
+        group["prediction_path"] = leg["prediction_path"]
+        group["prediction_sha256"] = leg["prediction_sha256"]
+    elif broken == "schema_float":
+        doc["schema_version"] = 2.0
+    else:
+        doc["sessions"] = [
+            {"session": f"fabricated_s{s}", "seed": s} for s in api().SEEDS
+        ]
+    write_json(evaluation, doc)
+    before = path.read_bytes()
+    with pytest.raises(
+        ValueError,
+        match="seed|source|SHA|hash|config|weight|horizon|model|missing|session|order|schema",
+    ):
+        event(root, path, result)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("schema", [1, 2])
+def test_ordinary_evaluation_retains_five_distinct_session_guard(research, schema):
+    if schema == 2:
+        initialized_v2(research)
+    root, plan_path, _ = research
+    path = plan_path.parent.parent / "docs/harness-state.json"
+    if schema == 1:
+        initialized(research)
+    plan_variant(root, path)
+    start(root, path)
+    evaluation = root / research[2]["archive_path"] / "metrics/ordinary.json"
+    doc = {
+        "schema_version": schema,
+        "data_version": "2026-07-31",
+        "sessions": [{"session": f"real_s{s}", "seed": s} for s in api().SEEDS],
+        "pools": {
+            "all": {
+                "ensemble": {
+                    "head": {
+                        "3": {
+                            "5": {
+                                "net_ann": 0.2,
+                                "net_ann_vol": 0.5,
+                                "net_sharpe": 0.4,
+                                "ann": 0.25,
+                                "turnover": 0.1,
+                                "n_days": 100,
+                            }
+                        }
+                    },
+                    "h5": {"rank_ic_mean": 0.05},
+                }
+            }
+        },
+    }
+    result = {
+        "type": "result",
+        "exp_id": "features/first",
+        "outcome": "succeeded",
+        "evaluation": str(evaluation.relative_to(root)),
+        "evidence": [str(evaluation.relative_to(root))],
+    }
+    duplicate = copy.deepcopy(doc)
+    duplicate["sessions"][1]["session"] = duplicate["sessions"][0]["session"]
+    write_json(evaluation, duplicate)
+    with pytest.raises(ValueError, match="distinct"):
+        event(root, path, result)
+    write_json(evaluation, doc)
+    assert (
+        event(root, path, result)["variants"]["features/first"]["attempts"][-1][
+            "outcome"
+        ]
+        == "succeeded"
+    )
+
+
+def fit_start(
+    root, path, job_id="fit-1", *, exp_id="features/first", seed=42, horizon=5
+):
+    return event(
+        root,
+        path,
+        {
+            "type": "fit_start",
+            "exp_id": exp_id,
+            "job_id": job_id,
+            "seed": seed,
+            "label_horizon": horizon,
+            "command": ["python", "train.py", "--seed", str(seed)],
+        },
+    )
+
+
+def fit_result(root, path, job_id="fit-1", *, outcome="failed"):
+    state = api().inspect_state(path, repo_root=root, check_drift=False)
+    exp_id = state["jobs"][job_id]["exp_id"]
+    log = root / state["variants"][exp_id]["archive_path"] / "docs" / f"{job_id}.json"
+    write_json(log, {"outcome": outcome})
+    return event(
+        root,
+        path,
+        {
+            "type": "fit_result",
+            "job_id": job_id,
+            "outcome": outcome,
+            "evidence": [str(log.relative_to(root))],
+        },
+    )
+
+
+def test_fit_budget_survives_failure_resume_and_cross_variant_retries(research):
+    root, path, state = initialized_v2(research)
+    assert state["jobs"] == {}
+    plan_variant(root, path)
+    start(root, path)
+    first = fit_start(root, path)
+    assert first["jobs"]["fit-1"]["attempt_id"].endswith("features/first/a1")
+    with pytest.raises(ValueError, match="running"):
+        fit_start(root, path, "fit-parallel")
+    fit_result(root, path)
+    finish(root, path)
+    register_and_report(root, path)
+    plan_variant(root, path, "features/second")
+    start(root, path, "features/second")
+    fit_start(root, path, "fit-retry", exp_id="features/second")
+    state = fit_result(root, path, "fit-retry", outcome="succeeded")
+    assert len(state["jobs"]) == 2
+    with pytest.raises(ValueError, match="fit.*budget|budget.*fit"):
+        fit_start(root, path, "fit-over-cap", exp_id="features/second")
+    assert (
+        len(api().inspect_state(path, repo_root=root, check_drift=False)["jobs"]) == 2
+    )
+
+
+@pytest.mark.parametrize("bad", ["parent", "seed", "horizon", "duplicate", "command"])
+def test_fit_start_rejects_invalid_job_without_debit(research, bad):
+    root, path, _ = initialized_v2(research, max_fits=3)
+    plan_variant(root, path)
+    if bad != "parent":
+        start(root, path)
+    payload = {
+        "type": "fit_start",
+        "exp_id": "features/first",
+        "job_id": "fit-1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": ["python", "train.py"],
+    }
+    if bad == "seed":
+        payload["seed"] = 123
+    elif bad == "horizon":
+        payload["label_horizon"] = 20
+    elif bad == "command":
+        payload["command"] = "python train.py"
+    elif bad == "duplicate":
+        fit_start(root, path)
+        fit_result(root, path)
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="running|seed|horizon|job|argv|command"):
+        event(root, path, payload)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("drift", ["policy", "deadline", "stop"])
+def test_fit_launch_guard_blocks_but_result_can_finalize_after_drift(
+    research, monkeypatch, drift
+):
+    root, path, state = initialized_v2(research)
+    plan_variant(root, path)
+    start(root, path)
+    fit_start(root, path)
+    if drift == "policy":
+        (root / "AGENTS.md").write_text("changed")
+    elif drift == "deadline":
+        monkeypatch.setattr(api(), "_now", lambda: state["deadline"] + 1)
+    else:
+        event(root, path, {"type": "stop", "reason": "user_stopped"})
+    with pytest.raises(ValueError, match="drift|time.*budget|stopping"):
+        fit_start(root, path, "fit-2")
+    assert (
+        fit_result(root, path, outcome="interrupted")["jobs"]["fit-1"]["outcome"]
+        == "interrupted"
+    )
+
+
+def test_running_fit_blocks_attempt_result_and_settlement(research):
+    root, path, _ = initialized_v2(research)
+    plan_variant(root, path)
+    start(root, path)
+    fit_start(root, path)
+    with pytest.raises(ValueError, match="running fit"):
+        finish(root, path)
+    state = api().inspect_state(path, repo_root=root, check_drift=False)
+    with pytest.raises(ValueError, match="running fit"):
+        api()._settled(root, state)
+    fit_result(root, path)
+    finish(root, path)
+
+
+@pytest.mark.parametrize("outcome", ["succeeded", "failed", "interrupted"])
+@pytest.mark.parametrize("change", ["modified", "deleted"])
+@pytest.mark.parametrize("stage", ["reflection", "cleanup", "close"])
+def test_settlement_rechecks_durable_fit_evidence(research, outcome, change, stage):
+    root, path, _ = initialized_v2(research)
+    plan_variant(root, path)
+    start(root, path)
+    fit_start(root, path)
+    fitted = fit_result(root, path, outcome=outcome)
+    evidence = root / fitted["jobs"]["fit-1"]["evidence"][0]["path"]
+    original = evidence.read_bytes()
+    finish(root, path)
+    register_and_report(root, path)
+    if stage == "reflection":
+        payload = {
+            "type": "reflection",
+            "round": 1,
+            "observations": "fit outcome recorded",
+            "interpretation": "parent attempt documented independently",
+            "new_evidence": True,
+        }
+    else:
+        event(root, path, {"type": "stop", "reason": "user_stopped"})
+        audit = write_json(
+            root / research[2]["archive_path"] / "docs/cleanup-audit.json",
+            {
+                "result": "no_changes",
+                "mlruns": "not_applicable",
+                "temporary": "cleaned",
+            },
+        )
+        payload = {
+            "type": "cleanup",
+            "outcome": "complete",
+            "audit": str(audit.relative_to(root)),
+        }
+        if stage == "close":
+            event(root, path, payload)
+            payload = {"type": "close"}
+    if change == "modified":
+        evidence.write_text("different fit evidence")
+    else:
+        evidence.unlink()
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="fit evidence changed|missing"):
+        event(root, path, payload)
+    assert path.read_bytes() == before
+    evidence.write_bytes(original)
+    assert event(root, path, payload)["revision"] == json.loads(before)["revision"] + 1
+
+
+def test_v1_cannot_use_fit_events(research):
+    root, path, _ = initialized(research)
+    plan_variant(root, path)
+    start(root, path)
+    with pytest.raises(ValueError, match="schema.*2"):
+        fit_start(root, path)
+
+
+def test_v1_cannot_silently_ignore_execution_budget(research):
+    root, plan_path, plan = research
+    write_json(
+        plan_path,
+        {
+            **plan,
+            "execution_budget": {
+                "max_model_fits": 22,
+                "new_label_horizons": [1, 5, 10, 40],
+            },
+        },
+    )
+    with pytest.raises(ValueError, match="schema.*2"):
+        api().initialize(plan_path, repo_root=root)
+
+
+def test_v2_without_execution_budget_keeps_ordinary_lifecycle(research):
+    root, plan_path, plan = research
+    write_json(plan_path, {**plan, "schema_version": 2})
+    root, path, _ = initialized(research)
+    plan_variant(root, path)
+    start(root, path)
+    with pytest.raises(ValueError, match="execution_budget"):
+        fit_start(root, path)
+    finish(root, path)
+    assert register_and_report(root, path)["variants"]["features/first"]["attempts"][
+        -1
+    ]["reported"]
+
+
+@pytest.mark.parametrize(
+    "broken", ["missing", "outside", "unknown_job", "finished", "outcome"]
+)
+def test_fit_result_requires_real_evidence_for_running_job(research, broken):
+    root, path, _ = initialized_v2(research)
+    plan_variant(root, path)
+    start(root, path)
+    fit_start(root, path)
+    evidence = write_json(
+        root / research[2]["archive_path"] / "docs/fit.json", {"failed": True}
+    )
+    payload = {
+        "type": "fit_result",
+        "job_id": "fit-1",
+        "outcome": "failed",
+        "evidence": [str(evidence.relative_to(root))],
+    }
+    if broken == "missing":
+        evidence.unlink()
+    elif broken == "outside":
+        payload["evidence"] = ["AGENTS.md"]
+    elif broken == "unknown_job":
+        payload["job_id"] = "unknown"
+    elif broken == "finished":
+        fit_result(root, path)
+    else:
+        payload["outcome"] = []
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="missing|evidence|running fit|outcome"):
+        event(root, path, payload)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("broken", ["zero", "sum", "nan", "construction", "horizon"])
+def test_composite_config_must_freeze_normalized_positive_recipe(research, broken):
+    blend = {
+        "horizon_weights": {"5": 0.5, "20": 0.5},
+        "construction": "per_seed_daily_zscore_horizon_weighted_then_daily_zscore_equal_seed",
+    }
+    if broken == "construction":
+        blend["construction"] = "unknown"
+    elif broken == "horizon":
+        blend["horizon_weights"] = {"05": 0.5, "20": 0.5}
+    else:
+        value = {"zero": 0, "sum": 1, "nan": float("nan")}[broken]
+        blend["horizon_weights"]["5"] = value
+    root, path, evaluation, doc, result = composite_running(research, blend=blend)
+    write_json(evaluation, doc)
+    with pytest.raises(ValueError, match="weight|construction|horizon|non-finite"):
+        event(root, path, result)
+
+
+@pytest.mark.parametrize(
+    "budget",
+    [
+        {"max_model_fits": 0, "new_label_horizons": [5]},
+        {"max_model_fits": 2, "new_label_horizons": [5, 5]},
+        {"max_model_fits": 2, "new_label_horizons": [True]},
+        {"max_model_fits": 2, "new_label_horizons": []},
+        {"max_model_fits": 2, "new_label_horizons": [5], "concurrency": 2},
+    ],
+)
+def test_v2_invalid_execution_budget_refuses_initialization(research, budget):
+    root, plan_path, plan = research
+    write_json(plan_path, {**plan, "schema_version": 2, "execution_budget": budget})
+    with pytest.raises(ValueError, match="execution|fit|horizon"):
+        api().initialize(plan_path, repo_root=root)

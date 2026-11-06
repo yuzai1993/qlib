@@ -1,0 +1,76 @@
+{
+  "exp_id": "training-target/horizon-style-p50-20261105-v1/arms/h20",
+  "archive_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+  "date": "2026-11-05",
+  "state": "completed",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "training-target",
+  "experiment_type": "training_target",
+  "display_name": "H20 · patience50 · 七H汇总内部臂",
+  "changed_axes": [
+    "label_horizon"
+  ],
+  "train_label_horizon": 20,
+  "representative_horizon": 20,
+  "hypothesis": "At fixed patience50, larger H improves T, smaller H>=5 improves D, and F peaks at H5-10; verify model patterns against the same fixed-s5 account rule.",
+  "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "eval_output": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+  "portable_eval_output": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+  "detail_report": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+  "configs": [
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json"
+  ],
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.2445518917762597,
+    "ir": 0.6474098947539955,
+    "ann": 0.3342333915319232,
+    "beta": 1.0469917795369432,
+    "ann_alpha": 0.24033759851119912,
+    "appraisal_ir": 0.6378804607497995,
+    "turnover_period": 0.8976668976668977,
+    "turnover": 0.17953337953337953,
+    "ann_cost": 0.03931062878262878,
+    "net_ann_excess": 0.2052412629936309,
+    "net_ann": 0.2949227627492944,
+    "net_ann_alpha": 0.20102696972857034,
+    "net_ann_vol": 0.5971968374940947,
+    "net_sharpe": 0.49384515160331993,
+    "rank_ic_mean": 0.0985574883393832
+  },
+  "conclusion": "T：模型收益不支持预设规律（最大值H=20）；模型夏普不支持预设规律（最大值H=20）；账户收益不支持预设规律（最大值H=20）；账户夏普不支持预设规律（最大值H=40）。 D：模型收益不支持预设规律（最大值H=7）；模型夏普不支持预设规律（最大值H=7）；账户收益不支持预设规律（最大值H=7）；账户夏普不支持预设规律（最大值H=40）。 F：模型收益不支持预设规律（最大值H=15）；模型夏普不支持预设规律（最大值H=30）；账户收益不支持预设规律（最大值H=15）；账户夏普不支持预设规律（最大值H=30）。 上述仅为固定规则下的数值模式；本轮仍存在短轮、同分、反序敏感或轮数上限等训练诊断，不能将对应差异全部归因于H，详见汇总报告。",
+  "eval_protocol": "全A五种子z-score均值 | Top3×H5 | 统一退出日边界 | 历史选型窗口",
+  "execution_audit": {
+    "scientific_arms": 7,
+    "registered_studies": 1,
+    "actual_new_fits": 35,
+    "successful_fits": 35,
+    "failed_fits": 0,
+    "prior_fits": 68,
+    "cumulative_fits": 103,
+    "bridge_p20_extra_fits": 0
+  },
+  "diagnostic_only": true,
+  "cleanup_retention_eligible": false,
+  "study_summary": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/study-summary.json",
+  "parent_experiment": "training-target/horizon-style-p50-20261105-v1",
+  "source_role": "internal_scientific_arm",
+  "source_registration": "Covered by the parent seven-arm formal registry event; no independent platform entity.",
+  "result_dirs": [
+    "backtest/result/horizonp50_20261105_h20_s42",
+    "backtest/result/horizonp50_20261105_h20_s1000",
+    "backtest/result/horizonp50_20261105_h20_s2000",
+    "backtest/result/horizonp50_20261105_h20_s3000",
+    "backtest/result/horizonp50_20261105_h20_s4000"
+  ]
+}

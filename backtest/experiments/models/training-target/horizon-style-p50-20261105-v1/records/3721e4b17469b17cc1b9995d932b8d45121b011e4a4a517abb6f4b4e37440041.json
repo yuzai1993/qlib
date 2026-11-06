@@ -1,0 +1,944 @@
+{
+  "exp_id": "training-target/horizon-style-p50-20261105-v1",
+  "archive_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+  "date": "2026-11-06",
+  "state": "completed",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "training-target",
+  "experiment_type": "training_target",
+  "display_name": "训练目标期限与风格复验 · patience50",
+  "changed_axes": [
+    "label_horizon"
+  ],
+  "train_label_horizon": 20,
+  "representative_horizon": 20,
+  "representative_note": "H20 remains the summary control; user selected D/H7, F/H15, T/H20 by style return. Seven-H outcomes remain historical evidence.",
+  "hypothesis": "At fixed patience50, larger H improves T, smaller H>=5 improves D, and F peaks at H5-10; verify model patterns against the same fixed-s5 account rule.",
+  "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "eval_output": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+  "portable_eval_output": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+  "detail_report": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+  "configs": [
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106.json",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106-accounts.json"
+  ],
+  "result_dirs": [
+    "backtest/result/20261103_h20_causal_inputs",
+    "backtest/result/20261105_112118_horizonp50_20261105_h20_s5",
+    "backtest/result/20261105_150321_horizonp50_20261105_h7_s5",
+    "backtest/result/20261105_150523_horizonp50_20261105_h15_s5",
+    "backtest/result/20261105_233401_horizonp50_20261105_h7_ladder_k3h5",
+    "backtest/result/20261105_233502_horizonp50_20261105_h15_ladder_k3h5",
+    "backtest/result/20261105_horizon_p50",
+    "backtest/result/20261106_022039_p50stable_20261106_old_s5",
+    "backtest/result/20261106_022202_p50stable_20261106_old_ladder",
+    "backtest/result/20261106_022322_p50stable_20261106_new_ladder",
+    "backtest/result/20261106_p50_stability",
+    "backtest/result/horizonp50_20261105_h15_s1000",
+    "backtest/result/horizonp50_20261105_h15_s2000",
+    "backtest/result/horizonp50_20261105_h15_s3000",
+    "backtest/result/horizonp50_20261105_h15_s4000",
+    "backtest/result/horizonp50_20261105_h15_s42",
+    "backtest/result/horizonp50_20261105_h20_s1000",
+    "backtest/result/horizonp50_20261105_h20_s2000",
+    "backtest/result/horizonp50_20261105_h20_s3000",
+    "backtest/result/horizonp50_20261105_h20_s4000",
+    "backtest/result/horizonp50_20261105_h20_s42",
+    "backtest/result/horizonp50_20261105_h7_s1000",
+    "backtest/result/horizonp50_20261105_h7_s2000",
+    "backtest/result/horizonp50_20261105_h7_s3000",
+    "backtest/result/horizonp50_20261105_h7_s4000",
+    "backtest/result/horizonp50_20261105_h7_s42",
+    "backtest/result/p50stable_20261106_old_s1000_r1_original",
+    "backtest/result/p50stable_20261106_old_s2000_r1_original",
+    "backtest/result/p50stable_20261106_old_s3000_r1_original",
+    "backtest/result/p50stable_20261106_old_s4000_r1_original",
+    "backtest/result/p50stable_20261106_old_s42_r1_original"
+  ],
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.2445518917762597,
+    "ir": 0.6474098947539955,
+    "ann": 0.3342333915319232,
+    "beta": 1.0469917795369432,
+    "ann_alpha": 0.24033759851119912,
+    "appraisal_ir": 0.6378804607497995,
+    "turnover_period": 0.8976668976668977,
+    "turnover": 0.17953337953337953,
+    "ann_cost": 0.03931062878262878,
+    "net_ann_excess": 0.2052412629936309,
+    "net_ann": 0.2949227627492944,
+    "net_ann_alpha": 0.20102696972857034,
+    "net_ann_vol": 0.5971968374940947,
+    "net_sharpe": 0.49384515160331993,
+    "rank_ic_mean": 0.0985574883393832
+  },
+  "conclusion": "同输入seed3000重复拟合逐位稳定；106条标签变化稳定重现第5轮起的轨迹分叉。两组s5 CAGR差7.41个百分点，真阶梯差2.30个百分点（旧减新），绝对差距收窄。 D/H7、F/H15 的真阶梯回测均改善；2026 大回撤未发现账户计算错误，真阶梯不能普遍修复。 T：模型收益不支持预设规律（最大值H=20）；模型夏普不支持预设规律（最大值H=20）；账户收益不支持预设规律（最大值H=20）；账户夏普不支持预设规律（最大值H=40）。 D：模型收益不支持预设规律（最大值H=7）；模型夏普不支持预设规律（最大值H=7）；账户收益不支持预设规律（最大值H=7）；账户夏普不支持预设规律（最大值H=40）。 F：模型收益不支持预设规律（最大值H=15）；模型夏普不支持预设规律（最大值H=30）；账户收益不支持预设规律（最大值H=15）；账户夏普不支持预设规律（最大值H=30）。 上述仅为固定规则下的数值模式；本轮仍存在短轮、同分、反序敏感或轮数上限等训练诊断，不能将对应差异全部归因于H，详见汇总报告。",
+  "eval_protocol": "全A五种子z-score均值 | Top3×H5 | 统一退出日边界 | 历史选型窗口",
+  "execution_audit": {
+    "scientific_arms": 7,
+    "registered_studies": 1,
+    "actual_new_fits": 43,
+    "successful_fits": 43,
+    "failed_fits": 0,
+    "prior_fits": 68,
+    "cumulative_fits": 111,
+    "bridge_p20_extra_fits": 0,
+    "original_seven_h_fits": 35,
+    "supplementary_fits": 8,
+    "audit_scope": "Original parent35 fits plus this closed-phase followup; original frozen records and original harness state are unchanged."
+  },
+  "diagnostic_only": true,
+  "cleanup_retention_eligible": false,
+  "study_summary": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/study-summary.json",
+  "hypothesis_decisions": {
+    "T": {
+      "model_return": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          -0.05943896516544772,
+          -0.017450272787300405,
+          0.02035860371344187,
+          0.19946074090465013,
+          0.4363959870982391,
+          0.20932801050537303,
+          0.06017656752287842
+        ],
+        "adjacent_differences": [
+          0.04198869237814731,
+          0.03780887650074227,
+          0.17910213719120827,
+          0.236935246193589,
+          -0.2270679765928661,
+          -0.1491514429824946
+        ],
+        "all_maximizing_H": [
+          20
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": false,
+        "spearman_descriptive": 0.7500000000000002
+      },
+      "model_sharpe": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          -0.11093163113681989,
+          -0.034014895396088284,
+          0.04067698813814744,
+          0.4375653586492336,
+          0.9905218835848166,
+          0.47203229571167676,
+          0.1669547286403524
+        ],
+        "adjacent_differences": [
+          0.0769167357407316,
+          0.07469188353423573,
+          0.39688837051108616,
+          0.552956524935583,
+          -0.5184895878731399,
+          -0.3050775670713244
+        ],
+        "all_maximizing_H": [
+          20
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": false,
+        "spearman_descriptive": 0.7500000000000002
+      },
+      "account_return": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          -0.1829485781585215,
+          0.09063843931815296,
+          0.026622024648235376,
+          0.11927073790856313,
+          0.3979855100208425,
+          0.3376699077078802,
+          0.31565030100652347
+        ],
+        "adjacent_differences": [
+          0.27358701747667447,
+          -0.06401641466991759,
+          0.09264871326032775,
+          0.27871477211227935,
+          -0.06031560231296229,
+          -0.02201960670135672
+        ],
+        "all_maximizing_H": [
+          20
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": false,
+        "spearman_descriptive": 0.8214285714285715
+      },
+      "account_sharpe": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          -0.4705443169820127,
+          0.42877266848052087,
+          0.24683340292576844,
+          0.5323224105478146,
+          1.3354847380957824,
+          1.2099763399351728,
+          1.366230278363916
+        ],
+        "adjacent_differences": [
+          0.8993169854625336,
+          -0.18193926555475243,
+          0.28548900762204615,
+          0.8031623275479678,
+          -0.12550839816060955,
+          0.15625393842874313
+        ],
+        "all_maximizing_H": [
+          40
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": true,
+        "spearman_descriptive": 0.9285714285714288
+      },
+      "agreement": {
+        "return": {
+          "same_hypothesis_decision": true,
+          "same_maximizing_H": true
+        },
+        "sharpe": {
+          "same_hypothesis_decision": true,
+          "same_maximizing_H": false
+        }
+      }
+    },
+    "D": {
+      "model_return": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          0.19880199301098778,
+          0.26633011114681854,
+          0.12995144487279475,
+          0.13013079688456194,
+          0.11811418606394912,
+          0.1673621023715402,
+          0.1707425931257158
+        ],
+        "adjacent_differences": [
+          0.06752811813583076,
+          -0.13637866627402379,
+          0.00017935201176719207,
+          -0.012016610820612825,
+          0.04924791630759108,
+          0.003380490754175597
+        ],
+        "all_maximizing_H": [
+          7
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": false,
+        "spearman_descriptive": -0.3571428571428572
+      },
+      "model_sharpe": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          0.33963113143052415,
+          0.43618831524055296,
+          0.1983161971014146,
+          0.22673329502891956,
+          0.2246117008288109,
+          0.3326937596308266,
+          0.3827448074978028
+        ],
+        "adjacent_differences": [
+          0.09655718381002881,
+          -0.23787211813913836,
+          0.028417097927504964,
+          -0.0021215942001086563,
+          0.10808205880201568,
+          0.05005104786697623
+        ],
+        "all_maximizing_H": [
+          7
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": false,
+        "spearman_descriptive": -0.07142857142857144
+      },
+      "account_return": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          0.06503555954432394,
+          0.16585434560113588,
+          0.06325399544645416,
+          0.03368533551962427,
+          0.12187059198088579,
+          0.1203116136562874,
+          0.15057890752948788
+        ],
+        "adjacent_differences": [
+          0.10081878605681194,
+          -0.10260035015468172,
+          -0.029568659926829888,
+          0.08818525646126152,
+          -0.0015589783245983924,
+          0.030267293873200485
+        ],
+        "all_maximizing_H": [
+          7
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": false,
+        "spearman_descriptive": 0.21428571428571433
+      },
+      "account_sharpe": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          0.360325965415231,
+          0.6394428511049615,
+          0.35115335258677205,
+          0.2615265140923508,
+          0.5552126598391769,
+          0.5622967208974705,
+          0.7397846557757471
+        ],
+        "adjacent_differences": [
+          0.2791168856897305,
+          -0.2882894985181894,
+          -0.08962683849442127,
+          0.2936861457468261,
+          0.0070840610582936225,
+          0.17748793487827663
+        ],
+        "all_maximizing_H": [
+          40
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": false,
+        "spearman_descriptive": 0.42857142857142866
+      },
+      "agreement": {
+        "return": {
+          "same_hypothesis_decision": true,
+          "same_maximizing_H": true
+        },
+        "sharpe": {
+          "same_hypothesis_decision": true,
+          "same_maximizing_H": false
+        }
+      }
+    },
+    "F": {
+      "model_return": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          1.4574097991406125,
+          1.4954319023036953,
+          1.5069207571703593,
+          1.559517041289965,
+          1.2938425402730307,
+          1.309190238771121,
+          0.9871841245123547
+        ],
+        "adjacent_differences": [
+          0.03802210316308274,
+          0.011488854866664067,
+          0.05259628411960571,
+          -0.26567450101693435,
+          0.015347698498090256,
+          -0.32200611425876624
+        ],
+        "all_maximizing_H": [
+          15
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": null,
+        "spearman_descriptive": -0.6071428571428572
+      },
+      "model_sharpe": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          1.3232566721171743,
+          1.3202786672761482,
+          1.2952327273616369,
+          1.1925315548329523,
+          1.1609310670928916,
+          1.3791596781209083,
+          1.1822204712753472
+        ],
+        "adjacent_differences": [
+          -0.0029780048410261717,
+          -0.025045939914511317,
+          -0.1027011725286846,
+          -0.031600487740060634,
+          0.21822861102801672,
+          -0.1969392068455611
+        ],
+        "all_maximizing_H": [
+          30
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": null,
+        "spearman_descriptive": -0.39285714285714296
+      },
+      "account_return": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          0.9392955372582583,
+          1.274106345240844,
+          0.9402178133846371,
+          1.2890349206038425,
+          0.842957061967855,
+          1.1160491003266282,
+          0.8371231711505371
+        ],
+        "adjacent_differences": [
+          0.3348108079825858,
+          -0.33388853185620704,
+          0.34881710721920545,
+          -0.4460778586359875,
+          0.27309203835877316,
+          -0.27892592917609105
+        ],
+        "all_maximizing_H": [
+          15
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": null,
+        "spearman_descriptive": -0.3571428571428572
+      },
+      "account_sharpe": {
+        "horizons": [
+          5,
+          7,
+          10,
+          15,
+          20,
+          30,
+          40
+        ],
+        "values": [
+          1.8557810508421453,
+          2.0817569427402476,
+          1.849709230491904,
+          2.10731821751013,
+          1.6589158230282741,
+          2.3948072352679093,
+          2.139359529766468
+        ],
+        "adjacent_differences": [
+          0.2259758918981023,
+          -0.23204771224834353,
+          0.2576089870182261,
+          -0.44840239448185604,
+          0.7358914122396352,
+          -0.25544770550144147
+        ],
+        "all_maximizing_H": [
+          30
+        ],
+        "nondecreasing": false,
+        "nonincreasing": false,
+        "frozen_hypothesis_supported": false,
+        "endpoint_maximum": null,
+        "spearman_descriptive": 0.5
+      },
+      "agreement": {
+        "return": {
+          "same_hypothesis_decision": true,
+          "same_maximizing_H": true
+        },
+        "sharpe": {
+          "same_hypothesis_decision": true,
+          "same_maximizing_H": true
+        }
+      }
+    }
+  },
+  "scientific_arms": [
+    {
+      "label_horizon": 7,
+      "model": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-model.json",
+        "sha256": "797fb80cbe9feaf279acdf78e09ed1d2c3c5ade73df568e4c572ca30a8e86978",
+        "size": 87956
+      },
+      "account": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-s5.json",
+        "sha256": "e2aaa699355c0286f7fcc0f5b24c591ae901d64bb191e437009244393dbc550f",
+        "size": 145681
+      },
+      "training_rows": 5461850,
+      "components": [
+        {
+          "seed": 42,
+          "session": "horizonp50_20261105_h7_s42",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "380c74ab84a5b4b76a147ceabc15f352bed483f7226c67ada185429df131fde8",
+            "size": 58640952
+          },
+          "fit_job": "h7-s42-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s42.json",
+            "sha256": "562f62c86410417627e67ba39d25f68a16e5e32030864404520b29783cbc3aab",
+            "size": 13747
+          }
+        },
+        {
+          "seed": 1000,
+          "session": "horizonp50_20261105_h7_s1000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "f65b79f765aa1ffd4abadc74d1d385d52636e8bdc1f55e64d87ec095badd4c2c",
+            "size": 59688388
+          },
+          "fit_job": "h7-s1000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s1000.json",
+            "sha256": "864e8e9a1ee43b5a0222599f16dbca08782906ef6a561e3c875caaa01a0e6b04",
+            "size": 26956
+          }
+        },
+        {
+          "seed": 2000,
+          "session": "horizonp50_20261105_h7_s2000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "601999952d38903f7ce0cefb4a21664b96745661294b32be05d9baf26c12a11b",
+            "size": 58902139
+          },
+          "fit_job": "h7-s2000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s2000.json",
+            "sha256": "0cceb243225d4572b490545d1554d020e1e0f01a497d0f1ead8857188910d1ff",
+            "size": 16739
+          }
+        },
+        {
+          "seed": 3000,
+          "session": "horizonp50_20261105_h7_s3000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "77cd448f54ff6e9b4b045afedc0f459b1d0e218b94960dbec665ed32753c8dbc",
+            "size": 58733713
+          },
+          "fit_job": "h7-s3000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s3000.json",
+            "sha256": "946ccf649c428c9fb322810f55d24740d43e218e84564435137130c12c5e5f1b",
+            "size": 14795
+          }
+        },
+        {
+          "seed": 4000,
+          "session": "horizonp50_20261105_h7_s4000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "dd5af1de822cffce141e161e6f65178e9c2711f8259f375a7ca3c162861f873f",
+            "size": 58823762
+          },
+          "fit_job": "h7-s4000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s4000.json",
+            "sha256": "a3e7bac9d79295e82ba0985e3b277cba92063b82cdb320beed4917ba84dc8a39",
+            "size": 15645
+          }
+        }
+      ]
+    },
+    {
+      "label_horizon": 15,
+      "model": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-model.json",
+        "sha256": "ad959e4dd3996ee2da99d609472a97affa2dad75939b6e4d03db95c49063a13c",
+        "size": 87968
+      },
+      "account": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-s5.json",
+        "sha256": "0a5c26954c5cb19c3e162b42d522269738798d24c0829656b746355256c625cf",
+        "size": 145952
+      },
+      "training_rows": 5449337,
+      "components": [
+        {
+          "seed": 42,
+          "session": "horizonp50_20261105_h15_s42",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "22606dba4667e684bdc5596b7571560906d8f73f7ac3eec0d0e2c40370fffe0f",
+            "size": 59554703
+          },
+          "fit_job": "h15-s42-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s42.json",
+            "sha256": "8615cedee50c79378c1dd93c5b25c95056e417e2ac1b7d817b69736284269c73",
+            "size": 25011
+          }
+        },
+        {
+          "seed": 1000,
+          "session": "horizonp50_20261105_h15_s1000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "d7f0541813051c8942a23c157e65d07b9c191cccf5835420042f3c73a59703e2",
+            "size": 59200403
+          },
+          "fit_job": "h15-s1000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s1000.json",
+            "sha256": "c1b186f530ed142eb1f19b5bc9f16dbc5429a5a19590cefbef146a421664a742",
+            "size": 20630
+          }
+        },
+        {
+          "seed": 2000,
+          "session": "horizonp50_20261105_h15_s2000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "659f05f224f27d35161658abbe6103deccc0e85e4342fe35f3716d18931ab3c0",
+            "size": 59440295
+          },
+          "fit_job": "h15-s2000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s2000.json",
+            "sha256": "480f520e1622be9998ab494299f1da8757b7cd08a76180cca518047e02dc3ef9",
+            "size": 23437
+          }
+        },
+        {
+          "seed": 3000,
+          "session": "horizonp50_20261105_h15_s3000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "37c7743f3643ca6531efe5e6ebcbee0953fc4fd99b080eb4cdc674495d34536b",
+            "size": 58565859
+          },
+          "fit_job": "h15-s3000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s3000.json",
+            "sha256": "b07d1afe310b0b9fdba96d084256b1ce042114bc39d3d28d22ff92f535754a49",
+            "size": 12755
+          }
+        },
+        {
+          "seed": 4000,
+          "session": "horizonp50_20261105_h15_s4000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "09e445d36b0ff2c0a3627de03ca1c31f210f1f9e911b744b0897b79ef569d055",
+            "size": 60159985
+          },
+          "fit_job": "h15-s4000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s4000.json",
+            "sha256": "beda5a873eec0fc8551e68afa5f5afd5463654d3c669b14b538cbebe86487f0c",
+            "size": 32998
+          }
+        }
+      ]
+    },
+    {
+      "label_horizon": 20,
+      "model": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+        "sha256": "406966331a8d6e63f3b703cd0663b37e7538c0a398e6a5e0c7814ff55e97b872",
+        "size": 87905
+      },
+      "account": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-s5.json",
+        "sha256": "cce029f3cfbae843fc9091ed48c7c104dd39e710bf31396c2bc820b85d87c7d5",
+        "size": 145916
+      },
+      "training_rows": 5448963,
+      "components": [
+        {
+          "seed": 42,
+          "session": "horizonp50_20261105_h20_s42",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "7fab0e7fa814358bf693560e833a334aa68badce15998c32ab8827ddcda8034e",
+            "size": 59330717
+          },
+          "fit_job": "h20-s42-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s42.json",
+            "sha256": "66181542a03c00c7d04b672a5fd5798d9f01aeed43e0a62694998ec23473d43d",
+            "size": 22379
+          }
+        },
+        {
+          "seed": 1000,
+          "session": "horizonp50_20261105_h20_s1000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "e139762396447385de0ec1ff5a1cdbc6bac95200f8d9d94c1c9b581d1ea1e121",
+            "size": 59540837
+          },
+          "fit_job": "h20-s1000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s1000.json",
+            "sha256": "dd41d50fa1bb8210383ceeda93be6f8f0891ce0c5eb89c240f065d7222b1e8eb",
+            "size": 25121
+          }
+        },
+        {
+          "seed": 2000,
+          "session": "horizonp50_20261105_h20_s2000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "3522cb7e221584ce12f14b4b8fc2cdca5b1299da1e09be325589e84fd4808d92",
+            "size": 59397247
+          },
+          "fit_job": "h20-s2000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s2000.json",
+            "sha256": "f49e04e8a1ac43c425c325eeeb2388a7d8dfb5d9510ae4c6a1e571b74733d5e7",
+            "size": 23482
+          }
+        },
+        {
+          "seed": 3000,
+          "session": "horizonp50_20261105_h20_s3000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "3a4f466c9f856a60707f87cc0e9314768d75325fbd3c197a8d6a00469feba9a8",
+            "size": 59312839
+          },
+          "fit_job": "h20-s3000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s3000.json",
+            "sha256": "897e00dbbd4212d36dd0160e56e698644020ba7449d9bf52fd550d61a5d4e01a",
+            "size": 22065
+          }
+        },
+        {
+          "seed": 4000,
+          "session": "horizonp50_20261105_h20_s4000",
+          "model": {
+            "path": "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "sha256": "ed5fd6c2efc6be90548cec352d77c790659529ba1496dcaf2514ca006d982180",
+            "size": 60307829
+          },
+          "fit_job": "h20-s4000-a1",
+          "training": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s4000.json",
+            "sha256": "3dd1cc997f034cf48c56cd2d2e5013504622a55467365cdcd92708e10cc3f6ea",
+            "size": 35111
+          }
+        }
+      ]
+    }
+  ],
+  "retention": {
+    "date": "2026-11-05",
+    "retained_H": [
+      7,
+      15,
+      20
+    ],
+    "style_return_choices": {
+      "D": 7,
+      "F": 15,
+      "T": 20
+    },
+    "audit": "docs/retention-20261105.json",
+    "previous_all_H_summary": "docs/study-summary.json"
+  },
+  "retention_note": "Consolidated after completed campaign by explicit user instruction; scientific metrics and cumulative fit cost unchanged.",
+  "followup_question": "先验证两轮patience50训练稳定性，再核验两组H20真阶梯收益差距。",
+  "derived_account_validations": [
+    {
+      "H": 7,
+      "focus": "D",
+      "model_ref": "training-target/horizon-style-p50-20261105-v1/arms/h7",
+      "evaluation": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-ladder.json",
+      "session_dir": "backtest/result/20261105_233401_horizonp50_20261105_h7_ladder_k3h5"
+    },
+    {
+      "H": 15,
+      "focus": "F",
+      "model_ref": "training-target/horizon-style-p50-20261105-v1/arms/h15",
+      "evaluation": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-ladder.json",
+      "session_dir": "backtest/result/20261105_233502_horizonp50_20261105_h15_ladder_k3h5"
+    },
+    {
+      "H": 20,
+      "label_treatment": "old",
+      "rule": "s5",
+      "model_ref": "training-target/horizon-style-p50-20261105-v1/arms/h20/old",
+      "evaluation": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-s5.json",
+      "session_dir": "backtest/result/20261106_022039_p50stable_20261106_old_s5"
+    },
+    {
+      "H": 20,
+      "label_treatment": "old",
+      "rule": "ladder",
+      "model_ref": "training-target/horizon-style-p50-20261105-v1/arms/h20/old",
+      "evaluation": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-ladder.json",
+      "session_dir": "backtest/result/20261106_022202_p50stable_20261106_old_ladder"
+    },
+    {
+      "H": 20,
+      "label_treatment": "new",
+      "rule": "ladder",
+      "model_ref": "training-target/horizon-style-p50-20261105-v1/arms/h20/new",
+      "evaluation": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-new-ladder.json",
+      "session_dir": "backtest/result/20261106_022322_p50stable_20261106_new_ladder"
+    }
+  ],
+  "followup_report": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/stability-20261106.html",
+  "followup_execution_cost": {
+    "new_model_fits": 8,
+    "new_accounts": 3,
+    "prior_cumulative_fits": 103,
+    "cumulative_fits": 111,
+    "repeatability_fits": 4,
+    "old_other_seed_fits": 4,
+    "determinism_parameter_fits": 0
+  },
+  "followup_reports": [
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/account-gap-validation.html",
+    "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/stability-20261106.html"
+  ],
+  "stability_followup": {
+    "kind": "supplementary_diagnostic",
+    "summary": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-summary.json",
+    "plan": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106.json",
+    "state": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-progress.json",
+    "stable_repetition_seed": 3000,
+    "input_treatments": [
+      "old_Nov2_labels",
+      "new_Nov3_labels"
+    ],
+    "repeat_count_per_treatment": 2,
+    "strict_repeatability_passed": true,
+    "historical_v2_cause": "unresolved, outside this paired-label attribution",
+    "old_reconstructed_model_metrics": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-model.json"
+  },
+  "followup_execution_cost_history": [
+    {
+      "new_model_fits": 0,
+      "new_accounts": 2,
+      "observational_replays": 2,
+      "prior_cumulative_fits": 103
+    }
+  ]
+}

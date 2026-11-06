@@ -1,0 +1,84 @@
+{
+  "new_fits": 0,
+  "new_official_accounts": 2,
+  "same_configuration_observational_replays": 2,
+  "tests": "........................................................................ [ 38%]\n........................................................................ [ 77%]\n...........................................                              [100%]\n187 passed in 1.42s",
+  "fixed_issues": [
+    "Consolidated fourteen newly added standalone trial entries into the retained parent study; selected runtime assets now explicit.",
+    "Corrected the misleading claim that live cohort account arithmetic annual return is identically equal to label mean annualization; documentation only, strategy behavior unchanged."
+  ],
+  "adapter_issues": [
+    {
+      "issue": "Historical order indicator is a NumpyOrderIndicator object, not a dict.",
+      "resolution": "Read its stored SingleData arrays and explicit instrument indices; reconciled complete cash, trades and account outputs."
+    },
+    {
+      "issue": "Direct pandas conversion of the historical custom index is unsupported in this environment.",
+      "resolution": "Used idx_list explicitly; no backtest implementation or saved metrics changed."
+    }
+  ],
+  "remaining": [
+    "Standalone strategy harness only supports baseline v2; bounded derived-account workflow used a temporary adapter with truthful H7/H15 model_refs.",
+    "Actual-execution residual beyond calendar attribution and dynamic capital remains grouped; overdue contribution is not complete causal attribution.",
+    "Historical v2 training reproduction cause remains unresolved.",
+    "HTML checked for source numbers and links; full browser rendering remains unverified under the existing file-protocol restriction."
+  ],
+  "source_adapters": [
+    {
+      "name": "cleanup_runtime.py",
+      "sha256": "f70aecab5809cb59e81c2eac9f71ef9088ab7cdb99fe94c2ccc85da8661aceb2"
+    },
+    {
+      "name": "consolidate.py",
+      "sha256": "a37245f9efd3ec6a484a753b852eb19e30c9e98c58d21310ebee0aad6a38ea7a"
+    },
+    {
+      "name": "decompose.py",
+      "sha256": "e083a4df27771cf92865f9e0dd8fe2065534b9ecbe2c7ef48637c57b5ecde63b"
+    },
+    {
+      "name": "diagnose.py",
+      "sha256": "1e954072621823b40148eb5565e699b803c2dbffd9e4356cabbd9409e2d4622d"
+    },
+    {
+      "name": "finish_refs.py",
+      "sha256": "ec5ed42f1ad6753cf5b4c4c3d09d74ce55dff563d2e3ece2f6fdc5d64109d557"
+    },
+    {
+      "name": "inspect_accounts.py",
+      "sha256": "86dee9a37d77a5f83c119341eee45c17a06631abd75b240231391fcdf2d8bc39"
+    },
+    {
+      "name": "publish.py",
+      "sha256": "6ba526c4a49a6724c74982387f7f95a7a624108a64f1b0b32001507ace16b810"
+    },
+    {
+      "name": "run_ladders.py",
+      "sha256": "65e7130bb3531e69b5f18f5fe4246bd3cfdd4a1a7fdf18f21fb67259b7f0be00"
+    },
+    {
+      "name": "trace_delayed.py",
+      "sha256": "b3a906c6272fc5a677393e6a1b2942bd132af53e195902d5d0ed31efb601bcd5"
+    },
+    {
+      "name": "verify_ladders.py",
+      "sha256": "db5b7e3d9f44655074859c62c458d55e582234be4113232a60774a1fe9ab5f7e"
+    }
+  ],
+  "post_execution_documentation_changes": [
+    {
+      "path": "qlib/contrib/strategy/cohort_ladder.py",
+      "frozen_sha256": "55e39b673db15b5d862f5288d29d353c83a974d15860632dced96d5720aa32e3",
+      "current_sha256": "17064220a23f3e06fe19a5d6fff298dfebe50f795cca384d97e848d954f2a0e0",
+      "non_docstring_ast_identical": true,
+      "timing": "Documentation correction after all official account runs and observational replays completed."
+    },
+    {
+      "path": "qlib/contrib/strategy/signal_strategy.py",
+      "frozen_sha256": "b7ae4c578b035d93a13a113492c19ab0085e803342dedc37d454992a4bd2a0e7",
+      "current_sha256": "87b40cfb43cdfb1e6f40df6be344b540b6d8f3d8f059eff2b542370ca383adb4",
+      "non_docstring_ast_identical": true,
+      "timing": "Documentation correction after all official account runs and observational replays completed."
+    }
+  ]
+}

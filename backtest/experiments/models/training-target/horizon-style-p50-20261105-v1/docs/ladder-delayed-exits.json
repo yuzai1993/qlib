@@ -1,0 +1,60 @@
+{
+  "h7": {
+    "lot_to_position_max_abs_shares": 1.1641532182693481e-10,
+    "realized_sale_age_min": 2,
+    "realized_sale_age_max": 13,
+    "sale_lots_at_exactly5_fraction": 0.9849246231155779,
+    "early_sales_under5": 2,
+    "early_sale_details": [
+      {
+        "day": "2024-07-02 00:00:00",
+        "code": "SZ002713",
+        "age": 2,
+        "qty": 0.11528662334603723,
+        "notional": 0.20816252205795727
+      },
+      {
+        "day": "2024-07-05 00:00:00",
+        "code": "SZ002713",
+        "age": 4,
+        "qty": 0.11528662334603723,
+        "notional": 0.27726564519954333
+      }
+    ],
+    "focus": "D",
+    "overdue_pnl_sum_focus": -0.042575962382397164,
+    "overdue_pnl_ann_focus": -0.010538604550098307,
+    "overdue_worst_names_focus": {
+      "SZ002713": -0.016720547185587232,
+      "SZ300069": -0.009209281122727007,
+      "SZ000638": -0.0061313446085901726,
+      "SH603398": -0.005708804240845584,
+      "SH600246": -0.005132996875198668,
+      "SH603718": -0.004969896522117363,
+      "SZ002816": -0.0030278622748849027,
+      "SZ002217": -0.0026527096539554545
+    },
+    "caveat": "Overdue mark-to-market contribution after the scheduled H5 exit, not a full counterfactual loss attribution: replacement opportunities and changing capital denominator remain separate."
+  },
+  "h15": {
+    "lot_to_position_max_abs_shares": 4.3655745685100555e-11,
+    "realized_sale_age_min": 5,
+    "realized_sale_age_max": 15,
+    "sale_lots_at_exactly5_fraction": 0.9840036563071298,
+    "early_sales_under5": 0,
+    "early_sale_details": [],
+    "focus": "F",
+    "overdue_pnl_sum_focus": -0.028474835465970287,
+    "overdue_pnl_ann_focus": -0.0523434475477395,
+    "overdue_worst_names_focus": {
+      "SZ002217": -0.02079648694946878,
+      "SZ300125": -0.011290964729504816,
+      "SH603110": -0.0044684057072016375,
+      "SZ002146": -0.002875318162791549,
+      "SH603123": 0.00019145662772627022,
+      "SH600292": 0.0051144519192957445,
+      "SH600356": 0.0056504315359744844
+    },
+    "caveat": "Overdue mark-to-market contribution after the scheduled H5 exit, not a full counterfactual loss attribution: replacement opportunities and changing capital denominator remain separate."
+  }
+}

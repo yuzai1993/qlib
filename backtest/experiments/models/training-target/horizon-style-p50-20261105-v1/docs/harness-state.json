@@ -1,0 +1,2506 @@
+{
+  "schema_version": 2,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-state.json",
+  "plan": {
+    "schema_version": 2,
+    "campaign_id": "horizon-style-p50-20261105-v1",
+    "idea": "确定延长早停有效的话，就用该方法重跑H实验",
+    "track": "all_a_model",
+    "direction": "training-target",
+    "anchor_exp_id": "training-target/horizon-style-p50-20261105-v1",
+    "archive_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+    "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "allowed_changes": [
+      "label_horizon"
+    ],
+    "selection_rule": "Fixed seven-H study; evaluate original T/D monotonicity and F peak hypotheses separately by metric, retain all outcomes; no winner-based promotion.",
+    "data_version": "2026-11-03",
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "inputs": [
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/frozen-training-inputs.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/evaluation-snapshot.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/validation-summary.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/inference-receipt.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/evaluation.yaml",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+      "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/common.py",
+      "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/prepare.py",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/train/train_regime_arm.py",
+      "/Users/yuxianqi/Project/qlib/backtest/models/regime_adapt.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/prepare/build_regime_alt_labels.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/ensemble_preds.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/run_pred_backtest.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/strategy_stability_metrics.py",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/train_dates_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "/Users/yuxianqi/Project/qlib/qlib/data/dataset/processor.py",
+      "/Users/yuxianqi/Project/qlib/qlib/backtest/cn_limit.py",
+      "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s4000/run_01/artifacts_root/artifacts/trained_model"
+    ],
+    "budget": {
+      "max_rounds": 1,
+      "max_variants": 7,
+      "max_attempts_per_variant": 2,
+      "max_wall_hours": 8,
+      "max_no_new_evidence_rounds": 2,
+      "concurrency": 1
+    },
+    "execution_budget": {
+      "max_model_fits": 37,
+      "new_label_horizons": [
+        5,
+        7,
+        10,
+        15,
+        20,
+        30,
+        40
+      ]
+    },
+    "scientific_arm_count": 7,
+    "registration_variant_count": 1,
+    "aggregation_note": "The one tool variant is the user-requested study entry. Seven scientific arms are explicitly frozen and counted; this is not permission to add six more study variants.",
+    "prior_total_fits": 68,
+    "parent_campaign": "h20-patience-confirmation-20261105-v1",
+    "parent_state": "backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/harness-state.json",
+    "temporary_owner": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM",
+    "model_adapter_policy": "Use frozen formal implementations; record and hash each task-local execution adapter before its first use. Additional adapters may not alter frozen science."
+  },
+  "plan_source": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/harness-plan.json",
+    "sha256": "3611df165eb36da2063ea3ff0e0dc9066b561a1b7d79aa03c2d8116e7542822b",
+    "size": 5018
+  },
+  "inputs": [
+    {
+      "path": "backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/frozen-training-inputs.json",
+      "sha256": "405d8c61ffd2bb850bd2deb4f074955a9f2ab247ed5446d03a071462efe25388",
+      "size": 11917
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/evaluation-snapshot.json",
+      "sha256": "32c763b1b3a9e269d3b30bebbd677f6027610093b57b09672aa928ae7e20528a",
+      "size": 21467591
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/validation-summary.json",
+      "sha256": "75c1138bb3c7f54b0435c9731101f3ed7a27f9bdb08c958f09be20111c05e96e",
+      "size": 11446
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/inference-receipt.json",
+      "sha256": "b0a56398fa4274a58d4e3b86b6609b303479568983b33198e41b1c61d883f80c",
+      "size": 63740
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+      "sha256": "55381bdc842e9300f320eea0a6f0d534e94d388be114f7c0d8e35dca8a291154",
+      "size": 4330
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+      "sha256": "d3e269b8b9ad74b6ad3bcd74ed691a38fc48e9854e45bf4dd3c3334583fb4a5e",
+      "size": 1840
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/common.py",
+      "sha256": "2acf77c6ad4d2743fc023340633555f9d113e303e86549603c5d9b1618d60c7e",
+      "size": 2654
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/prepare.py",
+      "sha256": "8484791674e8762b787c017de28c931a5bbaeb5b6413bbc73835384164c2caa0",
+      "size": 7018
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "8dfa2fcb39097ee0d19ea1c29dcbe3641e3237d9831b27c1db327a0fa6419a75",
+      "size": 33129
+    },
+    {
+      "path": "backtest/models/regime_adapt.py",
+      "sha256": "9fd7fc084365535680cb8df08a263132c13561a5d5434f8b51a16c6d08a9526d",
+      "size": 15566
+    },
+    {
+      "path": "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "sha256": "6ef9da9ce5869c7415c628acfeef0e24e223948013f4c60f17d66683ae143b64",
+      "size": 28674
+    },
+    {
+      "path": "backtest/scripts/prepare/build_regime_alt_labels.py",
+      "sha256": "e63ed693553a0506ab7902ca71ec57eea745e18b52fbae88c39130e0ba3201ff",
+      "size": 3632
+    },
+    {
+      "path": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "sha256": "8cc35a510bb1b95d047a963f595dc1a4b8ac8e3102056c2c8a78d5c2b22b6026",
+      "size": 68674
+    },
+    {
+      "path": "backtest/scripts/evaluate/ensemble_preds.py",
+      "sha256": "610a1ae3aca04b787cfbc56199d0515052902a3d072509df093b295600a02ef7",
+      "size": 3534
+    },
+    {
+      "path": "backtest/scripts/evaluate/run_pred_backtest.py",
+      "sha256": "9883480618d01063a5c9ed1010e65793495dc29e5336b1445ab3f2259d78ffed",
+      "size": 11636
+    },
+    {
+      "path": "backtest/scripts/evaluate/strategy_stability_metrics.py",
+      "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb",
+      "size": 7327
+    },
+    {
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a",
+      "size": 38931
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "qlib/data/dataset/processor.py",
+      "sha256": "097ad352d018406a72363326838d5d8f5eeaf4a40eed17855bfa167c2ddfc202",
+      "size": 14933
+    },
+    {
+      "path": "qlib/backtest/cn_limit.py",
+      "sha256": "44ed3d28606230d459edaa407fe6df9ed12081f3426f667d2a0e70d82772807b",
+      "size": 1804
+    },
+    {
+      "path": "backtest/result/h20es20261104_p50_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "a64c1dbc40394a52d408e6ec629fa1fdb3a10243833db160243cac8fca4eb8e5",
+      "size": 59330537
+    },
+    {
+      "path": "backtest/result/h20es20261104_p50_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "3321ed5a9fe105a6e60769d48c6fc33c06b5993d1fd77d46a71a0943c4125dbb",
+      "size": 59540546
+    },
+    {
+      "path": "backtest/result/h20es20261104_p50_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "4f885b8bfa68f6d86d276517b9438492fede8aad9d0dcb60d69437808216111a",
+      "size": 59397141
+    },
+    {
+      "path": "backtest/result/h20es20261104_p50_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "129bc6e309d625fac9ca9c611e3c3596ea4532a4152db51b551b8dfea19f54b4",
+      "size": 59382742
+    },
+    {
+      "path": "backtest/result/h20es20261104_p50_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "d38b06f449071124266400c512e702aac299568429614ef29264e0f9a061a7ea",
+      "size": 60307647
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "0cab80aa42eb80e5678f2f19e6975739a4e41175b1f7957ee48e51c0e5bb9f8a",
+      "size": 12365
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "0da4f8a77cc1af8d5208230f2d2a148c74e7520e446bd0a413ebeb773ba8e48f",
+      "size": 63823
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "508b47341d7c9680f06f083f2f405ca354cd14236670c312c47ee30e6d348f72",
+      "size": 57179
+    }
+  ],
+  "baseline_sha256": "73d29f3e2f78fa64fd1ef8bbadb451d686849a2141215fa77f777a287c922304",
+  "baseline_model_ref": null,
+  "started_at": 1793844757.884254,
+  "deadline": 1793873557.884254,
+  "revision": 91,
+  "status": "closed",
+  "variants": {
+    "training-target/horizon-style-p50-20261105-v1": {
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "archive_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+      "round": 1,
+      "hypothesis": "At fixed patience50, larger H improves T, smaller H>=5 improves D, and F peaks at H5-10; verify model patterns against the same fixed-s5 account rule.",
+      "changed_axis": "label_horizon",
+      "configs": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+          "sha256": "55381bdc842e9300f320eea0a6f0d534e94d388be114f7c0d8e35dca8a291154",
+          "size": 4330
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+          "outcome": "succeeded",
+          "started_at": 1793844758.5293481,
+          "command": [
+            "/opt/anaconda3/envs/qlib/bin/python",
+            "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/prepare.py"
+          ],
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+            "sha256": "406966331a8d6e63f3b703cd0663b37e7538c0a398e6a5e0c7814ff55e97b872",
+            "size": 87905
+          },
+          "finished_at": 1793862571.5881422,
+          "evidence": [
+            {
+              "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+              "sha256": "406966331a8d6e63f3b703cd0663b37e7538c0a398e6a5e0c7814ff55e97b872",
+              "size": 87905
+            },
+            {
+              "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/study-summary.json",
+              "sha256": "26c354d56f749bd53fdf4d12610864bbcca36f5e20584d61e08ab313ab02e0e4",
+              "size": 228799
+            },
+            {
+              "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/bridge-readiness.json",
+              "sha256": "850b6d6a1b227bf221e86fa40879fcecde3c3cd9ad9e04719e5ac417cb5119e6",
+              "size": 6384
+            }
+          ],
+          "reason": "",
+          "registered": {
+            "event_sha256": "30b134d65875e2ee3e5beb88855adafd26918c105461ede05bc455b73508adaa",
+            "detail_report": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html"
+          },
+          "reported": [
+            {
+              "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+              "sha256": "040777a4692d5af16138961c0ee00abb4d368702df451166ddd6534148515f02",
+              "size": 37581
+            },
+            {
+              "path": "backtest/experiments/reports/phase_m_v1_report.html",
+              "sha256": "339838cc8e5f101b1e5691e44a57f7e1c5b18f82717dca888d94cbf2dec44237",
+              "size": 15751
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reflections": [
+    {
+      "type": "reflection",
+      "round": 1,
+      "observations": "T：模型收益不支持预设规律（最大值H=20）；模型夏普不支持预设规律（最大值H=20）；账户收益不支持预设规律（最大值H=20）；账户夏普不支持预设规律（最大值H=40）。 D：模型收益不支持预设规律（最大值H=7）；模型夏普不支持预设规律（最大值H=7）；账户收益不支持预设规律（最大值H=7）；账户夏普不支持预设规律（最大值H=40）。 F：模型收益不支持预设规律（最大值H=15）；模型夏普不支持预设规律（最大值H=30）；账户收益不支持预设规律（最大值H=15）；账户夏普不支持预设规律（最大值H=30）。 35/35 fits succeeded, no fit retry; cumulative103. Paired new-cohort H20 p50 improved model net_ann19.47%→29.49%, Sharpe0.281→0.494, fixed-s5 CAGR4.71%→23.13%, Sharpe0.304→0.856. Full review: docs/harness-trial-review.json.",
+      "interpretation": "Observed patterns do not support the three frozen strict hypotheses. Return maxima agree between model/account (T20,D7,F15), Sharpe maxima differ for T/D and agree at F30. Three <=6-round selections, four reverse-priority-sensitive trajectories and one cap-censored fit limit causal H attribution. No ensemble falls below every component. Historical selection is not independent OOS, F is only136days in2024, historical v2 reproduction remains unresolved. Browser page layout QA blocked; source/links/static plots checked.",
+      "new_evidence": true,
+      "next_hypothesis": ""
+    }
+  ],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-cleanup.json",
+      "sha256": "d7f84432b59baaffbc4d2498e26ec9c1d8106f07faaefea037e25af680229483",
+      "size": 818
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1793844758.098779,
+      "event": {
+        "type": "plan_variant",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "archive_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "round": 1,
+        "changed_axis": "label_horizon",
+        "hypothesis": "At fixed patience50, larger H improves T, smaller H>=5 improves D, and F peaks at H5-10; verify model patterns against the same fixed-s5 account rule.",
+        "configs": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json"
+        ]
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1793844758.529349,
+      "event": {
+        "type": "start",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/prepare.py"
+        ]
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1793845154.4699142,
+      "event": {
+        "type": "note",
+        "text": "Initial label preparation interrupted before any fit due repeated full-calendar NameDFilter construction. Original adapter/log and completed base years preserved. New adapter uses the identical static prefix predicate with original instrument spans; it must exactly reproduce existing annual indices, H40 labels and listing masks before new years proceed. See docs/preparation-operational-retry.json."
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1793845332.120786,
+      "event": {
+        "type": "note",
+        "text": "Seven horizons prepared with independent target masks and one frozen Nov3 raw-label source. All actual per-year label block SHA/signatures saved in docs/prepared-labels.json. H20 input bridge decides exact model reuse before any fit; no fit started during preparation."
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1793845452.312479,
+      "event": {
+        "type": "note",
+        "text": "Train execution adapter frozen before H20 fits: docs/train-adapter-h20.json. Uses frozen formal model/weights, saves booster and full history before assertions."
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1793845492.621964,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h20-s42-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "20"
+        ]
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1793845865.7251892,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h20-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s42.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1793845866.291776,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h20-s1000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "20"
+        ]
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1793846321.99571,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h20-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s1000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 10,
+      "time": 1793846322.542961,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h20-s2000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "20"
+        ]
+      }
+    },
+    {
+      "revision": 11,
+      "time": 1793846724.6870458,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h20-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s2000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 12,
+      "time": 1793846725.246857,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h20-s3000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "20"
+        ]
+      }
+    },
+    {
+      "revision": 13,
+      "time": 1793847107.496802,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h20-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s3000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 14,
+      "time": 1793847108.0540512,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h20-s4000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "20"
+        ]
+      }
+    },
+    {
+      "revision": 15,
+      "time": 1793847742.314343,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h20-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s4000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 16,
+      "time": 1793847746.1648672,
+      "event": {
+        "type": "note",
+        "text": "Execution adapters recorded before bridge stage: docs/execution-bridge.json. Frozen H list, parameters and data sources unchanged."
+      }
+    },
+    {
+      "revision": 17,
+      "time": 1793849000.2975051,
+      "event": {
+        "type": "note",
+        "text": "Uniform-label H20 paired bridge completed; readiness=True. Full criteria, selected rounds and official model/account results saved in docs/bridge-readiness.json. No remaining H may start if false."
+      }
+    },
+    {
+      "revision": 18,
+      "time": 1793849000.595914,
+      "event": {
+        "type": "note",
+        "text": "Execution adapters recorded before study stage: docs/execution-study.json. Frozen H list, parameters and data sources unchanged."
+      }
+    },
+    {
+      "revision": 19,
+      "time": 1793849003.559073,
+      "event": {
+        "type": "note",
+        "text": "Train execution adapter frozen before H5 fits: docs/train-adapter-h5.json. Uses frozen formal model/weights, saves booster and full history before assertions."
+      }
+    },
+    {
+      "revision": 20,
+      "time": 1793849045.9051251,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h5-s42-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "5"
+        ]
+      }
+    },
+    {
+      "revision": 21,
+      "time": 1793849301.550924,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h5-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s42.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h5_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 22,
+      "time": 1793849302.3401852,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h5-s1000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "5"
+        ]
+      }
+    },
+    {
+      "revision": 23,
+      "time": 1793849640.196298,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h5-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s1000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h5_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 24,
+      "time": 1793849640.76243,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h5-s2000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "5"
+        ]
+      }
+    },
+    {
+      "revision": 25,
+      "time": 1793849968.458121,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h5-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s2000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h5_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 26,
+      "time": 1793849969.0192919,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h5-s3000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "5"
+        ]
+      }
+    },
+    {
+      "revision": 27,
+      "time": 1793850300.056229,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h5-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s3000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h5_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 28,
+      "time": 1793850300.6226099,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h5-s4000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "5"
+        ]
+      }
+    },
+    {
+      "revision": 29,
+      "time": 1793850685.598569,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h5-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s4000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h5_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 30,
+      "time": 1793850690.555851,
+      "event": {
+        "type": "note",
+        "text": "Train execution adapter frozen before H7 fits: docs/train-adapter-h7.json. Uses frozen formal model/weights, saves booster and full history before assertions."
+      }
+    },
+    {
+      "revision": 31,
+      "time": 1793850731.545734,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h7-s42-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 42,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "7"
+        ]
+      }
+    },
+    {
+      "revision": 32,
+      "time": 1793850993.729954,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s42.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 33,
+      "time": 1793850994.726413,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h7-s1000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 1000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "7"
+        ]
+      }
+    },
+    {
+      "revision": 34,
+      "time": 1793851495.341113,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s1000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 35,
+      "time": 1793851495.9105878,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h7-s2000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 2000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "7"
+        ]
+      }
+    },
+    {
+      "revision": 36,
+      "time": 1793851835.084388,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s2000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 37,
+      "time": 1793851835.941804,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h7-s3000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 3000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "7"
+        ]
+      }
+    },
+    {
+      "revision": 38,
+      "time": 1793852109.078687,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s3000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 39,
+      "time": 1793852110.001455,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h7-s4000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 4000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "7"
+        ]
+      }
+    },
+    {
+      "revision": 40,
+      "time": 1793852405.251282,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s4000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 41,
+      "time": 1793852410.361265,
+      "event": {
+        "type": "note",
+        "text": "Train execution adapter frozen before H10 fits: docs/train-adapter-h10.json. Uses frozen formal model/weights, saves booster and full history before assertions."
+      }
+    },
+    {
+      "revision": 42,
+      "time": 1793852451.102079,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h10-s42-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 42,
+        "label_horizon": 10,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "10"
+        ]
+      }
+    },
+    {
+      "revision": 43,
+      "time": 1793852755.559555,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h10-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s42.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h10_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 44,
+      "time": 1793852756.121661,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h10-s1000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 1000,
+        "label_horizon": 10,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "10"
+        ]
+      }
+    },
+    {
+      "revision": 45,
+      "time": 1793853009.393046,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h10-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s1000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h10_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 46,
+      "time": 1793853010.2469451,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h10-s2000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 2000,
+        "label_horizon": 10,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "10"
+        ]
+      }
+    },
+    {
+      "revision": 47,
+      "time": 1793853328.62897,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h10-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s2000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h10_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 48,
+      "time": 1793853329.184762,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h10-s3000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 3000,
+        "label_horizon": 10,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "10"
+        ]
+      }
+    },
+    {
+      "revision": 49,
+      "time": 1793853591.707615,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h10-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s3000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h10_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 50,
+      "time": 1793853592.5776908,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h10-s4000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 4000,
+        "label_horizon": 10,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "10"
+        ]
+      }
+    },
+    {
+      "revision": 51,
+      "time": 1793853898.413644,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h10-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s4000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h10_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 52,
+      "time": 1793853903.4255471,
+      "event": {
+        "type": "note",
+        "text": "Train execution adapter frozen before H15 fits: docs/train-adapter-h15.json. Uses frozen formal model/weights, saves booster and full history before assertions."
+      }
+    },
+    {
+      "revision": 53,
+      "time": 1793853944.061964,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h15-s42-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 42,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "15"
+        ]
+      }
+    },
+    {
+      "revision": 54,
+      "time": 1793854369.322004,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s42.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 55,
+      "time": 1793854369.886535,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h15-s1000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 1000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "15"
+        ]
+      }
+    },
+    {
+      "revision": 56,
+      "time": 1793854756.991728,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s1000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 57,
+      "time": 1793854757.570981,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h15-s2000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 2000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "15"
+        ]
+      }
+    },
+    {
+      "revision": 58,
+      "time": 1793855215.9333582,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s2000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 59,
+      "time": 1793855216.502242,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h15-s3000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 3000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "15"
+        ]
+      }
+    },
+    {
+      "revision": 60,
+      "time": 1793855475.552008,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s3000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 61,
+      "time": 1793855476.412045,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h15-s4000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 4000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "15"
+        ]
+      }
+    },
+    {
+      "revision": 62,
+      "time": 1793856056.21346,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s4000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 63,
+      "time": 1793856061.2031538,
+      "event": {
+        "type": "note",
+        "text": "Train execution adapter frozen before H30 fits: docs/train-adapter-h30.json. Uses frozen formal model/weights, saves booster and full history before assertions."
+      }
+    },
+    {
+      "revision": 64,
+      "time": 1793856100.9592052,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h30-s42-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 42,
+        "label_horizon": 30,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "30"
+        ]
+      }
+    },
+    {
+      "revision": 65,
+      "time": 1793856530.169636,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h30-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s42.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h30_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 66,
+      "time": 1793856530.734099,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h30-s1000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 1000,
+        "label_horizon": 30,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "30"
+        ]
+      }
+    },
+    {
+      "revision": 67,
+      "time": 1793857169.91185,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h30-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s1000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h30_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 68,
+      "time": 1793857170.481964,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h30-s2000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 2000,
+        "label_horizon": 30,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "30"
+        ]
+      }
+    },
+    {
+      "revision": 69,
+      "time": 1793857595.461889,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h30-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s2000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h30_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 70,
+      "time": 1793857596.0642922,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h30-s3000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 3000,
+        "label_horizon": 30,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "30"
+        ]
+      }
+    },
+    {
+      "revision": 71,
+      "time": 1793857989.408143,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h30-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s3000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h30_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 72,
+      "time": 1793857989.9668832,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h30-s4000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 4000,
+        "label_horizon": 30,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "30"
+        ]
+      }
+    },
+    {
+      "revision": 73,
+      "time": 1793858806.469682,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h30-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s4000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h30_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 74,
+      "time": 1793858811.5817559,
+      "event": {
+        "type": "note",
+        "text": "Train execution adapter frozen before H40 fits: docs/train-adapter-h40.json. Uses frozen formal model/weights, saves booster and full history before assertions."
+      }
+    },
+    {
+      "revision": 75,
+      "time": 1793858853.77217,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h40-s42-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 42,
+        "label_horizon": 40,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "40"
+        ]
+      }
+    },
+    {
+      "revision": 76,
+      "time": 1793859246.7926779,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h40-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s42.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h40_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 77,
+      "time": 1793859247.358623,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h40-s1000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 1000,
+        "label_horizon": 40,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "40"
+        ]
+      }
+    },
+    {
+      "revision": 78,
+      "time": 1793859509.0225642,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h40-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s1000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h40_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 79,
+      "time": 1793859509.8615491,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h40-s2000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 2000,
+        "label_horizon": 40,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "40"
+        ]
+      }
+    },
+    {
+      "revision": 80,
+      "time": 1793859845.1961951,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h40-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s2000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h40_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 81,
+      "time": 1793859846.056414,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h40-s3000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 3000,
+        "label_horizon": 40,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "40"
+        ]
+      }
+    },
+    {
+      "revision": 82,
+      "time": 1793860085.1738849,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h40-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s3000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h40_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 83,
+      "time": 1793860086.02009,
+      "event": {
+        "type": "fit_start",
+        "job_id": "h40-s4000-a1",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "seed": 4000,
+        "label_horizon": 40,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+          "40"
+        ]
+      }
+    },
+    {
+      "revision": 84,
+      "time": 1793860545.2158132,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h40-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s4000.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h40_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 85,
+      "time": 1793862571.588144,
+      "event": {
+        "type": "result",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1",
+        "outcome": "succeeded",
+        "evaluation": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/study-summary.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/bridge-readiness.json"
+        ]
+      }
+    },
+    {
+      "revision": 86,
+      "time": 1793862662.831616,
+      "event": {
+        "type": "registered",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1"
+      }
+    },
+    {
+      "revision": 87,
+      "time": 1793862672.1345558,
+      "event": {
+        "type": "reported",
+        "exp_id": "training-target/horizon-style-p50-20261105-v1"
+      }
+    },
+    {
+      "revision": 88,
+      "time": 1793862891.889962,
+      "event": {
+        "type": "reflection",
+        "round": 1,
+        "observations": "T：模型收益不支持预设规律（最大值H=20）；模型夏普不支持预设规律（最大值H=20）；账户收益不支持预设规律（最大值H=20）；账户夏普不支持预设规律（最大值H=40）。 D：模型收益不支持预设规律（最大值H=7）；模型夏普不支持预设规律（最大值H=7）；账户收益不支持预设规律（最大值H=7）；账户夏普不支持预设规律（最大值H=40）。 F：模型收益不支持预设规律（最大值H=15）；模型夏普不支持预设规律（最大值H=30）；账户收益不支持预设规律（最大值H=15）；账户夏普不支持预设规律（最大值H=30）。 35/35 fits succeeded, no fit retry; cumulative103. Paired new-cohort H20 p50 improved model net_ann19.47%→29.49%, Sharpe0.281→0.494, fixed-s5 CAGR4.71%→23.13%, Sharpe0.304→0.856. Full review: docs/harness-trial-review.json.",
+        "interpretation": "Observed patterns do not support the three frozen strict hypotheses. Return maxima agree between model/account (T20,D7,F15), Sharpe maxima differ for T/D and agree at F30. Three <=6-round selections, four reverse-priority-sensitive trajectories and one cap-censored fit limit causal H attribution. No ensemble falls below every component. Historical selection is not independent OOS, F is only136days in2024, historical v2 reproduction remains unresolved. Browser page layout QA blocked; source/links/static plots checked.",
+        "new_evidence": true,
+        "next_hypothesis": ""
+      }
+    },
+    {
+      "revision": 89,
+      "time": 1793862891.8958879,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 90,
+      "time": 1793862934.603467,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-cleanup.json"
+      }
+    },
+    {
+      "revision": 91,
+      "time": 1793862934.6997418,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "jobs": {
+    "h20-s42-a1": {
+      "job_id": "h20-s42-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "20"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793845492.621963,
+      "finished_at": 1793845865.725186,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s42.json",
+          "sha256": "66181542a03c00c7d04b672a5fd5798d9f01aeed43e0a62694998ec23473d43d",
+          "size": 22379
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7fab0e7fa814358bf693560e833a334aa68badce15998c32ab8827ddcda8034e",
+          "size": 59330717
+        }
+      ]
+    },
+    "h20-s1000-a1": {
+      "job_id": "h20-s1000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "20"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793845866.291774,
+      "finished_at": 1793846321.9957068,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s1000.json",
+          "sha256": "dd41d50fa1bb8210383ceeda93be6f8f0891ce0c5eb89c240f065d7222b1e8eb",
+          "size": 25121
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e139762396447385de0ec1ff5a1cdbc6bac95200f8d9d94c1c9b581d1ea1e121",
+          "size": 59540837
+        }
+      ]
+    },
+    "h20-s2000-a1": {
+      "job_id": "h20-s2000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "20"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793846322.5429602,
+      "finished_at": 1793846724.687042,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s2000.json",
+          "sha256": "f49e04e8a1ac43c425c325eeeb2388a7d8dfb5d9510ae4c6a1e571b74733d5e7",
+          "size": 23482
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "3522cb7e221584ce12f14b4b8fc2cdca5b1299da1e09be325589e84fd4808d92",
+          "size": 59397247
+        }
+      ]
+    },
+    "h20-s3000-a1": {
+      "job_id": "h20-s3000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "20"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793846725.246855,
+      "finished_at": 1793847107.496799,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s3000.json",
+          "sha256": "897e00dbbd4212d36dd0160e56e698644020ba7449d9bf52fd550d61a5d4e01a",
+          "size": 22065
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "3a4f466c9f856a60707f87cc0e9314768d75325fbd3c197a8d6a00469feba9a8",
+          "size": 59312839
+        }
+      ]
+    },
+    "h20-s4000-a1": {
+      "job_id": "h20-s4000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "20"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793847108.054049,
+      "finished_at": 1793847742.31434,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s4000.json",
+          "sha256": "3dd1cc997f034cf48c56cd2d2e5013504622a55467365cdcd92708e10cc3f6ea",
+          "size": 35111
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ed5fd6c2efc6be90548cec352d77c790659529ba1496dcaf2514ca006d982180",
+          "size": 60307829
+        }
+      ]
+    },
+    "h5-s42-a1": {
+      "job_id": "h5-s42-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "5"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793849045.905123,
+      "finished_at": 1793849301.5509188,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s42.json",
+          "sha256": "6408bf35aee8bdfec5fac748f13c1b8feb994e92bae73b064cbe19f567f854e2",
+          "size": 14125
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h5_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8aef358484d9f04dacbab947114f8a0c12dda92c6a94d1fd859b00218ac2ed4c",
+          "size": 58681308
+        }
+      ]
+    },
+    "h5-s1000-a1": {
+      "job_id": "h5-s1000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "5"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793849302.340184,
+      "finished_at": 1793849640.196296,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s1000.json",
+          "sha256": "f803f1bdeb179c167c8df7b5a3e40f19dfca0bebff20226b9f1e851d38039fc5",
+          "size": 17453
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h5_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5e9d999c3b0940c0be5c1ae4496e7a2aecf21ad3c9e54d3d2a32fde69bbfe562",
+          "size": 58971883
+        }
+      ]
+    },
+    "h5-s2000-a1": {
+      "job_id": "h5-s2000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "5"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793849640.762429,
+      "finished_at": 1793849968.458118,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s2000.json",
+          "sha256": "eadce95c3fb882526a8013e9f371a11e8cbedaca7c62c28171ced387fd202696",
+          "size": 18113
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h5_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e03666e4d56669787827e68c57fa9b9a16980396a35707d907062542d41f0dd9",
+          "size": 59010879
+        }
+      ]
+    },
+    "h5-s3000-a1": {
+      "job_id": "h5-s3000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "5"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793849969.019291,
+      "finished_at": 1793850300.056225,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s3000.json",
+          "sha256": "81646487a75c5519fcdd2083782aeae97f768b22738d1c1af3fc2f8217f912aa",
+          "size": 18089
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h5_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "68dfaf9707fee754ec4a5217d24a3ed8d2217506605dda87822a9dcc4e0f6577",
+          "size": 59009061
+        }
+      ]
+    },
+    "h5-s4000-a1": {
+      "job_id": "h5-s4000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "5"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793850300.622609,
+      "finished_at": 1793850685.5985658,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h5-s4000.json",
+          "sha256": "8933f9ab4a152f53d5a4dfacdfcd508a3cd6c6ca7c63eb8c173106bca4ba39ca",
+          "size": 18207
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h5_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "87938fca600a1c7b7a2d13b55abf01b6ac51305968b4e347d84386d1638b3d40",
+          "size": 59012830
+        }
+      ]
+    },
+    "h7-s42-a1": {
+      "job_id": "h7-s42-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 42,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "7"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793850731.545732,
+      "finished_at": 1793850993.729949,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s42.json",
+          "sha256": "562f62c86410417627e67ba39d25f68a16e5e32030864404520b29783cbc3aab",
+          "size": 13747
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "380c74ab84a5b4b76a147ceabc15f352bed483f7226c67ada185429df131fde8",
+          "size": 58640952
+        }
+      ]
+    },
+    "h7-s1000-a1": {
+      "job_id": "h7-s1000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 1000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "7"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793850994.726411,
+      "finished_at": 1793851495.34111,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s1000.json",
+          "sha256": "864e8e9a1ee43b5a0222599f16dbca08782906ef6a561e3c875caaa01a0e6b04",
+          "size": 26956
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f65b79f765aa1ffd4abadc74d1d385d52636e8bdc1f55e64d87ec095badd4c2c",
+          "size": 59688388
+        }
+      ]
+    },
+    "h7-s2000-a1": {
+      "job_id": "h7-s2000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 2000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "7"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793851495.9105868,
+      "finished_at": 1793851835.08438,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s2000.json",
+          "sha256": "0cceb243225d4572b490545d1554d020e1e0f01a497d0f1ead8857188910d1ff",
+          "size": 16739
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "601999952d38903f7ce0cefb4a21664b96745661294b32be05d9baf26c12a11b",
+          "size": 58902139
+        }
+      ]
+    },
+    "h7-s3000-a1": {
+      "job_id": "h7-s3000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 3000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "7"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793851835.941803,
+      "finished_at": 1793852109.0786839,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s3000.json",
+          "sha256": "946ccf649c428c9fb322810f55d24740d43e218e84564435137130c12c5e5f1b",
+          "size": 14795
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "77cd448f54ff6e9b4b045afedc0f459b1d0e218b94960dbec665ed32753c8dbc",
+          "size": 58733713
+        }
+      ]
+    },
+    "h7-s4000-a1": {
+      "job_id": "h7-s4000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 4000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "7"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793852110.001454,
+      "finished_at": 1793852405.251279,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s4000.json",
+          "sha256": "a3e7bac9d79295e82ba0985e3b277cba92063b82cdb320beed4917ba84dc8a39",
+          "size": 15645
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "dd5af1de822cffce141e161e6f65178e9c2711f8259f375a7ca3c162861f873f",
+          "size": 58823762
+        }
+      ]
+    },
+    "h10-s42-a1": {
+      "job_id": "h10-s42-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 42,
+      "label_horizon": 10,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "10"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793852451.102077,
+      "finished_at": 1793852755.559551,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s42.json",
+          "sha256": "9e654834e3e09cefb207702282461f17dc2d415453ff6a55ea3608c27f9bfc19",
+          "size": 17559
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h10_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8b6bb245b1e9184778a991f48f8b284db5e4ae5bbbc850d04ac2c5d86fd1413f",
+          "size": 58968394
+        }
+      ]
+    },
+    "h10-s1000-a1": {
+      "job_id": "h10-s1000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 1000,
+      "label_horizon": 10,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "10"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793852756.12166,
+      "finished_at": 1793853009.393043,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s1000.json",
+          "sha256": "dc70aa47f0a454c3b7152425213ab8cce99edb4d682eacbfc1d4ceeabd3bfcad",
+          "size": 13019
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h10_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ef834607ea4269506476ac7f74187fda0a5fa16aa0255dbba51cc24ad6156194",
+          "size": 58585697
+        }
+      ]
+    },
+    "h10-s2000-a1": {
+      "job_id": "h10-s2000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 2000,
+      "label_horizon": 10,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "10"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793853010.246943,
+      "finished_at": 1793853328.6289668,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s2000.json",
+          "sha256": "c233cae20b14b42e6025626d7ced5be783743cb0235fbc65b36e5c5792a5c6b0",
+          "size": 17279
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h10_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d82120b6d845549d373d74789fed72a9f57dfab690edae424de9b448a6d70247",
+          "size": 58949631
+        }
+      ]
+    },
+    "h10-s3000-a1": {
+      "job_id": "h10-s3000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 3000,
+      "label_horizon": 10,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "10"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793853329.184761,
+      "finished_at": 1793853591.7076118,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s3000.json",
+          "sha256": "c78bfe004cc2876165d3106c01deae46393371e6e450c9288cc9331ce4427755",
+          "size": 13411
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h10_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "721d8d94ad6c8b133f89cc85bfe439eb6588ebb450ddb24f86dc7214debf6a81",
+          "size": 58623306
+        }
+      ]
+    },
+    "h10-s4000-a1": {
+      "job_id": "h10-s4000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 4000,
+      "label_horizon": 10,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "10"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793853592.5776901,
+      "finished_at": 1793853898.4136372,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h10-s4000.json",
+          "sha256": "ae7df2f98566a0c0f3375af10e93ced9004858872f6ba3464ae6182ef7df1b2d",
+          "size": 15229
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h10_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b7788a8c2eb8bfad40a04c2867e04bbf09e51f19f3112c9085ff86014346fc14",
+          "size": 58780290
+        }
+      ]
+    },
+    "h15-s42-a1": {
+      "job_id": "h15-s42-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 42,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "15"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793853944.061962,
+      "finished_at": 1793854369.322001,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s42.json",
+          "sha256": "8615cedee50c79378c1dd93c5b25c95056e417e2ac1b7d817b69736284269c73",
+          "size": 25011
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "22606dba4667e684bdc5596b7571560906d8f73f7ac3eec0d0e2c40370fffe0f",
+          "size": 59554703
+        }
+      ]
+    },
+    "h15-s1000-a1": {
+      "job_id": "h15-s1000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 1000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "15"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793854369.886533,
+      "finished_at": 1793854756.991725,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s1000.json",
+          "sha256": "c1b186f530ed142eb1f19b5bc9f16dbc5429a5a19590cefbef146a421664a742",
+          "size": 20630
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d7f0541813051c8942a23c157e65d07b9c191cccf5835420042f3c73a59703e2",
+          "size": 59200403
+        }
+      ]
+    },
+    "h15-s2000-a1": {
+      "job_id": "h15-s2000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 2000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "15"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793854757.570979,
+      "finished_at": 1793855215.933355,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s2000.json",
+          "sha256": "480f520e1622be9998ab494299f1da8757b7cd08a76180cca518047e02dc3ef9",
+          "size": 23437
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "659f05f224f27d35161658abbe6103deccc0e85e4342fe35f3716d18931ab3c0",
+          "size": 59440295
+        }
+      ]
+    },
+    "h15-s3000-a1": {
+      "job_id": "h15-s3000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 3000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "15"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793855216.5022411,
+      "finished_at": 1793855475.552005,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s3000.json",
+          "sha256": "b07d1afe310b0b9fdba96d084256b1ce042114bc39d3d28d22ff92f535754a49",
+          "size": 12755
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "37c7743f3643ca6531efe5e6ebcbee0953fc4fd99b080eb4cdc674495d34536b",
+          "size": 58565859
+        }
+      ]
+    },
+    "h15-s4000-a1": {
+      "job_id": "h15-s4000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 4000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "15"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793855476.412043,
+      "finished_at": 1793856056.2134569,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s4000.json",
+          "sha256": "beda5a873eec0fc8551e68afa5f5afd5463654d3c669b14b538cbebe86487f0c",
+          "size": 32998
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "09e445d36b0ff2c0a3627de03ca1c31f210f1f9e911b744b0897b79ef569d055",
+          "size": 60159985
+        }
+      ]
+    },
+    "h30-s42-a1": {
+      "job_id": "h30-s42-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 42,
+      "label_horizon": 30,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "30"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793856100.959203,
+      "finished_at": 1793856530.169633,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s42.json",
+          "sha256": "62ebc2041e47ef9dfb99f114a9c4a2322b2938c7ab6cb32a5ef88c603db3489e",
+          "size": 24228
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h30_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2ce98eb179cdd818879c5be54c5915845ef44949d7b131115ce79a3709f67dde",
+          "size": 59497590
+        }
+      ]
+    },
+    "h30-s1000-a1": {
+      "job_id": "h30-s1000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 1000,
+      "label_horizon": 30,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "30"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793856530.734098,
+      "finished_at": 1793857169.911846,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s1000.json",
+          "sha256": "d0a7cd9a5e57085f59a832e9d28cf7512f0882ae5326f1eaeffd54c2b8b04568",
+          "size": 34767
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h30_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "0c6fb7e417db56387ad1d2f4982c1a9e1d33f486801563f36e2b9bdcebe04119",
+          "size": 60307805
+        }
+      ]
+    },
+    "h30-s2000-a1": {
+      "job_id": "h30-s2000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 2000,
+      "label_horizon": 30,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "30"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793857170.481962,
+      "finished_at": 1793857595.461885,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s2000.json",
+          "sha256": "5ebbd3fb2184c6425085003d36ffc00c2589936ffa3c6ccce39abf830d01da9c",
+          "size": 21548
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h30_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "38d3a180a6c631969821e3b8c9720217597ad57b001ddc264c8b7d6b9ca83fbd",
+          "size": 59317605
+        }
+      ]
+    },
+    "h30-s3000-a1": {
+      "job_id": "h30-s3000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 3000,
+      "label_horizon": 30,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "30"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793857596.064291,
+      "finished_at": 1793857989.408139,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s3000.json",
+          "sha256": "3bfe7cb528a08b54f30d7a4cbbed5c670e661d2a574dee671ff62a833f89a1f9",
+          "size": 19925
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h30_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e9c2bc3cfef567bf9a67b7143fdd2e7af919fdfd583da108070f859bf7723c7c",
+          "size": 59177576
+        }
+      ]
+    },
+    "h30-s4000-a1": {
+      "job_id": "h30-s4000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 4000,
+      "label_horizon": 30,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "30"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793857989.966881,
+      "finished_at": 1793858806.4696782,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h30-s4000.json",
+          "sha256": "7964c816f65d45f736b41d60e60403d7de0ed728953d0aceb63473a93247609b",
+          "size": 44716
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h30_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "3411ace115be1982cc33497e6c6bb6b152d73b101c26384374aee3f896edb85c",
+          "size": 61183581
+        }
+      ]
+    },
+    "h40-s42-a1": {
+      "job_id": "h40-s42-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 42,
+      "label_horizon": 40,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "40"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793858853.7721689,
+      "finished_at": 1793859246.792675,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s42.json",
+          "sha256": "253c273cdc8e5457ff7f70f5ba9de9fad33503a2d22e2cd8721c563685334218",
+          "size": 23623
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h40_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7cd3c98c34e36591d498b5a8a55c1ffa745797afc65198a102175816bc0e82d3",
+          "size": 59465270
+        }
+      ]
+    },
+    "h40-s1000-a1": {
+      "job_id": "h40-s1000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 1000,
+      "label_horizon": 40,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "40"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793859247.358621,
+      "finished_at": 1793859509.02256,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s1000.json",
+          "sha256": "ca33701a48c1d35f14536cf27e678d7b2ff44a4aefe8b41d770e428cc34234f7",
+          "size": 14907
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h40_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "888777b5847c1b3ea8579f5ffb448784ee4f0d39e3448e6d08ce67b1f3f5711c",
+          "size": 58766720
+        }
+      ]
+    },
+    "h40-s2000-a1": {
+      "job_id": "h40-s2000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 2000,
+      "label_horizon": 40,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "40"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793859509.861548,
+      "finished_at": 1793859845.196191,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s2000.json",
+          "sha256": "5685a01d87a62a3882e473b83285cff32d5ef7bd28722a340cfe2a631b1d71ca",
+          "size": 18382
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h40_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "c85bc7cb6c8b122e05d416f1d72e79ccf8841127aa281281a5865bc5fbe2e00d",
+          "size": 59023644
+        }
+      ]
+    },
+    "h40-s3000-a1": {
+      "job_id": "h40-s3000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 3000,
+      "label_horizon": 40,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "40"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793859846.056413,
+      "finished_at": 1793860085.173882,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s3000.json",
+          "sha256": "a43c6fe3d3940af62a43c0cd93c9d53705b8faf37416bec3f494ea54ee0f486c",
+          "size": 13709
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h40_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "742d3de9c1e822a4b33fbfd45279fbf78cd265eed9cf780646a759de0de576dd",
+          "size": 58645548
+        }
+      ]
+    },
+    "h40-s4000-a1": {
+      "job_id": "h40-s4000-a1",
+      "exp_id": "training-target/horizon-style-p50-20261105-v1",
+      "attempt_id": "horizon-style-p50-20261105-v1/training-target/horizon-style-p50-20261105-v1/a1",
+      "seed": 4000,
+      "label_horizon": 40,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+        "40"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793860086.020088,
+      "finished_at": 1793860545.21581,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h40-s4000.json",
+          "sha256": "ff565ef49b6fb68edaed0b5788b203e8ab715deb15e8ee404fd7e413a4fec5e5",
+          "size": 26747
+        },
+        {
+          "path": "backtest/result/horizonp50_20261105_h40_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b97b621b787eefeee6de11cb9a693007076a5e40e7bb4df6fc5f3f4a83743738",
+          "size": 59716103
+        }
+      ]
+    }
+  },
+  "checksum": "dd9358e528d7cc131f6b8ac3e72c9512302b30534dc894af72e7837fad073d1a"
+}

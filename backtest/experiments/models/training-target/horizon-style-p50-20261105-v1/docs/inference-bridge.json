@@ -1,0 +1,210 @@
+{
+  "phase": "bridge",
+  "models": [
+    {
+      "arm": "h20",
+      "seed": 42,
+      "session": "horizonp50_20261105_h20_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7fab0e7fa814358bf693560e833a334aa68badce15998c32ab8827ddcda8034e",
+        "size": 59330717
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s42_pred.pkl",
+        "sha256": "7d565f4d94c2b62e17071fd8b29290bfe5467e7251472f85c7c0087074a7d182",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h20",
+      "seed": 1000,
+      "session": "horizonp50_20261105_h20_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e139762396447385de0ec1ff5a1cdbc6bac95200f8d9d94c1c9b581d1ea1e121",
+        "size": 59540837
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s1000_pred.pkl",
+        "sha256": "2ee37c736ec6debe7f1012da5a048bbdf7f8adf6445f7e85516f396c0aa5a60a",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h20",
+      "seed": 2000,
+      "session": "horizonp50_20261105_h20_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3522cb7e221584ce12f14b4b8fc2cdca5b1299da1e09be325589e84fd4808d92",
+        "size": 59397247
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s2000_pred.pkl",
+        "sha256": "1834d0504f99d7135162f08a99eb5f84478756505096ac872d6d933b8dd3e235",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h20",
+      "seed": 3000,
+      "session": "horizonp50_20261105_h20_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3a4f466c9f856a60707f87cc0e9314768d75325fbd3c197a8d6a00469feba9a8",
+        "size": 59312839
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s3000_pred.pkl",
+        "sha256": "612664710f92d74ebd42a885a184d2f428135ae20c4fe220b516887cc6ed0455",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h20",
+      "seed": 4000,
+      "session": "horizonp50_20261105_h20_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ed5fd6c2efc6be90548cec352d77c790659529ba1496dcaf2514ca006d982180",
+        "size": 60307829
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s4000_pred.pkl",
+        "sha256": "a538fa1a3a0fa29eb39f7f2c08850884f92c0a346c5673dd43ec15a209853d69",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "bridge_p20",
+      "seed": 42,
+      "session": "horizonp50_20261105_bridge_p20_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_bridge_p20_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2dc7264f091fcb1eb97caa8ba27a97b4fa3714afbdc87a8648de92123094ce56",
+        "size": 58625717
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/bridge_p20/horizonp50_20261105_bridge_p20_s42_pred.pkl",
+        "sha256": "4c35841ae5f8bb5efa0e324ff5bbfa867f0b9067baa01d554118d8e7b3e6020a",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "bridge_p20",
+      "seed": 1000,
+      "session": "horizonp50_20261105_bridge_p20_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_bridge_p20_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b0ab31587206af080550570da7fe8235b787d0b08c47d11149de0125cd635e91",
+        "size": 58563886
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/bridge_p20/horizonp50_20261105_bridge_p20_s1000_pred.pkl",
+        "sha256": "630dca549f5e228a78d3d14b5f9c868523df6e20d3e95ec86e961ccf81e1071c",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "bridge_p20",
+      "seed": 2000,
+      "session": "horizonp50_20261105_bridge_p20_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_bridge_p20_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3c1c6878d7b8a2e7d2aa6623473b8057cd82c52b195272337fc9a56aab416137",
+        "size": 59396692
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/bridge_p20/horizonp50_20261105_bridge_p20_s2000_pred.pkl",
+        "sha256": "1834d0504f99d7135162f08a99eb5f84478756505096ac872d6d933b8dd3e235",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "bridge_p20",
+      "seed": 3000,
+      "session": "horizonp50_20261105_bridge_p20_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_bridge_p20_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e82d504c88886589e3497b7af29d5c56b1927aa81862adc273ca3940d569ffa2",
+        "size": 59312284
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/bridge_p20/horizonp50_20261105_bridge_p20_s3000_pred.pkl",
+        "sha256": "612664710f92d74ebd42a885a184d2f428135ae20c4fe220b516887cc6ed0455",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "bridge_p20",
+      "seed": 4000,
+      "session": "horizonp50_20261105_bridge_p20_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_bridge_p20_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "6161775c8d34cc01c8bd439f09ab0587938a27ecce0408949b9fd14eeaf87062",
+        "size": 58564672
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/bridge_p20/horizonp50_20261105_bridge_p20_s4000_pred.pkl",
+        "sha256": "b2b46344d4429b5beb1149cfcf39668984302ca71d7221b72143a0e3780cb042",
+        "size": 83046157
+      }
+    }
+  ],
+  "ensembles": {
+    "h20": {
+      "path": "backtest/result/20261105_horizon_p50/h20/ensemble.pkl",
+      "sha256": "1530988e0c244fd4d0ea6528c8b7ee16ac6a65cc7cacda5778d662979a809e4c",
+      "size": 83046157
+    },
+    "bridge_p20": {
+      "path": "backtest/result/20261105_horizon_p50/bridge_p20/ensemble.pkl",
+      "sha256": "5feca48746a4bec1665f3d49f38678356f04acf58ee00f4a9ea8ea74080dd3c5",
+      "size": 83046157
+    }
+  },
+  "feature_reference": {
+    "path": "backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/inference-receipt.json",
+    "sha256": "b0a56398fa4274a58d4e3b86b6609b303479568983b33198e41b1c61d883f80c",
+    "size": 63740
+  },
+  "all_annual_feature_signatures_exact": true,
+  "parts": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge-2020.json",
+      "sha256": "845b2cfcd7cd44a6603e893b174707f3a4e80d3760584d90bb76314539bdc0cc",
+      "size": 14331
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge-2021.json",
+      "sha256": "dc7c436d04217723a7bb389a069cb1178023b2735495365cb154cb200900130e",
+      "size": 14342
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge-2022.json",
+      "sha256": "8d1d2eb3b089a86c3adfa7c0124fe323a32ca037b610be38e6617d1061eabccd",
+      "size": 14342
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge-2023.json",
+      "sha256": "9d625d749cccd227d9064db802e8c1cdf691a063eda154f9338a70f2f8dde5c4",
+      "size": 14342
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge-2024.json",
+      "sha256": "f6c2f5aa72ff00d0f0181d14700a67734a62c97fd23d4c674ad63c027ebc9315",
+      "size": 14342
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge-2025.json",
+      "sha256": "d2d0e606c22ee1ca7a33a67caf6ed2ea3f1941e7ccd6b7d4b6935d499d73b0f1",
+      "size": 14342
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge-2026.json",
+      "sha256": "ba3f3e564e1fb1373ce4259144f7db065a22227b953312802cccfe44a149305d",
+      "size": 14331
+    }
+  ]
+}

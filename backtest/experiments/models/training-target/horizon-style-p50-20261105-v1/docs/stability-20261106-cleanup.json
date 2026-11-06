@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "temporary_root": "/private/tmp/qlib-p50-stability-20261106.PleG6F",
+  "preservation": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-preservation.json",
+  "planned_duplicate_sessions": [
+    "p50stable_20261106_new_s3000_r1_original",
+    "p50stable_20261106_new_s3000_r2_original",
+    "p50stable_20261106_old_s3000_r2_original"
+  ],
+  "deleted_result_sessions": [
+    "p50stable_20261106_new_s3000_r1_original",
+    "p50stable_20261106_new_s3000_r2_original",
+    "p50stable_20261106_old_s3000_r2_original"
+  ],
+  "mlruns": "Not deleted: all three new account runs retained with their report sessions.",
+  "result_directory_count": 54,
+  "temporary_root_removed": true,
+  "completed_at": 1793903423.928643
+}

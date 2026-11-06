@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/continue_initial.py",
+    "sha256": "68f2520ccfddcfaaf4643856fcdcde13887c2a1c787f6a125dab76d90e73f338",
+    "size": 993
+  },
+  "source_text": "from common import *\nimport subprocess\n\nif __name__=='__main__':\n    register_adapter(__file__)\n    first='old-s3000-r1-original'\n    while True:\n        state=read(STATE)\n        current=next(j for j in state['jobs'] if j['job_id']==first)\n        if current['status']!='running':break\n        try:os.kill(current['pid'],0)\n        except ProcessLookupError:raise RuntimeError('first fit disappeared without receipt')\n        time.sleep(10)\n    if current['status']!='succeeded':raise RuntimeError('first fit failed; inspect before continuing')\n    for label,repeat in [('new',1),('old',2),('new',2)]:\n        log=TMP/f'{label}-s3000-r{repeat}.log'\n        with log.open('w') as f:\n            result=subprocess.run([sys.executable,'-u',str(TMP/'fit.py'),label,'3000',str(repeat)],stdout=f,stderr=subprocess.STDOUT,cwd=ROOT)\n        if result.returncode:raise RuntimeError(f'{label} r{repeat} failed; see {log}')\n    subprocess.run([sys.executable,str(TMP/'compare.py')],cwd=ROOT,check=True)\n",
+  "purpose": "Exact task adapter source retained as audit evidence; executable temporary source is removed at closure."
+}

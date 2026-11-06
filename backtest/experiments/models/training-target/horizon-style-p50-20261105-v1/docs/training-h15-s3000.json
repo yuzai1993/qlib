@@ -1,0 +1,479 @@
+{
+  "horizon": 15,
+  "seed": 3000,
+  "fit_job": "h15-s3000-a1",
+  "session": "horizonp50_20261105_h15_s3000",
+  "model": {
+    "path": "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "37c7743f3643ca6531efe5e6ebcbee0953fc4fd99b080eb4cdc674495d34536b",
+    "size": 58565859
+  },
+  "input_receipt": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h15.json",
+    "sha256": "a7a3e8f80e6985b120c5a6ec1d22d640cd9062362118d542a33a241409ae80e6",
+    "size": 18221
+  },
+  "curves": [
+    {
+      "round": 1,
+      "official": 0.1630117299003901,
+      "reverse_tie_score": 0.1361794269305504,
+      "boundary_tied_days": 1313,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 2,
+      "official": 0.1530463246608734,
+      "reverse_tie_score": 0.14709917337284686,
+      "boundary_tied_days": 1094,
+      "probe_minus_official": -2.7755575615628914e-17
+    },
+    {
+      "round": 3,
+      "official": 0.2770275343341497,
+      "reverse_tie_score": 0.18404519231981606,
+      "boundary_tied_days": 910,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 4,
+      "official": 0.18314304609834003,
+      "reverse_tie_score": 0.1862242508979533,
+      "boundary_tied_days": 595,
+      "probe_minus_official": 2.7755575615628914e-17
+    },
+    {
+      "round": 5,
+      "official": 0.19425725716378078,
+      "reverse_tie_score": 0.21026202755251955,
+      "boundary_tied_days": 356,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 6,
+      "official": 0.16691193621092787,
+      "reverse_tie_score": 0.17193328406999095,
+      "boundary_tied_days": 208,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 7,
+      "official": 0.10549487495549445,
+      "reverse_tie_score": 0.1155572409030943,
+      "boundary_tied_days": 161,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 8,
+      "official": 0.13333642624730924,
+      "reverse_tie_score": 0.14071060063136337,
+      "boundary_tied_days": 87,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 9,
+      "official": 0.13646689644569202,
+      "reverse_tie_score": 0.14086493664747451,
+      "boundary_tied_days": 60,
+      "probe_minus_official": 2.7755575615628914e-17
+    },
+    {
+      "round": 10,
+      "official": 0.1727919103507776,
+      "reverse_tie_score": 0.17545584998215558,
+      "boundary_tied_days": 29,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 11,
+      "official": 0.1730605854324066,
+      "reverse_tie_score": 0.17259076039183702,
+      "boundary_tied_days": 27,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 12,
+      "official": 0.20356896501682772,
+      "reverse_tie_score": 0.20127948742342705,
+      "boundary_tied_days": 16,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 13,
+      "official": 0.23606193946899745,
+      "reverse_tie_score": 0.2338250745465425,
+      "boundary_tied_days": 12,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 14,
+      "official": 0.2492359632549896,
+      "reverse_tie_score": 0.24759757150930628,
+      "boundary_tied_days": 10,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 15,
+      "official": 0.2526651860019404,
+      "reverse_tie_score": 0.2514534888622161,
+      "boundary_tied_days": 9,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 16,
+      "official": 0.24832173451679515,
+      "reverse_tie_score": 0.24824348318129283,
+      "boundary_tied_days": 3,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 17,
+      "official": 0.235586704022988,
+      "reverse_tie_score": 0.23535999287624867,
+      "boundary_tied_days": 3,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 18,
+      "official": 0.25884495886759407,
+      "reverse_tie_score": 0.2601787756962427,
+      "boundary_tied_days": 2,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 19,
+      "official": 0.23359482721372835,
+      "reverse_tie_score": 0.23465940182682524,
+      "boundary_tied_days": 3,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 20,
+      "official": 0.2327032020300504,
+      "reverse_tie_score": 0.2327032020300504,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 21,
+      "official": 0.25224083416102167,
+      "reverse_tie_score": 0.2525912181882814,
+      "boundary_tied_days": 1,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 22,
+      "official": 0.23410652189652725,
+      "reverse_tie_score": 0.23410652189652725,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 23,
+      "official": 0.23957386751455748,
+      "reverse_tie_score": 0.23957386751455748,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 24,
+      "official": 0.22728416538124713,
+      "reverse_tie_score": 0.22728416538124713,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 25,
+      "official": 0.20744829435287915,
+      "reverse_tie_score": 0.20744829435287915,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 26,
+      "official": 0.22781303031328898,
+      "reverse_tie_score": 0.22816341434054882,
+      "boundary_tied_days": 1,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 27,
+      "official": 0.23001241389562496,
+      "reverse_tie_score": 0.23001241389562496,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 28,
+      "official": 0.22061251129807924,
+      "reverse_tie_score": 0.22061251129807924,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 29,
+      "official": 0.22158312542720449,
+      "reverse_tie_score": 0.22158312542720449,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 30,
+      "official": 0.22179281875783252,
+      "reverse_tie_score": 0.22179281875783252,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 31,
+      "official": 0.21293587180671453,
+      "reverse_tie_score": 0.21293587180671453,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 32,
+      "official": 0.2076665289313511,
+      "reverse_tie_score": 0.2076665289313511,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 33,
+      "official": 0.2121464345186798,
+      "reverse_tie_score": 0.2121464345186798,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 34,
+      "official": 0.21725300454355784,
+      "reverse_tie_score": 0.21725300454355784,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 35,
+      "official": 0.22806261712268627,
+      "reverse_tie_score": 0.22806261712268627,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 36,
+      "official": 0.21235786701089368,
+      "reverse_tie_score": 0.21235786701089368,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 37,
+      "official": 0.23648049713057873,
+      "reverse_tie_score": 0.23648049713057873,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 38,
+      "official": 0.22942660503527068,
+      "reverse_tie_score": 0.22942660503527068,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 39,
+      "official": 0.2448626912954632,
+      "reverse_tie_score": 0.2448626912954632,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 40,
+      "official": 0.24281307594297694,
+      "reverse_tie_score": 0.24281307594297694,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 41,
+      "official": 0.254053714852191,
+      "reverse_tie_score": 0.254053714852191,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 42,
+      "official": 0.2567828803077868,
+      "reverse_tie_score": 0.2567828803077868,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 43,
+      "official": 0.2479035296986058,
+      "reverse_tie_score": 0.2479035296986058,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 44,
+      "official": 0.24096433705174286,
+      "reverse_tie_score": 0.24096433705174286,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 45,
+      "official": 0.2415677989674236,
+      "reverse_tie_score": 0.2415677989674236,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 46,
+      "official": 0.23105336680439312,
+      "reverse_tie_score": 0.23105336680439312,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 47,
+      "official": 0.24865526612964273,
+      "reverse_tie_score": 0.24865526612964273,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 48,
+      "official": 0.2534373397657923,
+      "reverse_tie_score": 0.2534373397657923,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 49,
+      "official": 0.25523999306507833,
+      "reverse_tie_score": 0.25523999306507833,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 50,
+      "official": 0.2506640420034925,
+      "reverse_tie_score": 0.2506640420034925,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 51,
+      "official": 0.23343998333189325,
+      "reverse_tie_score": 0.23343998333189325,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 52,
+      "official": 0.2376211855111221,
+      "reverse_tie_score": 0.2376211855111221,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    },
+    {
+      "round": 53,
+      "official": 0.24739613380922174,
+      "reverse_tie_score": 0.24739613380922174,
+      "boundary_tied_days": 0,
+      "probe_minus_official": 0.0
+    }
+  ],
+  "rankic_evals": [
+    {
+      "es_metric": "top5_h5_net_ann",
+      "best_iteration": 3,
+      "best_score": 0.2770275343341497,
+      "valid_days": 1448,
+      "metric_history": [
+        0.1630117299003901,
+        0.1530463246608734,
+        0.2770275343341497,
+        0.18314304609834003,
+        0.19425725716378078,
+        0.16691193621092787,
+        0.10549487495549445,
+        0.13333642624730924,
+        0.13646689644569202,
+        0.1727919103507776,
+        0.1730605854324066,
+        0.20356896501682772,
+        0.23606193946899745,
+        0.2492359632549896,
+        0.2526651860019404,
+        0.24832173451679515,
+        0.235586704022988,
+        0.25884495886759407,
+        0.23359482721372835,
+        0.2327032020300504,
+        0.25224083416102167,
+        0.23410652189652725,
+        0.23957386751455748,
+        0.22728416538124713,
+        0.20744829435287915,
+        0.22781303031328898,
+        0.23001241389562496,
+        0.22061251129807924,
+        0.22158312542720449,
+        0.22179281875783252,
+        0.21293587180671453,
+        0.2076665289313511,
+        0.2121464345186798,
+        0.21725300454355784,
+        0.22806261712268627,
+        0.21235786701089368,
+        0.23648049713057873,
+        0.22942660503527068,
+        0.2448626912954632,
+        0.24281307594297694,
+        0.254053714852191,
+        0.2567828803077868,
+        0.2479035296986058,
+        0.24096433705174286,
+        0.2415677989674236,
+        0.23105336680439312,
+        0.24865526612964273,
+        0.2534373397657923,
+        0.25523999306507833,
+        0.2506640420034925,
+        0.23343998333189325,
+        0.2376211855111221,
+        0.24739613380922174
+      ],
+      "evaluated_iterations": 53,
+      "num_boost_round": 200,
+      "early_stopping_rounds": 50
+    }
+  ],
+  "p50": {
+    "best_iteration": 3,
+    "stop_iteration": 53,
+    "best_score": 0.2770275343341497,
+    "observed_rounds": 53,
+    "censored": false
+  },
+  "p20": {
+    "best_iteration": 3,
+    "stop_iteration": 23,
+    "best_score": 0.2770275343341497,
+    "observed_rounds": 53,
+    "censored": false
+  },
+  "reverse_p50": {
+    "best_iteration": 18,
+    "stop_iteration": null,
+    "best_score": 0.2601787756962427,
+    "observed_rounds": 53,
+    "censored": true
+  },
+  "fit_seconds": 258.9579908847809,
+  "actual_rounds": 53,
+  "peak_rss_gb": 10.828480512
+}

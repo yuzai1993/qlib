@@ -1,0 +1,116 @@
+{
+  "plan": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-account-validation.json",
+    "sha256": "17c172acdc13c33ded9dd5a1e8e8f70ea906495bd9b4c09217b73d99d839793b",
+    "size": 7038
+  },
+  "started_at": 1793892820.649753,
+  "deadline": 1793907220.649753,
+  "status": "completed",
+  "jobs": [
+    {
+      "H": 7,
+      "focus": "D",
+      "attempt": 1,
+      "status": "succeeded",
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/run_pred_backtest.py",
+        "--pred",
+        "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h7/ensemble.pkl",
+        "--config",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+        "--note",
+        "horizonp50_20261105_h7_ladder_k3h5",
+        "--skip-pred-copy"
+      ],
+      "started_at": 1793892839.946601,
+      "exit_code": 0,
+      "finished_at": 1793892900.882653,
+      "log_sha256": "57d13abbd85b932302dab76811d7dfa883792109986dc800493fe906c81e1d89",
+      "session_dir": "backtest/result/20261105_233401_horizonp50_20261105_h7_ladder_k3h5",
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-ladder.json",
+        "sha256": "74aef037c629fd57f552355ac03b7e41b55a884c037dc71fb6dd5b5cf686ec3b",
+        "size": 145397
+      }
+    },
+    {
+      "H": 15,
+      "focus": "F",
+      "attempt": 1,
+      "status": "succeeded",
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/run_pred_backtest.py",
+        "--pred",
+        "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h15/ensemble.pkl",
+        "--config",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+        "--note",
+        "horizonp50_20261105_h15_ladder_k3h5",
+        "--skip-pred-copy"
+      ],
+      "started_at": 1793892900.958516,
+      "exit_code": 0,
+      "finished_at": 1793892961.10368,
+      "log_sha256": "937684b1010ba0397f3642d2a2c257d996e75f7ef89710e00c9290a5d891e794",
+      "session_dir": "backtest/result/20261105_233502_horizonp50_20261105_h15_ladder_k3h5",
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-ladder.json",
+        "sha256": "42415118e45921b23641c8dfa1d1c6fe5287e87a49beedd9b8136d1531186bef",
+        "size": 145676
+      }
+    }
+  ],
+  "parent_budget_preserved": true,
+  "new_fits": 0,
+  "verification": {
+    "status": "succeeded",
+    "replays": [
+      {
+        "H": 7,
+        "status": "succeeded",
+        "duration_seconds": 38.93460488319397,
+        "report_max_abs_difference": {
+          "account": 1.862645149230957e-09,
+          "return": 6.38378239159465e-16,
+          "total_turnover": 2.384185791015625e-07,
+          "turnover": 2.220446049250313e-16,
+          "total_cost": 5.820766091346741e-11,
+          "cost": 9.999054535747565e-17,
+          "value": 1.862645149230957e-09,
+          "cash": 5.820766091346741e-11,
+          "bench": 9.952975943416931e-17
+        }
+      },
+      {
+        "H": 15,
+        "status": "succeeded",
+        "duration_seconds": 39.02020311355591,
+        "report_max_abs_difference": {
+          "account": 9.313225746154785e-10,
+          "return": 6.696032617270475e-16,
+          "total_turnover": 1.1920928955078125e-07,
+          "turnover": 2.220446049250313e-16,
+          "total_cost": 5.820766091346741e-11,
+          "cost": 9.985502008591496e-17,
+          "value": 9.313225746154785e-10,
+          "cash": 5.820766091346741e-11,
+          "bench": 9.952975943416931e-17
+        }
+      }
+    ]
+  },
+  "finished_at": 1793894419.381494,
+  "publication": {
+    "parent_exp_id": "training-target/horizon-style-p50-20261105-v1",
+    "report": "reports/account-gap-validation.html"
+  },
+  "cleanup": {
+    "result": "applied",
+    "mlruns": "handled",
+    "temporary": "cleaned"
+  },
+  "temporary_directory_exists": false
+}

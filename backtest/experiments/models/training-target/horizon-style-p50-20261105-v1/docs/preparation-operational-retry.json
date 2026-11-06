@@ -1,0 +1,53 @@
+{
+  "source_adapter": {
+    "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/prepare.py",
+    "sha256": "8484791674e8762b787c017de28c931a5bbaeb5b6413bbc73835384164c2caa0",
+    "size": 7018
+  },
+  "replacement_adapter": {
+    "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/prepare_fast.py",
+    "sha256": "5e079a7378aa32859f855f296036153dfe5ef253edc22f39204f1b5b4029cffe",
+    "size": 9000
+  },
+  "original_log": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepare.log",
+    "sha256": "148b61f24f19c7397db4ed422cc49ffdf3636a19a732c2a4e8fe31e513cc5b71",
+    "size": 5082
+  },
+  "source_semantics": [
+    {
+      "path": "qlib/data/filter.py",
+      "sha256": "795bc776e1b81a279e5ebe718ee5875f440e44d70128f8066d241e8258553862",
+      "size": 13950
+    },
+    {
+      "path": "qlib/data/data.py",
+      "sha256": "9156bfef585b9e2d22d4d1ba5831efdb63b419d24846ee738eee237090ff6a24",
+      "size": 49455
+    }
+  ],
+  "reason": "Static NameDFilter reconstructs per-instrument full-calendar Boolean series on every annual D.features call. Use the same code predicate over the original instrument spans once.",
+  "existing_years": [
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/base-parts/2004.pkl",
+      "sha256": "e2d005ee6fe998660cda1334e3a05cea7ef5a4481fd742e539247e54471ef505",
+      "size": 5790309
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/base-parts/2005.pkl",
+      "sha256": "e9f064217b9113edd35ead89a2db9b4abf3692b97f8b91f0fe8924656e26eaf8",
+      "size": 6010153
+    }
+  ],
+  "comparison": [
+    {
+      "year": 2004,
+      "index_label_listing_exact": true
+    },
+    {
+      "year": 2005,
+      "index_label_listing_exact": true
+    }
+  ],
+  "new_fits": 0
+}

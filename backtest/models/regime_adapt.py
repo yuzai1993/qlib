@@ -226,6 +226,10 @@ class RegimeWeightedDEnsembleModel(RankICEarlyStoppingDEnsembleModel):
                 "best_iteration": model.best_iteration,
                 "best_score": model.best_score["valid"][metric_name],
                 "valid_days": valid_index.get_level_values("datetime").nunique(),
+                "metric_history": evals_result["valid"][metric_name],
+                "evaluated_iterations": len(evals_result["valid"][metric_name]),
+                "num_boost_round": self.epochs,
+                "early_stopping_rounds": self.early_stopping_rounds,
             }
         )
         return model
@@ -374,6 +378,10 @@ class RegimeSingleLGBMModel(LGBModel):
                 "best_iteration": self.model.best_iteration,
                 "best_score": self.model.best_score["valid"][metric_name],
                 "valid_days": valid_index.get_level_values("datetime").nunique(),
+                "metric_history": evals_result["valid"][metric_name],
+                "evaluated_iterations": len(evals_result["valid"][metric_name]),
+                "num_boost_round": self.num_boost_round,
+                "early_stopping_rounds": self.early_stopping_rounds,
             }
         ]
         return self.model

@@ -1,0 +1,29 @@
+{
+  "a": "new-s3000-r1-original",
+  "b": "archived-new",
+  "tree_counts": [
+    45,
+    45
+  ],
+  "fields_changed": {
+    "default_left": 5,
+    "leaf_value": 20
+  },
+  "first_change_by_field": {
+    "default_left": {
+      "tree": 1,
+      "path": "root/left_child/right_child/right_child/left_child/left_child/right_child/left_child",
+      "a": true,
+      "b": false
+    },
+    "leaf_value": {
+      "tree": 1,
+      "path": "root/left_child/right_child/right_child/left_child/left_child/right_child/left_child/left_child",
+      "a": -0.0051618968596928265,
+      "b": -0.005161896859692827
+    }
+  },
+  "first_structural_difference_tree": 1,
+  "max_leaf_difference_at_corresponding_nodes": 4.7704895589362195e-17,
+  "note": "Corresponding node fields; default-direction differences are not assumed behaviorally irrelevant. Full valid predictions and selected heads are evaluated separately."
+}

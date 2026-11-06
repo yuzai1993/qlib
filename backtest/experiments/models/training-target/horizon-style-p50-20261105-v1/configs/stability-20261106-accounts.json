@@ -1,0 +1,43 @@
+{
+  "kind": "conditional_derived_accounts",
+  "parent_exp_id": "training-target/horizon-style-p50-20261105-v1",
+  "user_request": "查完若无法定位原因，两模型再用真阶梯跑回测，看gap是否收窄。",
+  "remaining_question": "Seed3000 repeatability and label-driven trajectory divergence are established; whether the full s5 CAGR gap reproduces and how much is specific to s5 execution remain unmeasured. This fixed-rule comparison addresses that remaining gap, not historical v2 reconstruction.",
+  "models": [
+    "old-label reconstructed five-seed H20, original settings, first repetition",
+    "retained new-label five-seed H20"
+  ],
+  "jobs": [
+    [
+      "old",
+      "s5"
+    ],
+    [
+      "old",
+      "ladder"
+    ],
+    [
+      "new",
+      "ladder"
+    ]
+  ],
+  "control_gate": {
+    "old_reconstructed_s5_cagr_absolute_tolerance": 1e-10,
+    "reference": "docs/H20-observed-label-effect.json metrics.previous_p50.account.annualized_return",
+    "on_failure": "Stop paired ladder launch; inspect control mismatch. Do not silently relabel reconstructed signals as original."
+  },
+  "comparison": "Signed old-minus-new and absolute CAGR gaps for s5 and top3/H5 ladder. Report arithmetic-account gaps separately. No direct subtraction of model238/H5 net_ann from accountCAGR. No parameter search.",
+  "configs": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+      "sha256": "d3e269b8b9ad74b6ad3bcd74ed691a38fc48e9854e45bf4dd3c3334583fb4a5e",
+      "size": 1840
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+      "sha256": "3c1e27921efa9ba6d7ae666705cef5285835d309ac96b8ad308a942c574fab80",
+      "size": 1810
+    }
+  ],
+  "budget": "Three jobs within parent max4 account attempts; one spare only for technical retry. 0 new fits."
+}

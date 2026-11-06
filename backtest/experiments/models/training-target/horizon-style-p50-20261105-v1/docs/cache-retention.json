@@ -1,0 +1,38 @@
+{
+  "reference": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/.references/horizon-style-p50-20261105-v1.json",
+    "sha256": "b83b0857c9b00ea3538e66bda760e5d5eca50158d0dd829f6e9af0daa6749485",
+    "size": 1267
+  },
+  "receipt": {
+    "reference_kind": "retained_research_input",
+    "owner_experiment": "training-target/horizon-style-p50-20261105-v1",
+    "owner_archive": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+    "created_at_utc": "2026-11-05T04:16:23.119876+00:00",
+    "manifests": [
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json"
+    ],
+    "retention_reason": "Preserve exact frozen training features, original H20 labels and exit-bounded validation source required by this seven-H study and its paired ES provenance. Source data have since changed; these blocks cannot be silently rebuilt from live data.",
+    "release_condition": "Remove only when the owning research is explicitly retired and no remaining experiment requires these exact inputs. This is a persistent archival reference, not a claim that a worker PID is alive."
+  },
+  "manifests": [
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    }
+  ],
+  "input_bytes_unchanged": true
+}

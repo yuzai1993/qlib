@@ -1,0 +1,209 @@
+{
+  "boosters": [
+    {
+      "job_id": "old-s3000-r1-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/old-s3000-r1-original-booster.txt",
+        "sha256": "c962582edac0c0adec7531d198ec695f4e57f92d3523e695ccc7df4b4c57d77c",
+        "size": 889906
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/c962582edac0c0adec7531d198ec695f4e57f92d3523e695ccc7df4b4c57d77c.txt.gz",
+        "sha256": "3f18126fced851f0b6451c7d2507c34f88a82014b9f314c3a8ee12b1fd6a381d",
+        "size": 407333
+      },
+      "original_full_model_retained": true
+    },
+    {
+      "job_id": "new-s3000-r1-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/new-s3000-r1-original-booster.txt",
+        "sha256": "1d8d9e1a13b3e793661baf718ef5d184e814cd018e955943da9058cb1ee2f01e",
+        "size": 819847
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/1d8d9e1a13b3e793661baf718ef5d184e814cd018e955943da9058cb1ee2f01e.txt.gz",
+        "sha256": "be09c44b36478fa5f7df01cb69c32c08f385222c9c539d2a047bf2616bd8d5e9",
+        "size": 375852
+      },
+      "original_full_model_retained": false
+    },
+    {
+      "job_id": "old-s3000-r2-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/old-s3000-r2-original-booster.txt",
+        "sha256": "c962582edac0c0adec7531d198ec695f4e57f92d3523e695ccc7df4b4c57d77c",
+        "size": 889906
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/c962582edac0c0adec7531d198ec695f4e57f92d3523e695ccc7df4b4c57d77c.txt.gz",
+        "sha256": "3f18126fced851f0b6451c7d2507c34f88a82014b9f314c3a8ee12b1fd6a381d",
+        "size": 407333
+      },
+      "original_full_model_retained": false
+    },
+    {
+      "job_id": "new-s3000-r2-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/new-s3000-r2-original-booster.txt",
+        "sha256": "1d8d9e1a13b3e793661baf718ef5d184e814cd018e955943da9058cb1ee2f01e",
+        "size": 819847
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/1d8d9e1a13b3e793661baf718ef5d184e814cd018e955943da9058cb1ee2f01e.txt.gz",
+        "sha256": "be09c44b36478fa5f7df01cb69c32c08f385222c9c539d2a047bf2616bd8d5e9",
+        "size": 375852
+      },
+      "original_full_model_retained": false
+    },
+    {
+      "job_id": "old-s42-r1-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/old-s42-r1-original-booster.txt",
+        "sha256": "60f350ce574f2ac2179b192d0ffd402ba394c03f7e91f01b3dfc702f6e16a042",
+        "size": 837817
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/60f350ce574f2ac2179b192d0ffd402ba394c03f7e91f01b3dfc702f6e16a042.txt.gz",
+        "sha256": "563ad58ced4124525631a76c6f91566fd3ae16da3ea8715b08b166167efdb145",
+        "size": 383221
+      },
+      "original_full_model_retained": true
+    },
+    {
+      "job_id": "old-s1000-r1-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/old-s1000-r1-original-booster.txt",
+        "sha256": "901dbcbd99e50efe26974d847ee89c4de932b242c9a7647fd406d2b28f7585e0",
+        "size": 1047717
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/901dbcbd99e50efe26974d847ee89c4de932b242c9a7647fd406d2b28f7585e0.txt.gz",
+        "sha256": "bf273eacc8ce40001776460bc6b88d113af93492c1fc73754276c99e2493cca1",
+        "size": 479825
+      },
+      "original_full_model_retained": true
+    },
+    {
+      "job_id": "old-s2000-r1-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/old-s2000-r1-original-booster.txt",
+        "sha256": "54147918904bd0aeabce4e55db23418449dfd36a6a57f829047e6e7370c89e98",
+        "size": 904278
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/54147918904bd0aeabce4e55db23418449dfd36a6a57f829047e6e7370c89e98.txt.gz",
+        "sha256": "a7215f27111fe2646bdaae0de38e55332fdf63cb0a8759cff545c3ee3234b902",
+        "size": 413802
+      },
+      "original_full_model_retained": true
+    },
+    {
+      "job_id": "old-s4000-r1-original",
+      "source": {
+        "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/old-s4000-r1-original-booster.txt",
+        "sha256": "d8bd8c2886fad2a03646387ab5718d9157ac9fe32882045fb1c97fa755593f92",
+        "size": 1814394
+      },
+      "preserved_selected_booster": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/d8bd8c2886fad2a03646387ab5718d9157ac9fe32882045fb1c97fa755593f92.txt.gz",
+        "sha256": "ea38ee96cc1bfe86b1a917c3362666a5ab769b2192c10b89cedca2ae899f69f9",
+        "size": 829953
+      },
+      "original_full_model_retained": true
+    }
+  ],
+  "execution_logs": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-execution-logs.json.gz",
+    "sha256": "920d0ec5a620e8957e5259a6fbc3a82807f90278a968d5ab8233ea6bd1bacaeb",
+    "size": 12254
+  },
+  "adapter_sources": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-account.json",
+      "sha256": "bd02ecb2cfffc808eaf0d34716d164732d0b2514fd1f61944107f0838431a905",
+      "size": 4340
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-accounts_pipeline.json",
+      "sha256": "7678752cbbab386c6f42a4b1d07865705996e7c1ec4bf4c488a352a4d64ebb54",
+      "size": 3684
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-closeout.json",
+      "sha256": "433892f70c85f5c69e3067456923aaf069bb669d84126b58ad20274971874724",
+      "size": 5619
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-common.json",
+      "sha256": "315bdc36b70e4213424f5a716ef0ef9c803ec65780ff75b4472af34d22806228",
+      "size": 3390
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-compare.json",
+      "sha256": "dd5832a8a801c975402ea6ef1cf808e02e6748b3beae59faa6f59dc3f4a4c0de",
+      "size": 2935
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-continue_initial.json",
+      "sha256": "f59b0e4a00acb32c609484d425ab576c48998d599d0b5b6030a1569b63810dad",
+      "size": 1358
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-evaluate_old.json",
+      "sha256": "e1695573eb494346f8f1d160fe3f7d4900ca047cf57fb5d22f9d263dd4c0ff44",
+      "size": 2217
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-fit.json",
+      "sha256": "3d2e4f827e7b8d4953e9b10660305fb9e4a22156aaa09f839d282387bac93885",
+      "size": 8125
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-infer.json",
+      "sha256": "143fa0b10b63c1b892d6182bbaf0af3d849f1c96072a74a2b480078780104d77",
+      "size": 5285
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-publish.json",
+      "sha256": "5ca74f58264323196de999a1950878de0ff93c6fe13d58cf36f9791ebc39a216",
+      "size": 5754
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-recover.json",
+      "sha256": "8971dbc8cb92b197e95f20bb5f952091540d0151531a89f7077c2821a436b39c",
+      "size": 2654
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-report.json",
+      "sha256": "8412cff93346ced7c166229c741ca359a745cbbf7378d05e7e05f4092245c34e",
+      "size": 14049
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-report_v2.json",
+      "sha256": "5a33a82f652f32c4d198571c934db60ff43ab7e11367cfb8735f3dd4a65aea4c",
+      "size": 14491
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-routes.json",
+      "sha256": "9ef5ce9f152e8621aee5761de5e99eeac2af6d6015133ddd6012429c3f2f2f69",
+      "size": 3221
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-setup.json",
+      "sha256": "cf1b0b57d9898835d0cd8249c6c07ce62f4b2b9286d664a59f91f3d26f46e4ec",
+      "size": 6354
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-tree_differences.json",
+      "sha256": "4789f996959d94e1bb547c3c8a4d73880b9249b101aec836e277b75a6bd56007",
+      "size": 2378
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-verify.json",
+      "sha256": "78b40528824f0b14402c4c765ff4a86f1572a3e177195ce589944645f19f61f4",
+      "size": 6433
+    }
+  ],
+  "temporary_selected_prediction_arrays": "Numerical comparisons and hashes retained in receipts; redundant arrays removed at closure."
+}

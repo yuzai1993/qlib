@@ -1,0 +1,30 @@
+{
+  "a": "old-s3000-r1-original",
+  "b": "old-s3000-r2-original",
+  "round_counts": [
+    99,
+    99
+  ],
+  "best_iterations": [
+    49,
+    49
+  ],
+  "objective_shared": {
+    "exact": true,
+    "n": 99,
+    "changed": 0,
+    "max_abs": 0.0,
+    "mean_abs": 0.0
+  },
+  "first_changed_objective_round": null,
+  "first_changed_tree_round": null,
+  "changed_tree_rounds": [],
+  "valid_prediction": {
+    "exact": true,
+    "n": 6483051,
+    "changed": 0,
+    "max_abs": 0.0,
+    "mean_abs": 0.0
+  },
+  "booster_file_exact": true
+}

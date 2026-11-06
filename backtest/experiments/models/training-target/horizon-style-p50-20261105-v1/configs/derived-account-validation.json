@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "kind": "derived_account_validation",
+  "parent_exp_id": "training-target/horizon-style-p50-20261105-v1",
+  "parent_closed_campaign": "horizon-style-p50-20261105-v1",
+  "user_authorization": "清理并保留D/H7、F/H15、T/H20；先核查2026回撤，再验证D/F真阶梯是否改善模型与账户差距。",
+  "hypothesis": "At fixed H7 and H15 official five-seed signals, replacing s5 with the existing top3/h5 cohort ladder improves D/H7 and F/H15 net account arithmetic return and brings execution holdings closer to the model head rule.",
+  "scientific_strategy_rules": 1,
+  "account_jobs": [
+    {
+      "H": 7,
+      "focus": "D"
+    },
+    {
+      "H": 15,
+      "focus": "F"
+    }
+  ],
+  "baseline_comparisons": {
+    "paired_controls": "Each H uses its existing same-input s5 account; model signals never change.",
+    "global_baselines_unchanged": [
+      "regime-adapt/m0-h20-t5h5-es-v1",
+      "baseline/phase-m-v1-bt-v5"
+    ]
+  },
+  "selection_rule": "Report the prespecified D/H7 and F/H15 signed change in CAGR/arithmetic return/Sharpe/drawdown and the complete window/year/style results. No tuning, no promotion. A reduction in absolute distance from model net_ann rescaled to 250/238 and 90% capital is descriptive only: signal-date H5 returns and calendar-day account P&L are not identical portfolios.",
+  "fixed": {
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "model_fits": 0,
+    "start": "2020-08-03",
+    "end": "2026-07-31",
+    "provider_snapshot": "2026-11-03",
+    "evaluation_mode": "historical_selection_window",
+    "account": 1000000,
+    "risk_degree": 0.9,
+    "fees": "original s5",
+    "regime_labels": "existing frozen monthly labels; F only 136 days in 2024"
+  },
+  "budget": {
+    "max_account_jobs": 2,
+    "max_attempts_per_job": 2,
+    "max_wall_hours": 4,
+    "concurrency": 1,
+    "no_extra_grid": true
+  },
+  "prior_cumulative_model_fits": 103,
+  "inputs": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+      "sha256": "3c1e27921efa9ba6d7ae666705cef5285835d309ac96b8ad308a942c574fab80",
+      "size": 1810
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+      "sha256": "d3e269b8b9ad74b6ad3bcd74ed691a38fc48e9854e45bf4dd3c3334583fb4a5e",
+      "size": 1840
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+      "size": 1203
+    },
+    {
+      "path": "backtest/scripts/evaluate/run_pred_backtest.py",
+      "sha256": "9883480618d01063a5c9ed1010e65793495dc29e5336b1445ab3f2259d78ffed",
+      "size": 11636
+    },
+    {
+      "path": "qlib/contrib/strategy/signal_strategy.py",
+      "sha256": "b7ae4c578b035d93a13a113492c19ab0085e803342dedc37d454992a4bd2a0e7",
+      "size": 34156
+    },
+    {
+      "path": "qlib/contrib/strategy/cohort_ladder.py",
+      "sha256": "55e39b673db15b5d862f5288d29d353c83a974d15860632dced96d5720aa32e3",
+      "size": 12630
+    },
+    {
+      "path": "/private/tmp/qlib-account-gap-20261105.NiZr20/run_ladders.py",
+      "sha256": "65e7130bb3531e69b5f18f5fe4246bd3cfdd4a1a7fdf18f21fb67259b7f0be00",
+      "size": 8581
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h7/ensemble.pkl",
+      "sha256": "46217065a6763f64a04fc2f3734245712546cb47fd03fdaa47fd82fbd6565a19",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h15/ensemble.pkl",
+      "sha256": "a59f1ec255e8438c5ee6ca1e372aff2677e573763705943a045b146ba497bbc6",
+      "size": 83046157
+    }
+  ],
+  "retained_models": [
+    {
+      "H": 7,
+      "seed": 42,
+      "path": "backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "380c74ab84a5b4b76a147ceabc15f352bed483f7226c67ada185429df131fde8",
+      "size": 58640952
+    },
+    {
+      "H": 7,
+      "seed": 1000,
+      "path": "backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f65b79f765aa1ffd4abadc74d1d385d52636e8bdc1f55e64d87ec095badd4c2c",
+      "size": 59688388
+    },
+    {
+      "H": 7,
+      "seed": 2000,
+      "path": "backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "601999952d38903f7ce0cefb4a21664b96745661294b32be05d9baf26c12a11b",
+      "size": 58902139
+    },
+    {
+      "H": 7,
+      "seed": 3000,
+      "path": "backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "77cd448f54ff6e9b4b045afedc0f459b1d0e218b94960dbec665ed32753c8dbc",
+      "size": 58733713
+    },
+    {
+      "H": 7,
+      "seed": 4000,
+      "path": "backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "dd5af1de822cffce141e161e6f65178e9c2711f8259f375a7ca3c162861f873f",
+      "size": 58823762
+    },
+    {
+      "H": 15,
+      "seed": 42,
+      "path": "backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "22606dba4667e684bdc5596b7571560906d8f73f7ac3eec0d0e2c40370fffe0f",
+      "size": 59554703
+    },
+    {
+      "H": 15,
+      "seed": 1000,
+      "path": "backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "d7f0541813051c8942a23c157e65d07b9c191cccf5835420042f3c73a59703e2",
+      "size": 59200403
+    },
+    {
+      "H": 15,
+      "seed": 2000,
+      "path": "backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "659f05f224f27d35161658abbe6103deccc0e85e4342fe35f3716d18931ab3c0",
+      "size": 59440295
+    },
+    {
+      "H": 15,
+      "seed": 3000,
+      "path": "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "37c7743f3643ca6531efe5e6ebcbee0953fc4fd99b080eb4cdc674495d34536b",
+      "size": 58565859
+    },
+    {
+      "H": 15,
+      "seed": 4000,
+      "path": "backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "09e445d36b0ff2c0a3627de03ca1c31f210f1f9e911b744b0897b79ef569d055",
+      "size": 60159985
+    }
+  ],
+  "harness_capability_boundary": "Formal experiment_harness.inspect_state verified the parent closed state/budget. Its standalone strategy track requires the global s5 baseline model v2 and cannot truthfully represent these H7/H15 signals. This bounded zero-fit derived validation therefore uses an archive-local job receipt via a temporary adapter, as allowed by the protocol, without faking model_ref or reopening/resetting the closed campaign. Final publication remains one parent experiment entry.",
+  "temporary_directory": "/private/tmp/qlib-account-gap-20261105.NiZr20"
+}

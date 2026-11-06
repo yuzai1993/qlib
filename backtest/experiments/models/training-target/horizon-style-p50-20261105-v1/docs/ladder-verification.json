@@ -1,0 +1,265 @@
+{
+  "h7": {
+    "replay_report_max_abs_difference": {
+      "account": 1.862645149230957e-09,
+      "return": 6.38378239159465e-16,
+      "total_turnover": 2.384185791015625e-07,
+      "turnover": 2.220446049250313e-16,
+      "total_cost": 5.820766091346741e-11,
+      "cost": 9.999054535747565e-17,
+      "value": 1.862645149230957e-09,
+      "cash": 5.820766091346741e-11,
+      "bench": 9.952975943416931e-17
+    },
+    "model_head_match_fraction": 0.9785911602209945,
+    "model_head_mean_overlap": 0.9928637200736647,
+    "days_adding_already_held_name": 1139,
+    "pending_sale_days": 94,
+    "pending_examples": [
+      {
+        "day": "2020-09-07",
+        "names": [
+          "SZ300069"
+        ]
+      },
+      {
+        "day": "2020-09-08",
+        "names": [
+          "SZ300069"
+        ]
+      },
+      {
+        "day": "2020-09-09",
+        "names": [
+          "SZ300069"
+        ]
+      },
+      {
+        "day": "2020-09-10",
+        "names": [
+          "SZ002581"
+        ]
+      },
+      {
+        "day": "2020-09-28",
+        "names": [
+          "SH603718"
+        ]
+      },
+      {
+        "day": "2021-01-07",
+        "names": [
+          "SZ300209"
+        ]
+      },
+      {
+        "day": "2021-01-08",
+        "names": [
+          "SZ300209"
+        ]
+      },
+      {
+        "day": "2021-01-11",
+        "names": [
+          "SZ300459",
+          "SZ002989"
+        ]
+      },
+      {
+        "day": "2021-01-12",
+        "names": [
+          "SZ300459",
+          "SZ002989"
+        ]
+      },
+      {
+        "day": "2021-01-13",
+        "names": [
+          "SZ300459",
+          "SZ002989"
+        ]
+      },
+      {
+        "day": "2021-04-22",
+        "names": [
+          "SZ300677"
+        ]
+      },
+      {
+        "day": "2021-04-23",
+        "names": [
+          "SZ300677"
+        ]
+      }
+    ],
+    "order_count": 8704,
+    "zero_or_partial_fill_orders": 57,
+    "max_cohort_count": 5,
+    "actual_mean_exposure_by_style": {
+      "D": 0.8811013994784842,
+      "F": 0.8975535034004752,
+      "T": 0.8930658190157855
+    },
+    "fixed_notional_label_reconcile_max_abs": 5.406674472019368e-08,
+    "attribution": {
+      "D": {
+        "model_signal_date_gross_ann_250_risk90": 0.2897086382502376,
+        "fixed_notional_pnl_date_gross_ann_250": 0.29515925025168277,
+        "model_signal_days": 1010,
+        "account_pnl_days": 1010,
+        "inbound_fixed_capital_pnl": -0.06774552388984592,
+        "outbound_fixed_capital_pnl": -0.08976603425683946
+      },
+      "F": {
+        "model_signal_date_gross_ann_250_risk90": 1.4533221765476112,
+        "fixed_notional_pnl_date_gross_ann_250": 1.3759849184920183,
+        "model_signal_days": 136,
+        "account_pnl_days": 136,
+        "inbound_fixed_capital_pnl": -0.1138755620276869,
+        "outbound_fixed_capital_pnl": -0.07180410257075813
+      },
+      "T": {
+        "model_signal_date_gross_ann_250_risk90": 0.021064482777323968,
+        "fixed_notional_pnl_date_gross_ann_250": 0.036929290455211525,
+        "model_signal_days": 302,
+        "account_pnl_days": 308,
+        "inbound_fixed_capital_pnl": 0.024109527770847412,
+        "outbound_fixed_capital_pnl": 0.004058578680912218
+      }
+    },
+    "caveat": "Fixed-notional attribution uses model-selected names and complete H5 exits; it is an explanatory no-fee portfolio, not a replacement official metric or capital-constrained account."
+  },
+  "h15": {
+    "replay_report_max_abs_difference": {
+      "account": 9.313225746154785e-10,
+      "return": 6.696032617270475e-16,
+      "total_turnover": 1.1920928955078125e-07,
+      "turnover": 2.220446049250313e-16,
+      "total_cost": 5.820766091346741e-11,
+      "cost": 9.985502008591496e-17,
+      "value": 9.313225746154785e-10,
+      "cash": 5.820766091346741e-11,
+      "bench": 9.952975943416931e-17
+    },
+    "model_head_match_fraction": 0.9620165745856354,
+    "model_head_mean_overlap": 0.9871086556169428,
+    "days_adding_already_held_name": 1236,
+    "pending_sale_days": 99,
+    "pending_examples": [
+      {
+        "day": "2020-08-24",
+        "names": [
+          "SH600009"
+        ]
+      },
+      {
+        "day": "2020-09-07",
+        "names": [
+          "SZ300069"
+        ]
+      },
+      {
+        "day": "2020-09-08",
+        "names": [
+          "SZ300069"
+        ]
+      },
+      {
+        "day": "2020-09-09",
+        "names": [
+          "SZ300069"
+        ]
+      },
+      {
+        "day": "2021-01-07",
+        "names": [
+          "SZ300209"
+        ]
+      },
+      {
+        "day": "2021-01-08",
+        "names": [
+          "SZ300209"
+        ]
+      },
+      {
+        "day": "2021-01-11",
+        "names": [
+          "SZ300209",
+          "SZ300148",
+          "SZ300324"
+        ]
+      },
+      {
+        "day": "2021-01-12",
+        "names": [
+          "SZ300209",
+          "SZ300148"
+        ]
+      },
+      {
+        "day": "2021-01-13",
+        "names": [
+          "SZ300209",
+          "SZ300148",
+          "SZ300152"
+        ]
+      },
+      {
+        "day": "2021-01-14",
+        "names": [
+          "SZ300209",
+          "SZ300148"
+        ]
+      },
+      {
+        "day": "2021-01-15",
+        "names": [
+          "SZ300209"
+        ]
+      },
+      {
+        "day": "2021-06-10",
+        "names": [
+          "SH600009"
+        ]
+      }
+    ],
+    "order_count": 8683,
+    "zero_or_partial_fill_orders": 55,
+    "max_cohort_count": 5,
+    "actual_mean_exposure_by_style": {
+      "D": 0.8764235922101145,
+      "F": 0.8962898705775291,
+      "T": 0.8914872013598024
+    },
+    "fixed_notional_label_reconcile_max_abs": 5.150226756178711e-08,
+    "attribution": {
+      "D": {
+        "model_signal_date_gross_ann_250_risk90": 0.15985027486735054,
+        "fixed_notional_pnl_date_gross_ann_250": 0.18765181340190937,
+        "model_signal_days": 1010,
+        "account_pnl_days": 1010,
+        "inbound_fixed_capital_pnl": -0.04718532138491256,
+        "outbound_fixed_capital_pnl": -0.15950356312780262
+      },
+      "F": {
+        "model_signal_date_gross_ann_250_risk90": 1.5119789255892526,
+        "fixed_notional_pnl_date_gross_ann_250": 1.404415283045742,
+        "model_signal_days": 136,
+        "account_pnl_days": 136,
+        "inbound_fixed_capital_pnl": -0.1352208326503766,
+        "outbound_fixed_capital_pnl": -0.07670623822823724
+      },
+      "T": {
+        "model_signal_date_gross_ann_250_risk90": 0.22557907151860115,
+        "fixed_notional_pnl_date_gross_ann_250": 0.17751294413536536,
+        "model_signal_days": 302,
+        "account_pnl_days": 308,
+        "inbound_fixed_capital_pnl": -0.024282730477425983,
+        "outbound_fixed_capital_pnl": 0.029520916843324682
+      }
+    },
+    "caveat": "Fixed-notional attribution uses model-selected names and complete H5 exits; it is an explanatory no-fee portfolio, not a replacement official metric or capital-constrained account."
+  }
+}

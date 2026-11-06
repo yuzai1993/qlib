@@ -1,0 +1,197 @@
+{
+  "phase": "bridge",
+  "adapters": [
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/pipeline.py",
+      "sha256": "cab5622985f2daf53b5fe63dcc56bc61d1c90c56b51ad50a28c58a10a8828b19",
+      "size": 3739
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/train.py",
+      "sha256": "168fc7346baef9f26d3199806c01732273f70afd3f0b8a0f6ab28ace79c85086",
+      "size": 12457
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/probe.py",
+      "sha256": "7a1bbfd126bb704cb50659ed41fed7e5c17077c081f3d6633c95d408bc803e42",
+      "size": 2599
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+      "sha256": "4d452d622049946a9f4ff6dab9019e907ff67155c69dd5bc228dd23037e982d7",
+      "size": 4628
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/eval_h.py",
+      "sha256": "2507ad1fff81b05db012519554634e627c3e3c86583ab81398d5ebb3fff9cc0e",
+      "size": 2872
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/account_h.py",
+      "sha256": "e1bcdca4a91c40869017c676352645bb9fb5185ca7124b6907e7a65d0d73eba1",
+      "size": 2850
+    },
+    {
+      "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/bridge_decision.py",
+      "sha256": "fce074a0520bf92db6a3269854b03acdcb01b89f39deb34063bd3c7ef5d0f626",
+      "size": 3316
+    }
+  ],
+  "prior_total_fits": 68,
+  "stages": [
+    {
+      "name": "bridge-predict-2020",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "2020"
+      ],
+      "started_at": 1793847746.38709,
+      "returncode": 0,
+      "finished_at": 1793847867.824824
+    },
+    {
+      "name": "bridge-predict-2021",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "2021"
+      ],
+      "started_at": 1793847868.045005,
+      "returncode": 0,
+      "finished_at": 1793848000.820231
+    },
+    {
+      "name": "bridge-predict-2022",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "2022"
+      ],
+      "started_at": 1793848001.0404549,
+      "returncode": 0,
+      "finished_at": 1793848137.98033
+    },
+    {
+      "name": "bridge-predict-2023",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "2023"
+      ],
+      "started_at": 1793848138.23322,
+      "returncode": 0,
+      "finished_at": 1793848279.428153
+    },
+    {
+      "name": "bridge-predict-2024",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "2024"
+      ],
+      "started_at": 1793848279.675991,
+      "returncode": 0,
+      "finished_at": 1793848423.158337
+    },
+    {
+      "name": "bridge-predict-2025",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "2025"
+      ],
+      "started_at": 1793848423.406728,
+      "returncode": 0,
+      "finished_at": 1793848568.6211998
+    },
+    {
+      "name": "bridge-predict-2026",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "2026"
+      ],
+      "started_at": 1793848568.869208,
+      "returncode": 0,
+      "finished_at": 1793848704.898926
+    },
+    {
+      "name": "bridge-consolidate",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/predict.py",
+        "bridge",
+        "consolidate"
+      ],
+      "started_at": 1793848705.117583,
+      "returncode": 0,
+      "finished_at": 1793848725.319514
+    },
+    {
+      "name": "bridge-eval-h20",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/eval_h.py",
+        "h20",
+        "bridge"
+      ],
+      "started_at": 1793848725.535636,
+      "returncode": 0,
+      "finished_at": 1793848801.351948
+    },
+    {
+      "name": "bridge-eval-bridge_p20",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/eval_h.py",
+        "bridge_p20",
+        "bridge"
+      ],
+      "started_at": 1793848801.5687501,
+      "returncode": 0,
+      "finished_at": 1793848875.969677
+    },
+    {
+      "name": "bridge-account-h20",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/account_h.py",
+        "h20",
+        "bridge"
+      ],
+      "started_at": 1793848876.187171,
+      "returncode": 0,
+      "finished_at": 1793848938.227484
+    },
+    {
+      "name": "bridge-account-bridge_p20",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/account_h.py",
+        "bridge_p20",
+        "bridge"
+      ],
+      "started_at": 1793848938.444563,
+      "returncode": 0,
+      "finished_at": 1793848999.609558
+    },
+    {
+      "name": "bridge-decision",
+      "argv": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/bridge_decision.py"
+      ],
+      "started_at": 1793848999.828309,
+      "returncode": 0,
+      "finished_at": 1793849000.335089
+    }
+  ]
+}

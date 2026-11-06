@@ -83,6 +83,13 @@ def resolve_es_valid_source(es_metric: str, es_valid: str = "auto") -> str:
     return "eval_window"
 
 
+def validate_label_horizon(horizon: int) -> int:
+    """Reject unsupported targets before initializing Qlib or loading data."""
+    if type(horizon) is not int or horizon not in (1, 2, 3, 5, 7, 10, 15, 20, 30, 40):
+        raise ValueError("--label-horizon must be 1, 2, 3, 5, 7, 10, 15, 20, 30 or 40")
+    return horizon
+
+
 # 阶段 1 筛选臂：B3-M 冻结超参（feature-b2/range 单 LGBModel，除 seed 外不动）
 # + cs-rank-norm 标签（分块缓存自带）；早停协议同 DoubleEnsemble 臂（RankIC 锚点）
 FROZEN_SINGLE_KWARGS = dict(
@@ -196,7 +203,8 @@ def build_t5h5es_valid_frame(
     arm: str,
     instruments=None,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """全A 评估窗特征 + H5 标签 + 评估过滤，供 top5×h5 扣费净年化早停。"""
+    """全A 评估窗特征 + 窗内完整 H5 标签 + 评估过滤，供头部指标早停。"""
+    from qlib.data import D
     from qlib.data.dataset import DatasetH
     from qlib.data.dataset.handler import DataHandlerLP
 
@@ -208,6 +216,7 @@ def build_t5h5es_valid_frame(
         _stock_only_mask,
         amount_mask,
         entry_tradable_mask,
+        label_window_cutoff,
     )
     from backtest.scripts.prepare.prepare_regime_train_chunks import build_handler
 
@@ -248,6 +257,13 @@ def build_t5h5es_valid_frame(
     mask = mask & _st_keep_for_eval(label.index)
     amt_ok = amount_mask(pool, EVAL_START, VALID_END, DEFAULT_MIN_AMOUNT)
     mask = mask & amt_ok.reindex(label.index).fillna(False)
+    # A later provider snapshot can supply labels whose exits lie after VALID_END.
+    # Apply the same exit boundary as formal evaluation, independent of data freshness.
+    calendar = pd.DatetimeIndex(D.calendar(start_time=EVAL_START, end_time=VALID_END))
+    cutoff = label_window_cutoff(calendar, 5)
+    if cutoff is None:
+        raise ValueError("t5h5es validation window cannot contain a complete H5 label")
+    mask = mask & (label.index.get_level_values("datetime") <= cutoff)
     label = label[mask]
     tradable = entry_tradable_mask(pool, EVAL_START, VALID_END)
 
@@ -443,6 +459,8 @@ def shared_validation_spec(arm: str, valid_source: str, instruments=None) -> dic
         warmup=VALID_WARMUP_START,
         instruments=instruments or INSTRUMENTS,
     )
+    if valid_source == "eval_window":
+        spec["recipe"]["label_window_policy"] = "exit_within_eval_window_h5"
     return spec
 
 
@@ -630,6 +648,7 @@ def main() -> None:
         help="早停 valid 帧；auto/eval_window=评估窗（v4），stratified70=v1 的 499 日集",
     )
     args = parser.parse_args()
+    validate_label_horizon(args.label_horizon)
     if (args.feature_manifest is None) != (args.label_manifest is None):
         parser.error(
             "--feature-manifest and --label-manifest must be supplied together"
@@ -669,8 +688,6 @@ def _run(args, leases: ExitStack) -> None:
     if args.early_stopping_rounds is not None:
         kwargs["early_stopping_rounds"] = args.early_stopping_rounds
         overridden = True
-    if args.label_horizon not in (1, 2, 3, 5, 10, 20, 40):
-        raise ValueError("--label-horizon must be 1, 2, 3, 5, 10, 20 or 40")
     if args.valid_instruments is not None:
         overridden = True
     tag = "regimeadaptfast" if single else "regimeadapt"
@@ -699,7 +716,7 @@ def _run(args, leases: ExitStack) -> None:
         )
     elif es_valid_source == "eval_window":
         valid_cache = (
-            CACHE_ROOT / args.arm / "valid_frame_t5h5es.pkl"
+            CACHE_ROOT / args.arm / "valid_frame_t5h5es_exitbounded.pkl"
             if args.valid_instruments is None
             else None
         )
@@ -832,6 +849,11 @@ def _run(args, leases: ExitStack) -> None:
         "es_metric": args.es_metric,
         "es_valid": args.es_valid,
         "es_valid_source": es_valid_source,
+        "es_valid_sample_start": str(df_valid.index.get_level_values("datetime").min().date()),
+        "es_valid_sample_end": str(df_valid.index.get_level_values("datetime").max().date()),
+        "es_label_window_policy": (
+            "exit_within_eval_window_h5" if es_valid_source == "eval_window" else "stratified70"
+        ),
         "rankic_evals": model.rankic_evals_result,
         "fit_seconds": round(t_fit, 1),
         "total_seconds": round(time.time() - t_all, 1),

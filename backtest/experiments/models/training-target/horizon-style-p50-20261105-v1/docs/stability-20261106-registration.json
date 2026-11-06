@@ -1,0 +1,30 @@
+{
+  "before": {
+    "path": "backtest/experiments/registry.jsonl",
+    "sha256": "0fb0682425a949eb5928adece13f70e5e2f85619db56655591d21a612faa2696",
+    "size": 20952
+  },
+  "after": {
+    "path": "backtest/experiments/registry.jsonl",
+    "sha256": "f576bb2a35798d0c0c4862f03275986c8ce240076efbe8bc9844189371cf742c",
+    "size": 22725
+  },
+  "new_event_count": 1,
+  "new_experiment_ids": 0,
+  "retained_diagnostic_sessions": [
+    "/Users/yuxianqi/Project/qlib/backtest/result/p50stable_20261106_old_s42_r1_original",
+    "/Users/yuxianqi/Project/qlib/backtest/result/p50stable_20261106_old_s1000_r1_original",
+    "/Users/yuxianqi/Project/qlib/backtest/result/p50stable_20261106_old_s2000_r1_original",
+    "/Users/yuxianqi/Project/qlib/backtest/result/p50stable_20261106_old_s3000_r1_original",
+    "/Users/yuxianqi/Project/qlib/backtest/result/p50stable_20261106_old_s4000_r1_original",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20261106_p50_stability",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20261106_022039_p50stable_20261106_old_s5",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20261106_022202_p50stable_20261106_old_ladder",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20261106_022322_p50stable_20261106_new_ladder"
+  ],
+  "summary": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-summary.json",
+    "sha256": "4d048f2fef8aa048002887cc909afb70c615368ae8a7866fcdc0f0ef7b5cc0b1",
+    "size": 17816
+  }
+}

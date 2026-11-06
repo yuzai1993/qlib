@@ -1,0 +1,141 @@
+{
+  "rows": 5448963,
+  "changed_float64": 106,
+  "changed_float32": 106,
+  "changed_float32_fraction": 1.945324275463056e-05,
+  "max_abs_normalized_label_change": 0.005339506172839403,
+  "mean_abs_normalized_label_change": 2.4495201965499045e-08,
+  "changed_training_days": 51,
+  "annual": [
+    {
+      "year": 2004,
+      "rows": 164511,
+      "changed_float64": 10,
+      "changed_float32": 10,
+      "max_abs_label_change": 0.0017145688800794812
+    },
+    {
+      "year": 2005,
+      "rows": 181374,
+      "changed_float64": 20,
+      "changed_float32": 20,
+      "max_abs_label_change": 0.0031143114311430464
+    },
+    {
+      "year": 2006,
+      "rows": 189847,
+      "changed_float64": 10,
+      "changed_float32": 10,
+      "max_abs_label_change": 0.005339506172839403
+    },
+    {
+      "year": 2007,
+      "rows": 244539,
+      "changed_float64": 7,
+      "changed_float32": 7,
+      "max_abs_label_change": 0.00300086730268867
+    },
+    {
+      "year": 2008,
+      "rows": 293576,
+      "changed_float64": 8,
+      "changed_float32": 8,
+      "max_abs_label_change": 0.0013494539781593318
+    },
+    {
+      "year": 2009,
+      "rows": 276265,
+      "changed_float64": 4,
+      "changed_float32": 4,
+      "max_abs_label_change": 0.0013185975609759648
+    },
+    {
+      "year": 2010,
+      "rows": 227646,
+      "changed_float64": 2,
+      "changed_float32": 2,
+      "max_abs_label_change": 0.0010785536159600984
+    },
+    {
+      "year": 2011,
+      "rows": 259801,
+      "changed_float64": 2,
+      "changed_float32": 2,
+      "max_abs_label_change": 0.000926124197002165
+    },
+    {
+      "year": 2012,
+      "rows": 345673,
+      "changed_float64": 5,
+      "changed_float32": 5,
+      "max_abs_label_change": 0.0016244131455398492
+    },
+    {
+      "year": 2013,
+      "rows": 294408,
+      "changed_float64": 4,
+      "changed_float32": 4,
+      "max_abs_label_change": 0.0008426692644910583
+    },
+    {
+      "year": 2014,
+      "rows": 336621,
+      "changed_float64": 0,
+      "changed_float32": 0,
+      "max_abs_label_change": 0.0
+    },
+    {
+      "year": 2015,
+      "rows": 398016,
+      "changed_float64": 0,
+      "changed_float32": 0,
+      "max_abs_label_change": 0.0
+    },
+    {
+      "year": 2016,
+      "rows": 418589,
+      "changed_float64": 4,
+      "changed_float32": 4,
+      "max_abs_label_change": 0.000815268614514697
+    },
+    {
+      "year": 2017,
+      "rows": 369358,
+      "changed_float64": 8,
+      "changed_float32": 8,
+      "max_abs_label_change": 0.000712814173877363
+    },
+    {
+      "year": 2018,
+      "rows": 478957,
+      "changed_float64": 12,
+      "changed_float32": 12,
+      "max_abs_label_change": 0.0005464308275426877
+    },
+    {
+      "year": 2019,
+      "rows": 599875,
+      "changed_float64": 6,
+      "changed_float32": 6,
+      "max_abs_label_change": 0.0005213984327909205
+    },
+    {
+      "year": 2020,
+      "rows": 369907,
+      "changed_float64": 4,
+      "changed_float32": 4,
+      "max_abs_label_change": 0.0004951345163137777
+    }
+  ],
+  "prior_labels": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+    "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+    "size": 11111985
+  },
+  "current_labels": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+    "sha256": "90783e819314072df08549698fc85a8657fce1359f105d0735b4c678b5a272a3",
+    "size": 97032
+  },
+  "interpretation": "This quantifies input changes only. Performance attribution requires the paired H20 training and account bridge; it does not establish the cause of the original historical v2 discrepancy."
+}

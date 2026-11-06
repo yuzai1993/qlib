@@ -1,0 +1,81 @@
+{
+  "schema_version": 2,
+  "campaign_id": "horizon-style-p50-20261105-v1",
+  "idea": "确定延长早停有效的话，就用该方法重跑H实验",
+  "track": "all_a_model",
+  "direction": "training-target",
+  "anchor_exp_id": "training-target/horizon-style-p50-20261105-v1",
+  "archive_path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+  "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "allowed_changes": [
+    "label_horizon"
+  ],
+  "selection_rule": "Fixed seven-H study; evaluate original T/D monotonicity and F peak hypotheses separately by metric, retain all outcomes; no winner-based promotion.",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "inputs": [
+    "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/frozen-training-inputs.json",
+    "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/evaluation-snapshot.json",
+    "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/validation-summary.json",
+    "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/inference-receipt.json",
+    "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+    "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/evaluation.yaml",
+    "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+    "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/common.py",
+    "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/prepare.py",
+    "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+    "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+    "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+    "/Users/yuxianqi/Project/qlib/backtest/scripts/train/train_regime_arm.py",
+    "/Users/yuxianqi/Project/qlib/backtest/models/regime_adapt.py",
+    "/Users/yuxianqi/Project/qlib/backtest/scripts/prepare/prepare_regime_train_chunks.py",
+    "/Users/yuxianqi/Project/qlib/backtest/scripts/prepare/build_regime_alt_labels.py",
+    "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/eval_ic_multi_pool.py",
+    "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/ensemble_preds.py",
+    "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/run_pred_backtest.py",
+    "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/strategy_stability_metrics.py",
+    "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/train_dates_v1.csv",
+    "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+    "/Users/yuxianqi/Project/qlib/qlib/data/dataset/processor.py",
+    "/Users/yuxianqi/Project/qlib/qlib/backtest/cn_limit.py",
+    "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s42/run_01/artifacts_root/artifacts/trained_model",
+    "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s1000/run_01/artifacts_root/artifacts/trained_model",
+    "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s2000/run_01/artifacts_root/artifacts/trained_model",
+    "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s3000/run_01/artifacts_root/artifacts/trained_model",
+    "/Users/yuxianqi/Project/qlib/backtest/result/h20es20261104_p50_s4000/run_01/artifacts_root/artifacts/trained_model"
+  ],
+  "budget": {
+    "max_rounds": 1,
+    "max_variants": 7,
+    "max_attempts_per_variant": 2,
+    "max_wall_hours": 8,
+    "max_no_new_evidence_rounds": 2,
+    "concurrency": 1
+  },
+  "execution_budget": {
+    "max_model_fits": 37,
+    "new_label_horizons": [
+      5,
+      7,
+      10,
+      15,
+      20,
+      30,
+      40
+    ]
+  },
+  "scientific_arm_count": 7,
+  "registration_variant_count": 1,
+  "aggregation_note": "The one tool variant is the user-requested study entry. Seven scientific arms are explicitly frozen and counted; this is not permission to add six more study variants.",
+  "prior_total_fits": 68,
+  "parent_campaign": "h20-patience-confirmation-20261105-v1",
+  "parent_state": "backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/harness-state.json",
+  "temporary_owner": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM",
+  "model_adapter_policy": "Use frozen formal implementations; record and hash each task-local execution adapter before its first use. Additional adapters may not alter frozen science."
+}

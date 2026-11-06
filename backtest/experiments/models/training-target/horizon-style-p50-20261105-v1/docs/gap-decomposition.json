@@ -1,0 +1,33 @@
+{
+  "method": "Explanatory bridge only. A/B use equal constant-principal completed H5 cohorts; C uses the same official model head names and due dates but dynamically budgets 90%/5 of preceding account NAV, fractional shares, no fees, no trading constraints. D is the actual Qlib account gross arithmetic return; E subtracts actual fees. C is a deterministic accounting decomposition, not a new selected strategy or official performance result. All stages use annualization 250, risk90 and calendar P&L after A; original official model metrics remain unchanged. Tail cohorts after the official model cutoff are omitted in C, only affecting T/2026/full, not the prespecified D/F slices.",
+  "arms": {
+    "h7": {
+      "focus": "D",
+      "n_days": 1010,
+      "stages": {
+        "A_model_signal_date_gross_250_risk90": 0.2897086382502376,
+        "B_constant_principal_calendar_gross": 0.29515925025168277,
+        "C_dynamic_fractional_calendar_gross": 0.2933189578961616,
+        "D_actual_ladder_calendar_gross": 0.27053208887857555,
+        "E_actual_ladder_calendar_net": 0.23008316497063735,
+        "actual_fee_annualized": 0.04044892390793819,
+        "s5_calendar_net": 0.20457726473088084
+      },
+      "ideal_cash_constrained_days_full": 0
+    },
+    "h15": {
+      "focus": "F",
+      "n_days": 136,
+      "stages": {
+        "A_model_signal_date_gross_250_risk90": 1.5119789255892526,
+        "B_constant_principal_calendar_gross": 1.404415283045742,
+        "C_dynamic_fractional_calendar_gross": 1.2761786268883908,
+        "D_actual_ladder_calendar_gross": 1.124612138708558,
+        "E_actual_ladder_calendar_net": 1.0836380720706202,
+        "actual_fee_annualized": 0.04097406663793791,
+        "s5_calendar_net": 0.9245708596448963
+      },
+      "ideal_cash_constrained_days_full": 0
+    }
+  }
+}

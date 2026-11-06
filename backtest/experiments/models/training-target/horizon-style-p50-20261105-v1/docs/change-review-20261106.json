@@ -1,0 +1,1270 @@
+{
+  "status": "ready_for_user_review",
+  "date": "2026-11-06",
+  "branch": "codex/annual-cache-reuse",
+  "base_commit": "87104fb5846bd98ab60cd479df52259f655442fa",
+  "research": {
+    "user_decision": "本次实验结束，不继续H或稳健性研究。",
+    "new_fits_in_closeout": 0,
+    "cumulative_fits": 111,
+    "platform_parent": "training-target/horizon-style-p50-20261105-v1",
+    "platform_entries": 15,
+    "new_platform_entries_in_closeout": 0,
+    "active_baselines": [
+      "baseline/phase-m-v1-bt-v5",
+      "regime-adapt/m0-h20-t5h5-es-v1"
+    ]
+  },
+  "requested_improvements": [
+    "主动核验指标合理性，预算内做有限、可证伪诊断。",
+    "一次用户发起的研究迭代优先一个平台入口，内部身份、失败和成本独立保留。",
+    "先清理无用途的任务临时材料，交付逐文件清单供review；本轮不commit、不push。"
+  ],
+  "review_fix": {
+    "finding": "fit_result持久证据在后续收尾阶段未重验。",
+    "resolution": "在现有_settled中校验所有终态fit证据；修改/删除时拒绝反思、cleanup和close，恢复原证据后允许继续。",
+    "independent_review": "问题已确认修复；未发现其它可操作代码问题。",
+    "new_modules": 0
+  },
+  "validation": {
+    "targeted_tests": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 MLFLOW_ALLOW_FILE_STORE=true /opt/anaconda3/envs/qlib/bin/python -m pytest tests/backtest/test_experiment_harness.py tests/backtest/test_experiment_archive.py tests/backtest/test_regime_adapt.py tests/backtest/test_train_regime_arm_es_valid.py tests/backtest/test_cleanup_experiment_artifacts.py tests/backtest/test_research_layout.py tests/backtest/test_experiment_registry.py tests/backtest/test_registry_script_integration.py tests/backtest/test_phase_m_v1_report.py tests/backtest/test_script_layout.py -q -p no:cacheprovider --basetemp <owned-temp>/pytest-green",
+      "result": "555 passed in 9.28s",
+      "log_sha256": "e624b5e254c942dca26b9c3c4a65f14d4658c4952c392f9fe3117cd3a776e709"
+    },
+    "regression_before_fix": "18 failed (DID NOT RAISE)",
+    "regression_after_formatting": "18 passed, 92 deselected in 0.46s",
+    "skill_frontmatter": "quick_validate.py passed",
+    "skill_forward_check": "七H失败归档、指标异常排查、review后提交三场景符合预期；补充明确有限账本的最小记录与校验责任。",
+    "format": "Black check passed for experiment_harness.py and test_experiment_harness.py",
+    "scope": "相关10个测试文件；未声称运行Qlib全量测试套件。",
+    "git_diff_check": "passed",
+    "archive_scan_errors": [],
+    "registry_unchanged_during_closeout": true,
+    "temporary_root_absent": true
+  },
+  "retained_local_dependencies": {
+    "description": "完整模型、原始预测、标签/特征缓存和MLflow仍是本地复跑依赖，不纳入本次Git新增文件。Git中保留6份压缩树文本用于稳定性审计，约2.76MiB。",
+    "result_directories": 54,
+    "cleanup_candidates": 0,
+    "mlruns": "本轮未创建训练或账户；已有必要回测记录继续保留，.trash为空。",
+    "historical_retention_warnings": {
+      "count": 142,
+      "note": "既有历史缺失/迁移来源提示，保留审计；当前平台API warnings为空，清理门禁errors为空。"
+    }
+  },
+  "limits": [
+    "历史v2原训练差距仍未完全归因。",
+    "同输入逐位重复验证限于本机seed3000，不外推至所有种子与硬件。",
+    "单入口的关闭后新阶段仍非原生harness完整生命周期支持；本轮没有扩建正式模块。",
+    "模型与账户年化定义不同，真阶梯缩小差距不保证各年收益改善。"
+  ],
+  "git_action": {
+    "committed": false,
+    "pushed": false,
+    "reason": "用户要求先review并准备提交推送。"
+  },
+  "prior_temporary_roots_absent": [
+    "/private/tmp/qlib-horizon-p50-20261105.8hmtSM",
+    "/private/tmp/qlib-p50-stability-20261106.PleG6F"
+  ],
+  "change_inventory": {
+    "modified": 16,
+    "new": 208,
+    "deleted": 0,
+    "new_file_groups": {
+      "configs": {
+        "files": 9,
+        "bytes_excluding_review_manifest": 33326
+      },
+      "data": {
+        "files": 31,
+        "bytes_excluding_review_manifest": 3785384
+      },
+      "docs": {
+        "files": 131,
+        "bytes_excluding_review_manifest": 2814261
+      },
+      "metadata.json": {
+        "files": 1,
+        "bytes_excluding_review_manifest": 41922
+      },
+      "metrics": {
+        "files": 14,
+        "bytes_excluding_review_manifest": 1344125
+      },
+      "records": {
+        "files": 3,
+        "bytes_excluding_review_manifest": 92081
+      },
+      "reports": {
+        "files": 16,
+        "bytes_excluding_review_manifest": 1996527
+      },
+      "source-records": {
+        "files": 3,
+        "bytes_excluding_review_manifest": 11645
+      }
+    },
+    "files": [
+      {
+        "status": "modified",
+        "path": ".agents/skills/qlib-experiment-harness/SKILL.md",
+        "purpose": "技能入口：指标合理性排查、一次迭代优先一个平台入口、清理后先交付review清单。"
+      },
+      {
+        "status": "modified",
+        "path": ".gitignore",
+        "purpose": "仅忽略正式harness运行锁sidecar。"
+      },
+      {
+        "status": "modified",
+        "path": "backtest/experiments/_catalog/path_map.json",
+        "purpose": "已合并旧试用入口的兼容路径。"
+      },
+      {
+        "status": "modified",
+        "path": "backtest/experiments/registry.jsonl",
+        "purpose": "同一patience50主实验的三个登记事件；不新增额外平台入口，不晋升基线。"
+      },
+      {
+        "status": "modified",
+        "path": "backtest/experiments/reports/phase_m_v1_report.html",
+        "purpose": "重建全A汇总页，链接保留实验及其结论。"
+      },
+      {
+        "status": "modified",
+        "path": "backtest/models/regime_adapt.py",
+        "purpose": "记录完整早停目标曲线、观测轮数、最大轮数与patience。"
+      },
+      {
+        "status": "modified",
+        "path": "backtest/scripts/maintenance/experiment_archive.py",
+        "purpose": "资产清单排除确切运行锁，仍保留其它用户.lock文件。"
+      },
+      {
+        "status": "modified",
+        "path": "backtest/scripts/maintenance/experiment_harness.py",
+        "purpose": "schema v2组合来源与真实fit预算；收尾重验所有终态fit证据，保留v1兼容。"
+      },
+      {
+        "status": "modified",
+        "path": "backtest/scripts/train/train_regime_arm.py",
+        "purpose": "支持H7/H15/H30；H5早停标签退出日截断到评估窗内，更新缓存身份。"
+      },
+      {
+        "status": "modified",
+        "path": "docs/research/experiment_harness.md",
+        "purpose": "维护操作协议与本次试用经验；明确工具能力边界、证据保留、清理和提交前review。"
+      },
+      {
+        "status": "modified",
+        "path": "qlib/contrib/strategy/cohort_ladder.py",
+        "purpose": "仅修正文档：真阶梯规则对齐不意味着账户年化等于标签年化。"
+      },
+      {
+        "status": "modified",
+        "path": "qlib/contrib/strategy/signal_strategy.py",
+        "purpose": "仅修正CohortLadderStrategy说明，不改变交易逻辑。"
+      },
+      {
+        "status": "modified",
+        "path": "tests/backtest/test_experiment_archive.py",
+        "purpose": "运行锁排除与正常用户资产保留测试。"
+      },
+      {
+        "status": "modified",
+        "path": "tests/backtest/test_experiment_harness.py",
+        "purpose": "组合来源、预算、失败/恢复与收尾证据回归，包括本轮新增18个证据丢失/篡改用例。"
+      },
+      {
+        "status": "modified",
+        "path": "tests/backtest/test_regime_adapt.py",
+        "purpose": "早停完整历史和轮数信息测试。"
+      },
+      {
+        "status": "modified",
+        "path": "tests/backtest/test_train_regime_arm_es_valid.py",
+        "purpose": "新增H范围、H5窗口截断与缓存身份测试。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-account-validation.json",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-account-verification.json",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/evaluation.yaml",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/harness-plan.json",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106-accounts.json",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106.json",
+        "purpose": "实际研究、评估、固定账户与有限诊断计划。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-2026-contributions.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-ladder-cohort-audit.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-ladder-order-audit.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h15-ladder-overdue-pnl.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h20-2026-contributions.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-2026-contributions.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-ladder-cohort-audit.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-ladder-order-audit.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/h7-ladder-overdue-pnl.csv.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s1000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s2000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s3000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s4000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h15-s42.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s1000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s2000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s3000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s4000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h20-s42.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s1000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s2000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s3000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s4000.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/head-h7-s42.npz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/manifest.json",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/1d8d9e1a13b3e793661baf718ef5d184e814cd018e955943da9058cb1ee2f01e.txt.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/54147918904bd0aeabce4e55db23418449dfd36a6a57f829047e6e7370c89e98.txt.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/60f350ce574f2ac2179b192d0ffd402ba394c03f7e91f01b3dfc702f6e16a042.txt.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/901dbcbd99e50efe26974d847ee89c4de932b242c9a7647fd406d2b28f7585e0.txt.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/c962582edac0c0adec7531d198ec695f4e57f92d3523e695ccc7df4b4c57d77c.txt.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/stability-20261106-boosters/d8bd8c2886fad2a03646387ab5718d9157ac9fe32882045fb1c97fa755593f92.txt.gz",
+        "purpose": "头部选股、成交/持仓诊断及压缩树文本等精简研究证据。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-input-bridge.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-label-change-audit.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-observed-label-effect.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-2026-initial.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-integrity-20261105.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-validation-review.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/account-validation-verification.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/bridge-readiness.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/cache-retention.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/change-review-20261106.json",
+        "purpose": "本次提交前逐文件review清单、验证结果及收尾记录。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/continuation-driver.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/derived-account-progress.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/execution-bridge.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/execution-study.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/final-input-verification.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/final-verification.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/gap-decomposition.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/h15-account-input.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/h20-account-input.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/h7-account-input.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-cleanup.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-state.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/harness-trial-review.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h15.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h20.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h7.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/ladder-delayed-exits.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/ladder-verification.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/mlruns-retention-audit.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/owned-temporary-cleanup.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/preparation-operational-retry.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/publication-verification.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/regime-label-source.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/registration-failure-a1.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/registration-receipt.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/report-qa.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/result-cleanup-applied.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/result-cleanup-dry-run.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/result-cleanup-owned-plan.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/retention-20261105.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/reused-controls.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h15.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h20.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h7.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-account.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-accounts_pipeline.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-closeout.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-common.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-compare.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-continue_initial.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-evaluate_old.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-fit.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-infer.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-publish.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-recover.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-report.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-report_v2.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-routes.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-setup.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-tree_differences.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-adapter-verify.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-cleanup.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-environment.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-execution-logs.json.gz",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2020.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2021.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2022.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2023.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2024.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2025.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference-2026.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-lessons.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-ladder-signal.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r1-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r1-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r2-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r2-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-account-gate.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-ladder-signal.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-repeat-preliminary.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s1000-r1-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s1000-r1-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s2000-r1-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s2000-r1-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r1-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r1-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r2-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r2-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s4000-r1-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s4000-r1-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s42-r1-original-inputs.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s42-r1-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s5-signal.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-original-comparison.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-preservation.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-progress.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-recovery-decision.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-registration.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-removed-results.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-result-cleanup-applied.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-result-cleanup-dry-run.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-result-retention-final.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-routes-new-s3000-r1-original--archived-new.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-routes-old-s3000-r1-original--new-s3000-r1-original.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-runtime-libraries.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-summary.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-temporary-cleanup-inventory.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-trees-new-s3000-r1-original--archived-new.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-trees-old-s3000-r1-original--archived-new.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-verification.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-visual-review.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/study-summary.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s1000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s2000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s3000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s4000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s42.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s1000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s2000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s3000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s4000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s42.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s1000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s2000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s3000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s4000.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s42.json",
+        "purpose": "输入/环境指纹、逐轮训练、有限账本、复现/清理/验证证据；非可执行临时工具。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metadata.json",
+        "purpose": "归档资产清单与人工分析，仍为原主实验。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-ladder.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-model.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-s5.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-s5.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-ladder.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-model.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-s5.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-new-ladder.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-ladder.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-model.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-s5.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/v2-model.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/v2-s5.json",
+        "purpose": "正式模型评估与派生账户指标。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/records/3721e4b17469b17cc1b9995d932b8d45121b011e4a4a517abb6f4b4e37440041.json",
+        "purpose": "不可改写的正式登记事件。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/records/ced8444db90bf4dd6af302e32e358ea1361933d2b295414d6b3c1b4daf472427.json",
+        "purpose": "不可改写的正式登记事件。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/records/d95f10810363fd882cf1c3c7d1532da4150921a4219f2ab79680feac4de34822.json",
+        "purpose": "不可改写的正式登记事件。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/account-2026-validation.png",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/account-gap-validation.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/early-stop-sensitivity.png",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/early-stop-sensitivity.svg",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h15-account.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h15-ladder-account.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-account.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-label-bridge.png",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-label-bridge.svg",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h7-account.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h7-ladder-account.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/horizon-style.png",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/horizon-style.svg",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/stability-20261106.html",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/stability-20261106.png",
+        "purpose": "研究、账户、稳定性HTML报告及对应图像。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/source-records/h15.json",
+        "purpose": "H7/H15/H20保留臂的内部来源身份。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/source-records/h20.json",
+        "purpose": "H7/H15/H20保留臂的内部来源身份。"
+      },
+      {
+        "status": "new",
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/source-records/h7.json",
+        "purpose": "H7/H15/H20保留臂的内部来源身份。"
+      }
+    ]
+  },
+  "temporary_cleanup": {
+    "root": "/private/tmp/qlib-harness-closeout-20261106.2tOvnq",
+    "ownership": "本轮mktemp创建的测试/核验专用目录；pytest使用显式basetemp，全部内容均为本轮生成。",
+    "files_removed": 5418,
+    "bytes_removed": 20466409,
+    "symlinks_removed_without_following": 205,
+    "removed": true
+  },
+  "publication_preflight": {
+    "requested_action": "User explicitly authorized commit and push on main.",
+    "branch": "main",
+    "included_dependency_commit": "87104fb5846bd98ab60cd479df52259f655442fa",
+    "tests": "584 passed in 12.31s; previous ten test files plus test_regime_cache.py",
+    "svg_whitespace_normalization": [
+      {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/early-stop-sensitivity.svg",
+        "before_sha256": "195d85f03cf3a09ea350833f6f4dcd6899e06ac86a9242794839002d3e20dde6",
+        "after_sha256": "dd7603e3ac83c96b62b7b5e054738e052c47464ef7f6024c4301c39b3bbcbdac",
+        "removed_whitespace_bytes": 1860,
+        "xml_graphic_content_unchanged": true
+      },
+      {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-label-bridge.svg",
+        "before_sha256": "f0960bce1fc4320fc7bff410006a270642d85bd2b8dc7401c686769d83fb533a",
+        "after_sha256": "58ef1dda1cc20fe5efee6cea9b8413aba992dfbd33f49ce4e50a3c1a9827bdd8",
+        "removed_whitespace_bytes": 1544,
+        "xml_graphic_content_unchanged": true
+      },
+      {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/horizon-style.svg",
+        "before_sha256": "64c60f1588ee7568eadc0645822c99f3e0d1711dbb8dd13988b323ce71539038",
+        "after_sha256": "659c22d11717d9f6e9e81fef7cd9e8e7e05517402cf90d93e0f1ebcc6eb0d605",
+        "removed_whitespace_bytes": 1140,
+        "xml_graphic_content_unchanged": true
+      }
+    ],
+    "staged_review_file_count": 224
+  }
+}

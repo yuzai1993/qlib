@@ -1,0 +1,38 @@
+{
+  "scope": "Supplementary diagnostic within the existing patience50 experiment",
+  "issues": [
+    {
+      "id": "same-input-versus-label-change",
+      "status": "verified_with_scope_limit",
+      "finding": "Both old/new inputs reproduced objectives, trees and validation predictions exactly in two separate-process seed3000 fits using the original eight threads. Changing 106 normalized labels reproducibly changed tree splits from round5. Old five-seed selection summaries and s5 account metrics were recovered. No all-seed/all-hardware determinism claim.",
+      "evidence": ["stability-20261106-original-comparison.json", "stability-20261106-old-account-gate.json", "stability-20261106-summary.json"]
+    },
+    {
+      "id": "deleted-adapter-reconstruction",
+      "status": "corrected_for_this_stage",
+      "finding": "A hash cannot reconstruct a deleted temporary adapter. This stage preserves exact source text, module origins, distribution versions, LightGBM and actual libomp binary fingerprints, execution logs and selected booster text. Earlier deleted source is not retroactively claimed recovered.",
+      "evidence": ["stability-20261106-environment.json", "stability-20261106-runtime-libraries.json", "stability-20261106-preservation.json"]
+    },
+    {
+      "id": "closed-parent-followup-tool-gap",
+      "status": "formal_tool_extension_pending",
+      "finding": "Native harness uses one fixed plan/state per archive and cannot add a new phase after closure. Preserved the closed parent and used an explicit bounded supplementary ledger with cumulative cost, frozen inputs and serial launches. Did not claim native lifecycle coverage or create a second platform entry."
+    },
+    {
+      "id": "figure-best-label-overlap",
+      "status": "corrected_and_visually_verified",
+      "finding": "First scientific PNG had overlapping best45/best49 labels. report_v2.py corrected offsets and headroom; source versions retained; no numerical outputs changed.",
+      "evidence": ["stability-20261106-visual-review.json"]
+    },
+    {
+      "id": "narrowing-versus-improvement",
+      "status": "documented",
+      "finding": "The full-period CAGR gap narrowed from7.41pp to2.30pp, with the old group's return falling and the new group's rising. Both groups' 2026 cumulative returns fell. A narrower gap is not a universal performance improvement. Account arithmetic and model238/H5 annualization remain distinct."
+    },
+    {
+      "id": "historical-v2-training-cause",
+      "status": "unresolved_separate_question",
+      "finding": "This comparison concerns the two recent H20 patience50 label treatments. It does not attribute historical v2's original-training difference solely to these106 labels."
+    }
+  ]
+}

@@ -582,6 +582,22 @@
     "backtest/experiments/strategies/topk-dropout/v4-top5-drop1-f100": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top5-drop1-f100",
     "backtest/experiments/strategies/topk-dropout/v4-top15-drop3-f100": "backtest/experiments/strategies/topk-dropout/v4-topk-drop/variants/v4-top15-drop3-f100",
     "backtest/experiments/strategies/topk-dropout/bt-v5-300k": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k",
-    "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1"
+    "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk1": "backtest/experiments/strategies/topk-dropout/bt-v5-300k-risk/variants/bt-v5-300k-risk1",
+    "backtest/experiments/models/label-ensemble/medium-equal-v1": "backtest/experiments/models/training-target/horizon-blend-medium-equal-v1",
+    "backtest/experiments/models/label-ensemble/broad-equal-v1": "backtest/experiments/models/training-target/horizon-blend-broad-equal-v1",
+    "backtest/experiments/models/label-ensemble/anchor-half-v1": "backtest/experiments/models/training-target/horizon-blend-anchor-half-v1",
+    "backtest/experiments/models/label-ensemble/anchor-defensive-v1": "backtest/experiments/models/training-target/horizon-blend-anchor-defensive-v1",
+    "backtest/experiments/models/horizon-style/h5-common-v1": "backtest/experiments/models/training-target/horizon-style-h5-common-v1",
+    "backtest/experiments/strategies/horizon-style/fixed-s5-h5-common-v1": "backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/variants/h5-common",
+    "backtest/experiments/models/horizon-style/h10-common-v1": "backtest/experiments/models/training-target/horizon-style-h10-common-v1",
+    "backtest/experiments/strategies/horizon-style/fixed-s5-h10-common-v1": "backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/variants/h10-common",
+    "backtest/experiments/models/horizon-style/h40-common-v1": "backtest/experiments/models/training-target/horizon-style-h40-common-v1",
+    "backtest/experiments/strategies/horizon-style/fixed-s5-h40-common-v1": "backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/variants/h40-common",
+    "backtest/experiments/models/horizon-style/h7-common-v1": "backtest/experiments/models/training-target/horizon-style-h7-common-v1",
+    "backtest/experiments/strategies/horizon-style/fixed-s5-h7-common-v1": "backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/variants/h7-common",
+    "backtest/experiments/models/horizon-style/h15-common-v1": "backtest/experiments/models/training-target/horizon-style-h15-common-v1",
+    "backtest/experiments/strategies/horizon-style/fixed-s5-h15-common-v1": "backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/variants/h15-common",
+    "backtest/experiments/models/horizon-style/h30-common-v1": "backtest/experiments/models/training-target/horizon-style-h30-common-v1",
+    "backtest/experiments/strategies/horizon-style/fixed-s5-h30-common-v1": "backtest/experiments/strategies/topk-dropout/fixed-s5-horizon-style/variants/h30-common"
   }
 }

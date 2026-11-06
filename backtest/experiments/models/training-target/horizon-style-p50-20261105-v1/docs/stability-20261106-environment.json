@@ -1,0 +1,996 @@
+{
+  "python": "3.12.13 | packaged by Anaconda, Inc. | (main, Mar 19 2026, 20:12:32) [Clang 20.1.8 ]",
+  "executable": "/opt/anaconda3/envs/qlib/bin/python",
+  "platform": "macOS-15.3-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": [
+    {
+      "name": "akshare",
+      "version": "1.18.46"
+    },
+    {
+      "name": "alembic",
+      "version": "1.18.4"
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.4"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.7.0"
+    },
+    {
+      "name": "anyio",
+      "version": "4.13.0"
+    },
+    {
+      "name": "appnope",
+      "version": "0.1.4"
+    },
+    {
+      "name": "argon2-cffi",
+      "version": "25.1.0"
+    },
+    {
+      "name": "argon2-cffi-bindings",
+      "version": "25.1.0"
+    },
+    {
+      "name": "arrow",
+      "version": "1.4.0"
+    },
+    {
+      "name": "asttokens",
+      "version": "3.0.1"
+    },
+    {
+      "name": "async-lru",
+      "version": "2.3.0"
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0"
+    },
+    {
+      "name": "autocommand",
+      "version": "2.2.2"
+    },
+    {
+      "name": "babel",
+      "version": "2.18.0"
+    },
+    {
+      "name": "backports.tarfile",
+      "version": "1.2.0"
+    },
+    {
+      "name": "baostock",
+      "version": "0.8.9"
+    },
+    {
+      "name": "beautifulsoup4",
+      "version": "4.14.3"
+    },
+    {
+      "name": "bleach",
+      "version": "6.3.0"
+    },
+    {
+      "name": "blinker",
+      "version": "1.9.0"
+    },
+    {
+      "name": "bs4",
+      "version": "0.0.2"
+    },
+    {
+      "name": "cachetools",
+      "version": "7.0.5"
+    },
+    {
+      "name": "catboost",
+      "version": "1.2.10"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.2.25"
+    },
+    {
+      "name": "cffi",
+      "version": "2.0.0"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.4.6"
+    },
+    {
+      "name": "choreographer",
+      "version": "1.3.0"
+    },
+    {
+      "name": "clarabel",
+      "version": "0.11.1"
+    },
+    {
+      "name": "click",
+      "version": "8.3.1"
+    },
+    {
+      "name": "cloudpickle",
+      "version": "3.1.2"
+    },
+    {
+      "name": "comm",
+      "version": "0.2.3"
+    },
+    {
+      "name": "contourpy",
+      "version": "1.3.3"
+    },
+    {
+      "name": "cryptography",
+      "version": "46.0.5"
+    },
+    {
+      "name": "curl_cffi",
+      "version": "0.14.0"
+    },
+    {
+      "name": "cvxpy",
+      "version": "1.8.2"
+    },
+    {
+      "name": "cycler",
+      "version": "0.12.1"
+    },
+    {
+      "name": "Cython",
+      "version": "3.2.4"
+    },
+    {
+      "name": "databricks-sdk",
+      "version": "0.102.0"
+    },
+    {
+      "name": "debugpy",
+      "version": "1.8.20"
+    },
+    {
+      "name": "decorator",
+      "version": "5.2.1"
+    },
+    {
+      "name": "defusedxml",
+      "version": "0.7.1"
+    },
+    {
+      "name": "dill",
+      "version": "0.4.1"
+    },
+    {
+      "name": "dnspython",
+      "version": "2.8.0"
+    },
+    {
+      "name": "docker",
+      "version": "7.1.0"
+    },
+    {
+      "name": "et_xmlfile",
+      "version": "2.0.0"
+    },
+    {
+      "name": "executing",
+      "version": "2.2.1"
+    },
+    {
+      "name": "fastapi",
+      "version": "0.135.2"
+    },
+    {
+      "name": "fastjsonschema",
+      "version": "2.21.2"
+    },
+    {
+      "name": "filelock",
+      "version": "3.25.2"
+    },
+    {
+      "name": "fire",
+      "version": "0.7.1"
+    },
+    {
+      "name": "Flask",
+      "version": "3.1.3"
+    },
+    {
+      "name": "flask-cors",
+      "version": "6.0.2"
+    },
+    {
+      "name": "fonttools",
+      "version": "4.62.1"
+    },
+    {
+      "name": "fqdn",
+      "version": "1.5.1"
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.6.0"
+    },
+    {
+      "name": "gitdb",
+      "version": "4.0.12"
+    },
+    {
+      "name": "GitPython",
+      "version": "3.1.46"
+    },
+    {
+      "name": "google-auth",
+      "version": "2.49.1"
+    },
+    {
+      "name": "graphene",
+      "version": "3.4.3"
+    },
+    {
+      "name": "graphql-core",
+      "version": "3.2.8"
+    },
+    {
+      "name": "graphql-relay",
+      "version": "3.2.0"
+    },
+    {
+      "name": "graphviz",
+      "version": "0.21"
+    },
+    {
+      "name": "greenlet",
+      "version": "3.5.0"
+    },
+    {
+      "name": "gunicorn",
+      "version": "25.1.0"
+    },
+    {
+      "name": "gym",
+      "version": "0.26.2"
+    },
+    {
+      "name": "gym-notices",
+      "version": "0.1.0"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "name": "highspy",
+      "version": "1.13.1"
+    },
+    {
+      "name": "html5lib",
+      "version": "1.1"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1"
+    },
+    {
+      "name": "huey",
+      "version": "2.6.0"
+    },
+    {
+      "name": "idna",
+      "version": "3.11"
+    },
+    {
+      "name": "importlib_metadata",
+      "version": "8.7.1"
+    },
+    {
+      "name": "importlib_metadata",
+      "version": "8.7.1"
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.3.0"
+    },
+    {
+      "name": "ipykernel",
+      "version": "7.2.0"
+    },
+    {
+      "name": "ipython",
+      "version": "9.11.0"
+    },
+    {
+      "name": "ipython_pygments_lexers",
+      "version": "1.1.1"
+    },
+    {
+      "name": "ipywidgets",
+      "version": "8.1.8"
+    },
+    {
+      "name": "isoduration",
+      "version": "20.11.0"
+    },
+    {
+      "name": "itsdangerous",
+      "version": "2.2.0"
+    },
+    {
+      "name": "jaraco.context",
+      "version": "6.1.0"
+    },
+    {
+      "name": "jaraco.functools",
+      "version": "4.4.0"
+    },
+    {
+      "name": "jaraco.text",
+      "version": "4.0.0"
+    },
+    {
+      "name": "jedi",
+      "version": "0.19.2"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "name": "joblib",
+      "version": "1.5.3"
+    },
+    {
+      "name": "jqdatasdk",
+      "version": "1.9.8"
+    },
+    {
+      "name": "json5",
+      "version": "0.13.0"
+    },
+    {
+      "name": "jsonpath",
+      "version": "0.82.2"
+    },
+    {
+      "name": "jsonpointer",
+      "version": "3.1.1"
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1"
+    },
+    {
+      "name": "jupyter",
+      "version": "1.1.1"
+    },
+    {
+      "name": "jupyter-console",
+      "version": "6.6.3"
+    },
+    {
+      "name": "jupyter-events",
+      "version": "0.12.0"
+    },
+    {
+      "name": "jupyter-lsp",
+      "version": "2.3.0"
+    },
+    {
+      "name": "jupyter_client",
+      "version": "8.8.0"
+    },
+    {
+      "name": "jupyter_core",
+      "version": "5.9.1"
+    },
+    {
+      "name": "jupyter_server",
+      "version": "2.17.0"
+    },
+    {
+      "name": "jupyter_server_terminals",
+      "version": "0.5.4"
+    },
+    {
+      "name": "jupyterlab",
+      "version": "4.5.6"
+    },
+    {
+      "name": "jupyterlab_pygments",
+      "version": "0.3.0"
+    },
+    {
+      "name": "jupyterlab_server",
+      "version": "2.28.0"
+    },
+    {
+      "name": "jupyterlab_widgets",
+      "version": "3.0.16"
+    },
+    {
+      "name": "kaleido",
+      "version": "1.3.0"
+    },
+    {
+      "name": "kiwisolver",
+      "version": "1.5.0"
+    },
+    {
+      "name": "lark",
+      "version": "1.3.1"
+    },
+    {
+      "name": "lightgbm",
+      "version": "4.6.0"
+    },
+    {
+      "name": "logistro",
+      "version": "2.0.1"
+    },
+    {
+      "name": "loguru",
+      "version": "0.7.3"
+    },
+    {
+      "name": "lxml",
+      "version": "6.0.2"
+    },
+    {
+      "name": "Mako",
+      "version": "1.3.10"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.3"
+    },
+    {
+      "name": "matplotlib",
+      "version": "3.10.8"
+    },
+    {
+      "name": "matplotlib-inline",
+      "version": "0.2.1"
+    },
+    {
+      "name": "mini-racer",
+      "version": "0.14.1"
+    },
+    {
+      "name": "mistune",
+      "version": "3.2.0"
+    },
+    {
+      "name": "mlflow",
+      "version": "3.10.1"
+    },
+    {
+      "name": "mlflow-skinny",
+      "version": "3.10.1"
+    },
+    {
+      "name": "mlflow-tracing",
+      "version": "3.10.1"
+    },
+    {
+      "name": "more-itertools",
+      "version": "10.8.0"
+    },
+    {
+      "name": "mpmath",
+      "version": "1.3.0"
+    },
+    {
+      "name": "msgpack",
+      "version": "1.2.1"
+    },
+    {
+      "name": "narwhals",
+      "version": "2.18.1"
+    },
+    {
+      "name": "nbclient",
+      "version": "0.10.4"
+    },
+    {
+      "name": "nbconvert",
+      "version": "7.17.0"
+    },
+    {
+      "name": "nbformat",
+      "version": "5.10.4"
+    },
+    {
+      "name": "nest-asyncio",
+      "version": "1.6.0"
+    },
+    {
+      "name": "networkx",
+      "version": "3.6.1"
+    },
+    {
+      "name": "notebook",
+      "version": "7.5.5"
+    },
+    {
+      "name": "notebook_shim",
+      "version": "0.2.4"
+    },
+    {
+      "name": "numpy",
+      "version": "2.4.3"
+    },
+    {
+      "name": "openpyxl",
+      "version": "3.1.5"
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.40.0"
+    },
+    {
+      "name": "opentelemetry-proto",
+      "version": "1.40.0"
+    },
+    {
+      "name": "opentelemetry-sdk",
+      "version": "1.40.0"
+    },
+    {
+      "name": "opentelemetry-semantic-conventions",
+      "version": "0.61b0"
+    },
+    {
+      "name": "orjson",
+      "version": "3.11.9"
+    },
+    {
+      "name": "osqp",
+      "version": "1.1.1"
+    },
+    {
+      "name": "packaging",
+      "version": "25.0"
+    },
+    {
+      "name": "packaging",
+      "version": "26.0"
+    },
+    {
+      "name": "pandas",
+      "version": "2.3.3"
+    },
+    {
+      "name": "pandocfilters",
+      "version": "1.5.1"
+    },
+    {
+      "name": "parso",
+      "version": "0.8.6"
+    },
+    {
+      "name": "patsy",
+      "version": "1.0.2"
+    },
+    {
+      "name": "pdfminer.six",
+      "version": "20251230"
+    },
+    {
+      "name": "pdfplumber",
+      "version": "0.11.9"
+    },
+    {
+      "name": "pexpect",
+      "version": "4.9.0"
+    },
+    {
+      "name": "pillow",
+      "version": "12.1.1"
+    },
+    {
+      "name": "pip",
+      "version": "26.0.1"
+    },
+    {
+      "name": "platformdirs",
+      "version": "4.9.4"
+    },
+    {
+      "name": "platformdirs",
+      "version": "4.4.0"
+    },
+    {
+      "name": "playwright",
+      "version": "1.59.0"
+    },
+    {
+      "name": "plotly",
+      "version": "6.6.0"
+    },
+    {
+      "name": "pluggy",
+      "version": "1.6.0"
+    },
+    {
+      "name": "ply",
+      "version": "3.11"
+    },
+    {
+      "name": "prettytable",
+      "version": "3.17.0"
+    },
+    {
+      "name": "prometheus_client",
+      "version": "0.24.1"
+    },
+    {
+      "name": "prompt_toolkit",
+      "version": "3.0.52"
+    },
+    {
+      "name": "protobuf",
+      "version": "6.33.6"
+    },
+    {
+      "name": "psutil",
+      "version": "7.2.2"
+    },
+    {
+      "name": "ptyprocess",
+      "version": "0.7.0"
+    },
+    {
+      "name": "pure_eval",
+      "version": "0.2.3"
+    },
+    {
+      "name": "pyarrow",
+      "version": "23.0.1"
+    },
+    {
+      "name": "pyasn1",
+      "version": "0.6.3"
+    },
+    {
+      "name": "pyasn1_modules",
+      "version": "0.4.2"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.0"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.12.5"
+    },
+    {
+      "name": "pydantic-settings",
+      "version": "2.13.1"
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.41.5"
+    },
+    {
+      "name": "pyee",
+      "version": "13.0.1"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.19.2"
+    },
+    {
+      "name": "pymongo",
+      "version": "4.16.0"
+    },
+    {
+      "name": "PyMySQL",
+      "version": "1.2.0"
+    },
+    {
+      "name": "pyparsing",
+      "version": "3.3.2"
+    },
+    {
+      "name": "pypdfium2",
+      "version": "5.8.0"
+    },
+    {
+      "name": "pyqlib",
+      "version": "0.1.dev2065"
+    },
+    {
+      "name": "pytest",
+      "version": "9.1.1"
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.9.0.post0"
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.2"
+    },
+    {
+      "name": "python-json-logger",
+      "version": "4.0.0"
+    },
+    {
+      "name": "python-redis-lock",
+      "version": "4.0.0"
+    },
+    {
+      "name": "pytz",
+      "version": "2026.1.post1"
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3"
+    },
+    {
+      "name": "pyzmq",
+      "version": "27.1.0"
+    },
+    {
+      "name": "redis",
+      "version": "7.4.0"
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0"
+    },
+    {
+      "name": "requests",
+      "version": "2.32.5"
+    },
+    {
+      "name": "requests-futures",
+      "version": "1.0.2"
+    },
+    {
+      "name": "rfc3339-validator",
+      "version": "0.1.4"
+    },
+    {
+      "name": "rfc3986-validator",
+      "version": "0.1.1"
+    },
+    {
+      "name": "rfc3987-syntax",
+      "version": "1.1.0"
+    },
+    {
+      "name": "rpds-py",
+      "version": "0.30.0"
+    },
+    {
+      "name": "ruamel.yaml",
+      "version": "0.19.1"
+    },
+    {
+      "name": "scikit-learn",
+      "version": "1.8.0"
+    },
+    {
+      "name": "scipy",
+      "version": "1.17.1"
+    },
+    {
+      "name": "scs",
+      "version": "3.2.11"
+    },
+    {
+      "name": "Send2Trash",
+      "version": "2.1.0"
+    },
+    {
+      "name": "setuptools",
+      "version": "80.10.2"
+    },
+    {
+      "name": "setuptools-scm",
+      "version": "9.2.2"
+    },
+    {
+      "name": "simplejson",
+      "version": "3.20.2"
+    },
+    {
+      "name": "six",
+      "version": "1.17.0"
+    },
+    {
+      "name": "skops",
+      "version": "0.13.0"
+    },
+    {
+      "name": "smmap",
+      "version": "5.0.3"
+    },
+    {
+      "name": "soupsieve",
+      "version": "2.8.3"
+    },
+    {
+      "name": "SQLAlchemy",
+      "version": "2.0.48"
+    },
+    {
+      "name": "sqlparse",
+      "version": "0.5.5"
+    },
+    {
+      "name": "stack-data",
+      "version": "0.6.3"
+    },
+    {
+      "name": "starlette",
+      "version": "1.0.0"
+    },
+    {
+      "name": "statsmodels",
+      "version": "0.14.6"
+    },
+    {
+      "name": "sympy",
+      "version": "1.14.0"
+    },
+    {
+      "name": "tabulate",
+      "version": "0.10.0"
+    },
+    {
+      "name": "termcolor",
+      "version": "3.3.0"
+    },
+    {
+      "name": "terminado",
+      "version": "0.18.1"
+    },
+    {
+      "name": "threadpoolctl",
+      "version": "3.6.0"
+    },
+    {
+      "name": "thriftpy2",
+      "version": "0.6.0"
+    },
+    {
+      "name": "tinycss2",
+      "version": "1.4.0"
+    },
+    {
+      "name": "tomli",
+      "version": "2.4.0"
+    },
+    {
+      "name": "torch",
+      "version": "2.13.0"
+    },
+    {
+      "name": "tornado",
+      "version": "6.5.5"
+    },
+    {
+      "name": "tqdm",
+      "version": "4.67.3"
+    },
+    {
+      "name": "traitlets",
+      "version": "5.14.3"
+    },
+    {
+      "name": "tushare",
+      "version": "1.4.25"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.2"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.15.0"
+    },
+    {
+      "name": "tzdata",
+      "version": "2025.3"
+    },
+    {
+      "name": "uri-template",
+      "version": "1.3.0"
+    },
+    {
+      "name": "urllib3",
+      "version": "2.6.3"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.42.0"
+    },
+    {
+      "name": "wcwidth",
+      "version": "0.6.0"
+    },
+    {
+      "name": "webcolors",
+      "version": "25.10.0"
+    },
+    {
+      "name": "webencodings",
+      "version": "0.5.1"
+    },
+    {
+      "name": "websocket-client",
+      "version": "1.9.0"
+    },
+    {
+      "name": "Werkzeug",
+      "version": "3.1.7"
+    },
+    {
+      "name": "wheel",
+      "version": "0.46.3"
+    },
+    {
+      "name": "wheel",
+      "version": "0.46.3"
+    },
+    {
+      "name": "widgetsnbextension",
+      "version": "4.0.15"
+    },
+    {
+      "name": "xgboost",
+      "version": "3.3.0"
+    },
+    {
+      "name": "xlrd",
+      "version": "2.0.2"
+    },
+    {
+      "name": "yahooquery",
+      "version": "2.4.1"
+    },
+    {
+      "name": "zipp",
+      "version": "3.23.0"
+    },
+    {
+      "name": "zipp",
+      "version": "3.23.0"
+    }
+  ],
+  "thread_variables": {},
+  "modules": {
+    "lightgbm": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/lightgbm/__init__.py",
+    "numpy": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/numpy/__init__.py",
+    "pandas": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/pandas/__init__.py",
+    "qlib": "/Users/yuxianqi/Project/qlib/qlib/__init__.py"
+  },
+  "lightgbm_binaries": [
+    {
+      "path": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/lightgbm/lib/lib_lightgbm.dylib",
+      "sha256": "50f62eef76a25c7dbd5b79c998d59a5dff4874c595f7fb8d197826c2bfbd8a92",
+      "size": 6376096
+    }
+  ],
+  "git_head": "87104fb5846bd98ab60cd479df52259f655442fa",
+  "git_diff": "diff --git a/backtest/models/regime_adapt.py b/backtest/models/regime_adapt.py\nindex df14ddd1..b8c7cdd0 100644\n--- a/backtest/models/regime_adapt.py\n+++ b/backtest/models/regime_adapt.py\n@@ -226,6 +226,10 @@ class RegimeWeightedDEnsembleModel(RankICEarlyStoppingDEnsembleModel):\n                 \"best_iteration\": model.best_iteration,\n                 \"best_score\": model.best_score[\"valid\"][metric_name],\n                 \"valid_days\": valid_index.get_level_values(\"datetime\").nunique(),\n+                \"metric_history\": evals_result[\"valid\"][metric_name],\n+                \"evaluated_iterations\": len(evals_result[\"valid\"][metric_name]),\n+                \"num_boost_round\": self.epochs,\n+                \"early_stopping_rounds\": self.early_stopping_rounds,\n             }\n         )\n         return model\n@@ -374,6 +378,10 @@ class RegimeSingleLGBMModel(LGBModel):\n                 \"best_iteration\": self.model.best_iteration,\n                 \"best_score\": self.model.best_score[\"valid\"][metric_name],\n                 \"valid_days\": valid_index.get_level_values(\"datetime\").nunique(),\n+                \"metric_history\": evals_result[\"valid\"][metric_name],\n+                \"evaluated_iterations\": len(evals_result[\"valid\"][metric_name]),\n+                \"num_boost_round\": self.num_boost_round,\n+                \"early_stopping_rounds\": self.early_stopping_rounds,\n             }\n         ]\n         return self.model\ndiff --git a/backtest/scripts/train/train_regime_arm.py b/backtest/scripts/train/train_regime_arm.py\nindex da786c94..3e2c5b36 100644\n--- a/backtest/scripts/train/train_regime_arm.py\n+++ b/backtest/scripts/train/train_regime_arm.py\n@@ -83,6 +83,13 @@ def resolve_es_valid_source(es_metric: str, es_valid: str = \"auto\") -> str:\n     return \"eval_window\"\n \n \n+def validate_label_horizon(horizon: int) -> int:\n+    \"\"\"Reject unsupported targets before initializing Qlib or loading data.\"\"\"\n+    if type(horizon) is not int or horizon not in (1, 2, 3, 5, 7, 10, 15, 20, 30, 40):\n+        raise ValueError(\"--label-horizon must be 1, 2, 3, 5, 7, 10, 15, 20, 30 or 40\")\n+    return horizon\n+\n+\n # 阶段 1 筛选臂：B3-M 冻结超参（feature-b2/range 单 LGBModel，除 seed 外不动）\n # + cs-rank-norm 标签（分块缓存自带）；早停协议同 DoubleEnsemble 臂（RankIC 锚点）\n FROZEN_SINGLE_KWARGS = dict(\n@@ -196,7 +203,8 @@ def build_t5h5es_valid_frame(\n     arm: str,\n     instruments=None,\n ) -> tuple[pd.DataFrame, pd.Series]:\n-    \"\"\"全A 评估窗特征 + H5 标签 + 评估过滤，供 top5×h5 扣费净年化早停。\"\"\"\n+    \"\"\"全A 评估窗特征 + 窗内完整 H5 标签 + 评估过滤，供头部指标早停。\"\"\"\n+    from qlib.data import D\n     from qlib.data.dataset import DatasetH\n     from qlib.data.dataset.handler import DataHandlerLP\n \n@@ -208,6 +216,7 @@ def build_t5h5es_valid_frame(\n         _stock_only_mask,\n         amount_mask,\n         entry_tradable_mask,\n+        label_window_cutoff,\n     )\n     from backtest.scripts.prepare.prepare_regime_train_chunks import build_handler\n \n@@ -248,6 +257,13 @@ def build_t5h5es_valid_frame(\n     mask = mask & _st_keep_for_eval(label.index)\n     amt_ok = amount_mask(pool, EVAL_START, VALID_END, DEFAULT_MIN_AMOUNT)\n     mask = mask & amt_ok.reindex(label.index).fillna(False)\n+    # A later provider snapshot can supply labels whose exits lie after VALID_END.\n+    # Apply the same exit boundary as formal evaluation, independent of data freshness.\n+    calendar = pd.DatetimeIndex(D.calendar(start_time=EVAL_START, end_time=VALID_END))\n+    cutoff = label_window_cutoff(calendar, 5)\n+    if cutoff is None:\n+        raise ValueError(\"t5h5es validation window cannot contain a complete H5 label\")\n+    mask = mask & (label.index.get_level_values(\"datetime\") <= cutoff)\n     label = label[mask]\n     tradable = entry_tradable_mask(pool, EVAL_START, VALID_END)\n \n@@ -443,6 +459,8 @@ def shared_validation_spec(arm: str, valid_source: str, instruments=None) -> dic\n         warmup=VALID_WARMUP_START,\n         instruments=instruments or INSTRUMENTS,\n     )\n+    if valid_source == \"eval_window\":\n+        spec[\"recipe\"][\"label_window_policy\"] = \"exit_within_eval_window_h5\"\n     return spec\n \n \n@@ -630,6 +648,7 @@ def main() -> None:\n         help=\"早停 valid 帧；auto/eval_window=评估窗（v4），stratified70=v1 的 499 日集\",\n     )\n     args = parser.parse_args()\n+    validate_label_horizon(args.label_horizon)\n     if (args.feature_manifest is None) != (args.label_manifest is None):\n         parser.error(\n             \"--feature-manifest and --label-manifest must be supplied together\"\n@@ -669,8 +688,6 @@ def _run(args, leases: ExitStack) -> None:\n     if args.early_stopping_rounds is not None:\n         kwargs[\"early_stopping_rounds\"] = args.early_stopping_rounds\n         overridden = True\n-    if args.label_horizon not in (1, 2, 3, 5, 10, 20, 40):\n-        raise ValueError(\"--label-horizon must be 1, 2, 3, 5, 10, 20 or 40\")\n     if args.valid_instruments is not None:\n         overridden = True\n     tag = \"regimeadaptfast\" if single else \"regimeadapt\"\n@@ -699,7 +716,7 @@ def _run(args, leases: ExitStack) -> None:\n         )\n     elif es_valid_source == \"eval_window\":\n         valid_cache = (\n-            CACHE_ROOT / args.arm / \"valid_frame_t5h5es.pkl\"\n+            CACHE_ROOT / args.arm / \"valid_frame_t5h5es_exitbounded.pkl\"\n             if args.valid_instruments is None\n             else None\n         )\n@@ -832,6 +849,11 @@ def _run(args, leases: ExitStack) -> None:\n         \"es_metric\": args.es_metric,\n         \"es_valid\": args.es_valid,\n         \"es_valid_source\": es_valid_source,\n+        \"es_valid_sample_start\": str(df_valid.index.get_level_values(\"datetime\").min().date()),\n+        \"es_valid_sample_end\": str(df_valid.index.get_level_values(\"datetime\").max().date()),\n+        \"es_label_window_policy\": (\n+            \"exit_within_eval_window_h5\" if es_valid_source == \"eval_window\" else \"stratified70\"\n+        ),\n         \"rankic_evals\": model.rankic_evals_result,\n         \"fit_seconds\": round(t_fit, 1),\n         \"total_seconds\": round(time.time() - t_all, 1),\n"
+}

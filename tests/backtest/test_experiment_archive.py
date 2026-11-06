@@ -337,3 +337,68 @@ def test_historical_classification_follows_research_protocol(row, expected):
     import backtest.scripts.maintenance.experiment_archive as archive
     actual = archive.classify_experiment(row)
     assert (actual["kind"], actual["track"]) == expected
+
+@pytest.mark.parametrize("asset_snapshot", [False, True])
+@pytest.mark.parametrize("stored_as_dict", [False, True])
+def test_metadata_refresh_excludes_only_harness_runtime_sidecars(tmp_path, asset_snapshot, stored_as_dict):
+    import backtest.scripts.maintenance.experiment_archive as archive
+
+    directory = tmp_path / "backtest/experiments/models/group/arm"
+    runtime = directory / "docs/.harness-state.json.lock"
+    global_runtime = tmp_path / "backtest/experiments/.harness-campaigns.lock"
+    user_paths = [
+        directory / "docs/research.lock",
+        directory / "docs/.user.lock",
+        directory / "docs/nested/.harness-state.json.lock",
+        directory / "notes/.harness-state.json.lock",
+        directory / "docs/.harness-campaigns.lock",
+    ]
+    for item in [runtime, global_runtime, *user_paths]:
+        item.parent.mkdir(parents=True, exist_ok=True)
+        item.write_text("user evidence" if item in user_paths else "")
+    state_file = directory / "docs/harness-state.json"
+    state_file.write_text("{}")
+    runtime_inode, global_inode = runtime.stat().st_ino, global_runtime.stat().st_ino
+
+    inventory_base = tmp_path if asset_snapshot else directory
+    runtime_entry = runtime.relative_to(inventory_base).as_posix()
+    if stored_as_dict:
+        runtime_entry = {"path": runtime_entry, "role": "former inventory entry"}
+    docs = [runtime_entry]
+    if asset_snapshot:
+        docs.append(global_runtime.relative_to(tmp_path).as_posix())
+    user_entry = {
+        "path": user_paths[0].relative_to(inventory_base).as_posix(),
+        "role": "user-authored evidence",
+    }
+    docs.append(user_entry)
+    metadata = {
+        "schema_version": 2, "entity_type": "experiment", "exp_id": "group/arm",
+        "kind": "model", "track": "csi1000", "title": "Keep editorial title",
+        "docs": docs,
+    }
+    if asset_snapshot:
+        metadata["inventory_kind"] = "asset_snapshot"
+    (directory / "metadata.json").write_text(json.dumps(metadata))
+    registry = tmp_path / "backtest/experiments/registry.jsonl"
+    registry.write_text('{"existing":"immutable-registry-evidence"}\n')
+    original = directory / "records/original.json"
+    original.parent.mkdir()
+    original.write_text('{"existing":"immutable-record-evidence"}\n')
+    registry_bytes, record_bytes = registry.read_bytes(), original.read_bytes()
+
+    refreshed = archive.ensure_experiment_metadata(tmp_path, {"exp_id": "group/arm", "phase": "M"})
+    inventory_paths = {
+        item["path"] if isinstance(item, dict) else item for item in refreshed["docs"]
+    }
+    assert runtime.relative_to(tmp_path).as_posix() not in inventory_paths
+    assert global_runtime.relative_to(tmp_path).as_posix() not in inventory_paths
+    assert {item.relative_to(tmp_path).as_posix() for item in user_paths} <= inventory_paths
+    assert state_file.relative_to(tmp_path).as_posix() in inventory_paths
+    preserved = next(item for item in refreshed["docs"] if isinstance(item, dict))
+    assert preserved["role"] == "user-authored evidence"
+    assert refreshed["title"] == "Keep editorial title"
+    assert runtime.stat().st_ino == runtime_inode
+    assert global_runtime.stat().st_ino == global_inode
+    assert registry.read_bytes() == registry_bytes
+    assert original.read_bytes() == record_bytes

@@ -570,6 +570,11 @@ def ensure_experiment_metadata(repo_root: Path, row: dict, *, atomic_writer=None
     for field in INVENTORY_FIELDS:
         if field in metadata:
             metadata[field] = relocated(metadata[field])
+    # Runtime flock sidecars retain stable inodes; they are not archive assets.
+    runtime_sidecars = {
+        "backtest/experiments/.harness-campaigns.lock",
+        (directory / "docs/.harness-state.json.lock").relative_to(root).as_posix(),
+    }
     for field, folders in (("configs", ("configs",)), ("reports", ("reports",)), ("records", ("records",)),
                            ("data", ("data", "metrics")), ("docs", ("docs", "notes"))):
         inventory = metadata.get(field, [])
@@ -580,13 +585,16 @@ def ensure_experiment_metadata(repo_root: Path, row: dict, *, atomic_writer=None
             relative = item.get("path") if isinstance(item, dict) else item
             if not isinstance(relative, str):
                 raise ValueError(f"archive {field} inventory entry must have a path")
-            assets[relative] = item
+            if relative not in runtime_sidecars:
+                assets[relative] = item
         for folder in folders:
             asset_root = directory / folder
             if asset_root.exists():
                 for asset in sorted(asset_root.rglob("*")):
                     relative = asset.relative_to(root).as_posix()
                     _safe_path(root, relative)
+                    if relative in runtime_sidecars:
+                        continue
                     if asset.is_file():
                         previous = assets.get(relative)
                         if field == "configs":

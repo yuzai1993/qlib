@@ -1,0 +1,13 @@
+{
+  "decision": "recover remaining old-label seeds",
+  "criterion": "Both seed3000 input treatments repeated exactly (all objectives/tree hashes/validation predictions); old selected49 and matched prior best objective. Recover original five-seed recipe to test whether the previously observed whole-account gap reproduces.",
+  "source": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-original-comparison.json",
+    "sha256": "a4741e86e893a613b3aa628d1b8df3642a5e15849254aa71146d253644f7c79e",
+    "size": 8766
+  },
+  "chosen_repeat": 1,
+  "additional_fits": 4,
+  "prior_fits": 103,
+  "created_at": 1793899663.4125838
+}

@@ -1,0 +1,17 @@
+{
+  "source": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+    "sha256": "90783e819314072df08549698fc85a8657fce1359f105d0735b4c678b5a272a3",
+    "size": 97032
+  },
+  "horizons": [
+    5,
+    7,
+    10,
+    15,
+    20,
+    30,
+    40
+  ],
+  "purpose": "Actual normalized training labels for seven-H study; source provider and pure feature manifest remain protected."
+}

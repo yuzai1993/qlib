@@ -1,0 +1,78 @@
+{
+  "hypothesis": "At fixed patience50, larger H improves T, smaller H>=5 improves D, and F peaks at H5-10; verify model patterns against the same fixed-s5 account rule.",
+  "user_authorization": "确定延长早停有效的话，就用该方法重跑H实验",
+  "prerequisite": {
+    "path": "backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/validation-summary.json",
+    "sha256": "75c1138bb3c7f54b0435c9731101f3ed7a27f9bdb08c958f09be20111c05e96e",
+    "size": 11446
+  },
+  "horizons": [
+    5,
+    7,
+    10,
+    15,
+    20,
+    30,
+    40
+  ],
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "scientific_arm_count": 7,
+  "registered_study_count": 1,
+  "model": "M0 single LightGBM; Alpha158+range; original training dates and M0 weights",
+  "parameters": {
+    "colsample_bytree": 0.8879,
+    "learning_rate": 0.2,
+    "subsample": 0.8789,
+    "lambda_l1": 205.6999,
+    "lambda_l2": 580.9768,
+    "max_depth": 8,
+    "num_leaves": 210,
+    "num_threads": 8,
+    "num_boost_round": 200,
+    "early_stopping_rounds": 50
+  },
+  "label_processing": "Legacy H40-base sample protocol. H40 ranks before listing-age filter; other H rank on H40-valid/listing-qualified base. Each target then drops its own missing labels; no seven-H intersection.",
+  "source_policy": {
+    "features": "Frozen Nov2 pure feature manifest/blocks, common to all H",
+    "labels": "All H and H40 base rebuilt on one frozen Nov3 provider snapshot; preserve original yearly H40 ProcessInf/rank ordering",
+    "validation": "Same exit-bounded H5 panel used in the completed ES confirmation, 1448 days through 2026-07-23",
+    "inference_and_accounts": "Same frozen Nov3 provider, formal annual DK_I and fixed-s5 account inputs"
+  },
+  "H20_bridge": {
+    "reuse": "Reuse confirmed H20 p50 only if ordered training indices and both float64 ranked labels and actual float32 model labels are exact against the frozen original cache; features, weights and validation must be identical.",
+    "otherwise": "Fit H20 first under the uniform new labels, derive prespecified p20 prefixes without extra fitting, evaluate both and run fixed-s5 before the other six H.",
+    "readiness": "If re-fitted: all p50 naturally stop within200 and select >6; no boundary ties at selected rounds; reverse-priority stopping choices agree; p50 model net_ann/net_sharpe and s5 CAGR/Sharpe are no lower than paired p20 (tolerance1e-12); no ensemble collapse below every component. If these fail, stop H expansion and preserve the bridge finding."
+  },
+  "evaluation": {
+    "official": "Five-seed daily zscore equal-weight ensemble; Top3xH5 net_ann/net_ann_vol/net_sharpe and global H5 RankIC; same yearly/style definitions",
+    "account": "Fixed s5 top5/drop1/hold1/f100,risk.90,1m,original fees; CAGR/Sharpe/drawdown/Alpha/Beta/benchmark; no strategy tuning"
+  },
+  "interpretation": {
+    "T": "Report all adjacent nonnegative differences in increasing H, separately net_ann and Sharpe; distinguish strict trend from H40 endpoint maximum.",
+    "D": "Report all adjacent nonpositive differences in increasing H>=5, separately return and Sharpe; distinguish monotonicity from H5 maximum.",
+    "F": "All tied maximizing H should lie in {5,7,10} to fully support the proposed peak interval; list every tie.",
+    "tolerance": 1e-12,
+    "secondary": "Report Spearman H-vs-metric descriptively, yearly consistency, and fixed-s5 pattern agreement. Do not redefine a hypothesis after seeing results.",
+    "F_limitation": "F occurs only in seven months of 2024 (136 days); no cross-year confirmation or live style switching claim.",
+    "exposure": "historical_selection_window; not independent out-of-sample; no promotion"
+  },
+  "fit_budget": {
+    "nominal_new": 35,
+    "maximum": 37,
+    "reuse_H20_can_reduce_to": 30,
+    "prior_total": 68
+  },
+  "entry_policy": "One model study entry contains all seven internal arms and failures. H20 is the prespecified representative/control for the existing report interface, never a claimed winner. One derived fixed-s5 validation entry links the full seven-arm report.",
+  "constraints": [
+    "No patience/epoch changes by H",
+    "No seed deletion/reweighting",
+    "No baseline or production changes",
+    "Do not silently substitute current live data for frozen inputs"
+  ]
+}

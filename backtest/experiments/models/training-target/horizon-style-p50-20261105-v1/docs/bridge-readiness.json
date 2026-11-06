@@ -1,0 +1,210 @@
+{
+  "ready": true,
+  "criteria": {
+    "same_ordered_features_and_weights": true,
+    "same_formal_eval_and_account_inputs": true,
+    "all_p50_naturally_stopped": true,
+    "all_p50_best_round_above6": true,
+    "no_selected_boundary_ties": true,
+    "reverse_priority_same_stops": true,
+    "model_return_and_sharpe_not_lower": true,
+    "account_CAGR_and_sharpe_not_lower": true,
+    "no_ensemble_collapse": true
+  },
+  "mode": "new_label_snapshot_same_fit_p20_p50_bridge",
+  "model": {
+    "h20": {
+      "n_days": 1448,
+      "ann_excess": 0.2445518917762597,
+      "ir": 0.6474098947539955,
+      "ann": 0.3342333915319232,
+      "beta": 1.0469917795369432,
+      "ann_alpha": 0.24033759851119912,
+      "appraisal_ir": 0.6378804607497995,
+      "turnover_period": 0.8976668976668977,
+      "turnover": 0.17953337953337953,
+      "ann_cost": 0.03931062878262878,
+      "net_ann_excess": 0.2052412629936309,
+      "net_ann": 0.2949227627492944,
+      "net_ann_alpha": 0.20102696972857034,
+      "net_ann_vol": 0.5971968374940947,
+      "net_sharpe": 0.49384515160331993
+    },
+    "bridge_p20": {
+      "n_days": 1448,
+      "ann_excess": 0.14360602505910028,
+      "ir": 0.3201298706394441,
+      "ann": 0.23328752481476375,
+      "beta": 1.2048928673553925,
+      "ann_alpha": 0.12523092542543043,
+      "appraisal_ir": 0.2864585961345645,
+      "turnover_period": 0.8810348810348811,
+      "turnover": 0.17620697620697623,
+      "ann_cost": 0.03858227951027952,
+      "net_ann_excess": 0.10502374554882077,
+      "net_ann": 0.19470524530448424,
+      "net_ann_alpha": 0.08664864591515092,
+      "net_ann_vol": 0.6921039438516556,
+      "net_sharpe": 0.2813237043859658
+    }
+  },
+  "account": {
+    "h20": {
+      "n_days": 1454,
+      "annualized_return": 0.23125710774146735,
+      "annualized_return_arith": 0.2510787643153733,
+      "sharpe_ratio": 0.8561770041957341,
+      "alpha": 0.15514321161561379,
+      "beta": 0.8985719392258102,
+      "calmar_ratio": 0.6744657547448676,
+      "annualized_volatility": 0.29325567386761203,
+      "max_drawdown": -0.34287449898615796,
+      "annualized_one_way_turnover": 74.27992331999162,
+      "cumulative_return": 2.353268531990175,
+      "benchmark_annualized_return": 0.08255076926224958,
+      "benchmark_annualized_return_arith": 0.1067644653831673,
+      "benchmark_cumulative_return": 0.5861752007260437
+    },
+    "bridge_p20": {
+      "n_days": 1454,
+      "annualized_return": 0.04708144984538576,
+      "annualized_return_arith": 0.09685243507040693,
+      "sharpe_ratio": 0.303850383017028,
+      "alpha": -0.006473444751095358,
+      "beta": 0.9677927899575551,
+      "calmar_ratio": 0.11790342602827353,
+      "annualized_volatility": 0.31875041297867723,
+      "max_drawdown": -0.39932215230196544,
+      "annualized_one_way_turnover": 74.13099139923196,
+      "cumulative_return": 0.30679176300288513,
+      "benchmark_annualized_return": 0.08255076926224958,
+      "benchmark_annualized_return_arith": 0.1067644653831673,
+      "benchmark_cumulative_return": 0.5861752007260437
+    }
+  },
+  "selected_rounds": {
+    "42": {
+      "p20": {
+        "best_iteration": 6,
+        "stop_iteration": 26,
+        "best_score": 0.2559020416372007,
+        "observed_rounds": 97,
+        "censored": false
+      },
+      "p50": {
+        "best_iteration": 47,
+        "stop_iteration": 97,
+        "best_score": 0.3071712577259711,
+        "observed_rounds": 97,
+        "censored": false
+      },
+      "reverse_p50": {
+        "best_iteration": 47,
+        "stop_iteration": 97,
+        "best_score": 0.3071712577259711,
+        "observed_rounds": 97,
+        "censored": false
+      }
+    },
+    "1000": {
+      "p20": {
+        "best_iteration": 3,
+        "stop_iteration": 23,
+        "best_score": 0.27290054130677743,
+        "observed_rounds": 109,
+        "censored": false
+      },
+      "p50": {
+        "best_iteration": 59,
+        "stop_iteration": 109,
+        "best_score": 0.2891597746499127,
+        "observed_rounds": 109,
+        "censored": false
+      },
+      "reverse_p50": {
+        "best_iteration": 59,
+        "stop_iteration": 109,
+        "best_score": 0.2891597746499127,
+        "observed_rounds": 109,
+        "censored": false
+      }
+    },
+    "2000": {
+      "p20": {
+        "best_iteration": 52,
+        "stop_iteration": 72,
+        "best_score": 0.30166019313219283,
+        "observed_rounds": 102,
+        "censored": false
+      },
+      "p50": {
+        "best_iteration": 52,
+        "stop_iteration": 102,
+        "best_score": 0.30166019313219283,
+        "observed_rounds": 102,
+        "censored": false
+      },
+      "reverse_p50": {
+        "best_iteration": 52,
+        "stop_iteration": 102,
+        "best_score": 0.30166019313219283,
+        "observed_rounds": 102,
+        "censored": false
+      }
+    },
+    "3000": {
+      "p20": {
+        "best_iteration": 45,
+        "stop_iteration": 65,
+        "best_score": 0.291048031229141,
+        "observed_rounds": 95,
+        "censored": false
+      },
+      "p50": {
+        "best_iteration": 45,
+        "stop_iteration": 95,
+        "best_score": 0.291048031229141,
+        "observed_rounds": 95,
+        "censored": false
+      },
+      "reverse_p50": {
+        "best_iteration": 45,
+        "stop_iteration": 95,
+        "best_score": 0.291048031229141,
+        "observed_rounds": 95,
+        "censored": false
+      }
+    },
+    "4000": {
+      "p20": {
+        "best_iteration": 3,
+        "stop_iteration": 23,
+        "best_score": 0.21108163536037497,
+        "observed_rounds": 156,
+        "censored": false
+      },
+      "p50": {
+        "best_iteration": 106,
+        "stop_iteration": 156,
+        "best_score": 0.28872399935912724,
+        "observed_rounds": 156,
+        "censored": false
+      },
+      "reverse_p50": {
+        "best_iteration": 106,
+        "stop_iteration": 156,
+        "best_score": 0.28872399935912724,
+        "observed_rounds": 156,
+        "censored": false
+      }
+    }
+  },
+  "input_bridge": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-input-bridge.json",
+    "sha256": "fbd1d294b16ee76d186de3421fb8ced0e45ea9e4facbbb2f78dbfaf5e2daea8a",
+    "size": 1173
+  },
+  "prior_fits": 68,
+  "new_fits": 5,
+  "historical_v2_reproduction": "not claimed; this bridge isolates patience within the uniform Nov3 label cohort"
+}

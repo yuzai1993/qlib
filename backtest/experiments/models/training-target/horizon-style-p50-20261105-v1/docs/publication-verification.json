@@ -1,0 +1,248 @@
+{
+  "combined_report_unchanged_by_BT_renderer": true,
+  "combined_report": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+    "sha256": "040777a4692d5af16138961c0ee00abb4d368702df451166ddd6534148515f02",
+    "size": 37581
+  },
+  "derived_report": {
+    "path": "backtest/experiments/strategies/topk-dropout/horizon-style-p50-20261105-v1/reports/detail.html",
+    "sha256": "7d4f15628a94f9686fffbbc6139fb939fbbaea707f6bb6e327fa904731f34a40",
+    "size": 92554
+  },
+  "platform_group": {
+    "kind": "training_target_comparison",
+    "status": "available",
+    "title": "Top3×H5 · 训练目标对比",
+    "note": "训练H表示预测未来多少日收益；评估固定Top3、持有5日。各组五种子信号分别合成后评估，数值来自各自已登记结果；此处为研究汇总。",
+    "records": [
+      {
+        "id": "training-target/horizon-style-p50-20261105-v1/arms/h5",
+        "kind": "model",
+        "track": "all_a",
+        "name": "H5",
+        "version": "",
+        "directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "metrics": {
+          "net_ann": 0.2631537705900799,
+          "net_ann_vol": 0.6521390302363891,
+          "net_sharpe": 0.40352403151624155,
+          "ann": 0.30540814434845365,
+          "turnover": 0.192977592977593,
+          "rank_ic_mean": 0.09108160664109154
+        },
+        "window": {
+          "start": "2020-08-03",
+          "end": "2026-07-31"
+        },
+        "source": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h5-model.json"
+      },
+      {
+        "id": "training-target/horizon-style-p50-20261105-v1/arms/h7",
+        "kind": "model",
+        "track": "all_a",
+        "name": "H7",
+        "version": "",
+        "directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "metrics": {
+          "net_ann": 0.32258408195076177,
+          "net_ann_vol": 0.6685536511143635,
+          "net_sharpe": 0.48251038852763695,
+          "ann": 0.36278491539959523,
+          "turnover": 0.18359898359898358,
+          "rank_ic_mean": 0.0937014244670759
+        },
+        "window": {
+          "start": "2020-08-03",
+          "end": "2026-07-31"
+        },
+        "source": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-model.json"
+      },
+      {
+        "id": "training-target/horizon-style-p50-20261105-v1/arms/h10",
+        "kind": "model",
+        "track": "all_a",
+        "name": "H10",
+        "version": "",
+        "directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "metrics": {
+          "net_ann": 0.23642187159281178,
+          "net_ann_vol": 0.7025264190775774,
+          "net_sharpe": 0.3365309334604605,
+          "ann": 0.2748422957092359,
+          "turnover": 0.17546777546777548,
+          "rank_ic_mean": 0.09423270551869278
+        },
+        "window": {
+          "start": "2020-08-03",
+          "end": "2026-07-31"
+        },
+        "source": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h10-model.json"
+      },
+      {
+        "id": "training-target/horizon-style-p50-20261105-v1/arms/h15",
+        "kind": "model",
+        "track": "all_a",
+        "name": "H15",
+        "version": "",
+        "directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "metrics": {
+          "net_ann": 0.27884181821269777,
+          "net_ann_vol": 0.6664210525377485,
+          "net_sharpe": 0.4184168809656612,
+          "ann": 0.3179197798666594,
+          "turnover": 0.17847077847077847,
+          "rank_ic_mean": 0.09887416742748893
+        },
+        "window": {
+          "start": "2020-08-03",
+          "end": "2026-07-31"
+        },
+        "source": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-model.json"
+      },
+      {
+        "id": "training-target/horizon-style-p50-20261105-v1/arms/h20",
+        "kind": "model",
+        "track": "all_a",
+        "name": "H20（对照）",
+        "version": "",
+        "directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "metrics": {
+          "net_ann": 0.2949227627492944,
+          "net_ann_vol": 0.5971968374940947,
+          "net_sharpe": 0.49384515160331993,
+          "ann": 0.3342333915319232,
+          "turnover": 0.17953337953337953,
+          "rank_ic_mean": 0.0985574883393832
+        },
+        "window": {
+          "start": "2020-08-03",
+          "end": "2026-07-31"
+        },
+        "source": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json"
+      },
+      {
+        "id": "training-target/horizon-style-p50-20261105-v1/arms/h30",
+        "kind": "model",
+        "track": "all_a",
+        "name": "H30",
+        "version": "",
+        "directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "metrics": {
+          "net_ann": 0.2833586421175168,
+          "net_ann_vol": 0.5576087175130647,
+          "net_sharpe": 0.5081675253954001,
+          "ann": 0.3224871835820583,
+          "turnover": 0.17870177870177872,
+          "rank_ic_mean": 0.09703556143811978
+        },
+        "window": {
+          "start": "2020-08-03",
+          "end": "2026-07-31"
+        },
+        "source": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h30-model.json"
+      },
+      {
+        "id": "training-target/horizon-style-p50-20261105-v1/arms/h40",
+        "kind": "model",
+        "track": "all_a",
+        "name": "H40",
+        "version": "",
+        "directory": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1",
+        "metrics": {
+          "net_ann": 0.22436468709877838,
+          "net_ann_vol": 0.4837248610296588,
+          "net_sharpe": 0.4638270743852089,
+          "ann": 0.26341230086639217,
+          "turnover": 0.17833217833217835,
+          "rank_ic_mean": 0.09258751495632596
+        },
+        "window": {
+          "start": "2020-08-03",
+          "end": "2026-07-31"
+        },
+        "source": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h40-model.json"
+      }
+    ],
+    "warnings": []
+  },
+  "current_baselines": [
+    "regime-adapt/m0-h20-t5h5-es-v1",
+    "baseline/phase-m-v1-bt-v5"
+  ],
+  "link_audit": [
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+      "links": 46,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/strategies/topk-dropout/horizon-style-p50-20261105-v1/reports/detail.html",
+      "links": 4,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/reports/phase_m_v1_report.html",
+      "links": 17,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+      "links": 20,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/v2-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h30-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h15-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h40-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h7-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h5-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h10-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/bridge_p20-account.html",
+      "links": 2,
+      "missing": []
+    },
+    {
+      "page": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-account.html",
+      "links": 2,
+      "missing": []
+    }
+  ],
+  "visual_inspection": {
+    "status": "passed_source_data_links_and_static_plots_browser_layout_unverified",
+    "audit": {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/report-qa.json",
+      "sha256": "bf44410a5cd70ef2be659ab27076b21cdd1b1b5c0b717dd7710d8201e956bbb1",
+      "size": 1869
+    }
+  }
+}

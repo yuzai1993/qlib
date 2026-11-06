@@ -1,0 +1,386 @@
+{
+  "exp_id": "training-target/horizon-style-p50-20261105-v1",
+  "scope": "One fixed seven-H study after paired H20 patience confirmation; no new tuning or promotion.",
+  "execution": {
+    "scientific_arms": 7,
+    "registered_studies": 1,
+    "actual_new_fits": 35,
+    "successful_fits": 35,
+    "failed_fits": 0,
+    "prior_fits": 68,
+    "cumulative_fits": 103,
+    "bridge_p20_extra_fits": 0
+  },
+  "conclusions": [
+    "T：模型收益不支持预设规律（最大值H=20）；模型夏普不支持预设规律（最大值H=20）；账户收益不支持预设规律（最大值H=20）；账户夏普不支持预设规律（最大值H=40）。",
+    "D：模型收益不支持预设规律（最大值H=7）；模型夏普不支持预设规律（最大值H=7）；账户收益不支持预设规律（最大值H=7）；账户夏普不支持预设规律（最大值H=40）。",
+    "F：模型收益不支持预设规律（最大值H=15）；模型夏普不支持预设规律（最大值H=30）；账户收益不支持预设规律（最大值H=15）；账户夏普不支持预设规律（最大值H=30）。"
+  ],
+  "paired_H20": {
+    "ready": true,
+    "criteria": {
+      "same_ordered_features_and_weights": true,
+      "same_formal_eval_and_account_inputs": true,
+      "all_p50_naturally_stopped": true,
+      "all_p50_best_round_above6": true,
+      "no_selected_boundary_ties": true,
+      "reverse_priority_same_stops": true,
+      "model_return_and_sharpe_not_lower": true,
+      "account_CAGR_and_sharpe_not_lower": true,
+      "no_ensemble_collapse": true
+    },
+    "mode": "new_label_snapshot_same_fit_p20_p50_bridge",
+    "model": {
+      "h20": {
+        "n_days": 1448,
+        "ann_excess": 0.2445518917762597,
+        "ir": 0.6474098947539955,
+        "ann": 0.3342333915319232,
+        "beta": 1.0469917795369432,
+        "ann_alpha": 0.24033759851119912,
+        "appraisal_ir": 0.6378804607497995,
+        "turnover_period": 0.8976668976668977,
+        "turnover": 0.17953337953337953,
+        "ann_cost": 0.03931062878262878,
+        "net_ann_excess": 0.2052412629936309,
+        "net_ann": 0.2949227627492944,
+        "net_ann_alpha": 0.20102696972857034,
+        "net_ann_vol": 0.5971968374940947,
+        "net_sharpe": 0.49384515160331993
+      },
+      "bridge_p20": {
+        "n_days": 1448,
+        "ann_excess": 0.14360602505910028,
+        "ir": 0.3201298706394441,
+        "ann": 0.23328752481476375,
+        "beta": 1.2048928673553925,
+        "ann_alpha": 0.12523092542543043,
+        "appraisal_ir": 0.2864585961345645,
+        "turnover_period": 0.8810348810348811,
+        "turnover": 0.17620697620697623,
+        "ann_cost": 0.03858227951027952,
+        "net_ann_excess": 0.10502374554882077,
+        "net_ann": 0.19470524530448424,
+        "net_ann_alpha": 0.08664864591515092,
+        "net_ann_vol": 0.6921039438516556,
+        "net_sharpe": 0.2813237043859658
+      }
+    },
+    "account": {
+      "h20": {
+        "n_days": 1454,
+        "annualized_return": 0.23125710774146735,
+        "annualized_return_arith": 0.2510787643153733,
+        "sharpe_ratio": 0.8561770041957341,
+        "alpha": 0.15514321161561379,
+        "beta": 0.8985719392258102,
+        "calmar_ratio": 0.6744657547448676,
+        "annualized_volatility": 0.29325567386761203,
+        "max_drawdown": -0.34287449898615796,
+        "annualized_one_way_turnover": 74.27992331999162,
+        "cumulative_return": 2.353268531990175,
+        "benchmark_annualized_return": 0.08255076926224958,
+        "benchmark_annualized_return_arith": 0.1067644653831673,
+        "benchmark_cumulative_return": 0.5861752007260437
+      },
+      "bridge_p20": {
+        "n_days": 1454,
+        "annualized_return": 0.04708144984538576,
+        "annualized_return_arith": 0.09685243507040693,
+        "sharpe_ratio": 0.303850383017028,
+        "alpha": -0.006473444751095358,
+        "beta": 0.9677927899575551,
+        "calmar_ratio": 0.11790342602827353,
+        "annualized_volatility": 0.31875041297867723,
+        "max_drawdown": -0.39932215230196544,
+        "annualized_one_way_turnover": 74.13099139923196,
+        "cumulative_return": 0.30679176300288513,
+        "benchmark_annualized_return": 0.08255076926224958,
+        "benchmark_annualized_return_arith": 0.1067644653831673,
+        "benchmark_cumulative_return": 0.5861752007260437
+      }
+    },
+    "selected_rounds": {
+      "42": {
+        "p20": {
+          "best_iteration": 6,
+          "stop_iteration": 26,
+          "best_score": 0.2559020416372007,
+          "observed_rounds": 97,
+          "censored": false
+        },
+        "p50": {
+          "best_iteration": 47,
+          "stop_iteration": 97,
+          "best_score": 0.3071712577259711,
+          "observed_rounds": 97,
+          "censored": false
+        },
+        "reverse_p50": {
+          "best_iteration": 47,
+          "stop_iteration": 97,
+          "best_score": 0.3071712577259711,
+          "observed_rounds": 97,
+          "censored": false
+        }
+      },
+      "1000": {
+        "p20": {
+          "best_iteration": 3,
+          "stop_iteration": 23,
+          "best_score": 0.27290054130677743,
+          "observed_rounds": 109,
+          "censored": false
+        },
+        "p50": {
+          "best_iteration": 59,
+          "stop_iteration": 109,
+          "best_score": 0.2891597746499127,
+          "observed_rounds": 109,
+          "censored": false
+        },
+        "reverse_p50": {
+          "best_iteration": 59,
+          "stop_iteration": 109,
+          "best_score": 0.2891597746499127,
+          "observed_rounds": 109,
+          "censored": false
+        }
+      },
+      "2000": {
+        "p20": {
+          "best_iteration": 52,
+          "stop_iteration": 72,
+          "best_score": 0.30166019313219283,
+          "observed_rounds": 102,
+          "censored": false
+        },
+        "p50": {
+          "best_iteration": 52,
+          "stop_iteration": 102,
+          "best_score": 0.30166019313219283,
+          "observed_rounds": 102,
+          "censored": false
+        },
+        "reverse_p50": {
+          "best_iteration": 52,
+          "stop_iteration": 102,
+          "best_score": 0.30166019313219283,
+          "observed_rounds": 102,
+          "censored": false
+        }
+      },
+      "3000": {
+        "p20": {
+          "best_iteration": 45,
+          "stop_iteration": 65,
+          "best_score": 0.291048031229141,
+          "observed_rounds": 95,
+          "censored": false
+        },
+        "p50": {
+          "best_iteration": 45,
+          "stop_iteration": 95,
+          "best_score": 0.291048031229141,
+          "observed_rounds": 95,
+          "censored": false
+        },
+        "reverse_p50": {
+          "best_iteration": 45,
+          "stop_iteration": 95,
+          "best_score": 0.291048031229141,
+          "observed_rounds": 95,
+          "censored": false
+        }
+      },
+      "4000": {
+        "p20": {
+          "best_iteration": 3,
+          "stop_iteration": 23,
+          "best_score": 0.21108163536037497,
+          "observed_rounds": 156,
+          "censored": false
+        },
+        "p50": {
+          "best_iteration": 106,
+          "stop_iteration": 156,
+          "best_score": 0.28872399935912724,
+          "observed_rounds": 156,
+          "censored": false
+        },
+        "reverse_p50": {
+          "best_iteration": 106,
+          "stop_iteration": 156,
+          "best_score": 0.28872399935912724,
+          "observed_rounds": 156,
+          "censored": false
+        }
+      }
+    },
+    "input_bridge": {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-input-bridge.json",
+      "sha256": "fbd1d294b16ee76d186de3421fb8ced0e45ea9e4facbbb2f78dbfaf5e2daea8a",
+      "size": 1173
+    },
+    "prior_fits": 68,
+    "new_fits": 5,
+    "historical_v2_reproduction": "not claimed; this bridge isolates patience within the uniform Nov3 label cohort"
+  },
+  "training_diagnostics": {
+    "censored": [
+      [
+        30,
+        4000
+      ]
+    ],
+    "ensemble_below_all_components": [],
+    "selected_at_or_below6": [
+      [
+        10,
+        1000
+      ],
+      [
+        10,
+        3000
+      ],
+      [
+        15,
+        3000
+      ]
+    ],
+    "selected_boundary_ties": [
+      [
+        5,
+        42
+      ],
+      [
+        7,
+        42
+      ],
+      [
+        7,
+        3000
+      ],
+      [
+        10,
+        1000
+      ],
+      [
+        10,
+        3000
+      ],
+      [
+        10,
+        4000
+      ],
+      [
+        15,
+        3000
+      ],
+      [
+        40,
+        1000
+      ],
+      [
+        40,
+        3000
+      ]
+    ],
+    "reverse_priority_changed_selection_or_stop": [
+      [
+        10,
+        1000
+      ],
+      [
+        10,
+        3000
+      ],
+      [
+        15,
+        3000
+      ],
+      [
+        40,
+        2000
+      ]
+    ]
+  },
+  "issues": [
+    {
+      "issue": "Repeated static NameDFilter preparation caused an operational interruption before fits.",
+      "status": "fixed_and_verified",
+      "evidence": "docs/preparation-operational-retry.json",
+      "lesson": "Preserve original instrument spans and static predicate; verify completed years exactly before continuing optimized preparation."
+    },
+    {
+      "issue": "Unified Nov3 labels changed 106 H20 ranked labels, so confirmed H20 models could not be reused as identical inputs.",
+      "status": "bridge_completed_historical_causality_unresolved",
+      "evidence": [
+        "docs/H20-label-change-audit.json",
+        "docs/H20-observed-label-effect.json",
+        "docs/bridge-readiness.json"
+      ],
+      "lesson": "Re-fit the control and validate paired efficacy before the grid. Identical objective histories/selected rounds do not imply identical full predictions; small input differences do not uniquely establish the historical performance-gap cause."
+    },
+    {
+      "issue": "Patience50 did not remove all short selections, tie-priority sensitivity, or cap censoring across H.",
+      "status": "observed_and_unresolved",
+      "evidence": "docs/study-summary.json",
+      "lesson": "Freeze diagnostics and interpretation limits in advance. Check the whole score trajectory, including early tied alternatives; a tie-free selected round alone does not establish robustness. Do not change patience by H or delete seeds after seeing results."
+    },
+    {
+      "issue": "Exact shared-cache blocks had no durable retention reference.",
+      "status": "protected_and_verified",
+      "evidence": "docs/cache-retention.json",
+      "lesson": "Retained research inputs need explicit persistent references distinct from active-process leases; do not rely only on recency-based cache retention."
+    },
+    {
+      "issue": "Registration adapter used the parent experiment itself as an internal H20 comparison ref; existing schema rejects self-reference.",
+      "status": "fixed_and_verified",
+      "evidence": [
+        "docs/registration-failure-a1.json",
+        "docs/registration-receipt.json",
+        "docs/publication-verification.json"
+      ],
+      "lesson": "Validate actual metadata against the existing archive schema before recording result/registration. Give all seven internal arms distinct refs; resume after a recorded result without duplicating it. No formal module, scientific attempt or fit was added."
+    },
+    {
+      "issue": "Browser URL policy rejected file:// report preview.",
+      "status": "browser_layout_unverified",
+      "evidence": "docs/report-qa.json",
+      "lesson": "Do not bypass the blocked browser action or claim full browser QA. Local scientific plots were visually inspected; HTML source numbers, structure and links were verified."
+    }
+  ],
+  "minor_operational_errors": [
+    "One audit-writer command had a syntax error before any file was written; corrected without research changes.",
+    "One read-only monitor invocation used a mistyped interpreter path and exited127; corrected immediately, training unaffected."
+  ],
+  "interpretation": "Frozen hypothesis booleans describe the observed metric pattern and are not rewritten. Short selections, boundary ties, reverse-priority sensitivity or round-cap censoring are reported separately; where present, they limit attribution of performance differences to the training horizon itself. H20 paired patience efficacy is not a universal proof that early-stop problems were removed for every H.",
+  "limitations": [
+    "Historical selection window also used for early stopping; not independent out of sample.",
+    "F has only 136 days in seven months of 2024; no cross-year confirmation.",
+    "Each H uses its own valid-label mask under the legacy H40-base protocol; no seven-H common-sample intersection.",
+    "Monotonicity and endpoint winners are reported separately; no H-specific patience tuning or promotion.",
+    "Historical v2 training reproduction root cause remains unresolved; 106 changed H20 labels do not establish causality."
+  ],
+  "early_stopping_recommendation": "Patience50 is supported by paired H20 results in this historical window, not a universal fix. A separate future early-stop study should first specify deterministic/tie-robust head handling and compare smoother selection objectives under a frozen validation design. No such rule is changed or trial added here.",
+  "next_scope": "The prespecified seven-H grid and fixed-s5 verification are exhausted. No additional H, patience, seeds, weights, strategy tuning, baseline change or production change.",
+  "verification": {
+    "input": {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/final-input-verification.json",
+      "sha256": "9fe84213115ae88bec15d2bb4cd9bdcb2bf20926b22d7fe62c69d73e29e90e83",
+      "size": 1233
+    },
+    "publication": {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/publication-verification.json",
+      "sha256": "4fd2ebf89d90590c21d0ea1aa72d5955e9765b14e56fba992da46bdca8e06679",
+      "size": 8953
+    },
+    "report_QA": {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/report-qa.json",
+      "sha256": "bf44410a5cd70ef2be659ab27076b21cdd1b1b5c0b717dd7710d8201e956bbb1",
+      "size": 1869
+    }
+  },
+  "cleanup": "Written before cleanup; final result/mlruns/temp disposition is recorded separately in docs/harness-cleanup.json. This review does not claim cleanup already happened."
+}

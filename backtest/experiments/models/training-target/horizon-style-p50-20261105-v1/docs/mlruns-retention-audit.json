@@ -1,0 +1,192 @@
+{
+  "status": "handled",
+  "created_recorders": 8,
+  "retained": [
+    {
+      "session": {
+        "path": "backtest/result/20261105_112118_horizonp50_20261105_h20_s5/meta.json",
+        "sha256": "a64120294d877964a630c6fa62abc3b586984f355d362d2f02d1e12b1e279f80",
+        "size": 1388
+      },
+      "link": {
+        "path": "backtest/result/20261105_112118_horizonp50_20261105_h20_s5/run_01/mlruns_link.json",
+        "sha256": "6ab681de27f4d8743813ca9e67cfc990ca077b8aa84666a7059ce45b9dc55ac7",
+        "size": 394
+      },
+      "report": {
+        "path": "mlruns/401795302766715995/7eabc2cb1e654496b19d3d3fe37e04c0/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "373abcdadd4ba74382ada77ef8fa7f21b7e53935a56834f0e8ff663a5733ea92",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/401795302766715995/7eabc2cb1e654496b19d3d3fe37e04c0/meta.yaml",
+        "sha256": "78cf7d7bb1215dc14c4eb8f366ddec944b410649d2db236f020c34f21121111b",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    },
+    {
+      "session": {
+        "path": "backtest/result/20261105_112220_horizonp50_20261105_bridge_p20_s5/meta.json",
+        "sha256": "648badba71f00a9893ed19375e41ea3d1be32fef6d1d011c94bc9aadbb9b96e4",
+        "size": 1409
+      },
+      "link": {
+        "path": "backtest/result/20261105_112220_horizonp50_20261105_bridge_p20_s5/run_01/mlruns_link.json",
+        "sha256": "4e034e3df53feadd50cd3822ea8cc6c2705225ba36d22a9de15062f9caf5b4df",
+        "size": 408
+      },
+      "report": {
+        "path": "mlruns/614622738927750335/b34869ba90154af0a0063b75685b3852/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "5e57148dd83cdb5df0ab487ab34e5a73bb9e10b8e2c25b71e54bf0030386e3c6",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/614622738927750335/b34869ba90154af0a0063b75685b3852/meta.yaml",
+        "sha256": "3b138089ea789edf95cc4bb693581e1224e399c039fa8dbbcb97f8d2e10d32d9",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    },
+    {
+      "session": {
+        "path": "backtest/result/20261105_150218_horizonp50_20261105_h5_s5/meta.json",
+        "sha256": "afc06fb42dcd20256a78ba09b0fc90dfdc48bbee3f1fc90bdb8e13711440b7a9",
+        "size": 1385
+      },
+      "link": {
+        "path": "backtest/result/20261105_150218_horizonp50_20261105_h5_s5/run_01/mlruns_link.json",
+        "sha256": "a54a5389438e563db432fda5e7237c103599b5564b1136435274907ae4c0739c",
+        "size": 392
+      },
+      "report": {
+        "path": "mlruns/848131551136056602/46cc4a5e83b1454bb4e4fe06c82c0482/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "277e8e239ef656f85207f43f00bd7fff183c659b4e23f7de3e47e7f174ee7bd8",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/848131551136056602/46cc4a5e83b1454bb4e4fe06c82c0482/meta.yaml",
+        "sha256": "10a9608d2fbd1da14b16ee7ac70577a9248300ecd534596bc516e01376df0344",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    },
+    {
+      "session": {
+        "path": "backtest/result/20261105_150321_horizonp50_20261105_h7_s5/meta.json",
+        "sha256": "b8c0f1ef820ded1d52e2e709e444ddd6addf6f3d458209ccb49d3f4674c8ac86",
+        "size": 1385
+      },
+      "link": {
+        "path": "backtest/result/20261105_150321_horizonp50_20261105_h7_s5/run_01/mlruns_link.json",
+        "sha256": "a3bd6c7e242cf7f8d1bfe5db47367f338fc039a6e9a6e3b56a3d80b90152ba84",
+        "size": 392
+      },
+      "report": {
+        "path": "mlruns/914806460647144717/e2c266b328e449e0894fddaee4390ad0/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "2e49a2840b616300bb9ae31af24170443368ef2a8b087abcb37b17db51a52a38",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/914806460647144717/e2c266b328e449e0894fddaee4390ad0/meta.yaml",
+        "sha256": "fa193a776db80d6f6562f93106357a031e35a161914eca2c476075ce7a00eef9",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    },
+    {
+      "session": {
+        "path": "backtest/result/20261105_150422_horizonp50_20261105_h10_s5/meta.json",
+        "sha256": "5e306d607971e94b4c090ccb434e843db42075b545067ecab76a45250f5e740b",
+        "size": 1388
+      },
+      "link": {
+        "path": "backtest/result/20261105_150422_horizonp50_20261105_h10_s5/run_01/mlruns_link.json",
+        "sha256": "1ff51e0a1f92acfbc82c3904ac6cdfde395f8ad2cb0c5322d4ed4e51e9cc1102",
+        "size": 394
+      },
+      "report": {
+        "path": "mlruns/836903235220870009/55b647e72e194cdf873cd39039cdf5ba/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "91ee5c4898c847d88116c03d90325d1847eddaba90d379187c9df88d6108e4a1",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/836903235220870009/55b647e72e194cdf873cd39039cdf5ba/meta.yaml",
+        "sha256": "c090825deaad0853c0cef0403b159055b85cdd849247e80779d69bd736544ab5",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    },
+    {
+      "session": {
+        "path": "backtest/result/20261105_150523_horizonp50_20261105_h15_s5/meta.json",
+        "sha256": "85e24151bbc3623ff9a9acb8fa44b787db3e2ad8cdf610a3290f659fcaac87a1",
+        "size": 1388
+      },
+      "link": {
+        "path": "backtest/result/20261105_150523_horizonp50_20261105_h15_s5/run_01/mlruns_link.json",
+        "sha256": "fe8eb4927ab6a19f99675184a4b287340ede1a3778c2421a407615bc016c8cb0",
+        "size": 394
+      },
+      "report": {
+        "path": "mlruns/776549857276963997/227e2c3e9881473c98593d321933e9af/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "5bfab3070f4ad801f5ec4a74c1e3043bdcea67d45f800e29c06e4654ea6174ff",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/776549857276963997/227e2c3e9881473c98593d321933e9af/meta.yaml",
+        "sha256": "55c10fd4421ff1c345bbfa9d35f6ed8acfcd8966cbf0a2411a5534d47a7d3fb4",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    },
+    {
+      "session": {
+        "path": "backtest/result/20261105_150625_horizonp50_20261105_h30_s5/meta.json",
+        "sha256": "7f4fb285c9ea026eb679fd687f3ac72789bca26ece83c9737d15724e647a3abb",
+        "size": 1388
+      },
+      "link": {
+        "path": "backtest/result/20261105_150625_horizonp50_20261105_h30_s5/run_01/mlruns_link.json",
+        "sha256": "aa9fd89246226bb083c98dedf9ab2b4ddc5b54ec242da587d7c5b92769bfabdf",
+        "size": 394
+      },
+      "report": {
+        "path": "mlruns/801145805925439967/da0400a2777d44cbb524a1bbb8bf67c7/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "ac625ba5357eca8bf7d1597d3c1c7da6b329b6fda4862b9c12992eb2c6e969e1",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/801145805925439967/da0400a2777d44cbb524a1bbb8bf67c7/meta.yaml",
+        "sha256": "360510b1d598d31a6947cbbb0a02f0717507a4764bdb09367335ddd30021c701",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    },
+    {
+      "session": {
+        "path": "backtest/result/20261105_150726_horizonp50_20261105_h40_s5/meta.json",
+        "sha256": "3be8e9a4c7c3a073e731f3972c16e1b4ee88abdeae4f19effc56a986f182e8db",
+        "size": 1388
+      },
+      "link": {
+        "path": "backtest/result/20261105_150726_horizonp50_20261105_h40_s5/run_01/mlruns_link.json",
+        "sha256": "9b7d80240865aea8952b72b1bdc36a127ed3d1c0f15bc3229be96f45dcb4267d",
+        "size": 394
+      },
+      "report": {
+        "path": "mlruns/255595077623753314/59d80c66ba594abf8515ba2a8f17f3c2/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "3280e29c334a74796e727f12c42cf84fad616084a153f360ef08b3285a574c91",
+        "size": 117829
+      },
+      "recorder": {
+        "path": "mlruns/255595077623753314/59d80c66ba594abf8515ba2a8f17f3c2/meta.yaml",
+        "sha256": "e050be45d4ea57d3acd4d29a68f47b28a4391c80d86c6259a3de184fc5d1c2cb",
+        "size": 404
+      },
+      "action": "retain required complete fixed-s5 recorder"
+    }
+  ],
+  "deleted": [],
+  "training": "Formal save_session wrote model artifacts directly; no MLflow training recorder created."
+}

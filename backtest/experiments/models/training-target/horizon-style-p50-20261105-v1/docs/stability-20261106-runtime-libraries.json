@@ -1,0 +1,10 @@
+{
+  "linked_libraries": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/lightgbm/lib/lib_lightgbm.dylib:\n\t@rpath/lib_lightgbm.dylib (compatibility version 0.0.0, current version 0.0.0)\n\t@rpath/libomp.dylib (compatibility version 5.0.0, current version 5.0.0)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1600.151.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1336.0.0)\n",
+  "runtime_libraries": [
+    {
+      "path": "/opt/homebrew/Cellar/libomp/20.1.5/lib/libomp.dylib",
+      "sha256": "42b5c6c1ccb76463af8d7e1731546a1f941c4ab53342bacea8e7a1d1f5801968"
+    }
+  ],
+  "scope": "Supplementary current runtime fingerprint before four repeat fits complete; not a recovered first-round environment image."
+}

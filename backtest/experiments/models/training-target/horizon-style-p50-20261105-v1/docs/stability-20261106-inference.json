@@ -1,0 +1,86 @@
+{
+  "components": [
+    {
+      "seed": 42,
+      "session": "p50stable_20261106_old_s42_r1_original",
+      "prediction": {
+        "path": "backtest/result/20261106_p50_stability/old-s42.pkl",
+        "sha256": "1d8326a8f95da9f685ece529ade18cb4e53bf8d516c85b7e08523f23abafaefd",
+        "size": 83046132
+      },
+      "historical_prediction": {
+        "path": "backtest/result/20261105_h20_es_confirmation/p50/h20es20261104_p50_s42_pred.pkl",
+        "sha256": "3563d20d7970ef0e1d5c302d08896646d62bc9cb002942987e618c28d9ae4386",
+        "size": 83046157
+      },
+      "historical_pickle_sha_equal": false
+    },
+    {
+      "seed": 1000,
+      "session": "p50stable_20261106_old_s1000_r1_original",
+      "prediction": {
+        "path": "backtest/result/20261106_p50_stability/old-s1000.pkl",
+        "sha256": "55e7ae76e852a7ff0c8f33c4a6c73fc3a14128d2bd91fa62a11cb14a98dc65e1",
+        "size": 83046132
+      },
+      "historical_prediction": {
+        "path": "backtest/result/20261105_h20_es_confirmation/p50/h20es20261104_p50_s1000_pred.pkl",
+        "sha256": "355451e4cbc6a2506aefff0babe340a1e649eabfbb6b15729cdc7ed4e31b6bdb",
+        "size": 83046157
+      },
+      "historical_pickle_sha_equal": false
+    },
+    {
+      "seed": 2000,
+      "session": "p50stable_20261106_old_s2000_r1_original",
+      "prediction": {
+        "path": "backtest/result/20261106_p50_stability/old-s2000.pkl",
+        "sha256": "f01625e30628992321451778c4937c7ded7bebc0ae911cc2bb3d2be7e8bcb73e",
+        "size": 83046132
+      },
+      "historical_prediction": {
+        "path": "backtest/result/20261105_h20_es_confirmation/p50/h20es20261104_p50_s2000_pred.pkl",
+        "sha256": "708d0524bf73b83d1e445983a1334c99cf6fcc37d402cb940e406edc0aa3de9d",
+        "size": 83046157
+      },
+      "historical_pickle_sha_equal": false
+    },
+    {
+      "seed": 3000,
+      "session": "p50stable_20261106_old_s3000_r1_original",
+      "prediction": {
+        "path": "backtest/result/20261106_p50_stability/old-s3000.pkl",
+        "sha256": "ab3d66822b41f8de301bf693645c33d635049b52b5df26b752725a288f155b27",
+        "size": 83046132
+      },
+      "historical_prediction": {
+        "path": "backtest/result/20261105_h20_es_confirmation/p50/h20es20261104_p50_s3000_pred.pkl",
+        "sha256": "8f6801be695c3cf2b0e0f72bfcb1e12dbd094ceb398ba4b7585ad9b075a467fe",
+        "size": 83046157
+      },
+      "historical_pickle_sha_equal": false
+    },
+    {
+      "seed": 4000,
+      "session": "p50stable_20261106_old_s4000_r1_original",
+      "prediction": {
+        "path": "backtest/result/20261106_p50_stability/old-s4000.pkl",
+        "sha256": "7f297330495e3f9123ed5d73847370ba6bb6bb9daf194f0d1a2baf76b3a7ab2a",
+        "size": 83046132
+      },
+      "historical_prediction": {
+        "path": "backtest/result/20261105_h20_es_confirmation/p50/h20es20261104_p50_s4000_pred.pkl",
+        "sha256": "c137904f8199522d7e4fdb6540fd0a4d8fa6fdec9b476bab01bf2d2e3bf84056",
+        "size": 83046157
+      },
+      "historical_pickle_sha_equal": false
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261106_p50_stability/old-ensemble.pkl",
+    "sha256": "cc9cff65d62e7d9985835a0fe551afc22a8dffd863e8f281353a05fc1b72d208",
+    "size": 83046157
+  },
+  "all_new_reference_annual_predictions_exact": true,
+  "all_old_historical_pickle_sha_equal": false
+}

@@ -543,6 +543,45 @@ def test_fit_prepared_default_still_records_daily_rank_ic():
     assert "best_score" in rec
 
 
+@pytest.mark.parametrize("model_kind", ["single", "double"])
+def test_early_stop_history_preserves_evaluations_after_selected_round(monkeypatch, model_kind):
+    """The selected booster loses its patience tail; the audit record must retain it."""
+    import json
+    from backtest.models import regime_adapt
+
+    observed = []
+
+    def score(*args, **kwargs):
+        value = [0.2, 0.4, 0.3, 0.2][len(observed)]
+        observed.append(value)
+        return value
+
+    monkeypatch.setattr(regime_adapt, "top5_h5_net_ann", score)
+    options = dict(es_metric="top5_h5_net_ann", early_stopping_rounds=2)
+    model = (
+        RegimeSingleLGBMModel(
+            **options,
+            num_boost_round=8,
+            num_leaves=8,
+            min_data_in_leaf=5,
+            num_threads=1,
+            seed=42,
+        )
+        if model_kind == "single"
+        else _tiny_densemble(**options, epochs=8)
+    )
+    train = _tiny_lgbm_frame(0, pd.date_range("2019-01-02", periods=30, freq="B"))
+    valid = _tiny_lgbm_frame(1, pd.date_range("2020-01-02", periods=40, freq="B"))
+    model.fit_prepared(train, valid)
+    rec = json.loads(json.dumps(model.rankic_evals_result[0]))
+    assert rec["best_iteration"] == 2
+    assert rec["metric_history"] == observed == [0.2, 0.4, 0.3, 0.2]
+    assert rec["evaluated_iterations"] == 4
+    assert rec["num_boost_round"] == 8
+    assert rec["early_stopping_rounds"] == 2
+    assert rec["best_score"] == rec["metric_history"][rec["best_iteration"] - 1]
+
+
 def _tiny_densemble(**kwargs):
     defaults = dict(
         protocol_id="regime-adapt-v1",

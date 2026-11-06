@@ -1,0 +1,37 @@
+{
+  "ordered_index_equal": true,
+  "ranked_labels_float64_equal": false,
+  "model_labels_float32_equal": false,
+  "current_rows": 5448963,
+  "prior_rows": 5448963,
+  "current_signature": {
+    "shape": [
+      5448963
+    ],
+    "columns": [
+      "LABEL0"
+    ],
+    "dtypes": [
+      "float64"
+    ],
+    "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+    "values_sha256": "6f5f934521d2464496919bc5d1f449992c7bacfefab0ba266734355619b55714"
+  },
+  "prior_signature": {
+    "shape": [
+      5448963
+    ],
+    "columns": [
+      "LABEL0"
+    ],
+    "dtypes": [
+      "float64"
+    ],
+    "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+    "values_sha256": "04243d0fe451322bce71e5da2e183645fe4ab397bba8fcbbc752a8bda483653a"
+  },
+  "current_model_label_sha256": "8e050add7001f924e50011cc4ff25a80321a549feb8aa21439525fef41b58176",
+  "prior_model_label_sha256": "e44c5a914c5f38f18e482fb471c050f89ebc61551f673c216e5926f195c04d96",
+  "reuse_confirmed_H20": false,
+  "reason": "Pure feature blocks, weights and validation are unchanged and verified; only exact label/index equality permits model reuse."
+}

@@ -1,0 +1,40 @@
+{
+  "status": "passed_source_data_links_and_static_plots_browser_layout_unverified",
+  "report": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/detail.html",
+    "sha256": "040777a4692d5af16138961c0ee00abb4d368702df451166ddd6534148515f02",
+    "size": 37581
+  },
+  "source_numeric_tables_verified": 12,
+  "source_cells_checked": 696,
+  "four_sections_present": true,
+  "all_publication_links_exist": true,
+  "static_plot_visual_review": {
+    "status": "passed",
+    "plots": [
+      {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/horizon-style.png",
+        "sha256": "8197302d1d7d60b782f831d21594ec3f89d1ae326d45bbf5d73eb4e5b76626d8",
+        "size": 288724
+      },
+      {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/h20-label-bridge.png",
+        "sha256": "f9462c8a2c88c6fab2c3293ced8e3e00bc639fa38a765b586590ee642f4d6110",
+        "size": 301051
+      },
+      {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/reports/early-stop-sensitivity.png",
+        "sha256": "697c380caa1d7442e87ebf307516a75d4eec7bb37ac6d17f0e4636050a81e393",
+        "size": 402914
+      }
+    ],
+    "method": "Local images inspected with view_image; labels, legends, axes, units, selected points and curves legible."
+  },
+  "browser_visual_review": {
+    "status": "not_performed_policy_blocked",
+    "attempt": "cua.createBrowserTab iab with local file:// report",
+    "reason": "Browser URL policy permits only http/https and explicitly rejected local file protocol.",
+    "workaround_attempted": false,
+    "remaining_limitation": "Full HTML browser layout has not been visually verified. Local numerical/structural/link checks and all three scientific PNGs were verified."
+  }
+}

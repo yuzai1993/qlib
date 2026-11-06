@@ -1,0 +1,30 @@
+{
+  "verified_at": "2026-11-05T07:08:38.327044+00:00",
+  "adapter": {
+    "path": "/private/tmp/qlib-horizon-p50-20261105.8hmtSM/verify_inputs.py",
+    "sha256": "9f59d8832ca1963fa3baa4f5145f837e45617773e5dea53376b38573b8119396",
+    "size": 1992
+  },
+  "source_manifest": {
+    "path": "backtest/experiments/models/early-stopping/h20-short-seed-swap-20261103-v1/docs/evaluation-snapshot.json",
+    "sha256": "32c763b1b3a9e269d3b30bebbd677f6027610093b57b09672aa928ae7e20528a",
+    "size": 21467591
+  },
+  "actual_provider": "backtest/result/20261103_h20_causal_inputs/evaluation-provider",
+  "expected_files_checked": 43855,
+  "mismatches": [],
+  "additional_files": [],
+  "st_snapshot_equal": true,
+  "st_snapshot": {
+    "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+    "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+    "size": 30202983
+  },
+  "regime_source": {
+    "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+    "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+    "size": 1203
+  },
+  "regime_source_equal": true,
+  "all_expected_bytes_exact": true
+}

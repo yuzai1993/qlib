@@ -1,0 +1,303 @@
+{
+  "status": "completed",
+  "started_at": 1793897850.674231,
+  "deadline": 1793926650.674231,
+  "plan": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/stability-20261106.json",
+    "sha256": "68547c8b68790f2cad3664694abc6caabe1fc4d390b1944a8619b81b6c93e30c",
+    "size": 9951
+  },
+  "prior_cumulative_model_fits": 103,
+  "model_fits_started": 8,
+  "jobs": [
+    {
+      "job_id": "old-s3000-r1-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "old",
+      "seed": 3000,
+      "repeat": 1,
+      "mode": "original",
+      "pid": 36620,
+      "started_at": 1793897851.02548,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "old",
+        "3000",
+        "1"
+      ],
+      "fit_started_at": 1793897905.931131,
+      "finished_at": 1793898315.036623,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r1-original.json",
+        "sha256": "9e1598cf3e4275957e78b5508f6ec23b97520c2033533db8c0dae3a7d2b05b0f",
+        "size": 20444
+      },
+      "session": "p50stable_20261106_old_s3000_r1_original"
+    },
+    {
+      "job_id": "new-s3000-r1-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "new",
+      "seed": 3000,
+      "repeat": 1,
+      "mode": "original",
+      "pid": 37240,
+      "started_at": 1793898322.226509,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "new",
+        "3000",
+        "1"
+      ],
+      "fit_started_at": 1793898371.0766258,
+      "finished_at": 1793898760.574233,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r1-original.json",
+        "sha256": "315fcd093f8e9f4b5d44f0ab266eb768fca1c06febad9ed2a2d614afa944ccd6",
+        "size": 19707
+      },
+      "session": "p50stable_20261106_new_s3000_r1_original"
+    },
+    {
+      "job_id": "old-s3000-r2-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "old",
+      "seed": 3000,
+      "repeat": 2,
+      "mode": "original",
+      "pid": 37692,
+      "started_at": 1793898761.543815,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "old",
+        "3000",
+        "2"
+      ],
+      "fit_started_at": 1793898808.843554,
+      "finished_at": 1793899203.539246,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s3000-r2-original.json",
+        "sha256": "f4dc5fae66397991fb0e5fc51ab6d14b1713bfa1ca8fe4eb80620681314bcb82",
+        "size": 20444
+      },
+      "session": "p50stable_20261106_old_s3000_r2_original"
+    },
+    {
+      "job_id": "new-s3000-r2-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "new",
+      "seed": 3000,
+      "repeat": 2,
+      "mode": "original",
+      "pid": 38155,
+      "started_at": 1793899204.544387,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "new",
+        "3000",
+        "2"
+      ],
+      "fit_started_at": 1793899257.7415218,
+      "finished_at": 1793899654.1955688,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-new-s3000-r2-original.json",
+        "sha256": "72b84b0e57c4e71717eaf4f1bae6b8081320c160dbdfcad32f8af1b149272a67",
+        "size": 19707
+      },
+      "session": "p50stable_20261106_new_s3000_r2_original"
+    },
+    {
+      "job_id": "old-s42-r1-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "old",
+      "seed": 42,
+      "repeat": 1,
+      "mode": "original",
+      "pid": 39102,
+      "started_at": 1793899723.9278002,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "old",
+        "42",
+        "1"
+      ],
+      "fit_started_at": 1793899775.239418,
+      "finished_at": 1793900161.681549,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s42-r1-original.json",
+        "sha256": "73e5a5027ec4ead9036260cfbd4e0ecc00e33350821bd495ab42c97f153b12ad",
+        "size": 20056
+      },
+      "session": "p50stable_20261106_old_s42_r1_original"
+    },
+    {
+      "job_id": "old-s1000-r1-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "old",
+      "seed": 1000,
+      "repeat": 1,
+      "mode": "original",
+      "pid": 39484,
+      "started_at": 1793900162.67767,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "old",
+        "1000",
+        "1"
+      ],
+      "fit_started_at": 1793900212.3898041,
+      "finished_at": 1793900633.864518,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s1000-r1-original.json",
+        "sha256": "156c8393d47d47e4155b4debfe9cdf36e30d04ebf4c40a8b8cc4072920e38eb5",
+        "size": 22352
+      },
+      "session": "p50stable_20261106_old_s1000_r1_original"
+    },
+    {
+      "job_id": "old-s2000-r1-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "old",
+      "seed": 2000,
+      "repeat": 1,
+      "mode": "original",
+      "pid": 39922,
+      "started_at": 1793900634.898885,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "old",
+        "2000",
+        "1"
+      ],
+      "fit_started_at": 1793900686.157046,
+      "finished_at": 1793901126.05524,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s2000-r1-original.json",
+        "sha256": "9a13eb5ac2e527f63029cb06316f2bff7a767c968ff78a900613f2915a6cd02a",
+        "size": 21024
+      },
+      "session": "p50stable_20261106_old_s2000_r1_original"
+    },
+    {
+      "job_id": "old-s4000-r1-original",
+      "status": "succeeded",
+      "phase": "complete",
+      "label": "old",
+      "seed": 4000,
+      "repeat": 1,
+      "mode": "original",
+      "pid": 40613,
+      "started_at": 1793901127.0617652,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+        "old",
+        "4000",
+        "1"
+      ],
+      "fit_started_at": 1793901178.2247522,
+      "finished_at": 1793901800.530263,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-old-s4000-r1-original.json",
+        "sha256": "73d0534625c5bba1cffeecee48455b35b1708761c6eb3cf263923199401a230e",
+        "size": 31232
+      },
+      "session": "p50stable_20261106_old_s4000_r1_original"
+    }
+  ],
+  "phase": "closed",
+  "account_jobs": [
+    {
+      "job_id": "p50stable_20261106_old_s5",
+      "label": "old",
+      "rule": "s5",
+      "status": "succeeded",
+      "started_at": 1793902838.030316,
+      "source_pred": {
+        "path": "backtest/result/20261106_p50_stability/old-ensemble.pkl",
+        "sha256": "cc9cff65d62e7d9985835a0fe551afc22a8dffd863e8f281353a05fc1b72d208",
+        "size": 83046157
+      },
+      "config": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+        "sha256": "d3e269b8b9ad74b6ad3bcd74ed691a38fc48e9854e45bf4dd3c3334583fb4a5e",
+        "size": 1840
+      },
+      "pid": 42551,
+      "finished_at": 1793902919.749186,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-s5.json",
+        "sha256": "87f4142731b2b8ecf296d7dc093daf5faabd3ad964a39ac0768a0ed9f637e427",
+        "size": 9990
+      },
+      "session": "backtest/result/20261106_022039_p50stable_20261106_old_s5"
+    },
+    {
+      "job_id": "p50stable_20261106_old_ladder",
+      "label": "old",
+      "rule": "ladder",
+      "status": "succeeded",
+      "started_at": 1793902920.4984279,
+      "source_pred": {
+        "path": "backtest/result/20261106_p50_stability/old-ensemble.pkl",
+        "sha256": "cc9cff65d62e7d9985835a0fe551afc22a8dffd863e8f281353a05fc1b72d208",
+        "size": 83046157
+      },
+      "config": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+        "sha256": "3c1e27921efa9ba6d7ae666705cef5285835d309ac96b8ad308a942c574fab80",
+        "size": 1810
+      },
+      "pid": 42825,
+      "finished_at": 1793903000.382986,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-ladder.json",
+        "sha256": "cf2c0b94d6a8ae45a9a7bda18e8e0dbf532ecea6f615da4cde9587a214feffe8",
+        "size": 10007
+      },
+      "session": "backtest/result/20261106_022202_p50stable_20261106_old_ladder"
+    },
+    {
+      "job_id": "p50stable_20261106_new_ladder",
+      "label": "new",
+      "rule": "ladder",
+      "status": "succeeded",
+      "started_at": 1793903001.093874,
+      "source_pred": {
+        "path": "backtest/result/20261105_horizon_p50/h20/ensemble.pkl",
+        "sha256": "1530988e0c244fd4d0ea6528c8b7ee16ac6a65cc7cacda5778d662979a809e4c",
+        "size": 83046157
+      },
+      "config": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+        "sha256": "3c1e27921efa9ba6d7ae666705cef5285835d309ac96b8ad308a942c574fab80",
+        "size": 1810
+      },
+      "pid": 43148,
+      "finished_at": 1793903081.0628202,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-new-ladder.json",
+        "sha256": "fcb39eb234ef1487632798cb0e7d2f8dfb3344d8b56513c22fad43e5d750798f",
+        "size": 10020
+      },
+      "session": "backtest/result/20261106_022322_p50stable_20261106_new_ladder"
+    }
+  ],
+  "finished_at": 1793903423.9280498,
+  "cumulative_model_fit_launches": 111,
+  "temporary_tools_removed": true
+}

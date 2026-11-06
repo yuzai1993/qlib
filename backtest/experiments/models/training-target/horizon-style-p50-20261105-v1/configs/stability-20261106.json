@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "kind": "supplementary_training_stability",
+  "parent_exp_id": "training-target/horizon-style-p50-20261105-v1",
+  "parent_closed_campaign": "horizon-style-p50-20261105-v1",
+  "user_authorization": "先查两轮patience50训练稳定性；若无法定位原因，再用两模型真阶梯比较gap。",
+  "prior_cumulative_model_fits": 103,
+  "temporary_directory": "/private/tmp/qlib-p50-stability-20261106.PleG6F",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "initial_jobs": [
+    {
+      "label": "old",
+      "seed": 3000,
+      "repeat": 1,
+      "mode": "original"
+    },
+    {
+      "label": "new",
+      "seed": 3000,
+      "repeat": 1,
+      "mode": "original"
+    },
+    {
+      "label": "old",
+      "seed": 3000,
+      "repeat": 2,
+      "mode": "original"
+    },
+    {
+      "label": "new",
+      "seed": 3000,
+      "repeat": 2,
+      "mode": "original"
+    }
+  ],
+  "hypotheses": [
+    "Exact same inputs and process settings reproduce each label treatment.",
+    "Only the 106 normalized H20 label changes reproduce the old/new training trajectory divergence."
+  ],
+  "fixed": {
+    "recipe": {
+      "colsample_bytree": 0.8879,
+      "learning_rate": 0.2,
+      "subsample": 0.8789,
+      "lambda_l1": 205.6999,
+      "lambda_l2": 580.9768,
+      "max_depth": 8,
+      "num_leaves": 210,
+      "num_threads": 8,
+      "num_boost_round": 200,
+      "early_stopping_rounds": 50
+    },
+    "es_metric": "top5_h5_net_ann",
+    "valid_cutoff": "2026-07-23",
+    "feature_snapshot": "2026-11-02",
+    "old_training_labels": "frozen Nov2 cache",
+    "new_training_labels": "frozen Nov3 cache",
+    "evaluation_snapshot": "2026-11-03",
+    "evaluation_mode": "historical_selection_window"
+  },
+  "decision_rules": [
+    "First compare exact ordered feature/label/weight/validation signatures before any fit.",
+    "Four separate-process original-setting fits: old/new labels twice each, seed3000, original 8 threads; no new determinism parameter initially.",
+    "Record every round metric plus tree hashes and full validation prediction signatures; equality of scores alone is insufficient.",
+    "If identical-input results differ, use up to four predeclared diagnostic fits (old/new x two repeats) with deterministic=True and force_col_wise=True, leaving num_threads=8. Treat this as a diagnostic change, never historical reproduction.",
+    "If old seed3000 returns the historical trajectory, recover remaining four old-label seeds once each to reconstruct the old ensemble; do not select repeats by higher return.",
+    "If causal source remains unresolved, run existing top3/h5 true ladder for both five-seed treatments. Recompute fixed-s5 for reconstructed old signal and verify against historical30.54%; new s5 is a frozen reference. Do not call a reconstructed old model an exact historical model unless its stored predictions are verified against preserved hashes/numerics.",
+    "Report CAGR gap and arithmetic-account gap separately; model Top3H5 arithmetic annualization and account CAGR are different metrics. No strategy grid/promotion/production change."
+  ],
+  "budget": {
+    "max_model_fits": 12,
+    "max_wall_hours": 8,
+    "max_account_jobs": 4,
+    "concurrency": 1,
+    "initial_fits": 4,
+    "conditional_old_ensemble_fits": 4,
+    "conditional_determinism_fits": 4
+  },
+  "retention": "One existing platform entry; retained main H7/H15/H20 untouched. Keep compact exact model/curve/prediction evidence needed for this causal comparison within H20; remove duplicate repetitions and temporary matrices after numerical comparison and audit. Preserve adapter source text and package/source fingerprints in audit JSON before deleting executables.",
+  "harness_capability_boundary": "Formal inspect_state confirms closed parent and prior cost103. Native initialize hardcodes one configs/harness-plan.json and docs/harness-state.json per archive; it cannot append a new phase to this closed one-entry experiment without overwriting or adding a new entity. The explicitly bounded supplemental ledger records all fits and frozen identities; no native lifecycle-success claim and no parent reopening.",
+  "frozen_files": [
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a",
+      "size": 38931
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+      "sha256": "90783e819314072df08549698fc85a8657fce1359f105d0735b4c678b5a272a3",
+      "size": 97032
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h20.json",
+      "sha256": "b21c1e3c83829e99362145d49ab832c24b20681d63413228cd3c6bd50fe76b7b",
+      "size": 18221
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-observed-label-effect.json",
+      "sha256": "9aa8a43b4432d4dadd807cf0169b2281e6462a12c1a71110ff580064a3b977f7",
+      "size": 10816
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+      "sha256": "55381bdc842e9300f320eea0a6f0d534e94d388be114f7c0d8e35dca8a291154",
+      "size": 4330
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/fixed-s5.yaml",
+      "sha256": "d3e269b8b9ad74b6ad3bcd74ed691a38fc48e9854e45bf4dd3c3334583fb4a5e",
+      "size": 1840
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/derived-ladder-k3h5.yaml",
+      "sha256": "3c1e27921efa9ba6d7ae666705cef5285835d309ac96b8ad308a942c574fab80",
+      "size": 1810
+    },
+    {
+      "path": "backtest/models/regime_adapt.py",
+      "sha256": "9fd7fc084365535680cb8df08a263132c13561a5d5434f8b51a16c6d08a9526d",
+      "size": 15566
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "8dfa2fcb39097ee0d19ea1c29dcbe3641e3237d9831b27c1db327a0fa6419a75",
+      "size": 33129
+    },
+    {
+      "path": "backtest/models/rankic_early_stop.py",
+      "sha256": "2320cce49ab762d1773881cd20e7974a8074bf1f95e94d2799cd9cb60619ca8c",
+      "size": 11309
+    },
+    {
+      "path": "qlib/contrib/model/gbdt.py",
+      "sha256": "2c1dd86b85af7730595a7657039c35a3a119d1c0af738d58e38a2357af5763a5",
+      "size": 4979
+    },
+    {
+      "path": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "sha256": "8cc35a510bb1b95d047a963f595dc1a4b8ac8e3102056c2c8a78d5c2b22b6026",
+      "size": 68674
+    },
+    {
+      "path": "backtest/scripts/evaluate/run_pred_backtest.py",
+      "sha256": "9883480618d01063a5c9ed1010e65793495dc29e5336b1445ab3f2259d78ffed",
+      "size": 11636
+    },
+    {
+      "path": "qlib/contrib/strategy/cohort_ladder.py",
+      "sha256": "17064220a23f3e06fe19a5d6fff298dfebe50f795cca384d97e848d954f2a0e0",
+      "size": 12786
+    },
+    {
+      "path": "qlib/contrib/strategy/signal_strategy.py",
+      "sha256": "87b40cfb43cdfb1e6f40df6be344b540b6d8f3d8f059eff2b542370ca383adb4",
+      "size": 34188
+    },
+    {
+      "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/common.py",
+      "sha256": "69f32f43de9daf3d0876f3f1089cd8993c1ab156400e22b9497f54c3e317981a",
+      "size": 2995
+    },
+    {
+      "path": "/private/tmp/qlib-p50-stability-20261106.PleG6F/fit.py",
+      "sha256": "30a3b3f50671cdf7f8dde91f89f285e5f8cf4b63f102c4e37ebf5e4c24e287a4",
+      "size": 7690
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "7fab0e7fa814358bf693560e833a334aa68badce15998c32ab8827ddcda8034e",
+      "size": 59330717
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e139762396447385de0ec1ff5a1cdbc6bac95200f8d9d94c1c9b581d1ea1e121",
+      "size": 59540837
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "3522cb7e221584ce12f14b4b8fc2cdca5b1299da1e09be325589e84fd4808d92",
+      "size": 59397247
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "3a4f466c9f856a60707f87cc0e9314768d75325fbd3c197a8d6a00469feba9a8",
+      "size": 59312839
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "ed5fd6c2efc6be90548cec352d77c790659529ba1496dcaf2514ca006d982180",
+      "size": 60307829
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-environment.json",
+      "sha256": "8b6a245d12f9fe5f5becc1d6d77e5abae52bf677a5f1138c46e16f286aae674f",
+      "size": 23349
+    }
+  ]
+}

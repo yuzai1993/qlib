@@ -1,0 +1,530 @@
+{
+  "phase": "study",
+  "models": [
+    {
+      "arm": "h5",
+      "seed": 42,
+      "session": "horizonp50_20261105_h5_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h5_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "8aef358484d9f04dacbab947114f8a0c12dda92c6a94d1fd859b00218ac2ed4c",
+        "size": 58681308
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h5/horizonp50_20261105_h5_s42_pred.pkl",
+        "sha256": "d78edc169289883bb43d44703938d6f7fd403fe7712f71068c8598df34529821",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h5",
+      "seed": 1000,
+      "session": "horizonp50_20261105_h5_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h5_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5e9d999c3b0940c0be5c1ae4496e7a2aecf21ad3c9e54d3d2a32fde69bbfe562",
+        "size": 58971883
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h5/horizonp50_20261105_h5_s1000_pred.pkl",
+        "sha256": "8cc2c2910f7d0fba9e1abd4c03d9702208e6bf9ad61d7d31a7a2cdc2c20a0cc6",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h5",
+      "seed": 2000,
+      "session": "horizonp50_20261105_h5_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h5_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e03666e4d56669787827e68c57fa9b9a16980396a35707d907062542d41f0dd9",
+        "size": 59010879
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h5/horizonp50_20261105_h5_s2000_pred.pkl",
+        "sha256": "454901a13bb1bb7fe8fdd1b8f44cfe71f4267018dae2cca7c34fcbb8e74f2c26",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h5",
+      "seed": 3000,
+      "session": "horizonp50_20261105_h5_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h5_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "68dfaf9707fee754ec4a5217d24a3ed8d2217506605dda87822a9dcc4e0f6577",
+        "size": 59009061
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h5/horizonp50_20261105_h5_s3000_pred.pkl",
+        "sha256": "aea5b1fad8ee1fd4707f33fe6e754db084c3c988fe74069adbbcfd453b114973",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h5",
+      "seed": 4000,
+      "session": "horizonp50_20261105_h5_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h5_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "87938fca600a1c7b7a2d13b55abf01b6ac51305968b4e347d84386d1638b3d40",
+        "size": 59012830
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h5/horizonp50_20261105_h5_s4000_pred.pkl",
+        "sha256": "15b14ad3f30ed1687a6fa7754265f7b6da1ee397684beb720fb96ea5844ba261",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h7",
+      "seed": 42,
+      "session": "horizonp50_20261105_h7_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "380c74ab84a5b4b76a147ceabc15f352bed483f7226c67ada185429df131fde8",
+        "size": 58640952
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s42_pred.pkl",
+        "sha256": "789cc80acddae39a7c7853cc3d99b5af043f6b7fe1768ae15b7329df867e6997",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h7",
+      "seed": 1000,
+      "session": "horizonp50_20261105_h7_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f65b79f765aa1ffd4abadc74d1d385d52636e8bdc1f55e64d87ec095badd4c2c",
+        "size": 59688388
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s1000_pred.pkl",
+        "sha256": "66bd70ff95cd4beacfbc4ea50c6e275609919e9137b0370eeb1109d3dc46e25f",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h7",
+      "seed": 2000,
+      "session": "horizonp50_20261105_h7_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "601999952d38903f7ce0cefb4a21664b96745661294b32be05d9baf26c12a11b",
+        "size": 58902139
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s2000_pred.pkl",
+        "sha256": "28eb736b3dadf2e834efbdc0072efc3afd5bdcea576cf64cd9270afcdaa65a3b",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h7",
+      "seed": 3000,
+      "session": "horizonp50_20261105_h7_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "77cd448f54ff6e9b4b045afedc0f459b1d0e218b94960dbec665ed32753c8dbc",
+        "size": 58733713
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s3000_pred.pkl",
+        "sha256": "bae22dc8495f85b46ef8c7d7937dc3fb10d275cdc65d9e4a66744dd51a07d669",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h7",
+      "seed": 4000,
+      "session": "horizonp50_20261105_h7_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "dd5af1de822cffce141e161e6f65178e9c2711f8259f375a7ca3c162861f873f",
+        "size": 58823762
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s4000_pred.pkl",
+        "sha256": "e91ac237a177b8adacecd8f5b3e29d7da617b41d0c841fd505d24c5195bd718c",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h10",
+      "seed": 42,
+      "session": "horizonp50_20261105_h10_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "8b6bb245b1e9184778a991f48f8b284db5e4ae5bbbc850d04ac2c5d86fd1413f",
+        "size": 58968394
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h10/horizonp50_20261105_h10_s42_pred.pkl",
+        "sha256": "8d5b4767121540696bff18474762c9b82c725c59c096a1e5b0ff961c16948776",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h10",
+      "seed": 1000,
+      "session": "horizonp50_20261105_h10_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ef834607ea4269506476ac7f74187fda0a5fa16aa0255dbba51cc24ad6156194",
+        "size": 58585697
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h10/horizonp50_20261105_h10_s1000_pred.pkl",
+        "sha256": "612ad18ccaa62e2fbc7d89694883088083ae0bf978e5c5a87e884f6e7f2c1700",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h10",
+      "seed": 2000,
+      "session": "horizonp50_20261105_h10_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d82120b6d845549d373d74789fed72a9f57dfab690edae424de9b448a6d70247",
+        "size": 58949631
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h10/horizonp50_20261105_h10_s2000_pred.pkl",
+        "sha256": "642704efb0bfffaffb03441fadd936cf0a5523c81ebfb70f0dd247d271483c1b",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h10",
+      "seed": 3000,
+      "session": "horizonp50_20261105_h10_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "721d8d94ad6c8b133f89cc85bfe439eb6588ebb450ddb24f86dc7214debf6a81",
+        "size": 58623306
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h10/horizonp50_20261105_h10_s3000_pred.pkl",
+        "sha256": "b9bd0b0f51f8459e89f20bb8b3629855fb4080018ff66cd28c846765e7d0988c",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h10",
+      "seed": 4000,
+      "session": "horizonp50_20261105_h10_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b7788a8c2eb8bfad40a04c2867e04bbf09e51f19f3112c9085ff86014346fc14",
+        "size": 58780290
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h10/horizonp50_20261105_h10_s4000_pred.pkl",
+        "sha256": "42893d801f32d2aa43fb3d1edda2fb3ab60cda39495e0cb6e2ec0feceec15913",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h15",
+      "seed": 42,
+      "session": "horizonp50_20261105_h15_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "22606dba4667e684bdc5596b7571560906d8f73f7ac3eec0d0e2c40370fffe0f",
+        "size": 59554703
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s42_pred.pkl",
+        "sha256": "37e22ae92d6d8c4c52c00ddc2b25377860c6a18353779769cb1f93e78b9cb006",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h15",
+      "seed": 1000,
+      "session": "horizonp50_20261105_h15_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d7f0541813051c8942a23c157e65d07b9c191cccf5835420042f3c73a59703e2",
+        "size": 59200403
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s1000_pred.pkl",
+        "sha256": "4f556ccdc50b6dcf5761207ab13fa0935626b12234909aa0eaa753fbdaaa2094",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h15",
+      "seed": 2000,
+      "session": "horizonp50_20261105_h15_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "659f05f224f27d35161658abbe6103deccc0e85e4342fe35f3716d18931ab3c0",
+        "size": 59440295
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s2000_pred.pkl",
+        "sha256": "85ca4d7b51dae0e963a13b2eeb8df33485b765e989063ce93c983713d8cbbf5e",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h15",
+      "seed": 3000,
+      "session": "horizonp50_20261105_h15_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "37c7743f3643ca6531efe5e6ebcbee0953fc4fd99b080eb4cdc674495d34536b",
+        "size": 58565859
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s3000_pred.pkl",
+        "sha256": "023f89b4bb45a23ef54b0d6a7da94f34ef092c9defbb0e22df370299814595c5",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h15",
+      "seed": 4000,
+      "session": "horizonp50_20261105_h15_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "09e445d36b0ff2c0a3627de03ca1c31f210f1f9e911b744b0897b79ef569d055",
+        "size": 60159985
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s4000_pred.pkl",
+        "sha256": "243d16bc7e6cbb7fdf21787f8667b108579ae515bcce6beef5ccd1637052d8f9",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h30",
+      "seed": 42,
+      "session": "horizonp50_20261105_h30_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h30_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2ce98eb179cdd818879c5be54c5915845ef44949d7b131115ce79a3709f67dde",
+        "size": 59497590
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h30/horizonp50_20261105_h30_s42_pred.pkl",
+        "sha256": "8b3cc4c7c930017d1112cecde0e831e356283ef69e076031856a279d74fbe60a",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h30",
+      "seed": 1000,
+      "session": "horizonp50_20261105_h30_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h30_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0c6fb7e417db56387ad1d2f4982c1a9e1d33f486801563f36e2b9bdcebe04119",
+        "size": 60307805
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h30/horizonp50_20261105_h30_s1000_pred.pkl",
+        "sha256": "e3d66d5f6b83a9c901da899cc478c69fad1e9d8a19f6140ae409fa63f2c969a6",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h30",
+      "seed": 2000,
+      "session": "horizonp50_20261105_h30_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h30_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "38d3a180a6c631969821e3b8c9720217597ad57b001ddc264c8b7d6b9ca83fbd",
+        "size": 59317605
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h30/horizonp50_20261105_h30_s2000_pred.pkl",
+        "sha256": "a3a5ea20441a8b62f4d477e81aa8e3bc3ab3a5be60c7417285d36f66972dd851",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h30",
+      "seed": 3000,
+      "session": "horizonp50_20261105_h30_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h30_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e9c2bc3cfef567bf9a67b7143fdd2e7af919fdfd583da108070f859bf7723c7c",
+        "size": 59177576
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h30/horizonp50_20261105_h30_s3000_pred.pkl",
+        "sha256": "854fe28a0c0a48e762d7adcb631dd242698097a40d1eab34aba91b0598684c55",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h30",
+      "seed": 4000,
+      "session": "horizonp50_20261105_h30_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h30_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3411ace115be1982cc33497e6c6bb6b152d73b101c26384374aee3f896edb85c",
+        "size": 61183581
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h30/horizonp50_20261105_h30_s4000_pred.pkl",
+        "sha256": "75b88f43ce9621c10dfcaa9ecf632300d71b694d6aa17939c67572afb18b1c75",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h40",
+      "seed": 42,
+      "session": "horizonp50_20261105_h40_s42",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h40_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7cd3c98c34e36591d498b5a8a55c1ffa745797afc65198a102175816bc0e82d3",
+        "size": 59465270
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h40/horizonp50_20261105_h40_s42_pred.pkl",
+        "sha256": "520df718c93e429885cdc367b5e878aafac7bb8a8c67b63cc4c6a03b7aa8c6f2",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h40",
+      "seed": 1000,
+      "session": "horizonp50_20261105_h40_s1000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h40_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "888777b5847c1b3ea8579f5ffb448784ee4f0d39e3448e6d08ce67b1f3f5711c",
+        "size": 58766720
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h40/horizonp50_20261105_h40_s1000_pred.pkl",
+        "sha256": "2abd84ed26d614b602604487d084c1619a1befabdaef78a1d583e7c7277c4e78",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h40",
+      "seed": 2000,
+      "session": "horizonp50_20261105_h40_s2000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h40_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "c85bc7cb6c8b122e05d416f1d72e79ccf8841127aa281281a5865bc5fbe2e00d",
+        "size": 59023644
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h40/horizonp50_20261105_h40_s2000_pred.pkl",
+        "sha256": "fb1be18622b987efa6646546a267150235ed979d3db852dd1b5b85cc501ea6a7",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h40",
+      "seed": 3000,
+      "session": "horizonp50_20261105_h40_s3000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h40_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "742d3de9c1e822a4b33fbfd45279fbf78cd265eed9cf780646a759de0de576dd",
+        "size": 58645548
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h40/horizonp50_20261105_h40_s3000_pred.pkl",
+        "sha256": "484b7a04040ce050bc3adc432b9fc6a01f2679a3933d36da5bff6b22121ffa8a",
+        "size": 83046157
+      }
+    },
+    {
+      "arm": "h40",
+      "seed": 4000,
+      "session": "horizonp50_20261105_h40_s4000",
+      "model": {
+        "path": "backtest/result/horizonp50_20261105_h40_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b97b621b787eefeee6de11cb9a693007076a5e40e7bb4df6fc5f3f4a83743738",
+        "size": 59716103
+      },
+      "prediction": {
+        "path": "backtest/result/20261105_horizon_p50/h40/horizonp50_20261105_h40_s4000_pred.pkl",
+        "sha256": "5019cc6f5189389fbee7651e85dc7668e91448076bda011aba0445a545e34717",
+        "size": 83046157
+      }
+    }
+  ],
+  "ensembles": {
+    "h5": {
+      "path": "backtest/result/20261105_horizon_p50/h5/ensemble.pkl",
+      "sha256": "113ac3a2f714fc2575cc99f75bdac96b2490c215423d18b7c24520f8f546c463",
+      "size": 83046157
+    },
+    "h7": {
+      "path": "backtest/result/20261105_horizon_p50/h7/ensemble.pkl",
+      "sha256": "46217065a6763f64a04fc2f3734245712546cb47fd03fdaa47fd82fbd6565a19",
+      "size": 83046157
+    },
+    "h10": {
+      "path": "backtest/result/20261105_horizon_p50/h10/ensemble.pkl",
+      "sha256": "69ebb3ac0a4a7d1bbab2917358bfadb4a25797e57d67c5ae73fb8a6828cca710",
+      "size": 83046157
+    },
+    "h15": {
+      "path": "backtest/result/20261105_horizon_p50/h15/ensemble.pkl",
+      "sha256": "a59f1ec255e8438c5ee6ca1e372aff2677e573763705943a045b146ba497bbc6",
+      "size": 83046157
+    },
+    "h30": {
+      "path": "backtest/result/20261105_horizon_p50/h30/ensemble.pkl",
+      "sha256": "5e11afe33587ef958e723c632ecb109fee887d81481543a2407512dde1a2eaa6",
+      "size": 83046157
+    },
+    "h40": {
+      "path": "backtest/result/20261105_horizon_p50/h40/ensemble.pkl",
+      "sha256": "be1d810784532816555ce0cbee6deec8e39f4c0775128f394a422ef63b9e62f4",
+      "size": 83046157
+    }
+  },
+  "feature_reference": {
+    "path": "backtest/experiments/models/early-stopping/h20-patience-confirmation-20261105-v1/docs/inference-receipt.json",
+    "sha256": "b0a56398fa4274a58d4e3b86b6609b303479568983b33198e41b1c61d883f80c",
+    "size": 63740
+  },
+  "all_annual_feature_signatures_exact": true,
+  "parts": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study-2020.json",
+      "sha256": "9664f2a8274700a2e12b5c434d79e1e2860f46a75e0ac72dcc660227dc8f408a",
+      "size": 26468
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study-2021.json",
+      "sha256": "94534d4603aac291161815441fa07539aecf984010f2ec5824bb8d5e2f471efa",
+      "size": 26499
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study-2022.json",
+      "sha256": "ed6ab2a60e9fbd97047bc469b17cd741dca9aceb67ea49a4dca375611747bfef",
+      "size": 26499
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study-2023.json",
+      "sha256": "5bf32279a64dc9cd6d065f9ec7075e90c768193f420dd4ef257f88209ee8ead7",
+      "size": 26499
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study-2024.json",
+      "sha256": "1c6f951e4d010091e96b8fcb3611ab16da7ec8fa8c109d8abecf28c58a720860",
+      "size": 26499
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study-2025.json",
+      "sha256": "83971369a40598760519380f48d00a0d57f7bd40b525dd142fa82d6d8eda6756",
+      "size": 26499
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-study-2026.json",
+      "sha256": "078d3464686eddfca1177940896b5ea0f8021611d683fd130956d0b2acec8e5c",
+      "size": 26468
+    }
+  ]
+}

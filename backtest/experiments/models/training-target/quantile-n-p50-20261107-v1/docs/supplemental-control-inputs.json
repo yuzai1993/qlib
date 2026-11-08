@@ -1,0 +1,85 @@
+{
+  "at": 1794019046.4152262,
+  "prior_audit_guard_failure": "Initial helper looked in inference-study; empty H20 list assertion prevented any receipt or research change. H20 authoritative source is inference-bridge.json. Source fixed in version2, no fit retry.",
+  "purpose": "Explicit continuous-control prediction and actual frozen ST/style dependencies, verified against pre-existing historical source receipts before any new candidate evaluation. Adds source verification without modifying frozen science contract or inputs.",
+  "prior_sources": [
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inference-bridge.json",
+      "sha256": "bed5405e62cda4788af5dbbc672b123dd95bd7c22a3f0fde9acd7732da80a29f",
+      "size": 8540
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference.json",
+      "sha256": "2c5158c9137226fa5f84c800bc6f6050d17c753ebc5bafa05c9dc67ca5860c1f",
+      "size": 3339
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/evaluation-inputs.json",
+      "sha256": "f70a204ddaa072d599bf99d587166e6855b490094ea21b91b0cffbcb64dce215",
+      "size": 1052
+    }
+  ],
+  "verified_files": [
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s42_pred.pkl",
+      "sha256": "7d565f4d94c2b62e17071fd8b29290bfe5467e7251472f85c7c0087074a7d182",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s1000_pred.pkl",
+      "sha256": "2ee37c736ec6debe7f1012da5a048bbdf7f8adf6445f7e85516f396c0aa5a60a",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s2000_pred.pkl",
+      "sha256": "1834d0504f99d7135162f08a99eb5f84478756505096ac872d6d933b8dd3e235",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s3000_pred.pkl",
+      "sha256": "612664710f92d74ebd42a885a184d2f428135ae20c4fe220b516887cc6ed0455",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s4000_pred.pkl",
+      "sha256": "a538fa1a3a0fa29eb39f7f2c08850884f92c0a346c5673dd43ec15a209853d69",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/20261106_p50_stability/old-s42.pkl",
+      "sha256": "1d8326a8f95da9f685ece529ade18cb4e53bf8d516c85b7e08523f23abafaefd",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/result/20261106_p50_stability/old-s1000.pkl",
+      "sha256": "55e7ae76e852a7ff0c8f33c4a6c73fc3a14128d2bd91fa62a11cb14a98dc65e1",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/result/20261106_p50_stability/old-s2000.pkl",
+      "sha256": "f01625e30628992321451778c4937c7ded7bebc0ae911cc2bb3d2be7e8bcb73e",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/result/20261106_p50_stability/old-s3000.pkl",
+      "sha256": "ab3d66822b41f8de301bf693645c33d635049b52b5df26b752725a288f155b27",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/result/20261106_p50_stability/old-s4000.pkl",
+      "sha256": "7f297330495e3f9123ed5d73847370ba6bb6bb9daf194f0d1a2baf76b3a7ab2a",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+      "size": 30202983
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+      "size": 1203
+    }
+  ],
+  "scope_gap": "Native init inputs froze model/label sources and n5/n10 signals but did not enumerate all continuous-control prediction files. This supplemental audit checks their pre-existing authoritative hashes; final verification must recheck it."
+}

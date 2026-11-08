@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/start.py",
+    "sha256": "caed4fb777b4bf4fe962c00ec064f3238fdf55ac458cf08ccf924aad10362658",
+    "size": 830
+  },
+  "source_text": "from common import *\n\nif __name__=='__main__':\n    save_source(__file__)\n    for n in ['train','infer','evaluate','pipeline_v2','train_group_v2','publish','plot','verify','paired_diagnostics','monitor','resource_tree','adapt_reports']:\n        save_source(TMP/(n+'.py'))\n    p=read(BASE/'configs/frozen-study.json')\n    harness('check')\n    harness('event',{'type':'plan_variant','exp_id':EID,'archive_path':str(BASE.relative_to(ROOT)),'round':1,'changed_axis':'label_bin_count','hypothesis':p['hypothesis'],'configs':[str((BASE/'configs/frozen-study.json').relative_to(ROOT)),str((BASE/'configs/prepared-inputs.json').relative_to(ROOT))]})\n    harness('check')\n    s=harness('event',{'type':'start','exp_id':EID,'command':[sys.executable,str(TMP/'pipeline_v2.py')]})\n    print('Native attempt started',s['revision'],flush=True)\n\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

@@ -1,0 +1,106 @@
+{
+  "variant": "width5",
+  "treatment": "new",
+  "components": [
+    {
+      "seed": 42,
+      "session": "labelgrade_20261106_width5_new_s42",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3636dbbf5d6d3c7e9f9816defdd173e0fb965cf7e78938ece0e45ef14d2abbad",
+        "size": 59026014
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/width5-new-s42.pkl",
+        "sha256": "6fe150940d8fd95d0dfedefef1b3af465ed4f6c98347b61f9b261125e7ec5f92",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s42-a1.json",
+        "sha256": "352fa4c7c8c671d5bdc03e6e6062575c5ac0343afdc3715636d819e49a7194dc",
+        "size": 27370
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "labelgrade_20261106_width5_new_s1000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "49833a4a8f7b6e0c59f74d1f66bf45311ed12cfe8aadf2bb43fc9700f9b80dc8",
+        "size": 58816213
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/width5-new-s1000.pkl",
+        "sha256": "c0035b7ac98c58d068aed8dfb82df77df36824f77409d54b9ec3493091a61dd5",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s1000-a1.json",
+        "sha256": "b247cbffffd18942485d3277a21430ca29b47e1d5ef532f52e33f006ba910fb6",
+        "size": 23631
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "labelgrade_20261106_width5_new_s2000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "837f17b949254482a051b9e405acad290317cc09645191159b9c9a82a85219a5",
+        "size": 58683040
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/width5-new-s2000.pkl",
+        "sha256": "9465c5ecb981465380d370eaa6083fc9afac35b608df4549ad69cb787d37a984",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s2000-a1.json",
+        "sha256": "835a99cdc63d334b792e4358263c5de547a25d8055b2d6978a3379eb35337889",
+        "size": 21581
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "labelgrade_20261106_width5_new_s3000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "de09689b7f63d97dffdb826918bac469590718775c5cbce1c82ece4ba2f6fe87",
+        "size": 59309231
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/width5-new-s3000.pkl",
+        "sha256": "902991b0b06cbcfce9950eb49250ab1981f89042d2c25328b5f720363d8b144f",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s3000-a1.json",
+        "sha256": "5aac154d12a80b5e742022b471e13c8bdb0a0540a1123c00565bca45ad593e59",
+        "size": 32184
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "labelgrade_20261106_width5_new_s4000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d31029badd6500567665bc6ac6dd00d12fdd48b51d064de14bbc813c5d54d992",
+        "size": 59304856
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/width5-new-s4000.pkl",
+        "sha256": "1ef06c00934beb9e3e44b2c1735e26b35e08473b7436cdc185f1d0b023f6a029",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s4000-a1.json",
+        "sha256": "277a5326710c64f905d81cc473d8c8a9954122fd136fb50d7ee8f519c459290f",
+        "size": 31832
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261106_label_grading/width5-new-ensemble.pkl",
+    "sha256": "c0ba2b253b3e606775fc75bc6d657abbba25aa816653a7110e84caa700a992f5",
+    "size": 83046157
+  }
+}

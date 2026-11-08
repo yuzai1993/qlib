@@ -1,0 +1,32 @@
+{
+  "candidate_refs": [
+    "training-target/label-grading-p50-20261106-v1/arms/control_new",
+    "training-target/label-grading-p50-20261106-v1/arms/quantile5",
+    "training-target/label-grading-p50-20261106-v1/arms/quantile10",
+    "training-target/label-grading-p50-20261106-v1/arms/width5",
+    "training-target/label-grading-p50-20261106-v1/arms/tails5"
+  ],
+  "source_records": [
+    {
+      "path": "source-records/control_new.json",
+      "sha256": "c9c334e86ddc5ded94a11cf21fd6c66a3967383bf75f11eefe9c20c46a1ab0d7"
+    },
+    {
+      "path": "source-records/quantile5.json",
+      "sha256": "1cc2dd41dac3353d62baa70881d93cc33de33a9304b4beeea7d83b6a479622e8"
+    },
+    {
+      "path": "source-records/quantile10.json",
+      "sha256": "f4600612092b4edecb4776a6cb6844e02ff47b28ddd9cb6d6f2cbd9b83fed2e2"
+    },
+    {
+      "path": "source-records/width5.json",
+      "sha256": "f10f628ec69fc5a01426fe8e1e41d4e7f6d3c9865026468098c85f7c57e2f665"
+    },
+    {
+      "path": "source-records/tails5.json",
+      "sha256": "480771ff45ba96a3c7d4df3acb48a0ac6c93af1b82e17582a91cf17293efb740"
+    }
+  ],
+  "platform_scope": "Normal parent experiment entry; generic same-H recipe groups unsupported by current platform. Detail HTML contains all candidates and the true paired control."
+}

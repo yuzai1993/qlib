@@ -1,0 +1,23 @@
+{
+  "user_instruction": "将n=10晋升为模型的新baseline，并且跑一次真阶梯回测，跟回测baseline对比效果。",
+  "authorized_by": "user",
+  "authorized_at": "2026-11-07",
+  "new_model_ref": "training-target/h20-quantile10-p50-v5",
+  "new_model_version": "v5",
+  "previous_model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "previous_model_version": "v2",
+  "selected_label_source": "old",
+  "source_fit_count": 5,
+  "new_fits": 0,
+  "prior_research_fits": 176,
+  "model_promotion_independent_of_derived_backtest_result": true,
+  "scope": "Research model baseline only. BT baseline remains s5; production/deployment not authorized by this request.",
+  "temporary_directory": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-n10-v5-20261107.fjys243a",
+  "steps": [
+    "Verify five actual models/predictions and exact ensemble",
+    "Append v5/current selection and preserve v2 history; update current model definition",
+    "Freeze two fixed account recipes: v5×Top3H5 true ladder and v5×s5 rule control",
+    "Run serially without retraining or tuning, compare official s5 plus matched-rule control",
+    "Verify metrics, register, rebuild model/BT reports, clean exact task-owned temporary artifacts"
+  ]
+}

@@ -1,0 +1,1264 @@
+{
+  "selected_records": [
+    {
+      "id": "training-target/h20-quantile10-p50-v5",
+      "kind": "model",
+      "name": "等样本10档 · H20／patience50（v5）",
+      "version": "v5",
+      "current": true,
+      "is_baseline": true,
+      "status": "completed",
+      "source_status": "available",
+      "date": "2026-11-07",
+      "direction": "training-target",
+      "baseline_ref": "self",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "official": true,
+      "comparable": true,
+      "comparison_key": "phase_m_v1:model:20dfcafd3c4bcfc3552c",
+      "scope": "standard",
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "pool": "all",
+      "metrics": {
+        "net_ann": 0.32050695390856143,
+        "net_ann_vol": 0.5666308459947101,
+        "net_sharpe": 0.5656362624345261,
+        "ann": 0.3599490901986977,
+        "turnover": 0.18013398013398013,
+        "rank_ic_mean": 0.0990979738303927
+      },
+      "years": {
+        "2020": {
+          "net_ann": 0.29692124897135797,
+          "net_ann_vol": 0.5184957143931169,
+          "net_sharpe": 0.5726590224933585,
+          "ann": 0.3368404870665961,
+          "turnover": 0.18231292517006806
+        },
+        "2021": {
+          "net_ann": 0.4903879780528902,
+          "net_ann_vol": 0.5260536239626632,
+          "net_sharpe": 0.9322015013581498,
+          "ann": 0.5288336296303936,
+          "turnover": 0.1755829903978052
+        },
+        "2022": {
+          "net_ann": 0.23765981070595738,
+          "net_ann_vol": 0.5813107709866069,
+          "net_sharpe": 0.4088343491427117,
+          "ann": 0.27692784376380863,
+          "turnover": 0.1793388429752066
+        },
+        "2023": {
+          "net_ann": 0.2034695156938327,
+          "net_ann_vol": 0.3722175156194587,
+          "net_sharpe": 0.5466414318391517,
+          "ann": 0.24279786831091257,
+          "turnover": 0.1796143250688705
+        },
+        "2024": {
+          "net_ann": 0.324559869128645,
+          "net_ann_vol": 0.8791152525832294,
+          "net_sharpe": 0.3691892140136854,
+          "ann": 0.3639485413049535,
+          "turnover": 0.17988980716253444
+        },
+        "2025": {
+          "net_ann": 0.4638735510473681,
+          "net_ann_vol": 0.3792736299620539,
+          "net_sharpe": 1.2230577461812422,
+          "ann": 0.504121342542567,
+          "turnover": 0.1838134430727023
+        },
+        "2026": {
+          "net_ann": 0.1227553249419363,
+          "net_ann_vol": 0.45121708136794114,
+          "net_sharpe": 0.2720538073819872,
+          "ann": 0.16281567581912929,
+          "turnover": 0.18295739348370926
+        }
+      },
+      "regimes": {
+        "D": {
+          "net_ann": 0.20532869699999712,
+          "net_ann_vol": 0.5222545564640616,
+          "net_sharpe": 0.393158268240263,
+          "ann": 0.24467613580596725,
+          "turnover": 0.17970149253731343
+        },
+        "F": {
+          "net_ann": 1.1510183314345679,
+          "net_ann_vol": 0.9792290959994947,
+          "net_sharpe": 1.175433140351828,
+          "ann": 1.190624331434568,
+          "turnover": 0.18088235294117647
+        },
+        "T": {
+          "net_ann": 0.3317022043109919,
+          "net_ann_vol": 0.4157485272009336,
+          "net_sharpe": 0.7978433659024807,
+          "ann": 0.37138568333968947,
+          "turnover": 0.18123620309050775
+        }
+      },
+      "protocol": "old-label H20 equal-count10 | patience50 Top5H5 early stop | official five-seed daily-zscore mean,Top3H5 | historical selection window",
+      "hypothesis": "用户在标签分级及n网格对比后明确选定等样本10档为新模型基线；不新增训练，不按本次执行层回测结果重新选型。",
+      "conclusion": "promoted_by_user",
+      "note": "当前研究模型v5；执行层baseline s5仍使用历史v2。原研究记录、对照关系及生产配置保留；分档并未证明普遍噪声稳健性。",
+      "promoted_to": "",
+      "promoted_from": "",
+      "warnings": [],
+      "resources": [
+        {
+          "id": "fe1954c38a3714783d943225",
+          "name": "detail.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "4fedde0e1b1024f9d60ea1ae",
+          "name": "model-evaluation.json",
+          "available": true,
+          "kind": "metrics"
+        },
+        {
+          "id": "71df553f8f5317d89aa6f791",
+          "name": "model-manifest.json",
+          "available": true,
+          "kind": "config"
+        },
+        {
+          "id": "402f7b32edc0c527f4865bc6",
+          "name": "evaluation.yaml",
+          "available": true,
+          "kind": "config"
+        },
+        {
+          "id": "8dea8d78e7a23da4b07eb8b7",
+          "name": "metadata.json",
+          "available": true,
+          "kind": "metadata"
+        },
+        {
+          "id": "8d96c35cc7d43db6f091a2e2",
+          "name": "promotion-plan.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "724b24866d8173fd7518f571",
+          "name": "promotion-verification.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "04ff9adb8e98dd2b23b62e10",
+          "name": "d7006710074b379d06adc716801e5b2feec651d5100ffac51ddc83e8f72033cb.json",
+          "available": true,
+          "kind": "registry_record"
+        }
+      ],
+      "source": "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json",
+      "original_source": "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json",
+      "track": "all_a",
+      "protocol_id": "phase_m_v1:model",
+      "registered": true,
+      "activity": "model_research",
+      "role": "experiment",
+      "directory": "backtest/experiments/models/training-target/quantile10-p50-v5",
+      "metadata_path": "backtest/experiments/models/training-target/quantile10-p50-v5/metadata.json",
+      "promoted_version": "v5",
+      "analysis_revision": "a9bcd07a8411b0801e9286261cce468b93ddf6184444035d291e1bac8ee39618",
+      "experiment_type": "training_target",
+      "experiment_type_label": "训练目标",
+      "analysis": {},
+      "change_summary": "",
+      "comparison_baseline": {
+        "ref": "",
+        "version": "",
+        "initial": false
+      },
+      "model_profile": {
+        "version": "v5",
+        "experiment_id": "models/training-target/quantile10-p50-v5",
+        "structure": "每个种子一个单LightGBM，沿用H20／patience50冻结超参。",
+        "features": "Alpha158 + range，164列，无regime特征。",
+        "seeds": [
+          42,
+          1000,
+          2000,
+          3000,
+          4000
+        ],
+        "training_sample": {
+          "pool": "沪深全A",
+          "time_range": "2004-01-02～2020-07-31",
+          "filters": "沿用已完成H20稳定性复核的冻结特征、训练日期、M0权重和有效标签掩码；5,448,963条有序训练样本，原件与签名见来源清单。"
+        },
+        "training_target": "旧标签快照H20累计收益，按日截面等样本10档；并列组按中秩归档，同档标签相同。ordinal0..9经冻结仿射变换，scale=0.34774330479829896，offset=-1.564601411089059；不在分档后重新CSRankNorm。",
+        "evaluation_sample": {
+          "pool": "全A",
+          "time_range": "2020-08-03～2026-07-31；H5退出截断至2026-07-23，1448日",
+          "filters": "日频ST、成交额≥1000万、上市≥60日；头部另剔t+1不可成交。"
+        },
+        "early_stopping": "Top5×H5扣费净年化，eval_window，patience=50，上限200轮；采用完整退出边界。",
+        "prediction_signal": "固定五种子逐日截面z-score后等权合成；官方主格Top3×H5，全局H5 RankIC。",
+        "changes": "2026-11-07用户指定把旧标签等样本n=10晋升为v5；复用原五种子，不重训。",
+        "model_paths": [
+          {
+            "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 42,
+            "available": true
+          },
+          {
+            "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 1000,
+            "available": true
+          },
+          {
+            "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 2000,
+            "available": true
+          },
+          {
+            "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 3000,
+            "available": true
+          },
+          {
+            "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+            "seed": 4000,
+            "available": true
+          }
+        ],
+        "artifacts": [
+          {
+            "resource_id": "fe1954c38a3714783d943225",
+            "name": "detail.html",
+            "kind": "report",
+            "available": true,
+            "label": "实验报告",
+            "description": "给人阅读的原始实验报告。"
+          },
+          {
+            "resource_id": "4fedde0e1b1024f9d60ea1ae",
+            "name": "model-evaluation.json",
+            "kind": "metrics",
+            "available": true,
+            "label": "评估结果",
+            "description": "平台读取的评估指标与配套结果数据。"
+          },
+          {
+            "resource_id": "71df553f8f5317d89aa6f791",
+            "name": "model-manifest.json",
+            "kind": "config",
+            "available": true,
+            "label": "运行配置",
+            "description": "模型训练或评估使用的参数配置。"
+          },
+          {
+            "resource_id": "402f7b32edc0c527f4865bc6",
+            "name": "evaluation.yaml",
+            "kind": "config",
+            "available": true,
+            "label": "运行配置",
+            "description": "模型训练或评估使用的参数配置。"
+          },
+          {
+            "resource_id": "8dea8d78e7a23da4b07eb8b7",
+            "name": "metadata.json",
+            "kind": "metadata",
+            "available": true,
+            "label": "实验元数据",
+            "description": "目录清单、展示说明与人工结论。"
+          },
+          {
+            "resource_id": "8d96c35cc7d43db6f091a2e2",
+            "name": "promotion-plan.json",
+            "kind": "plan",
+            "available": true,
+            "label": "研究方案",
+            "description": "实验设计、协议与研究说明。"
+          },
+          {
+            "resource_id": "724b24866d8173fd7518f571",
+            "name": "promotion-verification.json",
+            "kind": "plan",
+            "available": true,
+            "label": "研究方案",
+            "description": "实验设计、协议与研究说明。"
+          },
+          {
+            "resource_id": "04ff9adb8e98dd2b23b62e10",
+            "name": "d7006710074b379d06adc716801e5b2feec651d5100ffac51ddc83e8f72033cb.json",
+            "kind": "registry_record",
+            "available": true,
+            "label": "历史登记",
+            "description": "冻结的历史登记事件及指标来源。"
+          }
+        ]
+      },
+      "core_results": {
+        "kind": "baseline_comparison",
+        "status": "available",
+        "title": "实验组与Baseline",
+        "note": "Baseline为本次实验当时的对照。",
+        "warnings": [
+          "当时Baseline缺失、来源无效或引用不匹配，保留空值对照行。"
+        ],
+        "records": [
+          {
+            "id": "",
+            "kind": "model",
+            "track": "all_a",
+            "role": "baseline",
+            "name": "Baseline · 未登记",
+            "version": "",
+            "directory": "",
+            "metrics": {
+              "net_ann": null,
+              "net_ann_vol": null,
+              "net_sharpe": null,
+              "ann": null,
+              "turnover": null,
+              "rank_ic_mean": null
+            },
+            "window": {},
+            "seeds": [],
+            "source": ""
+          },
+          {
+            "id": "training-target/h20-quantile10-p50-v5",
+            "kind": "model",
+            "track": "all_a",
+            "role": "experiment",
+            "name": "实验组 · 等样本10档 · H20／patience50（v5）",
+            "version": "",
+            "directory": "backtest/experiments/models/training-target/quantile10-p50-v5",
+            "metrics": {
+              "net_ann": 0.32050695390856143,
+              "net_ann_vol": 0.5666308459947101,
+              "net_sharpe": 0.5656362624345261,
+              "ann": 0.3599490901986977,
+              "turnover": 0.18013398013398013,
+              "rank_ic_mean": 0.0990979738303927
+            },
+            "window": {
+              "start": "2020-08-03",
+              "end": "2026-07-31"
+            },
+            "seeds": [
+              42,
+              1000,
+              2000,
+              3000,
+              4000
+            ],
+            "source": "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json"
+          }
+        ]
+      },
+      "benchmark_outputs": [
+        {
+          "ref": "training-target/h20-quantile10-p50-v5",
+          "version": "v5",
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "baseline/phase-m-v1-bt-v5",
+      "kind": "strategy",
+      "name": "v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+      "version": "v5",
+      "current": true,
+      "is_baseline": true,
+      "status": "completed",
+      "source_status": "available",
+      "date": "2026-10-29",
+      "direction": "phase-m-v1-bt",
+      "baseline_ref": "self",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "official": true,
+      "comparable": true,
+      "comparison_key": "phase_m_v1:strategy:03f437cc91194775c673",
+      "scope": "standard",
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "pool": "all",
+      "metrics": {
+        "annualized_return": 0.3483992380540464,
+        "sharpe_ratio": 1.1773900944016509,
+        "alpha": 0.24674697308104526,
+        "beta": 0.8835077769150542,
+        "benchmark_cumulative_return": 0.5861751718482147,
+        "max_drawdown": -0.330239863785206,
+        "calmar_ratio": 1.0549884379817076,
+        "annualized_volatility": 0.28968666151630157,
+        "annualized_one_way_turnover": 73.32794962840944,
+        "annualized_return_arith": 0.3410742057495774
+      },
+      "years": {
+        "2020": {
+          "annualized_return": 0.2536989442992599,
+          "sharpe_ratio": 1.0230262561819596,
+          "alpha": 0.32648657090128796,
+          "beta": 0.8818556375294704,
+          "benchmark_cumulative_return": -0.03900638270040002,
+          "max_drawdown": -0.10736331714171199,
+          "calmar_ratio": 2.362994652674481,
+          "annualized_volatility": 0.2517081042416891,
+          "annualized_one_way_turnover": 73.61752452533435,
+          "annualized_return_arith": 0.25750399953303366
+        },
+        "2021": {
+          "annualized_return": 0.5116496694771866,
+          "sharpe_ratio": 1.6265558028783174,
+          "alpha": 0.18335552712193898,
+          "beta": 1.0710028683597184,
+          "benchmark_cumulative_return": 0.2598020963335981,
+          "max_drawdown": -0.17915013981701022,
+          "calmar_ratio": 2.8559825295129673,
+          "annualized_volatility": 0.27794422812546127,
+          "annualized_one_way_turnover": 67.12426796964455,
+          "annualized_return_arith": 0.4520917971340038
+        },
+        "2022": {
+          "annualized_return": 0.09210258672802474,
+          "sharpe_ratio": 0.43755246269067977,
+          "alpha": 0.21902730929558709,
+          "beta": 1.0483415351188405,
+          "benchmark_cumulative_return": -0.09805779991274721,
+          "max_drawdown": -0.33023986378520576,
+          "calmar_ratio": 0.27889602930532337,
+          "annualized_volatility": 0.3146937346296763,
+          "annualized_one_way_turnover": 75.48694574266773,
+          "annualized_return_arith": 0.13769501858054212
+        },
+        "2023": {
+          "annualized_return": 0.056073636743969146,
+          "sharpe_ratio": 0.36116273768110735,
+          "alpha": -0.020254657493846952,
+          "beta": 1.0422610288647352,
+          "benchmark_cumulative_return": 0.08314551444852514,
+          "max_drawdown": -0.18363491566784573,
+          "calmar_ratio": 0.30535389492809606,
+          "annualized_volatility": 0.21362071940516694,
+          "annualized_one_way_turnover": 74.44241607356017,
+          "annualized_return_arith": 0.07715184384577775
+        },
+        "2024": {
+          "annualized_return": 0.21999419445017532,
+          "sharpe_ratio": 0.7153812502716932,
+          "alpha": 0.18483189641197637,
+          "beta": 0.8020534316206891,
+          "benchmark_cumulative_return": 0.04273346512929699,
+          "max_drawdown": -0.31877932391085895,
+          "calmar_ratio": 0.6901143767771238,
+          "annualized_volatility": 0.37734078842287394,
+          "annualized_one_way_turnover": 74.43550620056267,
+          "annualized_return_arith": 0.269942525000462
+        },
+        "2025": {
+          "annualized_return": 1.2385272352220347,
+          "sharpe_ratio": 3.3415861656362194,
+          "alpha": 0.5665065916996301,
+          "beta": 0.751687819025546,
+          "benchmark_cumulative_return": 0.38905274321526084,
+          "max_drawdown": -0.08429653906365031,
+          "calmar_ratio": 14.69250397441409,
+          "annualized_volatility": 0.250896696853915,
+          "annualized_one_way_turnover": 74.0538622189995,
+          "annualized_return_arith": 0.8383929312108668
+        },
+        "2026": {
+          "annualized_return": 0.2631529262470296,
+          "sharpe_ratio": 0.9393779517060662,
+          "alpha": 0.36703239945249083,
+          "beta": 0.8297034264539168,
+          "benchmark_cumulative_return": -0.07408577414886086,
+          "max_drawdown": -0.23068064212979666,
+          "calmar_ratio": 1.1407672694918276,
+          "annualized_volatility": 0.29479298678901933,
+          "annualized_one_way_turnover": 75.06223048700767,
+          "annualized_return_arith": 0.2769220321071824
+        }
+      },
+      "regimes": {
+        "D": {
+          "annualized_return": 0.19461278289023354,
+          "sharpe_ratio": 0.7821877372350153,
+          "alpha": 0.21327609508956266,
+          "beta": 0.9900094235234772,
+          "benchmark_cumulative_return": -0.07297153524934896,
+          "max_drawdown": -0.33023986378520587,
+          "calmar_ratio": 0.5893073618053976,
+          "annualized_volatility": 0.2763248292697174,
+          "annualized_one_way_turnover": 72.65107190846099,
+          "annualized_return_arith": 0.2161378929483322
+        },
+        "F": {
+          "annualized_return": 1.3521805342165854,
+          "sharpe_ratio": 2.321567570985224,
+          "alpha": 0.38060826064231845,
+          "beta": 0.7204988507042356,
+          "benchmark_cumulative_return": 0.4530452669977616,
+          "max_drawdown": -0.17077035918041983,
+          "calmar_ratio": 7.918121977995017,
+          "annualized_volatility": 0.4039014193217868,
+          "annualized_one_way_turnover": 76.86575132057901,
+          "annualized_return_arith": 0.937684436972365
+        },
+        "T": {
+          "annualized_return": 0.5688216283711891,
+          "sharpe_ratio": 1.79675387816568,
+          "alpha": 0.3622603157125754,
+          "beta": 0.816765655443,
+          "benchmark_cumulative_return": 0.17754885354415872,
+          "max_drawdown": -0.2306806421297969,
+          "calmar_ratio": 2.4658403198441365,
+          "annualized_volatility": 0.2712278408145754,
+          "annualized_one_way_turnover": 73.98543491091873,
+          "annualized_return_arith": 0.48732967485009204
+        }
+      },
+      "protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "hypothesis": "用户于2026-10-29批准将现有五种子合成信号的 top5d1/hold1/f100 历史回测提升为 BT v5；模型研究基线仍为 v4。",
+      "conclusion": "",
+      "note": "历史选型窗口：2020-08-03~2026-07-31 已用于模型早停及策略比较，不是独立样本外检验。100万历史成本口径；30万当前费用与新增期间结果另作诊断，不用于调参，不代表实盘已切换。",
+      "promoted_to": "",
+      "promoted_from": "",
+      "warnings": [
+        "历史 st_daily 元数据缺失，按 EXPERIMENT_STANDARD 日频名单补足",
+        "历史费用元数据缺失，按 EXPERIMENT_STANDARD 本轨道费率标识"
+      ],
+      "resources": [
+        {
+          "id": "806ad3c12266bb6a24d3a92a",
+          "name": "phase_m_v1_bt_v5.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "9bc0933492e3e84dbcdc7f1b",
+          "name": "all_top5d1f100_m0h20es.json",
+          "available": true,
+          "kind": "metrics"
+        },
+        {
+          "id": "6be05ff6c7ac5f5c0d94b609",
+          "name": "report.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "aaa5fd5f4e6c01ee37207b7b",
+          "name": "metadata.json",
+          "available": true,
+          "kind": "metadata"
+        },
+        {
+          "id": "5da1c66480c311d27ba49a80",
+          "name": "bench_ew_all.csv",
+          "available": true,
+          "kind": "config"
+        },
+        {
+          "id": "ff757cce65a81787af6148c0",
+          "name": "monthly_regime_labels_eval_window_v1.csv",
+          "available": true,
+          "kind": "config"
+        },
+        {
+          "id": "f8746cf4de0bf620b6337d4b",
+          "name": "all_top5d1f100_m0h20es.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "1230d87715b8a7464000e49a",
+          "name": "phase_m_v1_bt_m0h20es_f100.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "aeb023734b21c3bad164fc6c",
+          "name": "m0h20es.json",
+          "available": true,
+          "kind": "metrics"
+        },
+        {
+          "id": "bd8bd0ddc9017d126e99e264",
+          "name": "887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+          "available": true,
+          "kind": "registry_record"
+        },
+        {
+          "id": "80170fb8bf750fdaa9d1d673",
+          "name": "a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+          "available": true,
+          "kind": "registry_record"
+        }
+      ],
+      "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+      "original_source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+      "track": "all_a",
+      "protocol_id": "phase_m_v1:strategy",
+      "registered": true,
+      "activity": "execution_backtest",
+      "role": "baseline",
+      "directory": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5",
+      "metadata_path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/metadata.json",
+      "promoted_version": "v5",
+      "analysis_revision": "4aeff41abad4cd6ebda276f719b959d25e5f9c042c8aa2c10d7c5b85c76f230f",
+      "experiment_type": "strategy_backtest",
+      "experiment_type_label": "策略回测",
+      "analysis": {
+        "conclusion": "当前执行基线，CAGR34.8%、夏普1.18；较BT v4收益更高，但换手增加、回撤未改善。",
+        "evidence": [
+          "records/887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5.json",
+          "reports/phase_m_v1_bt_v5.html",
+          "metrics/all_top5d1f100_m0h20es.json",
+          "metrics/m0h20es.json",
+          "records/a7569e62fa0b7e461670e8886c3751b4b8f2373c7e77e25e21eb9c72ede2d0fc.json",
+          "reports/all_top5d1f100_m0h20es.html"
+        ],
+        "limitations": "2020-08-03～2026-07-31为历史选型窗，参与早停与策略比较，非独立样本外检验。优势较依赖2025年，2021～2023收益低于BT v4；不代表实盘已激活或收益有保证。",
+        "review_status": "draft",
+        "updated_at": "2026-10-31"
+      },
+      "change_summary": "从v4模型真阶梯，改为v2模型Top5换1、最短持1日并启用F100。",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v4",
+        "version": "v4",
+        "initial": false,
+        "display_version": "s4"
+      },
+      "core_results": {
+        "kind": "baseline_comparison",
+        "status": "available",
+        "title": "实验组与Baseline",
+        "note": "Baseline为本次实验当时的对照。指标窗口：2020-08-03～2026-07-31。",
+        "warnings": [],
+        "records": [
+          {
+            "id": "baseline/phase-m-v1-bt-v4",
+            "kind": "strategy",
+            "track": "all_a",
+            "role": "baseline",
+            "name": "Baseline · BT v4",
+            "version": "",
+            "directory": "backtest/experiments/strategies/cohort-ladder/v4-k3-h5-f100-refill/variants/bt-v4",
+            "metrics": {
+              "annualized_return": 0.2634041974432082,
+              "sharpe_ratio": 1.0384087313597832,
+              "alpha": 0.17403166896830952,
+              "beta": 0.8707829727525177,
+              "benchmark_cumulative_return": 0.5861751718482147,
+              "max_drawdown": -0.32955049506103196,
+              "calmar_ratio": 0.7992832703662799,
+              "annualized_volatility": 0.25712451821736354,
+              "annualized_one_way_turnover": 44.25754382759521,
+              "annualized_return_arith": 0.2670003447635879
+            },
+            "window": {
+              "start": "2020-08-03",
+              "end": "2026-07-31"
+            },
+            "seeds": [
+              42,
+              1000,
+              2000,
+              3000,
+              4000
+            ],
+            "source": "backtest/experiments/regime-adapt/m0h20rankices-all-ladder-k3h5-bt/metrics/all_ladder_k3h5_m0h20rankices.json",
+            "display_version": "",
+            "display_name": "Baseline · s4"
+          },
+          {
+            "id": "baseline/phase-m-v1-bt-v5",
+            "kind": "strategy",
+            "track": "all_a",
+            "role": "experiment",
+            "name": "实验组 · v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+            "version": "",
+            "directory": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5",
+            "metrics": {
+              "annualized_return": 0.3483992380540464,
+              "sharpe_ratio": 1.1773900944016509,
+              "alpha": 0.24674697308104526,
+              "beta": 0.8835077769150542,
+              "benchmark_cumulative_return": 0.5861751718482147,
+              "max_drawdown": -0.330239863785206,
+              "calmar_ratio": 1.0549884379817076,
+              "annualized_volatility": 0.28968666151630157,
+              "annualized_one_way_turnover": 73.32794962840944,
+              "annualized_return_arith": 0.3410742057495774
+            },
+            "window": {
+              "start": "2020-08-03",
+              "end": "2026-07-31"
+            },
+            "seeds": [
+              42,
+              1000,
+              2000,
+              3000,
+              4000
+            ],
+            "source": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+            "display_version": "",
+            "display_name": "实验组 · v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）"
+          }
+        ]
+      },
+      "model_summary": {
+        "ref": "regime-adapt/m0-h20-t5h5-es-v1",
+        "version": "v2",
+        "name": "Top5早停"
+      },
+      "strategy_summary": {
+        "name": "Top5换1·持1·F100",
+        "description": "常规最多换1只、最短持有1日；掉出前100或缺有效分数可绕过换仓/持有期限制触发强卖。100万、risk=0.90、历史费率。"
+      },
+      "display_version": "s5",
+      "display_name": "v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+      "display_promoted_version": "s5"
+    },
+    {
+      "id": "regime-adapt/quantile10-p50-ladder-20261107-v1",
+      "kind": "strategy",
+      "name": "v5 等样本10档 · 真阶梯Top3×H5",
+      "version": "",
+      "current": false,
+      "is_baseline": false,
+      "status": "completed",
+      "source_status": "available",
+      "date": "2026-11-07",
+      "direction": "phase-m-v1-bt",
+      "baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "seeds": [
+        42,
+        1000,
+        2000,
+        3000,
+        4000
+      ],
+      "official": true,
+      "comparable": true,
+      "comparison_key": "phase_m_v1:strategy:80af138645ba4a984deb",
+      "scope": "standard",
+      "window": {
+        "start": "2020-08-03",
+        "end": "2026-07-31"
+      },
+      "pool": "all",
+      "metrics": {
+        "annualized_return": 0.27759333125624175,
+        "sharpe_ratio": 1.094947558809647,
+        "alpha": 0.18613397581896265,
+        "beta": 0.8520021187930433,
+        "benchmark_cumulative_return": 0.5861752007260437,
+        "max_drawdown": -0.32445112354925043,
+        "calmar_ratio": 0.8555782708334624,
+        "annualized_volatility": 0.253069221724618,
+        "annualized_one_way_turnover": 44.223470671076996,
+        "annualized_return_arith": 0.27709752653722775
+      },
+      "years": {
+        "2020": {
+          "annualized_return": 0.27767061629666223,
+          "sharpe_ratio": 1.168316394858076,
+          "alpha": 0.3446767749904745,
+          "beta": 0.9307321149069969,
+          "benchmark_cumulative_return": -0.03900638232749465,
+          "max_drawdown": -0.11315886322738378,
+          "calmar_ratio": 2.4538123517439825,
+          "annualized_volatility": 0.23270312370137136,
+          "annualized_one_way_turnover": 41.91179109196409,
+          "annualized_return_arith": 0.2718708745549991
+        },
+        "2021": {
+          "annualized_return": 0.46768436402362856,
+          "sharpe_ratio": 1.7323418480172719,
+          "alpha": 0.15720012869029026,
+          "beta": 1.0162892555357712,
+          "benchmark_cumulative_return": 0.2598020963723504,
+          "max_drawdown": -0.17032460228270363,
+          "calmar_ratio": 2.745841515293071,
+          "annualized_volatility": 0.23794821317993325,
+          "annualized_one_way_turnover": 44.088817726528866,
+          "annualized_return_arith": 0.41220764735253335
+        },
+        "2022": {
+          "annualized_return": 0.1586698725291238,
+          "sharpe_ratio": 0.6849616976759891,
+          "alpha": 0.25375352753272357,
+          "beta": 0.9098749633486174,
+          "benchmark_cumulative_return": -0.09805779793087976,
+          "max_drawdown": -0.3244511235492502,
+          "calmar_ratio": 0.489040909439287,
+          "annualized_volatility": 0.26740726426813877,
+          "annualized_one_way_turnover": 43.800139745086526,
+          "annualized_return_arith": 0.1831637337039962
+        },
+        "2023": {
+          "annualized_return": 0.23510718340909986,
+          "sharpe_ratio": 1.2831681086116626,
+          "alpha": 0.14363327391511782,
+          "beta": 0.8886258471798566,
+          "benchmark_cumulative_return": 0.08314551562437988,
+          "max_drawdown": -0.11997160972319254,
+          "calmar_ratio": 1.959690162960693,
+          "annualized_volatility": 0.1766576837603899,
+          "annualized_one_way_turnover": 44.37932643326904,
+          "annualized_return_arith": 0.22668150594253675
+        },
+        "2024": {
+          "annualized_return": 0.23771718015637333,
+          "sharpe_ratio": 0.7825259416814664,
+          "alpha": 0.18726818921327765,
+          "beta": 0.8197906608167798,
+          "benchmark_cumulative_return": 0.04273347770399405,
+          "max_drawdown": -0.30802357561489435,
+          "calmar_ratio": 0.771749953495698,
+          "annualized_volatility": 0.3504817101745466,
+          "annualized_one_way_turnover": 44.71307673973757,
+          "annualized_return_arith": 0.27426103029646787
+        },
+        "2025": {
+          "annualized_return": 0.42874168969060356,
+          "sharpe_ratio": 1.9384743807547618,
+          "alpha": 0.11834864054711258,
+          "beta": 0.7120648527154861,
+          "benchmark_cumulative_return": 0.38905274099832665,
+          "max_drawdown": -0.09433643185442209,
+          "calmar_ratio": 4.544815627033979,
+          "annualized_volatility": 0.19391708788432324,
+          "annualized_one_way_turnover": 44.76806903474292,
+          "annualized_return_arith": 0.3759033068543302
+        },
+        "2026": {
+          "annualized_return": 0.09544508599432877,
+          "sharpe_ratio": 0.4690870337381392,
+          "alpha": 0.2239152471786689,
+          "beta": 0.8804749177371414,
+          "benchmark_cumulative_return": -0.07408577040736763,
+          "max_drawdown": -0.21925017540879865,
+          "calmar_ratio": 0.43532501543667407,
+          "annualized_volatility": 0.27349044661008665,
+          "annualized_one_way_turnover": 44.83304319500754,
+          "annualized_return_arith": 0.12829082235604447
+        }
+      },
+      "regimes": {
+        "D": {
+          "annualized_return": 0.17208643181787808,
+          "sharpe_ratio": 0.7930788918086173,
+          "alpha": 0.18395589593323047,
+          "beta": 0.8955964751246352,
+          "benchmark_cumulative_return": -0.07297152686121255,
+          "max_drawdown": -0.32445112354925054,
+          "calmar_ratio": 0.5303924669311739,
+          "annualized_volatility": 0.2352159165824921,
+          "annualized_one_way_turnover": 44.03225133527612,
+          "annualized_return_arith": 0.18654477845899103
+        },
+        "F": {
+          "annualized_return": 1.3555445885847126,
+          "sharpe_ratio": 2.417096725143149,
+          "alpha": 0.3362856229256137,
+          "beta": 0.7698288536135677,
+          "benchmark_cumulative_return": 0.4530452755252876,
+          "max_drawdown": -0.14081805119598545,
+          "calmar_ratio": 9.626213238089163,
+          "annualized_volatility": 0.38538087013257305,
+          "annualized_one_way_turnover": 44.756367490231156,
+          "annualized_return_arith": 0.9315028391302594
+        },
+        "T": {
+          "annualized_return": 0.29366610393358616,
+          "sharpe_ratio": 1.2145017091052928,
+          "alpha": 0.1546690781913723,
+          "beta": 0.8516604117787812,
+          "benchmark_cumulative_return": 0.1775488574168902,
+          "max_drawdown": -0.2192501754087981,
+          "calmar_ratio": 1.3394110330175903,
+          "annualized_volatility": 0.23473148496826585,
+          "annualized_one_way_turnover": 44.61521600144681,
+          "annualized_return_arith": 0.2850817896747822
+        }
+      },
+      "protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+      "hypothesis": "用户指定新模型v5执行固定真阶梯，与当前回测基线历史s5比较；附同v5信号固定s5控制臂，无策略调参。",
+      "conclusion": "v5真阶梯：CAGR 27.76%、夏普 1.095、最大回撤 -32.45%；历史s5：34.84%／1.177／-33.02%；同v5固定s5：18.73%／0.754／-37.51%。模型v5按用户要求晋升；执行层基线仍为历史s5。",
+      "note": "内部固定s5控制臂与完整三方对比见详情；当前BT仍为历史s5，研究模型晋升不构成生产切换。",
+      "promoted_to": "",
+      "promoted_from": "",
+      "warnings": [
+        "历史 st_daily 元数据缺失，按 EXPERIMENT_STANDARD 日频名单补足",
+        "历史过滤元数据缺失，按 EXPERIMENT_STANDARD 的本轨道协议标识",
+        "历史费用元数据缺失，按 EXPERIMENT_STANDARD 本轨道费率标识",
+        "策略历史对照版本与引用不符：regime-adapt/quantile10-p50-ladder-20261107-v1"
+      ],
+      "resources": [
+        {
+          "id": "95eafb7c8dff6c70180304ab",
+          "name": "detail.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "f942a2d7ccb9e2895401bdf5",
+          "name": "ladder.json",
+          "available": true,
+          "kind": "metrics"
+        },
+        {
+          "id": "17b950641d509eec3fa6b905",
+          "name": "ladder.yaml",
+          "available": true,
+          "kind": "config"
+        },
+        {
+          "id": "de5777f6014d9475424f59f1",
+          "name": "s5.yaml",
+          "available": true,
+          "kind": "config"
+        },
+        {
+          "id": "65237f0f4e42ce87f32fc0e9",
+          "name": "report.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "1d5d08e2da862f2c14504725",
+          "name": "metadata.json",
+          "available": true,
+          "kind": "metadata"
+        },
+        {
+          "id": "242af9ebc2c7b186602951e5",
+          "name": "harness-plan.json",
+          "available": true,
+          "kind": "config"
+        },
+        {
+          "id": "eed4d6e270c964715adb2204",
+          "name": "comparison.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "7c88980673b656ce4c3c7623",
+          "name": "ladder-account.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "2397b5e4b7daa8e2c455590d",
+          "name": "s5-account.html",
+          "available": true,
+          "kind": "report"
+        },
+        {
+          "id": "6311dce906ba39b429bb5611",
+          "name": "adapter-account.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "36ff987193d8dab1099b9a13",
+          "name": "adapter-common.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "0fbc2ef93379fdd3be1a28c7",
+          "name": "adapter-finalize.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "07bd6a07f0502925ed2a3df6",
+          "name": "adapter-init_accounts.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "07510ac1658fd219df2ef44f",
+          "name": "adapter-prepare.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "41f583ef203ab26eb6dfed09",
+          "name": "adapter-prepare_v2.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "c1137ed4d11f0c8a9e458cbf",
+          "name": "adapter-promote.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "204251499a6bccc900cdf48f",
+          "name": "adapter-sync_baseline_docs.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "39a00b9e9230d604bb97b5cf",
+          "name": "baseline-record.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "3fce3ffdeccf5b14f59366a3",
+          "name": "execution-state.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "678ae4aea69d11e0ca7aa2bf",
+          "name": "harness-compatibility.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "c0350cd244760a7d54f9767e",
+          "name": "harness-state.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "8c6aede3162f1edfa52b45e3",
+          "name": "ladder-signal.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "673461a88a7a7a67247d793d",
+          "name": "native-event-1.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "068660adc67f7a491a3ae8ad",
+          "name": "native-event-2.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "22c5d4c46ed77164da374b8f",
+          "name": "native-event-3.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "c186df3d6e7d03d3cb670e3d",
+          "name": "native-event-4.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "59ffe50257435c7bb0be3a6e",
+          "name": "native-event-5.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "1709b79b663aba719d5532b1",
+          "name": "preflight-adapter-failure.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "562997f186b7ba9e856afebd",
+          "name": "s5-signal.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "c2e442be74747cb6247c4d34",
+          "name": "scientific-verification.json",
+          "available": true,
+          "kind": "plan"
+        },
+        {
+          "id": "011d75ec634f978ddc5f19ef",
+          "name": "ladder-account.csv",
+          "available": true,
+          "kind": "metrics"
+        },
+        {
+          "id": "758545d251c460ac9eddf419",
+          "name": "ladder-account.pkl",
+          "available": false,
+          "kind": "metrics"
+        },
+        {
+          "id": "66d65e9f1890c9c5c0ecc80b",
+          "name": "s5-account.csv",
+          "available": true,
+          "kind": "metrics"
+        },
+        {
+          "id": "367a6cfa439cff69b3f9183f",
+          "name": "s5-account.pkl",
+          "available": false,
+          "kind": "metrics"
+        },
+        {
+          "id": "cf8ae7678d693a84890ebf56",
+          "name": "s5.json",
+          "available": true,
+          "kind": "metrics"
+        },
+        {
+          "id": "f3c1107aca599b9278a583ce",
+          "name": "a220ce4224abc15af7ee6381ee21461442736543b55b810b9429801091ed39c2.json",
+          "available": true,
+          "kind": "registry_record"
+        }
+      ],
+      "source": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json",
+      "original_source": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json",
+      "track": "all_a",
+      "protocol_id": "phase_m_v1:strategy",
+      "registered": true,
+      "activity": "execution_backtest",
+      "role": "experiment",
+      "directory": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1",
+      "metadata_path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metadata.json",
+      "promoted_version": "",
+      "analysis_revision": "5297fdaffc6ac8ff160c0d1264af9794f47a13f05e5256ea7a66013235f7b14c",
+      "experiment_type": "strategy_backtest",
+      "experiment_type_label": "策略回测",
+      "analysis": {
+        "conclusion": "v5真阶梯：CAGR 27.76%、夏普 1.095、最大回撤 -32.45%；历史s5：34.84%／1.177／-33.02%；同v5固定s5：18.73%／0.754／-37.51%。模型v5按用户要求晋升；执行层基线仍为历史s5。",
+        "evidence": [
+          "metrics/ladder.json",
+          "metrics/s5.json",
+          "docs/scientific-verification.json",
+          "reports/comparison.html"
+        ],
+        "limitations": "历史选型窗口，非独立样本外。 历史s5与v5模型输入快照/配方不同，单独以同v5控制臂隔离执行规则。",
+        "updated_at": "2026-11-07"
+      },
+      "change_summary": "",
+      "comparison_baseline": {
+        "ref": "baseline/phase-m-v1-bt-v5",
+        "version": "",
+        "initial": false,
+        "display_version": ""
+      },
+      "core_results": {
+        "kind": "baseline_comparison",
+        "status": "available",
+        "title": "实验组与Baseline",
+        "note": "Baseline为本次实验当时的对照。",
+        "warnings": [
+          "当时Baseline缺失、来源无效或引用不匹配，保留空值对照行。"
+        ],
+        "records": [
+          {
+            "id": "baseline/phase-m-v1-bt-v5",
+            "kind": "strategy",
+            "track": "all_a",
+            "role": "baseline",
+            "name": "Baseline · 未登记",
+            "version": "",
+            "directory": "",
+            "metrics": {
+              "annualized_return": null,
+              "sharpe_ratio": null,
+              "alpha": null,
+              "beta": null,
+              "benchmark_cumulative_return": null,
+              "max_drawdown": null,
+              "calmar_ratio": null,
+              "annualized_volatility": null,
+              "annualized_one_way_turnover": null,
+              "annualized_return_arith": null
+            },
+            "window": {},
+            "seeds": [],
+            "source": "",
+            "display_version": "",
+            "display_name": "Baseline · 未登记"
+          },
+          {
+            "id": "regime-adapt/quantile10-p50-ladder-20261107-v1",
+            "kind": "strategy",
+            "track": "all_a",
+            "role": "experiment",
+            "name": "实验组 · v5 等样本10档 · 真阶梯Top3×H5",
+            "version": "",
+            "directory": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1",
+            "metrics": {
+              "annualized_return": 0.27759333125624175,
+              "sharpe_ratio": 1.094947558809647,
+              "alpha": 0.18613397581896265,
+              "beta": 0.8520021187930433,
+              "benchmark_cumulative_return": 0.5861752007260437,
+              "max_drawdown": -0.32445112354925043,
+              "calmar_ratio": 0.8555782708334624,
+              "annualized_volatility": 0.253069221724618,
+              "annualized_one_way_turnover": 44.223470671076996,
+              "annualized_return_arith": 0.27709752653722775
+            },
+            "window": {
+              "start": "2020-08-03",
+              "end": "2026-07-31"
+            },
+            "seeds": [
+              42,
+              1000,
+              2000,
+              3000,
+              4000
+            ],
+            "source": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json",
+            "display_version": "",
+            "display_name": "实验组 · v5 等样本10档 · 真阶梯Top3×H5"
+          }
+        ]
+      },
+      "model_summary": {
+        "ref": "training-target/h20-quantile10-p50-v5",
+        "version": "v5",
+        "name": "等样本10档 · H20／patience50"
+      },
+      "strategy_summary": {
+        "name": "v5 等样本10档 · 真阶梯Top3×H5",
+        "description": ""
+      },
+      "display_version": "",
+      "display_name": "v5 等样本10档 · 真阶梯Top3×H5",
+      "display_promoted_version": ""
+    }
+  ],
+  "archive_errors": []
+}

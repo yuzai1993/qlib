@@ -1,0 +1,51 @@
+{
+  "at": 1794021708.2568572,
+  "user_instruction": "n的实验在一份样本上做就行了，在效果比较好的样本上，不用两份都做。",
+  "selected_label_source": "old",
+  "selection_basis": "Existing continuous H20/patience50 control old net_ann31.31% versus new29.49%; source selected before any new n evaluation.",
+  "original_contract": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/configs/harness-plan.json",
+    "sha256": "decf4cce43926fe9d898284c7768dd8d30b4d231b22bc7ad1c1ae6dea34f1d70",
+    "size": 16582
+  },
+  "original_study": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/configs/frozen-study.json",
+    "sha256": "74247e669b364dab015be7b28753eba0f765eefaa8b6808d84518ce548181b3e",
+    "size": 5666
+  },
+  "preserved_deadline": 1794054485.268165,
+  "preserved_prior_fit_cost": 146,
+  "already_started_fits": 5,
+  "nominal_total_fits": 30,
+  "remaining_nominal_fits": 25,
+  "run_priority": [
+    "quantile7",
+    "quantile15",
+    "quantile20",
+    "quantile30",
+    "quantile50",
+    "quantile3"
+  ],
+  "job_treatments": {
+    "quantile7": "new",
+    "quantile15": "old",
+    "quantile20": "old",
+    "quantile30": "old",
+    "quantile50": "old",
+    "quantile3": "old"
+  },
+  "equivalence_reuse": {
+    "quantile7": "Five already trained new-labelled jobs reused because prepared old/new float32 targets are exactly identical, with unchanged affine transform; no independent replicate claimed."
+  },
+  "cancelled_branches": {
+    "quantile7": "old redundant duplicate",
+    "quantile15": "new counterpart cancelled by user",
+    "quantile20": "new counterpart cancelled by user",
+    "quantile30": "new counterpart cancelled by user",
+    "quantile50": "new counterpart cancelled by user",
+    "quantile3": "new counterpart cancelled by user"
+  },
+  "scope": "Only suppress duplicate source branches and use pre-existing old-label treatment as the primary comparison. Six frozen n, features, actual target arrays, affine encodings, seeds, model/early-stop/evaluation protocol and original wallclock remain unchanged. No new scientific candidate or budget reset.",
+  "formal_harness_scope": "Original native budget remains an upper bound; exact reduced job schedule is append-only supplementary amendment, linked by native note. Future fits must match job_treatments.",
+  "comparison": "All new n compare to old continuous H20 and prior n5/n10 old-label results; new-label results are historical provenance only."
+}

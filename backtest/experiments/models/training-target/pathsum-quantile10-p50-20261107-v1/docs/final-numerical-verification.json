@@ -1,0 +1,314 @@
+{
+  "at": 1794074346.463673,
+  "status": "complete",
+  "models": [
+    {
+      "job_id": "h7q10-new-s42-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9f4f47324fbc095e4752d0b631f680c900c04e9c3fcf363555923c3e59a68c92",
+        "size": 58941936
+      },
+      "rows": 5461850,
+      "best_iteration": 25,
+      "observed_rounds": 75
+    },
+    {
+      "job_id": "h7q10-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ea3ea4e0acc92b6dbe5b9b1861ac5e6a1438dba38f1da8596cd1d920bb42f681",
+        "size": 58718588
+      },
+      "rows": 5461850,
+      "best_iteration": 11,
+      "observed_rounds": 61
+    },
+    {
+      "job_id": "h7q10-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0cc96e6f231c106fdecd25c51b72a2cba81db02903121980d914835ba9230322",
+        "size": 59074844
+      },
+      "rows": 5461850,
+      "best_iteration": 32,
+      "observed_rounds": 82
+    },
+    {
+      "job_id": "h7q10-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0311f69182cdbac28cb00fd8f8952985fde5c7c4fc330a03bdf24bceab88ec3f",
+        "size": 58683671
+      },
+      "rows": 5461850,
+      "best_iteration": 9,
+      "observed_rounds": 59
+    },
+    {
+      "job_id": "h7q10-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a787a3d7a36297a7933f0ccab628745d34db2f05f3ad708d8a60838bb870eb89",
+        "size": 58958399
+      },
+      "rows": 5461850,
+      "best_iteration": 24,
+      "observed_rounds": 74
+    },
+    {
+      "job_id": "h15q10-new-s42-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "35617facfa8e3b5d2ac06d90a5f18c5e7b8500b93ae1adf573244f4037ce17e2",
+        "size": 59667416
+      },
+      "rows": 5449337,
+      "best_iteration": 68,
+      "observed_rounds": 118
+    },
+    {
+      "job_id": "h15q10-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a07a5212dfdd31214825d01a5d6be3e0ccb47b193e8e900ee6584c93e08a2bc0",
+        "size": 59791844
+      },
+      "rows": 5449337,
+      "best_iteration": 73,
+      "observed_rounds": 123
+    },
+    {
+      "job_id": "h15q10-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "42e8ab570b4c83d8e50f3370c9d17c11ade118a55f93d02ca07728e136b052e3",
+        "size": 59888287
+      },
+      "rows": 5449337,
+      "best_iteration": 79,
+      "observed_rounds": 129
+    },
+    {
+      "job_id": "h15q10-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1a37b913e8e6b3022cb5157f71518f24aef7545a7671bb7bcacf7d7860174bd3",
+        "size": 59334539
+      },
+      "rows": 5449337,
+      "best_iteration": 46,
+      "observed_rounds": 96
+    },
+    {
+      "job_id": "h15q10-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "bc77d8350da1605897b873c4bb23f994646018dcb3f3fd9bd27be8cf4f063c36",
+        "size": 60360007
+      },
+      "rows": 5449337,
+      "best_iteration": 107,
+      "observed_rounds": 157
+    },
+    {
+      "job_id": "sum20continuous-new-s42-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "cd4d51b7f6249a340bd0ec278571ac99417100ba01b65724c12181141eeaa9b3",
+        "size": 58564577
+      },
+      "rows": 5448963,
+      "best_iteration": 3,
+      "observed_rounds": 53
+    },
+    {
+      "job_id": "sum20continuous-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2cb81cd728c42fee5e3779b4c194ff8962bb46b7573d0e7fca419269f1005c1e",
+        "size": 58950720
+      },
+      "rows": 5448963,
+      "best_iteration": 23,
+      "observed_rounds": 73
+    },
+    {
+      "job_id": "sum20continuous-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e23451a208d8a2c2e68050da54986c8491d957581da4e7f9e41a854398685e32",
+        "size": 59278709
+      },
+      "rows": 5448963,
+      "best_iteration": 43,
+      "observed_rounds": 93
+    },
+    {
+      "job_id": "sum20continuous-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9a981fa8b1a7226fe359c5611cbf9ab5b6feed88ab4563b1f646ff80c9520008",
+        "size": 58855212
+      },
+      "rows": 5448963,
+      "best_iteration": 18,
+      "observed_rounds": 68
+    },
+    {
+      "job_id": "sum20continuous-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "339a1a33dc76cd83b7a18472ad9c1fbb0f3a5c2db6aabaa7b18bb97cdea20a20",
+        "size": 58665952
+      },
+      "rows": 5448963,
+      "best_iteration": 8,
+      "observed_rounds": 58
+    },
+    {
+      "job_id": "sum20q10-new-s42-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2b3d33eb2861ac1441cb05c43c5b60781c78d551bf5e18d6833bc6e7d5b0dccc",
+        "size": 59044836
+      },
+      "rows": 5448963,
+      "best_iteration": 28,
+      "observed_rounds": 78
+    },
+    {
+      "job_id": "sum20q10-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b5ae652a72dc1808d555c16467c18a06ff408cb1316631d24ee5c567feb8abe4",
+        "size": 59230736
+      },
+      "rows": 5448963,
+      "best_iteration": 40,
+      "observed_rounds": 90
+    },
+    {
+      "job_id": "sum20q10-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a63ba2570ac8b5802f672b57a49c90e3906c74e67909cb574ae273001a7129c3",
+        "size": 58543977
+      },
+      "rows": 5448963,
+      "best_iteration": 2,
+      "observed_rounds": 52
+    },
+    {
+      "job_id": "sum20q10-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1d256058a7ca691e4961c6e144619a3da78c376e656536b580484eb84dbc1db9",
+        "size": 59620631
+      },
+      "rows": 5448963,
+      "best_iteration": 65,
+      "observed_rounds": 115
+    },
+    {
+      "job_id": "sum20q10-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5ccfb7dde67a8460f082935990ceba6db4836cbbe4441a8477fdcb28d391b06f",
+        "size": 59145947
+      },
+      "rows": 5448963,
+      "best_iteration": 34,
+      "observed_rounds": 84
+    }
+  ],
+  "prediction_groups": [
+    {
+      "variant": "h7q10",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "prediction_proof": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-h7q10-new.json",
+        "sha256": "30490a098dea8bf40a70305efca473470ff9f60407ab94870e2a85880ba7ad97",
+        "size": 4380
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h7q10-new.json",
+        "sha256": "a34f322219968c3ca30fc7be2d7d26733bd92acf6e7bc0d9eec67e63dae73db7",
+        "size": 89026
+      }
+    },
+    {
+      "variant": "h15q10",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "prediction_proof": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-h15q10-new.json",
+        "sha256": "e27f7e22cea4c6551a255e692e85e6f531a7fd648cd3ddfb41710bb733970f6a",
+        "size": 4402
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h15q10-new.json",
+        "sha256": "70803ff9d10ca0196df8781c5e9d80f9028a1cfa3ce89f47065ab164537a4aed",
+        "size": 88996
+      }
+    },
+    {
+      "variant": "sum20continuous",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "prediction_proof": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-sum20continuous-new.json",
+        "sha256": "e12ec783724ad7265d8dee305a7c9be689659e31683e2d57f408e2f2a4e21cfc",
+        "size": 4600
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20continuous-new.json",
+        "sha256": "5b94937c17b1f601157451f8614960a2e7bde13a8daf54683170f73ee01d09c1",
+        "size": 89131
+      }
+    },
+    {
+      "variant": "sum20q10",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "prediction_proof": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-sum20q10-new.json",
+        "sha256": "828d4c37f880bed36489fccb786059d4bf4b92a269b8e1dfe4b3c09b4bdc4e3d",
+        "size": 4446
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+        "sha256": "19a6d6b148033cb655fe52f843d397f0dd8ddf82a16097bce4e163c4fccab018",
+        "size": 89086
+      }
+    }
+  ],
+  "actual_fits": 20,
+  "technical_retries": 0,
+  "prior_fits": 176,
+  "cumulative_fits": 196,
+  "native_ledger_matches": true,
+  "four_target_rows_features_validation_masks_parameters_verified": true,
+  "weights_and_labels_identical_across_each_five_seed_group": true,
+  "same_original_H20_rows_for_sum": true,
+  "five_controls_match_canonical_metrics": true,
+  "annual_formal_inference_control_exact": true,
+  "source_amendment": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/missing-price-amendment.json",
+    "sha256": "7e4da3d0b87ea9edbff83ea2ddf2712a8e0650a4fde723286cb300be904db160",
+    "size": 2145
+  },
+  "preflight": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/preflight-verification.json",
+    "sha256": "91711cc7922a1067392ce461f79d4992d6a4c12784ffd54951187c560f184c94",
+    "size": 770
+  },
+  "replay": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/early-stopping-replay.json",
+    "sha256": "e163efdec6c1bbc4e9383514778b53d1acf79a744c9d806990d939645f2fa24b",
+    "size": 20122
+  },
+  "limits": "Historical selection window. No independent OOS. Verifies saved input/model identities and exact four-ensemble arithmetic; independent selected-return recomputation is separately recorded in review audits."
+}

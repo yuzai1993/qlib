@@ -1,0 +1,2472 @@
+{
+  "schema_version": 2,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/harness-state.json",
+  "plan": {
+    "schema_version": 2,
+    "campaign_id": "pathsum-quantile10-p50-20261107-v1",
+    "idea": "1.Hn标签等于H1到Hn原始累计收益之和，先做H20，不分档和10档。2.H7/H15做10档，与H20比较分风格，检验T减弱D增强是否普遍。",
+    "track": "all_a_model",
+    "direction": "training-target",
+    "anchor_exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+    "archive_path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1",
+    "baseline_ref": "training-target/h20-quantile10-p50-v5",
+    "allowed_changes": [
+      "training_label_recipe"
+    ],
+    "selection_rule": "{\"H_ranking\": \"Among H7/H15/H20, list all maximizers separately in each D/F/T for net_ann and Sharpe, before and after q10. Historical seven-H conclusions are context, not a new seven-H sweep.\", \"universal\": \"For each H compute q10 minus same-source continuous. T deterioration requires all three net_ann differences < -1e-12; D improvement all three >1e-12. Report counts, every difference, Sharpe separately, and per-seed/year consistency. No claim beyond tested three H.\", \"path_sum\": \"Compare sum20continuous vs original H20continuous, sum20q10 vs original H20q10, and within sum20 q10 vs continuous; separate returns/Sharpe/RankIC.\", \"mechanism\": \"Train-only relation between path-sum rank and realized path volatility conditional on daily terminal-return deciles; illustrative equal-terminal paths to show no guaranteed lower-volatility preference. Descriptive, not a selection criterion.\", \"limitations\": \"Historical selection window; F only136days/seven2024months; no independent OOS and no automatic promotion.\"}",
+    "data_version": "2026-11-03",
+    "inputs": [
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/train_dates_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/prepared-inputs.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/provider-inputs.json.gz",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-new.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h7.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h7.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-model.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s42.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s42_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s1000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s1000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s2000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s2000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s3000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s3000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s4000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s4000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2004.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2005.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2006.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2007.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2008.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2009.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2010.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2011.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2012.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2013.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2014.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2015.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2016.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2017.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2018.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2019.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2020.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h15.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h15.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-model.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s42.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s42_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s1000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s1000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s2000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s2000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s3000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s3000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s4000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s4000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2004.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2005.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2006.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2007.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2008.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2009.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2010.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2011.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2012.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2013.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2014.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2015.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2016.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2017.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2018.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2019.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2020.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h20.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h20.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s42.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s42_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s1000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s1000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s2000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s2000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s3000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s3000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s4000.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s4000_pred.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2004.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2005.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2006.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2007.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2008.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2009.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2010.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2011.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2012.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2013.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2014.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2015.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2016.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2017.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2018.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2019.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2020.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-new.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_new_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-new-s42.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s42-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-new-s1000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s1000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-new-s2000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s2000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-new-s3000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s3000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-new-s4000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s4000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-new-ensemble.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-old.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/frozen-study.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/evaluation.yaml",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/environment.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/adapter-common.json",
+      "/Users/yuxianqi/Project/qlib/backtest/models/regime_adapt.py",
+      "/Users/yuxianqi/Project/qlib/backtest/models/rankic_early_stop.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/train/train_regime_arm.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/ensemble_preds.py"
+    ],
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "budget": {
+      "max_rounds": 1,
+      "max_variants": 4,
+      "max_attempts_per_variant": 2,
+      "max_wall_hours": 10,
+      "max_no_new_evidence_rounds": 1,
+      "concurrency": 1
+    },
+    "execution_budget": {
+      "max_model_fits": 22,
+      "new_label_horizons": [
+        7,
+        15,
+        20
+      ]
+    },
+    "scientific_candidate_count": 4,
+    "temporary_directory": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b",
+    "known_native_scope_gap": "One model study entry; four internal candidates plus reused controls. Native parent lifecycle and actual fit ledger; supplementary candidate/report ledger maintains four distinct identities and scientific results. Representative sum20q10 predeclared, not selected winner.",
+    "prior_cumulative_model_fits": 176
+  },
+  "plan_source": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/harness-plan.json",
+    "sha256": "ed51731b1fb6b4d1ea08b4e1ff977099a6b5b6be77d78cf0be11fabac5fd6a20",
+    "size": 23305
+  },
+  "inputs": [
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a",
+      "size": 38931
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+      "sha256": "90783e819314072df08549698fc85a8657fce1359f105d0735b4c678b5a272a3",
+      "size": 97032
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/prepared-inputs.json",
+      "sha256": "15dba15734e0b6db22ac383b59512de08e22f99377e4810eb5fd4ff2a77224c0",
+      "size": 9922
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/provider-inputs.json.gz",
+      "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+      "size": 1937741
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+      "size": 30202983
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+      "size": 9535
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json",
+      "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16",
+      "size": 88524
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-new.json",
+      "sha256": "b22846cc42ca0aa382332247e102c6e1601887adcbe06d76d09bb45cae674a18",
+      "size": 88523
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h7.json",
+      "sha256": "68b09e8b9da16b7746abbc9d98f59ddfe3fff47b44075c2e18971d47029824a9",
+      "size": 3176
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h7.json",
+      "sha256": "731edc315985a3c94e2db7ba63ca3590681e5eea8d37c025797588b7c1ce6549",
+      "size": 18220
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-model.json",
+      "sha256": "797fb80cbe9feaf279acdf78e09ed1d2c3c5ade73df568e4c572ca30a8e86978",
+      "size": 87956
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h7_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "380c74ab84a5b4b76a147ceabc15f352bed483f7226c67ada185429df131fde8",
+      "size": 58640952
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s42.json",
+      "sha256": "562f62c86410417627e67ba39d25f68a16e5e32030864404520b29783cbc3aab",
+      "size": 13747
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s42_pred.pkl",
+      "sha256": "789cc80acddae39a7c7853cc3d99b5af043f6b7fe1768ae15b7329df867e6997",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h7_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f65b79f765aa1ffd4abadc74d1d385d52636e8bdc1f55e64d87ec095badd4c2c",
+      "size": 59688388
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s1000.json",
+      "sha256": "864e8e9a1ee43b5a0222599f16dbca08782906ef6a561e3c875caaa01a0e6b04",
+      "size": 26956
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s1000_pred.pkl",
+      "sha256": "66bd70ff95cd4beacfbc4ea50c6e275609919e9137b0370eeb1109d3dc46e25f",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h7_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "601999952d38903f7ce0cefb4a21664b96745661294b32be05d9baf26c12a11b",
+      "size": 58902139
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s2000.json",
+      "sha256": "0cceb243225d4572b490545d1554d020e1e0f01a497d0f1ead8857188910d1ff",
+      "size": 16739
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s2000_pred.pkl",
+      "sha256": "28eb736b3dadf2e834efbdc0072efc3afd5bdcea576cf64cd9270afcdaa65a3b",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h7_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "77cd448f54ff6e9b4b045afedc0f459b1d0e218b94960dbec665ed32753c8dbc",
+      "size": 58733713
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s3000.json",
+      "sha256": "946ccf649c428c9fb322810f55d24740d43e218e84564435137130c12c5e5f1b",
+      "size": 14795
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s3000_pred.pkl",
+      "sha256": "bae22dc8495f85b46ef8c7d7937dc3fb10d275cdc65d9e4a66744dd51a07d669",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h7_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "dd5af1de822cffce141e161e6f65178e9c2711f8259f375a7ca3c162861f873f",
+      "size": 58823762
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h7-s4000.json",
+      "sha256": "a3e7bac9d79295e82ba0985e3b277cba92063b82cdb320beed4917ba84dc8a39",
+      "size": 15645
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h7/horizonp50_20261105_h7_s4000_pred.pkl",
+      "sha256": "e91ac237a177b8adacecd8f5b3e29d7da617b41d0c841fd505d24c5195bd718c",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2004.pkl",
+      "sha256": "49083e40eafb90cfbd492211ccd772d5a598cff227e73129f245ef4dd4bd398f",
+      "size": 4174505
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2005.pkl",
+      "sha256": "c685aa37f03d95665e9788bd35554b86c89b67bfd82cec829396de0d3e37213c",
+      "size": 4112202
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2006.pkl",
+      "sha256": "05bbe26c2b65b4a8361144986d566e0f3dc60dff7db53f7a53d36e766f6078cc",
+      "size": 3663732
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2007.pkl",
+      "sha256": "5ed1fac04a3d947fd772a9a300350adaf3bcce5c62f9c325286a373c04349d8a",
+      "size": 4340102
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2008.pkl",
+      "sha256": "7eb6b98f9b4f4d800918c145812421311acb691ebd16178b0bdfd1cefbaad416",
+      "size": 4981480
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2009.pkl",
+      "sha256": "6c8c10e64c5f785376bb3cfe85220551d05aadeafcd577c46e12e61fbfa89143",
+      "size": 5253230
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2010.pkl",
+      "sha256": "e51b01eacf22e4ce0beee001867caa1ff2ecf86b7c271f286ad12ad40e553e16",
+      "size": 5861625
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2011.pkl",
+      "sha256": "974544b1ef97db1694dbd8401bc90a70ebfcf439c7c0195cbd1d12f6083bda7d",
+      "size": 7059617
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2012.pkl",
+      "sha256": "658fa2f4802208b043ab769bef83c5a8af66888c04770767cb7895ece2673cec",
+      "size": 8013062
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2013.pkl",
+      "sha256": "67aad1a9a9ae8d5e7bf3fe17e636ca437bdb076b5014a6bc6b65cd6121856c18",
+      "size": 8064986
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2014.pkl",
+      "sha256": "8a4fc5322a68db42de8713a41391ba4b140e60255d4625cdebab05d282042a1a",
+      "size": 7848754
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2015.pkl",
+      "sha256": "e9727e95e4d4ad7b84fe538055f2bfc4286441013847568418ca1c12d6a9fae6",
+      "size": 7578544
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2016.pkl",
+      "sha256": "d03c0b1da70babf94f0109fa9ed0f6bcef804c9bac9ea6b4d38be68e62e7f6f6",
+      "size": 8964343
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2017.pkl",
+      "sha256": "ab01a6bc0affc77d0b9bd7671daa9a8c8d2514e7acbfc3c271ff803447d398fd",
+      "size": 10439959
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2018.pkl",
+      "sha256": "806802dc162f99781d79484cc793e9131239811514f29393bc88dd5ca18046a6",
+      "size": 12107595
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2019.pkl",
+      "sha256": "6eb9aa4bf7ffa01c870742b70bc81d722fba397a89dd1d576bfee330dfd3fb74",
+      "size": 13227076
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h7/2020.pkl",
+      "sha256": "3e3786057c21a59c9ebcf4d2ad6cd68a184d54bd82f71df2d6d6328ad34a420a",
+      "size": 7971691
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h15.json",
+      "sha256": "8998e64360b9a84262e9e08e123a4876bea88dc97e11647784198a886bab20f0",
+      "size": 3197
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h15.json",
+      "sha256": "a7a3e8f80e6985b120c5a6ec1d22d640cd9062362118d542a33a241409ae80e6",
+      "size": 18221
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-model.json",
+      "sha256": "ad959e4dd3996ee2da99d609472a97affa2dad75939b6e4d03db95c49063a13c",
+      "size": 87968
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h15_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "22606dba4667e684bdc5596b7571560906d8f73f7ac3eec0d0e2c40370fffe0f",
+      "size": 59554703
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s42.json",
+      "sha256": "8615cedee50c79378c1dd93c5b25c95056e417e2ac1b7d817b69736284269c73",
+      "size": 25011
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s42_pred.pkl",
+      "sha256": "37e22ae92d6d8c4c52c00ddc2b25377860c6a18353779769cb1f93e78b9cb006",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h15_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "d7f0541813051c8942a23c157e65d07b9c191cccf5835420042f3c73a59703e2",
+      "size": 59200403
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s1000.json",
+      "sha256": "c1b186f530ed142eb1f19b5bc9f16dbc5429a5a19590cefbef146a421664a742",
+      "size": 20630
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s1000_pred.pkl",
+      "sha256": "4f556ccdc50b6dcf5761207ab13fa0935626b12234909aa0eaa753fbdaaa2094",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h15_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "659f05f224f27d35161658abbe6103deccc0e85e4342fe35f3716d18931ab3c0",
+      "size": 59440295
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s2000.json",
+      "sha256": "480f520e1622be9998ab494299f1da8757b7cd08a76180cca518047e02dc3ef9",
+      "size": 23437
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s2000_pred.pkl",
+      "sha256": "85ca4d7b51dae0e963a13b2eeb8df33485b765e989063ce93c983713d8cbbf5e",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h15_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "37c7743f3643ca6531efe5e6ebcbee0953fc4fd99b080eb4cdc674495d34536b",
+      "size": 58565859
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s3000.json",
+      "sha256": "b07d1afe310b0b9fdba96d084256b1ce042114bc39d3d28d22ff92f535754a49",
+      "size": 12755
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s3000_pred.pkl",
+      "sha256": "023f89b4bb45a23ef54b0d6a7da94f34ef092c9defbb0e22df370299814595c5",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h15_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "09e445d36b0ff2c0a3627de03ca1c31f210f1f9e911b744b0897b79ef569d055",
+      "size": 60159985
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h15-s4000.json",
+      "sha256": "beda5a873eec0fc8551e68afa5f5afd5463654d3c669b14b538cbebe86487f0c",
+      "size": 32998
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h15/horizonp50_20261105_h15_s4000_pred.pkl",
+      "sha256": "243d16bc7e6cbb7fdf21787f8667b108579ae515bcce6beef5ccd1637052d8f9",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2004.pkl",
+      "sha256": "7d81bdf1c819ebc96398ba04c9e17c196de21076b53110105aaebd7af91cdcd1",
+      "size": 4174505
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2005.pkl",
+      "sha256": "f7074e5e0b0633bd850d739eb7df7d7c04781beee1acc60cde60617e352b3400",
+      "size": 4112202
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2006.pkl",
+      "sha256": "9f95d6b091fc0e219e3302b3a27813b7a7de3e135922308652db3f6e5a58bbd2",
+      "size": 3663732
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2007.pkl",
+      "sha256": "3bbaa642931259716b7a7769ccf91548acf1fd6aa64a780493c54ac3ce5193ac",
+      "size": 4340102
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2008.pkl",
+      "sha256": "550c8ae87c38f706dee1c95566af59ade86b4b4dd83f704d55c0bc5211069f15",
+      "size": 4981480
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2009.pkl",
+      "sha256": "271094b4fdab1f5893e434ec9969c4e93752c4e50a4c317d989ed7437757b403",
+      "size": 5253230
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2010.pkl",
+      "sha256": "9bcd6d4686a6a3e00ef1831f456ca3fb06f095557c107e8a2c222881dd179812",
+      "size": 5861625
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2011.pkl",
+      "sha256": "c298a752cab171e3511ca7447b4dce02ba99fad617fdf7172eaa7634730b1b00",
+      "size": 7059617
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2012.pkl",
+      "sha256": "0e8862bf3111b2e655cf75accebe529dfc32c653f48c8b7ce8d39ec7d7890fdc",
+      "size": 8013062
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2013.pkl",
+      "sha256": "3a0e2c6dff90f21e78b3a0e892f817ef857dbed29edd190ba0bbc860ea891f76",
+      "size": 8064986
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2014.pkl",
+      "sha256": "f079b13b9236a900a80e17866ac9dc30db26acaa249bad72da3e409991d16e29",
+      "size": 7848754
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2015.pkl",
+      "sha256": "5a716d3b683619aa79205495342414a267eda9421923d24dcab8419ffe4445e5",
+      "size": 7578544
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2016.pkl",
+      "sha256": "e00d0fd0232a35cfbe1f3e8fd3d499daa2f49dd65662ea4d99abc7f2e43f39f4",
+      "size": 8964343
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2017.pkl",
+      "sha256": "3b9fcec60da701cb7fa6ec2a57589f6fc653e54a0943530d1c4fd9c9f5dd5118",
+      "size": 10439959
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2018.pkl",
+      "sha256": "4e8ec9ee089cd24d873f8b318a8c9f86b7b79669497d7afcd4bf32c614209b63",
+      "size": 12107595
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2019.pkl",
+      "sha256": "4632454fc5dc49a3c22e76a575664c541af07a8beab4e385151a20ead5ddcbe0",
+      "size": 13227076
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h15/2020.pkl",
+      "sha256": "276f35c81146231582a813d7f633caced8532ae851cf18f9493016d2684eb85d",
+      "size": 7971691
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h20.json",
+      "sha256": "3cf4ec9166d58fa25cbd1c6c9f4ffa42b60af5a55c487f99c42e94b05c5cb9e5",
+      "size": 4968
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h20.json",
+      "sha256": "b21c1e3c83829e99362145d49ab832c24b20681d63413228cd3c6bd50fe76b7b",
+      "size": 18221
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+      "sha256": "406966331a8d6e63f3b703cd0663b37e7538c0a398e6a5e0c7814ff55e97b872",
+      "size": 87905
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "7fab0e7fa814358bf693560e833a334aa68badce15998c32ab8827ddcda8034e",
+      "size": 59330717
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s42.json",
+      "sha256": "66181542a03c00c7d04b672a5fd5798d9f01aeed43e0a62694998ec23473d43d",
+      "size": 22379
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s42_pred.pkl",
+      "sha256": "7d565f4d94c2b62e17071fd8b29290bfe5467e7251472f85c7c0087074a7d182",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e139762396447385de0ec1ff5a1cdbc6bac95200f8d9d94c1c9b581d1ea1e121",
+      "size": 59540837
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s1000.json",
+      "sha256": "dd41d50fa1bb8210383ceeda93be6f8f0891ce0c5eb89c240f065d7222b1e8eb",
+      "size": 25121
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s1000_pred.pkl",
+      "sha256": "2ee37c736ec6debe7f1012da5a048bbdf7f8adf6445f7e85516f396c0aa5a60a",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "3522cb7e221584ce12f14b4b8fc2cdca5b1299da1e09be325589e84fd4808d92",
+      "size": 59397247
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s2000.json",
+      "sha256": "f49e04e8a1ac43c425c325eeeb2388a7d8dfb5d9510ae4c6a1e571b74733d5e7",
+      "size": 23482
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s2000_pred.pkl",
+      "sha256": "1834d0504f99d7135162f08a99eb5f84478756505096ac872d6d933b8dd3e235",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "3a4f466c9f856a60707f87cc0e9314768d75325fbd3c197a8d6a00469feba9a8",
+      "size": 59312839
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s3000.json",
+      "sha256": "897e00dbbd4212d36dd0160e56e698644020ba7449d9bf52fd550d61a5d4e01a",
+      "size": 22065
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s3000_pred.pkl",
+      "sha256": "612664710f92d74ebd42a885a184d2f428135ae20c4fe220b516887cc6ed0455",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "ed5fd6c2efc6be90548cec352d77c790659529ba1496dcaf2514ca006d982180",
+      "size": 60307829
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/training-h20-s4000.json",
+      "sha256": "3dd1cc997f034cf48c56cd2d2e5013504622a55467365cdcd92708e10cc3f6ea",
+      "size": 35111
+    },
+    {
+      "path": "backtest/result/20261105_horizon_p50/h20/horizonp50_20261105_h20_s4000_pred.pkl",
+      "sha256": "a538fa1a3a0fa29eb39f7f2c08850884f92c0a346c5673dd43ec15a209853d69",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2004.pkl",
+      "sha256": "84d57d79772977f89ae7a958cefbfc09626b6c506cb716fefef16860a73a68b5",
+      "size": 4174505
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2005.pkl",
+      "sha256": "83e4bc56c7d8f8bcdcb1166755cbe09cd9ee0d52d40654fd1c0308c862ec89ea",
+      "size": 4112202
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2006.pkl",
+      "sha256": "72fd89b7f9a0251547525c3820536f92451a40bd8cf3a775643130b99f4a67b9",
+      "size": 3663732
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2007.pkl",
+      "sha256": "167c814217d1fb57d9f9179e8ca27ef4eedea1856595ad132ff4d4a91db9bfc3",
+      "size": 4340102
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2008.pkl",
+      "sha256": "beb69cda8c28d601e2b0b5ed9a82d4795db8900d30653d31f42c5c68bb766dfd",
+      "size": 4981480
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2009.pkl",
+      "sha256": "d19f0ce5b53dc6f47502d28f6dae1c6d94f37d05111b682e344eb43d17ad9f4b",
+      "size": 5253230
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2010.pkl",
+      "sha256": "9f2668e3e8c5aac501ddb8b6ef1b358bd36a24b00298e064f0c086a0e20a7cb9",
+      "size": 5861625
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2011.pkl",
+      "sha256": "3184ec7c98b14af49459ba0259ac1f765becd5994656844cbcfb8d929340486c",
+      "size": 7059617
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2012.pkl",
+      "sha256": "2aa2be22ad668e7ba20cc6ccfdab6bf5c8c5313d6b196af87071edfbb9ab1540",
+      "size": 8013062
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2013.pkl",
+      "sha256": "8ba39a01c325fedb85daf9d88510ffd4d9bdf9e9832490aea4de926ee081a5f7",
+      "size": 8064986
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2014.pkl",
+      "sha256": "02d9ea34afd5665c8c361dcbb2d88b7f0d48e6a0393f3e3913f0f13ae75cb597",
+      "size": 7848754
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2015.pkl",
+      "sha256": "789540eab43a4402831a0f6efa30a3d82e9e944466b82c57fa62af38a79ddb7a",
+      "size": 7578544
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2016.pkl",
+      "sha256": "5cf49ee1473f8d134b2f432bbcda4faad64ae97ebdfe907fb836da28f380ae65",
+      "size": 8964343
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2017.pkl",
+      "sha256": "7bab6217657d3a619a34f759432a158f125e7b007e60bf5f341d17b377f1fd13",
+      "size": 10439959
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2018.pkl",
+      "sha256": "372b54d2f6dfd3c0545fcbb89680dd13c03df58fb674b3f7321b34a518c18bfa",
+      "size": 12107595
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2019.pkl",
+      "sha256": "022aba9027979353ae4f4e4dbfffd4bfdf4ae40734381ca06dc2d4f573877484",
+      "size": 13227076
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2020.pkl",
+      "sha256": "9f52dbc17bb5247a4a93f1cac90ea6c6c25e7ca2ae851f994b919e2534fe66c9",
+      "size": 7971691
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-new.json",
+      "sha256": "e0d37b214276fe63f90d5de8c0d5ca100e97b4d8649adcb6b4a291d6f26847c4",
+      "size": 4475
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_new_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e628e905ca52e57359633df6e192679e37165b37979546304dad491fa90e6492",
+      "size": 59488447
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-new-s42.pkl",
+      "sha256": "4ca4e0b66144feed0d074b228902b4ea64c76d92d1c02a159bbb7063ec55df38",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s42-a1.json",
+      "sha256": "dccbfd00714d282b311e20467aff08ae86fbabd56796c22ed44b37b83562aaea",
+      "size": 38304
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "34734894bb990f054e985cb066303eac3085a848e92193560a11fe070b28a736",
+      "size": 59242343
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-new-s1000.pkl",
+      "sha256": "ac9a555cc7b04c5a07351ff947e40015c9ef0bb4a7a83bc4b93a1b5ac435cebc",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s1000-a1.json",
+      "sha256": "4d9ef07674a839ac2cde76b1678af69bac4c6521b205644e46f95bbb5319f9dc",
+      "size": 32820
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f73fe30e58b8a0e446610d6285df7c5001f8a2aaf090fea631b62ba26776776b",
+      "size": 59776434
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-new-s2000.pkl",
+      "sha256": "c300c5d4bfd788d009b1fd7da5b04613392488a0ff6622a550788dea77870843",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s2000-a1.json",
+      "sha256": "1b3c94977c51cb6e87f0f9b67956c0560b66ba425cd4f366d19a7440cf1c7fc8",
+      "size": 43851
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "ab27e15cec34e168af2b5435381dee3388d2813da98b397c93ada477a8f2efb7",
+      "size": 59546252
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-new-s3000.pkl",
+      "sha256": "e874b4b5387b83afc860a579d810abc21f869ecc11a56899ccea4b6f75eb6a1a",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s3000-a1.json",
+      "sha256": "c4bd0365baa39b09778637fb8825a3ebbda48d111a4f7d4aa277f3b6fa3a6041",
+      "size": 39342
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "6d0caa65eae1a105002f208d09d577cf7afbddbd3df2bcb8fb2a0a4e55e6f03a",
+      "size": 60125100
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-new-s4000.pkl",
+      "sha256": "9b82100ca16c664046492fe89d072524fe1c893d31b7477aee28e74f8e0fb377",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s4000-a1.json",
+      "sha256": "fae02b8d61b16039007be38cbf6d3a3a94c436d866498b01c9c65526eb644aba",
+      "size": 51352
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-new-ensemble.pkl",
+      "sha256": "a40117f842b58395266fbe98a4431cbc00dfd9f07a619fd71a5eccb0ee86d311",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-old.json",
+      "sha256": "ddba993b53de7535b4d81dec2b54905f09ca385e86dab803bb685eb644c54484",
+      "size": 4475
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+      "size": 59488457
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+      "sha256": "8bad9ee807084e769140728cef32cff0e4ff66ad736504e5ed7b74bbe337e6f2",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+      "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+      "size": 38305
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+      "size": 59781408
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+      "sha256": "9f52cfa2e9b11b93a7c15af1f7f1dcbf94a0014a34d573f20dc250cd4d14d439",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+      "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+      "size": 44465
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+      "size": 60495908
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+      "sha256": "09f99b5e2a6b8b176f3176dc8c2325a22d0425fbaa271c8fcbbe4f59a0bf3131",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+      "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+      "size": 59236
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+      "size": 59546157
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+      "sha256": "4136b5c13beb1d882170f6f957cdea7c8389c4406bd2069d68b494aabb39cbb4",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+      "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+      "size": 39348
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+      "size": 60125167
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+      "sha256": "e93ada017614ffd229cefe1b2061c76d9163efee5d253f7ea8c8c8fb0a03586c",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+      "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+      "size": 51355
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+      "sha256": "45ad0d4f05e84bd2594b95fd6fd660acb2345668ec3488813893d78c7d0155f0",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/frozen-study.json",
+      "sha256": "88ce84f076e8345c8608f63f1a9969e3de1a5fac0fd844534e45a839cc7b8a22",
+      "size": 5415
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/environment.json",
+      "sha256": "f4ad1eb327fb011b392ede73f25762ede1619b6d65097c58bc660b9f8f00e55a",
+      "size": 1344
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/adapter-common.json",
+      "sha256": "d6b2e39ad358ea202565e6c2dfff76704a9caf27fc8e74fdf70a80817d4e68b3",
+      "size": 4085
+    },
+    {
+      "path": "backtest/models/regime_adapt.py",
+      "sha256": "9fd7fc084365535680cb8df08a263132c13561a5d5434f8b51a16c6d08a9526d",
+      "size": 15566
+    },
+    {
+      "path": "backtest/models/rankic_early_stop.py",
+      "sha256": "2320cce49ab762d1773881cd20e7974a8074bf1f95e94d2799cd9cb60619ca8c",
+      "size": 11309
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "8dfa2fcb39097ee0d19ea1c29dcbe3641e3237d9831b27c1db327a0fa6419a75",
+      "size": 33129
+    },
+    {
+      "path": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "sha256": "8cc35a510bb1b95d047a963f595dc1a4b8ac8e3102056c2c8a78d5c2b22b6026",
+      "size": 68674
+    },
+    {
+      "path": "backtest/scripts/evaluate/ensemble_preds.py",
+      "sha256": "610a1ae3aca04b787cfbc56199d0515052902a3d072509df093b295600a02ef7",
+      "size": 3534
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+      "size": 12415
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "deea15eee8e411ec5e52c8f6ddc31ba6c254452465eeba2ea25d123f6c6c7bbd",
+      "size": 64550
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "0fd45a20651eede9ad4f9de8ffb83eb03025f7df4347e90e8e53cfd621b8db39",
+      "size": 69317
+    }
+  ],
+  "baseline_sha256": "edefdbe4cc0d652e38b6964f812b723b4448f13c6f45c75091368e598da93ce9",
+  "baseline_model_ref": null,
+  "started_at": 1794061884.6506822,
+  "deadline": 1794097884.6506822,
+  "revision": 50,
+  "status": "closed",
+  "variants": {
+    "training-target/pathsum-quantile10-p50-20261107-v1": {
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "archive_path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1",
+      "round": 1,
+      "hypothesis": "Summing within-horizon cumulative returns rewards earlier/persistent gains; may favor smoother paths but does not mathematically penalize volatility. Test predictive changes separately from this mechanism. Quantization may interact with label horizon and market style.",
+      "changed_axis": "training_label_recipe",
+      "configs": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/frozen-study.json",
+          "sha256": "88ce84f076e8345c8608f63f1a9969e3de1a5fac0fd844534e45a839cc7b8a22",
+          "size": 5415
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/missing-price-amendment.json",
+          "sha256": "7e4da3d0b87ea9edbff83ea2ddf2712a8e0650a4fde723286cb300be904db160",
+          "size": 2145
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/prepared-inputs.json",
+          "sha256": "1b0c533c48fb5a73c15909a62b07374f37b5f30801a5ff49cc1d327eed1756a5",
+          "size": 8255
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+          "outcome": "succeeded",
+          "started_at": 1794063094.7775202,
+          "command": [
+            "/opt/anaconda3/envs/qlib/bin/python",
+            "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/pipeline.py"
+          ],
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+            "sha256": "19a6d6b148033cb655fe52f843d397f0dd8ddf82a16097bce4e163c4fccab018",
+            "size": 89086
+          },
+          "finished_at": 1794074692.1296,
+          "evidence": [
+            {
+              "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+              "sha256": "19a6d6b148033cb655fe52f843d397f0dd8ddf82a16097bce4e163c4fccab018",
+              "size": 89086
+            },
+            {
+              "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/final-numerical-verification.json",
+              "sha256": "ad4ec743cb1d0f18b9566979dfb68a9263dcf999109b65ebefbd7cf9b1e10055",
+              "size": 11794
+            },
+            {
+              "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/research-conclusion.json",
+              "sha256": "02b5f3134b4378927715a4690ffb4f02da56b934b303e1f6c7f2d6dcec6ac480",
+              "size": 3246
+            },
+            {
+              "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/final-report-receipt.json",
+              "sha256": "893216e29c215f641d635e0c4487954f775a81d3dff3f05c5a619d4034bb88ad",
+              "size": 1874
+            },
+            {
+              "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/review-final-numerical.json",
+              "sha256": "556771c9167702e82d08617cff1a1147d36363986967956b2921a471a4dac706",
+              "size": 1347
+            },
+            {
+              "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/early-stopping-replay.json",
+              "sha256": "e163efdec6c1bbc4e9383514778b53d1acf79a744c9d806990d939645f2fa24b",
+              "size": 20122
+            }
+          ],
+          "reason": "",
+          "registered": {
+            "event_sha256": "a603d6ef6683090c6b0b774d60dfa17e283911552eb8c4245284e332c19e91b8",
+            "detail_report": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html"
+          },
+          "reported": [
+            {
+              "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+              "sha256": "c14b64f840d5f58f0c2202a440f718e341f77f0519e5196b96cf675761619175",
+              "size": 25193
+            },
+            {
+              "path": "backtest/experiments/reports/phase_m_v1_report.html",
+              "sha256": "795171cfbbab250675fd9ce222d8017c42de37f233649a1b779f49f71483bf80",
+              "size": 23231
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reflections": [
+    {
+      "type": "reflection",
+      "round": 1,
+      "observations": "连续求和：净年化27.98%（同源H20连续29.49%），夏普0.387（0.494），波动72.24%（59.72%）；10档求和：净年化24.61%（同源H20十档32.24%），夏普0.348（0.552），波动70.70%（58.37%）。；求和标签再做10档，相对求和连续版净年化降低3.38个百分点、夏普降低0.039；波动下降1.54个百分点，但仍高于原H20十档。；相对同源原H20，求和连续/十档的T净年化分别下降47.75/46.40个百分点；D分别变化+7.31/−1.78个百分点，F分别+35.69/+35.01个百分点。F只有136日，不能推广为跨年规律。；H7/H15/H20十档减连续的T净年化差依次为+9.91/+2.19/−0.56个百分点，D为−6.78/−8.75/+4.62个百分点；只有1/3个期限T下降、1/3个期限D提高。；仅在H7/H15/H20范围内，连续与十档的净年化最大值均为D/H7、F/H15、T/H20。夏普最大值D/H7与T/H20不变，F由连续H7变成十档H15；这不覆盖原七H研究中的H30等其他期限。；两种求和标签均保留原H20的5,448,963条样本，中间缺项跳过、不补价、不按项数缩放。条件于每日终点收益十分位的训练内排名相关为+0.1199，未体现低波动优先；公式本身也不保证低波动样本排名更高。；H15十档、求和十档的全窗合成净年化均低于各自全部单种子。求和十档T合成净年化−3.32%，五个单种子却均为正（2.19%～26.64%）；实际合成分数、Top3选股和收益已独立复算，结果不是收益取平均。；20次真实拟合全部成功，0次技术重试，前序累计176次、本轮后196次；本轮新增账户回测0次。当前模型v5、回测s5和生产配置未变。",
+      "interpretation": "原始H1～H20累计收益求和的连续版和10档版，均未改善相应同源H20标签的全窗净年化与夏普；分档也未修复求和标签的T风格退化。H7/H15/H20分档后仍分别由H7、H15、H20取得D、F、T最高净年化，但不支持T普遍变差、D普遍变好。",
+      "new_evidence": true,
+      "next_hypothesis": ""
+    }
+  ],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/harness-cleanup.json",
+      "sha256": "5f2cf10dc5249e465de89d26378b2de60518affe7ff04ca17eef8bf406c2856e",
+      "size": 2528
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1794062349.103838,
+      "event": {
+        "type": "note",
+        "text": "User amended path-sum missing-price handling before any fits: skip missing intermediate cumulative returns, retain original H20-valid sample mask, no imputation/count scaling. configs/missing-price-amendment.json SHA 7e4da3d0b87ea9edbff83ea2ddf2712a8e0650a4fde723286cb300be904db160. Original 10h deadline and22-fit cap unchanged; original materialization stopped with zero fits."
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1794063090.6460218,
+      "event": {
+        "type": "plan_variant",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "archive_path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1",
+        "round": 1,
+        "changed_axis": "training_label_recipe",
+        "hypothesis": "Summing within-horizon cumulative returns rewards earlier/persistent gains; may favor smoother paths but does not mathematically penalize volatility. Test predictive changes separately from this mechanism. Quantization may interact with label horizon and market style.",
+        "configs": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/frozen-study.json",
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/missing-price-amendment.json",
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/prepared-inputs.json"
+        ]
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1794063094.777521,
+      "event": {
+        "type": "start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/pipeline.py"
+        ]
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1794063124.55069,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h7q10-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h7q10",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1794063542.254127,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7q10-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s42-a1.json",
+          "backtest/result/pathsumq10_20261107_h7q10_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1794063549.869626,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h7q10-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h7q10",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1794063907.241885,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7q10-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s1000-a1.json",
+          "backtest/result/pathsumq10_20261107_h7q10_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1794063914.399999,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h7q10-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h7q10",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1794064336.5232031,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7q10-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s2000-a1.json",
+          "backtest/result/pathsumq10_20261107_h7q10_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 10,
+      "time": 1794064343.6639,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h7q10-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h7q10",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 11,
+      "time": 1794064698.50085,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7q10-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s3000-a1.json",
+          "backtest/result/pathsumq10_20261107_h7q10_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 12,
+      "time": 1794064706.057926,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h7q10-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 7,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h7q10",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 13,
+      "time": 1794065122.7311869,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h7q10-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s4000-a1.json",
+          "backtest/result/pathsumq10_20261107_h7q10_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 14,
+      "time": 1794066371.63151,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h15q10-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h15q10",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 15,
+      "time": 1794066923.776066,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15q10-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s42-a1.json",
+          "backtest/result/pathsumq10_20261107_h15q10_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 16,
+      "time": 1794066931.0086982,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h15q10-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h15q10",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 17,
+      "time": 1794067517.661485,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15q10-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s1000-a1.json",
+          "backtest/result/pathsumq10_20261107_h15q10_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 18,
+      "time": 1794067524.9432561,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h15q10-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h15q10",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 19,
+      "time": 1794068105.694633,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15q10-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s2000-a1.json",
+          "backtest/result/pathsumq10_20261107_h15q10_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 20,
+      "time": 1794068112.85821,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h15q10-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h15q10",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 21,
+      "time": 1794068617.814812,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15q10-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s3000-a1.json",
+          "backtest/result/pathsumq10_20261107_h15q10_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 22,
+      "time": 1794068625.0912,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "h15q10-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 15,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "h15q10",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 23,
+      "time": 1794069317.172336,
+      "event": {
+        "type": "fit_result",
+        "job_id": "h15q10-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s4000-a1.json",
+          "backtest/result/pathsumq10_20261107_h15q10_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 24,
+      "time": 1794069461.182871,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20continuous-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20continuous",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 25,
+      "time": 1794069783.022329,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20continuous-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s42-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20continuous_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 26,
+      "time": 1794069790.238228,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20continuous-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20continuous",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 27,
+      "time": 1794070181.853257,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20continuous-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s1000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20continuous_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 28,
+      "time": 1794070189.002099,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20continuous-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20continuous",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 29,
+      "time": 1794070673.866366,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20continuous-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s2000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20continuous_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 30,
+      "time": 1794070681.057051,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20continuous-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20continuous",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 31,
+      "time": 1794071076.750151,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20continuous-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s3000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20continuous_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 32,
+      "time": 1794071083.867577,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20continuous-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20continuous",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 33,
+      "time": 1794071460.696021,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20continuous-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s4000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20continuous_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 34,
+      "time": 1794071579.8706079,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20q10-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20q10",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 35,
+      "time": 1794072026.700353,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20q10-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s42-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20q10_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 36,
+      "time": 1794072033.969627,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20q10-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20q10",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 37,
+      "time": 1794072485.488771,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20q10-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s1000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20q10_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 38,
+      "time": 1794072492.6802921,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20q10-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20q10",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 39,
+      "time": 1794072820.5033321,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20q10-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s2000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20q10_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 40,
+      "time": 1794072827.671631,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20q10-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20q10",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 41,
+      "time": 1794073402.723831,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20q10-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s3000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20q10_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 42,
+      "time": 1794073410.023547,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "job_id": "sum20q10-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+          "sum20q10",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 43,
+      "time": 1794073839.056656,
+      "event": {
+        "type": "fit_result",
+        "job_id": "sum20q10-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s4000-a1.json",
+          "backtest/result/pathsumq10_20261107_sum20q10_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 44,
+      "time": 1794074692.129602,
+      "event": {
+        "type": "result",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+        "outcome": "succeeded",
+        "evaluation": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+        "evidence": [
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/final-numerical-verification.json",
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/research-conclusion.json",
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/final-report-receipt.json",
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/review-final-numerical.json",
+          "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/early-stopping-replay.json"
+        ]
+      }
+    },
+    {
+      "revision": 45,
+      "time": 1794074692.225912,
+      "event": {
+        "type": "registered",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1"
+      }
+    },
+    {
+      "revision": 46,
+      "time": 1794074692.321729,
+      "event": {
+        "type": "reported",
+        "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1"
+      }
+    },
+    {
+      "revision": 47,
+      "time": 1794074693.061779,
+      "event": {
+        "type": "reflection",
+        "round": 1,
+        "observations": "连续求和：净年化27.98%（同源H20连续29.49%），夏普0.387（0.494），波动72.24%（59.72%）；10档求和：净年化24.61%（同源H20十档32.24%），夏普0.348（0.552），波动70.70%（58.37%）。；求和标签再做10档，相对求和连续版净年化降低3.38个百分点、夏普降低0.039；波动下降1.54个百分点，但仍高于原H20十档。；相对同源原H20，求和连续/十档的T净年化分别下降47.75/46.40个百分点；D分别变化+7.31/−1.78个百分点，F分别+35.69/+35.01个百分点。F只有136日，不能推广为跨年规律。；H7/H15/H20十档减连续的T净年化差依次为+9.91/+2.19/−0.56个百分点，D为−6.78/−8.75/+4.62个百分点；只有1/3个期限T下降、1/3个期限D提高。；仅在H7/H15/H20范围内，连续与十档的净年化最大值均为D/H7、F/H15、T/H20。夏普最大值D/H7与T/H20不变，F由连续H7变成十档H15；这不覆盖原七H研究中的H30等其他期限。；两种求和标签均保留原H20的5,448,963条样本，中间缺项跳过、不补价、不按项数缩放。条件于每日终点收益十分位的训练内排名相关为+0.1199，未体现低波动优先；公式本身也不保证低波动样本排名更高。；H15十档、求和十档的全窗合成净年化均低于各自全部单种子。求和十档T合成净年化−3.32%，五个单种子却均为正（2.19%～26.64%）；实际合成分数、Top3选股和收益已独立复算，结果不是收益取平均。；20次真实拟合全部成功，0次技术重试，前序累计176次、本轮后196次；本轮新增账户回测0次。当前模型v5、回测s5和生产配置未变。",
+        "interpretation": "原始H1～H20累计收益求和的连续版和10档版，均未改善相应同源H20标签的全窗净年化与夏普；分档也未修复求和标签的T风格退化。H7/H15/H20分档后仍分别由H7、H15、H20取得D、F、T最高净年化，但不支持T普遍变差、D普遍变好。",
+        "new_evidence": true,
+        "next_hypothesis": ""
+      }
+    },
+    {
+      "revision": 48,
+      "time": 1794074693.105296,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 49,
+      "time": 1794074744.63051,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/harness-cleanup.json"
+      }
+    },
+    {
+      "revision": 50,
+      "time": 1794074745.342174,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "jobs": {
+    "h7q10-new-s42-a1": {
+      "job_id": "h7q10-new-s42-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 42,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h7q10",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794063124.550689,
+      "finished_at": 1794063542.254124,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s42-a1.json",
+          "sha256": "320087b65522498f969cff63d5235d56a99d0bd57edd4f0cbc0465db11f3635c",
+          "size": 27354
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h7q10_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9f4f47324fbc095e4752d0b631f680c900c04e9c3fcf363555923c3e59a68c92",
+          "size": 58941936
+        }
+      ]
+    },
+    "h7q10-new-s1000-a1": {
+      "job_id": "h7q10-new-s1000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 1000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h7q10",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794063549.869625,
+      "finished_at": 1794063907.241882,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s1000-a1.json",
+          "sha256": "2c759a63640a896292b10d43fcb9a1a2cc83a03975019d886c1601adffe332fa",
+          "size": 22563
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h7q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ea3ea4e0acc92b6dbe5b9b1861ac5e6a1438dba38f1da8596cd1d920bb42f681",
+          "size": 58718588
+        }
+      ]
+    },
+    "h7q10-new-s2000-a1": {
+      "job_id": "h7q10-new-s2000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 2000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h7q10",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794063914.399998,
+      "finished_at": 1794064336.5232,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s2000-a1.json",
+          "sha256": "28dd5d8f453b6573ff98c4f31c25912f8070a4d183102b0310803ff77d60b0f7",
+          "size": 29719
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h7q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "0cc96e6f231c106fdecd25c51b72a2cba81db02903121980d914835ba9230322",
+          "size": 59074844
+        }
+      ]
+    },
+    "h7q10-new-s3000-a1": {
+      "job_id": "h7q10-new-s3000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 3000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h7q10",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794064343.663899,
+      "finished_at": 1794064698.500844,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s3000-a1.json",
+          "sha256": "8f74b6985ec7f9059179df5085f2cee079f98901b1c8bfc654c206abe8fd7dcd",
+          "size": 21885
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h7q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "0311f69182cdbac28cb00fd8f8952985fde5c7c4fc330a03bdf24bceab88ec3f",
+          "size": 58683671
+        }
+      ]
+    },
+    "h7q10-new-s4000-a1": {
+      "job_id": "h7q10-new-s4000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 4000,
+      "label_horizon": 7,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h7q10",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794064706.0579252,
+      "finished_at": 1794065122.731183,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s4000-a1.json",
+          "sha256": "1e285d75b2113a8f97b3eccc1c9e901369ba4cba460d1ca725f7e9329d130e13",
+          "size": 26995
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h7q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a787a3d7a36297a7933f0ccab628745d34db2f05f3ad708d8a60838bb870eb89",
+          "size": 58958399
+        }
+      ]
+    },
+    "h15q10-new-s42-a1": {
+      "job_id": "h15q10-new-s42-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 42,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h15q10",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794066371.631509,
+      "finished_at": 1794066923.776063,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s42-a1.json",
+          "sha256": "9342d555dc1e6560ed0d1b97538c9f4d708aadf3b500af6f8f076d120f740738",
+          "size": 42080
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h15q10_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "35617facfa8e3b5d2ac06d90a5f18c5e7b8500b93ae1adf573244f4037ce17e2",
+          "size": 59667416
+        }
+      ]
+    },
+    "h15q10-new-s1000-a1": {
+      "job_id": "h15q10-new-s1000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 1000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h15q10",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794066931.008696,
+      "finished_at": 1794067517.661482,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s1000-a1.json",
+          "sha256": "d7f9bcb13371c3c0197d2f1282b77ac22c3463a69d26f1138bdf314abf9498e1",
+          "size": 43771
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h15q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a07a5212dfdd31214825d01a5d6be3e0ccb47b193e8e900ee6584c93e08a2bc0",
+          "size": 59791844
+        }
+      ]
+    },
+    "h15q10-new-s2000-a1": {
+      "job_id": "h15q10-new-s2000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 2000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h15q10",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794067524.943255,
+      "finished_at": 1794068105.69463,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s2000-a1.json",
+          "sha256": "8d7d1a72f2879bbe33ce838596328fe600e89137c55c79c14a4152652bc0a509",
+          "size": 45921
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h15q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "42e8ab570b4c83d8e50f3370c9d17c11ade118a55f93d02ca07728e136b052e3",
+          "size": 59888287
+        }
+      ]
+    },
+    "h15q10-new-s3000-a1": {
+      "job_id": "h15q10-new-s3000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 3000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h15q10",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794068112.8582091,
+      "finished_at": 1794068617.814809,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s3000-a1.json",
+          "sha256": "750de557a3c8feeecf457b6a494f38c35e7ea015fefab4757dae14c5058d4adc",
+          "size": 34554
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h15q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "1a37b913e8e6b3022cb5157f71518f24aef7545a7671bb7bcacf7d7860174bd3",
+          "size": 59334539
+        }
+      ]
+    },
+    "h15q10-new-s4000-a1": {
+      "job_id": "h15q10-new-s4000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 4000,
+      "label_horizon": 15,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "h15q10",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794068625.091199,
+      "finished_at": 1794069317.172333,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s4000-a1.json",
+          "sha256": "694d4037ee23e700ad42377b271136fc9347096a3aa7bcc1cbc2b605d80cfbaf",
+          "size": 55550
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_h15q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "bc77d8350da1605897b873c4bb23f994646018dcb3f3fd9bd27be8cf4f063c36",
+          "size": 60360007
+        }
+      ]
+    },
+    "sum20continuous-new-s42-a1": {
+      "job_id": "sum20continuous-new-s42-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20continuous",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794069461.182869,
+      "finished_at": 1794069783.022326,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s42-a1.json",
+          "sha256": "40f7c272d0916c3f3272e567a77cad80dcee30b8f911bc637d2ea478f5adf2af",
+          "size": 19903
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20continuous_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "cd4d51b7f6249a340bd0ec278571ac99417100ba01b65724c12181141eeaa9b3",
+          "size": 58564577
+        }
+      ]
+    },
+    "sum20continuous-new-s1000-a1": {
+      "job_id": "sum20continuous-new-s1000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20continuous",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794069790.238227,
+      "finished_at": 1794070181.8532538,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s1000-a1.json",
+          "sha256": "cb8cdf4a5fc168502afafac4525d6c91485d3c33f734d1eaba660a436f285f96",
+          "size": 26684
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20continuous_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2cb81cd728c42fee5e3779b4c194ff8962bb46b7573d0e7fca419269f1005c1e",
+          "size": 58950720
+        }
+      ]
+    },
+    "sum20continuous-new-s2000-a1": {
+      "job_id": "sum20continuous-new-s2000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20continuous",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794070189.002097,
+      "finished_at": 1794070673.8663628,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s2000-a1.json",
+          "sha256": "30df6a4a4f07ee9f855c7b553aec4f202964e0206a106cb7aba8ec9b75a50669",
+          "size": 33541
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20continuous_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e23451a208d8a2c2e68050da54986c8491d957581da4e7f9e41a854398685e32",
+          "size": 59278709
+        }
+      ]
+    },
+    "sum20continuous-new-s3000-a1": {
+      "job_id": "sum20continuous-new-s3000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20continuous",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794070681.057049,
+      "finished_at": 1794071076.750148,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s3000-a1.json",
+          "sha256": "daca4bf0898a95b83f0aced8d7bbee70fbc3df01e8cfc4a6f4cb97efff9c1ecf",
+          "size": 25021
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20continuous_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9a981fa8b1a7226fe359c5611cbf9ab5b6feed88ab4563b1f646ff80c9520008",
+          "size": 58855212
+        }
+      ]
+    },
+    "sum20continuous-new-s4000-a1": {
+      "job_id": "sum20continuous-new-s4000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20continuous",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794071083.8675761,
+      "finished_at": 1794071460.696018,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s4000-a1.json",
+          "sha256": "b093c09bc3bf4242865a0fc1e28abf20780fd2856889eb7956df5c05e8e1b9e9",
+          "size": 21607
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20continuous_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "339a1a33dc76cd83b7a18472ad9c1fbb0f3a5c2db6aabaa7b18bb97cdea20a20",
+          "size": 58665952
+        }
+      ]
+    },
+    "sum20q10-new-s42-a1": {
+      "job_id": "sum20q10-new-s42-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20q10",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794071579.8706062,
+      "finished_at": 1794072026.70035,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s42-a1.json",
+          "sha256": "8d655d7f1a57736c655016504f7b4f143f27f361fb625e314c519da8e06e63b4",
+          "size": 28354
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20q10_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2b3d33eb2861ac1441cb05c43c5b60781c78d551bf5e18d6833bc6e7d5b0dccc",
+          "size": 59044836
+        }
+      ]
+    },
+    "sum20q10-new-s1000-a1": {
+      "job_id": "sum20q10-new-s1000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20q10",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794072033.9696262,
+      "finished_at": 1794072485.488768,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s1000-a1.json",
+          "sha256": "c6a2c4815ba937081336d59ceaf0a2521cf3961f8eb5a06f11183dee9481572a",
+          "size": 32464
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b5ae652a72dc1808d555c16467c18a06ff408cb1316631d24ee5c567feb8abe4",
+          "size": 59230736
+        }
+      ]
+    },
+    "sum20q10-new-s2000-a1": {
+      "job_id": "sum20q10-new-s2000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20q10",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794072492.6802912,
+      "finished_at": 1794072820.503328,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s2000-a1.json",
+          "sha256": "0fc905bd036b9811db92b526628a0ea4e9b106aa4503cf5d6f12c85baaa50659",
+          "size": 19522
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a63ba2570ac8b5802f672b57a49c90e3906c74e67909cb574ae273001a7129c3",
+          "size": 58543977
+        }
+      ]
+    },
+    "sum20q10-new-s3000-a1": {
+      "job_id": "sum20q10-new-s3000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20q10",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794072827.671629,
+      "finished_at": 1794073402.723828,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s3000-a1.json",
+          "sha256": "da6850bf107b25a9f8083eb990b6fc1426012d0f0db9870e7268548be13a26eb",
+          "size": 41017
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "1d256058a7ca691e4961c6e144619a3da78c376e656536b580484eb84dbc1db9",
+          "size": 59620631
+        }
+      ]
+    },
+    "sum20q10-new-s4000-a1": {
+      "job_id": "sum20q10-new-s4000-a1",
+      "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+      "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/train.py",
+        "sum20q10",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794073410.023545,
+      "finished_at": 1794073839.056653,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s4000-a1.json",
+          "sha256": "256bae1783fcfdfc9c05c330736bde7b2379ce8650809629fe2ef70dc6c52987",
+          "size": 30417
+        },
+        {
+          "path": "backtest/result/pathsumq10_20261107_sum20q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5ccfb7dde67a8460f082935990ceba6db4836cbbe4441a8477fdcb28d391b06f",
+          "size": 59145947
+        }
+      ]
+    }
+  },
+  "checksum": "bfe46b8be22a71ff3b4939d1c1f6319ea7e2488cc2a7777353335af308ad0c15"
+}

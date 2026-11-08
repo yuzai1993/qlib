@@ -1,0 +1,159 @@
+{
+  "input": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/inference-input-2026.json",
+    "sha256": "456ea7f36729a006aadb8f3107dba03bedb41916d200273cb5389719c663a2c5",
+    "size": 6329
+  },
+  "predictions": [
+    {
+      "job_id": "quantile5-new-s42-a1",
+      "seed": 42,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "c10ac9b9ea2d8e2c9e73950cde521c41da472c159976e01fe7c367dcecd9844a",
+        "size": 59710958
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-new-s42-a1-2026.pkl",
+        "sha256": "e76ee8aa5b289736531dd51a7d22d49356d935ba76612a1fa434ce036243ad29",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-new-s1000-a1",
+      "seed": 1000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d6733e38438219d5b2f0ad3d820e1d881aa4e16dd8ba59ae66f1bb365a105ae4",
+        "size": 60184828
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-new-s1000-a1-2026.pkl",
+        "sha256": "9b98acfac3f13c9f33b353efbdc51230afaeda1f03eb8147cb62dcc03a6b5393",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-new-s2000-a1",
+      "seed": 2000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2e5a11492fbb3543510f883896d61578368bcb28e90b8105ed65148a769e8e76",
+        "size": 60028493
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-new-s2000-a1-2026.pkl",
+        "sha256": "321077250376605b0370b0f0c13a99d514a2a67b0e06ba5282850d7c91fd1c43",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-new-s3000-a1",
+      "seed": 3000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f1ec3c178d19d0849ecfa56827ceb2736f6791a2e55e27c3ded923ecea4dce3f",
+        "size": 59768130
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-new-s3000-a1-2026.pkl",
+        "sha256": "507d2e997762c991fa48afb5179cb933f2ba94d9860d1e2cbfdb742a36792da6",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-new-s4000-a1",
+      "seed": 4000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "286f9f27997e7f2d0e37ae7db5d7dd311c20feca7987e4682c4572b6e0fd9de2",
+        "size": 59893613
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-new-s4000-a1-2026.pkl",
+        "sha256": "791c7ff599d739d9de7db851b50d8423f3d47db48f9a226ce1f6c421c140771e",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-old-s42-a1",
+      "seed": 42,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "08def99c40a3654ee317cf298229f8d91e1f3ddef145d0eab247759566d2961b",
+        "size": 59200304
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-old-s42-a1-2026.pkl",
+        "sha256": "704c642a6bf5411e3558e0d41f2f52341061ea3e766879c7e4da8b9cd994ac10",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-old-s1000-a1",
+      "seed": 1000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e7f46840ec1163b57c083197fa178e1b8597e8944da061ddfe8526bd4e64c93e",
+        "size": 60184966
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-old-s1000-a1-2026.pkl",
+        "sha256": "9f3ed9d972a597fe3bb5cad3cb304c26e01600838c4288381ea4a4ee36ef45d4",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-old-s2000-a1",
+      "seed": 2000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "8f1d1b94cecc7c40393735dbd468dd58afc9118200f0b97d5092c16b496d8fa0",
+        "size": 60028563
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-old-s2000-a1-2026.pkl",
+        "sha256": "39c98a903c0d13013dc450bd5bbe5ccfcd1f75e622b1f97281bafd3806046c6a",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-old-s3000-a1",
+      "seed": 3000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7d3ff058cbac8779aa278058124aa238b64a4d8bccd84991c370f4f89614ec7d",
+        "size": 60083053
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-old-s3000-a1-2026.pkl",
+        "sha256": "65afe330ba74be1d4901283c0aa86f4561e4bac05cc2ade4571efa447501b819",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "quantile5-old-s4000-a1",
+      "seed": 4000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f31f21eb803f6b3382a6109f9441a814a40614da89b203158c3d7baf1e9f9dfb",
+        "size": 59893699
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-quantile5-old-s4000-a1-2026.pkl",
+        "sha256": "e5acb799e5d0be66ad4c520564c2b74e8d58917818d6b562ffc8008f26729998",
+        "size": 11625844
+      }
+    }
+  ]
+}

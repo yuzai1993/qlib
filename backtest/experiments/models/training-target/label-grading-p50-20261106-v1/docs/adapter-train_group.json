@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/train_group.py",
+    "sha256": "e04d8a0dbca72bec8594e8f08c92fffd5f4a5adc577d599b8f07276e80150bd3",
+    "size": 1532
+  },
+  "source_text": "from common import *\n\nif __name__=='__main__':\n    save_source(__file__)\n    variant=sys.argv[1];assert variant in VARIANTS\n    settings=read(BASE/'configs/prepared-inputs.json')['variants'][variant]\n    treatments=['new']+(['old'] if settings.get('paired_fits_needed') else [])\n    progress=read(PROGRESS);progress['status']='running';progress['scientific_candidates'][variant]['status']='running';write(PROGRESS,progress)\n    for treatment in treatments:\n        for seed in SEEDS:\n            job=f'{variant}-{treatment}-s{seed}-a1'\n            found=[j for j in read(PROGRESS)['jobs'] if j['job_id']==job]\n            if found:\n                assert len(found)==1 and found[0]['status']=='succeeded','inspect failed/incomplete job before resume'\n                check(found[0]['evidence']);r=read(ROOT/found[0]['evidence']['path']);check(r['model']);continue\n            harness('check')\n            with (TMP/f'{job}.log').open('w') as log:\n                proc=subprocess.run([sys.executable,'-u',str(TMP/'train.py'),variant,treatment,str(seed)],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT)\n            if proc.returncode:raise RuntimeError(f'{job} failed; inspect log and ledger')\n            r=read(BASE/'docs'/f'{job}.json');print(job,'best',r['early_stopping'][0]['best_iteration'],'seconds',round(r['fit_seconds']),flush=True)\n    progress=read(PROGRESS);progress['scientific_candidates'][variant]['status']='trained_awaiting_evaluation';write(PROGRESS,progress)\n    print('group training complete',variant,flush=True)\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

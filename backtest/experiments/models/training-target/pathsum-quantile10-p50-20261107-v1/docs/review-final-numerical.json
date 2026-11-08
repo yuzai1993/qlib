@@ -1,0 +1,38 @@
+{
+  "reviewer": "/root/review_v5_promotion",
+  "reviewed_at": "2026-11-08T02:01:24.139040+08:00",
+  "blocking_findings": [],
+  "prediction_arithmetic": {
+    "candidates": [
+      "h15q10",
+      "sum20q10"
+    ],
+    "rows_each": 6914485,
+    "days_before_H5_cutoff": 1454,
+    "full_row_daily_zscore_ensemble_exact": true,
+    "max_absolute_difference": 0,
+    "prediction_hashes_verified": 12
+  },
+  "selection_recomputation": {
+    "candidates": [
+      "h15q10",
+      "sum20q10"
+    ],
+    "official_top3_matches_all_1448_days": true
+  },
+  "return_recomputation": {
+    "candidates": [
+      "h15q10",
+      "sum20q10"
+    ],
+    "cells_per_candidate": 24,
+    "method": "Saved Top3 holdings plus frozen H5 labels, original summarize_head_series; five seeds and ensemble x full/D/F/T.",
+    "absolute_tolerance": 1e-12,
+    "all_primary_metrics_match": true
+  },
+  "input_identity": "sum20q10 preserves exact original H20 ordered5,448,963 rows, features, validation labels and tradable masks.",
+  "sum_comparisons_all_fields_verified": true,
+  "short_tree_limit": "sum20q10 seed2000 selected2, Top3/5 ties1099/1182days; reverse prefix best38 without observed stop in52rounds. seed4000 original34 with no selected ties, but reverse replay selects3 and stops53.",
+  "no_retraining_or_seed_changes": true,
+  "temporary_cache_released": true
+}

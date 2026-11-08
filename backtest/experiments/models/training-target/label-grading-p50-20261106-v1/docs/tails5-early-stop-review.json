@@ -1,0 +1,190 @@
+{
+  "at": 1793999789.756704,
+  "question": "Does the tails5 shallow-tree selection depend on arbitrary head-tie priority?",
+  "method": "Predeclared reverse-priority diagnostic along the observed trajectory; no refit or changed selected model.",
+  "observations": [
+    {
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 42,
+      "best_iteration": 65,
+      "observed_rounds": 115,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1274,
+      "reverse_observed_best": 65,
+      "reverse_stop_observed": 115,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 488.12565207481384,
+      "max_rss_GiB": 7.931243896484375
+    },
+    {
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 1000,
+      "best_iteration": 3,
+      "observed_rounds": 53,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 764,
+        "5": 813
+      },
+      "any_top5_boundary_tie_days": 1280,
+      "reverse_observed_best": 1,
+      "reverse_stop_observed": 51,
+      "reverse_observed_best_differs": true,
+      "fit_seconds": 284.19787764549255,
+      "max_rss_GiB": 7.931182861328125
+    },
+    {
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 2000,
+      "best_iteration": 45,
+      "observed_rounds": 95,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1289,
+      "reverse_observed_best": 45,
+      "reverse_stop_observed": 95,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 417.131450176239,
+      "max_rss_GiB": 8.117691040039062
+    },
+    {
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 3000,
+      "best_iteration": 74,
+      "observed_rounds": 124,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1275,
+      "reverse_observed_best": 74,
+      "reverse_stop_observed": 124,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 562.4938910007477,
+      "max_rss_GiB": 8.423309326171875
+    },
+    {
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 4000,
+      "best_iteration": 77,
+      "observed_rounds": 127,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1267,
+      "reverse_observed_best": 77,
+      "reverse_stop_observed": 127,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 535.6105389595032,
+      "max_rss_GiB": 8.2955322265625
+    },
+    {
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 42,
+      "best_iteration": 48,
+      "observed_rounds": 98,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1274,
+      "reverse_observed_best": 48,
+      "reverse_stop_observed": 98,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 421.2987129688263,
+      "max_rss_GiB": 8.066574096679688
+    },
+    {
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 1000,
+      "best_iteration": 3,
+      "observed_rounds": 53,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 764,
+        "5": 813
+      },
+      "any_top5_boundary_tie_days": 1280,
+      "reverse_observed_best": 1,
+      "reverse_stop_observed": 51,
+      "reverse_observed_best_differs": true,
+      "fit_seconds": 274.14645409584045,
+      "max_rss_GiB": 8.388519287109375
+    },
+    {
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 2000,
+      "best_iteration": 45,
+      "observed_rounds": 95,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1289,
+      "reverse_observed_best": 45,
+      "reverse_stop_observed": 95,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 414.17404198646545,
+      "max_rss_GiB": 8.477828979492188
+    },
+    {
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 3000,
+      "best_iteration": 93,
+      "observed_rounds": 143,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1275,
+      "reverse_observed_best": 93,
+      "reverse_stop_observed": 143,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 586.3274528980255,
+      "max_rss_GiB": 8.0491943359375
+    },
+    {
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 4000,
+      "best_iteration": 77,
+      "observed_rounds": 127,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1267,
+      "reverse_observed_best": 77,
+      "reverse_stop_observed": 127,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 535.7072429656982,
+      "max_rss_GiB": 8.194473266601562
+    }
+  ],
+  "interpretation": "Seed1000 selects round3 under both old and new labels, with764 Top3 and813 Top5 boundary-tie days out of1448. Reverse-priority best is round1 and its patience50 stop is observed at round51. Same-round original vs reverse early-stop score for the new-label run is0.2565273750316149 vs0.23643185363460711. This is direct tie-order sensitivity of the frozen early-stop rule, not a new model candidate.",
+  "performance": "The ensemble retains high global H5 RankIC but has lower head net_ann and Sharpe than the matched continuous control; average cross-seed Top3 agreement is27.21% vs35.24%. No ensemble-below-all-components collapse is observed.",
+  "action": "Keep all original five seeds in each treatment and the canonical equal-weight ensemble; report the failure of uniform robustness improvement without reselection."
+}

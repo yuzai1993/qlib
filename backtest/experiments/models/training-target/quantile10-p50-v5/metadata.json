@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "entity_type": "experiment",
+  "kind": "model",
+  "track": "all_a",
+  "exp_id": "training-target/h20-quantile10-p50-v5",
+  "archive_path": "backtest/experiments/models/training-target/quantile10-p50-v5",
+  "title": "等样本10档 · H20／patience50（v5）",
+  "inventory_kind": "asset_snapshot",
+  "experiment_type": "training_target",
+  "model_profile": {
+    "structure": "每个种子一个单LightGBM，沿用H20／patience50冻结超参。",
+    "features": "Alpha158 + range，164列，无regime特征。",
+    "training_sample": {
+      "pool": "沪深全A",
+      "time_range": "2004-01-02～2020-07-31",
+      "filters": "沿用已完成H20稳定性复核的冻结特征、训练日期、M0权重和有效标签掩码；5,448,963条有序训练样本，原件与签名见来源清单。"
+    },
+    "training_target": "旧标签快照H20累计收益，按日截面等样本10档；并列组按中秩归档，同档标签相同。ordinal0..9经冻结仿射变换，scale=0.34774330479829896，offset=-1.564601411089059；不在分档后重新CSRankNorm。",
+    "evaluation_sample": {
+      "pool": "全A",
+      "time_range": "2020-08-03～2026-07-31；H5退出截断至2026-07-23，1448日",
+      "filters": "日频ST、成交额≥1000万、上市≥60日；头部另剔t+1不可成交。"
+    },
+    "early_stopping": "Top5×H5扣费净年化，eval_window，patience=50，上限200轮；采用完整退出边界。",
+    "prediction_signal": "固定五种子逐日截面z-score后等权合成；官方主格Top3×H5，全局H5 RankIC。",
+    "changes": "2026-11-07用户指定把旧标签等样本n=10晋升为v5；复用原五种子，不重训。",
+    "model_paths": [
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000
+      }
+    ]
+  },
+  "benchmark_outputs": [
+    {
+      "ref": "training-target/h20-quantile10-p50-v5",
+      "version": "v5"
+    }
+  ],
+  "activity": "model_research",
+  "role": "experiment",
+  "changed_axes": [],
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "phase": "M",
+  "direction": "training-target",
+  "configs": [
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725"
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583"
+    }
+  ],
+  "reports": [
+    "backtest/experiments/models/training-target/quantile10-p50-v5/reports/detail.html"
+  ],
+  "records": [
+    "backtest/experiments/models/training-target/quantile10-p50-v5/records/d7006710074b379d06adc716801e5b2feec651d5100ffac51ddc83e8f72033cb.json"
+  ],
+  "data": [
+    "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json"
+  ],
+  "docs": [
+    "backtest/experiments/models/training-target/quantile10-p50-v5/docs/promotion-plan.json",
+    "backtest/experiments/models/training-target/quantile10-p50-v5/docs/promotion-verification.json"
+  ],
+  "metrics_source": {
+    "path": "metrics/model-evaluation.json",
+    "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16"
+  },
+  "records_directory": "backtest/experiments/models/training-target/quantile10-p50-v5/records"
+}

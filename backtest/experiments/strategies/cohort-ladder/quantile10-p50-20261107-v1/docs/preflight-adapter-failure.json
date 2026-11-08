@@ -1,0 +1,12 @@
+{
+  "at": 1794060300.6378748,
+  "script": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-n10-v5-20261107.fjys243a/prepare.py",
+    "sha256": "5cc302166ca88f743a1378558f70b3ffd71a41c69f5ea8cf0dd17509a24ef37c",
+    "size": 7558
+  },
+  "error": "KeyError variant: archived training receipt identifies job_id/session and input_receipt rather than redundant top-level variant/treatment",
+  "resolution": "prepare_v2 verifies exact job/session identity, input receipt hash and old-label receipt against frozen prepared input. No scientific input, training or registry changed.",
+  "new_fits": 0,
+  "account_jobs": 0
+}

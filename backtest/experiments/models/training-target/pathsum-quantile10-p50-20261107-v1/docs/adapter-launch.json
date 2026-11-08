@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/launch.py",
+    "sha256": "f5e6e29f4edf175fa9e6a0dfe0f69c272602464e2c388ea51202c6b0c4baa7d3",
+    "size": 797
+  },
+  "source_text": "from common import *\nif __name__=='__main__':\n save_source(__file__);p=BASE/'docs/pipeline-launch.json';assert not p.exists()\n assert read(STATE)['variants'][EID]['attempts'][-1]['outcome']=='running'\n assert not any(j['status']=='running' for j in read(PROGRESS)['jobs'])\n command=[sys.executable,'-B','-u',str(TMP/'pipeline.py')]\n with (TMP/'pipeline.log').open('w') as log:\n  proc=subprocess.Popen(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)\n write(p,{'pid':proc.pid,'command':command,'started_at':time.time(),'log':str(TMP/'pipeline.log'),'source':fingerprint(TMP/'pipeline.py'),'restart_rule':'Check exact process identity and saved job/receipt state before resuming; never duplicate running fits.'})\n print(json.dumps(read(p),ensure_ascii=False),flush=True)\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

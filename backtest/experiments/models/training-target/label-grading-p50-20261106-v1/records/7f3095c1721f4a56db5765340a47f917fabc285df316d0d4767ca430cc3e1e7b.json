@@ -1,0 +1,164 @@
+{
+  "exp_id": "training-target/label-grading-p50-20261106-v1",
+  "archive_path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1",
+  "date": "2026-11-06",
+  "state": "running",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "training-target",
+  "experiment_type": "training_target",
+  "hypothesis": "Daily label grading suppresses irrelevant fine rank differences while preserving or improving predictive usefulness; robustness and return are assessed separately.",
+  "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "test_pools": [
+    "all"
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "portable_eval_output": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+  "detail_report": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.2534605946841205,
+    "ir": 0.704315030617524,
+    "ann": 0.34314209443978405,
+    "beta": 1.0227728314507063,
+    "ann_alpha": 0.25141829300593826,
+    "appraisal_ir": 0.6988944072369143,
+    "turnover_period": 0.9085239085239085,
+    "turnover": 0.18170478170478171,
+    "ann_cost": 0.039786079002079006,
+    "net_ann_excess": 0.21367451568204152,
+    "net_ann": 0.3033560154377051,
+    "net_ann_alpha": 0.21163221400385926,
+    "net_ann_vol": 0.5723116542785851,
+    "net_sharpe": 0.5300538843999146,
+    "rank_ic_mean": 0.09891786875644017
+  },
+  "representative_candidate": "quantile5 chosen before returns; not an aggregate or selected winner",
+  "paired_control_ref": "training-target/horizon-style-p50-20261105-v1/arms/h20",
+  "internal_candidates": {
+    "quantile5": {
+      "status": "completed",
+      "treatments": {
+        "old": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-old.json",
+            "sha256": "44ba163b78c13ee7078dcd5c7260392ebe7549de331dcf5b68346749fa3b7bfc",
+            "size": 88480
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile5-old.json",
+            "sha256": "45a160ac41676b09d3e2b386bba1892f1ceae3a857e0abb846f1e3efec4b3d07",
+            "size": 4453
+          }
+        },
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+            "sha256": "7d9b5adb24bdd06fa5ef2752bad84168f3301e5645931e06807a79afa8152ea7",
+            "size": 88540
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile5-new.json",
+            "sha256": "1e2bf2ad99ae2c0d90def030ee230eefdec37ad9a20a9a1f9887229f0dd7fe55",
+            "size": 4453
+          }
+        }
+      }
+    },
+    "quantile10": {
+      "status": "evaluated_awaiting_registration",
+      "treatments": {
+        "old": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-old.json",
+            "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16",
+            "size": 88524
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-old.json",
+            "sha256": "ddba993b53de7535b4d81dec2b54905f09ca385e86dab803bb685eb644c54484",
+            "size": 4475
+          }
+        },
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-new.json",
+            "sha256": "b22846cc42ca0aa382332247e102c6e1601887adcbe06d76d09bb45cae674a18",
+            "size": 88523
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-new.json",
+            "sha256": "e0d37b214276fe63f90d5de8c0d5ca100e97b4d8649adcb6b4a291d6f26847c4",
+            "size": 4475
+          }
+        }
+      }
+    },
+    "width5": {
+      "status": "planned",
+      "treatments": {}
+    },
+    "tails5": {
+      "status": "planned",
+      "treatments": {}
+    }
+  },
+  "execution_audit": {
+    "scientific_candidates": 4,
+    "actual_new_fits": 20,
+    "successful_fits": 20,
+    "prior_fits": 111,
+    "cumulative_fits": 131,
+    "native_lifecycle_scope": "one study attempt plus exact per-fit ledger; internal science tracked in supplemental ledger"
+  },
+  "configs": [
+    "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/frozen-study.json",
+    "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/prepared-inputs.json",
+    "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/harness-plan.json",
+    "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/evaluation.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/labelgrade_20261106_quantile5_new_s42",
+    "backtest/result/labelgrade_20261106_quantile5_new_s1000",
+    "backtest/result/labelgrade_20261106_quantile5_new_s2000",
+    "backtest/result/labelgrade_20261106_quantile5_new_s3000",
+    "backtest/result/labelgrade_20261106_quantile5_new_s4000",
+    "backtest/result/labelgrade_20261106_quantile5_old_s42",
+    "backtest/result/labelgrade_20261106_quantile5_old_s1000",
+    "backtest/result/labelgrade_20261106_quantile5_old_s2000",
+    "backtest/result/labelgrade_20261106_quantile5_old_s3000",
+    "backtest/result/labelgrade_20261106_quantile5_old_s4000",
+    "backtest/result/labelgrade_20261106_quantile10_new_s42",
+    "backtest/result/labelgrade_20261106_quantile10_new_s1000",
+    "backtest/result/labelgrade_20261106_quantile10_new_s2000",
+    "backtest/result/labelgrade_20261106_quantile10_new_s3000",
+    "backtest/result/labelgrade_20261106_quantile10_new_s4000",
+    "backtest/result/labelgrade_20261106_quantile10_old_s42",
+    "backtest/result/labelgrade_20261106_quantile10_old_s1000",
+    "backtest/result/labelgrade_20261106_quantile10_old_s2000",
+    "backtest/result/labelgrade_20261106_quantile10_old_s3000",
+    "backtest/result/labelgrade_20261106_quantile10_old_s4000",
+    "backtest/result/20261106_label_grading"
+  ],
+  "harness": {
+    "campaign_id": "label-grading-p50-20261106-v1",
+    "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1"
+  },
+  "conclusion": "2/4个候选已完成官方评估；所有候选、旧标签配对和局限见详细报告。尚未晋升。",
+  "study_summary": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/study-summary.json",
+  "diagnostic_only": true,
+  "cleanup_retention_eligible": false
+}

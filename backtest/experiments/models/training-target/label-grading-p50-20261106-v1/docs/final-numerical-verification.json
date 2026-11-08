@@ -1,0 +1,487 @@
+{
+  "at": 1793999783.992748,
+  "status": "complete",
+  "models": [
+    {
+      "job_id": "quantile5-new-s42-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "c10ac9b9ea2d8e2c9e73950cde521c41da472c159976e01fe7c367dcecd9844a",
+        "size": 59710958
+      },
+      "best_iteration": 67,
+      "observed_rounds": 117
+    },
+    {
+      "job_id": "quantile5-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d6733e38438219d5b2f0ad3d820e1d881aa4e16dd8ba59ae66f1bb365a105ae4",
+        "size": 60184828
+      },
+      "best_iteration": 100,
+      "observed_rounds": 150
+    },
+    {
+      "job_id": "quantile5-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2e5a11492fbb3543510f883896d61578368bcb28e90b8105ed65148a769e8e76",
+        "size": 60028493
+      },
+      "best_iteration": 90,
+      "observed_rounds": 140
+    },
+    {
+      "job_id": "quantile5-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f1ec3c178d19d0849ecfa56827ceb2736f6791a2e55e27c3ded923ecea4dce3f",
+        "size": 59768130
+      },
+      "best_iteration": 74,
+      "observed_rounds": 124
+    },
+    {
+      "job_id": "quantile5-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "286f9f27997e7f2d0e37ae7db5d7dd311c20feca7987e4682c4572b6e0fd9de2",
+        "size": 59893613
+      },
+      "best_iteration": 83,
+      "observed_rounds": 133
+    },
+    {
+      "job_id": "quantile5-old-s42-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "08def99c40a3654ee317cf298229f8d91e1f3ddef145d0eab247759566d2961b",
+        "size": 59200304
+      },
+      "best_iteration": 37,
+      "observed_rounds": 87
+    },
+    {
+      "job_id": "quantile5-old-s1000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e7f46840ec1163b57c083197fa178e1b8597e8944da061ddfe8526bd4e64c93e",
+        "size": 60184966
+      },
+      "best_iteration": 100,
+      "observed_rounds": 150
+    },
+    {
+      "job_id": "quantile5-old-s2000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "8f1d1b94cecc7c40393735dbd468dd58afc9118200f0b97d5092c16b496d8fa0",
+        "size": 60028563
+      },
+      "best_iteration": 90,
+      "observed_rounds": 140
+    },
+    {
+      "job_id": "quantile5-old-s3000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7d3ff058cbac8779aa278058124aa238b64a4d8bccd84991c370f4f89614ec7d",
+        "size": 60083053
+      },
+      "best_iteration": 94,
+      "observed_rounds": 144
+    },
+    {
+      "job_id": "quantile5-old-s4000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f31f21eb803f6b3382a6109f9441a814a40614da89b203158c3d7baf1e9f9dfb",
+        "size": 59893699
+      },
+      "best_iteration": 83,
+      "observed_rounds": 133
+    },
+    {
+      "job_id": "quantile10-new-s42-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e628e905ca52e57359633df6e192679e37165b37979546304dad491fa90e6492",
+        "size": 59488447
+      },
+      "best_iteration": 57,
+      "observed_rounds": 107
+    },
+    {
+      "job_id": "quantile10-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "34734894bb990f054e985cb066303eac3085a848e92193560a11fe070b28a736",
+        "size": 59242343
+      },
+      "best_iteration": 41,
+      "observed_rounds": 91
+    },
+    {
+      "job_id": "quantile10-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f73fe30e58b8a0e446610d6285df7c5001f8a2aaf090fea631b62ba26776776b",
+        "size": 59776434
+      },
+      "best_iteration": 73,
+      "observed_rounds": 123
+    },
+    {
+      "job_id": "quantile10-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ab27e15cec34e168af2b5435381dee3388d2813da98b397c93ada477a8f2efb7",
+        "size": 59546252
+      },
+      "best_iteration": 60,
+      "observed_rounds": 110
+    },
+    {
+      "job_id": "quantile10-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "6d0caa65eae1a105002f208d09d577cf7afbddbd3df2bcb8fb2a0a4e55e6f03a",
+        "size": 60125100
+      },
+      "best_iteration": 95,
+      "observed_rounds": 145
+    },
+    {
+      "job_id": "quantile10-old-s42-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+        "size": 59488457
+      },
+      "best_iteration": 57,
+      "observed_rounds": 107
+    },
+    {
+      "job_id": "quantile10-old-s1000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+        "size": 59781408
+      },
+      "best_iteration": 75,
+      "observed_rounds": 125
+    },
+    {
+      "job_id": "quantile10-old-s2000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+        "size": 60495908
+      },
+      "best_iteration": 118,
+      "observed_rounds": 168
+    },
+    {
+      "job_id": "quantile10-old-s3000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+        "size": 59546157
+      },
+      "best_iteration": 60,
+      "observed_rounds": 110
+    },
+    {
+      "job_id": "quantile10-old-s4000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+        "size": 60125167
+      },
+      "best_iteration": 95,
+      "observed_rounds": 145
+    },
+    {
+      "job_id": "width5-new-s42-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3636dbbf5d6d3c7e9f9816defdd173e0fb965cf7e78938ece0e45ef14d2abbad",
+        "size": 59026014
+      },
+      "best_iteration": 25,
+      "observed_rounds": 75
+    },
+    {
+      "job_id": "width5-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "49833a4a8f7b6e0c59f74d1f66bf45311ed12cfe8aadf2bb43fc9700f9b80dc8",
+        "size": 58816213
+      },
+      "best_iteration": 14,
+      "observed_rounds": 64
+    },
+    {
+      "job_id": "width5-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "837f17b949254482a051b9e405acad290317cc09645191159b9c9a82a85219a5",
+        "size": 58683040
+      },
+      "best_iteration": 8,
+      "observed_rounds": 58
+    },
+    {
+      "job_id": "width5-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "de09689b7f63d97dffdb826918bac469590718775c5cbce1c82ece4ba2f6fe87",
+        "size": 59309231
+      },
+      "best_iteration": 39,
+      "observed_rounds": 89
+    },
+    {
+      "job_id": "width5-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_width5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d31029badd6500567665bc6ac6dd00d12fdd48b51d064de14bbc813c5d54d992",
+        "size": 59304856
+      },
+      "best_iteration": 38,
+      "observed_rounds": 88
+    },
+    {
+      "job_id": "tails5-new-s42-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "cf15639ef4b6b77cefcb9010535e5a8a31c5ce1f26272ac1c9df98faa01fa690",
+        "size": 59563026
+      },
+      "best_iteration": 65,
+      "observed_rounds": 115
+    },
+    {
+      "job_id": "tails5-new-s1000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "92843f7aa4af17ed15d9b64d5ebef0ddaebc59242c4a82b2a874c559851575d9",
+        "size": 58559720
+      },
+      "best_iteration": 3,
+      "observed_rounds": 53
+    },
+    {
+      "job_id": "tails5-new-s2000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "92b9280fe6ccdfe2b8e77ffe6bbaa3d773a2f9a8cb6efe3b9762b922735cc9e8",
+        "size": 59281886
+      },
+      "best_iteration": 45,
+      "observed_rounds": 95
+    },
+    {
+      "job_id": "tails5-new-s3000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "4a3113327395292c449a8291de1a34dd5e692d1617d9f000288fe928f3fc7f6c",
+        "size": 59696778
+      },
+      "best_iteration": 74,
+      "observed_rounds": 124
+    },
+    {
+      "job_id": "tails5-new-s4000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5b3a86b819afe0dc0ec8bfc49ab7b2b6b861cbccc4b7266e507c041fa7984504",
+        "size": 59818163
+      },
+      "best_iteration": 77,
+      "observed_rounds": 127
+    },
+    {
+      "job_id": "tails5-old-s42-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0ac6189d32bc7836ba1daaa09323fbef0190c1f95fbf49986da0a8f5e27728c9",
+        "size": 59310540
+      },
+      "best_iteration": 48,
+      "observed_rounds": 98
+    },
+    {
+      "job_id": "tails5-old-s1000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "88a02e75f455ce02d2b05e574f7c06d5b56244ba8d64176eaab55e0f2bfe3299",
+        "size": 58559695
+      },
+      "best_iteration": 3,
+      "observed_rounds": 53
+    },
+    {
+      "job_id": "tails5-old-s2000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "027ab0e05c8a76aa68b98f344db6bce90b6ca349e730cff4ca62f962f406567c",
+        "size": 59281928
+      },
+      "best_iteration": 45,
+      "observed_rounds": 95
+    },
+    {
+      "job_id": "tails5-old-s3000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "23c3ce302a0a7c06443b57954ae95d91f7693c9f46f93aaa891a13b9abbbf137",
+        "size": 59984020
+      },
+      "best_iteration": 93,
+      "observed_rounds": 143
+    },
+    {
+      "job_id": "tails5-old-s4000-a1",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9c1fdfae2ffdc2c1092e65bbfc497ab8dabde31cf8d9fd7c334b781995d34fed",
+        "size": 59818142
+      },
+      "best_iteration": 77,
+      "observed_rounds": 127
+    }
+  ],
+  "prediction_groups": [
+    {
+      "variant": "quantile10",
+      "treatment": "new",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "predictions": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-new.json",
+        "sha256": "e0d37b214276fe63f90d5de8c0d5ca100e97b4d8649adcb6b4a291d6f26847c4",
+        "size": 4475
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-new.json",
+        "sha256": "b22846cc42ca0aa382332247e102c6e1601887adcbe06d76d09bb45cae674a18",
+        "size": 88523
+      }
+    },
+    {
+      "variant": "quantile10",
+      "treatment": "old",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "predictions": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-old.json",
+        "sha256": "ddba993b53de7535b4d81dec2b54905f09ca385e86dab803bb685eb644c54484",
+        "size": 4475
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-old.json",
+        "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16",
+        "size": 88524
+      }
+    },
+    {
+      "variant": "quantile5",
+      "treatment": "new",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "predictions": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile5-new.json",
+        "sha256": "1e2bf2ad99ae2c0d90def030ee230eefdec37ad9a20a9a1f9887229f0dd7fe55",
+        "size": 4453
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+        "sha256": "7d9b5adb24bdd06fa5ef2752bad84168f3301e5645931e06807a79afa8152ea7",
+        "size": 88540
+      }
+    },
+    {
+      "variant": "quantile5",
+      "treatment": "old",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "predictions": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile5-old.json",
+        "sha256": "45a160ac41676b09d3e2b386bba1892f1ceae3a857e0abb846f1e3efec4b3d07",
+        "size": 4453
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-old.json",
+        "sha256": "44ba163b78c13ee7078dcd5c7260392ebe7549de331dcf5b68346749fa3b7bfc",
+        "size": 88480
+      }
+    },
+    {
+      "variant": "tails5",
+      "treatment": "new",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "predictions": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-tails5-new.json",
+        "sha256": "0424e985427d344df81028da7383bd8c2ab22a1cb500d337866c0bc4fb2aa5d1",
+        "size": 4387
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/tails5-new.json",
+        "sha256": "6cb101e1650676ee91b7be5f23948038b2fe420c070bf35a56e32fdca234d5cd",
+        "size": 88598
+      }
+    },
+    {
+      "variant": "tails5",
+      "treatment": "old",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "predictions": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-tails5-old.json",
+        "sha256": "d5d268ed16cffc7308067750c6bae491ae51795d92007ec542d1000a49980729",
+        "size": 4387
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/tails5-old.json",
+        "sha256": "1936d5692c069c53d1a9f643302cd365608f031780c562ff16b8d8cf9ecec269",
+        "size": 88599
+      }
+    },
+    {
+      "variant": "width5",
+      "treatment": "new",
+      "rows": 6914485,
+      "ensemble_recomputed_exact": true,
+      "predictions": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-width5-new.json",
+        "sha256": "5c7176b31f520fc82c43ff75fe0905d8a78182c447eb74f70ab674e68d427fb0",
+        "size": 4387
+      },
+      "evaluation": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/width5-new.json",
+        "sha256": "ea4e8f5e57603e34d3362804dbe599c407fa6045c839b320851390ba28269cc0",
+        "size": 88818
+      }
+    }
+  ],
+  "coverage": {
+    "expected_jobs": 35,
+    "expected_prediction_groups": 7,
+    "missing_successful_jobs": [],
+    "missing_prediction_groups": [],
+    "unfinished_groups": [],
+    "non_successful_attempts": []
+  },
+  "native_job_ledger_matches_supplemental": true,
+  "training_rows_features_masks_weights_parameters_verified": true,
+  "continuous_control_formal_inference_exact": true,
+  "source": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/adapter-verify.json",
+    "sha256": "efd5ec516214d5f40f6e5fb125ea26ee5f95ccd61fe647b914174667b068d86a",
+    "size": 10833
+  },
+  "limits": "Verifies preserved evidence and ensemble arithmetic; the canonical metric implementation remains the source for financial metrics. Does not create an independent out-of-sample evaluation."
+}

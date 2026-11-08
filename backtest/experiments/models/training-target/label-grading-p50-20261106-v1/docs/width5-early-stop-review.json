@@ -1,0 +1,101 @@
+{
+  "at": 1793994443.748673,
+  "question": "Does the earlier stopping of daily min/max equal-width labels depend on head-boundary ties?",
+  "method": "Predeclared reverse-priority diagnostic along each actually observed training trajectory; no new fit, changed rule, or selected seed.",
+  "observations": [
+    {
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 42,
+      "best_iteration": 25,
+      "observed_rounds": 75,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1243,
+      "reverse_observed_best": 25,
+      "reverse_stop_observed": 75,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 353.63312101364136,
+      "max_rss_GiB": 7.25
+    },
+    {
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 1000,
+      "best_iteration": 14,
+      "observed_rounds": 64,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 3,
+        "5": 2
+      },
+      "any_top5_boundary_tie_days": 1125,
+      "reverse_observed_best": 14,
+      "reverse_stop_observed": 64,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 307.2211539745331,
+      "max_rss_GiB": 7.6097259521484375
+    },
+    {
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 2000,
+      "best_iteration": 8,
+      "observed_rounds": 58,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 102,
+        "5": 102
+      },
+      "any_top5_boundary_tie_days": 1159,
+      "reverse_observed_best": 9,
+      "reverse_stop_observed": null,
+      "reverse_observed_best_differs": true,
+      "fit_seconds": 278.9587128162384,
+      "max_rss_GiB": 7.687744140625
+    },
+    {
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 3000,
+      "best_iteration": 39,
+      "observed_rounds": 89,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1158,
+      "reverse_observed_best": 39,
+      "reverse_stop_observed": 89,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 389.4837558269501,
+      "max_rss_GiB": 7.9083709716796875
+    },
+    {
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 4000,
+      "best_iteration": 38,
+      "observed_rounds": 88,
+      "hit_200_round_cap": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      },
+      "any_top5_boundary_tie_days": 1266,
+      "reverse_observed_best": 38,
+      "reverse_stop_observed": 88,
+      "reverse_observed_best_differs": false,
+      "fit_seconds": 387.2626118659973,
+      "max_rss_GiB": 7.884307861328125
+    }
+  ],
+  "interpretation": "All five chosen rounds are8–39. Seed2000 has102 Top3 and102 Top5 boundary-tie days at round8. Reverse-priority best in the observed58-round prefix is9, but its patience50 stop is not observed. Do not call9 a completed alternate early-stop result. Other four observed reverse-priority selections match the actual selections.",
+  "performance": "Official five-seed width5 net_ann, net_sharpe and global H5 RankIC are lower than the same-source continuous control. More concentrated bins and shallow trees are observed mechanisms to investigate, not proven unique causes of the performance difference.",
+  "limits": "No frozen old raw-return magnitudes; old/new106-label paired robustness is unavailable for this method. This examines daily min/max equal-width5 only, without clipping.",
+  "action": "Keep all five original models and official metrics; flag tie sensitivity; no reselection or refit."
+}

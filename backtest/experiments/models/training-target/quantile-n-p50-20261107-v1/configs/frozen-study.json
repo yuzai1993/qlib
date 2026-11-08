@@ -1,0 +1,140 @@
+{
+  "hypothesis": "Only vary equal-count bin number n. Test whether finer bins improve head return monotonically or an intermediate n balances return and label sensitivity; compare return, Sharpe, RankIC and Top3/Top5 agreement separately.",
+  "user_idea": "那在等样本上，再做几组n的实验，预估实验时间9-10小时",
+  "user_control_choice": "沿用最近 H20／patience50 对照",
+  "formal_baseline": "regime-adapt/m0-h20-t5h5-es-v1",
+  "paired_control": "training-target/horizon-style-p50-20261105-v1/arms/h20",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "parameters": {
+    "colsample_bytree": 0.8879,
+    "learning_rate": 0.2,
+    "subsample": 0.8789,
+    "lambda_l1": 205.6999,
+    "lambda_l2": 580.9768,
+    "max_depth": 8,
+    "num_leaves": 210,
+    "num_threads": 8,
+    "num_boost_round": 200,
+    "early_stopping_rounds": 50
+  },
+  "train_window": [
+    "2004-01-02",
+    "2020-07-31"
+  ],
+  "eval_window": [
+    "2020-08-03",
+    "2026-07-31"
+  ],
+  "es_metric": "top5_h5_net_ann",
+  "valid_cutoff": "2026-07-23",
+  "data_version": "2026-11-03",
+  "source_snapshots": {
+    "features": "2026-11-02 frozen features",
+    "reference_labels": "2026-11-03 frozen H20 labels",
+    "perturbed_labels": "2026-11-02 frozen H20 labels;106 normalized differences",
+    "evaluation": "2026-11-03 frozen provider"
+  },
+  "candidates": [
+    {
+      "id": "quantile7",
+      "bins": 7,
+      "method": "daily percentile boundaries k/n; preserve ties; exact rational midpoint-rank comparisons"
+    },
+    {
+      "id": "quantile15",
+      "bins": 15,
+      "method": "daily percentile boundaries k/n; preserve ties; exact rational midpoint-rank comparisons"
+    },
+    {
+      "id": "quantile20",
+      "bins": 20,
+      "method": "daily percentile boundaries k/n; preserve ties; exact rational midpoint-rank comparisons"
+    },
+    {
+      "id": "quantile30",
+      "bins": 30,
+      "method": "daily percentile boundaries k/n; preserve ties; exact rational midpoint-rank comparisons"
+    },
+    {
+      "id": "quantile50",
+      "bins": 50,
+      "method": "daily percentile boundaries k/n; preserve ties; exact rational midpoint-rank comparisons"
+    },
+    {
+      "id": "quantile3",
+      "bins": 3,
+      "method": "daily percentile boundaries k/n; preserve ties; exact rational midpoint-rank comparisons"
+    }
+  ],
+  "encoding": "Ordinal bin ID 0..n-1; one affine transform fitted on reference training rows only matches mean/std of continuous control training labels. Same frozen transform for old-label sensitivity; no CSRankNorm or daily reranking after grading.",
+  "sample_protocol": "Exact H20 training indices, original rank-before-date-selection and legacy-h40-base-v1; no sample/intersection changes.",
+  "evaluation": "Canonical official_head_from_preds; five-seed daily zscore mean, Top3xH5 net_ann/net_ann_vol/net_sharpe, globalH5RankIC, years/styles; retain individual seeds as diagnostics.",
+  "sensitivity": "All five seeds per new n. Refit old-label treatment only when encoded float32 target differs; exact input identity is a reuse diagnostic, not an independent replicate.",
+  "diagnostics": [
+    "bin occupancy and label distortion",
+    "full early-stop curves and tree counts",
+    "Top3/Top5 tie frequency and seed agreement",
+    "paired old/new heads and metric differences on common frozen inputs",
+    "short-tree and200-round censoring flags"
+  ],
+  "decision_rule": "No automatic promotion. Compare each n against same-source continuous H20 and prior n5/n10. Report non-monotonicity, plateau/interior or endpoint optima separately for net_ann/Sharpe and sensitivity, including all tied maxima. Historical selection window, not independent OOS.",
+  "budget": {
+    "max_scientific_candidates": 6,
+    "nominal_primary_fits": 30,
+    "conditional_paired_fits": 20,
+    "max_model_fits_including_retries": 52,
+    "max_wall_hours": 10,
+    "concurrency": 1,
+    "closeout_reserve_seconds": 2700
+  },
+  "prior_research_fit_cost": 146,
+  "entry_policy": "One new study entry linked to the closed label-grading campaign. Six internal n candidates with separate receipt/attempt/fit costs; native parent lifecycle plus exact fit ledger. Platform representative n7 is predeclared, not winner or aggregate.",
+  "temporary_directory": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20",
+  "implementation": "Task-local adapters call existing trainer, evaluator, registry and report; no new permanent module or platform structure.",
+  "previous_campaign": {
+    "state": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/harness-state.json",
+      "sha256": "d4654886b41243fc97310ca316302f174e9c4150f1d8d8bff04d3cd48d6a1b9c",
+      "size": 105912
+    },
+    "fits": 35,
+    "prior_cumulative_fits": 146,
+    "already_exposed_n": [
+      5,
+      10
+    ],
+    "control_source": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/prepared-inputs.json",
+      "sha256": "15dba15734e0b6db22ac383b59512de08e22f99377e4810eb5fd4ff2a77224c0",
+      "size": 9922
+    }
+  },
+  "reused_candidates": [
+    5,
+    10
+  ],
+  "run_priority": [
+    7,
+    15,
+    20,
+    30,
+    50,
+    3
+  ],
+  "timing_estimate": {
+    "historical_equal_count_10fit_minutes": [
+      108.0,
+      97.2
+    ],
+    "expected_fit_minutes": 515,
+    "preparation_inference_evaluation_review_minutes": 65,
+    "expected_total_hours": 9.67,
+    "hard_stop_new_fit_rule": "Remaining time must cover fit plus 45min closeout; new whole candidate also reserves canonical evaluation. Budget can stop unstarted/partial candidates truthfully."
+  }
+}

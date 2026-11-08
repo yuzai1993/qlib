@@ -1,0 +1,38 @@
+{
+  "user_instruction": "不用要求每个中间时间点都有价格",
+  "at": 1794062349.0653162,
+  "before_any_model_fit": true,
+  "actual_fits": 0,
+  "terminated_prepare_pid": 11425,
+  "terminated_exit_code": 143,
+  "original_prepare_source": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/adapter-prepare.json",
+    "sha256": "6a2bd2ac08d79142c14f38da23c90b8a92e4ca4cc99460ea77e8e80551de3da3",
+    "size": 8971
+  },
+  "original_prepare_log": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/prepare.log",
+    "sha256": "f5538bcad2c2b09f1469c3044f07a21feea62b77e46415f46e73388e77b7615d",
+    "size": 903
+  },
+  "prior_prepared_outputs": [
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/data/h15q10.pkl",
+      "sha256": "0418c0ee3cccbd64b0144d2bef96e9f9140060bbc3d31baae5395b242fcce23c",
+      "size": 65467722
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/data/h7q10.pkl",
+      "sha256": "c9703d8129de089871d70596b7670bfcc223fe1b1774eefd6e98422aa50505b1",
+      "size": 65617878
+    }
+  ],
+  "changes": {
+    "sum_mask": "Use original H20-valid mask; keep exactly original H20 training rows.",
+    "sum_operation": "Sum finite H1..H20 raw cumulative returns in float64, skip NaN intermediate components; do not impute prices or rescale by count. H20 remains finite under the unchanged H20 mask.",
+    "term_counts": "Record number of contributing horizons per sample and train-only diagnostics; unequal counts are a known label-definition property.",
+    "rank_order": "Rank raw path sum within original H20 eligible universe, then select fixed training dates; q10 fixed v5 affine, no reranking.",
+    "budget": "Unchanged: 20 nominal fits,22 max; original deadline and prior176 carried forward."
+  },
+  "supersedes": "frozen-study.json label_processing.sum requirement for every component finite; freeze original contract unchanged for audit, use this explicit user amendment in native variant configs."
+}

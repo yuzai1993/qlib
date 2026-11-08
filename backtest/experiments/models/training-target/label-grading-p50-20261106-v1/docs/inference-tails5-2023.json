@@ -1,0 +1,159 @@
+{
+  "input": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/inference-input-2023.json",
+    "sha256": "fb7878df3f090a274f8d34d8f8f48ca2c0aeed51e9bdc850d79cf083d71db0ae",
+    "size": 6330
+  },
+  "predictions": [
+    {
+      "job_id": "tails5-new-s42-a1",
+      "seed": 42,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "cf15639ef4b6b77cefcb9010535e5a8a31c5ce1f26272ac1c9df98faa01fa690",
+        "size": 59563026
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-new-s42-a1-2023.pkl",
+        "sha256": "fc87f4fb1ba09180ebc11648042c7b6629d48aad43c52902f1f7297856a6b5f4",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-new-s1000-a1",
+      "seed": 1000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "92843f7aa4af17ed15d9b64d5ebef0ddaebc59242c4a82b2a874c559851575d9",
+        "size": 58559720
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-new-s1000-a1-2023.pkl",
+        "sha256": "062dc1157625f163f1b002632cde89433b3a0e87e5e3a3205d7f3fadf973bcb4",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-new-s2000-a1",
+      "seed": 2000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "92b9280fe6ccdfe2b8e77ffe6bbaa3d773a2f9a8cb6efe3b9762b922735cc9e8",
+        "size": 59281886
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-new-s2000-a1-2023.pkl",
+        "sha256": "235f6830224175dcf9fbd4547f0c7a0c634e06ca040300e1ac6bd045979cf236",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-new-s3000-a1",
+      "seed": 3000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "4a3113327395292c449a8291de1a34dd5e692d1617d9f000288fe928f3fc7f6c",
+        "size": 59696778
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-new-s3000-a1-2023.pkl",
+        "sha256": "7a64c167728b079f5136c539c92f7e4c0b9416c7a51ac77fc8f6f3a17d48ec46",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-new-s4000-a1",
+      "seed": 4000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5b3a86b819afe0dc0ec8bfc49ab7b2b6b861cbccc4b7266e507c041fa7984504",
+        "size": 59818163
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-new-s4000-a1-2023.pkl",
+        "sha256": "6d4d6daa82b578762c51573f87881f6f8c732257e29c33835e7257a5715212db",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-old-s42-a1",
+      "seed": 42,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0ac6189d32bc7836ba1daaa09323fbef0190c1f95fbf49986da0a8f5e27728c9",
+        "size": 59310540
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-old-s42-a1-2023.pkl",
+        "sha256": "9484d548fa458c807ff66428e3a694eb3a68681fc038207928417f2411fb1a08",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-old-s1000-a1",
+      "seed": 1000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "88a02e75f455ce02d2b05e574f7c06d5b56244ba8d64176eaab55e0f2bfe3299",
+        "size": 58559695
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-old-s1000-a1-2023.pkl",
+        "sha256": "4d560f2e5a40ab24098ff77f1af9a18b6a2cf02a2f127a6d98f13c5a5b578c8d",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-old-s2000-a1",
+      "seed": 2000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "027ab0e05c8a76aa68b98f344db6bce90b6ca349e730cff4ca62f962f406567c",
+        "size": 59281928
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-old-s2000-a1-2023.pkl",
+        "sha256": "af8df8522fc24a689c6cd5f821a8a310099c5102d23442e36cf94e7ec2392653",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-old-s3000-a1",
+      "seed": 3000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "23c3ce302a0a7c06443b57954ae95d91f7693c9f46f93aaa891a13b9abbbf137",
+        "size": 59984020
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-old-s3000-a1-2023.pkl",
+        "sha256": "3184072fc84fe3eb89d1280e20c84d81315398adeab00ab70e9442f7abd986fc",
+        "size": 19065007
+      }
+    },
+    {
+      "job_id": "tails5-old-s4000-a1",
+      "seed": 4000,
+      "treatment": "old",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9c1fdfae2ffdc2c1092e65bbfc497ab8dabde31cf8d9fd7c334b781995d34fed",
+        "size": 59818142
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/infer-tails5-old-s4000-a1-2023.pkl",
+        "sha256": "6aab7212bf852f8740401e02be61f23962a9b054c900e29a1e550777a768619e",
+        "size": 19065007
+      }
+    }
+  ]
+}

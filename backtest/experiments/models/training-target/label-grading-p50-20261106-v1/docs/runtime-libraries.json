@@ -1,0 +1,27 @@
+{
+  "observed_pid": 58589,
+  "observed_at": 1793979570.4705899,
+  "scope": "Observed during second fit; initial setup separately froze packages and LightGBM binary. No retroactive claim about unobserved process maps.",
+  "libraries": [
+    {
+      "path": "/opt/homebrew/Cellar/libomp/20.1.5/lib/libomp.dylib",
+      "sha256": "42b5c6c1ccb76463af8d7e1731546a1f941c4ab53342bacea8e7a1d1f5801968",
+      "size": 740896
+    },
+    {
+      "path": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/lightgbm/lib/lib_lightgbm.dylib",
+      "sha256": "50f62eef76a25c7dbd5b79c998d59a5dff4874c595f7fb8d197826c2bfbd8a92",
+      "size": 6376096
+    },
+    {
+      "path": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/sklearn/.dylibs/libomp.dylib",
+      "sha256": "7fe04d06d824817d39e4c99ec44e837fd6b5f0f75f2cc3e77a384c298f3f1709",
+      "size": 678720
+    },
+    {
+      "path": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/torch/lib/libomp.dylib",
+      "sha256": "6256bee09e93c28d71c65711cc69224d69994c6965648b628b70a22772fe98d4",
+      "size": 856096
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "reviewer": "/root/review_label_grading",
+  "scope": "Temporary scientific and lifecycle adapters; read-only review, no training",
+  "findings": [
+    {
+      "issue": "Report receipt captured before chart mutation",
+      "resolution": "Plot before registering and hashing; idempotent plot invocation",
+      "status": "resolved_in_adapter"
+    },
+    {
+      "issue": "Incomplete continuous-control bundle could pass existence guard",
+      "resolution": "Final receipt verifies both control metrics and four head artifacts",
+      "status": "resolved_in_adapter"
+    },
+    {
+      "issue": "Seed agreement and ensemble collapse diagnostics missing",
+      "resolution": "Capture canonical per-seed/ensemble heads and report comparisons",
+      "status": "resolved_in_adapter"
+    },
+    {
+      "issue": "Existing platform group supports distinct horizons only",
+      "resolution": "Normal study entry; all H20 encodings in detail report; quantile5 explicitly predeclared representative",
+      "status": "resolved_in_adapter"
+    },
+    {
+      "issue": "Fit-level closeout reserve not enforced",
+      "resolution": "Audited safe handoff to v2 supervisor; frozen trainer unchanged; before each missing fit enforce estimated fit plus 2700 seconds closeout",
+      "status": "resolved_and_handoff_observed"
+    }
+  ],
+  "followup": "Reviewer verified metadata schema, reserve logic, handoff conditions, frozen trainer source, and syntax. Numerical evaluation, final report rendering, lifecycle closeout, and cleanup remain pending."
+}

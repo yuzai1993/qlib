@@ -1,0 +1,74 @@
+{
+  "independent_review": "review_v5_promotion: no critical/important blockers; independently recomputed all full/year/style metrics; 51 detail/hub links valid. Minor risk-degree wording corrected.",
+  "checks": [
+    {
+      "report": {
+        "path": "backtest/experiments/models/training-target/quantile10-p50-v5/reports/detail.html",
+        "sha256": "2fe83988b5738abc956b70d98a394f068eb70aa625643247b25fccdd301ac74f",
+        "size": 6884
+      },
+      "local_links_checked": 5,
+      "svg_count": 0
+    },
+    {
+      "report": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/detail.html",
+        "sha256": "8458fdbb463f0b8ef1769e2d21a91dcf2d4c145a524f3cb8acf6dfd691f3dfbd",
+        "size": 135044
+      },
+      "local_links_checked": 8,
+      "svg_count": 3
+    },
+    {
+      "report": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/comparison.html",
+        "sha256": "8458fdbb463f0b8ef1769e2d21a91dcf2d4c145a524f3cb8acf6dfd691f3dfbd",
+        "size": 135044
+      },
+      "local_links_checked": 8,
+      "svg_count": 3
+    },
+    {
+      "report": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/ladder-account.html",
+        "sha256": "4533036823900ecde9eee9cd9a35dece822a4c8804fcbc57d94f9813791f0928",
+        "size": 46571
+      },
+      "local_links_checked": 2,
+      "svg_count": 1
+    },
+    {
+      "report": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/s5-account.html",
+        "sha256": "7199429482d3ec5a69f1c3dbbb0dcb3997613f56e99061099bc21baef74a507a",
+        "size": 46681
+      },
+      "local_links_checked": 2,
+      "svg_count": 1
+    },
+    {
+      "report": {
+        "path": "backtest/experiments/reports/phase_m_v1_report.html",
+        "sha256": "4e2ae5a8b5cd1acc7fa1ca84c4b51e6e4282b3aaeb023a0902825f96e1a5feda",
+        "size": 20291
+      },
+      "local_links_checked": 24,
+      "svg_count": 0
+    },
+    {
+      "report": {
+        "path": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+        "sha256": "11316c7a760ba3fa36fbefae19945fe9385276eea1cfedab414345f41ea287b2",
+        "size": 18943
+      },
+      "local_links_checked": 14,
+      "svg_count": 0
+    }
+  ],
+  "visual_preview": "Not performed: browser security rejected file protocol. No workaround attempted. Static HTML structure/local links/embedded SVG presence checked.",
+  "remaining_scientific_limitations": [
+    "Historical selection window, not independent out-of-sample.",
+    "v5 under fixed-s5 does not improve historical s5; model head-metric promotion does not imply account improvement.",
+    "No automated v5 strategy result gate; explicit manual verification used."
+  ]
+}

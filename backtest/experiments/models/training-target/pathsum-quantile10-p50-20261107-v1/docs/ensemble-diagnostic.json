@@ -1,0 +1,246 @@
+{
+  "new_fits": 0,
+  "rows": [
+    {
+      "candidate": "h15q10",
+      "scope": "full",
+      "metric": "net_ann",
+      "seed_min": 0.22056433606337553,
+      "seed_max": 0.30211712198368185,
+      "ensemble": 0.21661851255388598,
+      "below_all": true,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "full",
+      "metric": "net_sharpe",
+      "seed_min": 0.33658138643128943,
+      "seed_max": 0.4752952066335463,
+      "ensemble": 0.33836664010361617,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "full",
+      "metric": "net_ann_vol",
+      "seed_min": 0.5919779435698101,
+      "seed_max": 0.6553075866790455,
+      "ensemble": 0.6401887387230375,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "D",
+      "metric": "net_ann",
+      "seed_min": 0.03389871370641929,
+      "seed_max": 0.1376784657460731,
+      "ensemble": 0.04262829169534976,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "D",
+      "metric": "net_sharpe",
+      "seed_min": 0.057365189276198804,
+      "seed_max": 0.25385310980538994,
+      "ensemble": 0.07583388837713348,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "D",
+      "metric": "net_ann_vol",
+      "seed_min": 0.5313727341840583,
+      "seed_max": 0.5909282987493617,
+      "ensemble": 0.5621272047050097,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "F",
+      "metric": "net_ann",
+      "seed_min": 1.2402769086936314,
+      "seed_max": 1.576980631202062,
+      "ensemble": 1.4982889752477013,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "F",
+      "metric": "net_sharpe",
+      "seed_min": 1.1774358894640273,
+      "seed_max": 1.3639581356323212,
+      "ensemble": 1.2623449342689683,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "F",
+      "metric": "net_ann_vol",
+      "seed_min": 0.9913047457840718,
+      "seed_max": 1.216733022635147,
+      "ensemble": 1.1869093261069485,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "T",
+      "metric": "net_ann",
+      "seed_min": 0.11258517354415322,
+      "seed_max": 0.29313782887324485,
+      "ensemble": 0.22133206068696618,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "T",
+      "metric": "net_sharpe",
+      "seed_min": 0.2429369692458864,
+      "seed_max": 0.6062035603561069,
+      "ensemble": 0.47571374109719294,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "h15q10",
+      "scope": "T",
+      "metric": "net_ann_vol",
+      "seed_min": 0.425830071299019,
+      "seed_max": 0.4882108032271317,
+      "ensemble": 0.4652631226848372,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "full",
+      "metric": "net_ann",
+      "seed_min": 0.2568177280583096,
+      "seed_max": 0.3463059585107192,
+      "ensemble": 0.24607143582936541,
+      "below_all": true,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "full",
+      "metric": "net_sharpe",
+      "seed_min": 0.34878678496055904,
+      "seed_max": 0.5127543656627905,
+      "ensemble": 0.3480461476241002,
+      "below_all": true,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "full",
+      "metric": "net_ann_vol",
+      "seed_min": 0.6214424064397329,
+      "seed_max": 0.7880445450352833,
+      "ensemble": 0.7070080720879853,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "D",
+      "metric": "net_ann",
+      "seed_min": 0.1359900280033003,
+      "seed_max": 0.17755636884977333,
+      "ensemble": 0.1465984282832864,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "D",
+      "metric": "net_sharpe",
+      "seed_min": 0.23340705502881848,
+      "seed_max": 0.30649798260864447,
+      "ensemble": 0.23943109504762936,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "D",
+      "metric": "net_ann_vol",
+      "seed_min": 0.5710390282732618,
+      "seed_max": 0.7425431548252307,
+      "ensemble": 0.612278151482889,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "F",
+      "metric": "net_ann",
+      "seed_min": 1.1429531180645627,
+      "seed_max": 1.8547996077721913,
+      "ensemble": 1.60498459736983,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "F",
+      "metric": "net_sharpe",
+      "seed_min": 1.1142015215472574,
+      "seed_max": 1.5684937149694291,
+      "ensemble": 1.1928690280845704,
+      "below_all": false,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "F",
+      "metric": "net_ann_vol",
+      "seed_min": 1.0258046645613792,
+      "seed_max": 1.2823138105900171,
+      "ensemble": 1.3454826637145634,
+      "below_all": false,
+      "above_all": true
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "T",
+      "metric": "net_ann",
+      "seed_min": 0.021878236436494385,
+      "seed_max": 0.26635845941795366,
+      "ensemble": -0.03320848737426155,
+      "below_all": true,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "T",
+      "metric": "net_sharpe",
+      "seed_min": 0.03648129627980159,
+      "seed_max": 0.5284077569842671,
+      "ensemble": -0.06545817643370684,
+      "below_all": true,
+      "above_all": false
+    },
+    {
+      "candidate": "sum20q10",
+      "scope": "T",
+      "metric": "net_ann_vol",
+      "seed_min": 0.45467916372971084,
+      "seed_max": 0.5997110483326656,
+      "ensemble": 0.507323747521345,
+      "below_all": false,
+      "above_all": false
+    }
+  ],
+  "interpretation": "The official ensemble averages standardized scores before selecting Top3; it does not average seed returns. Exact scores, selections and returns independently verified; all five seeds retained."
+}

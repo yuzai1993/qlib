@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/pin_inputs.py",
+    "sha256": "26de18fbd33ed9bd6baacc3f5c48d376312ef464024c87b2f64c90c4c14603fe",
+    "size": 1512
+  },
+  "source_text": "from common import *\nfrom backtest.scripts.prepare.prepare_regime_train_chunks import cache_lock,_atomic_json\n\nsave_source(__file__)\nroot=FEATURE.parents[2]\npaths=[FEATURE,OLD_LABEL,VALID]\nreceipt=root/'.references/pathsum-quantile10-p50-20261107-v1.json'\nold_ref=read(PREVIOUS/'docs/cache-reference.json');check(old_ref)\nprior=read(ROOT/old_ref['path'])\nassert set(map(str,paths))<=set(prior['manifests'])\nwith cache_lock(root):\n journal=root/'.cleanup-journal.json'\n if journal.exists():assert not {r['manifest'] for r in read(journal)['targets']}.intersection(map(str,paths))\n assert all(p.is_file() and p.is_relative_to(root) for p in paths)\n value={'owner_experiment':EID,'owner_archive':str(BASE.relative_to(ROOT)),'reference_kind':'retained_research_input','manifests':list(map(str,paths)),'retention_reason':'Frozen shared inputs for raw path-sum and H7/H15 quantile10 research with matched H20 controls','release_condition':'Release only after owner explicitly retired and all dependencies checked.'}\n if receipt.exists():assert read(receipt)==value\n else:_atomic_json(receipt,value)\nwrite(BASE/'docs/cache-reference.json',fingerprint(receipt))\nwrite(BASE/'docs/cache-reference-audit.json',{'at':time.time(),'study_reference_created_at_closeout':True,'existing_protection_during_run':old_ref,'same_three_manifests_already_pinned_by_prior_study':True,'new_owner_reference':fingerprint(receipt)})\nprint('Persistent study-owned shared-input reference created; prior study protection verified.',flush=True)\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

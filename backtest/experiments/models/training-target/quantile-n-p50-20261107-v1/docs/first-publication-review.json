@@ -1,0 +1,32 @@
+{
+  "at": 1794023152.506658,
+  "candidate": "quantile7",
+  "summary": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/study-summary.json",
+    "sha256": "6b7f53c4c215f48a2aac0058432ca5759bef8c6a42ef1bd5e17a1bd1ce820a68",
+    "size": 8641
+  },
+  "evaluation": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile7-new.json",
+    "sha256": "a9e2a83ded1f12aa4700b76dbbc80fa65f47a40dd07bd94f74c2a8ce1db8f613",
+    "size": 89045
+  },
+  "primary_source": "old",
+  "source_metadata_corrected_and_observed": true,
+  "new_control": false,
+  "matched_old_control_net_ann": 0.31310381475564053,
+  "candidate_net_ann": 0.3320571729192463,
+  "candidate_net_sharpe": 0.5607660190262044,
+  "old_n10_net_sharpe": 0.5656362624345261,
+  "interpretation": "n7 return exceeds oldn10, but Sharpe remains slightly lower; no overall winner claim. All five selected rounds have zero Top3/Top5 boundary ties and observed reverse priorities select same rounds.",
+  "visual_scope": "Actual scientific PNG inspected; original reference line crossed a value label. Versioned plot_single_v2 adds label backgrounds and3-decimal Sharpe; final report uses this version. Full HTML browser rendering not claimed.",
+  "figure": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/reports/label-grading.png",
+    "sha256": "281c8e58ddc06947d7de67ad9d530c54a052157fc41988e32f0d246d0c695cd4",
+    "size": 58467
+  },
+  "review_source_findings": {
+    "eval_control_identity": "resolved in evaluate_single.py and actual JSON, before first new evaluation",
+    "bin_counts": "clearly marked original new-input preflight, not old training counts"
+  }
+}

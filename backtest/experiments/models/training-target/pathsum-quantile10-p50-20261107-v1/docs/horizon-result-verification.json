@@ -1,0 +1,257 @@
+{
+  "verified_at": 1794070618.216303,
+  "scope": "Completed H7/H15 new q10 plus frozen same-source H20 q10; independent JSON arithmetic verification, not a new fit or alternative metric evaluation.",
+  "evidence": [
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h7continuous.json",
+      "sha256": "32185518792ad5f8df9ed0c434f01ea9c39ee50dd7c3d6ae5daf6d230d450706",
+      "size": 88130
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h7q10-new.json",
+      "sha256": "a34f322219968c3ca30fc7be2d7d26733bd92acf6e7bc0d9eec67e63dae73db7",
+      "size": 89026
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h15continuous.json",
+      "sha256": "dce85bc3d2de91c31cc5e1ed8eaccd40754456bfb9a284423cfea9b938c8796b",
+      "size": 88141
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h15q10-new.json",
+      "sha256": "70803ff9d10ca0196df8781c5e9d80f9028a1cfa3ce89f47065ab164537a4aed",
+      "size": 88996
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h20continuous.json",
+      "sha256": "e73d057809eefd0a6c24d458eafd1d38bd29588bc9228183ed358286433b07b3",
+      "size": 88078
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h20q10.json",
+      "sha256": "61bb3d88b2034831dec0b6ec13d14c31c63931cf154aab18dc10e7953c3a902d",
+      "size": 88099
+    }
+  ],
+  "paired_style_metrics": {
+    "7": {
+      "D": {
+        "net_ann": {
+          "continuous": 0.26633011114681854,
+          "q10": 0.19855000124762287,
+          "difference": -0.06778010989919567
+        },
+        "net_sharpe": {
+          "continuous": 0.43618831524055296,
+          "q10": 0.346534461765168,
+          "difference": -0.08965385347538496
+        },
+        "net_ann_vol": {
+          "continuous": 0.6105851574679172,
+          "q10": 0.5729588919850978,
+          "difference": -0.03762626548281944
+        }
+      },
+      "F": {
+        "net_ann": {
+          "continuous": 1.4954319023036953,
+          "q10": 1.3747289285713828,
+          "difference": -0.12070297373231242
+        },
+        "net_sharpe": {
+          "continuous": 1.3202786672761482,
+          "q10": 1.2544368415267841,
+          "difference": -0.06584182574936404
+        },
+        "net_ann_vol": {
+          "continuous": 1.132663837846372,
+          "q10": 1.0958932989389807,
+          "difference": -0.03677053890739135
+        }
+      },
+      "T": {
+        "net_ann": {
+          "continuous": -0.017450272787300405,
+          "q10": 0.08165913171353034,
+          "difference": 0.09910940450083075
+        },
+        "net_sharpe": {
+          "continuous": -0.034014895396088284,
+          "q10": 0.15232992762573594,
+          "difference": 0.18634482302182423
+        },
+        "net_ann_vol": {
+          "continuous": 0.5130185638997199,
+          "q10": 0.536067554066993,
+          "difference": 0.02304899016727313
+        }
+      }
+    },
+    "15": {
+      "D": {
+        "net_ann": {
+          "continuous": 0.13013079688456194,
+          "q10": 0.04262829169534976,
+          "difference": -0.08750250518921218
+        },
+        "net_sharpe": {
+          "continuous": 0.22673329502891956,
+          "q10": 0.07583388837713348,
+          "difference": -0.15089940665178608
+        },
+        "net_ann_vol": {
+          "continuous": 0.5739377486132503,
+          "q10": 0.5621272047050097,
+          "difference": -0.011810543908240656
+        }
+      },
+      "F": {
+        "net_ann": {
+          "continuous": 1.559517041289965,
+          "q10": 1.4982889752477013,
+          "difference": -0.06122806604226372
+        },
+        "net_sharpe": {
+          "continuous": 1.1925315548329523,
+          "q10": 1.2623449342689683,
+          "difference": 0.06981337943601607
+        },
+        "net_ann_vol": {
+          "continuous": 1.3077364996923873,
+          "q10": 1.1869093261069485,
+          "difference": -0.12082717358543871
+        }
+      },
+      "T": {
+        "net_ann": {
+          "continuous": 0.19946074090465013,
+          "q10": 0.22133206068696618,
+          "difference": 0.021871319782316045
+        },
+        "net_sharpe": {
+          "continuous": 0.4375653586492336,
+          "q10": 0.47571374109719294,
+          "difference": 0.03814838244795932
+        },
+        "net_ann_vol": {
+          "continuous": 0.45584216611750616,
+          "q10": 0.4652631226848372,
+          "difference": 0.009420956567331051
+        }
+      }
+    },
+    "20": {
+      "D": {
+        "net_ann": {
+          "continuous": 0.11811418606394912,
+          "q10": 0.16436401061962524,
+          "difference": 0.046249824555676125
+        },
+        "net_sharpe": {
+          "continuous": 0.2246117008288109,
+          "q10": 0.31339950629904073,
+          "difference": 0.08878780547022982
+        },
+        "net_ann_vol": {
+          "continuous": 0.5258594526826121,
+          "q10": 0.524455231473121,
+          "difference": -0.00140422120949113
+        }
+      },
+      "F": {
+        "net_ann": {
+          "continuous": 1.2938425402730307,
+          "q10": 1.254874771903356,
+          "difference": -0.03896776836967475
+        },
+        "net_sharpe": {
+          "continuous": 1.1609310670928916,
+          "q10": 1.2089077835774036,
+          "difference": 0.04797671648451196
+        },
+        "net_ann_vol": {
+          "continuous": 1.1144869639098944,
+          "q10": 1.0380235688365962,
+          "difference": -0.07646339507329825
+        }
+      },
+      "T": {
+        "net_ann": {
+          "continuous": 0.4363959870982391,
+          "q10": 0.43081501292407653,
+          "difference": -0.0055809741741625896
+        },
+        "net_sharpe": {
+          "continuous": 0.9905218835848166,
+          "q10": 0.9831725679270095,
+          "difference": -0.007349315657807165
+        },
+        "net_ann_vol": {
+          "continuous": 0.44057177769649075,
+          "q10": 0.4381886018569836,
+          "difference": -0.0023831758395071456
+        }
+      }
+    }
+  },
+  "horizon_maxima": {
+    "continuous": {
+      "D": {
+        "net_ann": [
+          7
+        ],
+        "net_sharpe": [
+          7
+        ]
+      },
+      "F": {
+        "net_ann": [
+          15
+        ],
+        "net_sharpe": [
+          7
+        ]
+      },
+      "T": {
+        "net_ann": [
+          20
+        ],
+        "net_sharpe": [
+          20
+        ]
+      }
+    },
+    "q10": {
+      "D": {
+        "net_ann": [
+          7
+        ],
+        "net_sharpe": [
+          7
+        ]
+      },
+      "F": {
+        "net_ann": [
+          15
+        ],
+        "net_sharpe": [
+          15
+        ]
+      },
+      "T": {
+        "net_ann": [
+          20
+        ],
+        "net_sharpe": [
+          20
+        ]
+      }
+    }
+  },
+  "T_return_decreased_horizons": 1,
+  "D_return_increased_horizons": 1,
+  "all_three_T_decreased": false,
+  "all_three_D_increased": false,
+  "remaining_research": "Both path-sum candidates, complete scientific review and final lifecycle/cleanup remain.",
+  "limitations": "Historical selection window; only H7/H15/H20; F136days in2024; formal v5 old-label control not used for these causal paired differences."
+}

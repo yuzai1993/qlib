@@ -1,0 +1,37 @@
+{
+  "candidate": "h20continuous",
+  "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1/arms/h20continuous",
+  "parent_experiment": "training-target/pathsum-quantile10-p50-20261107-v1",
+  "state": "completed",
+  "source_role": "reused_control",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "eval_output": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h20continuous.json",
+    "sha256": "e73d057809eefd0a6c24d458eafd1d38bd29588bc9228183ed358286433b07b3",
+    "size": 88078
+  },
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.2445518917762597,
+    "ir": 0.6474098947539955,
+    "ann": 0.3342333915319232,
+    "beta": 1.0469917795369432,
+    "ann_alpha": 0.24033759851119912,
+    "appraisal_ir": 0.6378804607497995,
+    "turnover_period": 0.8976668976668977,
+    "turnover": 0.17953337953337953,
+    "ann_cost": 0.03931062878262878,
+    "net_ann_excess": 0.2052412629936309,
+    "net_ann": 0.2949227627492944,
+    "net_ann_alpha": 0.20102696972857034,
+    "net_ann_vol": 0.5971968374940947,
+    "net_sharpe": 0.49384515160331993,
+    "rank_ic_mean": 0.0985574883393832
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "pid": 12095,
+  "command": [
+    "/opt/anaconda3/envs/qlib/bin/python",
+    "-B",
+    "-u",
+    "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/pipeline.py"
+  ],
+  "started_at": 1794063116.1934452,
+  "log": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/pipeline.log",
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/pipeline.py",
+    "sha256": "8887bf060106b122064b243065f56bdca97258343d0602f67cc43407827187dd",
+    "size": 2549
+  },
+  "restart_rule": "Check exact process identity and saved job/receipt state before resuming; never duplicate running fits."
+}

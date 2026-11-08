@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/bootstrap.py",
+    "sha256": "e75b3eda67aa2fc9a97b0db638bc16541d9b389865cb78f9675ee4885e97de4b",
+    "size": 1104
+  },
+  "source_text": "import json,ast\nfrom pathlib import Path\nT=Path(__file__).resolve().parent\nR=Path('/Users/yuxianqi/Project/qlib')\nP=R/'backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs'\ns=json.loads((P/'adapter-common.json').read_text())['source_text']\ns=s.replace(\"TMP=Path(__file__).parent\",\"TMP=Path(__file__).resolve().parent\")\ns=s.replace('quantile-n-p50-20261107-v1','pathsum-quantile10-p50-20261107-v1')\ns=s.replace(\"VARIANTS=['quantile7','quantile15','quantile20','quantile30','quantile50','quantile3']\",\"VARIANTS=['h7q10','h15q10','sum20continuous','sum20q10']\\nHORIZONS={'h7q10':7,'h15q10':15,'sum20continuous':20,'sum20q10':20}\\nCURRENT=ROOT/'backtest/experiments/models/training-target/quantile10-p50-v5'\\nBASELINE_ID='training-target/h20-quantile10-p50-v5'\")\ns=s.replace(\"REUSED=['quantile5','quantile10']\",\"REUSED=['h7continuous','h15continuous','h20continuous','h20q10','v5']\")\ns=s.replace('PRIOR_FITS=146','PRIOR_FITS=176').replace(\"REPRESENTATIVE='quantile7'\",\"REPRESENTATIVE='sum20q10'\")\nast.parse(s);(T/'common.py').write_text(s)\nprint('Prepared task-local common adapter.')\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

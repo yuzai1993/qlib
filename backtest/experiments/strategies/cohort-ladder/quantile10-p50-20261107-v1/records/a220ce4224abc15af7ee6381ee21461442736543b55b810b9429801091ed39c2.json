@@ -1,0 +1,54 @@
+{
+  "exp_id": "regime-adapt/quantile10-p50-ladder-20261107-v1",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-11-07",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt",
+  "display_name": "v5等样本10档 · 真阶梯Top3×H5",
+  "arm": "h20-quantile10-old-p50",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "model_ref": "training-target/h20-quantile10-p50-v5",
+  "model_baseline_version": "v5",
+  "hypothesis": "用户指定新模型v5执行固定真阶梯，与当前回测基线历史s5比较；附同v5信号固定s5控制臂，无策略调参。",
+  "eval_protocol": "ensemble daily_zscore_mean | CohortLadder topk=3 horizon=5 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json",
+  "portable_eval_output": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json",
+  "detail_report": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/detail.html",
+  "metrics_source": "ensemble",
+  "baseline_ref": "baseline/phase-m-v1-bt-v5",
+  "configs": [
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/ladder.yaml",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/s5.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/20261107_221212_quantile10v5_20261107_ladder",
+    "backtest/result/20261107_221345_quantile10v5_20261107_s5"
+  ],
+  "metrics": {
+    "annualized_return": 0.27759333125624175,
+    "sharpe_ratio": 1.094947558809647,
+    "alpha": 0.18613397581896265,
+    "beta": 0.8520021187930433,
+    "max_drawdown": -0.32445112354925043,
+    "calmar_ratio": 0.8555782708334624,
+    "annualized_volatility": 0.253069221724618,
+    "annualized_one_way_turnover": 44.223470671076996,
+    "n_days": 1454,
+    "annualized_return_arith": 0.27709752653722775,
+    "y2026_annualized_return": 0.09544508599432877,
+    "y2026_annualized_return_arith": 0.12829082235604447
+  },
+  "ensemble_session": "backtest/result/20261107_221212_quantile10v5_20261107_ladder",
+  "data_version": "2026-11-03",
+  "evaluation_mode": "historical_selection_window",
+  "conclusion": "v5真阶梯：CAGR 27.76%、夏普 1.095、最大回撤 -32.45%；历史s5：34.84%／1.177／-33.02%；同v5固定s5：18.73%／0.754／-37.51%。模型v5按用户要求晋升；执行层基线仍为历史s5。",
+  "note": "内部固定s5控制臂与完整三方对比见详情；当前BT仍为历史s5，研究模型晋升不构成生产切换。",
+  "execution_audit": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/scientific-verification.json"
+}

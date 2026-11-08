@@ -1,0 +1,37 @@
+{
+  "at": 1794025610.7687738,
+  "reviewer": "/root/review_quantile_n",
+  "scope": "Read-only single-source schedule, source metadata and report paths; no new fit",
+  "issues": [
+    {
+      "id": "P2-control-identity",
+      "resolution": "evaluate_single.py binds old control evaluation, source amendment and n7 reuse; verified in actual n7 and n15 JSON before final publication",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile7-new.json",
+          "sha256": "a9e2a83ded1f12aa4700b76dbbc80fa65f47a40dd07bd94f74c2a8ce1db8f613",
+          "size": 89045
+        },
+        {
+          "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile15-old.json",
+          "sha256": "114abf3fd81149ad0434f369e7251569f04b011425a41664b9489d8f1c6d598d",
+          "size": 89087
+        }
+      ]
+    },
+    {
+      "id": "P3-bin-occupancy",
+      "resolution": "publish_single_v2.py explicitly labels original new-label preflight counts and daily shares; not presented as actual old training-bin counts",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/adapter-publish_single_v2.json",
+          "sha256": "ef3f7fee3e598fc892ca4e5d059a23db0692b3dfef4986189ce70cbae3e668ea",
+          "size": 18407
+        }
+      ]
+    }
+  ],
+  "original_contract_unchanged": true,
+  "fit_retry_count": 0,
+  "deadline": 1794054485.268165
+}

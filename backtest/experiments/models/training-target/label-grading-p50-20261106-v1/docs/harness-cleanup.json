@@ -1,0 +1,42 @@
+{
+  "result": "no_changes",
+  "mlruns": "not_applicable",
+  "temporary": "cleaned",
+  "completed_at": 1794000237.1923041,
+  "temporary_directory_removed": "/private/tmp/qlib-label-grading-20261106.nWblY2",
+  "temporary_file_count": 378,
+  "temporary_bytes_removed": 8591543375,
+  "inventory": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/temporary-artifact-inventory.json",
+    "sha256": "55d802cebeca5d2d73916e2ee7a2f254a526c79252ef4c28ab3f2b07fc687f42",
+    "size": 130685
+  },
+  "runtime_archive": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/runtime-texts.json.gz",
+    "sha256": "2d70e28075b81a10cb99d5bbdfbddb4679573d1d4fb8f1efc1f4eb012e3561e6",
+    "size": 52647
+  },
+  "deletion_log": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/temporary-cleanup-progress.json",
+    "sha256": "a3177818b3fbecc098e7f6117fb80582b327f7ed921d83cfb29962daa2e5ef4e",
+    "size": 33277
+  },
+  "result_plan": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/result-cleanup-dry-run.json",
+    "sha256": "9672d773a9d1846b58ff74d39731d12b57e0e6f18cbf0e2f89b142fc6c6e9d98",
+    "size": 44311
+  },
+  "retention_review": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/result-retention-review.json",
+    "sha256": "e462298cb9e32f157fdc145e08e387af062ce98d9a7f5ec57b8ba63752c03ccb",
+    "size": 298
+  },
+  "process_and_mlflow_audit": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/process-and-mlflow-audit.json",
+    "sha256": "60a0480b6d424821219691c0b75666e549c442e6158684a670e89a379628b8fe",
+    "size": 739
+  },
+  "result_decision": "Platform retention dry-run has zero deletion candidates; all90 existing result directories preserved, including all35 study models and prediction/provider dependencies. Historical missing-source warnings retained without retraining.",
+  "mlruns_decision": "All35 save_session links point to local result artifacts; no MLflow metadata changed since campaign start, and save_session creates no recorder. No MLflow deletion required.",
+  "temporary_decision": "Only the exact persisted inventory of task-owned temporary files was removed. Source text, logs, required research data and model/prediction dependencies remain."
+}

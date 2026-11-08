@@ -1,0 +1,163 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><title>标签分级 · H20／patience50</title><style>body{font-family:-apple-system,"PingFang SC",sans-serif;color:#182635;margin:0;background:#f7f8fa}main{max-width:1240px;margin:auto;padding:30px}h1{font-size:25px}h2{font-size:19px;margin-top:30px}p{line-height:1.65}table{border-collapse:collapse;width:100%;background:white;margin:15px 0;font-size:13px}th,td{padding:9px;border-bottom:1px solid #dfe4e9;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#eef2f5}.note{color:#536273;font-size:13px}.wrap{overflow:auto}a{color:#155faa}img{width:100%;max-width:1100px}.control{background:#edf4fa}</style><main>
+<h1>标签分级：去掉细微排名，能否保留预测能力？</h1>
+<p>状态：completed · 4/4 个候选已评估 · 本轮实际启动 35 次拟合（成功 35 次）。前序研究 111 次，本轮另行记账。</p>
+<p>用户指定 H20／patience50 配对控制。固定全A、Alpha158+range、M0日期/权重、五种子、200轮上限和Top5×H5早停；只改训练标签。正式全局基线仍为历史v2。2020-08-03～2026-07-31是历史选型窗口，不是独立样本外检验。</p>
+<h2>本轮结论</h2>
+<p>本轮硬分档没有一致地解决标签敏感性。等样本10档的历史选型窗收益和夏普最好，可保留为后续研究候选；但头部选股对标签扰动反而更敏感，且分年改善不一致，因此不能把收益改善解释为稳健性已得到证明。正式基线与生产配置不变。</p>
+<ul>
+<li>已完成4个预先冻结的候选、35次拟合（20个主模型＋15个旧标签配对），无失败或重试。全部使用H20／patience50、固定五种子及同一特征、样本、权重、早停与正式评估口径。</li>
+<li>同源连续标签对照：Top3×H5扣费净年化29.49%、波动59.72%、夏普0.494、全局H5 RankIC 0.09856。这里是模型头部收益的算术年化，不是策略账户CAGR。</li>
+<li>等样本10档：净年化32.24%、波动58.37%、夏普0.552、RankIC 0.09869。新旧标签两侧净年化32.24%／32.05%均高于各自连续对照29.49%／31.31%；但Top3名单重合率从对照85.45%降至79.70%。只有0.19个百分点的收益差距，不意味着预测更稳定。</li>
+<li>等样本5档：净年化30.34%、夏普0.530、RankIC 0.09892；Top3配对重合率86.79%，只比对照提高1.34个百分点。旧标签侧净年化29.59%低于旧连续对照31.31%，所以差距缩小并非两侧表现都改善。</li>
+<li>每日最小值至最大值等涨幅5档：净年化27.39%、波动69.16%、夏普0.396、RankIC 0.06437，整体弱于对照。典型日最大档占约67.5%，极端日达99.93%；五种子最佳轮为8～39轮，存在浅树和同分敏感性。旧原始收益幅度快照缺失，未伪造该方法的旧／新标签配对。</li>
+<li>两端少、中间多5档：净年化26.78%、波动68.31%、夏普0.392；RankIC虽为0.09933，头部收益仍较差。种子间Top3平均重合率27.21%，低于对照35.24%。seed1000在新旧标签下均选第3轮，Top5边界813／1448天同分，反序诊断选第1轮；较高RankIC和较小标签差异不能替代头部稳定性检查。</li>
+<li>分年上，等样本10档在2020、2021、2022、2025段净年化高于对照，在2023、2024、2026段较低；2026段为12.27%，对照19.32%。D风格净年化16.44%高于对照11.81%，F、T风格净年化略低。没有获得跨年、跨风格的一致改善。</li>
+<li>排名分档把106条float32标签差异压到1条，但剩余跨档跳变约为0.706／0.348／1.194，原连续标签最大单条变化约0.00534。组内差异被消除，同时边界变化被放大；本轮证据支持区分输入差异条数、预测一致性和实现收益，而非合并成一个稳健性判断。</li>
+</ul>
+<p class="note">2020-08-03～2026-07-31为参与早停和选型的历史窗口，H5退出截断至2026-07-23；不是独立样本外检验；仅检验4个固定配方及这一对真实标签快照；不能推断所有n、所有等宽定义或所有噪声扰动；2020和2026仅覆盖部分年度；F风格只有2024年7个月、136个评估日；标签分档也改变目标分布、每日方差、极端样本权重和边界跳跃，不能把全部表现差异直接归因为降噪；正式v2仍为基线，未晋升或修改策略、生产配置；平台单行摘要为事先指定的等样本5档代表值，全部方案见本报告</p>
+<h2>训练前定义与标签检查</h2>
+<p>等样本按每日排名分5/10档；两端少中间多按5% / 15% / 60% / 15% / 5%分5档，原始同值不拆散。等涨幅按每日原始H20收益最小值到最大值等距分5档，不做事后缩尾。每档固定序数分数，只在当前训练集确定一次线性缩放以匹配连续目标均值/标准差；同一缩放用于旧标签配对，分档后不再次排名。</p>
+<p>5,448,963条训练样本的顺序、特征、缺失掩码及权重固定。旧/新原始规范化标签差106条；三个排名方案均只余1条跨档。若分档后再做每日CSRankNorm，差异会扩散到1129／564／2115条，故未采用该编码。这是输入诊断，不代表模型或收益更稳定。</p>
+<div class="wrap"><table><tr><th>候选</th><th>各档样本数（由低到高）</th><th>典型日最大档占比</th><th>极端日最大档占比</th><th>配对标签差异</th></tr>
+<tr><td>等样本 · 5档</td><td>1,088,603 / 1,089,814 / 1,089,747 / 1,089,799 / 1,091,000</td><td>20.0%</td><td>20.6%</td><td>1</td></tr>
+<tr><td>等样本 · 10档</td><td>543,520 / 545,083 / 544,742 / 545,072 / 545,269 / 544,478 / 544,751 / 545,048 / 544,767 / 546,233</td><td>10.0%</td><td>11.2%</td><td>1</td></tr>
+<tr><td>等涨幅 · 5档</td><td>1,341,046 / 3,114,098 / 853,361 / 124,525 / 15,933</td><td>67.5%</td><td>99.9%</td><td>旧原始收益快照缺失</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>270,983 / 817,620 / 3,269,360 / 817,162 / 273,838</td><td>60.0%</td><td>60.2%</td><td>1</td></tr>
+</table></div>
+<p>边界风险：连续标签旧/新最大单条变化约0.00534；保留下来的1条跨档，在等样本5档、等样本10档、两端少5档中分别跳变约0.706 / 0.348 / 1.194。减少变化条数并未降低这次扰动的总幅度；分档的边界跳变必须由配对模型结果判断。统一全局方差也不等于保持每日方差或极端样本权重。</p>
+<h2>五种子合成信号：Top3×H5正式指标</h2><img src="label-grading.png" alt="五种子合成净年化与夏普对照">
+<p class="note">净年化采用模型头部收益 ×238/5；波动采用HAC年化标准差，夏普=净年化/波动。这里没有账户CAGR。官方数字来自逐种子日截面z-score后等权合成的一次评估。</p>
+<div class="wrap"><table><tr><th>方案</th><th>扣费净年化</th><th>扣费波动</th><th>扣费夏普</th><th>未扣费年化</th><th>日换手</th><th>全局H5 RankIC</th></tr>
+<tr class="control"><td>连续标签 · 同源H20对照</td><td>29.49%</td><td>59.72%</td><td>0.494</td><td>33.42%</td><td>17.95%</td><td>0.09856</td></tr>
+<tr class=""><td>等样本 · 5档</td><td>30.34%</td><td>57.23%</td><td>0.530</td><td>34.31%</td><td>18.17%</td><td>0.09892</td></tr>
+<tr class=""><td>等样本 · 10档</td><td>32.24%</td><td>58.37%</td><td>0.552</td><td>36.16%</td><td>17.94%</td><td>0.09869</td></tr>
+<tr class=""><td>等涨幅 · 5档</td><td>27.39%</td><td>69.16%</td><td>0.396</td><td>30.73%</td><td>15.29%</td><td>0.06437</td></tr>
+<tr class=""><td>两端少中间多 · 5档</td><td>26.78%</td><td>68.31%</td><td>0.392</td><td>30.65%</td><td>17.67%</td><td>0.09933</td></tr>
+<tr class="control"><td>连续标签 · 旧标签对照</td><td>31.31%</td><td>59.62%</td><td>0.525</td><td>35.26%</td><td>18.03%</td><td>0.09865</td></tr>
+</table></div>
+<h2>分年：主格Top3×H5</h2>
+<h3>扣费净年化</h3><div class="wrap"><table><tr><th>方案</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>9.07%</td><td>40.29%</td><td>9.16%</td><td>23.53%</td><td>40.96%</td><td>47.67%</td><td>19.32%</td></tr>
+<tr><td>等样本 · 5档</td><td>18.98%</td><td>51.09%</td><td>21.38%</td><td>20.49%</td><td>28.12%</td><td>50.36%</td><td>2.88%</td></tr>
+<tr><td>等样本 · 10档</td><td>21.79%</td><td>46.90%</td><td>16.90%</td><td>21.64%</td><td>37.63%</td><td>53.38%</td><td>12.27%</td></tr>
+<tr><td>等涨幅 · 5档</td><td>11.86%</td><td>66.61%</td><td>17.82%</td><td>2.39%</td><td>36.75%</td><td>38.15%</td><td>-6.09%</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>-6.05%</td><td>48.02%</td><td>25.51%</td><td>29.08%</td><td>28.97%</td><td>43.90%</td><td>-23.74%</td></tr>
+</table></div>
+<h3>扣费波动</h3><div class="wrap"><table><tr><th>方案</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>46.33%</td><td>51.12%</td><td>57.11%</td><td>41.09%</td><td>98.54%</td><td>38.62%</td><td>49.40%</td></tr>
+<tr><td>等样本 · 5档</td><td>48.04%</td><td>51.56%</td><td>59.90%</td><td>39.78%</td><td>88.83%</td><td>36.63%</td><td>47.72%</td></tr>
+<tr><td>等样本 · 10档</td><td>52.16%</td><td>52.77%</td><td>59.64%</td><td>38.74%</td><td>91.90%</td><td>35.35%</td><td>49.59%</td></tr>
+<tr><td>等涨幅 · 5档</td><td>41.15%</td><td>58.49%</td><td>73.49%</td><td>44.02%</td><td>103.99%</td><td>66.53%</td><td>50.26%</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>51.58%</td><td>58.31%</td><td>74.12%</td><td>49.58%</td><td>104.83%</td><td>52.82%</td><td>46.53%</td></tr>
+</table></div>
+<h3>扣费夏普</h3><div class="wrap"><table><tr><th>方案</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>0.196</td><td>0.788</td><td>0.160</td><td>0.573</td><td>0.416</td><td>1.234</td><td>0.391</td></tr>
+<tr><td>等样本 · 5档</td><td>0.395</td><td>0.991</td><td>0.357</td><td>0.515</td><td>0.317</td><td>1.375</td><td>0.060</td></tr>
+<tr><td>等样本 · 10档</td><td>0.418</td><td>0.889</td><td>0.283</td><td>0.559</td><td>0.409</td><td>1.510</td><td>0.247</td></tr>
+<tr><td>等涨幅 · 5档</td><td>0.288</td><td>1.139</td><td>0.243</td><td>0.054</td><td>0.353</td><td>0.573</td><td>-0.121</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>-0.117</td><td>0.824</td><td>0.344</td><td>0.587</td><td>0.276</td><td>0.831</td><td>-0.510</td></tr>
+</table></div>
+<h2>分风格：主格Top3×H5</h2>
+<h3>扣费净年化</h3><div class="wrap"><table><tr><th>方案</th><th>D</th><th>F</th><th>T</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>11.81%</td><td>129.38%</td><td>43.64%</td></tr>
+<tr><td>等样本 · 5档</td><td>20.32%</td><td>101.67%</td><td>31.70%</td></tr>
+<tr><td>等样本 · 10档</td><td>16.44%</td><td>125.49%</td><td>43.08%</td></tr>
+<tr><td>等涨幅 · 5档</td><td>15.07%</td><td>135.62%</td><td>19.85%</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>13.61%</td><td>131.59%</td><td>23.62%</td></tr>
+</table></div>
+<h3>扣费波动</h3><div class="wrap"><table><tr><th>方案</th><th>D</th><th>F</th><th>T</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>52.59%</td><td>111.45%</td><td>44.06%</td></tr>
+<tr><td>等样本 · 5档</td><td>52.48%</td><td>100.40%</td><td>42.66%</td></tr>
+<tr><td>等样本 · 10档</td><td>52.45%</td><td>103.80%</td><td>43.82%</td></tr>
+<tr><td>等涨幅 · 5档</td><td>65.41%</td><td>118.88%</td><td>43.67%</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>63.51%</td><td>119.19%</td><td>46.35%</td></tr>
+</table></div>
+<h3>扣费夏普</h3><div class="wrap"><table><tr><th>方案</th><th>D</th><th>F</th><th>T</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>0.225</td><td>1.161</td><td>0.991</td></tr>
+<tr><td>等样本 · 5档</td><td>0.387</td><td>1.013</td><td>0.743</td></tr>
+<tr><td>等样本 · 10档</td><td>0.313</td><td>1.209</td><td>0.983</td></tr>
+<tr><td>等涨幅 · 5档</td><td>0.230</td><td>1.141</td><td>0.455</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>0.214</td><td>1.104</td><td>0.510</td></tr>
+</table></div>
+<p class="note">F风格仅覆盖2024年7个月、136个评估日，不能据此推断跨年稳定性。</p>
+<h2>种子间一致性与合成检查</h2>
+<p class="note">名单重合取同一交易日两两种子的平均值（10对），在正式推理与正式过滤后计算。种子区间用于诊断，官方数字始终是合成信号的一次评估。</p>
+<table><tr><th>方案</th><th>Top3平均重合</th><th>Top5平均重合</th><th>逐种子净年化范围</th><th>合成低于全部种子：净年化/夏普</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>35.24%</td><td>39.42%</td><td>27.63%～31.36%</td><td>False / False</td></tr>
+<tr><td>连续标签 · 旧标签对照</td><td>34.81%</td><td>39.14%</td><td>24.84%～31.36%</td><td>False / False</td></tr>
+<tr><td>等样本 · 5档</td><td>35.21%</td><td>39.29%</td><td>23.40%～31.40%</td><td>False / False</td></tr>
+<tr><td>等样本 · 10档</td><td>35.17%</td><td>39.27%</td><td>25.00%～29.16%</td><td>False / False</td></tr>
+<tr><td>等涨幅 · 5档</td><td>38.28%</td><td>42.23%</td><td>21.15%～24.57%</td><td>False / False</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>27.21%</td><td>30.71%</td><td>25.37%～28.04%</td><td>False / False</td></tr>
+</table>
+<h2>配对敏感性：固定其余输入，只替换旧/新标签</h2><img src="label-sensitivity.png" alt="旧新标签配对的两侧绝对收益">
+<p>先看两侧绝对表现，再看差距。差距变小也可能来自较好一侧变差。等涨幅缺少对应旧原始收益幅度，本轮不伪造这组106条差异的配对。</p>
+<table><tr><th>标签处理</th><th>旧标签净年化</th><th>新标签净年化</th><th>新−旧（百分点）</th><th>Top3名单重合</th><th>Top5名单重合</th></tr>
+<tr><td>连续标签 · 同源H20对照</td><td>31.31%</td><td>29.49%</td><td>-1.82</td><td>85.45%</td><td>87.00%</td></tr>
+<tr><td>等样本 · 5档</td><td>29.59%</td><td>30.34%</td><td>+0.75</td><td>86.79%</td><td>88.58%</td></tr>
+<tr><td>等样本 · 10档</td><td>32.05%</td><td>32.24%</td><td>+0.19</td><td>79.70%</td><td>81.78%</td></tr>
+<tr><td>两端少中间多 · 5档</td><td>25.89%</td><td>26.78%</td><td>+0.89</td><td>88.72%</td><td>89.81%</td></tr>
+</table>
+<h2>逐种子早停与同分诊断</h2>
+<p class="note">反序只改变同分优先顺序，属于同一已观察轨迹的诊断，不参与选轮。未观察到停止时，反序“最佳轮”不能当作新早停规则的最终结果；200轮代表达到上限。</p>
+<div class="wrap"><table><tr><th>方案/输入/种子</th><th>选中轮</th><th>实际观察轮</th><th>选中轮Top3/5同分天数</th><th>轨迹最大Top5同分天数</th><th>反序观察最佳轮</th><th>反序停止轮</th><th>峰值进程RSS</th></tr>
+<tr><td>等样本 · 5档 / new / 42</td><td>67</td><td>117</td><td>0 / 0</td><td>1221</td><td>67</td><td>117</td><td>8.21 GiB</td></tr>
+<tr><td>等样本 · 5档 / new / 1000</td><td>100</td><td>150</td><td>0 / 0</td><td>1266</td><td>100</td><td>150</td><td>8.00 GiB</td></tr>
+<tr><td>等样本 · 5档 / new / 2000</td><td>90</td><td>140</td><td>0 / 0</td><td>1269</td><td>90</td><td>140</td><td>8.27 GiB</td></tr>
+<tr><td>等样本 · 5档 / new / 3000</td><td>74</td><td>124</td><td>0 / 0</td><td>1240</td><td>74</td><td>124</td><td>7.88 GiB</td></tr>
+<tr><td>等样本 · 5档 / new / 4000</td><td>83</td><td>133</td><td>0 / 0</td><td>1307</td><td>83</td><td>133</td><td>8.08 GiB</td></tr>
+<tr><td>等样本 · 5档 / old / 42</td><td>37</td><td>87</td><td>0 / 0</td><td>1221</td><td>37</td><td>87</td><td>8.36 GiB</td></tr>
+<tr><td>等样本 · 5档 / old / 1000</td><td>100</td><td>150</td><td>0 / 0</td><td>1266</td><td>100</td><td>150</td><td>7.96 GiB</td></tr>
+<tr><td>等样本 · 5档 / old / 2000</td><td>90</td><td>140</td><td>0 / 0</td><td>1269</td><td>90</td><td>140</td><td>8.22 GiB</td></tr>
+<tr><td>等样本 · 5档 / old / 3000</td><td>94</td><td>144</td><td>0 / 0</td><td>1240</td><td>94</td><td>144</td><td>8.38 GiB</td></tr>
+<tr><td>等样本 · 5档 / old / 4000</td><td>83</td><td>133</td><td>0 / 0</td><td>1307</td><td>83</td><td>133</td><td>7.98 GiB</td></tr>
+<tr><td>等样本 · 10档 / new / 42</td><td>57</td><td>107</td><td>0 / 0</td><td>1254</td><td>57</td><td>107</td><td>8.26 GiB</td></tr>
+<tr><td>等样本 · 10档 / new / 1000</td><td>41</td><td>91</td><td>0 / 0</td><td>1278</td><td>41</td><td>91</td><td>8.34 GiB</td></tr>
+<tr><td>等样本 · 10档 / new / 2000</td><td>73</td><td>123</td><td>0 / 0</td><td>1230</td><td>73</td><td>123</td><td>7.93 GiB</td></tr>
+<tr><td>等样本 · 10档 / new / 3000</td><td>60</td><td>110</td><td>0 / 0</td><td>1247</td><td>60</td><td>110</td><td>8.01 GiB</td></tr>
+<tr><td>等样本 · 10档 / new / 4000</td><td>95</td><td>145</td><td>0 / 0</td><td>1273</td><td>95</td><td>145</td><td>7.86 GiB</td></tr>
+<tr><td>等样本 · 10档 / old / 42</td><td>57</td><td>107</td><td>0 / 0</td><td>1254</td><td>57</td><td>107</td><td>8.28 GiB</td></tr>
+<tr><td>等样本 · 10档 / old / 1000</td><td>75</td><td>125</td><td>0 / 0</td><td>1278</td><td>75</td><td>125</td><td>8.41 GiB</td></tr>
+<tr><td>等样本 · 10档 / old / 2000</td><td>118</td><td>168</td><td>0 / 0</td><td>1230</td><td>118</td><td>168</td><td>8.22 GiB</td></tr>
+<tr><td>等样本 · 10档 / old / 3000</td><td>60</td><td>110</td><td>0 / 0</td><td>1247</td><td>60</td><td>110</td><td>8.02 GiB</td></tr>
+<tr><td>等样本 · 10档 / old / 4000</td><td>95</td><td>145</td><td>0 / 0</td><td>1273</td><td>95</td><td>145</td><td>7.70 GiB</td></tr>
+<tr><td>等涨幅 · 5档 / new / 42</td><td>25</td><td>75</td><td>0 / 0</td><td>1243</td><td>25</td><td>75</td><td>7.25 GiB</td></tr>
+<tr><td>等涨幅 · 5档 / new / 1000</td><td>14</td><td>64</td><td>3 / 2</td><td>1125</td><td>14</td><td>64</td><td>7.61 GiB</td></tr>
+<tr><td>等涨幅 · 5档 / new / 2000</td><td>8</td><td>58</td><td>102 / 102</td><td>1159</td><td>9</td><td>未观察到</td><td>7.69 GiB</td></tr>
+<tr><td>等涨幅 · 5档 / new / 3000</td><td>39</td><td>89</td><td>0 / 0</td><td>1158</td><td>39</td><td>89</td><td>7.91 GiB</td></tr>
+<tr><td>等涨幅 · 5档 / new / 4000</td><td>38</td><td>88</td><td>0 / 0</td><td>1266</td><td>38</td><td>88</td><td>7.88 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / new / 42</td><td>65</td><td>115</td><td>0 / 0</td><td>1274</td><td>65</td><td>115</td><td>7.93 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / new / 1000</td><td>3</td><td>53</td><td>764 / 813</td><td>1280</td><td>1</td><td>51</td><td>7.93 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / new / 2000</td><td>45</td><td>95</td><td>0 / 0</td><td>1289</td><td>45</td><td>95</td><td>8.12 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / new / 3000</td><td>74</td><td>124</td><td>0 / 0</td><td>1275</td><td>74</td><td>124</td><td>8.42 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / new / 4000</td><td>77</td><td>127</td><td>0 / 0</td><td>1267</td><td>77</td><td>127</td><td>8.30 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / old / 42</td><td>48</td><td>98</td><td>0 / 0</td><td>1274</td><td>48</td><td>98</td><td>8.07 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / old / 1000</td><td>3</td><td>53</td><td>764 / 813</td><td>1280</td><td>1</td><td>51</td><td>8.39 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / old / 2000</td><td>45</td><td>95</td><td>0 / 0</td><td>1289</td><td>45</td><td>95</td><td>8.48 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / old / 3000</td><td>93</td><td>143</td><td>0 / 0</td><td>1275</td><td>93</td><td>143</td><td>8.05 GiB</td></tr>
+<tr><td>两端少中间多 · 5档 / old / 4000</td><td>77</td><td>127</td><td>0 / 0</td><td>1267</td><td>77</td><td>127</td><td>8.19 GiB</td></tr>
+</table></div>
+<h2>逐种子旧／新标签配对</h2>
+<p class="note">同种子、相同特征与窗口，仅替换冻结的旧／新标签。树内容哈希的差异包括叶值变化，不能单独证明分裂结构改变。头部重合在正式推理和过滤后计算。</p>
+<table><tr><th>方案／种子</th><th>旧／新最佳轮</th><th>首个树内容差异轮</th><th>Top3重合</th><th>Top5重合</th></tr>
+<tr><td>等样本 · 5档／42</td><td>37／67</td><td>1</td><td>59.39%</td><td>62.73%</td></tr>
+<tr><td>等样本 · 5档／1000</td><td>100／100</td><td>1</td><td>100.00%</td><td>99.99%</td></tr>
+<tr><td>等样本 · 5档／2000</td><td>90／90</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+<tr><td>等样本 · 5档／3000</td><td>94／74</td><td>1</td><td>60.45%</td><td>62.79%</td></tr>
+<tr><td>等样本 · 5档／4000</td><td>83／83</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+<tr><td>等样本 · 10档／42</td><td>57／57</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+<tr><td>等样本 · 10档／1000</td><td>75／41</td><td>1</td><td>59.51%</td><td>63.07%</td></tr>
+<tr><td>等样本 · 10档／2000</td><td>118／73</td><td>1</td><td>40.03%</td><td>43.84%</td></tr>
+<tr><td>等样本 · 10档／3000</td><td>60／60</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+<tr><td>等样本 · 10档／4000</td><td>95／95</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+<tr><td>两端少中间多 · 5档／42</td><td>48／65</td><td>1</td><td>64.30%</td><td>67.96%</td></tr>
+<tr><td>两端少中间多 · 5档／1000</td><td>3／3</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+<tr><td>两端少中间多 · 5档／2000</td><td>45／45</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+<tr><td>两端少中间多 · 5档／3000</td><td>93／74</td><td>1</td><td>72.91%</td><td>75.76%</td></tr>
+<tr><td>两端少中间多 · 5档／4000</td><td>77／77</td><td>1</td><td>100.00%</td><td>100.00%</td></tr>
+</table>
+<p><a href="../docs/research-conclusion.json">结论与判读</a> · <a href="../docs/final-numerical-verification.json">35模型／7组预测数值核验</a> · <a href="../docs/paired-seed-diagnostics.json">15组同种子配对</a> · <a href="../docs/width5-early-stop-review.json">等涨幅早停检查</a> · <a href="../docs/tails5-early-stop-review.json">两端少分档早停检查</a></p>
+<h2>来源、状态与解释边界</h2>
+<p>直接对照为最近H20/patience50；该对照不替代正式v2。仅有四个候选，不能据单个n宣布全体分档方法有效或无效。收益、夏普、波动和RankIC分别解释；输入变化减少不等于模型稳健性得到证明。本轮不晋升、不修改策略或生产配置。</p>
+<p><a href="../configs/frozen-study.json">冻结方案</a> · <a href="../configs/prepared-inputs.json">标签与输入证据</a> · <a href="../docs/study-summary.json">数值摘要</a> · <a href="../docs/study-progress.json">逐候选/作业账本</a> · <a href="../docs/harness-state.json">正式Harness账本</a></p>
+</main></html>

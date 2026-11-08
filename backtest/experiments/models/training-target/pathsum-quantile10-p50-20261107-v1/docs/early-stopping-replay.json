@@ -1,0 +1,612 @@
+{
+  "generated_at": 1794074202.743714,
+  "status": "complete",
+  "successful_fit_count": 20,
+  "new_fits": 0,
+  "rows": [
+    {
+      "job_id": "h7q10-new-s42-a1",
+      "candidate": "h7q10",
+      "seed": 42,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s42-a1.json",
+        "sha256": "320087b65522498f969cff63d5235d56a99d0bd57edd4f0cbc0465db11f3635c",
+        "size": 27354
+      },
+      "observed_rounds": 75,
+      "selected_round": 25,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 25,
+        "best_observed_score": 0.2810104141790342,
+        "observed_stop_round": 75,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 25,
+        "best_observed_score": 0.2810104141790342,
+        "observed_stop_round": 75,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "h7q10-new-s1000-a1",
+      "candidate": "h7q10",
+      "seed": 1000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s1000-a1.json",
+        "sha256": "2c759a63640a896292b10d43fcb9a1a2cc83a03975019d886c1601adffe332fa",
+        "size": 22563
+      },
+      "observed_rounds": 61,
+      "selected_round": 11,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 11,
+        "best_observed_score": 0.3164199957188152,
+        "observed_stop_round": 61,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 11,
+        "best_observed_score": 0.3155253108183739,
+        "observed_stop_round": 61,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 18,
+        "5": 21
+      }
+    },
+    {
+      "job_id": "h7q10-new-s2000-a1",
+      "candidate": "h7q10",
+      "seed": 2000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s2000-a1.json",
+        "sha256": "28dd5d8f453b6573ff98c4f31c25912f8070a4d183102b0310803ff77d60b0f7",
+        "size": 29719
+      },
+      "observed_rounds": 82,
+      "selected_round": 32,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 32,
+        "best_observed_score": 0.31300955942707076,
+        "observed_stop_round": 82,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 32,
+        "best_observed_score": 0.31300955942707076,
+        "observed_stop_round": 82,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "h7q10-new-s3000-a1",
+      "candidate": "h7q10",
+      "seed": 3000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s3000-a1.json",
+        "sha256": "8f74b6985ec7f9059179df5085f2cee079f98901b1c8bfc654c206abe8fd7dcd",
+        "size": 21885
+      },
+      "observed_rounds": 59,
+      "selected_round": 9,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 9,
+        "best_observed_score": 0.2844617068016314,
+        "observed_stop_round": 59,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 10,
+        "best_observed_score": 0.28022217971359387,
+        "observed_stop_round": null,
+        "right_censored": true
+      },
+      "reverse_best_changed_in_observed_prefix": true,
+      "selected_boundary_ties": {
+        "3": 69,
+        "5": 71
+      }
+    },
+    {
+      "job_id": "h7q10-new-s4000-a1",
+      "candidate": "h7q10",
+      "seed": 4000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s4000-a1.json",
+        "sha256": "1e285d75b2113a8f97b3eccc1c9e901369ba4cba460d1ca725f7e9329d130e13",
+        "size": 26995
+      },
+      "observed_rounds": 74,
+      "selected_round": 24,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 24,
+        "best_observed_score": 0.3233228747031644,
+        "observed_stop_round": 74,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 24,
+        "best_observed_score": 0.3233228747031644,
+        "observed_stop_round": 74,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "h15q10-new-s42-a1",
+      "candidate": "h15q10",
+      "seed": 42,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s42-a1.json",
+        "sha256": "9342d555dc1e6560ed0d1b97538c9f4d708aadf3b500af6f8f076d120f740738",
+        "size": 42080
+      },
+      "observed_rounds": 118,
+      "selected_round": 68,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 68,
+        "best_observed_score": 0.31563205274484957,
+        "observed_stop_round": 118,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 68,
+        "best_observed_score": 0.31563205274484957,
+        "observed_stop_round": 118,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "h15q10-new-s1000-a1",
+      "candidate": "h15q10",
+      "seed": 1000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s1000-a1.json",
+        "sha256": "d7f9bcb13371c3c0197d2f1282b77ac22c3463a69d26f1138bdf314abf9498e1",
+        "size": 43771
+      },
+      "observed_rounds": 123,
+      "selected_round": 73,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 73,
+        "best_observed_score": 0.29375486930307676,
+        "observed_stop_round": 123,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 73,
+        "best_observed_score": 0.29375486930307676,
+        "observed_stop_round": 123,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "h15q10-new-s2000-a1",
+      "candidate": "h15q10",
+      "seed": 2000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s2000-a1.json",
+        "sha256": "8d7d1a72f2879bbe33ce838596328fe600e89137c55c79c14a4152652bc0a509",
+        "size": 45921
+      },
+      "observed_rounds": 129,
+      "selected_round": 79,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 79,
+        "best_observed_score": 0.2844888646197583,
+        "observed_stop_round": 129,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 79,
+        "best_observed_score": 0.2844888646197583,
+        "observed_stop_round": 129,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "h15q10-new-s3000-a1",
+      "candidate": "h15q10",
+      "seed": 3000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s3000-a1.json",
+        "sha256": "750de557a3c8feeecf457b6a494f38c35e7ea015fefab4757dae14c5058d4adc",
+        "size": 34554
+      },
+      "observed_rounds": 96,
+      "selected_round": 46,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 46,
+        "best_observed_score": 0.2540752390196368,
+        "observed_stop_round": 96,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 46,
+        "best_observed_score": 0.2540752390196368,
+        "observed_stop_round": 96,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "h15q10-new-s4000-a1",
+      "candidate": "h15q10",
+      "seed": 4000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s4000-a1.json",
+        "sha256": "694d4037ee23e700ad42377b271136fc9347096a3aa7bcc1cbc2b605d80cfbaf",
+        "size": 55550
+      },
+      "observed_rounds": 157,
+      "selected_round": 107,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 107,
+        "best_observed_score": 0.2528273061223462,
+        "observed_stop_round": 157,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 107,
+        "best_observed_score": 0.2528273061223462,
+        "observed_stop_round": 157,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s42-a1",
+      "candidate": "sum20continuous",
+      "seed": 42,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s42-a1.json",
+        "sha256": "40f7c272d0916c3f3272e567a77cad80dcee30b8f911bc637d2ea478f5adf2af",
+        "size": 19903
+      },
+      "observed_rounds": 53,
+      "selected_round": 3,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 3,
+        "best_observed_score": 0.272397017477378,
+        "observed_stop_round": 53,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 9,
+        "best_observed_score": 0.26482461009939906,
+        "observed_stop_round": null,
+        "right_censored": true
+      },
+      "reverse_best_changed_in_observed_prefix": true,
+      "selected_boundary_ties": {
+        "3": 928,
+        "5": 981
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s1000-a1",
+      "candidate": "sum20continuous",
+      "seed": 1000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s1000-a1.json",
+        "sha256": "cb8cdf4a5fc168502afafac4525d6c91485d3c33f734d1eaba660a436f285f96",
+        "size": 26684
+      },
+      "observed_rounds": 73,
+      "selected_round": 23,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 23,
+        "best_observed_score": 0.30980508746588176,
+        "observed_stop_round": 73,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 23,
+        "best_observed_score": 0.30980508746588176,
+        "observed_stop_round": 73,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s2000-a1",
+      "candidate": "sum20continuous",
+      "seed": 2000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s2000-a1.json",
+        "sha256": "30df6a4a4f07ee9f855c7b553aec4f202964e0206a106cb7aba8ec9b75a50669",
+        "size": 33541
+      },
+      "observed_rounds": 93,
+      "selected_round": 43,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 43,
+        "best_observed_score": 0.3019754519946227,
+        "observed_stop_round": 93,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 43,
+        "best_observed_score": 0.3019754519946227,
+        "observed_stop_round": 93,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s3000-a1",
+      "candidate": "sum20continuous",
+      "seed": 3000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s3000-a1.json",
+        "sha256": "daca4bf0898a95b83f0aced8d7bbee70fbc3df01e8cfc4a6f4cb97efff9c1ecf",
+        "size": 25021
+      },
+      "observed_rounds": 68,
+      "selected_round": 18,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 18,
+        "best_observed_score": 0.2951430664480584,
+        "observed_stop_round": 68,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 18,
+        "best_observed_score": 0.29530097516958176,
+        "observed_stop_round": 68,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 2
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s4000-a1",
+      "candidate": "sum20continuous",
+      "seed": 4000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s4000-a1.json",
+        "sha256": "b093c09bc3bf4242865a0fc1e28abf20780fd2856889eb7956df5c05e8e1b9e9",
+        "size": 21607
+      },
+      "observed_rounds": 58,
+      "selected_round": 8,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 8,
+        "best_observed_score": 0.3029466879323006,
+        "observed_stop_round": 58,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 3,
+        "best_observed_score": 0.3169371292287617,
+        "observed_stop_round": 53,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": true,
+      "selected_boundary_ties": {
+        "3": 178,
+        "5": 194
+      }
+    },
+    {
+      "job_id": "sum20q10-new-s42-a1",
+      "candidate": "sum20q10",
+      "seed": 42,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s42-a1.json",
+        "sha256": "8d655d7f1a57736c655016504f7b4f143f27f361fb625e314c519da8e06e63b4",
+        "size": 28354
+      },
+      "observed_rounds": 78,
+      "selected_round": 28,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 28,
+        "best_observed_score": 0.32775278708680017,
+        "observed_stop_round": 78,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 28,
+        "best_observed_score": 0.32775278708680017,
+        "observed_stop_round": 78,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "sum20q10-new-s1000-a1",
+      "candidate": "sum20q10",
+      "seed": 1000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s1000-a1.json",
+        "sha256": "c6a2c4815ba937081336d59ceaf0a2521cf3961f8eb5a06f11183dee9481572a",
+        "size": 32464
+      },
+      "observed_rounds": 90,
+      "selected_round": 40,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 40,
+        "best_observed_score": 0.34799287215232666,
+        "observed_stop_round": 90,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 40,
+        "best_observed_score": 0.34799287215232666,
+        "observed_stop_round": 90,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "sum20q10-new-s2000-a1",
+      "candidate": "sum20q10",
+      "seed": 2000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s2000-a1.json",
+        "sha256": "0fc905bd036b9811db92b526628a0ea4e9b106aa4503cf5d6f12c85baaa50659",
+        "size": 19522
+      },
+      "observed_rounds": 52,
+      "selected_round": 2,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 2,
+        "best_observed_score": 0.2817489008791984,
+        "observed_stop_round": 52,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 38,
+        "best_observed_score": 0.2652702661881244,
+        "observed_stop_round": null,
+        "right_censored": true
+      },
+      "reverse_best_changed_in_observed_prefix": true,
+      "selected_boundary_ties": {
+        "3": 1099,
+        "5": 1182
+      }
+    },
+    {
+      "job_id": "sum20q10-new-s3000-a1",
+      "candidate": "sum20q10",
+      "seed": 3000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s3000-a1.json",
+        "sha256": "da6850bf107b25a9f8083eb990b6fc1426012d0f0db9870e7268548be13a26eb",
+        "size": 41017
+      },
+      "observed_rounds": 115,
+      "selected_round": 65,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 65,
+        "best_observed_score": 0.32141260667184735,
+        "observed_stop_round": 115,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 65,
+        "best_observed_score": 0.32141260667184735,
+        "observed_stop_round": 115,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": false,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    },
+    {
+      "job_id": "sum20q10-new-s4000-a1",
+      "candidate": "sum20q10",
+      "seed": 4000,
+      "receipt": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s4000-a1.json",
+        "sha256": "256bae1783fcfdfc9c05c330736bde7b2379ce8650809629fe2ef70dc6c52987",
+        "size": 30417
+      },
+      "observed_rounds": 84,
+      "selected_round": 34,
+      "round_cap_reached": false,
+      "forward_replay": {
+        "best_observed_round": 34,
+        "best_observed_score": 0.2891342850460382,
+        "observed_stop_round": 84,
+        "right_censored": false
+      },
+      "reverse_priority_replay": {
+        "best_observed_round": 3,
+        "best_observed_score": 0.30677241830469837,
+        "observed_stop_round": 53,
+        "right_censored": false
+      },
+      "reverse_best_changed_in_observed_prefix": true,
+      "selected_boundary_ties": {
+        "3": 0,
+        "5": 0
+      }
+    }
+  ],
+  "interpretation": "Replay applies the original strict-improvement patience rule to recorded objective sequences. Reversed priority only changes ordering among tied scores. A missing observed_stop_round is right-censoring, not an extrapolated completed alternative fit. No training settings or official selected models changed.",
+  "reverse_changed_prefix_best_count": 5,
+  "reverse_unobserved_stop_count": 3,
+  "cap_count": 0
+}

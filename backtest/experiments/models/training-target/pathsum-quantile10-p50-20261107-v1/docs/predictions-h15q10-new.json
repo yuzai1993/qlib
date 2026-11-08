@@ -1,0 +1,106 @@
+{
+  "variant": "h15q10",
+  "treatment": "new",
+  "components": [
+    {
+      "seed": 42,
+      "session": "pathsumq10_20261107_h15q10_s42",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "35617facfa8e3b5d2ac06d90a5f18c5e7b8500b93ae1adf573244f4037ce17e2",
+        "size": 59667416
+      },
+      "prediction": {
+        "path": "backtest/result/20261107_pathsum_quantile10/h15q10-new-s42.pkl",
+        "sha256": "514d2f5ea5051b13230df0124fe5031439bcc9e2b00010be4812c95bae4d030d",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s42-a1.json",
+        "sha256": "9342d555dc1e6560ed0d1b97538c9f4d708aadf3b500af6f8f076d120f740738",
+        "size": 42080
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "pathsumq10_20261107_h15q10_s1000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a07a5212dfdd31214825d01a5d6be3e0ccb47b193e8e900ee6584c93e08a2bc0",
+        "size": 59791844
+      },
+      "prediction": {
+        "path": "backtest/result/20261107_pathsum_quantile10/h15q10-new-s1000.pkl",
+        "sha256": "9fb924edb836897c7381de2218ba8619abafa744091c2cf3a02db2a223aca0c9",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s1000-a1.json",
+        "sha256": "d7f9bcb13371c3c0197d2f1282b77ac22c3463a69d26f1138bdf314abf9498e1",
+        "size": 43771
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "pathsumq10_20261107_h15q10_s2000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "42e8ab570b4c83d8e50f3370c9d17c11ade118a55f93d02ca07728e136b052e3",
+        "size": 59888287
+      },
+      "prediction": {
+        "path": "backtest/result/20261107_pathsum_quantile10/h15q10-new-s2000.pkl",
+        "sha256": "7e1154b564c671095a95c12ce2e8365b26b69313e8946b0f6859e40143216aea",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s2000-a1.json",
+        "sha256": "8d7d1a72f2879bbe33ce838596328fe600e89137c55c79c14a4152652bc0a509",
+        "size": 45921
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "pathsumq10_20261107_h15q10_s3000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1a37b913e8e6b3022cb5157f71518f24aef7545a7671bb7bcacf7d7860174bd3",
+        "size": 59334539
+      },
+      "prediction": {
+        "path": "backtest/result/20261107_pathsum_quantile10/h15q10-new-s3000.pkl",
+        "sha256": "193d62a44950fd42a5737fcef9ffdd279d382e84751cb5d5a858ac1b7986cc1f",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s3000-a1.json",
+        "sha256": "750de557a3c8feeecf457b6a494f38c35e7ea015fefab4757dae14c5058d4adc",
+        "size": 34554
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "pathsumq10_20261107_h15q10_s4000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "bc77d8350da1605897b873c4bb23f994646018dcb3f3fd9bd27be8cf4f063c36",
+        "size": 60360007
+      },
+      "prediction": {
+        "path": "backtest/result/20261107_pathsum_quantile10/h15q10-new-s4000.pkl",
+        "sha256": "524425179f96df341f9c999755de851e2ec6caa03a5e17ba68fde4063ba80fd2",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s4000-a1.json",
+        "sha256": "694d4037ee23e700ad42377b271136fc9347096a3aa7bcc1cbc2b605d80cfbaf",
+        "size": 55550
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261107_pathsum_quantile10/h15q10-new-ensemble.pkl",
+    "sha256": "17fe77f7e002fe42ff17ef8dd0f03a10d81535215618b00e0f0236bcdb9b2131",
+    "size": 83046157
+  }
+}

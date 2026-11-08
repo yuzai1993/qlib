@@ -1,0 +1,24 @@
+{
+  "at": 1794060365.556153,
+  "previous_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "new_ref": "training-target/h20-quantile10-p50-v5",
+  "version": "v5",
+  "authorization": {
+    "path": "backtest/experiments/models/training-target/quantile10-p50-v5/docs/promotion-plan.json",
+    "sha256": "0e6338aa34587389776c19bb3af4bb57b8638a622aefdbad901f91d17f04193d",
+    "size": 1242
+  },
+  "manifest": {
+    "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+    "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+    "size": 9535
+  },
+  "registry": {
+    "path": "backtest/experiments/registry.jsonl",
+    "sha256": "06a6cdfab88f838f0b4edbf4c4c26f16a77af8d76073d4044dd491d8f294eafb",
+    "size": 31858
+  },
+  "new_model_fits": 0,
+  "production_changed": false,
+  "strategy_baseline_changed": false
+}

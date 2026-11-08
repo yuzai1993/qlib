@@ -1,0 +1,14 @@
+{
+  "python": "3.12.13 | packaged by Anaconda, Inc. | (main, Mar 19 2026, 20:12:32) [Clang 20.1.8 ]",
+  "executable": "/opt/anaconda3/envs/qlib/bin/python",
+  "platform": "macOS-15.3-arm64-arm-64bit",
+  "git_head": "132d83dedc01131c4c337c38cc9eb5207e5a8f85",
+  "initial_git_status": " M AGENTS.md\n M backtest/EXPERIMENT_STANDARD.md\n M backtest/experiments/README.md\n M backtest/experiments/_catalog/path_map.json\n M backtest/experiments/models/early-stopping/top5-v2/metadata.json\n M backtest/experiments/registry.jsonl\n M backtest/experiments/reports/phase_m_v1_bt_report.html\n M backtest/experiments/reports/phase_m_v1_report.html\n M docs/research/experiment_harness.md\n?? backtest/experiments/models/early-stopping/top5-v2/records/4ca9543bcdb2200a5101eefb1f8e1baadf42b04b7afe8ad08fc7b7d72da84905.json\n?? backtest/experiments/models/training-target/label-grading-p50-20261106-v1/\n?? backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/\n?? backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/\n?? backtest/experiments/models/training-target/quantile10-p50-v5/\n?? backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/\n",
+  "packages": {
+    "numpy": "2.4.3",
+    "pandas": "2.3.3",
+    "lightgbm": "4.6.0",
+    "scipy": "1.17.1",
+    "pyqlib": "0.1.dev2065"
+  }
+}

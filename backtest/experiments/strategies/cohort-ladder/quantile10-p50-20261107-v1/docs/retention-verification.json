@@ -1,0 +1,311 @@
+{
+  "result_dry_run": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/cleanup-final-dryrun.json",
+    "sha256": "b18cbe081a06b96477841d68e45e76d1e2a10811406850480934f848ec27304f",
+    "size": 47636
+  },
+  "delete_result_dirs": [],
+  "new_sessions_retained": [
+    "backtest/result/20261107_221212_quantile10v5_20261107_ladder",
+    "backtest/result/20261107_221345_quantile10v5_20261107_s5"
+  ],
+  "five_v5_models_preserved": true,
+  "prediction_dependency_preserved": true,
+  "new_mlruns": [
+    {
+      "recorder": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec",
+      "files": [
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/code_cached.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/code_diff.txt",
+          "sha256": "8dc225b0c379c99e65b7273cf3ce5b7332374d156e0f589e89285b1c6aa7c1ad",
+          "size": 85503
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/code_status.txt",
+          "sha256": "a905717add8e60033252a5b553b6c2f5dec6a67464740911dfe47b2deba63f79",
+          "size": 1204
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/portfolio_analysis/indicator_analysis_1day.pkl",
+          "sha256": "20e770405ed9a9a37f2e5089038e77119fff30f38f84f836e84c07a6760567de",
+          "size": 663
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/portfolio_analysis/indicators_normal_1day.pkl",
+          "sha256": "190942809d1d987f37945d3dd3519ce7baa95ea141106fb113278810a45d92f3",
+          "size": 82533
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/portfolio_analysis/indicators_normal_1day_obj.pkl",
+          "sha256": "d390980566186b53e8a4ff2757ba3c1b65d5cd551323621e28335d12e7fd32a9",
+          "size": 9449758
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/portfolio_analysis/port_analysis_1day.pkl",
+          "sha256": "ee71d7246cfd6ebab0ddfa8cfff4ab263866e3af7c23a9f3e7a0296a49440cd7",
+          "size": 1091
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/portfolio_analysis/positions_normal_1day.pkl",
+          "sha256": "ffb861b7c8d7bb679a233c174bd9752bb48ca883be7530cc1c8a65e5da51e346",
+          "size": 1169913
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/artifacts/portfolio_analysis/report_normal_1day.pkl",
+          "sha256": "17b3d23059ce45a4c504ab9e3e3c5fddb8452b899bb92ad64d7fb5b9df41f348",
+          "size": 117829
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/meta.yaml",
+          "sha256": "67d765047189ba86468f3f9c5039e4b70c76919e3cb8e08eb2533da74cdddc89",
+          "size": 404
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_with_cost.annualized_return",
+          "sha256": "793c866b49ebcae0bdc7697ae188d0163b8c5a673a6d456d907a9ac9742cde2e",
+          "size": 36
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_with_cost.information_ratio",
+          "sha256": "41534d51e32c2c392a9876eeae3715d77698f271d36c24bd4f2a71d74d19fa4a",
+          "size": 35
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_with_cost.max_drawdown",
+          "sha256": "7644a182db1cdb1ccdce0a09bfb02014ad508fcd0b5b3c27beaf80415cb38b96",
+          "size": 37
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_with_cost.mean",
+          "sha256": "0ab57164cc6959f7f4eda83c45525d0a1a603a98b7f77f17941a9ea98d70e921",
+          "size": 38
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_with_cost.std",
+          "sha256": "b612474093ad1029b79f6b05d187397ae8bf4c5e53a30e452f7ba8b4735f8d81",
+          "size": 37
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_without_cost.annualized_return",
+          "sha256": "3511a35df57d15ba63c059715f0e7dd587bab2d716719addf27901b3726bfcdc",
+          "size": 36
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_without_cost.information_ratio",
+          "sha256": "5560d9ece3064892de03ea340a63d4e45fed85db0afa329228f7530abcdd7c5c",
+          "size": 34
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_without_cost.max_drawdown",
+          "sha256": "93a6a1a481f471027ca47c43c3d4f3526fb9e38502ab811b8236f2fae86bea38",
+          "size": 37
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_without_cost.mean",
+          "sha256": "aca8d2e4d6e8c2b7721037c77fdb45ad9e6bc870bdebff21273c3ed59317af6f",
+          "size": 37
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.excess_return_without_cost.std",
+          "sha256": "799e3a5eb08654a7c72b210a3d7fa93a90ede2d4eea8770bfff05d0cbf7ca075",
+          "size": 37
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.ffr",
+          "sha256": "ad69ebb51fd8759bc0a46c554b77ff5d9b1067a39771a497b265f3c709fc489e",
+          "size": 34
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.pa",
+          "sha256": "4edde741d2e4c101972f4651c3532b5f766a4249e3b2135d6479ab8f44dd724c",
+          "size": 20
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/metrics/1day.pos",
+          "sha256": "7a0f78c83a48d012ff14d0b951e98b17d6f7e85bd6fcb0e45ffe863c9b7aa624",
+          "size": 20
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/params/cmd-sys.argv",
+          "sha256": "802b557ad1760a4a78f26dc9bca38d9e809394bb79b8f378da717d54aed60460",
+          "size": 307
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/tags/mlflow.runName",
+          "sha256": "e210afbd2a5a7b09d08be575b2edc101d6e4c442e7e865e1d07b7b3321d2eb86",
+          "size": 15
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/tags/mlflow.source.name",
+          "sha256": "b04cf65535b0233dfdafd48fb24a49825bbf89c764454d5ef71fd87e0c9d3757",
+          "size": 20
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/tags/mlflow.source.type",
+          "sha256": "646c19373ac9e27e972c8e3bdf6554c4c10d23006c1abec3407cbff80c4ab71f",
+          "size": 5
+        },
+        {
+          "path": "mlruns/675785820284249511/ddf3c11d95ba4d0a9ee02c6593aaf7ec/tags/mlflow.user",
+          "sha256": "ccd922b4a56fad25dad3ccca789df745f1f14d47edc34b6538c9dd04fba07c9c",
+          "size": 8
+        }
+      ],
+      "retained_reason": "Registered platform experiment original account/position/indicator evidence. source_report fingerprints and mlruns_link reference this exact recorder; retain required originals. No transient predictions or trained model copied into recorder."
+    },
+    {
+      "recorder": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6",
+      "files": [
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/code_cached.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/code_diff.txt",
+          "sha256": "8dc225b0c379c99e65b7273cf3ce5b7332374d156e0f589e89285b1c6aa7c1ad",
+          "size": 85503
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/code_status.txt",
+          "sha256": "a905717add8e60033252a5b553b6c2f5dec6a67464740911dfe47b2deba63f79",
+          "size": 1204
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/portfolio_analysis/indicator_analysis_1day.pkl",
+          "sha256": "73f37569140848d805bf987555bbdc8d2f75a00b1227d1218cb1dcf124b75048",
+          "size": 663
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/portfolio_analysis/indicators_normal_1day.pkl",
+          "sha256": "a86b9abaa38c7568e4d3ba128410394432bdee16ed797a87eee187427db854d1",
+          "size": 82533
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/portfolio_analysis/indicators_normal_1day_obj.pkl",
+          "sha256": "a7f8b027581e908263706dafb85abd7b58802c5373077e8e4867740deb207919",
+          "size": 5888014
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/portfolio_analysis/port_analysis_1day.pkl",
+          "sha256": "4d9eb9c3e9c3e303c55853c6cb2418c52583e0ab35ef798b8354728fb40a2544",
+          "size": 1091
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/portfolio_analysis/positions_normal_1day.pkl",
+          "sha256": "43a1fb3ea9eb98f3ea524b4bb0c430b7b3c8c5ea8f3d3c0ff2d59c9d2a63f230",
+          "size": 648671
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/artifacts/portfolio_analysis/report_normal_1day.pkl",
+          "sha256": "4d64641e1fca2998504a48dc52318fd21d0d466b604364469d540c864abe5176",
+          "size": 117829
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/meta.yaml",
+          "sha256": "e43197db160c5441c3a42c2fa5e115c9c7e2d7dfa00ab32f19cb9a1d9d832a2c",
+          "size": 404
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_with_cost.annualized_return",
+          "sha256": "b1e5ddb2ca78d2dc0f7553ae431c2e3a9e0dcf261c17d537b5f3b852b8eddfca",
+          "size": 36
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_with_cost.information_ratio",
+          "sha256": "db77797bd74f975d60a117224485337664ed0448dfa50a24a188499210761d5b",
+          "size": 34
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_with_cost.max_drawdown",
+          "sha256": "32d169a118d48f8b3444c861ed5fa58605490f822d0e2164c1f365f68c37bdaa",
+          "size": 36
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_with_cost.mean",
+          "sha256": "1563ff6e1d49ae80a60de35153539c971f68471749fcbd0c48ebbec38cdc38e6",
+          "size": 38
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_with_cost.std",
+          "sha256": "7792d093610ada797c887ed401ecdd070806614d837fba0b4410a364c80a5e87",
+          "size": 37
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_without_cost.annualized_return",
+          "sha256": "1ea2dcd9f6c187ba881bfb3b2af8ce92cb056fcba2f19e20b9835baef2511372",
+          "size": 36
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_without_cost.information_ratio",
+          "sha256": "f78a29d4058c7e2bb8588888bfb5d5f07191cd2b158d00a9f7657983428d4133",
+          "size": 35
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_without_cost.max_drawdown",
+          "sha256": "440a2071d19ea077352bda33f650afe82e8bb6d518e46407aefa95f1af2a409d",
+          "size": 37
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_without_cost.mean",
+          "sha256": "6f5e77baa24a12448c7080f1d04c6d1b02000eac7043ad74807897847efd08ed",
+          "size": 38
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.excess_return_without_cost.std",
+          "sha256": "e932c0dc9c17111ba85be02932aeb459b8a166d7d278f036d80b42b35a007b09",
+          "size": 36
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.ffr",
+          "sha256": "b5a92c17ec817f7ce30e8f533574739aedfe0a1b7281a0fde6ed9c62731ec580",
+          "size": 20
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.pa",
+          "sha256": "411d14d27cbdfd99725aca97516983122837e320ee083cbf21bf994db03c38f3",
+          "size": 20
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/metrics/1day.pos",
+          "sha256": "411d14d27cbdfd99725aca97516983122837e320ee083cbf21bf994db03c38f3",
+          "size": 20
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/params/cmd-sys.argv",
+          "sha256": "ee4976adbf11ad6d95c3b3442b75a00a7c05d159f50ba2532faa711f4e196e89",
+          "size": 299
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/tags/mlflow.runName",
+          "sha256": "e210afbd2a5a7b09d08be575b2edc101d6e4c442e7e865e1d07b7b3321d2eb86",
+          "size": 15
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/tags/mlflow.source.name",
+          "sha256": "b04cf65535b0233dfdafd48fb24a49825bbf89c764454d5ef71fd87e0c9d3757",
+          "size": 20
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/tags/mlflow.source.type",
+          "sha256": "646c19373ac9e27e972c8e3bdf6554c4c10d23006c1abec3407cbff80c4ab71f",
+          "size": 5
+        },
+        {
+          "path": "mlruns/535536840717601952/47d62033d5674f9b8570635682a8e6f6/tags/mlflow.user",
+          "sha256": "ccd922b4a56fad25dad3ccca789df745f1f14d47edc34b6538c9dd04fba07c9c",
+          "size": 8
+        }
+      ],
+      "retained_reason": "Registered platform experiment original account/position/indicator evidence. source_report fingerprints and mlruns_link reference this exact recorder; retain required originals. No transient predictions or trained model copied into recorder."
+    }
+  ],
+  "mlruns_disposition": "Required registered originals retained after exact ownership/reference audit; no new unreferenced recorders. only-result alone was not used as MLflow evidence.",
+  "historical_warning_count": 143,
+  "historical_warnings_scope": "Pre-existing missing historical sources recorded by official dry-run; no reconstruction or deletion in this task."
+}

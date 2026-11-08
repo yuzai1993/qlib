@@ -1,0 +1,244 @@
+{
+  "model_ref": "training-target/h20-quantile10-p50-v5",
+  "baseline_version": "v5",
+  "label_source": "old",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "components": [
+    {
+      "seed": 42,
+      "session": "labelgrade_20261106_quantile10_old_s42",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+        "size": 59488457
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+        "sha256": "8bad9ee807084e769140728cef32cff0e4ff66ad736504e5ed7b74bbe337e6f2",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+        "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+        "size": 38305
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "labelgrade_20261106_quantile10_old_s1000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+        "size": 59781408
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+        "sha256": "9f52cfa2e9b11b93a7c15af1f7f1dcbf94a0014a34d573f20dc250cd4d14d439",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+        "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+        "size": 44465
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "labelgrade_20261106_quantile10_old_s2000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+        "size": 60495908
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+        "sha256": "09f99b5e2a6b8b176f3176dc8c2325a22d0425fbaa271c8fcbbe4f59a0bf3131",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+        "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+        "size": 59236
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "labelgrade_20261106_quantile10_old_s3000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+        "size": 59546157
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+        "sha256": "4136b5c13beb1d882170f6f957cdea7c8389c4406bd2069d68b494aabb39cbb4",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+        "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+        "size": 39348
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "labelgrade_20261106_quantile10_old_s4000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+        "size": 60125167
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+        "sha256": "e93ada017614ffd229cefe1b2061c76d9163efee5d253f7ea8c8c8fb0a03586c",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+        "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+        "size": 51355
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+    "sha256": "45ad0d4f05e84bd2594b95fd6fd660acb2345668ec3488813893d78c7d0155f0",
+    "size": 83046157
+  },
+  "source_parent": "training-target/label-grading-p50-20261106-v1",
+  "source_candidate": "quantile10-old",
+  "selection_study": "training-target/quantile-n-p50-20261107-v1",
+  "source_proof": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-old.json",
+    "sha256": "ddba993b53de7535b4d81dec2b54905f09ca385e86dab803bb685eb644c54484",
+    "size": 4475
+  },
+  "evaluation": {
+    "path": "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json",
+    "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16",
+    "size": 88524
+  },
+  "label_transform": {
+    "bins": 10,
+    "scale": 0.34774330479829896,
+    "offset": -1.564601411089059,
+    "scores": [
+      -1.564601411089059,
+      -1.21685810629076,
+      -0.869114801492461,
+      -0.521371496694162,
+      -0.1736281918958631,
+      0.17411511290243586,
+      0.5218584177007348,
+      0.8696017224990338,
+      1.2173450272973327,
+      1.5650883320956317
+    ],
+    "new": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-new.pkl",
+      "sha256": "7f293a86256c214fff979f9838705d81837c685cb1c152b3518ebc0751374281",
+      "size": 65463234
+    },
+    "new_signature": {
+      "shape": [
+        5448963
+      ],
+      "columns": [
+        "LABEL0"
+      ],
+      "dtypes": [
+        "float32"
+      ],
+      "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+      "values_sha256": "109b5a2c0d0bd3228e4d2a5c291558465bb2317c0b8f869bdb11e8cdac428351"
+    },
+    "counts": [
+      543520,
+      545083,
+      544742,
+      545072,
+      545269,
+      544478,
+      544751,
+      545048,
+      544767,
+      546233
+    ],
+    "target_mean": 0.0009448550239293172,
+    "target_std": 0.9988157090537705,
+    "actual_mean": 0.0009448497103386184,
+    "actual_std": 0.9988157213943023,
+    "rms_error_to_continuous": 0.10000682936814152,
+    "old": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+      "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+      "size": 65463234
+    },
+    "old_signature": {
+      "shape": [
+        5448963
+      ],
+      "columns": [
+        "LABEL0"
+      ],
+      "dtypes": [
+        "float32"
+      ],
+      "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+      "values_sha256": "bc96ba29de10454d406663f4ebd478ea4cfba48b69764c98a5b80bedc33bf48d"
+    },
+    "membership_changes": 1,
+    "encoded_changes": 1,
+    "paired_fits_needed": true,
+    "daily_max_bin_share": {
+      "median": 0.10026171495705546,
+      "max": 0.11178509532062392
+    }
+  },
+  "profile": {
+    "structure": "每个种子一个单LightGBM，沿用H20／patience50冻结超参。",
+    "features": "Alpha158 + range，164列，无regime特征。",
+    "training_sample": {
+      "pool": "沪深全A",
+      "time_range": "2004-01-02～2020-07-31",
+      "filters": "沿用已完成H20稳定性复核的冻结特征、训练日期、M0权重和有效标签掩码；5,448,963条有序训练样本，原件与签名见来源清单。"
+    },
+    "training_target": "旧标签快照H20累计收益，按日截面等样本10档；并列组按中秩归档，同档标签相同。ordinal0..9经冻结仿射变换，scale=0.34774330479829896，offset=-1.564601411089059；不在分档后重新CSRankNorm。",
+    "evaluation_sample": {
+      "pool": "全A",
+      "time_range": "2020-08-03～2026-07-31；H5退出截断至2026-07-23，1448日",
+      "filters": "日频ST、成交额≥1000万、上市≥60日；头部另剔t+1不可成交。"
+    },
+    "early_stopping": "Top5×H5扣费净年化，eval_window，patience=50，上限200轮；采用完整退出边界。",
+    "prediction_signal": "固定五种子逐日截面z-score后等权合成；官方主格Top3×H5，全局H5 RankIC。",
+    "changes": "2026-11-07用户指定把旧标签等样本n=10晋升为v5；复用原五种子，不重训。",
+    "model_paths": [
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000
+      },
+      {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000
+      }
+    ]
+  }
+}

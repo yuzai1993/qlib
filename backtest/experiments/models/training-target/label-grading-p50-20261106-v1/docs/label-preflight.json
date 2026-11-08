@@ -1,0 +1,46 @@
+{
+  "scope": "Read-only label feasibility audit, no fit and no return exposure",
+  "training_rows": 5448963,
+  "original_label_changes": 106,
+  "candidates": {
+    "quantile5": {
+      "changed_memberships": 1,
+      "changed_encoded_float32": 1129,
+      "crossing_examples": [
+        {
+          "index": "(Timestamp('2017-11-03 00:00:00'), 'SZ000166')",
+          "old_label": 1.0383682156793188,
+          "new_label": 1.0377545228804541,
+          "old_bin": 4,
+          "new_bin": 3
+        }
+      ]
+    },
+    "quantile10": {
+      "changed_memberships": 1,
+      "changed_encoded_float32": 564,
+      "crossing_examples": [
+        {
+          "index": "(Timestamp('2017-11-03 00:00:00'), 'SZ000166')",
+          "old_label": 1.0383682156793188,
+          "new_label": 1.0377545228804541,
+          "old_bin": 8,
+          "new_bin": 7
+        }
+      ]
+    },
+    "tails5": {
+      "changed_memberships": 1,
+      "changed_encoded_float32": 2115,
+      "crossing_examples": [
+        {
+          "index": "(Timestamp('2017-11-03 00:00:00'), 'SZ000166')",
+          "old_label": 1.0383682156793188,
+          "new_label": 1.0377545228804541,
+          "old_bin": 3,
+          "new_bin": 2
+        }
+      ]
+    }
+  }
+}

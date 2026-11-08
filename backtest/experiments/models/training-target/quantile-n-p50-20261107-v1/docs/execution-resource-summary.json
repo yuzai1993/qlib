@@ -1,0 +1,75 @@
+{
+  "at": 1794038424.51152,
+  "wallclock_hours_through_report": 5.538678709665934,
+  "original_wallclock_budget_hours": 10,
+  "unchanged_deadline": 1794054485.268165,
+  "fits_started": 30,
+  "fits_succeeded": 30,
+  "fit_seconds_sum": 15391.666971683502,
+  "sampled_process_tree_peak_RSS_GiB": 9.259185791015625,
+  "peak_sample": {
+    "at": 1794024891.167603,
+    "stage": "train-quantile15",
+    "processes": [
+      {
+        "pid": 94983,
+        "ppid": 6209,
+        "rss_KiB": 9712,
+        "cpu_percent": 0.0,
+        "elapsed": "01:43:26",
+        "command": "/opt/anaconda3/envs/qlib/bin/python -u /private/tmp/qlib-quantile-n-20261107.5g5nkn20/resource_tree.py"
+      },
+      {
+        "pid": 97049,
+        "ppid": 6209,
+        "rss_KiB": 10816,
+        "cpu_percent": 0.0,
+        "elapsed": "51:32",
+        "command": "/opt/anaconda3/envs/qlib/bin/python -u /private/tmp/qlib-quantile-n-20261107.5g5nkn20/monitor_single.py"
+      },
+      {
+        "pid": 97377,
+        "ppid": 6209,
+        "rss_KiB": 2336,
+        "cpu_percent": 0.0,
+        "elapsed": "46:55",
+        "command": "/opt/anaconda3/envs/qlib/bin/python -u /private/tmp/qlib-quantile-n-20261107.5g5nkn20/pipeline_single_v2.py"
+      },
+      {
+        "pid": 97896,
+        "ppid": 97377,
+        "rss_KiB": 3936,
+        "cpu_percent": 0.0,
+        "elapsed": "32:24",
+        "command": "/opt/anaconda3/envs/qlib/bin/python -u /private/tmp/qlib-quantile-n-20261107.5g5nkn20/train_group_single.py quantile15"
+      },
+      {
+        "pid": 98678,
+        "ppid": 97896,
+        "rss_KiB": 9680528,
+        "cpu_percent": 791.0,
+        "elapsed": "08:17",
+        "command": "/opt/anaconda3/envs/qlib/bin/python -u /private/tmp/qlib-quantile-n-20261107.5g5nkn20/train.py quantile15 old 3000"
+      },
+      {
+        "pid": 99025,
+        "ppid": 94983,
+        "rss_KiB": 1632,
+        "cpu_percent": 0.0,
+        "elapsed": "00:00",
+        "command": "ps -axo pid=,ppid=,rss=,%cpu=,etime=,command="
+      }
+    ],
+    "sum_rss_KiB": 9708960,
+    "rss_interpretation": "Summed resident sets may double-count shared pages; sample, not a guaranteed peak.",
+    "system_swap": "total = 6144.00M  used = 4635.44M  free = 1508.56M  (encrypted)"
+  },
+  "system_swap_used_GiB_range": [
+    3.445986328125,
+    8.91552734375
+  ],
+  "sampling_seconds": 50,
+  "limits": "Summed process RSS may double-count shared pages and sampling can miss peaks; system swap belongs to entire machine, not solely this task.",
+  "process_tree_samples": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/process-tree-samples.jsonl",
+  "runtime_archive_at_cleanup": "docs/runtime-texts.json.gz"
+}

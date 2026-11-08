@@ -1,0 +1,50 @@
+{
+  "campaign": "quantile-n-p50-20261107-v1",
+  "tmp": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20",
+  "pipeline_session": null,
+  "resource_session": null,
+  "monitor_session": null,
+  "monitor_exec_cell": null,
+  "active_pipeline": "pipeline_single_v2.py",
+  "final_verifier": "verify_single_v2.py",
+  "deadline": 1794054485.268165,
+  "expected_fits": 30,
+  "prior_fits": 146,
+  "next_steps": [],
+  "known_native_scope_gap": "One parent lifecycle; six distinct scientific candidates and 30 amended fit slots tracked inside; original 50-fit plan remains frozen as history",
+  "review": "docs/adapter-review.json",
+  "do_not_modify": "Frozen scientific configuration and archived original adapter bytes; fixes use new versions",
+  "source_amendment": "configs/single-source-amendment.json",
+  "primary_source": "old",
+  "obsolete_finalizers": [
+    "final_report_v2.py (50-fit paired source)",
+    "paired_diagnostics.py (paired re-fits cancelled)",
+    "cleanup_temporary.py (old task copy)"
+  ],
+  "final_report_adapter": "final_report_single_v2.py",
+  "native_terminal_adapter": "close_research_single.py",
+  "cleanup_adapter": "cleanup_temporary_v3.py",
+  "expected_model_groups": 6,
+  "paired_diagnostics": "Not applicable: user cancelled paired fits; do not run prior paired diagnostics or50-fit finalizers",
+  "source_handoff": "docs/source-label-handoff.json",
+  "last_reviewed_candidates": [
+    "quantile7",
+    "quantile15",
+    "quantile20",
+    "quantile30",
+    "quantile50",
+    "quantile3"
+  ],
+  "last_observation": "All30 fits and6 candidate groups completed. n7 best net_ann33.21%; reused n10 best Sharpe0.566. Exact ensemble checks and n50 canonical shortfall diagnostic passed. Native state closed;365 temporary files7.4846GiB removed;121 platform result directories retained; no MLflow deletion needed.",
+  "figure_renderer": "plot_single_v2.py (final3-decimalSharpe and nonoverlap labels)",
+  "supplemental_diagnostic": "After final verify, run diagnose_ensemble.py (canonical re-evaluation, exact blend/heads, selection replacement/cost identity, zero fits); static review passed. Plan docs/ensemble-diagnostic-plan.json.",
+  "status": "closed",
+  "temporary_directory_removed": true,
+  "final_evidence": [
+    "docs/final-numerical-verification.json",
+    "docs/ensemble-shortfall-diagnostic.json",
+    "docs/research-conclusion.json",
+    "docs/final-report-receipt.json",
+    "docs/harness-cleanup.json"
+  ]
+}

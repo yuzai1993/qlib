@@ -1,0 +1,24 @@
+{
+  "cache": {
+    "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/official-evaluation-inputs.pkl",
+    "sha256": "533009de2a7ab3bfe84c48d86baa14937ff525dbaf58fcdd4a6688c027552d96",
+    "size": 140217082
+  },
+  "st_daily": {
+    "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+    "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+    "size": 30202983
+  },
+  "regime": {
+    "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+    "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+    "size": 1203
+  },
+  "provider_inventory": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/provider-inputs.json.gz",
+    "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+    "size": 1937741
+  },
+  "cutoff": "2026-07-23",
+  "source": "Canonical prepare_pool_labels and entry_tradable_mask; reused exactly across all arms"
+}

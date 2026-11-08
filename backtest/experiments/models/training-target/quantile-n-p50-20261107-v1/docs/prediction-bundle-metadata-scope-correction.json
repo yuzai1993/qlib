@@ -1,0 +1,22 @@
+{
+  "at": 1794038369.5946949,
+  "reason": "Inherited generic bundle note mentioned paired perturbations; align mutable bundle description with user amendment. No signals or metrics changed.",
+  "before": {
+    "fingerprint": {
+      "path": "backtest/result/20261107_quantile_n/meta.json",
+      "sha256": "17a195fd9fcd9f0a6b838c0ec1f211443236a501821bd4cdd3595286659327c7",
+      "size": 223
+    },
+    "content": {
+      "mode": "research_prediction_bundle",
+      "owner_experiment": "training-target/quantile-n-p50-20261107-v1",
+      "note": "Label-grading five-seed signals and paired source perturbation",
+      "created_at": 1794022895.6414871
+    }
+  },
+  "after": {
+    "path": "backtest/result/20261107_quantile_n/meta.json",
+    "sha256": "f91caa5e627ee8cbd9ed604dcd8d81ef66f77b6565dfcfc244a086975a0e2da1",
+    "size": 567
+  }
+}

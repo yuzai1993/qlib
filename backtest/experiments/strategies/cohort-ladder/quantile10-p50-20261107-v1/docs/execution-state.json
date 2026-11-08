@@ -1,0 +1,81 @@
+{
+  "created_at": 1794060681.698574,
+  "deadline": 1794071481.698574,
+  "model_ref": "training-target/h20-quantile10-p50-v5",
+  "prior_cumulative_model_fits": 176,
+  "new_model_fits": 0,
+  "max_account_jobs": 3,
+  "jobs": [
+    {
+      "job_id": "quantile10v5_20261107_ladder-a1",
+      "rule": "ladder",
+      "status": "succeeded",
+      "started_at": 1794060730.761027,
+      "pid": 9624,
+      "source_pred": {
+        "path": "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+        "sha256": "45ad0d4f05e84bd2594b95fd6fd660acb2345668ec3488813893d78c7d0155f0",
+        "size": 83046157
+      },
+      "config": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/ladder.yaml",
+        "sha256": "ca7e723308b5b51cdb721a28ab18232d86d8b68b0282a68a3a4b6b45c803d522",
+        "size": 1805
+      },
+      "finished_at": 1794060815.975415,
+      "evidence": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json",
+        "sha256": "6db5068b9243c262f372df4dccc4baec8555331944829a5a0d12d83fba3bcace",
+        "size": 146844
+      },
+      "session": "backtest/result/20261107_221212_quantile10v5_20261107_ladder",
+      "report": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/ladder-account.html",
+        "sha256": "4533036823900ecde9eee9cd9a35dece822a4c8804fcbc57d94f9813791f0928",
+        "size": 46571
+      }
+    },
+    {
+      "job_id": "quantile10v5_20261107_s5-a1",
+      "rule": "s5",
+      "status": "succeeded",
+      "started_at": 1794060824.247728,
+      "pid": 9917,
+      "source_pred": {
+        "path": "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+        "sha256": "45ad0d4f05e84bd2594b95fd6fd660acb2345668ec3488813893d78c7d0155f0",
+        "size": 83046157
+      },
+      "config": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/s5.yaml",
+        "sha256": "fefd904bbfdcca54065beababd1e7a6ce97fba1327f71820bc18acbd337dbd73",
+        "size": 1839
+      },
+      "finished_at": 1794060909.729009,
+      "evidence": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/s5.json",
+        "sha256": "f3c2c40d65ae540a7fe50da2d0cc07cfc886d91f5398d69524c2aa15591eee02",
+        "size": 146981
+      },
+      "session": "backtest/result/20261107_221345_quantile10v5_20261107_s5",
+      "report": {
+        "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/s5-account.html",
+        "sha256": "7199429482d3ec5a69f1c3dbbb0dcb3997613f56e99061099bc21baef74a507a",
+        "size": 46681
+      }
+    }
+  ],
+  "status": "completed",
+  "capability_gap": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-compatibility.json",
+  "completed_at": 1794060993.965479,
+  "scientific_verification": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/scientific-verification.json",
+    "sha256": "ac9fdfc99734048f1259abf0648b864e3506b16e2c387396959b15525e7ce468",
+    "size": 2346
+  },
+  "registry_record": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/records/a220ce4224abc15af7ee6381ee21461442736543b55b810b9429801091ed39c2.json",
+    "sha256": "a220ce4224abc15af7ee6381ee21461442736543b55b810b9429801091ed39c2",
+    "size": 2810
+  }
+}

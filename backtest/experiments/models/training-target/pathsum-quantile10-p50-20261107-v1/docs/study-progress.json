@@ -1,0 +1,760 @@
+{
+  "status": "closed",
+  "scientific_candidates": {
+    "h7q10": {
+      "status": "completed",
+      "treatments": {
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h7q10-new.json",
+            "sha256": "a34f322219968c3ca30fc7be2d7d26733bd92acf6e7bc0d9eec67e63dae73db7",
+            "size": 89026
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-h7q10-new.json",
+            "sha256": "30490a098dea8bf40a70305efca473470ff9f60407ab94870e2a85880ba7ad97",
+            "size": 4380
+          }
+        }
+      }
+    },
+    "h15q10": {
+      "status": "completed",
+      "treatments": {
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h15q10-new.json",
+            "sha256": "70803ff9d10ca0196df8781c5e9d80f9028a1cfa3ce89f47065ab164537a4aed",
+            "size": 88996
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-h15q10-new.json",
+            "sha256": "e27f7e22cea4c6551a255e692e85e6f531a7fd648cd3ddfb41710bb733970f6a",
+            "size": 4402
+          }
+        }
+      }
+    },
+    "sum20continuous": {
+      "status": "completed",
+      "treatments": {
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20continuous-new.json",
+            "sha256": "5b94937c17b1f601157451f8614960a2e7bde13a8daf54683170f73ee01d09c1",
+            "size": 89131
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-sum20continuous-new.json",
+            "sha256": "e12ec783724ad7265d8dee305a7c9be689659e31683e2d57f408e2f2a4e21cfc",
+            "size": 4600
+          }
+        }
+      }
+    },
+    "sum20q10": {
+      "status": "completed",
+      "treatments": {
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+            "sha256": "19a6d6b148033cb655fe52f843d397f0dd8ddf82a16097bce4e163c4fccab018",
+            "size": 89086
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/predictions-sum20q10-new.json",
+            "sha256": "828d4c37f880bed36489fccb786059d4bf4b92a269b8e1dfe4b3c09b4bdc4e3d",
+            "size": 4446
+          }
+        }
+      }
+    }
+  },
+  "prior_fit_count": 176,
+  "jobs": [
+    {
+      "job_id": "h7q10-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h7q10",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 12117,
+      "started_at": 1794063124.5575428,
+      "fit_started_at": 1794063171.173978,
+      "finished_at": 1794063542.134239,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s42-a1.json",
+        "sha256": "320087b65522498f969cff63d5235d56a99d0bd57edd4f0cbc0465db11f3635c",
+        "size": 27354
+      },
+      "session": "pathsumq10_20261107_h7q10_s42"
+    },
+    {
+      "job_id": "h7q10-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h7q10",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 12408,
+      "started_at": 1794063549.8766809,
+      "fit_started_at": 1794063599.010498,
+      "finished_at": 1794063907.12414,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s1000-a1.json",
+        "sha256": "2c759a63640a896292b10d43fcb9a1a2cc83a03975019d886c1601adffe332fa",
+        "size": 22563
+      },
+      "session": "pathsumq10_20261107_h7q10_s1000"
+    },
+    {
+      "job_id": "h7q10-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h7q10",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 12647,
+      "started_at": 1794063914.4071949,
+      "fit_started_at": 1794063959.82676,
+      "finished_at": 1794064336.41646,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s2000-a1.json",
+        "sha256": "28dd5d8f453b6573ff98c4f31c25912f8070a4d183102b0310803ff77d60b0f7",
+        "size": 29719
+      },
+      "session": "pathsumq10_20261107_h7q10_s2000"
+    },
+    {
+      "job_id": "h7q10-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h7q10",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 12821,
+      "started_at": 1794064343.671055,
+      "fit_started_at": 1794064390.998473,
+      "finished_at": 1794064698.3803048,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s3000-a1.json",
+        "sha256": "8f74b6985ec7f9059179df5085f2cee079f98901b1c8bfc654c206abe8fd7dcd",
+        "size": 21885
+      },
+      "session": "pathsumq10_20261107_h7q10_s3000"
+    },
+    {
+      "job_id": "h7q10-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h7q10",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 13117,
+      "started_at": 1794064706.0651588,
+      "fit_started_at": 1794064756.015838,
+      "finished_at": 1794065122.6112561,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h7q10-new-s4000-a1.json",
+        "sha256": "1e285d75b2113a8f97b3eccc1c9e901369ba4cba460d1ca725f7e9329d130e13",
+        "size": 26995
+      },
+      "session": "pathsumq10_20261107_h7q10_s4000"
+    },
+    {
+      "job_id": "h15q10-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h15q10",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 14178,
+      "started_at": 1794066371.638834,
+      "fit_started_at": 1794066418.3411689,
+      "finished_at": 1794066923.656538,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s42-a1.json",
+        "sha256": "9342d555dc1e6560ed0d1b97538c9f4d708aadf3b500af6f8f076d120f740738",
+        "size": 42080
+      },
+      "session": "pathsumq10_20261107_h15q10_s42"
+    },
+    {
+      "job_id": "h15q10-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h15q10",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 14326,
+      "started_at": 1794066931.0162718,
+      "fit_started_at": 1794066982.444463,
+      "finished_at": 1794067517.551563,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s1000-a1.json",
+        "sha256": "d7f9bcb13371c3c0197d2f1282b77ac22c3463a69d26f1138bdf314abf9498e1",
+        "size": 43771
+      },
+      "session": "pathsumq10_20261107_h15q10_s1000"
+    },
+    {
+      "job_id": "h15q10-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h15q10",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 14957,
+      "started_at": 1794067524.950811,
+      "fit_started_at": 1794067572.3805,
+      "finished_at": 1794068105.56493,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s2000-a1.json",
+        "sha256": "8d7d1a72f2879bbe33ce838596328fe600e89137c55c79c14a4152652bc0a509",
+        "size": 45921
+      },
+      "session": "pathsumq10_20261107_h15q10_s2000"
+    },
+    {
+      "job_id": "h15q10-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h15q10",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 15239,
+      "started_at": 1794068112.865849,
+      "fit_started_at": 1794068160.1160479,
+      "finished_at": 1794068617.6964512,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s3000-a1.json",
+        "sha256": "750de557a3c8feeecf457b6a494f38c35e7ea015fefab4757dae14c5058d4adc",
+        "size": 34554
+      },
+      "session": "pathsumq10_20261107_h15q10_s3000"
+    },
+    {
+      "job_id": "h15q10-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "h15q10",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 15749,
+      "started_at": 1794068625.098963,
+      "fit_started_at": 1794068670.821687,
+      "finished_at": 1794069317.0534458,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/h15q10-new-s4000-a1.json",
+        "sha256": "694d4037ee23e700ad42377b271136fc9347096a3aa7bcc1cbc2b605d80cfbaf",
+        "size": 55550
+      },
+      "session": "pathsumq10_20261107_h15q10_s4000"
+    },
+    {
+      "job_id": "sum20continuous-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20continuous",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 16357,
+      "started_at": 1794069461.190486,
+      "fit_started_at": 1794069504.390293,
+      "finished_at": 1794069782.896215,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s42-a1.json",
+        "sha256": "40f7c272d0916c3f3272e567a77cad80dcee30b8f911bc637d2ea478f5adf2af",
+        "size": 19903
+      },
+      "session": "pathsumq10_20261107_sum20continuous_s42"
+    },
+    {
+      "job_id": "sum20continuous-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20continuous",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 16479,
+      "started_at": 1794069790.245876,
+      "fit_started_at": 1794069831.1702049,
+      "finished_at": 1794070181.73475,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s1000-a1.json",
+        "sha256": "cb8cdf4a5fc168502afafac4525d6c91485d3c33f734d1eaba660a436f285f96",
+        "size": 26684
+      },
+      "session": "pathsumq10_20261107_sum20continuous_s1000"
+    },
+    {
+      "job_id": "sum20continuous-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20continuous",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 16630,
+      "started_at": 1794070189.010068,
+      "fit_started_at": 1794070231.5969138,
+      "finished_at": 1794070673.766412,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s2000-a1.json",
+        "sha256": "30df6a4a4f07ee9f855c7b553aec4f202964e0206a106cb7aba8ec9b75a50669",
+        "size": 33541
+      },
+      "session": "pathsumq10_20261107_sum20continuous_s2000"
+    },
+    {
+      "job_id": "sum20continuous-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20continuous",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 17095,
+      "started_at": 1794070681.065064,
+      "fit_started_at": 1794070723.8427148,
+      "finished_at": 1794071076.6417248,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s3000-a1.json",
+        "sha256": "daca4bf0898a95b83f0aced8d7bbee70fbc3df01e8cfc4a6f4cb97efff9c1ecf",
+        "size": 25021
+      },
+      "session": "pathsumq10_20261107_sum20continuous_s3000"
+    },
+    {
+      "job_id": "sum20continuous-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20continuous",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 17247,
+      "started_at": 1794071083.875768,
+      "fit_started_at": 1794071127.1029398,
+      "finished_at": 1794071460.582795,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20continuous-new-s4000-a1.json",
+        "sha256": "b093c09bc3bf4242865a0fc1e28abf20780fd2856889eb7956df5c05e8e1b9e9",
+        "size": 21607
+      },
+      "session": "pathsumq10_20261107_sum20continuous_s4000"
+    },
+    {
+      "job_id": "sum20q10-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20q10",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 17736,
+      "started_at": 1794071579.878766,
+      "fit_started_at": 1794071626.001719,
+      "finished_at": 1794072026.606198,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s42-a1.json",
+        "sha256": "8d655d7f1a57736c655016504f7b4f143f27f361fb625e314c519da8e06e63b4",
+        "size": 28354
+      },
+      "session": "pathsumq10_20261107_sum20q10_s42"
+    },
+    {
+      "job_id": "sum20q10-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20q10",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 18247,
+      "started_at": 1794072033.977932,
+      "fit_started_at": 1794072081.31264,
+      "finished_at": 1794072485.356062,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s1000-a1.json",
+        "sha256": "c6a2c4815ba937081336d59ceaf0a2521cf3961f8eb5a06f11183dee9481572a",
+        "size": 32464
+      },
+      "session": "pathsumq10_20261107_sum20q10_s1000"
+    },
+    {
+      "job_id": "sum20q10-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20q10",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 18483,
+      "started_at": 1794072492.688788,
+      "fit_started_at": 1794072542.0061991,
+      "finished_at": 1794072820.39425,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s2000-a1.json",
+        "sha256": "0fc905bd036b9811db92b526628a0ea4e9b106aa4503cf5d6f12c85baaa50659",
+        "size": 19522
+      },
+      "session": "pathsumq10_20261107_sum20q10_s2000"
+    },
+    {
+      "job_id": "sum20q10-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20q10",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 18661,
+      "started_at": 1794072827.680607,
+      "fit_started_at": 1794072873.8117068,
+      "finished_at": 1794073402.6067252,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s3000-a1.json",
+        "sha256": "da6850bf107b25a9f8083eb990b6fc1426012d0f0db9870e7268548be13a26eb",
+        "size": 41017
+      },
+      "session": "pathsumq10_20261107_sum20q10_s3000"
+    },
+    {
+      "job_id": "sum20q10-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "sum20q10",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 19099,
+      "started_at": 1794073410.032614,
+      "fit_started_at": 1794073456.260223,
+      "finished_at": 1794073838.935101,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/sum20q10-new-s4000-a1.json",
+        "sha256": "256bae1783fcfdfc9c05c330736bde7b2379ce8650809629fe2ef70dc6c52987",
+        "size": 30417
+      },
+      "session": "pathsumq10_20261107_sum20q10_s4000"
+    }
+  ],
+  "frozen_study": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/frozen-study.json",
+    "sha256": "88ce84f076e8345c8608f63f1a9969e3de1a5fac0fd844534e45a839cc7b8a22",
+    "size": 5415
+  },
+  "reused_controls": [
+    "h7continuous",
+    "h15continuous",
+    "h20continuous",
+    "h20q10",
+    "v5"
+  ],
+  "source_amendment": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/missing-price-amendment.json",
+    "sha256": "7e4da3d0b87ea9edbff83ea2ddf2712a8e0650a4fde723286cb300be904db160",
+    "size": 2145
+  },
+  "prepared_inputs": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/prepared-inputs.json",
+    "sha256": "1b0c533c48fb5a73c15909a62b07374f37b5f30801a5ff49cc1d327eed1756a5",
+    "size": 8255
+  },
+  "pipeline_stage": "final_report_ready_for_native_lifecycle",
+  "registration_receipts": [
+    {
+      "completed_candidates": [
+        "h7q10"
+      ],
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "310cd6530145ebf6ffcf7cf3452cc552c499bed62a7a1f8131ad20b86ed34b9d",
+        "size": 33363
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+        "sha256": "19f9b2c06453509b3720916f8741107e68cb7536cc6bd11712de21269a7da802",
+        "size": 11818
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-summary.json",
+        "sha256": "c19fdd09167d4cc4b4a915a3a2307ef9c7729d47d4616eb2c84b9b74dce7d29e",
+        "size": 14895
+      },
+      "candidate_records": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-v5-record.json",
+          "sha256": "c4138bee4f64ab08492b83bead3f3185efae2a23b0bd1d01a8582985edbd9021",
+          "size": 1133
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7continuous-record.json",
+          "sha256": "700cf5796e2163b28a3adc1297365846c5fcc7f1c1ebca3e86f980a60a6a8632",
+          "size": 1167
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7q10-record.json",
+          "sha256": "675d07a9a0533040a36c6cab6cb3046a43eb224cc9881e3264574d04c051bcbe",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15continuous-record.json",
+          "sha256": "a49be25608aa4417cc193ed1cf2b52df137d8705acd3ce85f30c7a1ca5b1574c",
+          "size": 1170
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20continuous-record.json",
+          "sha256": "cef61c2bdfeebc7062cadb2a6143d4cc73a770a26f27f7d342a55e8cecf57390",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20q10-record.json",
+          "sha256": "e0726f82e09b81b891864670b16a1d3ad69af7f4e46cc5878b7ddfd9bd3ad6f0",
+          "size": 1145
+        }
+      ]
+    },
+    {
+      "completed_candidates": [
+        "h7q10",
+        "h15q10"
+      ],
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "a0d0c363c77b4ce07895bfad8f0234a0843dfa5ee2a40ff450391b8e87519ddb",
+        "size": 34065
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+        "sha256": "92d32901cb9da51c0fedc0b20417ae7e7b65150bd317e42e376aae4bfaa321a2",
+        "size": 14432
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-summary.json",
+        "sha256": "e5cc375b34728b0ad98a40cdcecd504e895959de03f6de217eeea4e7d380abbd",
+        "size": 21678
+      },
+      "candidate_records": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-v5-record.json",
+          "sha256": "c4138bee4f64ab08492b83bead3f3185efae2a23b0bd1d01a8582985edbd9021",
+          "size": 1133
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7continuous-record.json",
+          "sha256": "700cf5796e2163b28a3adc1297365846c5fcc7f1c1ebca3e86f980a60a6a8632",
+          "size": 1167
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7q10-record.json",
+          "sha256": "675d07a9a0533040a36c6cab6cb3046a43eb224cc9881e3264574d04c051bcbe",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15continuous-record.json",
+          "sha256": "a49be25608aa4417cc193ed1cf2b52df137d8705acd3ce85f30c7a1ca5b1574c",
+          "size": 1170
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15q10-record.json",
+          "sha256": "066464cb934275369fb6b7ea5e6a076adf7394b30425b677db84533217386f52",
+          "size": 1166
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20continuous-record.json",
+          "sha256": "cef61c2bdfeebc7062cadb2a6143d4cc73a770a26f27f7d342a55e8cecf57390",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20q10-record.json",
+          "sha256": "e0726f82e09b81b891864670b16a1d3ad69af7f4e46cc5878b7ddfd9bd3ad6f0",
+          "size": 1145
+        }
+      ]
+    },
+    {
+      "completed_candidates": [
+        "h7q10",
+        "h15q10",
+        "sum20continuous"
+      ],
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "ef317cd93f73272b3820846b32a28ab2b33a9eae07e54ca5f50a17e59f9a690f",
+        "size": 34767
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+        "sha256": "90f97d73aaa69a9f7f0f9f2fe57f298248e38861caaa4f24da2a601bc0c30490",
+        "size": 16497
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-summary.json",
+        "sha256": "4724f52d63c87cfe0181db1eb4ed08fc0ce2a774c512df56de8fba8ed76faa94",
+        "size": 24868
+      },
+      "candidate_records": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-v5-record.json",
+          "sha256": "c4138bee4f64ab08492b83bead3f3185efae2a23b0bd1d01a8582985edbd9021",
+          "size": 1133
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7continuous-record.json",
+          "sha256": "700cf5796e2163b28a3adc1297365846c5fcc7f1c1ebca3e86f980a60a6a8632",
+          "size": 1167
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7q10-record.json",
+          "sha256": "675d07a9a0533040a36c6cab6cb3046a43eb224cc9881e3264574d04c051bcbe",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15continuous-record.json",
+          "sha256": "a49be25608aa4417cc193ed1cf2b52df137d8705acd3ce85f30c7a1ca5b1574c",
+          "size": 1170
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15q10-record.json",
+          "sha256": "066464cb934275369fb6b7ea5e6a076adf7394b30425b677db84533217386f52",
+          "size": 1166
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20continuous-record.json",
+          "sha256": "cef61c2bdfeebc7062cadb2a6143d4cc73a770a26f27f7d342a55e8cecf57390",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20q10-record.json",
+          "sha256": "e0726f82e09b81b891864670b16a1d3ad69af7f4e46cc5878b7ddfd9bd3ad6f0",
+          "size": 1145
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-sum20continuous-record.json",
+          "sha256": "7c9fec00d8e587dc589a022faabee5e73b46d6b7c4e5a369ba35c2285bf4eaa2",
+          "size": 1192
+        }
+      ]
+    },
+    {
+      "completed_candidates": [
+        "h7q10",
+        "h15q10",
+        "sum20continuous",
+        "sum20q10"
+      ],
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "415a8e05fb66dc95ee5d7669abb1e3f6567ef924d1dfb387dd5651e89f187607",
+        "size": 35471
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+        "sha256": "068246dc52d42a5080681dfbf23faa0542699704e2fe7bed7ce71f27737ea2f3",
+        "size": 18438
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-summary.json",
+        "sha256": "e037f54bad9b8602f016f3fc98451c768076729449b8898f950e0ef737027e67",
+        "size": 28695
+      },
+      "candidate_records": [
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-v5-record.json",
+          "sha256": "c4138bee4f64ab08492b83bead3f3185efae2a23b0bd1d01a8582985edbd9021",
+          "size": 1133
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7continuous-record.json",
+          "sha256": "700cf5796e2163b28a3adc1297365846c5fcc7f1c1ebca3e86f980a60a6a8632",
+          "size": 1167
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7q10-record.json",
+          "sha256": "675d07a9a0533040a36c6cab6cb3046a43eb224cc9881e3264574d04c051bcbe",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15continuous-record.json",
+          "sha256": "a49be25608aa4417cc193ed1cf2b52df137d8705acd3ce85f30c7a1ca5b1574c",
+          "size": 1170
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15q10-record.json",
+          "sha256": "066464cb934275369fb6b7ea5e6a076adf7394b30425b677db84533217386f52",
+          "size": 1166
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20continuous-record.json",
+          "sha256": "cef61c2bdfeebc7062cadb2a6143d4cc73a770a26f27f7d342a55e8cecf57390",
+          "size": 1168
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20q10-record.json",
+          "sha256": "e0726f82e09b81b891864670b16a1d3ad69af7f4e46cc5878b7ddfd9bd3ad6f0",
+          "size": 1145
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-sum20continuous-record.json",
+          "sha256": "7c9fec00d8e587dc589a022faabee5e73b46d6b7c4e5a369ba35c2285bf4eaa2",
+          "size": 1192
+        },
+        {
+          "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-sum20q10-record.json",
+          "sha256": "e03ecf2442c6e895d8e09d7014b42dbf9f65a1075c0c2377bf94d7ac957df062",
+          "size": 1174
+        }
+      ]
+    },
+    {
+      "final_review": true,
+      "detail": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+        "sha256": "c14b64f840d5f58f0c2202a440f718e341f77f0519e5196b96cf675761619175",
+        "size": 25193
+      },
+      "total_report": {
+        "path": "backtest/experiments/reports/phase_m_v1_report.html",
+        "sha256": "795171cfbbab250675fd9ce222d8017c42de37f233649a1b779f49f71483bf80",
+        "size": 23231
+      },
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "35f0b43147d82ec75cbc6cc8ce9b88f9200cf74ba0750b55ae92f93f0a875e8b",
+        "size": 36382
+      },
+      "metadata": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metadata.json",
+        "sha256": "ad5187d625d2340cfb6cfc8bfc13d245421c747ce90cb9535bec2f42176f4b50",
+        "size": 30553
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-summary.json",
+        "sha256": "e037f54bad9b8602f016f3fc98451c768076729449b8898f950e0ef737027e67",
+        "size": 28695
+      },
+      "conclusion": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/research-conclusion.json",
+        "sha256": "02b5f3134b4378927715a4690ffb4f02da56b934b303e1f6c7f2d6dcec6ac480",
+        "size": 3246
+      },
+      "numerical_verification": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/final-numerical-verification.json",
+        "sha256": "ad4ec743cb1d0f18b9566979dfb68a9263dcf999109b65ebefbd7cf9b1e10055",
+        "size": 11794
+      },
+      "html_checks": {
+        "local_links": 15,
+        "missing_links": [],
+        "figures": 2
+      },
+      "visual_check": "Both scientific PNGs viewed; labels and units checked; horizon label offsets corrected in plot_final_v2. Full HTML browser preview unavailable after earlier local-protocol rejection."
+    }
+  ],
+  "pipeline_finished_at": 1794073955.056264,
+  "cleanup": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/harness-cleanup.json",
+    "sha256": "5f2cf10dc5249e465de89d26378b2de60518affe7ff04ca17eef8bf406c2856e",
+    "size": 2528
+  },
+  "native_final_revision": 50
+}

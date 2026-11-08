@@ -1,0 +1,1413 @@
+{
+  "at": 1794038231.499734,
+  "primary_label_source": "old",
+  "new_n": [
+    7,
+    15,
+    20,
+    30,
+    50,
+    3
+  ],
+  "reused_n": [
+    5,
+    10
+  ],
+  "tested_n": [
+    3,
+    5,
+    7,
+    10,
+    15,
+    20,
+    30,
+    50
+  ],
+  "best_tested_by_metric": {
+    "net_ann": {
+      "n": [
+        7
+      ],
+      "value": 0.3320571729192463,
+      "old_continuous_control": 0.31310381475564053,
+      "difference_from_control": 0.01895335816360577
+    },
+    "net_sharpe": {
+      "n": [
+        10
+      ],
+      "value": 0.5656362624345261,
+      "old_continuous_control": 0.5251667812274254,
+      "difference_from_control": 0.0404694812071007
+    },
+    "rank_ic_mean": {
+      "n": [
+        20
+      ],
+      "value": 0.09945190871677552,
+      "old_continuous_control": 0.09865488613081032,
+      "difference_from_control": 0.0007970225859652014
+    }
+  },
+  "adjacent_differences": {
+    "net_ann": [
+      {
+        "from_n": 3,
+        "to_n": 5,
+        "difference": -0.0059127244074923535
+      },
+      {
+        "from_n": 5,
+        "to_n": 7,
+        "difference": 0.03618739592969694
+      },
+      {
+        "from_n": 7,
+        "to_n": 10,
+        "difference": -0.01155021901068487
+      },
+      {
+        "from_n": 10,
+        "to_n": 15,
+        "difference": -0.024543245373095823
+      },
+      {
+        "from_n": 15,
+        "to_n": 20,
+        "difference": -0.004463597288250742
+      },
+      {
+        "from_n": 20,
+        "to_n": 30,
+        "difference": -0.05916247333980992
+      },
+      {
+        "from_n": 30,
+        "to_n": 50,
+        "difference": 0.01396854833852082
+      }
+    ],
+    "net_sharpe": [
+      {
+        "from_n": 3,
+        "to_n": 5,
+        "difference": 0.011420786995111398
+      },
+      {
+        "from_n": 5,
+        "to_n": 7,
+        "difference": 0.04722875172997554
+      },
+      {
+        "from_n": 7,
+        "to_n": 10,
+        "difference": 0.004870243408321762
+      },
+      {
+        "from_n": 10,
+        "to_n": 15,
+        "difference": -0.05162258910555251
+      },
+      {
+        "from_n": 15,
+        "to_n": 20,
+        "difference": -0.02228901109841025
+      },
+      {
+        "from_n": 20,
+        "to_n": 30,
+        "difference": -0.09695758436786306
+      },
+      {
+        "from_n": 30,
+        "to_n": 50,
+        "difference": 0.023309591676890895
+      }
+    ],
+    "rank_ic_mean": [
+      {
+        "from_n": 3,
+        "to_n": 5,
+        "difference": 0.0007768236393005667
+      },
+      {
+        "from_n": 5,
+        "to_n": 7,
+        "difference": -0.00014681606050823137
+      },
+      {
+        "from_n": 7,
+        "to_n": 10,
+        "difference": 0.00037701343171607504
+      },
+      {
+        "from_n": 10,
+        "to_n": 15,
+        "difference": -0.0017273205844425404
+      },
+      {
+        "from_n": 15,
+        "to_n": 20,
+        "difference": 0.002081255470825355
+      },
+      {
+        "from_n": 20,
+        "to_n": 30,
+        "difference": -0.0008500389563615152
+      },
+      {
+        "from_n": 30,
+        "to_n": 50,
+        "difference": 0.0002784263936655845
+      }
+    ]
+  },
+  "monotone_non_decreasing": {
+    "net_ann": false,
+    "net_sharpe": false,
+    "rank_ic_mean": false
+  },
+  "primary": {
+    "control_old": {
+      "n_days": 1448,
+      "ann_excess": 0.2628947991764612,
+      "ir": 0.7000143532050385,
+      "ann": 0.3525762989321247,
+      "beta": 1.0507653183776948,
+      "ann_alpha": 0.2583420892887758,
+      "appraisal_ir": 0.6897824108263609,
+      "turnover_period": 0.9013629013629014,
+      "turnover": 0.18027258027258028,
+      "ann_cost": 0.03947248417648418,
+      "net_ann_excess": 0.223422314999977,
+      "net_ann": 0.31310381475564053,
+      "net_ann_alpha": 0.2188696051122916,
+      "net_ann_vol": 0.5961988190186952,
+      "net_sharpe": 0.5251667812274254,
+      "rank_ic_mean": 0.09865488613081032
+    },
+    "quantile3": {
+      "n_days": 1448,
+      "ann_excess": 0.2516139496663262,
+      "ir": 0.6899441188263764,
+      "ann": 0.34129544942198975,
+      "beta": 1.0980337227070232,
+      "ann_alpha": 0.2428221383873296,
+      "appraisal_ir": 0.6708160680735556,
+      "turnover_period": 0.9022869022869023,
+      "turnover": 0.18045738045738047,
+      "ann_cost": 0.03951294802494803,
+      "net_ann_excess": 0.21210100164137818,
+      "net_ann": 0.3017825013970417,
+      "net_ann_alpha": 0.20330919036238157,
+      "net_ann_vol": 0.6010209049821743,
+      "net_sharpe": 0.5021164803011174,
+      "rank_ic_mean": 0.0980909528198843
+    },
+    "quantile5": {
+      "n_days": 1448,
+      "ann_excess": 0.24581250084210934,
+      "ir": 0.6646282538856164,
+      "ann": 0.33549400059777296,
+      "beta": 1.015055127348607,
+      "ann_alpha": 0.2444623344424738,
+      "appraisal_ir": 0.6610765677570964,
+      "turnover_period": 0.9048279048279048,
+      "turnover": 0.18096558096558096,
+      "ann_cost": 0.03962422360822361,
+      "net_ann_excess": 0.20618827723388572,
+      "net_ann": 0.29586977698954936,
+      "net_ann_alpha": 0.2048381108342502,
+      "net_ann_vol": 0.5761408096968351,
+      "net_sharpe": 0.5135372672962288,
+      "rank_ic_mean": 0.09886777645918486
+    },
+    "quantile7": {
+      "n_days": 1448,
+      "ann_excess": 0.282111172355082,
+      "ir": 0.7707926658322984,
+      "ann": 0.3717926721107455,
+      "beta": 1.0559344051339712,
+      "ann_alpha": 0.27709489101472656,
+      "appraisal_ir": 0.7597090511468274,
+      "turnover_period": 0.9073689073689075,
+      "turnover": 0.18147378147378151,
+      "ann_cost": 0.0397354991914992,
+      "net_ann_excess": 0.24237567316358277,
+      "net_ann": 0.3320571729192463,
+      "net_ann_alpha": 0.23735939182322735,
+      "net_ann_vol": 0.5921492416674581,
+      "net_sharpe": 0.5607660190262044,
+      "rank_ic_mean": 0.09872096039867663
+    },
+    "quantile10": {
+      "n_days": 1448,
+      "ann_excess": 0.27026759044303417,
+      "ir": 0.7607622082300475,
+      "ann": 0.3599490901986977,
+      "beta": 1.0033407272647559,
+      "ann_alpha": 0.2699679890116563,
+      "appraisal_ir": 0.7599656585676798,
+      "turnover_period": 0.9006699006699007,
+      "turnover": 0.18013398013398013,
+      "ann_cost": 0.03944213629013629,
+      "net_ann_excess": 0.23082545415289787,
+      "net_ann": 0.32050695390856143,
+      "net_ann_alpha": 0.23052585272152,
+      "net_ann_vol": 0.5666308459947101,
+      "net_sharpe": 0.5656362624345261,
+      "rank_ic_mean": 0.0990979738303927
+    },
+    "quantile15": {
+      "n_days": 1448,
+      "ann_excess": 0.2455119098655032,
+      "ir": 0.658856368673412,
+      "ann": 0.33519340962116667,
+      "beta": 0.9990705717790433,
+      "ann_alpha": 0.24559526238227378,
+      "appraisal_ir": 0.6590728254742415,
+      "turnover_period": 0.8958188958188958,
+      "turnover": 0.17916377916377918,
+      "ann_cost": 0.03922970108570109,
+      "net_ann_excess": 0.2062822087798021,
+      "net_ann": 0.2959637085354656,
+      "net_ann_alpha": 0.20636556129657269,
+      "net_ann_vol": 0.5757895633761595,
+      "net_sharpe": 0.5140136733289736,
+      "rank_ic_mean": 0.09737065324595016
+    },
+    "quantile20": {
+      "n_days": 1448,
+      "ann_excess": 0.24165527030421013,
+      "ir": 0.6480666368938397,
+      "ann": 0.33133677005987366,
+      "beta": 1.0556274602835116,
+      "ann_alpha": 0.23666651623838622,
+      "appraisal_ir": 0.6362499763240348,
+      "turnover_period": 0.9096789096789095,
+      "turnover": 0.18193578193578192,
+      "ann_cost": 0.039836658812658805,
+      "net_ann_excess": 0.20181861149155134,
+      "net_ann": 0.29150011124721487,
+      "net_ann_alpha": 0.19682985742572742,
+      "net_ann_vol": 0.5928116558663357,
+      "net_sharpe": 0.4917246622305634,
+      "rank_ic_mean": 0.09945190871677552
+    },
+    "quantile30": {
+      "n_days": 1448,
+      "ann_excess": 0.18213873829034155,
+      "ir": 0.4939130431080879,
+      "ann": 0.2718202380460051,
+      "beta": 1.0465983702179813,
+      "ann_alpha": 0.17795972656302333,
+      "appraisal_ir": 0.4835745184480203,
+      "turnover_period": 0.9015939015939016,
+      "turnover": 0.18031878031878032,
+      "ann_cost": 0.039482600138600145,
+      "net_ann_excess": 0.1426561381517414,
+      "net_ann": 0.23233763790740494,
+      "net_ann_alpha": 0.1384771264244232,
+      "net_ann_vol": 0.5885436018760708,
+      "net_sharpe": 0.3947670778627003,
+      "rank_ic_mean": 0.098601869760414
+    },
+    "quantile50": {
+      "n_days": 1448,
+      "ann_excess": 0.19604659085616666,
+      "ir": 0.5191547960508258,
+      "ann": 0.28572809061183013,
+      "beta": 1.027811678606248,
+      "ann_alpha": 0.19355239780803585,
+      "appraisal_ir": 0.5130321757150179,
+      "turnover_period": 0.9002079002079002,
+      "turnover": 0.18004158004158005,
+      "ann_cost": 0.03942190436590437,
+      "net_ann_excess": 0.1566246864902623,
+      "net_ann": 0.24630618624592576,
+      "net_ann_alpha": 0.15413049344213148,
+      "net_ann_vol": 0.5891411891440188,
+      "net_sharpe": 0.4180766695395912,
+      "rank_ic_mean": 0.09888029615407959
+    }
+  },
+  "windows": {
+    "head_years": {
+      "2020": {
+        "metrics": {
+          "control_old": {
+            "n_days": 103,
+            "net_ann": 0.1080942054790086,
+            "net_ann_vol": 0.47495095837137985,
+            "net_sharpe": 0.22759024605333286
+          },
+          "quantile3": {
+            "n_days": 103,
+            "net_ann": 0.16677641434932017,
+            "net_ann_vol": 0.4885832700109356,
+            "net_sharpe": 0.34134696086828215
+          },
+          "quantile5": {
+            "n_days": 103,
+            "net_ann": 0.1946494146829712,
+            "net_ann_vol": 0.5040316439623096,
+            "net_sharpe": 0.3861849092505126
+          },
+          "quantile7": {
+            "n_days": 103,
+            "net_ann": 0.24436911763684416,
+            "net_ann_vol": 0.5109827032136222,
+            "net_sharpe": 0.4782336390253172
+          },
+          "quantile10": {
+            "n_days": 103,
+            "net_ann": 0.29692124897135797,
+            "net_ann_vol": 0.5184957143931169,
+            "net_sharpe": 0.5726590224933585
+          },
+          "quantile15": {
+            "n_days": 103,
+            "net_ann": 0.033036484420349545,
+            "net_ann_vol": 0.5125926381622563,
+            "net_sharpe": 0.06444978324072645
+          },
+          "quantile20": {
+            "n_days": 103,
+            "net_ann": 0.24229595319875435,
+            "net_ann_vol": 0.5157658314899312,
+            "net_sharpe": 0.46977899349946467
+          },
+          "quantile30": {
+            "n_days": 103,
+            "net_ann": 0.12002111300427443,
+            "net_ann_vol": 0.495778134613325,
+            "net_sharpe": 0.24208633786942452
+          },
+          "quantile50": {
+            "n_days": 103,
+            "net_ann": 0.1958092581886189,
+            "net_ann_vol": 0.5103267018952226,
+            "net_sharpe": 0.383693930694658
+          }
+        },
+        "return_above_control_n": [
+          3,
+          5,
+          7,
+          10,
+          20,
+          30,
+          50
+        ],
+        "sharpe_above_control_n": [
+          3,
+          5,
+          7,
+          10,
+          20,
+          30,
+          50
+        ]
+      },
+      "2021": {
+        "metrics": {
+          "control_old": {
+            "n_days": 243,
+            "net_ann": 0.5205522563282217,
+            "net_ann_vol": 0.5319408394414317,
+            "net_sharpe": 0.978590508062572
+          },
+          "quantile3": {
+            "n_days": 243,
+            "net_ann": 0.596433156499185,
+            "net_ann_vol": 0.5285026065988604,
+            "net_sharpe": 1.128533992173637
+          },
+          "quantile5": {
+            "n_days": 243,
+            "net_ann": 0.4019081531275997,
+            "net_ann_vol": 0.514403289393057,
+            "net_sharpe": 0.7813094539146707
+          },
+          "quantile7": {
+            "n_days": 243,
+            "net_ann": 0.5243582546772689,
+            "net_ann_vol": 0.5457543621456828,
+            "net_sharpe": 0.9607953523554201
+          },
+          "quantile10": {
+            "n_days": 243,
+            "net_ann": 0.4903879780528902,
+            "net_ann_vol": 0.5260536239626632,
+            "net_sharpe": 0.9322015013581498
+          },
+          "quantile15": {
+            "n_days": 243,
+            "net_ann": 0.5315713949871194,
+            "net_ann_vol": 0.5037711984986178,
+            "net_sharpe": 1.0551841720434874
+          },
+          "quantile20": {
+            "n_days": 243,
+            "net_ann": 0.5987501332112692,
+            "net_ann_vol": 0.5280644939345792,
+            "net_sharpe": 1.1338579663821273
+          },
+          "quantile30": {
+            "n_days": 243,
+            "net_ann": 0.4022685275289695,
+            "net_ann_vol": 0.5063222512881527,
+            "net_sharpe": 0.794491110168561
+          },
+          "quantile50": {
+            "n_days": 243,
+            "net_ann": 0.5317442594503394,
+            "net_ann_vol": 0.5264212373319535,
+            "net_sharpe": 1.010111716133195
+          }
+        },
+        "return_above_control_n": [
+          3,
+          7,
+          15,
+          20,
+          50
+        ],
+        "sharpe_above_control_n": [
+          3,
+          15,
+          20,
+          50
+        ]
+      },
+      "2022": {
+        "metrics": {
+          "control_old": {
+            "n_days": 242,
+            "net_ann": 0.22128127214969817,
+            "net_ann_vol": 0.586489166951226,
+            "net_sharpe": 0.37729814056071137
+          },
+          "quantile3": {
+            "n_days": 242,
+            "net_ann": 0.1767673078450394,
+            "net_ann_vol": 0.5986213725923125,
+            "net_sharpe": 0.29529067276624904
+          },
+          "quantile5": {
+            "n_days": 242,
+            "net_ann": 0.27794946532403403,
+            "net_ann_vol": 0.6049828976687266,
+            "net_sharpe": 0.45943359125538813
+          },
+          "quantile7": {
+            "n_days": 242,
+            "net_ann": 0.24126229178429176,
+            "net_ann_vol": 0.590510465388157,
+            "net_sharpe": 0.40856564942622
+          },
+          "quantile10": {
+            "n_days": 242,
+            "net_ann": 0.23765981070595738,
+            "net_ann_vol": 0.5813107709866069,
+            "net_sharpe": 0.4088343491427117
+          },
+          "quantile15": {
+            "n_days": 242,
+            "net_ann": 0.2896468676227959,
+            "net_ann_vol": 0.6122301757768904,
+            "net_sharpe": 0.47310126008612374
+          },
+          "quantile20": {
+            "n_days": 242,
+            "net_ann": 0.16706624633227896,
+            "net_ann_vol": 0.5837082936941241,
+            "net_sharpe": 0.2862153033237957
+          },
+          "quantile30": {
+            "n_days": 242,
+            "net_ann": 0.1731402361994342,
+            "net_ann_vol": 0.6076834823229912,
+            "net_sharpe": 0.28491845053541875
+          },
+          "quantile50": {
+            "n_days": 242,
+            "net_ann": 0.1011345312347412,
+            "net_ann_vol": 0.6235390283806937,
+            "net_sharpe": 0.16219438821236834
+          }
+        },
+        "return_above_control_n": [
+          5,
+          7,
+          10,
+          15
+        ],
+        "sharpe_above_control_n": [
+          5,
+          7,
+          10,
+          15
+        ]
+      },
+      "2023": {
+        "metrics": {
+          "control_old": {
+            "n_days": 242,
+            "net_ann": 0.23969627724485165,
+            "net_ann_vol": 0.42077100225264447,
+            "net_sharpe": 0.5696596865316548
+          },
+          "quantile3": {
+            "n_days": 242,
+            "net_ann": 0.21627390317934736,
+            "net_ann_vol": 0.37074256153265744,
+            "net_sharpe": 0.5833533174213033
+          },
+          "quantile5": {
+            "n_days": 242,
+            "net_ann": 0.18054545531134697,
+            "net_ann_vol": 0.4057144796004814,
+            "net_sharpe": 0.44500619127307267
+          },
+          "quantile7": {
+            "n_days": 242,
+            "net_ann": 0.1901216510792882,
+            "net_ann_vol": 0.4024608882193572,
+            "net_sharpe": 0.4723978320488731
+          },
+          "quantile10": {
+            "n_days": 242,
+            "net_ann": 0.2034695156938327,
+            "net_ann_vol": 0.3722175156194587,
+            "net_sharpe": 0.5466414318391517
+          },
+          "quantile15": {
+            "n_days": 242,
+            "net_ann": 0.250257408056359,
+            "net_ann_vol": 0.44133746865651297,
+            "net_sharpe": 0.567043194447492
+          },
+          "quantile20": {
+            "n_days": 242,
+            "net_ann": 0.15105107813702207,
+            "net_ann_vol": 0.4057952215829373,
+            "net_sharpe": 0.37223473836827803
+          },
+          "quantile30": {
+            "n_days": 242,
+            "net_ann": 0.18485097516516488,
+            "net_ann_vol": 0.3845912489471414,
+            "net_sharpe": 0.48064269707439694
+          },
+          "quantile50": {
+            "n_days": 242,
+            "net_ann": 0.1050566438450038,
+            "net_ann_vol": 0.3850465205777819,
+            "net_sharpe": 0.27284143143888423
+          }
+        },
+        "return_above_control_n": [
+          15
+        ],
+        "sharpe_above_control_n": [
+          3
+        ]
+      },
+      "2024": {
+        "metrics": {
+          "control_old": {
+            "n_days": 242,
+            "net_ann": 0.3400559074354881,
+            "net_ann_vol": 0.956331002520934,
+            "net_sharpe": 0.3555838998621655
+          },
+          "quantile3": {
+            "n_days": 242,
+            "net_ann": 0.2539140527444004,
+            "net_ann_vol": 0.9900590391057374,
+            "net_sharpe": 0.25646354683428385
+          },
+          "quantile5": {
+            "n_days": 242,
+            "net_ann": 0.25751834396615564,
+            "net_ann_vol": 0.8913559071322137,
+            "net_sharpe": 0.2889063076887853
+          },
+          "quantile7": {
+            "n_days": 242,
+            "net_ann": 0.3427739192563522,
+            "net_ann_vol": 0.9440634068616441,
+            "net_sharpe": 0.36308357761248017
+          },
+          "quantile10": {
+            "n_days": 242,
+            "net_ann": 0.324559869128645,
+            "net_ann_vol": 0.8791152525832294,
+            "net_sharpe": 0.3691892140136854
+          },
+          "quantile15": {
+            "n_days": 242,
+            "net_ann": 0.3402033661469915,
+            "net_ann_vol": 0.8775972751000393,
+            "net_sharpe": 0.38765317053680565
+          },
+          "quantile20": {
+            "n_days": 242,
+            "net_ann": 0.23150828309751145,
+            "net_ann_vol": 0.9499556020909385,
+            "net_sharpe": 0.24370431901021553
+          },
+          "quantile30": {
+            "n_days": 242,
+            "net_ann": 0.21152410552623313,
+            "net_ann_vol": 0.9330760116475489,
+            "net_sharpe": 0.22669547055736783
+          },
+          "quantile50": {
+            "n_days": 242,
+            "net_ann": 0.29527561727255824,
+            "net_ann_vol": 0.9227222980326828,
+            "net_sharpe": 0.3200048572599896
+          }
+        },
+        "return_above_control_n": [
+          7,
+          15
+        ],
+        "sharpe_above_control_n": [
+          7,
+          10,
+          15
+        ]
+      },
+      "2025": {
+        "metrics": {
+          "control_old": {
+            "n_days": 243,
+            "net_ann": 0.43502711015726925,
+            "net_ann_vol": 0.39161376365422773,
+            "net_sharpe": 1.1108575605156028
+          },
+          "quantile3": {
+            "n_days": 243,
+            "net_ann": 0.5625457433632012,
+            "net_ann_vol": 0.3610392915335325,
+            "net_sharpe": 1.5581288700566631
+          },
+          "quantile5": {
+            "n_days": 243,
+            "net_ann": 0.49187587054003806,
+            "net_ann_vol": 0.37553245114878,
+            "net_sharpe": 1.309809229629438
+          },
+          "quantile7": {
+            "n_days": 243,
+            "net_ann": 0.5242442568176122,
+            "net_ann_vol": 0.37657765544895544,
+            "net_sharpe": 1.392127889777764
+          },
+          "quantile10": {
+            "n_days": 243,
+            "net_ann": 0.4638735510473681,
+            "net_ann_vol": 0.3792736299620539,
+            "net_sharpe": 1.2230577461812422
+          },
+          "quantile15": {
+            "n_days": 243,
+            "net_ann": 0.3590386081705604,
+            "net_ann_vol": 0.3813748481260962,
+            "net_sharpe": 0.9414323202872816
+          },
+          "quantile20": {
+            "n_days": 243,
+            "net_ann": 0.5244061433399969,
+            "net_ann_vol": 0.3465466950711711,
+            "net_sharpe": 1.513233716548064
+          },
+          "quantile30": {
+            "n_days": 243,
+            "net_ann": 0.3771353294656594,
+            "net_ann_vol": 0.40136676407133826,
+            "net_sharpe": 0.9396277002114406
+          },
+          "quantile50": {
+            "n_days": 243,
+            "net_ann": 0.30558875121359713,
+            "net_ann_vol": 0.37061954278648684,
+            "net_sharpe": 0.824534909616588
+          }
+        },
+        "return_above_control_n": [
+          3,
+          5,
+          7,
+          10,
+          20
+        ],
+        "sharpe_above_control_n": [
+          3,
+          5,
+          7,
+          10,
+          20
+        ]
+      },
+      "2026": {
+        "metrics": {
+          "control_old": {
+            "n_days": 133,
+            "net_ann": 0.12169536293993491,
+            "net_ann_vol": 0.48155757617656936,
+            "net_sharpe": 0.25271196833027026
+          },
+          "quantile3": {
+            "n_days": 133,
+            "net_ann": -0.13830625087162482,
+            "net_ann_vol": 0.46778012335735764,
+            "net_sharpe": -0.29566508700491884
+          },
+          "quantile5": {
+            "n_days": 133,
+            "net_ann": 0.13462473137731723,
+            "net_ann_vol": 0.47333561491095233,
+            "net_sharpe": 0.2844170756148233
+          },
+          "quantile7": {
+            "n_days": 133,
+            "net_ann": 0.10144906145477298,
+            "net_ann_vol": 0.4553405238645135,
+            "net_sharpe": 0.2227982271241009
+          },
+          "quantile10": {
+            "n_days": 133,
+            "net_ann": 0.1227553249419363,
+            "net_ann_vol": 0.45121708136794114,
+            "net_sharpe": 0.2720538073819872
+          },
+          "quantile15": {
+            "n_days": 133,
+            "net_ann": -0.03195355170601283,
+            "net_ann_vol": 0.4385142803965467,
+            "net_sharpe": -0.07286775627265174
+          },
+          "quantile20": {
+            "n_days": 133,
+            "net_ann": -0.06619613737340554,
+            "net_ann_vol": 0.5093740666959679,
+            "net_sharpe": -0.12995584522546236
+          },
+          "quantile30": {
+            "n_days": 133,
+            "net_ann": -0.023722314217015417,
+            "net_ann_vol": 0.4925961545030946,
+            "net_sharpe": -0.048157733267214106
+          },
+          "quantile50": {
+            "n_days": 133,
+            "net_ann": 0.08764369269963318,
+            "net_ann_vol": 0.4848575823848466,
+            "net_sharpe": 0.18076172443987407
+          }
+        },
+        "return_above_control_n": [
+          5,
+          10
+        ],
+        "sharpe_above_control_n": [
+          5,
+          10
+        ]
+      }
+    },
+    "head_regimes": {
+      "D": {
+        "metrics": {
+          "control_old": {
+            "n_days": 1010,
+            "net_ann": 0.14728004568530992,
+            "net_ann_vol": 0.5296609046337284,
+            "net_sharpe": 0.2780647852179257
+          },
+          "quantile3": {
+            "n_days": 1010,
+            "net_ann": 0.17962133689729237,
+            "net_ann_vol": 0.5425377875500773,
+            "net_sharpe": 0.3310761775846129
+          },
+          "quantile5": {
+            "n_days": 1010,
+            "net_ann": 0.1874782277794539,
+            "net_ann_vol": 0.5307074230244865,
+            "net_sharpe": 0.3532609864603378
+          },
+          "quantile7": {
+            "n_days": 1010,
+            "net_ann": 0.20040264311010048,
+            "net_ann_vol": 0.5375062355526444,
+            "net_sharpe": 0.37283780141462686
+          },
+          "quantile10": {
+            "n_days": 1010,
+            "net_ann": 0.20532869699999712,
+            "net_ann_vol": 0.5222545564640616,
+            "net_sharpe": 0.393158268240263
+          },
+          "quantile15": {
+            "n_days": 1010,
+            "net_ann": 0.16705053677706524,
+            "net_ann_vol": 0.5304141772127274,
+            "net_sharpe": 0.3149435741987494
+          },
+          "quantile20": {
+            "n_days": 1010,
+            "net_ann": 0.15835862633718306,
+            "net_ann_vol": 0.5277052266216631,
+            "net_sharpe": 0.30008917544930414
+          },
+          "quantile30": {
+            "n_days": 1010,
+            "net_ann": 0.08485843842784145,
+            "net_ann_vol": 0.5325921394087763,
+            "net_sharpe": 0.15933100049512883
+          },
+          "quantile50": {
+            "n_days": 1010,
+            "net_ann": 0.09702003250794186,
+            "net_ann_vol": 0.5335679481121471,
+            "net_sharpe": 0.18183257231101493
+          }
+        },
+        "return_above_control_n": [
+          3,
+          5,
+          7,
+          10,
+          15,
+          20
+        ],
+        "sharpe_above_control_n": [
+          3,
+          5,
+          7,
+          10,
+          15,
+          20
+        ]
+      },
+      "F": {
+        "metrics": {
+          "control_old": {
+            "n_days": 136,
+            "net_ann": 1.2531834757636389,
+            "net_ann_vol": 1.0800140086880832,
+            "net_sharpe": 1.1603400193724418
+          },
+          "quantile3": {
+            "n_days": 136,
+            "net_ann": 1.2528264453713098,
+            "net_ann_vol": 1.1072086043169158,
+            "net_sharpe": 1.1315179817846808
+          },
+          "quantile5": {
+            "n_days": 136,
+            "net_ann": 1.012564965614001,
+            "net_ann_vol": 0.9994677828601832,
+            "net_sharpe": 1.0131041570107817
+          },
+          "quantile7": {
+            "n_days": 136,
+            "net_ann": 1.235986535381317,
+            "net_ann_vol": 1.0594270401430061,
+            "net_sharpe": 1.1666556436151356
+          },
+          "quantile10": {
+            "n_days": 136,
+            "net_ann": 1.1510183314345679,
+            "net_ann_vol": 0.9792290959994947,
+            "net_sharpe": 1.175433140351828
+          },
+          "quantile15": {
+            "n_days": 136,
+            "net_ann": 1.1872550442260106,
+            "net_ann_vol": 0.9776353298713538,
+            "net_sharpe": 1.2144150359032548
+          },
+          "quantile20": {
+            "n_days": 136,
+            "net_ann": 1.1041864030971524,
+            "net_ann_vol": 1.0756657166102113,
+            "net_sharpe": 1.0265144515127056
+          },
+          "quantile30": {
+            "n_days": 136,
+            "net_ann": 1.0477561635348003,
+            "net_ann_vol": 1.0456669707548985,
+            "net_sharpe": 1.0019979523484361
+          },
+          "quantile50": {
+            "n_days": 136,
+            "net_ann": 1.132778380653699,
+            "net_ann_vol": 1.0480301407422554,
+            "net_sharpe": 1.0808643154589253
+          }
+        },
+        "return_above_control_n": [],
+        "sharpe_above_control_n": [
+          7,
+          10,
+          15
+        ]
+      },
+      "T": {
+        "metrics": {
+          "control_old": {
+            "n_days": 302,
+            "net_ann": 0.4443351747369239,
+            "net_ann_vol": 0.45454599796305345,
+            "net_sharpe": 0.9775362157583896
+          },
+          "quantile3": {
+            "n_days": 302,
+            "net_ann": 0.2820489428988914,
+            "net_ann_vol": 0.43915966916067245,
+            "net_sharpe": 0.642246915428156
+          },
+          "quantile5": {
+            "n_days": 302,
+            "net_ann": 0.33562262092049716,
+            "net_ann_vol": 0.4142628153023531,
+            "net_sharpe": 0.8101683485048984
+          },
+          "quantile7": {
+            "n_days": 302,
+            "net_ann": 0.36529283398992446,
+            "net_ann_vol": 0.42495789380194143,
+            "net_sharpe": 0.8595977138388566
+          },
+          "quantile10": {
+            "n_days": 302,
+            "net_ann": 0.3317022043109919,
+            "net_ann_vol": 0.4157485272009336,
+            "net_sharpe": 0.7978433659024807
+          },
+          "quantile15": {
+            "n_days": 302,
+            "net_ann": 0.32572331236774876,
+            "net_ann_vol": 0.42123007890218506,
+            "net_sharpe": 0.7732669832521286
+          },
+          "quantile20": {
+            "n_days": 302,
+            "net_ann": 0.370798047367096,
+            "net_ann_vol": 0.47432646192599565,
+            "net_sharpe": 0.7817359500911586
+          },
+          "quantile30": {
+            "n_days": 302,
+            "net_ann": 0.35835618939283087,
+            "net_ann_vol": 0.4447940057010134,
+            "net_sharpe": 0.8056677581075918
+          },
+          "quantile50": {
+            "n_days": 302,
+            "net_ann": 0.34636845792129556,
+            "net_ann_vol": 0.42868803083994267,
+            "net_sharpe": 0.807973241619656
+          }
+        },
+        "return_above_control_n": [],
+        "sharpe_above_control_n": []
+      }
+    }
+  },
+  "seed_diagnostics": {
+    "control_old": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.34811233885819515,
+          "min_pairwise_overlap": 0.31837016574585636,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.39136740331491715,
+          "min_pairwise_overlap": 0.3574585635359116,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.24836373096280048,
+          "seed_max": 0.31360629941861845,
+          "ensemble": 0.31310381475564053,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.406109414068694,
+          "seed_max": 0.5209391994173896,
+          "ensemble": 0.5251667812274254,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile3": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.28892725598526703,
+          "min_pairwise_overlap": 0.23319521178637198,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.32738950276243095,
+          "min_pairwise_overlap": 0.2669889502762431,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.2583631129409447,
+          "seed_max": 0.3445838516353031,
+          "ensemble": 0.3017825013970417,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.4445079277886809,
+          "seed_max": 0.6147244673463939,
+          "ensemble": 0.5021164803011174,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile5": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.3332412523020258,
+          "min_pairwise_overlap": 0.2958103130755064,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.37186464088397786,
+          "min_pairwise_overlap": 0.3343922651933702,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.23654032748491055,
+          "seed_max": 0.3139639876769305,
+          "ensemble": 0.29586977698954936,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.39462679466103007,
+          "seed_max": 0.5367187826238742,
+          "ensemble": 0.5135372672962288,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile7": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.3345994475138121,
+          "min_pairwise_overlap": 0.27417127071823205,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.3732182320441989,
+          "min_pairwise_overlap": 0.30925414364640885,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.26736277045293994,
+          "seed_max": 0.34004288883437545,
+          "ensemble": 0.3320571729192463,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.45952922479685687,
+          "seed_max": 0.5819249636289935,
+          "ensemble": 0.5607660190262044,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile10": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.34666206261510124,
+          "min_pairwise_overlap": 0.3139963167587477,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.3895165745856354,
+          "min_pairwise_overlap": 0.3526243093922652,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.2499593771960791,
+          "seed_max": 0.3536385096300967,
+          "ensemble": 0.32050695390856143,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.4174828269022248,
+          "seed_max": 0.5802779308494074,
+          "ensemble": 0.5656362624345261,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile15": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.35536372007366485,
+          "min_pairwise_overlap": 0.3381675874769797,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.3979281767955801,
+          "min_pairwise_overlap": 0.3824585635359116,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.2867663614428675,
+          "seed_max": 0.37049335087466384,
+          "ensemble": 0.2959637085354656,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.48779693796937523,
+          "seed_max": 0.5887411831948142,
+          "ensemble": 0.5140136733289736,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile20": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.3425644567219153,
+          "min_pairwise_overlap": 0.31353591160220995,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.38372928176795573,
+          "min_pairwise_overlap": 0.350414364640884,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.2683935293629162,
+          "seed_max": 0.32596879673057455,
+          "ensemble": 0.29150011124721487,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.4551927213452156,
+          "seed_max": 0.5451187821926019,
+          "ensemble": 0.4917246622305634,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile30": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.33047882136279927,
+          "min_pairwise_overlap": 0.2863720073664825,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.3738121546961326,
+          "min_pairwise_overlap": 0.3276243093922652,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.18909974923492376,
+          "seed_max": 0.3187422965429633,
+          "ensemble": 0.23233763790740494,
+          "ensemble_below_all_seeds": false
+        },
+        "net_sharpe": {
+          "seed_min": 0.31636117615562354,
+          "seed_max": 0.5217676049395288,
+          "ensemble": 0.3947670778627003,
+          "ensemble_below_all_seeds": false
+        }
+      }
+    },
+    "quantile50": {
+      "head_agreement": {
+        "3": {
+          "mean_pairwise_overlap": 0.3149401473296501,
+          "min_pairwise_overlap": 0.23250460405156534,
+          "pairs": 10
+        },
+        "5": {
+          "mean_pairwise_overlap": 0.356767955801105,
+          "min_pairwise_overlap": 0.27265193370165747,
+          "pairs": 10
+        }
+      },
+      "ensemble_vs_components": {
+        "net_ann": {
+          "seed_min": 0.270054939499782,
+          "seed_max": 0.30835807472421933,
+          "ensemble": 0.24630618624592576,
+          "ensemble_below_all_seeds": true
+        },
+        "net_sharpe": {
+          "seed_min": 0.45301837460524985,
+          "seed_max": 0.5330200656811216,
+          "ensemble": 0.4180766695395912,
+          "ensemble_below_all_seeds": true
+        }
+      }
+    }
+  },
+  "early_stop_flags": {
+    "selected_round_le10": [],
+    "selected_boundary_ties": [],
+    "reverse_best_differs": [],
+    "reverse_stop_not_observed": [
+      {
+        "variant": "quantile50",
+        "treatment": "old",
+        "seed": 4000,
+        "best_iteration": 156,
+        "observed_rounds": 200,
+        "hit_200_round_cap": true,
+        "selected_boundary_ties": {
+          "3": 0,
+          "5": 0
+        },
+        "any_top5_boundary_tie_days": 1276,
+        "reverse_observed_best": 156,
+        "reverse_stop_observed": null,
+        "reverse_observed_best_differs": false,
+        "fit_seconds": 769.6252551078796,
+        "max_rss_GiB": 8.111129760742188
+      },
+      {
+        "variant": "quantile3",
+        "treatment": "old",
+        "seed": 42,
+        "best_iteration": 152,
+        "observed_rounds": 200,
+        "hit_200_round_cap": true,
+        "selected_boundary_ties": {
+          "3": 0,
+          "5": 0
+        },
+        "any_top5_boundary_tie_days": 1264,
+        "reverse_observed_best": 152,
+        "reverse_stop_observed": null,
+        "reverse_observed_best_differs": false,
+        "fit_seconds": 781.1054310798645,
+        "max_rss_GiB": 8.092056274414062
+      }
+    ],
+    "200_round_cap": [
+      {
+        "variant": "quantile50",
+        "treatment": "old",
+        "seed": 4000,
+        "best_iteration": 156,
+        "observed_rounds": 200,
+        "hit_200_round_cap": true,
+        "selected_boundary_ties": {
+          "3": 0,
+          "5": 0
+        },
+        "any_top5_boundary_tie_days": 1276,
+        "reverse_observed_best": 156,
+        "reverse_stop_observed": null,
+        "reverse_observed_best_differs": false,
+        "fit_seconds": 769.6252551078796,
+        "max_rss_GiB": 8.111129760742188
+      },
+      {
+        "variant": "quantile3",
+        "treatment": "old",
+        "seed": 42,
+        "best_iteration": 152,
+        "observed_rounds": 200,
+        "hit_200_round_cap": true,
+        "selected_boundary_ties": {
+          "3": 0,
+          "5": 0
+        },
+        "any_top5_boundary_tie_days": 1264,
+        "reverse_observed_best": 152,
+        "reverse_stop_observed": null,
+        "reverse_observed_best_differs": false,
+        "fit_seconds": 781.1054310798645,
+        "max_rss_GiB": 8.092056274414062
+      }
+    ]
+  },
+  "sources": {
+    "control_old": {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/control-old.json",
+      "sha256": "b5a813df49d024d4a43f2dd86c515e2dc82c868b9ce64d925de963db0bc4940c",
+      "size": 88111
+    },
+    "quantile3": {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile3-old.json",
+      "sha256": "fdd5dbe0820f519bcd1c59ddf0371b4b0ad3be85f64496edd82ee07a15636de7",
+      "size": 89073
+    },
+    "quantile5": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-old.json",
+      "sha256": "44ba163b78c13ee7078dcd5c7260392ebe7549de331dcf5b68346749fa3b7bfc",
+      "size": 88480
+    },
+    "quantile7": {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile7-new.json",
+      "sha256": "a9e2a83ded1f12aa4700b76dbbc80fa65f47a40dd07bd94f74c2a8ce1db8f613",
+      "size": 89045
+    },
+    "quantile10": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-old.json",
+      "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16",
+      "size": 88524
+    },
+    "quantile15": {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile15-old.json",
+      "sha256": "114abf3fd81149ad0434f369e7251569f04b011425a41664b9489d8f1c6d598d",
+      "size": 89087
+    },
+    "quantile20": {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile20-old.json",
+      "sha256": "24d7ebf732128fcd4afbcf846ab60927831f4aac62d8752d64ff17029d6dbf7f",
+      "size": 89083
+    },
+    "quantile30": {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile30-old.json",
+      "sha256": "3148f928d88f39306cc57d5dbe492144f4abbd4b436fb8a181233cbd281a0619",
+      "size": 89209
+    },
+    "quantile50": {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile50-old.json",
+      "sha256": "5266cb38909cc192b55bd7b85367e496d26625f9f956014304ee02d779f8f600",
+      "size": 89134
+    }
+  },
+  "limitations": [
+    "Historical early-stopping/selection window; no independent OOS claim",
+    "Only one selected old-label sample; no new paired label-perturbation stability test",
+    "n7 uses already completed identical-input models; no second fit claimed",
+    "2020/2026 partial years; F style136 days in2024 only",
+    "Metric maxima describe this finite grid, not significance or promotion"
+  ]
+}

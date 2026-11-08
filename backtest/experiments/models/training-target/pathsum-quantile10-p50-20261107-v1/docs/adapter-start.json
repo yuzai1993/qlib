@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/start.py",
+    "sha256": "8b75654c4f80e515bd687a74d89bdd59173ab696d67971027335cef6f4b1f436",
+    "size": 888
+  },
+  "source_text": "from common import *\nif __name__=='__main__':\n save_source(__file__);state=read(PROGRESS);assert state['status']=='prepared' and not state['jobs']\n for name in ['train','train_group','infer','evaluate','pipeline','publish']:save_source(TMP/(name+'.py'))\n check(state['prepared_inputs']);check(state['source_amendment']);harness('check')\n p=read(BASE/'configs/frozen-study.json')\n harness('event',{'type':'plan_variant','exp_id':EID,'archive_path':str(BASE.relative_to(ROOT)),'round':1,'changed_axis':'training_label_recipe','hypothesis':p['hypothesis'],'configs':[str((BASE/'configs'/n).relative_to(ROOT)) for n in ['frozen-study.json','missing-price-amendment.json','prepared-inputs.json']]})\n harness('check');harness('event',{'type':'start','exp_id':EID,'command':[sys.executable,str(TMP/'pipeline.py')]})\n print('Native study attempt started; four internal groups /20 nominal fits.')\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

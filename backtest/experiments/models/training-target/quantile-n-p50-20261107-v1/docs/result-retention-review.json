@@ -1,0 +1,53 @@
+{
+  "at": 1794038513.535557,
+  "plan": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/result-cleanup-dry-run.json",
+    "sha256": "950babae8e751958b0c32263f1617a4e61f37fe1b058ac3a6e0da67c6810fbdf",
+    "size": 47121
+  },
+  "retained_result_directories": 121,
+  "study_model_sessions_verified_retained": 30,
+  "expected_retained_dependencies": [
+    "/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20261107_quantile_n",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile15_old_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile15_old_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile15_old_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile15_old_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile15_old_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile20_old_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile20_old_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile20_old_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile20_old_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile20_old_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile30_old_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile30_old_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile30_old_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile30_old_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile30_old_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile3_old_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile3_old_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile3_old_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile3_old_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile3_old_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile50_old_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile50_old_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile50_old_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile50_old_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile50_old_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile7_new_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile7_new_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile7_new_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile7_new_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/quantilen_20261107_quantile7_new_s42"
+  ],
+  "delete_candidates": 0,
+  "errors": 0,
+  "historical_missing_source_warning_count": 142,
+  "decision": "No --apply needed: zero candidates. Preserve all current platform dependencies, five-seed model groups and canonical predictions/provider. Historical missing sources are unchanged warnings; do not rebuild retired/missing CSI inputs.",
+  "shared_cache_reference": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/cache-reference.json",
+    "sha256": "f7a4e4a6f8d71ae31100de92f57a757a6ce710513decc26fe10e1013d5aca2c9",
+    "size": 202
+  }
+}

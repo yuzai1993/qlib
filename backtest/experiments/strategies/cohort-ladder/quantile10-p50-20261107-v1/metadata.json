@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "entity_type": "experiment",
+  "kind": "strategy",
+  "track": "all_a",
+  "exp_id": "regime-adapt/quantile10-p50-ladder-20261107-v1",
+  "archive_path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1",
+  "title": "v5 等样本10档 · 真阶梯Top3×H5",
+  "inventory_kind": "asset_snapshot",
+  "model_ref": "training-target/h20-quantile10-p50-v5",
+  "comparison_baseline": {
+    "ref": "baseline/phase-m-v1-bt-v5",
+    "version": "s5"
+  },
+  "activity": "execution_backtest",
+  "role": "experiment",
+  "changed_axes": [],
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "configs": [
+    {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/harness-plan.json",
+      "sha256": "d5605183301ff82059179d7067178549eedaddb6adadc7260ffee7dfe0bec144"
+    },
+    {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/ladder.yaml",
+      "sha256": "ca7e723308b5b51cdb721a28ab18232d86d8b68b0282a68a3a4b6b45c803d522"
+    },
+    {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/s5.yaml",
+      "sha256": "fefd904bbfdcca54065beababd1e7a6ce97fba1327f71820bc18acbd337dbd73"
+    }
+  ],
+  "reports": [
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/comparison.html",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/detail.html",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/ladder-account.html",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/s5-account.html"
+  ],
+  "records": [
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/records/a220ce4224abc15af7ee6381ee21461442736543b55b810b9429801091ed39c2.json"
+  ],
+  "data": [
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/data/ladder-account.csv",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/data/ladder-account.pkl",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/data/s5-account.csv",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/data/s5-account.pkl",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/s5.json"
+  ],
+  "docs": [
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-account.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-common.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-finalize.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-init_accounts.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-prepare.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-prepare_v2.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-promote.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/adapter-sync_baseline_docs.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/baseline-record.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/execution-state.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-compatibility.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-state.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/ladder-signal.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/native-event-1.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/native-event-2.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/native-event-3.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/native-event-4.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/native-event-5.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/preflight-adapter-failure.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/s5-signal.json",
+    "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/scientific-verification.json"
+  ],
+  "metrics_source": {
+    "path": "metrics/ladder.json",
+    "sha256": "6db5068b9243c262f372df4dccc4baec8555331944829a5a0d12d83fba3bcace"
+  },
+  "records_directory": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/records",
+  "analysis": {
+    "conclusion": "v5真阶梯：CAGR 27.76%、夏普 1.095、最大回撤 -32.45%；历史s5：34.84%／1.177／-33.02%；同v5固定s5：18.73%／0.754／-37.51%。模型v5按用户要求晋升；执行层基线仍为历史s5。",
+    "limitations": "历史选型窗口，非独立样本外。 历史s5与v5模型输入快照/配方不同，单独以同v5控制臂隔离执行规则。",
+    "evidence": [
+      "metrics/ladder.json",
+      "metrics/s5.json",
+      "docs/scientific-verification.json",
+      "reports/comparison.html"
+    ],
+    "updated_at": "2026-11-07"
+  }
+}

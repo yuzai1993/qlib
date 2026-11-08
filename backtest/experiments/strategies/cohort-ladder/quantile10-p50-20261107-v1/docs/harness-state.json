@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-state.json",
+  "plan": {
+    "schema_version": 1,
+    "campaign_id": "quantile10-v5-accounts-20261107",
+    "direction": "cohort-ladder",
+    "anchor_exp_id": "regime-adapt/quantile10-p50-ladder-20261107-v1",
+    "baseline_ref": "baseline/phase-m-v1-bt-v5",
+    "archive_path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1",
+    "idea": "User-selected v5 n10-old model; fixed true Top3 H5 ladder versus historical s5, with same-signal s5 control.",
+    "selection_rule": "Fixed Top3 H5 ladder and fixed s5 on v5; compare official historical s5. No tuning or strategy promotion.",
+    "data_version": "2026-11-03",
+    "track": "all_a_strategy",
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "allowed_changes": [
+      "v5 fixed signal; fixed Top3 H5 cohort ladder; same-signal fixed s5 control"
+    ],
+    "budget": {
+      "max_rounds": 1,
+      "max_variants": 2,
+      "max_attempts_per_variant": 2,
+      "max_wall_hours": 3,
+      "max_no_new_evidence_rounds": 1,
+      "concurrency": 1
+    },
+    "inputs": [
+      "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json",
+      "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/ladder.yaml",
+      "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/s5.yaml",
+      "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/baseline-record.json",
+      "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-compatibility.json",
+      "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/bench_ew_all.csv",
+      "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "backtest/scripts/evaluate/run_pred_backtest.py",
+      "qlib/contrib/strategy/signal_strategy.py",
+      "backtest/scripts/evaluate/strategy_stability_metrics.py",
+      "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+      "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+      "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+      "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+      "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+      "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+      "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+      "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+      "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+      "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+      "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json"
+    ],
+    "supplementary_execution": {
+      "native_coverage": "baseline/policy/input identities, wall budget, notes and closure",
+      "native_result_gate_limitation": "all_a_strategy pins model_ref to historical s5 v2; actual v5 cannot pass. No fabricated v2 identity and no native variants. Two serial account jobs/results independently verified in execution-state.json.",
+      "model_ref": "training-target/h20-quantile10-p50-v5",
+      "strategy_baseline_ref": "baseline/phase-m-v1-bt-v5",
+      "max_account_jobs": 3,
+      "expected_accounts": 2,
+      "new_model_fits": 0,
+      "prior_cumulative_model_fits": 176,
+      "selection_rule": "Fixed Top3 H5 ladder and fixed s5 on v5; compare official historical s5. No tuning or strategy promotion.",
+      "user_authorization": "将n=10晋升为模型的新baseline，并且跑一次真阶梯回测，跟回测baseline对比效果。"
+    }
+  },
+  "plan_source": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/harness-plan.json",
+    "sha256": "d5605183301ff82059179d7067178549eedaddb6adadc7260ffee7dfe0bec144",
+    "size": 4594
+  },
+  "inputs": [
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+      "size": 9535
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/metrics/model-evaluation.json",
+      "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16",
+      "size": 88524
+    },
+    {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/ladder.yaml",
+      "sha256": "ca7e723308b5b51cdb721a28ab18232d86d8b68b0282a68a3a4b6b45c803d522",
+      "size": 1805
+    },
+    {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/configs/s5.yaml",
+      "sha256": "fefd904bbfdcca54065beababd1e7a6ce97fba1327f71820bc18acbd337dbd73",
+      "size": 1839
+    },
+    {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/baseline-record.json",
+      "sha256": "887242cbbdc91436f5413fec483f9a52f3843f2467e9d6a00d5c01f8cbf2c1b5",
+      "size": 4498
+    },
+    {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-compatibility.json",
+      "sha256": "a2910b102100e61478d47064a7f31b1f413640632b7cfc0b4af6319afb109a39",
+      "size": 819
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+      "size": 30202983
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/bench_ew_all.csv",
+      "sha256": "92d5cfdb4d328705db1204c7f3ff8df459b83f1e62b5b80c635cecb3a05154a9",
+      "size": 44141
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+      "size": 1203
+    },
+    {
+      "path": "backtest/scripts/evaluate/run_pred_backtest.py",
+      "sha256": "9883480618d01063a5c9ed1010e65793495dc29e5336b1445ab3f2259d78ffed",
+      "size": 11636
+    },
+    {
+      "path": "qlib/contrib/strategy/signal_strategy.py",
+      "sha256": "87b40cfb43cdfb1e6f40df6be344b540b6d8f3d8f059eff2b542370ca383adb4",
+      "size": 34188
+    },
+    {
+      "path": "backtest/scripts/evaluate/strategy_stability_metrics.py",
+      "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb",
+      "size": 7327
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+      "sha256": "45ad0d4f05e84bd2594b95fd6fd660acb2345668ec3488813893d78c7d0155f0",
+      "size": 83046157
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+      "size": 59488457
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+      "sha256": "8bad9ee807084e769140728cef32cff0e4ff66ad736504e5ed7b74bbe337e6f2",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+      "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+      "size": 38305
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+      "size": 59781408
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+      "sha256": "9f52cfa2e9b11b93a7c15af1f7f1dcbf94a0014a34d573f20dc250cd4d14d439",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+      "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+      "size": 44465
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+      "size": 60495908
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+      "sha256": "09f99b5e2a6b8b176f3176dc8c2325a22d0425fbaa271c8fcbbe4f59a0bf3131",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+      "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+      "size": 59236
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+      "size": 59546157
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+      "sha256": "4136b5c13beb1d882170f6f957cdea7c8389c4406bd2069d68b494aabb39cbb4",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+      "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+      "size": 39348
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+      "size": 60125167
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+      "sha256": "e93ada017614ffd229cefe1b2061c76d9163efee5d253f7ea8c8c8fb0a03586c",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+      "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+      "size": 51355
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+      "size": 12415
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "deea15eee8e411ec5e52c8f6ddc31ba6c254452465eeba2ea25d123f6c6c7bbd",
+      "size": 64550
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "0fd45a20651eede9ad4f9de8ffb83eb03025f7df4347e90e8e53cfd621b8db39",
+      "size": 69317
+    }
+  ],
+  "baseline_sha256": "8db514bd7a5c66eb8d48e5d6997c68bb9b886bd822c3a8faf33aa0fef1b4d55b",
+  "baseline_model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "started_at": 1794060681.693342,
+  "deadline": 1794071481.693342,
+  "revision": 10,
+  "status": "closed",
+  "variants": {},
+  "reflections": [],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-cleanup.json",
+      "sha256": "de958544779db349cee33c4508a0f0fda786782e8880580d392e6b950051a0a8",
+      "size": 1210
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1794060681.732266,
+      "event": {
+        "type": "note",
+        "text": "Authorized model promotion complete. Explicit limited adapter handles v5 accounts; native result gate pins historical v2. Supplementary ledger docs/execution-state.json; zero native variants, no new fits."
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1794060730.836304,
+      "event": {
+        "type": "note",
+        "text": "Supplementary start quantile10v5_20261107_ladder-a1; actual model_ref training-target/h20-quantile10-p50-v5; zero new fits."
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1794060816.037853,
+      "event": {
+        "type": "note",
+        "text": "Supplementary success quantile10v5_20261107_ladder-a1; canonical metrics backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/ladder.json SHA 6db5068b9243c262f372df4dccc4baec8555331944829a5a0d12d83fba3bcace"
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1794060824.322714,
+      "event": {
+        "type": "note",
+        "text": "Supplementary start quantile10v5_20261107_s5-a1; actual model_ref training-target/h20-quantile10-p50-v5; zero new fits."
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1794060909.791973,
+      "event": {
+        "type": "note",
+        "text": "Supplementary success quantile10v5_20261107_s5-a1; canonical metrics backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metrics/s5.json SHA f3c2c40d65ae540a7fe50da2d0cc07cfc886d91f5398d69524c2aa15591eee02"
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1794060994.001539,
+      "event": {
+        "type": "note",
+        "text": "Two actual v5 account jobs complete. Canonical metrics, exact filtered signals, configs, NAV and historical s5 audited in scientific-verification.json. Registered one strategy parent with internal fixed-s5 control; reports rebuilt. Reporting metadata list/string error corrected without new account jobs. Native result-gate limitation remains explicit."
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1794061129.0456781,
+      "event": {
+        "type": "note",
+        "text": "Independent review and numerical/HTML-link/platform checks passed. 50 cohort tests passed. Browser file-URL visual preview blocked by security policy; recorded limitation. Official platform cleanup dry-run has zero errors and zero deletion targets; required new recorder originals and five v5 models verified."
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1794061129.0849411,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1794061173.009551,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-cleanup.json"
+      }
+    },
+    {
+      "revision": 10,
+      "time": 1794061173.048154,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "checksum": "693950a51f6eaae7d46f37e2fd27f84a95c04f032c81bc885e6ba6bc8555bdc9"
+}

@@ -1,0 +1,17 @@
+{
+  "stage": "report-generation",
+  "cause": "metadata analysis.limitations must be string; finalizer wrote list",
+  "before": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metadata.json",
+    "sha256": "fdb0575a1233f6137316b9587e11b987f930630c84f851189c419f985ea01cd9",
+    "size": 5698
+  },
+  "after": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metadata.json",
+    "sha256": "5297fdaffc6ac8ff160c0d1264af9794f47a13f05e5256ea7a66013235f7b14c",
+    "size": 5675
+  },
+  "actual_account_jobs": 2,
+  "actual_new_fits": 0,
+  "action": "Fix only metadata type, reuse successful canonical metrics and existing registration; no recomputation/re-registration."
+}

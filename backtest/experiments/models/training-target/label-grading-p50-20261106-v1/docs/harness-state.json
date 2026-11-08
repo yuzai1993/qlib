@@ -1,0 +1,2668 @@
+{
+  "schema_version": 2,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/harness-state.json",
+  "plan": {
+    "schema_version": 2,
+    "campaign_id": "label-grading-p50-20261106-v1",
+    "idea": "标签分级实验：等样本、等涨幅、两头少中间多，并尝试不同n。",
+    "track": "all_a_model",
+    "direction": "training-target",
+    "anchor_exp_id": "training-target/label-grading-p50-20261106-v1",
+    "archive_path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1",
+    "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+    "allowed_changes": [
+      "label_quantization"
+    ],
+    "selection_rule": "No single automatic pass threshold or promotion. Compare all4 primary candidates to same-source continuous H20; report return,volatility,Sharpe,RankIC separately. Robustness improvement alone is insufficient. Historical selection window, no independent OOS claim.",
+    "data_version": "2026-11-03",
+    "inputs": [
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/train_dates_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h20.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h20.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-input-bridge.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "/Users/yuxianqi/Project/qlib/scripts/data_collector/tushare/st_daily.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2004.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2005.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2006.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2007.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2008.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2009.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2010.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2011.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2012.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2013.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2014.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2015.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2016.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2017.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2018.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2019.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2020.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/models/regime_adapt.py",
+      "/Users/yuxianqi/Project/qlib/backtest/models/rankic_early_stop.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/train/train_regime_arm.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/ensemble_preds.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/frozen-study.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/evaluation.yaml",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/environment.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/label-preflight.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/adapter-common.json"
+    ],
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "budget": {
+      "max_rounds": 3,
+      "max_variants": 4,
+      "max_attempts_per_variant": 2,
+      "max_wall_hours": 8,
+      "max_no_new_evidence_rounds": 2,
+      "concurrency": 1
+    },
+    "execution_budget": {
+      "max_model_fits": 37,
+      "new_label_horizons": [
+        20
+      ]
+    },
+    "scientific_candidate_count": 4,
+    "paired_control": "training-target/horizon-style-p50-20261105-v1/arms/h20",
+    "temporary_directory": "/private/tmp/qlib-label-grading-20261106.nWblY2",
+    "known_native_scope_gap": "One new label-grading study; four internal scientific candidates and two sensitivity treatments retain separate identities/results/costs. Native harness parent lifecycle+fit ledger, supplemental internal-candidate ledger; native variant count is not the scientific count."
+  },
+  "plan_source": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/harness-plan.json",
+    "sha256": "a344670583289ff9bf66220d040f8e952f0a7d938b6c22dd25d1d8d581bf9021",
+    "size": 7313
+  },
+  "inputs": [
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a",
+      "size": 38931
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+      "sha256": "90783e819314072df08549698fc85a8657fce1359f105d0735b4c678b5a272a3",
+      "size": 97032
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h20.json",
+      "sha256": "b21c1e3c83829e99362145d49ab832c24b20681d63413228cd3c6bd50fe76b7b",
+      "size": 18221
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h20.json",
+      "sha256": "3cf4ec9166d58fa25cbd1c6c9f4ffa42b60af5a55c487f99c42e94b05c5cb9e5",
+      "size": 4968
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/H20-input-bridge.json",
+      "sha256": "fbd1d294b16ee76d186de3421fb8ced0e45ea9e4facbbb2f78dbfaf5e2daea8a",
+      "size": 1173
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/configs/frozen-study.json",
+      "sha256": "55381bdc842e9300f320eea0a6f0d534e94d388be114f7c0d8e35dca8a291154",
+      "size": 4330
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "scripts/data_collector/tushare/st_daily.csv",
+      "sha256": "ae7aab6e7ff8517ac0dde11dd4f0cb5a2384616ac8a25eb024bd2a18b39995f5",
+      "size": 30225991
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2004.pkl",
+      "sha256": "84d57d79772977f89ae7a958cefbfc09626b6c506cb716fefef16860a73a68b5",
+      "size": 4174505
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2005.pkl",
+      "sha256": "83e4bc56c7d8f8bcdcb1166755cbe09cd9ee0d52d40654fd1c0308c862ec89ea",
+      "size": 4112202
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2006.pkl",
+      "sha256": "72fd89b7f9a0251547525c3820536f92451a40bd8cf3a775643130b99f4a67b9",
+      "size": 3663732
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2007.pkl",
+      "sha256": "167c814217d1fb57d9f9179e8ca27ef4eedea1856595ad132ff4d4a91db9bfc3",
+      "size": 4340102
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2008.pkl",
+      "sha256": "beb69cda8c28d601e2b0b5ed9a82d4795db8900d30653d31f42c5c68bb766dfd",
+      "size": 4981480
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2009.pkl",
+      "sha256": "d19f0ce5b53dc6f47502d28f6dae1c6d94f37d05111b682e344eb43d17ad9f4b",
+      "size": 5253230
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2010.pkl",
+      "sha256": "9f2668e3e8c5aac501ddb8b6ef1b358bd36a24b00298e064f0c086a0e20a7cb9",
+      "size": 5861625
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2011.pkl",
+      "sha256": "3184ec7c98b14af49459ba0259ac1f765becd5994656844cbcfb8d929340486c",
+      "size": 7059617
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2012.pkl",
+      "sha256": "2aa2be22ad668e7ba20cc6ccfdab6bf5c8c5313d6b196af87071edfbb9ab1540",
+      "size": 8013062
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2013.pkl",
+      "sha256": "8ba39a01c325fedb85daf9d88510ffd4d9bdf9e9832490aea4de926ee081a5f7",
+      "size": 8064986
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2014.pkl",
+      "sha256": "02d9ea34afd5665c8c361dcbb2d88b7f0d48e6a0393f3e3913f0f13ae75cb597",
+      "size": 7848754
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2015.pkl",
+      "sha256": "789540eab43a4402831a0f6efa30a3d82e9e944466b82c57fa62af38a79ddb7a",
+      "size": 7578544
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2016.pkl",
+      "sha256": "5cf49ee1473f8d134b2f432bbcda4faad64ae97ebdfe907fb836da28f380ae65",
+      "size": 8964343
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2017.pkl",
+      "sha256": "7bab6217657d3a619a34f759432a158f125e7b007e60bf5f341d17b377f1fd13",
+      "size": 10439959
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2018.pkl",
+      "sha256": "372b54d2f6dfd3c0545fcbb89680dd13c03df58fb674b3f7321b34a518c18bfa",
+      "size": 12107595
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2019.pkl",
+      "sha256": "022aba9027979353ae4f4e4dbfffd4bfdf4ae40734381ca06dc2d4f573877484",
+      "size": 13227076
+    },
+    {
+      "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2020.pkl",
+      "sha256": "9f52dbc17bb5247a4a93f1cac90ea6c6c25e7ca2ae851f994b919e2534fe66c9",
+      "size": 7971691
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "7fab0e7fa814358bf693560e833a334aa68badce15998c32ab8827ddcda8034e",
+      "size": 59330717
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e139762396447385de0ec1ff5a1cdbc6bac95200f8d9d94c1c9b581d1ea1e121",
+      "size": 59540837
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "3522cb7e221584ce12f14b4b8fc2cdca5b1299da1e09be325589e84fd4808d92",
+      "size": 59397247
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "3a4f466c9f856a60707f87cc0e9314768d75325fbd3c197a8d6a00469feba9a8",
+      "size": 59312839
+    },
+    {
+      "path": "backtest/result/horizonp50_20261105_h20_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "ed5fd6c2efc6be90548cec352d77c790659529ba1496dcaf2514ca006d982180",
+      "size": 60307829
+    },
+    {
+      "path": "backtest/models/regime_adapt.py",
+      "sha256": "9fd7fc084365535680cb8df08a263132c13561a5d5434f8b51a16c6d08a9526d",
+      "size": 15566
+    },
+    {
+      "path": "backtest/models/rankic_early_stop.py",
+      "sha256": "2320cce49ab762d1773881cd20e7974a8074bf1f95e94d2799cd9cb60619ca8c",
+      "size": 11309
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "8dfa2fcb39097ee0d19ea1c29dcbe3641e3237d9831b27c1db327a0fa6419a75",
+      "size": 33129
+    },
+    {
+      "path": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "sha256": "8cc35a510bb1b95d047a963f595dc1a4b8ac8e3102056c2c8a78d5c2b22b6026",
+      "size": 68674
+    },
+    {
+      "path": "backtest/scripts/evaluate/ensemble_preds.py",
+      "sha256": "610a1ae3aca04b787cfbc56199d0515052902a3d072509df093b295600a02ef7",
+      "size": 3534
+    },
+    {
+      "path": "backtest/scripts/prepare/prepare_regime_train_chunks.py",
+      "sha256": "6ef9da9ce5869c7415c628acfeef0e24e223948013f4c60f17d66683ae143b64",
+      "size": 28674
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/frozen-study.json",
+      "sha256": "18c1d4dd7c4405610754066d3f01f08857533c27e7b883a2a124f4d76776448f",
+      "size": 4125
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/environment.json",
+      "sha256": "5338d409ad654d44739ca79bd570f4e43923d25ee8d7b432d8d3a42d7194d460",
+      "size": 915
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/label-preflight.json",
+      "sha256": "89b5abba7dabfb784ed9628754b7897c81cf74dc2d4b6aebd17d8e96fcfca5b2",
+      "size": 1230
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/adapter-common.json",
+      "sha256": "14bd8e36d5250bac382f469116e50b843e42d768140830c3d9c9b4371793d588",
+      "size": 3605
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "0cab80aa42eb80e5678f2f19e6975739a4e41175b1f7957ee48e51c0e5bb9f8a",
+      "size": 12365
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "0da4f8a77cc1af8d5208230f2d2a148c74e7520e446bd0a413ebeb773ba8e48f",
+      "size": 63823
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "a864d2d9f80027d43c2244c0844b7b5857a981601f6886290ebc029ff279a6cf",
+      "size": 69164
+    }
+  ],
+  "baseline_sha256": "73d29f3e2f78fa64fd1ef8bbadb451d686849a2141215fa77f777a287c922304",
+  "baseline_model_ref": null,
+  "started_at": 1793978083.500222,
+  "deadline": 1794006883.500222,
+  "revision": 80,
+  "status": "closed",
+  "variants": {
+    "training-target/label-grading-p50-20261106-v1": {
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "archive_path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1",
+      "round": 1,
+      "hypothesis": "Daily label grading suppresses irrelevant fine rank differences while preserving or improving predictive usefulness; robustness and return are assessed separately.",
+      "changed_axis": "label_quantization",
+      "configs": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/frozen-study.json",
+          "sha256": "18c1d4dd7c4405610754066d3f01f08857533c27e7b883a2a124f4d76776448f",
+          "size": 4125
+        },
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/prepared-inputs.json",
+          "sha256": "15dba15734e0b6db22ac383b59512de08e22f99377e4810eb5fd4ff2a77224c0",
+          "size": 9922
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+          "outcome": "succeeded",
+          "started_at": 1793978402.158237,
+          "command": [
+            "/opt/anaconda3/envs/qlib/bin/python",
+            "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+            "quantile5",
+            "new",
+            "42"
+          ],
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+            "sha256": "7d9b5adb24bdd06fa5ef2752bad84168f3301e5645931e06807a79afa8152ea7",
+            "size": 88540
+          },
+          "finished_at": 1793999870.436369,
+          "evidence": [
+            {
+              "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+              "sha256": "7d9b5adb24bdd06fa5ef2752bad84168f3301e5645931e06807a79afa8152ea7",
+              "size": 88540
+            },
+            {
+              "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/final-numerical-verification.json",
+              "sha256": "4d05650194d2abd1211d3c897ac6d66d7f273c80147adbce227ab730a35643d1",
+              "size": 18358
+            },
+            {
+              "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/paired-seed-diagnostics.json",
+              "sha256": "1448d57519bf64e40399bc150099e7073c5f803d6277d1cd1f4755368d1c554c",
+              "size": 19219
+            },
+            {
+              "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/research-conclusion.json",
+              "sha256": "345124dbfe50c3c402fd2115c32948b34c9959b7735d79dbbf44f801a6a22302",
+              "size": 4137
+            },
+            {
+              "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/final-report-receipt.json",
+              "sha256": "e61a262b8fe308e50ae52de2c92236fece0aceb42f5356102c30a3c508502f1e",
+              "size": 2014
+            }
+          ],
+          "reason": "",
+          "registered": {
+            "event_sha256": "3c0913ca4a3b3585291716697f0763abd8a7a6c0164457a9354febc7e0231731",
+            "detail_report": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html"
+          },
+          "reported": [
+            {
+              "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+              "sha256": "b03e0b4328ef8cd326fd5e9949f45e4942736df84fcd5a35cb0fff28c7b962c1",
+              "size": 22997
+            },
+            {
+              "path": "backtest/experiments/reports/phase_m_v1_report.html",
+              "sha256": "9d520fca3acf46fd130d5f01aa38c0bc93033c8ac0b094f01f107c326335b24c",
+              "size": 15102
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reflections": [
+    {
+      "type": "reflection",
+      "round": 1,
+      "observations": "已完成4个预先冻结的候选、35次拟合（20个主模型＋15个旧标签配对），无失败或重试。全部使用H20／patience50、固定五种子及同一特征、样本、权重、早停与正式评估口径。\n同源连续标签对照：Top3×H5扣费净年化29.49%、波动59.72%、夏普0.494、全局H5 RankIC 0.09856。这里是模型头部收益的算术年化，不是策略账户CAGR。\n等样本10档：净年化32.24%、波动58.37%、夏普0.552、RankIC 0.09869。新旧标签两侧净年化32.24%／32.05%均高于各自连续对照29.49%／31.31%；但Top3名单重合率从对照85.45%降至79.70%。只有0.19个百分点的收益差距，不意味着预测更稳定。\n等样本5档：净年化30.34%、夏普0.530、RankIC 0.09892；Top3配对重合率86.79%，只比对照提高1.34个百分点。旧标签侧净年化29.59%低于旧连续对照31.31%，所以差距缩小并非两侧表现都改善。\n每日最小值至最大值等涨幅5档：净年化27.39%、波动69.16%、夏普0.396、RankIC 0.06437，整体弱于对照。典型日最大档占约67.5%，极端日达99.93%；五种子最佳轮为8～39轮，存在浅树和同分敏感性。旧原始收益幅度快照缺失，未伪造该方法的旧／新标签配对。\n两端少、中间多5档：净年化26.78%、波动68.31%、夏普0.392；RankIC虽为0.09933，头部收益仍较差。种子间Top3平均重合率27.21%，低于对照35.24%。seed1000在新旧标签下均选第3轮，Top5边界813／1448天同分，反序诊断选第1轮；较高RankIC和较小标签差异不能替代头部稳定性检查。\n分年上，等样本10档在2020、2021、2022、2025段净年化高于对照，在2023、2024、2026段较低；2026段为12.27%，对照19.32%。D风格净年化16.44%高于对照11.81%，F、T风格净年化略低。没有获得跨年、跨风格的一致改善。\n排名分档把106条float32标签差异压到1条，但剩余跨档跳变约为0.706／0.348／1.194，原连续标签最大单条变化约0.00534。组内差异被消除，同时边界变化被放大；本轮证据支持区分输入差异条数、预测一致性和实现收益，而非合并成一个稳健性判断。\n三个排名分档方案各有3/5种子的正式Top3名单在旧新标签下完全一致，另外2个种子变化较大；十档seed2000重合率40.03%，最佳轮为新73／旧118。",
+      "interpretation": "等样本分档有一定收益改善线索，其中10档较好；没有证据支持硬分档能普遍降低模型对标签变化的敏感性。等涨幅和两端少方案未改善正式头部指标，并引入或暴露浅树、同分顺序敏感性。保留全部五种子和原规则，不删种子、不事后更换同分顺序或早停轮数。",
+      "new_evidence": true,
+      "next_hypothesis": ""
+    }
+  ],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/harness-cleanup.json",
+      "sha256": "9ab8476fc08c1cd0a34e38671150be20a9ab009c3f605b104444456d684266a8",
+      "size": 2424
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1793978401.5459762,
+      "event": {
+        "type": "plan_variant",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "archive_path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1",
+        "round": 1,
+        "changed_axis": "label_quantization",
+        "hypothesis": "Daily label grading suppresses irrelevant fine rank differences while preserving or improving predictive usefulness; robustness and return are assessed separately.",
+        "configs": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/frozen-study.json",
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/prepared-inputs.json"
+        ]
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1793978402.158239,
+      "event": {
+        "type": "start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1793978437.524339,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1793979024.831845,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s42-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_new_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1793979026.5505579,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1793979702.063356,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s1000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_new_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1793979703.824665,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1793980392.0143979,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s2000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_new_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1793980395.031712,
+      "event": {
+        "type": "note",
+        "text": "Independent read-only review identified per-fit closeout reserve and horizon-only platform grouping. Frozen scientific plan and train adapter unchanged; dispatcher v2 checks a45-minute closeout reserve plus expected duration before every fit. Sources and handoff audit saved; no active fit terminated. Publication uses normal study entry and detailed four-recipe report."
+      }
+    },
+    {
+      "revision": 10,
+      "time": 1793980396.5896199,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 11,
+      "time": 1793981089.704364,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s3000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_new_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 12,
+      "time": 1793981091.6491132,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 13,
+      "time": 1793981787.692671,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s4000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_new_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 14,
+      "time": 1793981789.5935192,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-old-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "old",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 15,
+      "time": 1793982280.974229,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-old-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s42-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_old_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 16,
+      "time": 1793982282.718732,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-old-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "old",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 17,
+      "time": 1793983013.347695,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-old-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s1000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_old_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 18,
+      "time": 1793983015.190505,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-old-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "old",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 19,
+      "time": 1793983644.554761,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-old-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s2000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_old_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 20,
+      "time": 1793983646.319453,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-old-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "old",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 21,
+      "time": 1793984323.188492,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-old-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s3000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_old_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 22,
+      "time": 1793984324.8814561,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile5-old-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile5",
+          "old",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 23,
+      "time": 1793984933.8835368,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile5-old-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s4000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile5_old_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 24,
+      "time": 1793986143.4815402,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 25,
+      "time": 1793986662.8919659,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s42-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_new_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 26,
+      "time": 1793986664.745609,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 27,
+      "time": 1793987130.668747,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s1000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_new_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 28,
+      "time": 1793987132.4715872,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 29,
+      "time": 1793987705.030642,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s2000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_new_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 30,
+      "time": 1793987706.853512,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 31,
+      "time": 1793988256.6092212,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s3000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_new_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 32,
+      "time": 1793988258.450381,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 33,
+      "time": 1793988907.475648,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s4000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_new_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 34,
+      "time": 1793988909.292501,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-old-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "old",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 35,
+      "time": 1793989424.982087,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-old-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 36,
+      "time": 1793989426.798677,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-old-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "old",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 37,
+      "time": 1793990000.8693278,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-old-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 38,
+      "time": 1793990002.6980832,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-old-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "old",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 39,
+      "time": 1793990739.173579,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-old-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 40,
+      "time": 1793990741.0745,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-old-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "old",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 41,
+      "time": 1793991318.291824,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-old-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 42,
+      "time": 1793991320.310839,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "quantile10-old-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "quantile10",
+          "old",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 43,
+      "time": 1793991994.928266,
+      "event": {
+        "type": "fit_result",
+        "job_id": "quantile10-old-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+          "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 44,
+      "time": 1793992198.804161,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "width5-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "width5",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 45,
+      "time": 1793992616.953575,
+      "event": {
+        "type": "fit_result",
+        "job_id": "width5-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s42-a1.json",
+          "backtest/result/labelgrade_20261106_width5_new_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 46,
+      "time": 1793992619.0297742,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "width5-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "width5",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 47,
+      "time": 1793992990.723968,
+      "event": {
+        "type": "fit_result",
+        "job_id": "width5-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s1000-a1.json",
+          "backtest/result/labelgrade_20261106_width5_new_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 48,
+      "time": 1793992992.773684,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "width5-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "width5",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 49,
+      "time": 1793993336.4611578,
+      "event": {
+        "type": "fit_result",
+        "job_id": "width5-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s2000-a1.json",
+          "backtest/result/labelgrade_20261106_width5_new_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 50,
+      "time": 1793993338.479002,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "width5-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "width5",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 51,
+      "time": 1793993793.623358,
+      "event": {
+        "type": "fit_result",
+        "job_id": "width5-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s3000-a1.json",
+          "backtest/result/labelgrade_20261106_width5_new_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 52,
+      "time": 1793993795.654849,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "width5-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "width5",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 53,
+      "time": 1793994248.1742542,
+      "event": {
+        "type": "fit_result",
+        "job_id": "width5-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s4000-a1.json",
+          "backtest/result/labelgrade_20261106_width5_new_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 54,
+      "time": 1793994347.583447,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-new-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "new",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 55,
+      "time": 1793994902.5896802,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-new-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s42-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_new_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 56,
+      "time": 1793994904.6362739,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-new-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "new",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 57,
+      "time": 1793995248.3321931,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-new-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s1000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_new_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 58,
+      "time": 1793995250.266934,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-new-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "new",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 59,
+      "time": 1793995728.4807522,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-new-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s2000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_new_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 60,
+      "time": 1793995730.465345,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-new-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "new",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 61,
+      "time": 1793996354.291602,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-new-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s3000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_new_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 62,
+      "time": 1793996356.1681302,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-new-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "new",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 63,
+      "time": 1793996956.8275368,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-new-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s4000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_new_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 64,
+      "time": 1793996958.881788,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-old-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "old",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 65,
+      "time": 1793997444.092543,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-old-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s42-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_old_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 66,
+      "time": 1793997446.022196,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-old-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "old",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 67,
+      "time": 1793997779.11964,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-old-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s1000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_old_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 68,
+      "time": 1793997781.084888,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-old-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "old",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 69,
+      "time": 1793998256.559701,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-old-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s2000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_old_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 70,
+      "time": 1793998258.5038211,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-old-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "old",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 71,
+      "time": 1793998911.4074318,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-old-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s3000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_old_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 72,
+      "time": 1793998913.403038,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "job_id": "tails5-old-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+          "tails5",
+          "old",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 73,
+      "time": 1793999514.703413,
+      "event": {
+        "type": "fit_result",
+        "job_id": "tails5-old-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s4000-a1.json",
+          "backtest/result/labelgrade_20261106_tails5_old_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 74,
+      "time": 1793999870.436372,
+      "event": {
+        "type": "result",
+        "exp_id": "training-target/label-grading-p50-20261106-v1",
+        "outcome": "succeeded",
+        "evaluation": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+        "evidence": [
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/final-numerical-verification.json",
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/paired-seed-diagnostics.json",
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/research-conclusion.json",
+          "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/final-report-receipt.json"
+        ]
+      }
+    },
+    {
+      "revision": 75,
+      "time": 1793999894.8710358,
+      "event": {
+        "type": "registered",
+        "exp_id": "training-target/label-grading-p50-20261106-v1"
+      }
+    },
+    {
+      "revision": 76,
+      "time": 1793999894.959338,
+      "event": {
+        "type": "reported",
+        "exp_id": "training-target/label-grading-p50-20261106-v1"
+      }
+    },
+    {
+      "revision": 77,
+      "time": 1793999896.090328,
+      "event": {
+        "type": "reflection",
+        "round": 1,
+        "observations": "已完成4个预先冻结的候选、35次拟合（20个主模型＋15个旧标签配对），无失败或重试。全部使用H20／patience50、固定五种子及同一特征、样本、权重、早停与正式评估口径。\n同源连续标签对照：Top3×H5扣费净年化29.49%、波动59.72%、夏普0.494、全局H5 RankIC 0.09856。这里是模型头部收益的算术年化，不是策略账户CAGR。\n等样本10档：净年化32.24%、波动58.37%、夏普0.552、RankIC 0.09869。新旧标签两侧净年化32.24%／32.05%均高于各自连续对照29.49%／31.31%；但Top3名单重合率从对照85.45%降至79.70%。只有0.19个百分点的收益差距，不意味着预测更稳定。\n等样本5档：净年化30.34%、夏普0.530、RankIC 0.09892；Top3配对重合率86.79%，只比对照提高1.34个百分点。旧标签侧净年化29.59%低于旧连续对照31.31%，所以差距缩小并非两侧表现都改善。\n每日最小值至最大值等涨幅5档：净年化27.39%、波动69.16%、夏普0.396、RankIC 0.06437，整体弱于对照。典型日最大档占约67.5%，极端日达99.93%；五种子最佳轮为8～39轮，存在浅树和同分敏感性。旧原始收益幅度快照缺失，未伪造该方法的旧／新标签配对。\n两端少、中间多5档：净年化26.78%、波动68.31%、夏普0.392；RankIC虽为0.09933，头部收益仍较差。种子间Top3平均重合率27.21%，低于对照35.24%。seed1000在新旧标签下均选第3轮，Top5边界813／1448天同分，反序诊断选第1轮；较高RankIC和较小标签差异不能替代头部稳定性检查。\n分年上，等样本10档在2020、2021、2022、2025段净年化高于对照，在2023、2024、2026段较低；2026段为12.27%，对照19.32%。D风格净年化16.44%高于对照11.81%，F、T风格净年化略低。没有获得跨年、跨风格的一致改善。\n排名分档把106条float32标签差异压到1条，但剩余跨档跳变约为0.706／0.348／1.194，原连续标签最大单条变化约0.00534。组内差异被消除，同时边界变化被放大；本轮证据支持区分输入差异条数、预测一致性和实现收益，而非合并成一个稳健性判断。\n三个排名分档方案各有3/5种子的正式Top3名单在旧新标签下完全一致，另外2个种子变化较大；十档seed2000重合率40.03%，最佳轮为新73／旧118。",
+        "interpretation": "等样本分档有一定收益改善线索，其中10档较好；没有证据支持硬分档能普遍降低模型对标签变化的敏感性。等涨幅和两端少方案未改善正式头部指标，并引入或暴露浅树、同分顺序敏感性。保留全部五种子和原规则，不删种子、不事后更换同分顺序或早停轮数。",
+        "new_evidence": true,
+        "next_hypothesis": ""
+      }
+    },
+    {
+      "revision": 78,
+      "time": 1793999896.1343281,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 79,
+      "time": 1794000295.596035,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/harness-cleanup.json"
+      }
+    },
+    {
+      "revision": 80,
+      "time": 1794000296.724781,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "jobs": {
+    "quantile5-new-s42-a1": {
+      "job_id": "quantile5-new-s42-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793978437.524338,
+      "finished_at": 1793979024.831842,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s42-a1.json",
+          "sha256": "a906269ccceb302b3c7e53f944a69765a77e8e441b8881e110254e8f69fca9a7",
+          "size": 41810
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "c10ac9b9ea2d8e2c9e73950cde521c41da472c159976e01fe7c367dcecd9844a",
+          "size": 59710958
+        }
+      ]
+    },
+    "quantile5-new-s1000-a1": {
+      "job_id": "quantile5-new-s1000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793979026.550556,
+      "finished_at": 1793979702.063353,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s1000-a1.json",
+          "sha256": "27e20d7b96aac1a633e0be3d07ae8a74ff28d99da98b508d9ab75c9169d0cb33",
+          "size": 53094
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d6733e38438219d5b2f0ad3d820e1d881aa4e16dd8ba59ae66f1bb365a105ae4",
+          "size": 60184828
+        }
+      ]
+    },
+    "quantile5-new-s2000-a1": {
+      "job_id": "quantile5-new-s2000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793979703.824663,
+      "finished_at": 1793980392.014395,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s2000-a1.json",
+          "sha256": "d3cc763be3fd17d911ca41d175bc5a82cf8cb6a8a93bcd05da3d3be2d2b1c2d0",
+          "size": 49567
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2e5a11492fbb3543510f883896d61578368bcb28e90b8105ed65148a769e8e76",
+          "size": 60028493
+        }
+      ]
+    },
+    "quantile5-new-s3000-a1": {
+      "job_id": "quantile5-new-s3000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793980396.589618,
+      "finished_at": 1793981089.704361,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s3000-a1.json",
+          "sha256": "103a933c9dbef4ca838356b00bedbdd1a1b9ddfb0166ad70726ad4ff375342b9",
+          "size": 44174
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f1ec3c178d19d0849ecfa56827ceb2736f6791a2e55e27c3ded923ecea4dce3f",
+          "size": 59768130
+        }
+      ]
+    },
+    "quantile5-new-s4000-a1": {
+      "job_id": "quantile5-new-s4000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793981091.649112,
+      "finished_at": 1793981787.6926668,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s4000-a1.json",
+          "sha256": "df93dde3b10debf9d732a5cfc4dc3bed2932d312cac094d174eb42fba6c83b8c",
+          "size": 47185
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "286f9f27997e7f2d0e37ae7db5d7dd311c20feca7987e4682c4572b6e0fd9de2",
+          "size": 59893613
+        }
+      ]
+    },
+    "quantile5-old-s42-a1": {
+      "job_id": "quantile5-old-s42-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "old",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793981789.593517,
+      "finished_at": 1793982280.974226,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s42-a1.json",
+          "sha256": "8d2895bb0da0e569ea79df10132d38063f8b61bab653ce9e8b7cc8b7fa8abbea",
+          "size": 31501
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_old_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "08def99c40a3654ee317cf298229f8d91e1f3ddef145d0eab247759566d2961b",
+          "size": 59200304
+        }
+      ]
+    },
+    "quantile5-old-s1000-a1": {
+      "job_id": "quantile5-old-s1000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "old",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793982282.71873,
+      "finished_at": 1793983013.347692,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s1000-a1.json",
+          "sha256": "3a9d61e6ddb3ea1b2da3e22900af6d23531605453a4f89c9c96903279a6aedf6",
+          "size": 53095
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e7f46840ec1163b57c083197fa178e1b8597e8944da061ddfe8526bd4e64c93e",
+          "size": 60184966
+        }
+      ]
+    },
+    "quantile5-old-s2000-a1": {
+      "job_id": "quantile5-old-s2000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "old",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793983015.190503,
+      "finished_at": 1793983644.554757,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s2000-a1.json",
+          "sha256": "84ff638cae99b03f40e9f40f397530caa3f34b7c2c793e30ba3bc4d85303d31e",
+          "size": 49565
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8f1d1b94cecc7c40393735dbd468dd58afc9118200f0b97d5092c16b496d8fa0",
+          "size": 60028563
+        }
+      ]
+    },
+    "quantile5-old-s3000-a1": {
+      "job_id": "quantile5-old-s3000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "old",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793983646.3194518,
+      "finished_at": 1793984323.18849,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s3000-a1.json",
+          "sha256": "18f5817e2a8959db418af660b3543eb1a42b0d6422566896feda39c225aaa5ba",
+          "size": 51022
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7d3ff058cbac8779aa278058124aa238b64a4d8bccd84991c370f4f89614ec7d",
+          "size": 60083053
+        }
+      ]
+    },
+    "quantile5-old-s4000-a1": {
+      "job_id": "quantile5-old-s4000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile5",
+        "old",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793984324.8814552,
+      "finished_at": 1793984933.8835342,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s4000-a1.json",
+          "sha256": "90c26b6f2aa1f98ba08ffeceace62f1d78c638ed6c75ab01160e05a0db9289fe",
+          "size": 47176
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile5_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f31f21eb803f6b3382a6109f9441a814a40614da89b203158c3d7baf1e9f9dfb",
+          "size": 59893699
+        }
+      ]
+    },
+    "quantile10-new-s42-a1": {
+      "job_id": "quantile10-new-s42-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793986143.481539,
+      "finished_at": 1793986662.891962,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s42-a1.json",
+          "sha256": "dccbfd00714d282b311e20467aff08ae86fbabd56796c22ed44b37b83562aaea",
+          "size": 38304
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_new_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e628e905ca52e57359633df6e192679e37165b37979546304dad491fa90e6492",
+          "size": 59488447
+        }
+      ]
+    },
+    "quantile10-new-s1000-a1": {
+      "job_id": "quantile10-new-s1000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793986664.7456079,
+      "finished_at": 1793987130.668745,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s1000-a1.json",
+          "sha256": "4d9ef07674a839ac2cde76b1678af69bac4c6521b205644e46f95bbb5319f9dc",
+          "size": 32820
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "34734894bb990f054e985cb066303eac3085a848e92193560a11fe070b28a736",
+          "size": 59242343
+        }
+      ]
+    },
+    "quantile10-new-s2000-a1": {
+      "job_id": "quantile10-new-s2000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793987132.471586,
+      "finished_at": 1793987705.030638,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s2000-a1.json",
+          "sha256": "1b3c94977c51cb6e87f0f9b67956c0560b66ba425cd4f366d19a7440cf1c7fc8",
+          "size": 43851
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f73fe30e58b8a0e446610d6285df7c5001f8a2aaf090fea631b62ba26776776b",
+          "size": 59776434
+        }
+      ]
+    },
+    "quantile10-new-s3000-a1": {
+      "job_id": "quantile10-new-s3000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793987706.85351,
+      "finished_at": 1793988256.6092181,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s3000-a1.json",
+          "sha256": "c4bd0365baa39b09778637fb8825a3ebbda48d111a4f7d4aa277f3b6fa3a6041",
+          "size": 39342
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ab27e15cec34e168af2b5435381dee3388d2813da98b397c93ada477a8f2efb7",
+          "size": 59546252
+        }
+      ]
+    },
+    "quantile10-new-s4000-a1": {
+      "job_id": "quantile10-new-s4000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793988258.450379,
+      "finished_at": 1793988907.4756448,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s4000-a1.json",
+          "sha256": "fae02b8d61b16039007be38cbf6d3a3a94c436d866498b01c9c65526eb644aba",
+          "size": 51352
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6d0caa65eae1a105002f208d09d577cf7afbddbd3df2bcb8fb2a0a4e55e6f03a",
+          "size": 60125100
+        }
+      ]
+    },
+    "quantile10-old-s42-a1": {
+      "job_id": "quantile10-old-s42-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "old",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793988909.2925,
+      "finished_at": 1793989424.982084,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+          "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+          "size": 38305
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+          "size": 59488457
+        }
+      ]
+    },
+    "quantile10-old-s1000-a1": {
+      "job_id": "quantile10-old-s1000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "old",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793989426.798676,
+      "finished_at": 1793990000.8693252,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+          "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+          "size": 44465
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+          "size": 59781408
+        }
+      ]
+    },
+    "quantile10-old-s2000-a1": {
+      "job_id": "quantile10-old-s2000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "old",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793990002.698082,
+      "finished_at": 1793990739.1735759,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+          "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+          "size": 59236
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+          "size": 60495908
+        }
+      ]
+    },
+    "quantile10-old-s3000-a1": {
+      "job_id": "quantile10-old-s3000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "old",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793990741.074498,
+      "finished_at": 1793991318.291818,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+          "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+          "size": 39348
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+          "size": 59546157
+        }
+      ]
+    },
+    "quantile10-old-s4000-a1": {
+      "job_id": "quantile10-old-s4000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "quantile10",
+        "old",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793991320.310838,
+      "finished_at": 1793991994.928263,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+          "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+          "size": 51355
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+          "size": 60125167
+        }
+      ]
+    },
+    "width5-new-s42-a1": {
+      "job_id": "width5-new-s42-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "width5",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793992198.804159,
+      "finished_at": 1793992616.953572,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s42-a1.json",
+          "sha256": "352fa4c7c8c671d5bdc03e6e6062575c5ac0343afdc3715636d819e49a7194dc",
+          "size": 27370
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_width5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "3636dbbf5d6d3c7e9f9816defdd173e0fb965cf7e78938ece0e45ef14d2abbad",
+          "size": 59026014
+        }
+      ]
+    },
+    "width5-new-s1000-a1": {
+      "job_id": "width5-new-s1000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "width5",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793992619.029772,
+      "finished_at": 1793992990.723965,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s1000-a1.json",
+          "sha256": "b247cbffffd18942485d3277a21430ca29b47e1d5ef532f52e33f006ba910fb6",
+          "size": 23631
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_width5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "49833a4a8f7b6e0c59f74d1f66bf45311ed12cfe8aadf2bb43fc9700f9b80dc8",
+          "size": 58816213
+        }
+      ]
+    },
+    "width5-new-s2000-a1": {
+      "job_id": "width5-new-s2000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "width5",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793992992.7736819,
+      "finished_at": 1793993336.4611552,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s2000-a1.json",
+          "sha256": "835a99cdc63d334b792e4358263c5de547a25d8055b2d6978a3379eb35337889",
+          "size": 21581
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_width5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "837f17b949254482a051b9e405acad290317cc09645191159b9c9a82a85219a5",
+          "size": 58683040
+        }
+      ]
+    },
+    "width5-new-s3000-a1": {
+      "job_id": "width5-new-s3000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "width5",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793993338.479001,
+      "finished_at": 1793993793.6233542,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s3000-a1.json",
+          "sha256": "5aac154d12a80b5e742022b471e13c8bdb0a0540a1123c00565bca45ad593e59",
+          "size": 32184
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_width5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "de09689b7f63d97dffdb826918bac469590718775c5cbce1c82ece4ba2f6fe87",
+          "size": 59309231
+        }
+      ]
+    },
+    "width5-new-s4000-a1": {
+      "job_id": "width5-new-s4000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "width5",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793993795.654848,
+      "finished_at": 1793994248.174252,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s4000-a1.json",
+          "sha256": "277a5326710c64f905d81cc473d8c8a9954122fd136fb50d7ee8f519c459290f",
+          "size": 31832
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_width5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d31029badd6500567665bc6ac6dd00d12fdd48b51d064de14bbc813c5d54d992",
+          "size": 59304856
+        }
+      ]
+    },
+    "tails5-new-s42-a1": {
+      "job_id": "tails5-new-s42-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "new",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793994347.583445,
+      "finished_at": 1793994902.5896761,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s42-a1.json",
+          "sha256": "97520a0f135e51df673fcd444df978a947b502531359d46d9ddbdfc4ee4694bd",
+          "size": 41044
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "cf15639ef4b6b77cefcb9010535e5a8a31c5ce1f26272ac1c9df98faa01fa690",
+          "size": 59563026
+        }
+      ]
+    },
+    "tails5-new-s1000-a1": {
+      "job_id": "tails5-new-s1000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "new",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793994904.6362722,
+      "finished_at": 1793995248.33219,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s1000-a1.json",
+          "sha256": "49fc7e4f6e185d9399b0b663d07a389edd0bde406d89387fe9a1010fcd2ae26a",
+          "size": 19881
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "92843f7aa4af17ed15d9b64d5ebef0ddaebc59242c4a82b2a874c559851575d9",
+          "size": 58559720
+        }
+      ]
+    },
+    "tails5-new-s2000-a1": {
+      "job_id": "tails5-new-s2000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "new",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793995250.266933,
+      "finished_at": 1793995728.4807491,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s2000-a1.json",
+          "sha256": "65568e77ebff3f1e620dfc7b40a7fee9b353987ed8548490c04fc2ae64728b56",
+          "size": 34215
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "92b9280fe6ccdfe2b8e77ffe6bbaa3d773a2f9a8cb6efe3b9762b922735cc9e8",
+          "size": 59281886
+        }
+      ]
+    },
+    "tails5-new-s3000-a1": {
+      "job_id": "tails5-new-s3000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "new",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793995730.465343,
+      "finished_at": 1793996354.291599,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s3000-a1.json",
+          "sha256": "07afbf89e8dbb5f3d5e261934ad43f264fe5832695f8f3d1aaeb7ce42fa2075b",
+          "size": 44118
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "4a3113327395292c449a8291de1a34dd5e692d1617d9f000288fe928f3fc7f6c",
+          "size": 59696778
+        }
+      ]
+    },
+    "tails5-new-s4000-a1": {
+      "job_id": "tails5-new-s4000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "new",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793996356.168128,
+      "finished_at": 1793996956.8275342,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s4000-a1.json",
+          "sha256": "89e0d6893cd8f24ebb41699756f16832cc4f2bc51a63742c2d1389ec61bfdac1",
+          "size": 45125
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5b3a86b819afe0dc0ec8bfc49ab7b2b6b861cbccc4b7266e507c041fa7984504",
+          "size": 59818163
+        }
+      ]
+    },
+    "tails5-old-s42-a1": {
+      "job_id": "tails5-old-s42-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "old",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793996958.8817868,
+      "finished_at": 1793997444.0925398,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s42-a1.json",
+          "sha256": "23d39cd11b42b6b6701d57e75778e9a00697920541b81bdbca809a38df88eb9f",
+          "size": 35173
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_old_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "0ac6189d32bc7836ba1daaa09323fbef0190c1f95fbf49986da0a8f5e27728c9",
+          "size": 59310540
+        }
+      ]
+    },
+    "tails5-old-s1000-a1": {
+      "job_id": "tails5-old-s1000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "old",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793997446.0221949,
+      "finished_at": 1793997779.119637,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s1000-a1.json",
+          "sha256": "e61dd10573436757b8c4dd80d821539a0dab276c8451f78a96d8beaffb45faab",
+          "size": 19878
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "88a02e75f455ce02d2b05e574f7c06d5b56244ba8d64176eaab55e0f2bfe3299",
+          "size": 58559695
+        }
+      ]
+    },
+    "tails5-old-s2000-a1": {
+      "job_id": "tails5-old-s2000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "old",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793997781.084887,
+      "finished_at": 1793998256.5596979,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s2000-a1.json",
+          "sha256": "d0ae071167d4005cb33f9d74a9daeb02feb6f8401fe41d613ec6c62941a62aa2",
+          "size": 34222
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "027ab0e05c8a76aa68b98f344db6bce90b6ca349e730cff4ca62f962f406567c",
+          "size": 59281928
+        }
+      ]
+    },
+    "tails5-old-s3000-a1": {
+      "job_id": "tails5-old-s3000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "old",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793998258.503819,
+      "finished_at": 1793998911.407425,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s3000-a1.json",
+          "sha256": "7bf74c926e89be5f407b06d1e3da90af83445003187960de1e9454cf34a3eb7d",
+          "size": 50671
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "23c3ce302a0a7c06443b57954ae95d91f7693c9f46f93aaa891a13b9abbbf137",
+          "size": 59984020
+        }
+      ]
+    },
+    "tails5-old-s4000-a1": {
+      "job_id": "tails5-old-s4000-a1",
+      "exp_id": "training-target/label-grading-p50-20261106-v1",
+      "attempt_id": "label-grading-p50-20261106-v1/training-target/label-grading-p50-20261106-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-label-grading-20261106.nWblY2/train.py",
+        "tails5",
+        "old",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1793998913.4030368,
+      "finished_at": 1793999514.7034109,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s4000-a1.json",
+          "sha256": "ff68529a38b04986aa09c8c7261452a62d4f294fb91e1085644ecb2c68397bce",
+          "size": 45119
+        },
+        {
+          "path": "backtest/result/labelgrade_20261106_tails5_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9c1fdfae2ffdc2c1092e65bbfc497ab8dabde31cf8d9fd7c334b781995d34fed",
+          "size": 59818142
+        }
+      ]
+    }
+  },
+  "checksum": "eb8180a15c715a8eeaaa53d8d452caef337705a036dbb6cdae8a328d8daee1bf"
+}

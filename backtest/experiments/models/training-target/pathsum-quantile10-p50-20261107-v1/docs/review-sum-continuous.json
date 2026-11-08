@@ -1,0 +1,41 @@
+{
+  "reviewed_at_local": "2026-11-08 01:36 Asia/Shanghai",
+  "reviewer": "/root/review_v5_promotion",
+  "scope": "Read-only zero-fit diagnosis of completed sum20continuous versus same-source H20continuous; sum20q10 was still training.",
+  "blocking_findings": [],
+  "independent_verification": {
+    "method": "Reviewer loaded one frozen H5 evaluation-label cache and reconstructed returns from saved official Top3 holdings, then called the original summarize_head_series.",
+    "cells": 48,
+    "coverage": "Both candidates, five seeds and ensemble, full window plus D/F/T.",
+    "metrics": ["n_days", "ann", "ann_cost", "net_ann", "net_ann_vol", "net_sharpe", "turnover"],
+    "absolute_tolerance": 1e-12,
+    "all_match": true,
+    "style_days": {"D": 1010, "F": 136, "T": 302},
+    "training_rows": 5448963,
+    "input_identity": "All five training ordered indices, feature signatures, validation labels and tradable masks match same-source H20."
+  },
+  "findings": {
+    "ensemble_T_net_ann_difference": -0.47746018227363735,
+    "ensemble_full_net_ann_vol_difference": 0.1252317912277353,
+    "T_seed_net_ann_differences_pp_rounded": {"42": -37.3441, "1000": -18.8188, "2000": -33.2842, "3000": -9.1279, "4000": -46.1947},
+    "T_all_five_seeds_decrease": true,
+    "short_tree_and_tie_sensitivity": "seed42 original best3: reversing tied-score priority reduces its selected-round early-stop score by3.2245pp and gives observed-prefix best9, but no reverse patience50 stop is observed within53 rounds. seed4000 reverse replay selects3 and stops53, versus original best8. Other three retain best. None hit200 rounds.",
+    "ensemble_effect": "T ensemble is below four individual seeds but within the five-seed range. Full-window ensemble volatility exceeds all five seed values and matches independently reconstructed actual selection returns.",
+    "top3_mean_seed_overlap_rounded": {"h20continuous": 0.3524, "sum20continuous": 0.2427},
+    "T_year_gross_arithmetic_ann_diagnostic_rounded": {
+      "2021": {"sum20continuous": 0.3081, "h20continuous": 0.6731},
+      "2025": {"sum20continuous": 0.8200, "h20continuous": 0.6577},
+      "2026": {"sum20continuous": -0.6528, "h20continuous": 0.2335}
+    }
+  },
+  "interpretation": "No implementation or aggregation error found. T deterioration spans all five seeds and cannot be attributed only to seed42 or ensemble averaging. Short-tree and tied-score sensitivity limit attribution to a stable label mechanism. Seed overlap and T-year gross figures are diagnostic, not alternative selection criteria or account returns.",
+  "action": "Keep all seeds and original settings. No new fits. Integrate existing early-stopping replay and these limitations into the final paired sum-label report.",
+  "evidence_paths": [
+    "metrics/sum20continuous-new.json",
+    "metrics/h20continuous.json",
+    "docs/predictions-sum20continuous-new.json",
+    "docs/sum20continuous-new-s42-a1.json",
+    "docs/sum20continuous-new-s4000-a1.json",
+    "docs/early-stopping-replay.json"
+  ]
+}

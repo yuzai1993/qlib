@@ -1,0 +1,26 @@
+{
+  "result": "no_changes",
+  "mlruns": "handled",
+  "temporary": "cleaned",
+  "result_evidence": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/cleanup-final-dryrun.json",
+    "sha256": "b18cbe081a06b96477841d68e45e76d1e2a10811406850480934f848ec27304f",
+    "size": 47636
+  },
+  "retention_evidence": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/retention-verification.json",
+    "sha256": "5f589f26a3d3b557b7242e2ba2086564e0d94a7e9f8221f8859dafd40771c56f",
+    "size": 15642
+  },
+  "temporary_manifest": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/temporary-cleanup-manifest.json",
+    "sha256": "81e0bf1940f0bd9c5e1c0d7fc904196aeecf47c0cd4fc58210a673a0b40d78ce",
+    "size": 8607
+  },
+  "temporary_root_absent": true,
+  "temporary_files_deleted": 16,
+  "temporary_bytes_deleted": 144309,
+  "mlruns_action": "Two new registered recorders retained as necessary exact source account/positions/indicators; inspected individually. No unreferenced new MLflow artifacts. Existing unrelated MLflow experiments untouched.",
+  "new_fits": 0,
+  "completed_account_jobs": 2
+}

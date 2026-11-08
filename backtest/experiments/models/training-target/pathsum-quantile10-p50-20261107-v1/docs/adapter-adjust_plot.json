@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/adjust_plot.py",
+    "sha256": "7009c8400be871812bcc4fdc792397d877b762781b72fff2d8cb4a8a2016e81b",
+    "size": 483
+  },
+  "source_text": "from common import *\nsave_source(__file__)\ns=(TMP/'plot_final.py').read_text()\ns=s.replace(\"   for x,y in zip([7,15,20],vals):\", \"   other='q10' if typ=='continuous' else 'continuous'\\n   other_vals=[official(docs[f'h{h}{other}'])['head_regimes'][r]['3']['5']['net_ann'] for h in [7,15,20]]\\n   for x,y,other_y in zip([7,15,20],vals,other_vals):\")\ns=s.replace(\"xytext=(0,8 if typ=='continuous' else -17)\",\"xytext=(0,8 if y>=other_y else -17)\")\n(TMP/'plot_final_v2.py').write_text(s)\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

@@ -1,0 +1,42 @@
+{
+  "result": "no_changes",
+  "mlruns": "not_applicable",
+  "temporary": "cleaned",
+  "completed_at": 1794074713.730027,
+  "temporary_directory_removed": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b",
+  "temporary_file_count": 249,
+  "temporary_bytes_removed": 6925494275,
+  "inventory": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/temporary-artifact-inventory.json",
+    "sha256": "e3fcd79f59e5a8a7b8a126c1c42a51ca56a0b98d224508ca2cf30f6b1fdfcbbe",
+    "size": 98531
+  },
+  "runtime_archive": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/runtime-texts.json.gz",
+    "sha256": "75c5d72acf2e011161e689c62b9e83527adb7ae87372bbd77fe8816418dfe563",
+    "size": 23753
+  },
+  "deletion_log": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/temporary-cleanup-progress.json",
+    "sha256": "83f47ee3b782bec0a2a417fcd19d0a7433797448726e66dfe41c095ffaaaf40c",
+    "size": 34328
+  },
+  "result_plan": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/result-cleanup-dry-run.json",
+    "sha256": "016503f06ba2ece3e45eda6d61af5e92e999af2b04389eda243161adbb1cb057",
+    "size": 49458
+  },
+  "retention_review": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/result-retention-review.json",
+    "sha256": "32c1b15306ca29675c7d5895ea7c091bb80bf4400eb3ee835f8e780f74ffb3b6",
+    "size": 36623
+  },
+  "process_and_mlflow_audit": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/process-and-mlflow-audit.json",
+    "sha256": "104a835bc47bda37f51228e78cc007336cee59649b2491721e776be600663da1",
+    "size": 8686
+  },
+  "result_decision": "Platform retention dry-run has zero deletion candidates; all existing result directories preserved, including all successful study models and prediction/provider dependencies. Historical missing-source warnings retained without retraining.",
+  "mlruns_decision": "All successful study save_session links point to local result artifacts; no MLflow metadata changed since campaign start, and save_session creates no recorder. No MLflow deletion required.",
+  "temporary_decision": "Only the exact persisted inventory of task-owned temporary files was removed. Source text, logs, required research data and model/prediction dependencies remain."
+}

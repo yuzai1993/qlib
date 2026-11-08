@@ -1,0 +1,24 @@
+{
+  "reviewed_at_local": "2026-11-08 00:16 Asia/Shanghai",
+  "reviewer": "/root/review_v5_promotion",
+  "scope": "Read-only review of completed H7 q10 five-seed outputs, reused controls, summary, HTML and registration; remaining candidates were not yet complete.",
+  "blocking_findings": [],
+  "verified": [
+    "All five reused controls: per-seed and ensemble full-window, yearly, style primary metrics and H5 RankIC agree with source JSON within 1e-12; ten relevant file hashes checked.",
+    "H7 paired style differences match official evaluation JSON. No premature universality field has been emitted.",
+    "Parent registry remains running and does not attach unfinished sum20q10 representative metrics. Six internal records and evaluation hashes are valid.",
+    "Formal v5 old-label baseline remains separate from same-source new-label H20 control."
+  ],
+  "pending_closeout_report_items": [
+    {
+      "item": "Expose reverse-priority patience50 replay and 200-round cap diagnostics from existing receipts, without retraining.",
+      "h7_findings": "For seed3000, original best is round9 and observed end is59; reversed tie-priority observed-prefix best is10, but patience50 has not fired within the observed prefix. Label this right-censored/unobserved stop, not a complete alternative-training selected round. The other four seeds preserve best round and their reverse replay stops at the recorded end. None of the five hit the200-round cap.",
+      "status": "pending final report"
+    },
+    {
+      "item": "Add report generation time and explicit outstanding candidate list to distinguish stage snapshots from final results.",
+      "status": "pending final report"
+    }
+  ],
+  "training_action": "No change or retry required; existing serial pipeline continues under original budget."
+}

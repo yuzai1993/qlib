@@ -1,0 +1,84 @@
+{
+  "input": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/inference-input-2026.json",
+    "sha256": "abd008d8a8284cdadfa77611848b03d8fdce025aa8eabf3caec237910b9981c0",
+    "size": 6380
+  },
+  "predictions": [
+    {
+      "job_id": "sum20continuous-new-s42-a1",
+      "seed": 42,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "cd4d51b7f6249a340bd0ec278571ac99417100ba01b65724c12181141eeaa9b3",
+        "size": 58564577
+      },
+      "prediction_part": {
+        "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/infer-sum20continuous-new-s42-a1-2026.pkl",
+        "sha256": "790e829bebc03d5e2cf844bf387b379dc4daf8384aefe0a7bd9b79600375b3ca",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s1000-a1",
+      "seed": 1000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2cb81cd728c42fee5e3779b4c194ff8962bb46b7573d0e7fca419269f1005c1e",
+        "size": 58950720
+      },
+      "prediction_part": {
+        "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/infer-sum20continuous-new-s1000-a1-2026.pkl",
+        "sha256": "84110c6759e445fd10c3118f15b0996b0089aa76fcd072ba85f83fd353a0dd51",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s2000-a1",
+      "seed": 2000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e23451a208d8a2c2e68050da54986c8491d957581da4e7f9e41a854398685e32",
+        "size": 59278709
+      },
+      "prediction_part": {
+        "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/infer-sum20continuous-new-s2000-a1-2026.pkl",
+        "sha256": "f97d31f7cd02389fe351eb8de2098d62d133774d4e2508c41aba68cd58f4a969",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s3000-a1",
+      "seed": 3000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9a981fa8b1a7226fe359c5611cbf9ab5b6feed88ab4563b1f646ff80c9520008",
+        "size": 58855212
+      },
+      "prediction_part": {
+        "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/infer-sum20continuous-new-s3000-a1-2026.pkl",
+        "sha256": "3bb4534c20b60dab78626c2daa531d777a4c3ea6f76abd6e0e1edb5e879c1ff1",
+        "size": 11625844
+      }
+    },
+    {
+      "job_id": "sum20continuous-new-s4000-a1",
+      "seed": 4000,
+      "treatment": "new",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "339a1a33dc76cd83b7a18472ad9c1fbb0f3a5c2db6aabaa7b18bb97cdea20a20",
+        "size": 58665952
+      },
+      "prediction_part": {
+        "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/infer-sum20continuous-new-s4000-a1-2026.pkl",
+        "sha256": "e52a62e279081060d2bf48f09cd7bfe3fdd0a641a3576ab550847abc14b7587a",
+        "size": 11625844
+      }
+    }
+  ]
+}

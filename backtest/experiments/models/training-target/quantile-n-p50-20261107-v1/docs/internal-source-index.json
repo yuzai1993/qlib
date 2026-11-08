@@ -1,0 +1,52 @@
+{
+  "candidate_refs": [
+    "training-target/quantile-n-p50-20261107-v1/arms/control_old",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile3",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile5",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile7",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile10",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile15",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile20",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile30",
+    "training-target/quantile-n-p50-20261107-v1/arms/quantile50"
+  ],
+  "source_records": [
+    {
+      "path": "source-records/control_old.json",
+      "sha256": "f548dd56d5e5c1bbc5481ad6eff02a938fae1bfaddbe5d3e48c5c629889ff365"
+    },
+    {
+      "path": "source-records/quantile3.json",
+      "sha256": "e96ad97acb861ade76e0f36ad1853a82655b8a8f4dc2a44c1ecdd848e1f97587"
+    },
+    {
+      "path": "source-records/quantile5.json",
+      "sha256": "4246f9b62122c51297653bcbc2acf91a8aa0297e8933f96cfcde4ac489338b9e"
+    },
+    {
+      "path": "source-records/quantile7.json",
+      "sha256": "4f233f6a32378c81055215b49e2833103aeffa8be9841a4b8adfef757f9bf597"
+    },
+    {
+      "path": "source-records/quantile10.json",
+      "sha256": "45b81bfdf1c91fa882bcec0779b440d90db4f5f61398dc43157c6dd2465415c3"
+    },
+    {
+      "path": "source-records/quantile15.json",
+      "sha256": "8da7116121927e02ecb7ef03fae790961c9e1b63a3090f38329fbbeec6fd02f6"
+    },
+    {
+      "path": "source-records/quantile20.json",
+      "sha256": "2065426d06a9898b5574238ae6d72b3875f3b8e694ebfc8a9037974a337ef122"
+    },
+    {
+      "path": "source-records/quantile30.json",
+      "sha256": "43afcd03ee5ce9fc7b269a34d1462fd306474c6dbd9707ea79286b26c9dab99c"
+    },
+    {
+      "path": "source-records/quantile50.json",
+      "sha256": "99b3f718aebd650e2695dbebf5df0f8c2b77bb83f15b17beed90fbfb4dbe6eda"
+    }
+  ],
+  "platform_scope": "Normal parent experiment entry; generic same-H recipe groups unsupported by current platform. Detail HTML contains all candidates and the true paired control."
+}

@@ -1,0 +1,27 @@
+{
+  "native_status": "closed",
+  "native_revision": 10,
+  "native_variants": 0,
+  "supplementary_account_jobs": 2,
+  "new_model_fits": 0,
+  "model_baseline": "training-target/h20-quantile10-p50-v5",
+  "strategy_baseline": "baseline/phase-m-v1-bt-v5",
+  "scientific_verification": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/scientific-verification.json",
+    "sha256": "ac9fdfc99734048f1259abf0648b864e3506b16e2c387396959b15525e7ce468",
+    "size": 2346
+  },
+  "report_verification": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/registration-report-verification.json",
+    "sha256": "573312e22997dca23728f577f18f72390563d2f44e881056ba8ded5c6031aeb2",
+    "size": 4121
+  },
+  "cleanup": {
+    "path": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/harness-cleanup.json",
+    "sha256": "de958544779db349cee33c4508a0f0fda786782e8880580d392e6b950051a0a8",
+    "size": 1210
+  },
+  "temporary_root_absent": true,
+  "coverage_note": "Native strategy result gate pins historical v2; actual v5 accounts verified separately, never represented as v2 native variants.",
+  "visual_preview": "Browser local-file protocol blocked; static checks completed."
+}

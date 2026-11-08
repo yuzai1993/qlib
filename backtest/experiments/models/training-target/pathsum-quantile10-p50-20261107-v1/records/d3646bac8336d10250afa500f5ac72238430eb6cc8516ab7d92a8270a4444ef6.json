@@ -1,0 +1,140 @@
+{
+  "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+  "archive_path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1",
+  "date": "2026-11-07",
+  "state": "completed",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "training-target",
+  "experiment_type": "training_target",
+  "display_name": "路径累计收益和与10档期限对照 · patience50",
+  "hypothesis": "Summing within-horizon cumulative returns rewards earlier/persistent gains; may favor smoother paths but does not mathematically penalize volatility. Test predictive changes separately from this mechanism. Quantization may interact with label horizon and market style.",
+  "baseline_ref": "training-target/h20-quantile10-p50-v5",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "test_pools": [
+    "all"
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "detail_report": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+  "representative_candidate": "sum20q10 predeclared, not a selected winner",
+  "internal_candidate_records": [
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-v5-record.json",
+      "sha256": "c4138bee4f64ab08492b83bead3f3185efae2a23b0bd1d01a8582985edbd9021",
+      "size": 1133
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7continuous-record.json",
+      "sha256": "700cf5796e2163b28a3adc1297365846c5fcc7f1c1ebca3e86f980a60a6a8632",
+      "size": 1167
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h7q10-record.json",
+      "sha256": "675d07a9a0533040a36c6cab6cb3046a43eb224cc9881e3264574d04c051bcbe",
+      "size": 1168
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15continuous-record.json",
+      "sha256": "a49be25608aa4417cc193ed1cf2b52df137d8705acd3ce85f30c7a1ca5b1574c",
+      "size": 1170
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h15q10-record.json",
+      "sha256": "066464cb934275369fb6b7ea5e6a076adf7394b30425b677db84533217386f52",
+      "size": 1166
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20continuous-record.json",
+      "sha256": "cef61c2bdfeebc7062cadb2a6143d4cc73a770a26f27f7d342a55e8cecf57390",
+      "size": 1168
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-h20q10-record.json",
+      "sha256": "e0726f82e09b81b891864670b16a1d3ad69af7f4e46cc5878b7ddfd9bd3ad6f0",
+      "size": 1145
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-sum20continuous-record.json",
+      "sha256": "7c9fec00d8e587dc589a022faabee5e73b46d6b7c4e5a369ba35c2285bf4eaa2",
+      "size": 1192
+    },
+    {
+      "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/candidate-sum20q10-record.json",
+      "sha256": "e03ecf2442c6e895d8e09d7014b42dbf9f65a1075c0c2377bf94d7ac957df062",
+      "size": 1174
+    }
+  ],
+  "execution_audit": {
+    "scientific_candidates": 4,
+    "actual_new_fits": 20,
+    "successful_fits": 20,
+    "prior_fits": 176,
+    "cumulative_fits": 196
+  },
+  "configs": [
+    "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/frozen-study.json",
+    "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/missing-price-amendment.json",
+    "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/prepared-inputs.json",
+    "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/harness-plan.json",
+    "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/evaluation.yaml"
+  ],
+  "result_dirs": [
+    "backtest/result/pathsumq10_20261107_h7q10_s42",
+    "backtest/result/pathsumq10_20261107_h7q10_s1000",
+    "backtest/result/pathsumq10_20261107_h7q10_s2000",
+    "backtest/result/pathsumq10_20261107_h7q10_s3000",
+    "backtest/result/pathsumq10_20261107_h7q10_s4000",
+    "backtest/result/pathsumq10_20261107_h15q10_s42",
+    "backtest/result/pathsumq10_20261107_h15q10_s1000",
+    "backtest/result/pathsumq10_20261107_h15q10_s2000",
+    "backtest/result/pathsumq10_20261107_h15q10_s3000",
+    "backtest/result/pathsumq10_20261107_h15q10_s4000",
+    "backtest/result/pathsumq10_20261107_sum20continuous_s42",
+    "backtest/result/pathsumq10_20261107_sum20continuous_s1000",
+    "backtest/result/pathsumq10_20261107_sum20continuous_s2000",
+    "backtest/result/pathsumq10_20261107_sum20continuous_s3000",
+    "backtest/result/pathsumq10_20261107_sum20continuous_s4000",
+    "backtest/result/pathsumq10_20261107_sum20q10_s42",
+    "backtest/result/pathsumq10_20261107_sum20q10_s1000",
+    "backtest/result/pathsumq10_20261107_sum20q10_s2000",
+    "backtest/result/pathsumq10_20261107_sum20q10_s3000",
+    "backtest/result/pathsumq10_20261107_sum20q10_s4000",
+    "backtest/result/20261107_pathsum_quantile10"
+  ],
+  "harness": {
+    "campaign_id": "pathsum-quantile10-p50-20261107-v1",
+    "attempt_id": "pathsum-quantile10-p50-20261107-v1/training-target/pathsum-quantile10-p50-20261107-v1/a1"
+  },
+  "conclusion": "4/4组已完成；逐期限/风格配对及求和标签比较见详情，未晋升。",
+  "study_summary": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-summary.json",
+  "diagnostic_only": true,
+  "cleanup_retention_eligible": false,
+  "eval_output": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+  "portable_eval_output": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/sum20q10-new.json",
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.19567021696998274,
+    "ir": 0.4196051089542908,
+    "ann": 0.2853517167256463,
+    "beta": 1.2182537855535713,
+    "ann_alpha": 0.17609689015418753,
+    "appraisal_ir": 0.38777663203979656,
+    "turnover_period": 0.896973896973897,
+    "turnover": 0.17939477939477938,
+    "ann_cost": 0.0392802808962809,
+    "net_ann_excess": 0.15638993607370183,
+    "net_ann": 0.24607143582936541,
+    "net_ann_alpha": 0.13681660925790662,
+    "net_ann_vol": 0.7070080720879853,
+    "net_sharpe": 0.3480461476241002,
+    "rank_ic_mean": 0.09622591082374797
+  }
+}

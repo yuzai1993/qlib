@@ -1,0 +1,9 @@
+{
+  "at": 1794021607.1262789,
+  "coordinator_pid": 94981,
+  "command": "/opt/anaconda3/envs/qlib/bin/python -u /private/tmp/qlib-quantile-n-20261107.5g5nkn20/pipeline_v2.py",
+  "action": "SIGSTOP coordinator only; existing train_group and current fit allowed to finish",
+  "user_steering": "Use only better-performing old-label sample for n sweep; cancel future paired/new-label branches",
+  "budget_origin": "unchanged campaign wallclock; no reset",
+  "reason": "Prevent old frozen scheduler from starting next two-treatment candidate while new authorized single-source continuation is prepared"
+}

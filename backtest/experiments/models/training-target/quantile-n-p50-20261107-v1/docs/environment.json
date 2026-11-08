@@ -1,0 +1,26 @@
+{
+  "python": "3.12.13 | packaged by Anaconda, Inc. | (main, Mar 19 2026, 20:12:32) [Clang 20.1.8 ]",
+  "executable": "/opt/anaconda3/envs/qlib/bin/python",
+  "platform": "macOS-15.3-arm64-arm-64bit",
+  "git_head": "132d83dedc01131c4c337c38cc9eb5207e5a8f85",
+  "initial_git_status": " M backtest/experiments/registry.jsonl\n M backtest/experiments/reports/phase_m_v1_report.html\n?? backtest/experiments/models/training-target/label-grading-p50-20261106-v1/\n?? backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/\n",
+  "packages": {
+    "numpy": "2.4.3",
+    "pandas": "2.3.3",
+    "lightgbm": "4.6.0",
+    "scipy": "1.17.1",
+    "pyqlib": "0.1.dev2065"
+  },
+  "modules": {
+    "numpy": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/numpy/__init__.py",
+    "lightgbm": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/lightgbm/__init__.py",
+    "qlib": "/Users/yuxianqi/Project/qlib/qlib/__init__.py"
+  },
+  "lightgbm_binaries": [
+    {
+      "path": "/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/lightgbm/lib/lib_lightgbm.dylib",
+      "sha256": "50f62eef76a25c7dbd5b79c998d59a5dff4874c595f7fb8d197826c2bfbd8a92",
+      "size": 6376096
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "at": 1794034960.322979,
+  "trigger": "n50 official five-seed ensemble net_ann and net_sharpe below all component seeds; predeclared scientific acceptance diagnostic",
+  "scope": "After all fits finish, recompute exact five-seed blend, canonical Top3H5 metrics and heads, and reconcile annual return shortfall to selected-stock replacements and cost. Include any other new candidate with same predeclared flag.",
+  "input_changes": false,
+  "new_fits": 0,
+  "budget": "Original deadline unchanged; diagnostic and closeout consume same wallclock budget",
+  "prohibited": [
+    "drop seeds",
+    "change weights",
+    "extend200roundcap",
+    "promote baseline"
+  ],
+  "source": {
+    "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/diagnose_ensemble.py",
+    "sha256": "3bb0f460c9bb2ef21ad9d7478c342d484dd147489e0d4c2e848988a9a91bf11f",
+    "size": 5788
+  }
+}

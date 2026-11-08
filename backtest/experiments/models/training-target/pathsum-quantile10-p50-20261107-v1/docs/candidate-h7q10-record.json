@@ -1,0 +1,37 @@
+{
+  "candidate": "h7q10",
+  "exp_id": "training-target/pathsum-quantile10-p50-20261107-v1/arms/h7q10",
+  "parent_experiment": "training-target/pathsum-quantile10-p50-20261107-v1",
+  "state": "completed",
+  "source_role": "internal_scientific_candidate",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "eval_output": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metrics/h7q10-new.json",
+    "sha256": "a34f322219968c3ca30fc7be2d7d26733bd92acf6e7bc0d9eec67e63dae73db7",
+    "size": 89026
+  },
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.23520992179444264,
+    "ir": 0.5563000284907308,
+    "ann": 0.32489142155010614,
+    "beta": 1.1231913671869895,
+    "ann_alpha": 0.22416193522816283,
+    "appraisal_ir": 0.5340328512308586,
+    "turnover_period": 0.9191499191499193,
+    "turnover": 0.18382998382998386,
+    "ann_cost": 0.04025141325941327,
+    "net_ann_excess": 0.19495850853502938,
+    "net_ann": 0.28464000829069286,
+    "net_ann_alpha": 0.18391052196874957,
+    "net_ann_vol": 0.6423528423588912,
+    "net_sharpe": 0.44312096019598624,
+    "rank_ic_mean": 0.09325084753807493
+  }
+}

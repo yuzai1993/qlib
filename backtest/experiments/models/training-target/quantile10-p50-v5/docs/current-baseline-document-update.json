@@ -1,0 +1,47 @@
+{
+  "at": 1794060438.7948532,
+  "authorization": {
+    "path": "backtest/experiments/models/training-target/quantile10-p50-v5/docs/promotion-plan.json",
+    "sha256": "0e6338aa34587389776c19bb3af4bb57b8638a622aefdbad901f91d17f04193d",
+    "size": 1242
+  },
+  "scope": "Current model identity/recipe only; evaluation rules, strategy baseline and production definitions unchanged.",
+  "files": [
+    {
+      "before": {
+        "path": "backtest/EXPERIMENT_STANDARD.md",
+        "sha256": "0da4f8a77cc1af8d5208230f2d2a148c74e7520e446bd0a413ebeb773ba8e48f",
+        "size": 63823
+      },
+      "after": {
+        "path": "backtest/EXPERIMENT_STANDARD.md",
+        "sha256": "deea15eee8e411ec5e52c8f6ddc31ba6c254452465eeba2ea25d123f6c6c7bbd",
+        "size": 64550
+      }
+    },
+    {
+      "before": {
+        "path": "AGENTS.md",
+        "sha256": "0cab80aa42eb80e5678f2f19e6975739a4e41175b1f7957ee48e51c0e5bb9f8a",
+        "size": 12365
+      },
+      "after": {
+        "path": "AGENTS.md",
+        "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+        "size": 12415
+      }
+    },
+    {
+      "before": {
+        "path": "backtest/experiments/README.md",
+        "sha256": "ad93ce2c7fe01683dab2abdafaead58334cac17372561ee4e7fd68c495f3292f",
+        "size": 26515
+      },
+      "after": {
+        "path": "backtest/experiments/README.md",
+        "sha256": "3fc219e62ce93c51ae55e9b9ceb0e934e6cc7c2b737d16068b4111df441e91fa",
+        "size": 26888
+      }
+    }
+  ]
+}

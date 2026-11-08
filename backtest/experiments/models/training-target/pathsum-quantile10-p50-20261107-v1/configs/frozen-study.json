@@ -1,0 +1,117 @@
+{
+  "user_request": "1.Hn标签等于H1到Hn原始累计收益之和，先做H20，不分档和10档。2.H7/H15做10档，与H20比较分风格，检验T减弱D增强是否普遍。",
+  "confirmed_formula": "sum(k=1..20)[Ref(close,-(k+1))/Ref(close,-1)-1]",
+  "hypothesis": "Summing within-horizon cumulative returns rewards earlier/persistent gains; may favor smoother paths but does not mathematically penalize volatility. Test predictive changes separately from this mechanism. Quantization may interact with label horizon and market style.",
+  "formal_baseline": "training-target/h20-quantile10-p50-v5",
+  "candidates": [
+    {
+      "id": "h7q10",
+      "horizon": 7,
+      "target": "terminal_return",
+      "bins": 10
+    },
+    {
+      "id": "h15q10",
+      "horizon": 15,
+      "target": "terminal_return",
+      "bins": 10
+    },
+    {
+      "id": "sum20continuous",
+      "horizon": 20,
+      "target": "path_sum",
+      "bins": null
+    },
+    {
+      "id": "sum20q10",
+      "horizon": 20,
+      "target": "path_sum",
+      "bins": 10
+    }
+  ],
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "parameters": {
+    "colsample_bytree": 0.8879,
+    "learning_rate": 0.2,
+    "subsample": 0.8789,
+    "lambda_l1": 205.6999,
+    "lambda_l2": 580.9768,
+    "max_depth": 8,
+    "num_leaves": 210,
+    "num_threads": 8,
+    "num_boost_round": 200,
+    "early_stopping_rounds": 50
+  },
+  "train_window": [
+    "2004-01-02",
+    "2020-07-31"
+  ],
+  "eval_window": [
+    "2020-08-03",
+    "2026-07-31"
+  ],
+  "es_metric": "top5_h5_net_ann",
+  "valid_cutoff": "2026-07-23",
+  "data_version": "2026-11-03",
+  "source_policy": {
+    "features": "Nov2 existing frozen feature blocks",
+    "labels": "Nov3 frozen provider and original H7/H15/H20 labels; controls must match ordered inputs",
+    "validation": "Existing exit-bounded H5 valid and tradable, same as p50 trials",
+    "inference": "Formal DK_I on Nov3 provider; exact control prediction bridge",
+    "v5_reference": "Current v5 uses old H20 labels; compare against it as formal baseline, but scientific paired H20 controls use existing Nov3 continuous and q10 models. Do not attribute old/new differences to grading."
+  },
+  "label_processing": {
+    "base": "Legacy H40-valid/listing-qualified base; each target keeps its own finite mask. Do not force an all-H intersection.",
+    "sum": "Float64 sum of 20 raw float32 cumulative returns, require every component finite; CSRankNorm (average daily pct rank-.5)*3.46 after target mask, before training-date selection.",
+    "continuous": "CSRankNorm without grading",
+    "quantile10": "Exact rational midpoint ranks; right-closed boundaries j/10; preserve ties; apply fixed v5 affine and no reranking",
+    "affine": {
+      "scale": 0.34774330479829896,
+      "offset": -1.564601411089059,
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705
+    }
+  },
+  "comparison_rule": {
+    "H_ranking": "Among H7/H15/H20, list all maximizers separately in each D/F/T for net_ann and Sharpe, before and after q10. Historical seven-H conclusions are context, not a new seven-H sweep.",
+    "universal": "For each H compute q10 minus same-source continuous. T deterioration requires all three net_ann differences < -1e-12; D improvement all three >1e-12. Report counts, every difference, Sharpe separately, and per-seed/year consistency. No claim beyond tested three H.",
+    "path_sum": "Compare sum20continuous vs original H20continuous, sum20q10 vs original H20q10, and within sum20 q10 vs continuous; separate returns/Sharpe/RankIC.",
+    "mechanism": "Train-only relation between path-sum rank and realized path volatility conditional on daily terminal-return deciles; illustrative equal-terminal paths to show no guaranteed lower-volatility preference. Descriptive, not a selection criterion.",
+    "limitations": "Historical selection window; F only136days/seven2024months; no independent OOS and no automatic promotion."
+  },
+  "budget": {
+    "nominal_new_fits": 20,
+    "max_model_fits": 22,
+    "max_wall_hours": 10,
+    "concurrency": 1,
+    "closeout_reserve_seconds": 2700,
+    "estimated_total_hours": [
+      4,
+      5
+    ]
+  },
+  "prior_cumulative_model_fits": 176,
+  "run_priority": [
+    "h7q10",
+    "h15q10",
+    "sum20continuous",
+    "sum20q10"
+  ],
+  "representative": "sum20q10",
+  "entry_policy": "One model study entry; four internal candidates plus reused controls. Native parent lifecycle and actual fit ledger; supplementary candidate/report ledger maintains four distinct identities and scientific results. Representative sum20q10 predeclared, not selected winner.",
+  "temporary_directory": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b",
+  "implementation_steps": [
+    "Verify control models/predictions/input hashes and provider version.",
+    "Materialize labels with finite-mask/quantile/formula tests; no outcome exposure.",
+    "Fit four fixed groups, five seeds each, sequential; capture every ES round/ties.",
+    "Formal annual DK_I inference, exact control bridge; canonical Top3H5 all/year/style and H5 RankIC.",
+    "Register every completed/failed candidate through one parent with individual receipts, rebuild reports before next group.",
+    "Review input/scientific claims, cleanup exact task-owned temporary data, official platform dry-run, native close."
+  ]
+}

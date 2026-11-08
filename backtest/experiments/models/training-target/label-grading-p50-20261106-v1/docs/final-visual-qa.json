@@ -1,0 +1,28 @@
+{
+  "at": 1794000105.9101288,
+  "detail": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+    "sha256": "b03e0b4328ef8cd326fd5e9949f45e4942736df84fcd5a35cb0fff28c7b962c1",
+    "size": 22997
+  },
+  "dom_checks": {
+    "local_links": 12,
+    "missing_links": [],
+    "each_figure_embedded_once": true,
+    "scope": "DOM and links checked; separate visual QA must record actual rendering scope."
+  },
+  "figures": [
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/label-grading.png",
+      "sha256": "43dfc46f88cd91d74b6afe695df6995fda838805d77f8c8df4c6b3b62e7da7cd",
+      "size": 75712
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/label-sensitivity.png",
+      "sha256": "b6cfcdee2e8919ebaa9e88ed29aaf8dac3c73a40454fd99f99b868bdcb7da347",
+      "size": 62757
+    }
+  ],
+  "figure_review": "Both final PNGs visually inspected: all5 primary rows and4 paired groups, axes, values, legends and source/window captions are legible, with no clipping or overlap.",
+  "scope": "Actual scientific figures viewed; HTML parsed and local links verified. No claim of a full interactive browser rendering of HTML."
+}

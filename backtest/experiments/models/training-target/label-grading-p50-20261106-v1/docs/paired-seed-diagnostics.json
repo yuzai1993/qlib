@@ -1,0 +1,583 @@
+{
+  "status": "complete",
+  "expected_pairs": 15,
+  "missing_pairs": [],
+  "incomplete_reasons": [],
+  "width5_exclusion": "No frozen old raw-return magnitudes; no valid paired old-label input.",
+  "purpose": "Within-seed old/new label sensitivity; no new fit or selection.",
+  "interpretation": "A tree hash difference includes leaf values and does not prove a split-structure difference. Round comparisons cover only the common observed prefix. Formal head sets use canonical inference and filters, not the early-stop input shortcut.",
+  "pairs": [
+    {
+      "variant": "quantile5",
+      "seed": 42,
+      "common_observed_rounds": 87,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 48,
+      "selected_rounds": {
+        "new": 67,
+        "old": 37
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 0.5939226519337016,
+          "days": 1448,
+          "identical_days": 212
+        },
+        "5": {
+          "mean": 0.6273480662983425,
+          "days": 1448,
+          "identical_days": 68
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s42-a1.json",
+          "sha256": "a906269ccceb302b3c7e53f944a69765a77e8e441b8881e110254e8f69fca9a7",
+          "size": 41810
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s42-a1.json",
+          "sha256": "8d2895bb0da0e569ea79df10132d38063f8b61bab653ce9e8b7cc8b7fa8abbea",
+          "size": 31501
+        }
+      }
+    },
+    {
+      "variant": "quantile5",
+      "seed": 1000,
+      "common_observed_rounds": 150,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 33,
+      "selected_rounds": {
+        "new": 100,
+        "old": 100
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 0.9998618784530386,
+          "days": 1448,
+          "identical_days": 1447
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s1000-a1.json",
+          "sha256": "27e20d7b96aac1a633e0be3d07ae8a74ff28d99da98b508d9ab75c9169d0cb33",
+          "size": 53094
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s1000-a1.json",
+          "sha256": "3a9d61e6ddb3ea1b2da3e22900af6d23531605453a4f89c9c96903279a6aedf6",
+          "size": 53095
+        }
+      }
+    },
+    {
+      "variant": "quantile5",
+      "seed": 2000,
+      "common_observed_rounds": 140,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 18,
+      "selected_rounds": {
+        "new": 90,
+        "old": 90
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s2000-a1.json",
+          "sha256": "d3cc763be3fd17d911ca41d175bc5a82cf8cb6a8a93bcd05da3d3be2d2b1c2d0",
+          "size": 49567
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s2000-a1.json",
+          "sha256": "84ff638cae99b03f40e9f40f397530caa3f34b7c2c793e30ba3bc4d85303d31e",
+          "size": 49565
+        }
+      }
+    },
+    {
+      "variant": "quantile5",
+      "seed": 3000,
+      "common_observed_rounds": 124,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 9,
+      "selected_rounds": {
+        "new": 74,
+        "old": 94
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 0.6045119705340699,
+          "days": 1448,
+          "identical_days": 230
+        },
+        "5": {
+          "mean": 0.6279005524861879,
+          "days": 1448,
+          "identical_days": 66
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s3000-a1.json",
+          "sha256": "103a933c9dbef4ca838356b00bedbdd1a1b9ddfb0166ad70726ad4ff375342b9",
+          "size": 44174
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s3000-a1.json",
+          "sha256": "18f5817e2a8959db418af660b3543eb1a42b0d6422566896feda39c225aaa5ba",
+          "size": 51022
+        }
+      }
+    },
+    {
+      "variant": "quantile5",
+      "seed": 4000,
+      "common_observed_rounds": 133,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 26,
+      "selected_rounds": {
+        "new": 83,
+        "old": 83
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s4000-a1.json",
+          "sha256": "df93dde3b10debf9d732a5cfc4dc3bed2932d312cac094d174eb42fba6c83b8c",
+          "size": 47185
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s4000-a1.json",
+          "sha256": "90c26b6f2aa1f98ba08ffeceace62f1d78c638ed6c75ab01160e05a0db9289fe",
+          "size": 47176
+        }
+      }
+    },
+    {
+      "variant": "quantile10",
+      "seed": 42,
+      "common_observed_rounds": 107,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 19,
+      "selected_rounds": {
+        "new": 57,
+        "old": 57
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s42-a1.json",
+          "sha256": "dccbfd00714d282b311e20467aff08ae86fbabd56796c22ed44b37b83562aaea",
+          "size": 38304
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+          "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+          "size": 38305
+        }
+      }
+    },
+    {
+      "variant": "quantile10",
+      "seed": 1000,
+      "common_observed_rounds": 91,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 56,
+      "selected_rounds": {
+        "new": 41,
+        "old": 75
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 0.595073664825046,
+          "days": 1448,
+          "identical_days": 226
+        },
+        "5": {
+          "mean": 0.6306629834254144,
+          "days": 1448,
+          "identical_days": 85
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s1000-a1.json",
+          "sha256": "4d9ef07674a839ac2cde76b1678af69bac4c6521b205644e46f95bbb5319f9dc",
+          "size": 32820
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+          "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+          "size": 44465
+        }
+      }
+    },
+    {
+      "variant": "quantile10",
+      "seed": 2000,
+      "common_observed_rounds": 123,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 5,
+      "selected_rounds": {
+        "new": 73,
+        "old": 118
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 0.4003222836095764,
+          "days": 1448,
+          "identical_days": 54
+        },
+        "5": {
+          "mean": 0.43839779005524865,
+          "days": 1448,
+          "identical_days": 7
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s2000-a1.json",
+          "sha256": "1b3c94977c51cb6e87f0f9b67956c0560b66ba425cd4f366d19a7440cf1c7fc8",
+          "size": 43851
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+          "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+          "size": 59236
+        }
+      }
+    },
+    {
+      "variant": "quantile10",
+      "seed": 3000,
+      "common_observed_rounds": 110,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 47,
+      "selected_rounds": {
+        "new": 60,
+        "old": 60
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s3000-a1.json",
+          "sha256": "c4bd0365baa39b09778637fb8825a3ebbda48d111a4f7d4aa277f3b6fa3a6041",
+          "size": 39342
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+          "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+          "size": 39348
+        }
+      }
+    },
+    {
+      "variant": "quantile10",
+      "seed": 4000,
+      "common_observed_rounds": 145,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 33,
+      "selected_rounds": {
+        "new": 95,
+        "old": 95
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s4000-a1.json",
+          "sha256": "fae02b8d61b16039007be38cbf6d3a3a94c436d866498b01c9c65526eb644aba",
+          "size": 51352
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+          "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+          "size": 51355
+        }
+      }
+    },
+    {
+      "variant": "tails5",
+      "seed": 42,
+      "common_observed_rounds": 98,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 9,
+      "selected_rounds": {
+        "new": 65,
+        "old": 48
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 0.6429558011049724,
+          "days": 1448,
+          "identical_days": 301
+        },
+        "5": {
+          "mean": 0.6795580110497238,
+          "days": 1448,
+          "identical_days": 117
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s42-a1.json",
+          "sha256": "97520a0f135e51df673fcd444df978a947b502531359d46d9ddbdfc4ee4694bd",
+          "size": 41044
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s42-a1.json",
+          "sha256": "23d39cd11b42b6b6701d57e75778e9a00697920541b81bdbca809a38df88eb9f",
+          "size": 35173
+        }
+      }
+    },
+    {
+      "variant": "tails5",
+      "seed": 1000,
+      "common_observed_rounds": 53,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 40,
+      "selected_rounds": {
+        "new": 3,
+        "old": 3
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s1000-a1.json",
+          "sha256": "49fc7e4f6e185d9399b0b663d07a389edd0bde406d89387fe9a1010fcd2ae26a",
+          "size": 19881
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s1000-a1.json",
+          "sha256": "e61dd10573436757b8c4dd80d821539a0dab276c8451f78a96d8beaffb45faab",
+          "size": 19878
+        }
+      }
+    },
+    {
+      "variant": "tails5",
+      "seed": 2000,
+      "common_observed_rounds": 95,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 18,
+      "selected_rounds": {
+        "new": 45,
+        "old": 45
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s2000-a1.json",
+          "sha256": "65568e77ebff3f1e620dfc7b40a7fee9b353987ed8548490c04fc2ae64728b56",
+          "size": 34215
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s2000-a1.json",
+          "sha256": "d0ae071167d4005cb33f9d74a9daeb02feb6f8401fe41d613ec6c62941a62aa2",
+          "size": 34222
+        }
+      }
+    },
+    {
+      "variant": "tails5",
+      "seed": 3000,
+      "common_observed_rounds": 124,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 17,
+      "selected_rounds": {
+        "new": 74,
+        "old": 93
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 0.7290515653775322,
+          "days": 1448,
+          "identical_days": 454
+        },
+        "5": {
+          "mean": 0.7575966850828729,
+          "days": 1448,
+          "identical_days": 251
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s3000-a1.json",
+          "sha256": "07afbf89e8dbb5f3d5e261934ad43f264fe5832695f8f3d1aaeb7ce42fa2075b",
+          "size": 44118
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s3000-a1.json",
+          "sha256": "7bf74c926e89be5f407b06d1e3da90af83445003187960de1e9454cf34a3eb7d",
+          "size": 50671
+        }
+      }
+    },
+    {
+      "variant": "tails5",
+      "seed": 4000,
+      "common_observed_rounds": 127,
+      "first_tree_serialization_difference": 1,
+      "first_early_stopping_metric_difference": 32,
+      "selected_rounds": {
+        "new": 77,
+        "old": 77
+      },
+      "formal_head_overlap": {
+        "3": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        },
+        "5": {
+          "mean": 1.0,
+          "days": 1448,
+          "identical_days": 1448
+        }
+      },
+      "evidence": {
+        "new": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s4000-a1.json",
+          "sha256": "89e0d6893cd8f24ebb41699756f16832cc4f2bc51a63742c2d1389ec61bfdac1",
+          "size": 45125
+        },
+        "old": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s4000-a1.json",
+          "sha256": "ff68529a38b04986aa09c8c7261452a62d4f294fb91e1085644ecb2c68397bce",
+          "size": 45119
+        }
+      }
+    }
+  ],
+  "head_sources": [
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/control-new-formal-heads.json",
+      "sha256": "7050c0d2cff3fbec193c543a39d9296687dd5ff98d944ffaa83ea0bbda7bffc4",
+      "size": 2085900
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/control-old-formal-heads.json",
+      "sha256": "9e1e38406ca4b106e0bb94073d7d867d990712d67a643f617429e0d1d9c58af2",
+      "size": 2085901
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-new-formal-heads.json",
+      "sha256": "fefdd942bd1e885d7b6eea03fd6e785f72e588ce24ffeb5b02e5165243a62a66",
+      "size": 2085898
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old-formal-heads.json",
+      "sha256": "fba7362dae134a6796afdc614058d128168e43537ebdec2a396ad5d1420050d8",
+      "size": 2085899
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile5-new-formal-heads.json",
+      "sha256": "f589334d8510e8cf65199f5e11b7a17bcfa8f1ba6e0b69916278f87bf777c06c",
+      "size": 2085901
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile5-old-formal-heads.json",
+      "sha256": "6fada4bfc95166772f65f08a23352835f9b78280f657064a99650cf7e1d639e4",
+      "size": 2085899
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/tails5-new-formal-heads.json",
+      "sha256": "9ab1a2b172e5c8b6ce8a7fe8ef12a2f9974bc8ccb38a0296cce72f5fb0bad966",
+      "size": 2085902
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/tails5-old-formal-heads.json",
+      "sha256": "207336c2c0a75c424a29bfcd7750ff10d9408476e466ce5518a4b497c65b05c2",
+      "size": 2085901
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/width5-new-formal-heads.json",
+      "sha256": "04ce8fa69d1a9434046a0f6bedc9376612f0015e3e69d003a5f0c8cbc2911406",
+      "size": 2085900
+    }
+  ]
+}

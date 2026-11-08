@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/pin_inputs.py",
+    "sha256": "59020a108ac604deb28967620c6d63adc518e6aa8d300ab5a5ec940c7ad9b000",
+    "size": 1181
+  },
+  "source_text": "from common import *\nfrom backtest.scripts.prepare.prepare_regime_train_chunks import cache_lock, _atomic_json\n\nif __name__=='__main__':\n    save_source(__file__)\n    root=FEATURE.parents[2]\n    paths=[FEATURE,OLD_LABEL,VALID]\n    receipt=root/'.references/quantile-n-p50-20261107-v1.json'\n    with cache_lock(root):\n        journal=root/'.cleanup-journal.json'\n        if journal.exists():\n            pending={r['manifest'] for r in read(journal)['targets']}\n            assert not pending.intersection(map(str,paths))\n        assert all(p.is_file() and p.is_relative_to(root) for p in paths)\n        value={'owner_experiment':EID,'owner_archive':str(BASE.relative_to(ROOT)),'reference_kind':'retained_research_input','manifests':list(map(str,paths)),'retention_reason':'Frozen shared inputs for equal-count n extension and matched H20 control','release_condition':'Release only after owner explicitly retired and all dependencies checked.'}\n        if receipt.exists():assert read(receipt)==value\n        else:_atomic_json(receipt,value)\n    write(BASE/'docs/cache-reference.json',fingerprint(receipt))\n    print('Persistent shared-input reference saved; not a process lease.')\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

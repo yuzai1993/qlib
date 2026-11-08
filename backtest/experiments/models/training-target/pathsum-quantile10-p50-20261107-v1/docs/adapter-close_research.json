@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/close_research.py",
+    "sha256": "00f94b156c13e8dfb417ca2e4c75268461d5cd4a1a2bc659b76a10819daf9452",
+    "size": 1520
+  },
+  "source_text": "from common import *\n\nsave_source(__file__)\nprogress=read(PROGRESS)\nassert progress['pipeline_stage']=='final_report_ready_for_native_lifecycle'\nassert len(progress['jobs'])==20 and all(j['status']=='succeeded' for j in progress['jobs'])\nassert all(v['status']=='completed' for v in progress['scientific_candidates'].values())\nassert read(BASE/'docs/final-numerical-verification.json')['status']=='complete'\ncheck(read(BASE/'docs/cache-reference.json'))\nc=read(BASE/'docs/research-conclusion.json')\nevidence=[BASE/'metrics'/f'{REPRESENTATIVE}-new.json']+[BASE/'docs'/n for n in ['final-numerical-verification.json','research-conclusion.json','final-report-receipt.json','review-final-numerical.json','early-stopping-replay.json']]\nstate=harness('check')\nassert state['variants'][EID]['attempts'][-1]['outcome']=='running','Inspect existing lifecycle; do not duplicate terminal events.'\nfor event in [\n {'type':'result','exp_id':EID,'outcome':'succeeded','evaluation':str(evidence[0].relative_to(ROOT)),'evidence':[str(p.relative_to(ROOT)) for p in evidence]},\n {'type':'registered','exp_id':EID},\n {'type':'reported','exp_id':EID},\n {'type':'reflection','round':1,'observations':'；'.join(c['observations']),'interpretation':c['conclusion'],'new_evidence':True,'next_hypothesis':''},\n {'type':'stop','reason':'hypotheses_exhausted'}\n]:\n s=harness('event',event);print(event['type'],s['status'],s['revision'],flush=True)\nprint('Scientific lifecycle stopped; exact temporary cleanup and native close remain.',flush=True)\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

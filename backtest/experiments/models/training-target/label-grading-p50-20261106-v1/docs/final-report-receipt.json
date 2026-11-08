@@ -1,0 +1,48 @@
+{
+  "detail": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+    "sha256": "b03e0b4328ef8cd326fd5e9949f45e4942736df84fcd5a35cb0fff28c7b962c1",
+    "size": 22997
+  },
+  "total_report": {
+    "path": "backtest/experiments/reports/phase_m_v1_report.html",
+    "sha256": "9d520fca3acf46fd130d5f01aa38c0bc93033c8ac0b094f01f107c326335b24c",
+    "size": 15102
+  },
+  "registry": {
+    "path": "backtest/experiments/registry.jsonl",
+    "sha256": "19864f7522fd31f34502593b4be42c043ab786f7001a7e0269991048b3621060",
+    "size": 26113
+  },
+  "metadata": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metadata.json",
+    "sha256": "df8ad041366dfda484f4d95cbf99a26bca9ea1f27c58145d6603f784f4be1590",
+    "size": 34625
+  },
+  "summary": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/study-summary.json",
+    "sha256": "5baae0e32026b8ed18919022a6f4c6a534c61ef32508bbe261d15ca784240b28",
+    "size": 29540
+  },
+  "conclusion": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/research-conclusion.json",
+    "sha256": "345124dbfe50c3c402fd2115c32948b34c9959b7735d79dbbf44f801a6a22302",
+    "size": 4137
+  },
+  "numerical_verification": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/final-numerical-verification.json",
+    "sha256": "4d05650194d2abd1211d3c897ac6d66d7f273c80147adbce227ab730a35643d1",
+    "size": 18358
+  },
+  "paired_diagnostics": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/paired-seed-diagnostics.json",
+    "sha256": "1448d57519bf64e40399bc150099e7073c5f803d6277d1cd1f4755368d1c554c",
+    "size": 19219
+  },
+  "html_checks": {
+    "local_links": 12,
+    "missing_links": [],
+    "each_figure_embedded_once": true,
+    "scope": "DOM and links checked; separate visual QA must record actual rendering scope."
+  }
+}

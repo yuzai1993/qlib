@@ -1,0 +1,196 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><title>路径收益和与10档期限实验</title><style>body{font-family:-apple-system,"PingFang SC",sans-serif;background:#f6f7f9;color:#172b3a;margin:0}main{max-width:1300px;margin:auto;padding:28px}h1{font-size:25px}h2{font-size:19px;margin-top:28px}p{line-height:1.7}.note{color:#5e6b79;font-size:13px}.scroll{overflow:auto}table{border-collapse:collapse;background:white;width:100%;font-size:13px}td,th{border:1px solid #dce3e9;padding:8px;text-align:right}th{background:#edf2f7}td:first-child,th:first-child{text-align:left}a{color:#125dac}</style><main><h1>路径收益和与10档期限实验</h1>
+<p>状态：completed；四组中 4 组已评估，实际 20 次训练启动，成功 20 次；前序累计176次。平台代表为事先指定的求和20/10档，不代表事后最优方案。</p>
+<p>统一Alpha158+range、M0样本日期/权重、五种子[42,1000,2000,3000,4000]、Top5×H5早停、patience50和200轮上限。官方指标为五种子逐日z-score均值信号的Top3×H5；2020-08-03～2026-07-31历史选型窗，H5信号截止2026-07-23（1448日），不是独立样本外。</p>
+<h2>研究结论</h2>
+<p class="note">报告生成：2026-11-08T02:01:24.139040+08:00；4/4组评估完成，未完成候选：无。正式收尾状态见文末状态链接。</p>
+<p><strong>原始H1～H20累计收益求和的连续版和10档版，均未改善相应同源H20标签的全窗净年化与夏普；分档也未修复求和标签的T风格退化。H7/H15/H20分档后仍分别由H7、H15、H20取得D、F、T最高净年化，但不支持T普遍变差、D普遍变好。</strong></p>
+<ul>
+<li>连续求和：净年化27.98%（同源H20连续29.49%），夏普0.387（0.494），波动72.24%（59.72%）；10档求和：净年化24.61%（同源H20十档32.24%），夏普0.348（0.552），波动70.70%（58.37%）。</li>
+<li>求和标签再做10档，相对求和连续版净年化降低3.38个百分点、夏普降低0.039；波动下降1.54个百分点，但仍高于原H20十档。</li>
+<li>相对同源原H20，求和连续/十档的T净年化分别下降47.75/46.40个百分点；D分别变化+7.31/−1.78个百分点，F分别+35.69/+35.01个百分点。F只有136日，不能推广为跨年规律。</li>
+<li>H7/H15/H20十档减连续的T净年化差依次为+9.91/+2.19/−0.56个百分点，D为−6.78/−8.75/+4.62个百分点；只有1/3个期限T下降、1/3个期限D提高。</li>
+<li>仅在H7/H15/H20范围内，连续与十档的净年化最大值均为D/H7、F/H15、T/H20。夏普最大值D/H7与T/H20不变，F由连续H7变成十档H15；这不覆盖原七H研究中的H30等其他期限。</li>
+<li>两种求和标签均保留原H20的5,448,963条样本，中间缺项跳过、不补价、不按项数缩放。条件于每日终点收益十分位的训练内排名相关为+0.1199，未体现低波动优先；公式本身也不保证低波动样本排名更高。</li>
+<li>H15十档、求和十档的全窗合成净年化均低于各自全部单种子。求和十档T合成净年化−3.32%，五个单种子却均为正（2.19%～26.64%）；实际合成分数、Top3选股和收益已独立复算，结果不是收益取平均。</li>
+<li>20次真实拟合全部成功，0次技术重试，前序累计176次、本轮后196次；本轮新增账户回测0次。当前模型v5、回测s5和生产配置未变。</li>
+</ul>
+<figure><img style="width:100%;height:auto" src="horizon-style.png" alt="H7 H15 H20连续与10档分风格净年化对比"><figcaption>同源三期限对照。各风格使用各自纵轴；F为短窗口算术年化。</figcaption></figure>
+<figure><img style="width:100%;height:auto" src="path-sum-comparison.png" alt="原H20与求和标签的净年化波动夏普对比"><figcaption>同源标签及完全相同H20有序样本；五种子官方合成信号。</figcaption></figure>
+<h2>标签定义与样本</h2>
+<p>新H20标签先计算 Σ(k=1…20)[Close(t+k+1)/Close(t+1)−1]，再按日截面CSRankNorm；连续版不分档，10档版使用等样本中秩边界和当前v5固定仿射编码，分档后不再次排名。按用户补充要求，保留原H20有效样本，缺失中间项直接跳过，不补价、不按有效项数归一化；原始严格完整路径准备已停止且未启动任何训练。</p>
+<p>H7/H15分档各自保留原有有效样本；H20正式v5使用旧标签来源，同源期限比较另用Nov3 H20连续与10档对照，不能把新旧来源差异当作分档效果。求和标签倾向较早/持续上涨，不保证低波动样本必排在前面。</p>
+<p class="note">训练内机制诊断：有效求和项数分布 {&quot;1&quot;: 108, &quot;2&quot;: 268, &quot;3&quot;: 349, &quot;4&quot;: 541, &quot;5&quot;: 1054, &quot;6&quot;: 1009, &quot;7&quot;: 1207, &quot;8&quot;: 1163, &quot;9&quot;: 1246, &quot;10&quot;: 5973, &quot;11&quot;: 2439, &quot;12&quot;: 3609, &quot;13&quot;: 3718, &quot;14&quot;: 7887, &quot;15&quot;: 17638, &quot;16&quot;: 10577, &quot;17&quot;: 14396, &quot;18&quot;: 35255, &quot;19&quot;: 421294, &quot;20&quot;: 4919232}；在每日H20终点收益十分位内，求和排名与可观察日收益波动排名的条件相关为 0.1199。该诊断不参与选型；缺失相邻价格的日收益不进入波动统计。</p>
+<h2>全窗官方主格</h2><div class="scroll"><table><tr><th>方案</th><th>扣费净年化</th><th>扣费波动</th><th>扣费夏普</th><th>未扣费年化</th><th>日换手</th><th>全局H5 RankIC</th></tr>
+<tr><td>当前baseline v5 · H20旧标签10档</td><td>32.05%</td><td>56.66%</td><td>0.5656</td><td>35.99%</td><td>18.01%</td><td>0.0991</td></tr>
+<tr><td>H7连续标签 · 同源对照</td><td>32.26%</td><td>66.86%</td><td>0.4825</td><td>36.28%</td><td>18.36%</td><td>0.0937</td></tr>
+<tr><td>H7 10档</td><td>28.46%</td><td>64.24%</td><td>0.4431</td><td>32.49%</td><td>18.38%</td><td>0.0933</td></tr>
+<tr><td>H15连续标签 · 同源对照</td><td>27.88%</td><td>66.64%</td><td>0.4184</td><td>31.79%</td><td>17.85%</td><td>0.0989</td></tr>
+<tr><td>H15 10档</td><td>21.66%</td><td>64.02%</td><td>0.3384</td><td>25.64%</td><td>18.18%</td><td>0.0999</td></tr>
+<tr><td>H20连续标签 · 同源对照</td><td>29.49%</td><td>59.72%</td><td>0.4938</td><td>33.42%</td><td>17.95%</td><td>0.0986</td></tr>
+<tr><td>H20 10档 · 同源对照</td><td>32.24%</td><td>58.37%</td><td>0.5523</td><td>36.16%</td><td>17.94%</td><td>0.0987</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>27.98%</td><td>72.24%</td><td>0.3874</td><td>31.78%</td><td>17.32%</td><td>0.0941</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>24.61%</td><td>70.70%</td><td>0.3480</td><td>28.54%</td><td>17.94%</td><td>0.0962</td></tr>
+</table></div>
+<h2>10档减连续：同源逐期限变化</h2><div class="scroll"><table><tr><th>H</th><th>风格</th><th>净年化差（百分点）</th><th>夏普差</th><th>波动差（百分点）</th></tr>
+<tr><td>7</td><td>D</td><td>-6.78</td><td>-0.0897</td><td>-3.76</td></tr>
+<tr><td>7</td><td>F</td><td>-12.07</td><td>-0.0658</td><td>-3.68</td></tr>
+<tr><td>7</td><td>T</td><td>+9.91</td><td>+0.1863</td><td>+2.30</td></tr>
+<tr><td>15</td><td>D</td><td>-8.75</td><td>-0.1509</td><td>-1.18</td></tr>
+<tr><td>15</td><td>F</td><td>-6.12</td><td>+0.0698</td><td>-12.08</td></tr>
+<tr><td>15</td><td>T</td><td>+2.19</td><td>+0.0381</td><td>+0.94</td></tr>
+<tr><td>20</td><td>D</td><td>+4.62</td><td>+0.0888</td><td>-0.14</td></tr>
+<tr><td>20</td><td>F</td><td>-3.90</td><td>+0.0480</td><td>-7.65</td></tr>
+<tr><td>20</td><td>T</td><td>-0.56</td><td>-0.0073</td><td>-0.24</td></tr>
+</table></div>
+<h2>逐种子同向性 · 10档相对连续</h2><div class="scroll"><table><tr><th>H</th><th>风格</th><th>收益改善种子/5</th><th>收益下降种子/5</th><th>夏普改善种子/5</th><th>夏普下降种子/5</th></tr>
+<tr><td>7</td><td>D</td><td>2</td><td>3</td><td>2</td><td>3</td></tr>
+<tr><td>7</td><td>F</td><td>4</td><td>1</td><td>3</td><td>2</td></tr>
+<tr><td>7</td><td>T</td><td>3</td><td>2</td><td>3</td><td>2</td></tr>
+<tr><td>15</td><td>D</td><td>0</td><td>5</td><td>0</td><td>5</td></tr>
+<tr><td>15</td><td>F</td><td>3</td><td>2</td><td>3</td><td>2</td></tr>
+<tr><td>15</td><td>T</td><td>3</td><td>2</td><td>3</td><td>2</td></tr>
+<tr><td>20</td><td>D</td><td>3</td><td>2</td><td>3</td><td>2</td></tr>
+<tr><td>20</td><td>F</td><td>0</td><td>5</td><td>2</td><td>3</td></tr>
+<tr><td>20</td><td>T</td><td>1</td><td>4</td><td>1</td><td>4</td></tr>
+</table></div>
+<h2>预先定义的判断</h2><p>三个已测期限T收益都下降：False；三个已测期限D收益都上升：False。只覆盖H7/H15/H20，收益与夏普分别判断，不以均值代替“全部”。</p>
+<h2>各风格收益/夏普最大期限（列出并列）</h2><div class="scroll"><table><tr><th>编码</th><th>风格</th><th>净年化最高H</th><th>夏普最高H</th></tr>
+<tr><td>continuous</td><td>D</td><td>[7]</td><td>[7]</td></tr>
+<tr><td>continuous</td><td>F</td><td>[15]</td><td>[7]</td></tr>
+<tr><td>continuous</td><td>T</td><td>[20]</td><td>[20]</td></tr>
+<tr><td>q10</td><td>D</td><td>[7]</td><td>[7]</td></tr>
+<tr><td>q10</td><td>F</td><td>[15]</td><td>[15]</td></tr>
+<tr><td>q10</td><td>T</td><td>[20]</td><td>[20]</td></tr>
+</table></div>
+<h2>求和标签的配对变化</h2><div class="scroll"><table><tr><th>比较</th><th>净年化差（百分点）</th><th>夏普差</th><th>波动差（百分点）</th></tr>
+<tr><td>sum20continuous minus h20continuous</td><td>-1.51</td><td>-0.1065</td><td>+12.52</td></tr>
+<tr><td>sum20q10 minus h20q10</td><td>-7.63</td><td>-0.2042</td><td>+12.33</td></tr>
+<tr><td>sum20q10 minus sum20continuous</td><td>-3.38</td><td>-0.0393</td><td>-1.54</td></tr>
+</table></div>
+<h2>分风格 · 扣费净年化</h2><div class="scroll"><table><tr><th>方案</th><th>D</th><th>F</th><th>T</th></tr>
+<tr><td>当前baseline v5 · H20旧标签10档</td><td>20.53%</td><td>115.10%</td><td>33.17%</td></tr>
+<tr><td>H7连续标签 · 同源对照</td><td>26.63%</td><td>149.54%</td><td>-1.75%</td></tr>
+<tr><td>H7 10档</td><td>19.86%</td><td>137.47%</td><td>8.17%</td></tr>
+<tr><td>H15连续标签 · 同源对照</td><td>13.01%</td><td>155.95%</td><td>19.95%</td></tr>
+<tr><td>H15 10档</td><td>4.26%</td><td>149.83%</td><td>22.13%</td></tr>
+<tr><td>H20连续标签 · 同源对照</td><td>11.81%</td><td>129.38%</td><td>43.64%</td></tr>
+<tr><td>H20 10档 · 同源对照</td><td>16.44%</td><td>125.49%</td><td>43.08%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>19.12%</td><td>165.08%</td><td>-4.11%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>14.66%</td><td>160.50%</td><td>-3.32%</td></tr>
+</table></div>
+<h2>分风格 · 扣费波动</h2><div class="scroll"><table><tr><th>方案</th><th>D</th><th>F</th><th>T</th></tr>
+<tr><td>当前baseline v5 · H20旧标签10档</td><td>52.23%</td><td>97.92%</td><td>41.57%</td></tr>
+<tr><td>H7连续标签 · 同源对照</td><td>61.06%</td><td>113.27%</td><td>51.30%</td></tr>
+<tr><td>H7 10档</td><td>57.30%</td><td>109.59%</td><td>53.61%</td></tr>
+<tr><td>H15连续标签 · 同源对照</td><td>57.39%</td><td>130.77%</td><td>45.58%</td></tr>
+<tr><td>H15 10档</td><td>56.21%</td><td>118.69%</td><td>46.53%</td></tr>
+<tr><td>H20连续标签 · 同源对照</td><td>52.59%</td><td>111.45%</td><td>44.06%</td></tr>
+<tr><td>H20 10档 · 同源对照</td><td>52.45%</td><td>103.80%</td><td>43.82%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>64.68%</td><td>124.41%</td><td>56.14%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>61.23%</td><td>134.55%</td><td>50.73%</td></tr>
+</table></div>
+<h2>分风格 · 扣费夏普</h2><div class="scroll"><table><tr><th>方案</th><th>D</th><th>F</th><th>T</th></tr>
+<tr><td>当前baseline v5 · H20旧标签10档</td><td>0.3932</td><td>1.1754</td><td>0.7978</td></tr>
+<tr><td>H7连续标签 · 同源对照</td><td>0.4362</td><td>1.3203</td><td>-0.0340</td></tr>
+<tr><td>H7 10档</td><td>0.3465</td><td>1.2544</td><td>0.1523</td></tr>
+<tr><td>H15连续标签 · 同源对照</td><td>0.2267</td><td>1.1925</td><td>0.4376</td></tr>
+<tr><td>H15 10档</td><td>0.0758</td><td>1.2623</td><td>0.4757</td></tr>
+<tr><td>H20连续标签 · 同源对照</td><td>0.2246</td><td>1.1609</td><td>0.9905</td></tr>
+<tr><td>H20 10档 · 同源对照</td><td>0.3134</td><td>1.2089</td><td>0.9832</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>0.2956</td><td>1.3269</td><td>-0.0731</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>0.2394</td><td>1.1929</td><td>-0.0655</td></tr>
+</table></div>
+<h2>分年 · 扣费净年化</h2><div class="scroll"><table><tr><th>方案</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th></tr>
+<tr><td>当前baseline v5 · H20旧标签10档</td><td>29.69%</td><td>49.04%</td><td>23.77%</td><td>20.35%</td><td>32.46%</td><td>46.39%</td><td>12.28%</td></tr>
+<tr><td>H7连续标签 · 同源对照</td><td>4.88%</td><td>70.73%</td><td>33.38%</td><td>6.79%</td><td>46.64%</td><td>62.46%</td><td>-53.88%</td></tr>
+<tr><td>H7 10档</td><td>-18.76%</td><td>67.87%</td><td>20.71%</td><td>12.25%</td><td>48.49%</td><td>51.42%</td><td>-41.74%</td></tr>
+<tr><td>H15连续标签 · 同源对照</td><td>-10.81%</td><td>44.93%</td><td>28.96%</td><td>13.49%</td><td>42.55%</td><td>56.40%</td><td>-27.85%</td></tr>
+<tr><td>H15 10档</td><td>8.42%</td><td>46.16%</td><td>7.80%</td><td>12.13%</td><td>43.44%</td><td>31.09%</td><td>-27.14%</td></tr>
+<tr><td>H20连续标签 · 同源对照</td><td>9.07%</td><td>40.29%</td><td>9.16%</td><td>23.53%</td><td>40.96%</td><td>47.67%</td><td>19.32%</td></tr>
+<tr><td>H20 10档 · 同源对照</td><td>21.79%</td><td>46.90%</td><td>16.90%</td><td>21.64%</td><td>37.63%</td><td>53.38%</td><td>12.27%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>-8.40%</td><td>39.45%</td><td>24.53%</td><td>9.59%</td><td>60.98%</td><td>73.95%</td><td>-69.05%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>-16.90%</td><td>35.79%</td><td>31.93%</td><td>22.17%</td><td>49.06%</td><td>52.48%</td><td>-67.97%</td></tr>
+</table></div>
+<h2>分年 · 扣费波动</h2><div class="scroll"><table><tr><th>方案</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th></tr>
+<tr><td>当前baseline v5 · H20旧标签10档</td><td>51.85%</td><td>52.61%</td><td>58.13%</td><td>37.22%</td><td>87.91%</td><td>37.93%</td><td>45.12%</td></tr>
+<tr><td>H7连续标签 · 同源对照</td><td>56.71%</td><td>57.23%</td><td>64.93%</td><td>41.31%</td><td>104.68%</td><td>48.08%</td><td>60.57%</td></tr>
+<tr><td>H7 10档</td><td>50.66%</td><td>52.27%</td><td>61.07%</td><td>42.03%</td><td>100.29%</td><td>48.42%</td><td>63.45%</td></tr>
+<tr><td>H15连续标签 · 同源对照</td><td>49.84%</td><td>52.85%</td><td>65.08%</td><td>43.91%</td><td>113.66%</td><td>41.94%</td><td>47.44%</td></tr>
+<tr><td>H15 10档</td><td>41.96%</td><td>49.79%</td><td>64.28%</td><td>43.85%</td><td>106.85%</td><td>43.63%</td><td>50.11%</td></tr>
+<tr><td>H20连续标签 · 同源对照</td><td>46.33%</td><td>51.12%</td><td>57.11%</td><td>41.09%</td><td>98.54%</td><td>38.62%</td><td>49.40%</td></tr>
+<tr><td>H20 10档 · 同源对照</td><td>52.16%</td><td>52.77%</td><td>59.64%</td><td>38.74%</td><td>91.90%</td><td>35.35%</td><td>49.59%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>55.47%</td><td>67.90%</td><td>70.77%</td><td>46.98%</td><td>110.91%</td><td>51.53%</td><td>60.82%</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>57.83%</td><td>58.47%</td><td>67.76%</td><td>43.41%</td><td>117.39%</td><td>46.65%</td><td>56.76%</td></tr>
+</table></div>
+<h2>分年 · 扣费夏普</h2><div class="scroll"><table><tr><th>方案</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th></tr>
+<tr><td>当前baseline v5 · H20旧标签10档</td><td>0.5727</td><td>0.9322</td><td>0.4088</td><td>0.5466</td><td>0.3692</td><td>1.2231</td><td>0.2721</td></tr>
+<tr><td>H7连续标签 · 同源对照</td><td>0.0861</td><td>1.2360</td><td>0.5140</td><td>0.1645</td><td>0.4455</td><td>1.2991</td><td>-0.8896</td></tr>
+<tr><td>H7 10档</td><td>-0.3704</td><td>1.2985</td><td>0.3391</td><td>0.2915</td><td>0.4835</td><td>1.0620</td><td>-0.6578</td></tr>
+<tr><td>H15连续标签 · 同源对照</td><td>-0.2169</td><td>0.8501</td><td>0.4451</td><td>0.3072</td><td>0.3744</td><td>1.3447</td><td>-0.5870</td></tr>
+<tr><td>H15 10档</td><td>0.2007</td><td>0.9272</td><td>0.1213</td><td>0.2766</td><td>0.4065</td><td>0.7126</td><td>-0.5416</td></tr>
+<tr><td>H20连续标签 · 同源对照</td><td>0.1959</td><td>0.7882</td><td>0.1605</td><td>0.5727</td><td>0.4157</td><td>1.2343</td><td>0.3912</td></tr>
+<tr><td>H20 10档 · 同源对照</td><td>0.4177</td><td>0.8888</td><td>0.2834</td><td>0.5586</td><td>0.4094</td><td>1.5101</td><td>0.2474</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>-0.1514</td><td>0.5810</td><td>0.3466</td><td>0.2041</td><td>0.5498</td><td>1.4351</td><td>-1.1353</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>-0.2923</td><td>0.6120</td><td>0.4712</td><td>0.5107</td><td>0.4179</td><td>1.1250</td><td>-1.1974</td></tr>
+</table></div>
+<h2>逐种子训练核验</h2><div class="scroll"><table><tr><th>方案</th><th>seed</th><th>最佳轮</th><th>观察轮</th><th>选中轮Top3/5同分日</th><th>训练秒</th><th>进程峰值GiB</th></tr>
+<tr><td>H7 10档</td><td>42</td><td>25</td><td>75</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>357</td><td>8.39</td></tr>
+<tr><td>H7 10档</td><td>1000</td><td>11</td><td>61</td><td>{&#x27;3&#x27;: 18, &#x27;5&#x27;: 21}</td><td>294</td><td>8.21</td></tr>
+<tr><td>H7 10档</td><td>2000</td><td>32</td><td>82</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>363</td><td>8.48</td></tr>
+<tr><td>H7 10档</td><td>3000</td><td>9</td><td>59</td><td>{&#x27;3&#x27;: 69, &#x27;5&#x27;: 71}</td><td>293</td><td>8.24</td></tr>
+<tr><td>H7 10档</td><td>4000</td><td>24</td><td>74</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>352</td><td>8.00</td></tr>
+<tr><td>H15 10档</td><td>42</td><td>68</td><td>118</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>488</td><td>8.24</td></tr>
+<tr><td>H15 10档</td><td>1000</td><td>73</td><td>123</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>516</td><td>9.44</td></tr>
+<tr><td>H15 10档</td><td>2000</td><td>79</td><td>129</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>516</td><td>8.46</td></tr>
+<tr><td>H15 10档</td><td>3000</td><td>46</td><td>96</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>443</td><td>7.86</td></tr>
+<tr><td>H15 10档</td><td>4000</td><td>107</td><td>157</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>626</td><td>8.43</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>42</td><td>3</td><td>53</td><td>{&#x27;3&#x27;: 928, &#x27;5&#x27;: 981}</td><td>274</td><td>11.76</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>1000</td><td>23</td><td>73</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>343</td><td>11.90</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>2000</td><td>43</td><td>93</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>433</td><td>11.66</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>3000</td><td>18</td><td>68</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 2}</td><td>346</td><td>11.22</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续</td><td>4000</td><td>8</td><td>58</td><td>{&#x27;3&#x27;: 178, &#x27;5&#x27;: 194}</td><td>328</td><td>11.34</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>42</td><td>28</td><td>78</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>389</td><td>8.50</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>1000</td><td>40</td><td>90</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>390</td><td>8.36</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>2000</td><td>2</td><td>52</td><td>{&#x27;3&#x27;: 1099, &#x27;5&#x27;: 1182}</td><td>267</td><td>8.03</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>3000</td><td>65</td><td>115</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>512</td><td>8.18</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档</td><td>4000</td><td>34</td><td>84</td><td>{&#x27;3&#x27;: 0, &#x27;5&#x27;: 0}</td><td>369</td><td>8.34</td></tr>
+</table></div>
+<p class="note">模型净年化为×238/5算术口径、波动为HAC；不是执行账户CAGR。F仅136日/2024年7个月，不作跨年泛化结论。保持全部五种子，不改早停、策略、正式基线或生产配置。</p><p><a href="../configs/frozen-study.json">初始冻结方案</a> · <a href="../configs/missing-price-amendment.json">用户缺失价格规则补充</a> · <a href="../configs/prepared-inputs.json">标签来源/实际样本</a> · <a href="../docs/study-summary.json">数值摘要</a> · <a href="../docs/study-progress.json">逐作业状态</a> · <a href="../docs/harness-state.json">正式状态</a></p><h2>完整轨迹同分敏感性回放</h2>
+<p>只使用已经记录的目标曲线，反序仅改变预测同分时的优先级。“未观察到”表示记录截断，不能外推为完整重训会选该轮；本诊断不替换正式模型。</p>
+<div class="scroll"><table><tr><th>方案 / seed</th><th>原最佳轮</th><th>观察轮</th><th>反序前缀最佳轮</th><th>反序停点</th><th>触200上限</th></tr>
+<tr><td>H7 10档 / 42</td><td>25</td><td>75</td><td>25</td><td>75</td><td>否</td></tr>
+<tr><td>H7 10档 / 1000</td><td>11</td><td>61</td><td>11</td><td>61</td><td>否</td></tr>
+<tr><td>H7 10档 / 2000</td><td>32</td><td>82</td><td>32</td><td>82</td><td>否</td></tr>
+<tr><td>H7 10档 / 3000</td><td>9</td><td>59</td><td>10</td><td>未观察到（记录截断）</td><td>否</td></tr>
+<tr><td>H7 10档 / 4000</td><td>24</td><td>74</td><td>24</td><td>74</td><td>否</td></tr>
+<tr><td>H15 10档 / 42</td><td>68</td><td>118</td><td>68</td><td>118</td><td>否</td></tr>
+<tr><td>H15 10档 / 1000</td><td>73</td><td>123</td><td>73</td><td>123</td><td>否</td></tr>
+<tr><td>H15 10档 / 2000</td><td>79</td><td>129</td><td>79</td><td>129</td><td>否</td></tr>
+<tr><td>H15 10档 / 3000</td><td>46</td><td>96</td><td>46</td><td>96</td><td>否</td></tr>
+<tr><td>H15 10档 / 4000</td><td>107</td><td>157</td><td>107</td><td>157</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续 / 42</td><td>3</td><td>53</td><td>9</td><td>未观察到（记录截断）</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续 / 1000</td><td>23</td><td>73</td><td>23</td><td>73</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续 / 2000</td><td>43</td><td>93</td><td>43</td><td>93</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续 / 3000</td><td>18</td><td>68</td><td>18</td><td>68</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 连续 / 4000</td><td>8</td><td>58</td><td>3</td><td>53</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档 / 42</td><td>28</td><td>78</td><td>28</td><td>78</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档 / 1000</td><td>40</td><td>90</td><td>40</td><td>90</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档 / 2000</td><td>2</td><td>52</td><td>38</td><td>未观察到（记录截断）</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档 / 3000</td><td>65</td><td>115</td><td>65</td><td>115</td><td>否</td></tr>
+<tr><td>H1～H20原始累计收益和 · 10档 / 4000</td><td>34</td><td>84</td><td>3</td><td>53</td><td>否</td></tr>
+</table></div>
+<h2>解释限制与复核证据</h2>
+<ul>
+<li>历史选型窗口同时参与早停，不是独立样本外；F仅2024年136日。</li>
+<li>20个模型中5个的反序同分优先级回放改变已观测前缀最佳轮，3个未观测到反序早停点；均未触200轮上限。短树、同分及合成退化限制对标签机制的归因，保留全部种子与原配置。</li>
+<li>缺失中间项数量不一致，原始求和不作计数归一化；训练内条件相关为描述性关联，不证明因果。</li>
+<li>正式v5来自旧标签；同源H20比较使用Nov3标签。模型算术年化不是执行账户CAGR。</li>
+<li>两张静态科学图已目视核验；HTML数字、结构和本地链接已检查。此前浏览器拒绝本地报告协议，完整页面布局未作浏览器视觉核验。</li>
+</ul>
+<p><a href="../docs/research-conclusion.json">完整结论</a></p>
+<p><a href="../docs/final-numerical-verification.json">20模型与4组合成精确核验</a></p>
+<p><a href="../docs/review-final-numerical.json">独立数值复算</a></p>
+<p><a href="../docs/review-sum-continuous.json">累计连续标签异常诊断</a></p>
+<p><a href="../docs/ensemble-diagnostic.json">合成与单种子范围</a></p>
+<p><a href="../docs/early-stopping-replay.json">完整早停回放</a></p>
+<p><a href="../docs/horizon-result-verification.json">三期限结论核验</a></p></main></html>

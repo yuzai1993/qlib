@@ -1,0 +1,68 @@
+{
+  "model_ref": "training-target/h20-quantile10-p50-v5",
+  "model_components": 5,
+  "new_model_fits": 0,
+  "actual_account_jobs": 2,
+  "all_jobs_succeeded": true,
+  "canonical_full_year_style_metrics_recomputed": true,
+  "baseline_csv": {
+    "path": "backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/run_01/report_normal.csv",
+    "sha256": "46daf20509630dec886acac628dc9587a2e9cfd1214904c9fe63f5e746c0fed7",
+    "size": 272637
+  },
+  "same_ordered_filtered_signal_exact": true,
+  "same_account_fee_benchmark_and_window": true,
+  "benchmark_daily_max_abs_difference": {
+    "ladder": 4.000000192183606e-09,
+    "s5": 4.000000192183606e-09
+  },
+  "nav_matches_account_value": true,
+  "runtime_strategy": {
+    "ladder": {
+      "class": "CohortLadderStrategy",
+      "horizon": 5,
+      "risk_degree": 0.9,
+      "only_tradable": false,
+      "forbid_all_trade_at_limit": false,
+      "topk": 3
+    },
+    "s5": {
+      "class": "TopkDropoutStrategy",
+      "risk_degree": 0.9,
+      "only_tradable": false,
+      "forbid_all_trade_at_limit": false,
+      "force_sell_rank": 100,
+      "topk": 5,
+      "n_drop": 1,
+      "hold_thresh": 1
+    }
+  },
+  "comparison_deltas": {
+    "historical_s5": {
+      "annualized_return": -0.07080590679780463,
+      "sharpe_ratio": -0.08244253559200398,
+      "max_drawdown": 0.005788740235955547,
+      "alpha": -0.06061299726208261,
+      "beta": -0.03150565812201089,
+      "annualized_one_way_turnover": -29.104478957332446
+    },
+    "same_v5_s5": {
+      "annualized_return": 0.09025235839807921,
+      "sharpe_ratio": 0.34065092091429794,
+      "max_drawdown": 0.05067254199715654,
+      "alpha": 0.06797979850829276,
+      "beta": -0.01694973727978133,
+      "annualized_one_way_turnover": -28.593167405872066
+    }
+  },
+  "tests": {
+    "command": "python -m pytest tests/backtest/test_cohort_ladder.py tests/backtest/test_cohort_ladder_strategy.py -q",
+    "result": "50 passed in 1.34s"
+  },
+  "limitations": [
+    "Historical selection window, not out-of-sample.",
+    "Historical s5 uses v2 model and historical source snapshot; no claim that n10 alone causes differences.",
+    "Same-v5 rule comparison isolates execution-rule change.",
+    "Native strategy gate cannot validate v5; manual verification covers metrics, exact inputs, configs, registry and reports."
+  ]
+}

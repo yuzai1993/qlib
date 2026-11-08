@@ -1,0 +1,48 @@
+{
+  "at": 1794029550.683428,
+  "reason": "Read-only closeout review identified unarchived unused copies. Exact source is now retained without executing obsolete paired-study entry points; executable copies remain solely for final exact-inventory deletion.",
+  "entries": [
+    {
+      "name": "cleanup_temporary.py",
+      "source": {
+        "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/cleanup_temporary.py",
+        "sha256": "a4ae177e2e708a077092f8c7a396ba396a92c94bb115421ac93abd8183a26441",
+        "size": 7452
+      },
+      "audit": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/adapter-cleanup_temporary.json",
+        "sha256": "4b1917de0db86f4d3b7507b30fb8abfa37ff1da22b4365ad157f9b6d601b28ca",
+        "size": 7897
+      },
+      "executed": false
+    },
+    {
+      "name": "final_report_v2.py",
+      "source": {
+        "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/final_report_v2.py",
+        "sha256": "fe41eea3d532e33ddb95fa98e61f019a978c4f87a93e8b21ece4e181469b0ebe",
+        "size": 6130
+      },
+      "audit": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/adapter-final_report_v2.json",
+        "sha256": "efee57f9f2d5155cbede0d2e98928166fa618e0f7e90d5955efc792bb0f05d88",
+        "size": 6827
+      },
+      "executed": false
+    },
+    {
+      "name": "close_research.py",
+      "source": {
+        "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/close_research.py",
+        "sha256": "d66465abb4ecfe34c4945143e46b10c07837a7e9f03331ae5247f58f9025e3c2",
+        "size": 1636
+      },
+      "audit": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/adapter-close_research.json",
+        "sha256": "de739b92eccc32224b2df764ebf6ad53b888ac03cb7db5ea7c1e30c630516b8d",
+        "size": 1987
+      },
+      "executed": false
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "exp_id": "training-target/quantile-n-p50-20261107-v1/arms/quantile50",
+  "archive_path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1",
+  "date": "2026-11-07",
+  "state": "completed",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "training-target",
+  "experiment_type": "training_target",
+  "display_name": "等样本 · 50档",
+  "hypothesis": "Only vary equal-count bin number n. Test whether finer bins improve head return monotonically or an intermediate n balances return and label sensitivity; compare return, Sharpe, RankIC and Top3/Top5 agreement separately.",
+  "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "portable_eval_output": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile50-old.json",
+  "eval_output": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/quantile50-old.json",
+  "detail_report": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/reports/detail.html",
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.19604659085616666,
+    "ir": 0.5191547960508258,
+    "ann": 0.28572809061183013,
+    "beta": 1.027811678606248,
+    "ann_alpha": 0.19355239780803585,
+    "appraisal_ir": 0.5130321757150179,
+    "turnover_period": 0.9002079002079002,
+    "turnover": 0.18004158004158005,
+    "ann_cost": 0.03942190436590437,
+    "net_ann_excess": 0.1566246864902623,
+    "net_ann": 0.24630618624592576,
+    "net_ann_alpha": 0.15413049344213148,
+    "net_ann_vol": 0.5891411891440188,
+    "net_sharpe": 0.4180766695395912,
+    "rank_ic_mean": 0.09888029615407959
+  },
+  "parent_experiment": "training-target/quantile-n-p50-20261107-v1",
+  "source_role": "internal_scientific_candidate",
+  "source_registration": "Covered by parent label-grading formal event",
+  "diagnostic_only": true,
+  "cleanup_retention_eligible": false,
+  "configs": [
+    "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/configs/frozen-study.json"
+  ],
+  "result_dirs": [
+    "backtest/result/quantilen_20261107_quantile50_old_s42",
+    "backtest/result/quantilen_20261107_quantile50_old_s1000",
+    "backtest/result/quantilen_20261107_quantile50_old_s2000",
+    "backtest/result/quantilen_20261107_quantile50_old_s3000",
+    "backtest/result/quantilen_20261107_quantile50_old_s4000"
+  ]
+}

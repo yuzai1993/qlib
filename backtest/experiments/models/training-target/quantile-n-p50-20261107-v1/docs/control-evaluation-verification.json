@@ -1,0 +1,89 @@
+{
+  "new_control_recomputed": true,
+  "old_control_recomputed": true,
+  "canonical_match_tolerance": 1e-12,
+  "reference": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h20-model.json",
+    "sha256": "406966331a8d6e63f3b703cd0663b37e7538c0a398e6a5e0c7814ff55e97b872",
+    "size": 87905
+  },
+  "old_reference": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/stability-20261106-old-model.json",
+    "sha256": "1733c7bb18ba7650c24dfcbd63a429ca53b108873475c9160f2cca1ec1f73e44",
+    "size": 87960
+  },
+  "old_prediction_proof": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/stability-20261106-inference.json",
+    "sha256": "2c5158c9137226fa5f84c800bc6f6050d17c753ebc5bafa05c9dc67ca5860c1f",
+    "size": 3339
+  },
+  "inference_years": [
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-input-2020.json",
+      "sha256": "f5327308d5fd26ed1cf97e7763dbb23746f2e2ddd803b5901a5fedeccddbaa15",
+      "size": 6328
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-input-2021.json",
+      "sha256": "61ac745a033e6fa0abc85ef34099f70903c0ca40ae797d7019b2dc8aee0b6055",
+      "size": 6329
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-input-2022.json",
+      "sha256": "1a13d79aaf34a3f21b0fd141e87ef32435c6bda154a97bbe45216cb1d1372088",
+      "size": 6329
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-input-2023.json",
+      "sha256": "fc69b24ff291840195fe564af719b509dacfdea7c32af54f65d24df4699636e4",
+      "size": 6329
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-input-2024.json",
+      "sha256": "9d75956484e98b535757ec1b9d4ca7ab128f9e98ddc75655ced60dd06722a9d1",
+      "size": 6329
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-input-2025.json",
+      "sha256": "3197b052bcc33bc6628fae3640f911c88c0a6dca97af693bc30f2ef767b43194",
+      "size": 6329
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-input-2026.json",
+      "sha256": "06e7e2a6fc01bf8f907ff83e91b911eb2fb046ddc3c19a9a6ea168461effe77b",
+      "size": 6328
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/control-new.json",
+      "sha256": "2d28b1b39e14f4813cee8be73afe042583259af3492199cbb2d3ad7390f91e55",
+      "size": 88060
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metrics/control-old.json",
+      "sha256": "b5a813df49d024d4a43f2dd86c515e2dc82c868b9ce64d925de963db0bc4940c",
+      "size": 88111
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/control-new-formal-heads.json",
+      "sha256": "7050c0d2cff3fbec193c543a39d9296687dd5ff98d944ffaa83ea0bbda7bffc4",
+      "size": 2085900
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/control-new-ensemble-heads.json",
+      "sha256": "987cd9c832830c4da296cb1b4efdb5e0142babb0ba46afce12f4743086d05969",
+      "size": 283837
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/control-old-formal-heads.json",
+      "sha256": "9e1e38406ca4b106e0bb94073d7d867d990712d67a643f617429e0d1d9c58af2",
+      "size": 2085901
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/control-old-ensemble-heads.json",
+      "sha256": "d846e2bfb05d8b977730a73eb14d204f7eb9244f7a7e30f5686d8970b1845c91",
+      "size": 283837
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "at": 1794038424.506193,
+  "figure": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/reports/label-grading.png",
+    "sha256": "eaa6db9e5f403ae6eb186ac5b5d4b5f45d4b2e00540a7556c95c7d64e610095f",
+    "size": 68928
+  },
+  "actual_visual_inspection": "Viewed final PNG: eight n values, prior n5/n10 grey, old continuous control lines, readable3-decimal Sharpe labels, no material overlaps/clipping; values match official JSON.",
+  "html_checks": {
+    "primary_rows_including_header": 10,
+    "new_seed_diagnostic_rows_including_header": 31,
+    "official_primary_display_values_match": true,
+    "links": {
+      "local_links": 10,
+      "missing_links": [],
+      "each_figure_embedded_once": true,
+      "scope": "DOM and links checked; separate visual QA must record actual rendering scope."
+    }
+  },
+  "limitation": "Full HTML page was not visually rendered in a browser; prior browser rejected local report protocol. DOM/numbers/links checked and embedded PNG visually inspected; no browser-layout claim.",
+  "report": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/reports/detail.html",
+    "sha256": "18031bd86c8485a56e66f1aa14366954dec51ef7117bb463aa361a07ed07aa31",
+    "size": 24848
+  }
+}

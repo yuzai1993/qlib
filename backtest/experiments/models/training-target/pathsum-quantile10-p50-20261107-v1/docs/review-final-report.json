@@ -1,0 +1,20 @@
+{
+  "reviewer": "/root/review_v5_promotion",
+  "scope": "Final report, conclusions, numerical verification and retention dry-run before actual temporary deletion and native close.",
+  "blocking_findings": [],
+  "checks": {
+    "final_report_receipt_current_file_hashes_matched": 7,
+    "html_local_links_valid": 15,
+    "current_model_baseline": "training-target/h20-quantile10-p50-v5",
+    "current_strategy_baseline": "baseline/phase-m-v1-bt-v5",
+    "diff_check_passed": true,
+    "cleanup_errors": [],
+    "proposed_result_deletions": 0,
+    "proposed_mlruns_deletions": 0,
+    "study_result_directories_protected": 21,
+    "historical_cleanup_warnings": 143,
+    "warnings_involving_current_study": 0
+  },
+  "scientific_disclosure": "Three-H scope, old-v5 versus same-source H20, arithmetic annualization versus account CAGR, ensemble deterioration,5 reverse-prefix selection changes/3 unobserved stop points/0cap, historical selection window and skipmissing limitations all present.",
+  "remaining_at_review": "Actual temporary deletion, independent MLflow audit and final harness lifecycle must have separate real receipts."
+}

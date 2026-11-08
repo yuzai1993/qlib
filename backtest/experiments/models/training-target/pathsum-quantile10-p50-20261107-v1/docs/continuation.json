@@ -1,0 +1,73 @@
+{
+  "created_at": 1794063404.734195,
+  "status": "closed; temporary tools removed; no resume work remains",
+  "experiment_id": "training-target/pathsum-quantile10-p50-20261107-v1",
+  "tmp": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b",
+  "python": "/opt/anaconda3/envs/qlib/bin/python",
+  "heartbeat": {
+    "automation_id": "10",
+    "name": "完成标签累计收益与10档实验",
+    "interval_minutes": 20,
+    "disable_when_closed": true
+  },
+  "latest_user_instruction": "不用要求每个中间时间点都有价格",
+  "effective_label_contract": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/missing-price-amendment.json",
+  "native_state": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/harness-state.json",
+  "study_progress": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-progress.json",
+  "native_check": {
+    "revision": 4,
+    "status": "active",
+    "at": 1794063404.734258
+  },
+  "launch_receipt": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/pipeline-launch.json",
+  "pipeline_log": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/pipeline.log",
+  "running_jobs_at_handoff": [
+    {
+      "job_id": "h7q10-new-s42-a1",
+      "status": "running",
+      "phase": "fitting",
+      "variant": "h7q10",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 12117,
+      "started_at": 1794063124.5575428,
+      "fit_started_at": 1794063171.173978
+    }
+  ],
+  "deadline_unix": 1794097884.6506822,
+  "deadline_local": "2026-11-08 08:31:24 Asia/Shanghai",
+  "nominal_fits": 20,
+  "maximum_fits_with_technical_retries": 22,
+  "prior_cumulative_fits": 176,
+  "scope": [
+    "h7q10",
+    "h15q10",
+    "sum20continuous",
+    "sum20q10"
+  ],
+  "controls": [
+    "h7continuous",
+    "h15continuous",
+    "h20continuous",
+    "h20q10-new",
+    "formal-v5-old"
+  ],
+  "resume_rules": [
+    "Read formal status/check, current jobs, exact live process identity, receipts and logs before any action. Do not rerun setup/start/launch.",
+    "The detached pipeline is already running. Do not launch a duplicate. Check its PID and command, not merely PID existence.",
+    "pipeline.py resumes verified successful jobs and inference parts; any real fit retry needs a new job attempt and original total budget. Record actual failure costs.",
+    "Original frozen-study includes superseded strict intermediate-price rule. The user amendment and native note supersede it; do not restore strict complete-path masking.",
+    "Each arm has five fixed seeds and official daily-zscore ensemble. Current model baseline v5 stays; BT s5 stays. No production operation or promotion in this study.",
+    "Native harness holds one aggregate variant and all actual fit jobs; scientific candidate identities and registration receipts remain distinct internally.",
+    "If a stage fails, preserve original source/logs and use a versioned fix with source audit; do not rewrite frozen adapters."
+  ],
+  "remaining_closeout": [],
+  "resource_monitor": {
+    "pid": 11945,
+    "stop_file": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/stop-monitor",
+    "samples": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/process-tree-samples.jsonl",
+    "physical_memory_bytes": 17179869184
+  },
+  "prior_work_preservation": "Prior v5 promotion and true-ladder comparison were completed and left intentional dirty research files. Preserve them and unrelated user changes.",
+  "completed_native_revision": 50
+}

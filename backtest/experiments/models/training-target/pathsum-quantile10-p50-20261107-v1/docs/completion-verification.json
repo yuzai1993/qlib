@@ -1,0 +1,20 @@
+{
+  "completed_at": "2026-11-07 18:06:34 UTC",
+  "native_status": "closed",
+  "native_revision": 50,
+  "actual_fits": 20,
+  "technical_retries": 0,
+  "cumulative_fits": 196,
+  "temporary_files_deleted": 249,
+  "temporary_GiB_deleted": 6.449869158677757,
+  "temporary_directory_absent": true,
+  "result_retention": "official platform dry-run: zero deletions; all20 models and complete predictions retained",
+  "mlruns": "no new directories or metadata modifications during campaign; no task-owned runs to delete",
+  "automation": {
+    "id": "10",
+    "delete_status": "deleted"
+  },
+  "git_diff_check": "passed",
+  "git_status": " M AGENTS.md\n M backtest/EXPERIMENT_STANDARD.md\n M backtest/experiments/README.md\n M backtest/experiments/_catalog/path_map.json\n M backtest/experiments/models/early-stopping/top5-v2/metadata.json\n M backtest/experiments/registry.jsonl\n M backtest/experiments/reports/phase_m_v1_bt_report.html\n M backtest/experiments/reports/phase_m_v1_report.html\n M docs/research/experiment_harness.md\n?? backtest/experiments/models/early-stopping/top5-v2/records/4ca9543bcdb2200a5101eefb1f8e1baadf42b04b7afe8ad08fc7b7d72da84905.json\n?? backtest/experiments/models/training-target/label-grading-p50-20261106-v1/\n?? backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/\n?? backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/\n?? backtest/experiments/models/training-target/quantile10-p50-v5/\n?? backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/\n",
+  "verification_scope": "All20 model identities and inputs, four exact ensembles, official controls and independent selection/return checks, report values/links, final native state and actual temporary deletion verified. Static scientific figures viewed; complete HTML browser visual preview unavailable after earlier local-protocol rejection."
+}

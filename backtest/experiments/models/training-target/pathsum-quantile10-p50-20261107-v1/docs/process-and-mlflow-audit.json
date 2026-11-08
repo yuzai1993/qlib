@@ -1,0 +1,232 @@
+{
+  "at": 1794074574.131052,
+  "task_processes_active": [],
+  "mlflow_metadata_modified_since_campaign_start": [],
+  "mlruns_directories_before": [
+    ".trash",
+    "193294180634344660",
+    "202999456416839429",
+    "307064847046051741",
+    "347176805538849999",
+    "383955905181939329",
+    "401795302766715995",
+    "423624292273676597",
+    "440511413852618761",
+    "535536840717601952",
+    "551310491137032461",
+    "657807164385264418",
+    "670933646941813568",
+    "673933145025975108",
+    "675785820284249511",
+    "708236692900899016",
+    "776549857276963997",
+    "914806460647144717"
+  ],
+  "mlruns_directories_after": [
+    ".trash",
+    "193294180634344660",
+    "202999456416839429",
+    "307064847046051741",
+    "347176805538849999",
+    "383955905181939329",
+    "401795302766715995",
+    "423624292273676597",
+    "440511413852618761",
+    "535536840717601952",
+    "551310491137032461",
+    "657807164385264418",
+    "670933646941813568",
+    "673933145025975108",
+    "675785820284249511",
+    "708236692900899016",
+    "776549857276963997",
+    "914806460647144717"
+  ],
+  "new_result_directories": [
+    "20261107_pathsum_quantile10",
+    "pathsumq10_20261107_h15q10_s1000",
+    "pathsumq10_20261107_h15q10_s2000",
+    "pathsumq10_20261107_h15q10_s3000",
+    "pathsumq10_20261107_h15q10_s4000",
+    "pathsumq10_20261107_h15q10_s42",
+    "pathsumq10_20261107_h7q10_s1000",
+    "pathsumq10_20261107_h7q10_s2000",
+    "pathsumq10_20261107_h7q10_s3000",
+    "pathsumq10_20261107_h7q10_s4000",
+    "pathsumq10_20261107_h7q10_s42",
+    "pathsumq10_20261107_sum20continuous_s1000",
+    "pathsumq10_20261107_sum20continuous_s2000",
+    "pathsumq10_20261107_sum20continuous_s3000",
+    "pathsumq10_20261107_sum20continuous_s4000",
+    "pathsumq10_20261107_sum20continuous_s42",
+    "pathsumq10_20261107_sum20q10_s1000",
+    "pathsumq10_20261107_sum20q10_s2000",
+    "pathsumq10_20261107_sum20q10_s3000",
+    "pathsumq10_20261107_sum20q10_s4000",
+    "pathsumq10_20261107_sum20q10_s42"
+  ],
+  "removed_prior_result_directories": [],
+  "actual_direct_model_storage": [
+    {
+      "session": "pathsumq10_20261107_h7q10_s42",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9f4f47324fbc095e4752d0b631f680c900c04e9c3fcf363555923c3e59a68c92",
+        "size": 58941936
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h7q10_s1000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ea3ea4e0acc92b6dbe5b9b1861ac5e6a1438dba38f1da8596cd1d920bb42f681",
+        "size": 58718588
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h7q10_s2000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0cc96e6f231c106fdecd25c51b72a2cba81db02903121980d914835ba9230322",
+        "size": 59074844
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h7q10_s3000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0311f69182cdbac28cb00fd8f8952985fde5c7c4fc330a03bdf24bceab88ec3f",
+        "size": 58683671
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h7q10_s4000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h7q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a787a3d7a36297a7933f0ccab628745d34db2f05f3ad708d8a60838bb870eb89",
+        "size": 58958399
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h15q10_s42",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "35617facfa8e3b5d2ac06d90a5f18c5e7b8500b93ae1adf573244f4037ce17e2",
+        "size": 59667416
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h15q10_s1000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a07a5212dfdd31214825d01a5d6be3e0ccb47b193e8e900ee6584c93e08a2bc0",
+        "size": 59791844
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h15q10_s2000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "42e8ab570b4c83d8e50f3370c9d17c11ade118a55f93d02ca07728e136b052e3",
+        "size": 59888287
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h15q10_s3000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1a37b913e8e6b3022cb5157f71518f24aef7545a7671bb7bcacf7d7860174bd3",
+        "size": 59334539
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_h15q10_s4000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_h15q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "bc77d8350da1605897b873c4bb23f994646018dcb3f3fd9bd27be8cf4f063c36",
+        "size": 60360007
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20continuous_s42",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "cd4d51b7f6249a340bd0ec278571ac99417100ba01b65724c12181141eeaa9b3",
+        "size": 58564577
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20continuous_s1000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2cb81cd728c42fee5e3779b4c194ff8962bb46b7573d0e7fca419269f1005c1e",
+        "size": 58950720
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20continuous_s2000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e23451a208d8a2c2e68050da54986c8491d957581da4e7f9e41a854398685e32",
+        "size": 59278709
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20continuous_s3000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9a981fa8b1a7226fe359c5611cbf9ab5b6feed88ab4563b1f646ff80c9520008",
+        "size": 58855212
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20continuous_s4000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20continuous_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "339a1a33dc76cd83b7a18472ad9c1fbb0f3a5c2db6aabaa7b18bb97cdea20a20",
+        "size": 58665952
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20q10_s42",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2b3d33eb2861ac1441cb05c43c5b60781c78d551bf5e18d6833bc6e7d5b0dccc",
+        "size": 59044836
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20q10_s1000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b5ae652a72dc1808d555c16467c18a06ff408cb1316631d24ee5c567feb8abe4",
+        "size": 59230736
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20q10_s2000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a63ba2570ac8b5802f672b57a49c90e3906c74e67909cb574ae273001a7129c3",
+        "size": 58543977
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20q10_s3000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1d256058a7ca691e4961c6e144619a3da78c376e656536b580484eb84dbc1db9",
+        "size": 59620631
+      }
+    },
+    {
+      "session": "pathsumq10_20261107_sum20q10_s4000",
+      "model": {
+        "path": "backtest/result/pathsumq10_20261107_sum20q10_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5ccfb7dde67a8460f082935990ceba6db4836cbbe4441a8477fdcb28d391b06f",
+        "size": 59145947
+      }
+    }
+  ],
+  "mlruns_decision": "No new MLflow directories and no MLflow meta.yaml modified since campaign start; all20 actual models are local result artifacts. No task-owned MLflow run to delete."
+}

@@ -1,0 +1,13 @@
+{
+  "at": 1794000046.577312,
+  "campaign_started_at": 1793978083.500222,
+  "task_processes_active": [],
+  "main_pipeline_exit_code": 0,
+  "monitor_exit_code": 0,
+  "resource_monitor_exit_code": 0,
+  "mlflow_metadata_count": 30,
+  "mlflow_metadata_modified_since_campaign_start": [],
+  "local_artifact_links_checked": 35,
+  "mlflow_explanation": "save_session writes local result artifacts and a train_artifacts link; it creates no MLflow recorder. All35 links point to result, and metadata scan checks for recent MLflow writes.",
+  "audit_correction": "Initial read-only helper used nonexistent created_at; authoritative state uses started_at, verified with deadline-started_at=8h. No research artifact was changed by that failed read."
+}

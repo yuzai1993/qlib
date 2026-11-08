@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b/adapt_cleanup.py",
+    "sha256": "7459faa19d5a3a2659cfe56d19f8edae6160d95836a4ddeeccde68b619927843",
+    "size": 691
+  },
+  "source_text": "from common import *\nsave_source(__file__)\nprior=ROOT/'backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/adapter-cleanup_temporary_v3.json'\ns=read(prior)['source_text']\ns=s.replace(\"assert TMP == Path('/private/tmp/qlib-quantile-n-20261107.5g5nkn20')\", \"assert TMP == Path('/private/var/folders/9q/zsn3ty0n64xdq30dkr_5655c0000gn/T/qlib-pathsum-quantile10-20261107.5oqyuc8b')\")\ns=s.replace('cleanup_temporary_v3.py','cleanup_temporary.py')\n(TMP/'cleanup_temporary.py').write_text(s)\nsave_source(TMP/'cleanup_temporary.py')\nfor p in sorted(TMP.glob('*.py')):save_source(p)\nprint('Cleanup adapter prepared; all temporary executable source bytes archived.',flush=True)\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

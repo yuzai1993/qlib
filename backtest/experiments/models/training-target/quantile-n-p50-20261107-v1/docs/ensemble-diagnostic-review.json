@@ -1,0 +1,12 @@
+{
+  "at": 1794035720.749377,
+  "reviewer": "/root/review_quantile_n",
+  "scope": "Read-only static implementation review and actual metric schema, no large data reads",
+  "result": "No material bug found: canonical blend/panel/summary and return/cost/year-contribution identities correct; no changed fits/seeds/weights/cap",
+  "source": {
+    "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/diagnose_ensemble.py",
+    "sha256": "3bb0f460c9bb2ef21ad9d7478c342d484dd147489e0d4c2e848988a9a91bf11f",
+    "size": 5788
+  },
+  "numerical_checks": "pending actual execution after all fits"
+}

@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-quantile-n-20261107.5g5nkn20/bootstrap.py",
+    "sha256": "4729b4bd6f27d018933e88913c5ee17b34a767adc401a7beb883857cd980ea8b",
+    "size": 1299
+  },
+  "source_text": "import json, hashlib\nfrom pathlib import Path\n\nT=Path(__file__).parent\nR=Path('/Users/yuxianqi/Project/qlib')\nP=R/'backtest/experiments/models/training-target/label-grading-p50-20261106-v1'\n\ndef replace(name, pairs):\n    p=T/name;s=p.read_text()\n    for old,new in pairs:\n        assert old in s,(name,old)\n        s=s.replace(old,new)\n    p.write_text(s)\n\nreplace('common.py',[\n ('label-grading-p50-20261106-v1','quantile-n-p50-20261107-v1'),\n (\"VARIANTS=['quantile5','quantile10','width5','tails5']\", \"PREVIOUS=ROOT/'backtest/experiments/models/training-target/label-grading-p50-20261106-v1'\\nVARIANTS=['quantile7','quantile15','quantile20','quantile30','quantile50','quantile3']\\nREUSED=['quantile5','quantile10']\\nPRIOR_FITS=146\\nREPRESENTATIVE='quantile7'\"),\n (\"dtype=np.int8\", \"dtype=np.int16\")\n])\nreplace('train.py', [('labelgrade_20261106_','quantilen_20261107_')])\nreplace('evaluate.py', [('20261106_label_grading','20261107_quantile_n')])\nreplace('monitor.py', [('/35 fits','/50 fits')])\nreplace('pipeline_v2.py', [('All four scientific candidates','All six scientific candidates'),('per_fit=statistics.median(elapsed) if elapsed else 900','per_fit=max(660,statistics.median(elapsed)) if elapsed else 660')])\nprint('Restored and adapted task-local calculation adapters; no fit launched.')\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

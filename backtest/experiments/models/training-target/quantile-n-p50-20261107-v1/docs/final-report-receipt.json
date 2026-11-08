@@ -1,0 +1,48 @@
+{
+  "detail": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/reports/detail.html",
+    "sha256": "18031bd86c8485a56e66f1aa14366954dec51ef7117bb463aa361a07ed07aa31",
+    "size": 24848
+  },
+  "total_report": {
+    "path": "backtest/experiments/reports/phase_m_v1_report.html",
+    "sha256": "741867709b74e3dea773a88bdc097821e686557ddc6f3affa2a5c3fb4bd3db93",
+    "size": 18679
+  },
+  "registry": {
+    "path": "backtest/experiments/registry.jsonl",
+    "sha256": "aa4fa5fe2a5af63ce8bea7f5a21582a174bb0b402887a9a15cb38dd32a2415ed",
+    "size": 30780
+  },
+  "metadata": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/metadata.json",
+    "sha256": "bc188da3bbc47edb756e98546246b8dde7846b627f1427b98decdfdc1d60c654",
+    "size": 38048
+  },
+  "summary": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/study-summary.json",
+    "sha256": "eafb388c79537725dcdb58aa9ae747911f853145e847f77fb1b8ac502b3c998f",
+    "size": 28311
+  },
+  "conclusion": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/research-conclusion.json",
+    "sha256": "a69288e5a554e185cc181d5288d56b5b511d3104ca161b4e972181ae45b02714",
+    "size": 4262
+  },
+  "numerical_verification": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/final-numerical-verification.json",
+    "sha256": "3b3c3a0fe106f7f21b4fc8aa50aa41bacc7002ddf2dfd7353e77acdb96741894",
+    "size": 16334
+  },
+  "html_checks": {
+    "local_links": 10,
+    "missing_links": [],
+    "each_figure_embedded_once": true,
+    "scope": "DOM and links checked; separate visual QA must record actual rendering scope."
+  },
+  "ensemble_diagnostic": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/ensemble-shortfall-diagnostic.json",
+    "sha256": "58615a00bf8c97fe29b6eec69dfc56f602507cd5772b4e977e07e9a8def391a3",
+    "size": 9449
+  }
+}

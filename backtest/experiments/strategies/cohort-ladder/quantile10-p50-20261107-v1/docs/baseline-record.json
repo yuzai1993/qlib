@@ -1,0 +1,104 @@
+{
+  "exp_id": "baseline/phase-m-v1-bt-v5",
+  "direction": "phase-m-v1-bt",
+  "phase": "S",
+  "date": "2026-10-29",
+  "state": "completed",
+  "report_kind": "phase_m_v1_bt_baseline",
+  "bt_version": "v5",
+  "current_bt": true,
+  "display_name": "v2 M0 H20 ES top5d1 + 掉出前100必卖（hold=1）",
+  "arm": "m0h20es",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "model_baseline_version": "v2",
+  "baseline_ref": "self",
+  "promoted_from": "regime-adapt/m0h20es-all-top5d1f100-bt",
+  "hypothesis": "用户于2026-10-29批准将现有五种子合成信号的 top5d1/hold1/f100 历史回测提升为 BT v5；模型研究基线仍为 v4。",
+  "eval_protocol": "ensemble daily_zscore_mean | TopkDropout topk=5 n_drop=1 hold_thresh=1 force_sell_rank=100 risk_degree=0.90 account=1e6 | market_cn | 日频ST+成交额+上市60+近60日成交 | 等权全A | 2020-08-03~2026-07-31",
+  "eval_output": "backtest/experiments/regime-adapt/m0h20es-all-top5d1f100-bt/metrics/all_top5d1f100_m0h20es.json",
+  "source_eval_output": "backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json",
+  "metrics_source": "ensemble",
+  "metrics": {
+    "n_days": 1454,
+    "annualized_return": 0.3483992380540464,
+    "annualized_return_arith": 0.3410742057495774,
+    "sharpe_ratio": 1.1773900944016509,
+    "alpha": 0.24674697308104526,
+    "beta": 0.8835077769150542,
+    "calmar_ratio": 1.0549884379817076,
+    "annualized_volatility": 0.28968666151630157,
+    "max_drawdown": -0.330239863785206,
+    "annualized_one_way_turnover": 73.32794962840944,
+    "cumulative_return": 4.688848745271195,
+    "benchmark_annualized_return": 0.08255076587351717,
+    "benchmark_annualized_return_arith": 0.10676446221887799,
+    "benchmark_cumulative_return": 0.5861751718482147
+  },
+  "ensemble_session": "backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble",
+  "evaluation_mode": "historical_selection_window",
+  "note": "历史选型窗口：2020-08-03~2026-07-31 已用于模型早停及策略比较，不是独立样本外检验。100万历史成本口径；30万当前费用与新增期间结果另作诊断，不用于调参，不代表实盘已切换。",
+  "detail_report": "backtest/experiments/baseline/phase-m-v1-bt-v5/reports/phase_m_v1_bt_v5.html",
+  "comparison_baseline_ref": "baseline/phase-m-v1-bt-v4",
+  "provenance": {
+    "eval_json": {
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/result/phase_s_regime/all_top5d1f100/m0h20es.json",
+      "sha256": "a0dad7bf248b00889b3400bf2840f82bda60f21c0ba519a38fc121ffb7bca0e4",
+      "bytes": 8826
+    },
+    "report_csv": {
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/run_01/report_normal.csv",
+      "sha256": "46daf20509630dec886acac628dc9587a2e9cfd1214904c9fe63f5e746c0fed7",
+      "bytes": 272637
+    },
+    "regime_labels": {
+      "path": "backtest/experiments/baseline/phase-m-v1-bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+      "bytes": 1203
+    },
+    "metrics_function": "strategy_stability_metrics.summarize_stability",
+    "run_meta": {
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble/meta.json",
+      "sha256": "821ea67511ac40ff46821d3cb3ca7f06ba4aca1aaab9f46808e34c0455672a42",
+      "bytes": 1362
+    },
+    "prediction": {
+      "path": "/Users/yuxianqi/Project/qlib_exp/backtest/result/phase_s_regime/all_top5d1/m0h20es_ensemble_pred.pkl",
+      "sha256": "3d6f768930a4b9ac63622ee039ded617b68addfac56f44d77002a0188572021e",
+      "bytes": 82975387
+    },
+    "backtest": {
+      "account": 1000000,
+      "exchange_kwargs": {
+        "freq": "day",
+        "deal_price": "close",
+        "limit_threshold": "market_cn",
+        "open_cost": 0.00021,
+        "close_cost": 0.00071,
+        "min_cost": 5.0,
+        "trade_unit": 100
+      },
+      "start_time": "2020-08-03",
+      "end_time": "2026-07-31",
+      "benchmark": {
+        "equal_weight_csv": "backtest/experiments/baseline/phase-m-v1-bt-v5/configs/bench_ew_all.csv"
+      }
+    },
+    "strategy": {
+      "class": "TopkDropoutStrategy",
+      "risk_degree": 0.9,
+      "only_tradable": false,
+      "forbid_all_trade_at_limit": false,
+      "force_sell_rank": 100,
+      "topk": 5,
+      "n_drop": 1,
+      "hold_thresh": 1
+    }
+  }
+}

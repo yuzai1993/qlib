@@ -1,0 +1,860 @@
+{
+  "status": "closed",
+  "scientific_candidates": {
+    "quantile5": {
+      "status": "completed",
+      "treatments": {
+        "old": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-old.json",
+            "sha256": "44ba163b78c13ee7078dcd5c7260392ebe7549de331dcf5b68346749fa3b7bfc",
+            "size": 88480
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile5-old.json",
+            "sha256": "45a160ac41676b09d3e2b386bba1892f1ceae3a857e0abb846f1e3efec4b3d07",
+            "size": 4453
+          }
+        },
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile5-new.json",
+            "sha256": "7d9b5adb24bdd06fa5ef2752bad84168f3301e5645931e06807a79afa8152ea7",
+            "size": 88540
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile5-new.json",
+            "sha256": "1e2bf2ad99ae2c0d90def030ee230eefdec37ad9a20a9a1f9887229f0dd7fe55",
+            "size": 4453
+          }
+        }
+      }
+    },
+    "quantile10": {
+      "status": "completed",
+      "treatments": {
+        "old": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-old.json",
+            "sha256": "5875bcb4cab8e4f27648b59d61e967316a06d938bdac7c31ab8d374a93ccaa16",
+            "size": 88524
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-old.json",
+            "sha256": "ddba993b53de7535b4d81dec2b54905f09ca385e86dab803bb685eb644c54484",
+            "size": 4475
+          }
+        },
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/quantile10-new.json",
+            "sha256": "b22846cc42ca0aa382332247e102c6e1601887adcbe06d76d09bb45cae674a18",
+            "size": 88523
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-quantile10-new.json",
+            "sha256": "e0d37b214276fe63f90d5de8c0d5ca100e97b4d8649adcb6b4a291d6f26847c4",
+            "size": 4475
+          }
+        }
+      }
+    },
+    "width5": {
+      "status": "completed",
+      "treatments": {
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/width5-new.json",
+            "sha256": "ea4e8f5e57603e34d3362804dbe599c407fa6045c839b320851390ba28269cc0",
+            "size": 88818
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-width5-new.json",
+            "sha256": "5c7176b31f520fc82c43ff75fe0905d8a78182c447eb74f70ab674e68d427fb0",
+            "size": 4387
+          }
+        }
+      }
+    },
+    "tails5": {
+      "status": "completed",
+      "treatments": {
+        "old": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/tails5-old.json",
+            "sha256": "1936d5692c069c53d1a9f643302cd365608f031780c562ff16b8d8cf9ecec269",
+            "size": 88599
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-tails5-old.json",
+            "sha256": "d5d268ed16cffc7308067750c6bae491ae51795d92007ec542d1000a49980729",
+            "size": 4387
+          }
+        },
+        "new": {
+          "status": "completed",
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/tails5-new.json",
+            "sha256": "6cb101e1650676ee91b7be5f23948038b2fe420c070bf35a56e32fdca234d5cd",
+            "size": 88598
+          },
+          "prediction_proof": {
+            "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/predictions-tails5-new.json",
+            "sha256": "0424e985427d344df81028da7383bd8c2ab22a1cb500d337866c0bc4fb2aa5d1",
+            "size": 4387
+          }
+        }
+      }
+    }
+  },
+  "prior_fit_count": 111,
+  "jobs": [
+    {
+      "job_id": "quantile5-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 58283,
+      "started_at": 1793978437.529929,
+      "fit_started_at": 1793978486.871603,
+      "finished_at": 1793979024.735256,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s42-a1.json",
+        "sha256": "a906269ccceb302b3c7e53f944a69765a77e8e441b8881e110254e8f69fca9a7",
+        "size": 41810
+      },
+      "session": "labelgrade_20261106_quantile5_new_s42"
+    },
+    {
+      "job_id": "quantile5-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 58589,
+      "started_at": 1793979026.5563,
+      "fit_started_at": 1793979073.781955,
+      "finished_at": 1793979701.9584541,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s1000-a1.json",
+        "sha256": "27e20d7b96aac1a633e0be3d07ae8a74ff28d99da98b508d9ab75c9169d0cb33",
+        "size": 53094
+      },
+      "session": "labelgrade_20261106_quantile5_new_s1000"
+    },
+    {
+      "job_id": "quantile5-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 59189,
+      "started_at": 1793979703.830441,
+      "fit_started_at": 1793979758.549681,
+      "finished_at": 1793980391.9051678,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s2000-a1.json",
+        "sha256": "d3cc763be3fd17d911ca41d175bc5a82cf8cb6a8a93bcd05da3d3be2d2b1c2d0",
+        "size": 49567
+      },
+      "session": "labelgrade_20261106_quantile5_new_s2000"
+    },
+    {
+      "job_id": "quantile5-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 59874,
+      "started_at": 1793980396.59572,
+      "fit_started_at": 1793980449.509417,
+      "finished_at": 1793981089.594217,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s3000-a1.json",
+        "sha256": "103a933c9dbef4ca838356b00bedbdd1a1b9ddfb0166ad70726ad4ff375342b9",
+        "size": 44174
+      },
+      "session": "labelgrade_20261106_quantile5_new_s3000"
+    },
+    {
+      "job_id": "quantile5-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 60738,
+      "started_at": 1793981091.655315,
+      "fit_started_at": 1793981144.1877382,
+      "finished_at": 1793981787.581578,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-new-s4000-a1.json",
+        "sha256": "df93dde3b10debf9d732a5cfc4dc3bed2932d312cac094d174eb42fba6c83b8c",
+        "size": 47185
+      },
+      "session": "labelgrade_20261106_quantile5_new_s4000"
+    },
+    {
+      "job_id": "quantile5-old-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "old",
+      "seed": 42,
+      "pid": 61241,
+      "started_at": 1793981789.600547,
+      "fit_started_at": 1793981844.173909,
+      "finished_at": 1793982280.8497899,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s42-a1.json",
+        "sha256": "8d2895bb0da0e569ea79df10132d38063f8b61bab653ce9e8b7cc8b7fa8abbea",
+        "size": 31501
+      },
+      "session": "labelgrade_20261106_quantile5_old_s42"
+    },
+    {
+      "job_id": "quantile5-old-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "old",
+      "seed": 1000,
+      "pid": 61621,
+      "started_at": 1793982282.724952,
+      "fit_started_at": 1793982329.008311,
+      "finished_at": 1793983013.235348,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s1000-a1.json",
+        "sha256": "3a9d61e6ddb3ea1b2da3e22900af6d23531605453a4f89c9c96903279a6aedf6",
+        "size": 53095
+      },
+      "session": "labelgrade_20261106_quantile5_old_s1000"
+    },
+    {
+      "job_id": "quantile5-old-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "old",
+      "seed": 2000,
+      "pid": 62186,
+      "started_at": 1793983015.196892,
+      "fit_started_at": 1793983061.731273,
+      "finished_at": 1793983644.435161,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s2000-a1.json",
+        "sha256": "84ff638cae99b03f40e9f40f397530caa3f34b7c2c793e30ba3bc4d85303d31e",
+        "size": 49565
+      },
+      "session": "labelgrade_20261106_quantile5_old_s2000"
+    },
+    {
+      "job_id": "quantile5-old-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "old",
+      "seed": 3000,
+      "pid": 62532,
+      "started_at": 1793983646.325589,
+      "fit_started_at": 1793983693.447226,
+      "finished_at": 1793984323.071893,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s3000-a1.json",
+        "sha256": "18f5817e2a8959db418af660b3543eb1a42b0d6422566896feda39c225aaa5ba",
+        "size": 51022
+      },
+      "session": "labelgrade_20261106_quantile5_old_s3000"
+    },
+    {
+      "job_id": "quantile5-old-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile5",
+      "treatment": "old",
+      "seed": 4000,
+      "pid": 63029,
+      "started_at": 1793984324.888012,
+      "fit_started_at": 1793984370.614044,
+      "finished_at": 1793984933.764568,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s4000-a1.json",
+        "sha256": "90c26b6f2aa1f98ba08ffeceace62f1d78c638ed6c75ab01160e05a0db9289fe",
+        "size": 47176
+      },
+      "session": "labelgrade_20261106_quantile5_old_s4000"
+    },
+    {
+      "job_id": "quantile10-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 65580,
+      "started_at": 1793986143.4878888,
+      "fit_started_at": 1793986191.300855,
+      "finished_at": 1793986662.788179,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s42-a1.json",
+        "sha256": "dccbfd00714d282b311e20467aff08ae86fbabd56796c22ed44b37b83562aaea",
+        "size": 38304
+      },
+      "session": "labelgrade_20261106_quantile10_new_s42"
+    },
+    {
+      "job_id": "quantile10-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 66231,
+      "started_at": 1793986664.752175,
+      "fit_started_at": 1793986710.7941918,
+      "finished_at": 1793987130.554111,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s1000-a1.json",
+        "sha256": "4d9ef07674a839ac2cde76b1678af69bac4c6521b205644e46f95bbb5319f9dc",
+        "size": 32820
+      },
+      "session": "labelgrade_20261106_quantile10_new_s1000"
+    },
+    {
+      "job_id": "quantile10-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 66856,
+      "started_at": 1793987132.479203,
+      "fit_started_at": 1793987179.207762,
+      "finished_at": 1793987704.917268,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s2000-a1.json",
+        "sha256": "1b3c94977c51cb6e87f0f9b67956c0560b66ba425cd4f366d19a7440cf1c7fc8",
+        "size": 43851
+      },
+      "session": "labelgrade_20261106_quantile10_new_s2000"
+    },
+    {
+      "job_id": "quantile10-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 67705,
+      "started_at": 1793987706.860256,
+      "fit_started_at": 1793987754.848004,
+      "finished_at": 1793988256.499132,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s3000-a1.json",
+        "sha256": "c4bd0365baa39b09778637fb8825a3ebbda48d111a4f7d4aa277f3b6fa3a6041",
+        "size": 39342
+      },
+      "session": "labelgrade_20261106_quantile10_new_s3000"
+    },
+    {
+      "job_id": "quantile10-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 68363,
+      "started_at": 1793988258.457224,
+      "fit_started_at": 1793988305.8622878,
+      "finished_at": 1793988907.3547158,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-new-s4000-a1.json",
+        "sha256": "fae02b8d61b16039007be38cbf6d3a3a94c436d866498b01c9c65526eb644aba",
+        "size": 51352
+      },
+      "session": "labelgrade_20261106_quantile10_new_s4000"
+    },
+    {
+      "job_id": "quantile10-old-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "old",
+      "seed": 42,
+      "pid": 68987,
+      "started_at": 1793988909.300128,
+      "fit_started_at": 1793988956.72674,
+      "finished_at": 1793989424.875731,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+        "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+        "size": 38305
+      },
+      "session": "labelgrade_20261106_quantile10_old_s42"
+    },
+    {
+      "job_id": "quantile10-old-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "old",
+      "seed": 1000,
+      "pid": 69651,
+      "started_at": 1793989426.805687,
+      "fit_started_at": 1793989471.920734,
+      "finished_at": 1793990000.74818,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+        "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+        "size": 44465
+      },
+      "session": "labelgrade_20261106_quantile10_old_s1000"
+    },
+    {
+      "job_id": "quantile10-old-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "old",
+      "seed": 2000,
+      "pid": 70305,
+      "started_at": 1793990002.70592,
+      "fit_started_at": 1793990049.013427,
+      "finished_at": 1793990739.042551,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+        "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+        "size": 59236
+      },
+      "session": "labelgrade_20261106_quantile10_old_s2000"
+    },
+    {
+      "job_id": "quantile10-old-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "old",
+      "seed": 3000,
+      "pid": 70970,
+      "started_at": 1793990741.082494,
+      "fit_started_at": 1793990791.626962,
+      "finished_at": 1793991318.162982,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+        "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+        "size": 39348
+      },
+      "session": "labelgrade_20261106_quantile10_old_s3000"
+    },
+    {
+      "job_id": "quantile10-old-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "quantile10",
+      "treatment": "old",
+      "seed": 4000,
+      "pid": 71843,
+      "started_at": 1793991320.317848,
+      "fit_started_at": 1793991366.950208,
+      "finished_at": 1793991994.803156,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+        "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+        "size": 51355
+      },
+      "session": "labelgrade_20261106_quantile10_old_s4000"
+    },
+    {
+      "job_id": "width5-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 74415,
+      "started_at": 1793992198.812052,
+      "fit_started_at": 1793992246.885395,
+      "finished_at": 1793992616.82592,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s42-a1.json",
+        "sha256": "352fa4c7c8c671d5bdc03e6e6062575c5ac0343afdc3715636d819e49a7194dc",
+        "size": 27370
+      },
+      "session": "labelgrade_20261106_width5_new_s42"
+    },
+    {
+      "job_id": "width5-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 75221,
+      "started_at": 1793992619.037077,
+      "fit_started_at": 1793992666.5264032,
+      "finished_at": 1793992990.595144,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s1000-a1.json",
+        "sha256": "b247cbffffd18942485d3277a21430ca29b47e1d5ef532f52e33f006ba910fb6",
+        "size": 23631
+      },
+      "session": "labelgrade_20261106_width5_new_s1000"
+    },
+    {
+      "job_id": "width5-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 75922,
+      "started_at": 1793992992.781118,
+      "fit_started_at": 1793993042.556056,
+      "finished_at": 1793993336.331127,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s2000-a1.json",
+        "sha256": "835a99cdc63d334b792e4358263c5de547a25d8055b2d6978a3379eb35337889",
+        "size": 21581
+      },
+      "session": "labelgrade_20261106_width5_new_s2000"
+    },
+    {
+      "job_id": "width5-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 76685,
+      "started_at": 1793993338.4862962,
+      "fit_started_at": 1793993386.881244,
+      "finished_at": 1793993793.497417,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s3000-a1.json",
+        "sha256": "5aac154d12a80b5e742022b471e13c8bdb0a0540a1123c00565bca45ad593e59",
+        "size": 32184
+      },
+      "session": "labelgrade_20261106_width5_new_s3000"
+    },
+    {
+      "job_id": "width5-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "width5",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 77468,
+      "started_at": 1793993795.6622221,
+      "fit_started_at": 1793993842.6178932,
+      "finished_at": 1793994248.0398002,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/width5-new-s4000-a1.json",
+        "sha256": "277a5326710c64f905d81cc473d8c8a9954122fd136fb50d7ee8f519c459290f",
+        "size": 31832
+      },
+      "session": "labelgrade_20261106_width5_new_s4000"
+    },
+    {
+      "job_id": "tails5-new-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 42,
+      "pid": 80179,
+      "started_at": 1793994347.597456,
+      "fit_started_at": 1793994392.949852,
+      "finished_at": 1793994902.4527519,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s42-a1.json",
+        "sha256": "97520a0f135e51df673fcd444df978a947b502531359d46d9ddbdfc4ee4694bd",
+        "size": 41044
+      },
+      "session": "labelgrade_20261106_tails5_new_s42"
+    },
+    {
+      "job_id": "tails5-new-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 1000,
+      "pid": 81295,
+      "started_at": 1793994904.643873,
+      "fit_started_at": 1793994949.8380532,
+      "finished_at": 1793995248.208829,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s1000-a1.json",
+        "sha256": "49fc7e4f6e185d9399b0b663d07a389edd0bde406d89387fe9a1010fcd2ae26a",
+        "size": 19881
+      },
+      "session": "labelgrade_20261106_tails5_new_s1000"
+    },
+    {
+      "job_id": "tails5-new-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 2000,
+      "pid": 82095,
+      "started_at": 1793995250.2750988,
+      "fit_started_at": 1793995296.034388,
+      "finished_at": 1793995728.365227,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s2000-a1.json",
+        "sha256": "65568e77ebff3f1e620dfc7b40a7fee9b353987ed8548490c04fc2ae64728b56",
+        "size": 34215
+      },
+      "session": "labelgrade_20261106_tails5_new_s2000"
+    },
+    {
+      "job_id": "tails5-new-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 3000,
+      "pid": 82999,
+      "started_at": 1793995730.4733949,
+      "fit_started_at": 1793995776.2072861,
+      "finished_at": 1793996354.174575,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s3000-a1.json",
+        "sha256": "07afbf89e8dbb5f3d5e261934ad43f264fe5832695f8f3d1aaeb7ce42fa2075b",
+        "size": 44118
+      },
+      "session": "labelgrade_20261106_tails5_new_s3000"
+    },
+    {
+      "job_id": "tails5-new-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "new",
+      "seed": 4000,
+      "pid": 84012,
+      "started_at": 1793996356.176609,
+      "fit_started_at": 1793996402.893527,
+      "finished_at": 1793996956.692346,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s4000-a1.json",
+        "sha256": "89e0d6893cd8f24ebb41699756f16832cc4f2bc51a63742c2d1389ec61bfdac1",
+        "size": 45125
+      },
+      "session": "labelgrade_20261106_tails5_new_s4000"
+    },
+    {
+      "job_id": "tails5-old-s42-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 42,
+      "pid": 84969,
+      "started_at": 1793996958.889914,
+      "fit_started_at": 1793997006.075018,
+      "finished_at": 1793997443.9848802,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s42-a1.json",
+        "sha256": "23d39cd11b42b6b6701d57e75778e9a00697920541b81bdbca809a38df88eb9f",
+        "size": 35173
+      },
+      "session": "labelgrade_20261106_tails5_old_s42"
+    },
+    {
+      "job_id": "tails5-old-s1000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 1000,
+      "pid": 85825,
+      "started_at": 1793997446.030711,
+      "fit_started_at": 1793997492.987201,
+      "finished_at": 1793997778.99526,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s1000-a1.json",
+        "sha256": "e61dd10573436757b8c4dd80d821539a0dab276c8451f78a96d8beaffb45faab",
+        "size": 19878
+      },
+      "session": "labelgrade_20261106_tails5_old_s1000"
+    },
+    {
+      "job_id": "tails5-old-s2000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 2000,
+      "pid": 86698,
+      "started_at": 1793997781.0930429,
+      "fit_started_at": 1793997826.3052201,
+      "finished_at": 1793998256.44147,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s2000-a1.json",
+        "sha256": "d0ae071167d4005cb33f9d74a9daeb02feb6f8401fe41d613ec6c62941a62aa2",
+        "size": 34222
+      },
+      "session": "labelgrade_20261106_tails5_old_s2000"
+    },
+    {
+      "job_id": "tails5-old-s3000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 3000,
+      "pid": 87627,
+      "started_at": 1793998258.512654,
+      "fit_started_at": 1793998305.511294,
+      "finished_at": 1793998911.2835891,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s3000-a1.json",
+        "sha256": "7bf74c926e89be5f407b06d1e3da90af83445003187960de1e9454cf34a3eb7d",
+        "size": 50671
+      },
+      "session": "labelgrade_20261106_tails5_old_s3000"
+    },
+    {
+      "job_id": "tails5-old-s4000-a1",
+      "status": "succeeded",
+      "phase": "complete",
+      "variant": "tails5",
+      "treatment": "old",
+      "seed": 4000,
+      "pid": 88626,
+      "started_at": 1793998913.411794,
+      "fit_started_at": 1793998959.5209181,
+      "finished_at": 1793999514.596734,
+      "evidence": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-old-s4000-a1.json",
+        "sha256": "ff68529a38b04986aa09c8c7261452a62d4f294fb91e1085644ecb2c68397bce",
+        "size": 45119
+      },
+      "session": "labelgrade_20261106_tails5_old_s4000"
+    }
+  ],
+  "frozen_study": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/frozen-study.json",
+    "sha256": "18c1d4dd7c4405610754066d3f01f08857533c27e7b883a2a124f4d76776448f",
+    "size": 4125
+  },
+  "prepared_inputs": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/prepared-inputs.json",
+    "sha256": "15dba15734e0b6db22ac383b59512de08e22f99377e4810eb5fd4ff2a77224c0",
+    "size": 9922
+  },
+  "pipeline_stage": "closed",
+  "registration_receipts": [
+    {
+      "completed_candidates": 1,
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "7aa96b62557befe761693f9bd4578b685e67e86eba9d2679959a90407ca889b4",
+        "size": 23360
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+        "sha256": "93ca6544195c1193d6ffa8faf1e76989e75861fc9f8e280b53f64417cae91aca",
+        "size": 10769
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/study-summary.json",
+        "sha256": "9501c4a7162279a815dfde64f9c5fadb8d64be2e7dd22985246cc2a0328e147a",
+        "size": 11276
+      }
+    },
+    {
+      "completed_candidates": 2,
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "1680be15b7a21c35895f59aabc3584568b61dc729ad923c5ca6040d69da15a6e",
+        "size": 23995
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+        "sha256": "4a0a4a47a7074f77cffeb75e0908953d45dd612372dc9e25d32f480dce1b0eae",
+        "size": 13189
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/study-summary.json",
+        "sha256": "1eb58c5984524c52d08d0c056f0aa40e9dff364d3e7052fcbbbb7130e9e65e90",
+        "size": 18495
+      }
+    },
+    {
+      "completed_candidates": 3,
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "1fe64a55adfea773deb5833a660bd3c167811d4a5f6d3cf753bea84b9700b713",
+        "size": 24630
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+        "sha256": "75f28414e9103a98938a6265342e24dd03472e9e3ce5ac6deae69f44ea4b033c",
+        "size": 14790
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/study-summary.json",
+        "sha256": "b8b46e3f6fea4b3543be61141e64b120ba3bbd7080f50cced2201a12435cca77",
+        "size": 22382
+      }
+    },
+    {
+      "completed_candidates": 4,
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "e9fc3f24ceaac866716915235e80cd1521cdd624ae8aed86648e5f860bf32e6b",
+        "size": 25267
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+        "sha256": "cf66b366510ff4332b6ce7c5ee89d6e776c092a438e95e1f6a6cc8e655bfb65a",
+        "size": 17362
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/study-summary.json",
+        "sha256": "5baae0e32026b8ed18919022a6f4c6a534c61ef32508bbe261d15ca784240b28",
+        "size": 29540
+      }
+    },
+    {
+      "final_review": true,
+      "completed_candidates": 4,
+      "registry": {
+        "path": "backtest/experiments/registry.jsonl",
+        "sha256": "19864f7522fd31f34502593b4be42c043ab786f7001a7e0269991048b3621060",
+        "size": 26113
+      },
+      "detail": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+        "sha256": "b03e0b4328ef8cd326fd5e9949f45e4942736df84fcd5a35cb0fff28c7b962c1",
+        "size": 22997
+      },
+      "summary": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/study-summary.json",
+        "sha256": "5baae0e32026b8ed18919022a6f4c6a534c61ef32508bbe261d15ca784240b28",
+        "size": 29540
+      }
+    }
+  ],
+  "pipeline_finished_at": 1793999695.49297,
+  "cleanup": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/harness-cleanup.json",
+    "sha256": "9ab8476fc08c1cd0a34e38671150be20a9ab009c3f605b104444456d684266a8",
+    "size": 2424
+  },
+  "native_close_revision": 80
+}

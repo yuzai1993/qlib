@@ -1,0 +1,235 @@
+{
+  "variants": {
+    "h7q10": {
+      "new": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/data/h7q10.pkl",
+        "sha256": "c9703d8129de089871d70596b7670bfcc223fe1b1774eefd6e98422aa50505b1",
+        "size": 65617878
+      },
+      "horizon": 7,
+      "label_signature": {
+        "shape": [
+          5461850
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "0689561d58105b51ac5bd322cd023592d8cc461f2c207ea59fbfec0db5ea91cb",
+        "values_sha256": "87d193ef393db7df2ed8ca0550814ffa6aa7aa888d84158e35126b49a961d3b5"
+      },
+      "stats": {
+        "bin_counts": [
+          544820,
+          546297,
+          546178,
+          546161,
+          546675,
+          545769,
+          546083,
+          546306,
+          546031,
+          547530
+        ],
+        "mean": 0.000944692175835371,
+        "std": 0.9988111345998291,
+        "scale": 0.34774330479829896,
+        "offset": -1.564601411089059
+      },
+      "paired_continuous_inputs": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h7.json",
+        "sha256": "731edc315985a3c94e2db7ba63ca3590681e5eea8d37c025797588b7c1ce6549",
+        "size": 18220
+      }
+    },
+    "h15q10": {
+      "new": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/data/h15q10.pkl",
+        "sha256": "0418c0ee3cccbd64b0144d2bef96e9f9140060bbc3d31baae5395b242fcce23c",
+        "size": 65467722
+      },
+      "horizon": 15,
+      "label_signature": {
+        "shape": [
+          5449337
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "47ca2f0b0cf4d80f1df33dd053c28c73fac59c5f2d11066df68c74f889d652d0",
+        "values_sha256": "f66f3e22bd494485b836a55e22433ce6a41e5419057daa6f5ffdcbb636a599db"
+      },
+      "stats": {
+        "bin_counts": [
+          543602,
+          545046,
+          544819,
+          544985,
+          545526,
+          544487,
+          544754,
+          545059,
+          544803,
+          546256
+        ],
+        "mean": 0.0009343374404124916,
+        "std": 0.9988096856801868,
+        "scale": 0.34774330479829896,
+        "offset": -1.564601411089059
+      },
+      "paired_continuous_inputs": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/inputs-h15.json",
+        "sha256": "a7a3e8f80e6985b120c5a6ec1d22d640cd9062362118d542a33a241409ae80e6",
+        "size": 18221
+      }
+    },
+    "sum20continuous": {
+      "new": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/data/sum20continuous.pkl",
+        "sha256": "35a8e62478445796703b22d7573f72c893e0b56c9eb8bb106130194382723379",
+        "size": 87259086
+      },
+      "horizon": 20,
+      "label_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float64"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "70706781070cdfa1eceb722b98fb48cb9d762e9ded77edc4c046df11388ba900"
+      },
+      "training_rows": 5448963,
+      "quantization": null
+    },
+    "sum20q10": {
+      "new": {
+        "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/data/sum20q10.pkl",
+        "sha256": "164cf3d9268c6b016a955e02991f3c10f7a004fc1163aad8148b9283e0f523d9",
+        "size": 65463234
+      },
+      "horizon": 20,
+      "label_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "f03a8f34587f94811b04b68731f1f3254257ab8d14bf888244d8d55c964f2bc1"
+      },
+      "training_rows": 5448963,
+      "quantization": {
+        "bin_counts": [
+          543527,
+          545054,
+          544752,
+          545061,
+          545328,
+          544454,
+          544749,
+          545064,
+          544742,
+          546232
+        ],
+        "mean": 0.0009426171891391277,
+        "std": 0.9988113014324339,
+        "scale": 0.34774330479829896,
+        "offset": -1.564601411089059
+      }
+    }
+  },
+  "expectations": {
+    "h7q10": {
+      "index_sha256": "0689561d58105b51ac5bd322cd023592d8cc461f2c207ea59fbfec0db5ea91cb",
+      "feature_array_sha256": "5670a6f487de22adbdf207c78970975f418817d38b58b8e6c2ec41bc6c723180",
+      "rows": 5461850
+    },
+    "h15q10": {
+      "index_sha256": "47ca2f0b0cf4d80f1df33dd053c28c73fac59c5f2d11066df68c74f889d652d0",
+      "feature_array_sha256": "2cc907656164ff0bcb5568416553f4e9f2ca9cc5b3bcb4e116536ce3de467b1d",
+      "rows": 5449337
+    },
+    "sum20continuous": {
+      "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+      "feature_array_sha256": "132a5284972c9677c91ef05c45cab166098bdda1b2fbb405b86eaa87c210ed9f",
+      "rows": 5448963
+    },
+    "sum20q10": {
+      "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+      "feature_array_sha256": "132a5284972c9677c91ef05c45cab166098bdda1b2fbb405b86eaa87c210ed9f",
+      "rows": 5448963
+    }
+  },
+  "controls": {
+    "h7continuous": {
+      "metrics": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h7-model.json",
+        "sha256": "797fb80cbe9feaf279acdf78e09ed1d2c3c5ade73df568e4c572ca30a8e86978",
+        "size": 87956
+      },
+      "models": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h7.json",
+        "sha256": "68b09e8b9da16b7746abbc9d98f59ddfe3fff47b44075c2e18971d47029824a9",
+        "size": 3176
+      }
+    },
+    "h15continuous": {
+      "metrics": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/metrics/h15-model.json",
+        "sha256": "ad959e4dd3996ee2da99d609472a97affa2dad75939b6e4d03db95c49063a13c",
+        "size": 87968
+      },
+      "models": {
+        "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/sources-h15.json",
+        "sha256": "8998e64360b9a84262e9e08e123a4876bea88dc97e11647784198a886bab20f0",
+        "size": 3197
+      }
+    }
+  },
+  "provider_inventory": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/provider-inputs.json.gz",
+    "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+    "size": 1937741
+  },
+  "provider_files_verified": 43855,
+  "label_definition": {
+    "base": "Legacy H40-valid/listing-qualified base; each target keeps its own finite mask. Do not force an all-H intersection.",
+    "sum": "Float64 sum of 20 raw float32 cumulative returns, require every component finite; CSRankNorm (average daily pct rank-.5)*3.46 after target mask, before training-date selection.",
+    "continuous": "CSRankNorm without grading",
+    "quantile10": "Exact rational midpoint ranks; right-closed boundaries j/10; preserve ties; apply fixed v5 affine and no reranking",
+    "affine": {
+      "scale": 0.34774330479829896,
+      "offset": -1.564601411089059,
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705
+    }
+  },
+  "authoritative_missing_price_amendment": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/configs/missing-price-amendment.json",
+    "sha256": "7e4da3d0b87ea9edbff83ea2ddf2712a8e0650a4fde723286cb300be904db160",
+    "size": 2145
+  },
+  "checks": [
+    "Exact H20 raw-rank reproduction by all17years",
+    "Same final training mask as H20 for both sum arms",
+    "Exact H7/H15 original ordered masks",
+    "Existing fixed q10 affine; no reranking",
+    "Raw H1..H20 sum in float64, skip missing components without count scaling; original H20 mask retained",
+    "Quantile boundaries/ties tested",
+    "No guarantee of lower volatility demonstrated with equal-terminal paths"
+  ]
+}

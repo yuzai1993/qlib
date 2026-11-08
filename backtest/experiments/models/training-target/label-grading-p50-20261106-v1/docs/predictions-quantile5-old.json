@@ -1,0 +1,106 @@
+{
+  "variant": "quantile5",
+  "treatment": "old",
+  "components": [
+    {
+      "seed": 42,
+      "session": "labelgrade_20261106_quantile5_old_s42",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "08def99c40a3654ee317cf298229f8d91e1f3ddef145d0eab247759566d2961b",
+        "size": 59200304
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile5-old-s42.pkl",
+        "sha256": "bd4f7f7588026f87c2697cdcf02af251a03e0e8b661d7b03ea0141cadd4d7395",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s42-a1.json",
+        "sha256": "8d2895bb0da0e569ea79df10132d38063f8b61bab653ce9e8b7cc8b7fa8abbea",
+        "size": 31501
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "labelgrade_20261106_quantile5_old_s1000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e7f46840ec1163b57c083197fa178e1b8597e8944da061ddfe8526bd4e64c93e",
+        "size": 60184966
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile5-old-s1000.pkl",
+        "sha256": "fe2682d8437329a8cbbd065b1e4806c368dcf2202faf7263c0359c440a033468",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s1000-a1.json",
+        "sha256": "3a9d61e6ddb3ea1b2da3e22900af6d23531605453a4f89c9c96903279a6aedf6",
+        "size": 53095
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "labelgrade_20261106_quantile5_old_s2000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "8f1d1b94cecc7c40393735dbd468dd58afc9118200f0b97d5092c16b496d8fa0",
+        "size": 60028563
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile5-old-s2000.pkl",
+        "sha256": "7571399ddb3bcfda1b202440d9289e6ff3252f8f5001cd2a7ae5500e5bea19f6",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s2000-a1.json",
+        "sha256": "84ff638cae99b03f40e9f40f397530caa3f34b7c2c793e30ba3bc4d85303d31e",
+        "size": 49565
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "labelgrade_20261106_quantile5_old_s3000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7d3ff058cbac8779aa278058124aa238b64a4d8bccd84991c370f4f89614ec7d",
+        "size": 60083053
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile5-old-s3000.pkl",
+        "sha256": "22e7870c8bb6a65bd6629fda3380fa174af31a8952f3d36a3db1d90316cb817d",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s3000-a1.json",
+        "sha256": "18f5817e2a8959db418af660b3543eb1a42b0d6422566896feda39c225aaa5ba",
+        "size": 51022
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "labelgrade_20261106_quantile5_old_s4000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile5_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f31f21eb803f6b3382a6109f9441a814a40614da89b203158c3d7baf1e9f9dfb",
+        "size": 59893699
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/quantile5-old-s4000.pkl",
+        "sha256": "32c6a17d6a153e5399b2f15f4b2618670b868fa14eceee0d62d213a6da0a66b7",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile5-old-s4000-a1.json",
+        "sha256": "90c26b6f2aa1f98ba08ffeceace62f1d78c638ed6c75ab01160e05a0db9289fe",
+        "size": 47176
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261106_label_grading/quantile5-old-ensemble.pkl",
+    "sha256": "30e87203e178a83a5c42548d3903083695470d8320659f70bbe08f2dc2bf1496",
+    "size": 83046157
+  }
+}

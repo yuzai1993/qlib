@@ -1,0 +1,310 @@
+{
+  "original_changes": 106,
+  "training_rows": 5448963,
+  "exact_raw_rank_reproduction": true,
+  "source_manifests": [
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    }
+  ],
+  "provider_files": 43855,
+  "provider_inventory": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/provider-inputs.json.gz",
+    "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+    "size": 1937741
+  },
+  "inputs": {
+    "control_new": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/control_new.pkl",
+      "sha256": "c30e060163901ccee1793b06add4f3c464563b375274b2edc59e331fc051dd5c",
+      "size": 87259086
+    },
+    "control_old": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/control_old.pkl",
+      "sha256": "4f34c2cad0a107d5da46a5cf01bc46951454958b4d65515a589eb44d8ba25e98",
+      "size": 87259061
+    }
+  },
+  "variants": {
+    "quantile5": {
+      "bins": 5,
+      "scale": 0.7062662888849909,
+      "offset": -1.4122071519098367,
+      "scores": [
+        -1.4122071519098367,
+        -0.7059408630248458,
+        0.0003254258601450566,
+        0.7065917147451359,
+        1.4128580036301268
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile5-new.pkl",
+        "sha256": "48dc00e3bf85e7e626d1ec7ff5ade9ca17ec9af9d38355f8059c0be943b106e7",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "38510cc7b0c19e476be8a6b185b570f42ae15053c37de748b660b6d0ef00ab97"
+      },
+      "counts": [
+        1088603,
+        1089814,
+        1089747,
+        1089799,
+        1091000
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448674176253233,
+      "actual_std": 0.9988157021316204,
+      "rms_error_to_continuous": 0.20077978274106523,
+      "old": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile5-old.pkl",
+        "sha256": "13479335ea808219228ecdc5fe9ac2faae6f1dbd70bae0c85b85089456e65f9e",
+        "size": 65463234
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "d1ea397deb9058c06c95c8c8ade1b21aee18d0c2bf87544f1e80617f9c645041"
+      },
+      "membership_changes": 1,
+      "encoded_changes": 1,
+      "paired_fits_needed": true,
+      "daily_max_bin_share": {
+        "median": 0.2002181223753156,
+        "max": 0.20571955719557194
+      }
+    },
+    "quantile10": {
+      "bins": 10,
+      "scale": 0.34774330479829896,
+      "offset": -1.564601411089059,
+      "scores": [
+        -1.564601411089059,
+        -1.21685810629076,
+        -0.869114801492461,
+        -0.521371496694162,
+        -0.1736281918958631,
+        0.17411511290243586,
+        0.5218584177007348,
+        0.8696017224990338,
+        1.2173450272973327,
+        1.5650883320956317
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-new.pkl",
+        "sha256": "7f293a86256c214fff979f9838705d81837c685cb1c152b3518ebc0751374281",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "109b5a2c0d0bd3228e4d2a5c291558465bb2317c0b8f869bdb11e8cdac428351"
+      },
+      "counts": [
+        543520,
+        545083,
+        544742,
+        545072,
+        545269,
+        544478,
+        544751,
+        545048,
+        544767,
+        546233
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448497103386184,
+      "actual_std": 0.9988157213943023,
+      "rms_error_to_continuous": 0.10000682936814152,
+      "old": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+        "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+        "size": 65463234
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "bc96ba29de10454d406663f4ebd478ea4cfba48b69764c98a5b80bedc33bf48d"
+      },
+      "membership_changes": 1,
+      "encoded_changes": 1,
+      "paired_fits_needed": true,
+      "daily_max_bin_share": {
+        "median": 0.10026171495705546,
+        "max": 0.11178509532062392
+      }
+    },
+    "width5": {
+      "bins": 5,
+      "scale": 1.386145753508584,
+      "offset": -1.3366546868446483,
+      "scores": [
+        -1.3366546868446483,
+        0.04949106666393566,
+        1.4356368201725196,
+        2.8217825736811033,
+        4.207928327189688
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/width5-new.pkl",
+        "sha256": "458567a6024870eea6ff0f7089a8f6cb40c793b1960a13671bf95eea4c5b93f9",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "2bdc9a95ac842e9ff124b880f7ab8d0d499edc47fe24efe086108ec084f5bfc3"
+      },
+      "counts": [
+        1341046,
+        3114098,
+        853361,
+        124525,
+        15933
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448697485616604,
+      "actual_std": 0.9988157134115895,
+      "rms_error_to_continuous": 0.9354829153300506,
+      "old": null,
+      "sensitivity_limitation": "Frozen old raw H20 return magnitudes unavailable; no reconstructed106-change width comparison.",
+      "daily_max_bin_share": {
+        "median": 0.6749422277945768,
+        "max": 0.9992937853107344
+      }
+    },
+    "tails5": {
+      "bins": 5,
+      "scale": 1.193846470661467,
+      "offset": -2.387898778947113,
+      "scores": [
+        -2.387898778947113,
+        -1.1940523082856458,
+        -0.00020583762417869522,
+        1.1936406330372886,
+        2.3874871036987555
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/tails5-new.pkl",
+        "sha256": "e5a69b2d4511e1c2d50bdc6d938e7913dc667274a44d8ce6696189867474314b",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "df27b1a42655992fc125b10ee49cfa9a5cb626a18697beaf71455457b89c468b"
+      },
+      "counts": [
+        270983,
+        817620,
+        3269360,
+        817162,
+        273838
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448522077534627,
+      "actual_std": 0.9988157037221149,
+      "rms_error_to_continuous": 0.5301567274936285,
+      "old": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/tails5-old.pkl",
+        "sha256": "add26ce1bff0bd7b54315988dd1e7c4e84cdd6ecbe0374b7397fe412140be575",
+        "size": 65463234
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "d61aa70ccd77ecfc4d1819e5eb542d8c00dd2012d6a07dae3a361912ab7bfbc5"
+      },
+      "membership_changes": 1,
+      "encoded_changes": 1,
+      "paired_fits_needed": true,
+      "daily_max_bin_share": {
+        "median": 0.6,
+        "max": 0.6018348623853211
+      }
+    }
+  },
+  "checks": [
+    "sourceSHA and5448963exact indices",
+    "106 original float32differences",
+    "rawH20 ranks reproduce current target exactly",
+    "rank bin boundary and tie checks",
+    "training-only affine mean/std match",
+    "same affine encoding across paired sources",
+    "no reranking after grading"
+  ]
+}

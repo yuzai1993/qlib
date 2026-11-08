@@ -41,6 +41,10 @@ experiments/
 
 `_catalog/path_map.json`及实盘parity保留；27份审计日志/XML、重复映射/平台快照及哈希清单合并为摘要，保留每个原件的SHA、大小和Git来源。详情见[审计索引](_catalog/audits/README.md)与[本次整理](_catalog/audits/20261101-shared-catalog-cleanup/README.md)。
 
+2026-11-07：当前模型基线已按用户指定晋升为v5 · H20等样本10档／patience50（旧标签五种子），独立档案为 `models/training-target/quantile10-p50-v5/`。原标签分级及n网格档案保留，v2保留历史模型与s5/生产依赖；当前执行层基线仍为s5。下文带历史日期的数量与“当前”只描述相应整理时点。
+
+2026-11-08：标签实验已完成训练、核验、登记、报告和清理。累计H1～H20原始收益求和的连续版与10档版，均未改善同源H20对照的全窗净年化及夏普；用户据此决定不采纳本轮累计标签，保留v5。H7/H15/H20中，分档后仍分别由H7、H15、H20取得D、F、T最高净年化，但不支持“T普遍变差、D普遍变好”。结论限于本轮配方及历史选型窗口，详见[累计标签与期限分档报告](models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html)；此前v5的执行层比较见[真阶梯回测报告](strategies/cohort-ladder/quantile10-p50-20261107-v1/reports/detail.html)。
+
 ## 按文件夹维护与平台发现
 
 2026-10-31 按用户追加要求，先删除无可读报告的模型档案，再将重复训练目标和历史v1归入汇总。当前保留全A模型6个、`phase-m-v1-bt`策略源实验17个，共23个源实体、24条登记事件。策略中的14个参数变体归为5组，另有3个独立入口；平台“实验记录”显示6个模型和8个策略入口。共享部署配置与模型原件不在本次删除范围。模型归并证据见 [_catalog/audits/20261031-baseline-comparison-cleanup/archive-consolidation.json](_catalog/audits/20261031-baseline-comparison-cleanup/archive-consolidation.json)，v1来源保留见 [_catalog/audits/20261031-v1-consolidation-v2-current/v1-archive-consolidation.json](_catalog/audits/20261031-v1-consolidation-v2-current/v1-archive-consolidation.json)。

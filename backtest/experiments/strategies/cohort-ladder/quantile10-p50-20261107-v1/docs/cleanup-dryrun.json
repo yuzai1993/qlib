@@ -1,0 +1,58 @@
+{
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "result_root": "/Users/yuxianqi/Project/qlib/backtest/result",
+  "mlruns_root": "/Users/yuxianqi/Project/qlib/mlruns",
+  "scope": "all_a",
+  "result_retention": "platform",
+  "only_result": true,
+  "baseline_exp_id": null,
+  "candidate_exp_id": null,
+  "phase_m_v1_baseline_exp_ids": [
+    "regime-adapt/m0-h20-t5h5-es-v1",
+    "regime-adapt/m0-h20-t3h5es-v1",
+    "regime-adapt/m0-h20-rankices-v1",
+    "training-target/h20-quantile10-p50-v5"
+  ],
+  "current_bt_exp_ids": [
+    "baseline/phase-m-v1-bt-v5"
+  ],
+  "keep_result_dirs": [
+    "/Users/yuxianqi/Project/qlib/backtest/result/20260822_091415_phase_s_m0h20es_all_top5d1f100_ensemble",
+    "/Users/yuxianqi/Project/qlib/backtest/result/20261102_h20_legacy_rebuild",
+    "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/phase_s_regime",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_rankices_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t3h5es_s42",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s1000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s2000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s3000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s4000",
+    "/Users/yuxianqi/Project/qlib/backtest/result/regimeadaptfast_m0h20_t5h5es_s42"
+  ],
+  "delete_result_dirs": [],
+  "keep_mlruns_dirs": [
+    "/Users/yuxianqi/Project/qlib/mlruns/440511413852618761"
+  ],
+  "delete_mlruns_dirs": [],
+  "warnings": [
+    "Retention is confined to the selected repository; use --repo-root to explicitly select the real research root. No sibling repository is searched.",
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/20261102_h20_legacy_rebuild",
+    "non-session result directory preserved for audit: /Users/yuxianqi/Project/qlib/backtest/result/phase_s_regime"
+  ],
+  "errors": [
+    "historical model baseline reference validation failed: historical baseline archive discovery failed: [{'path': 'backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metadata.json', 'message': 'analysis limitations must be a string', 'exp_id': 'regime-adapt/quantile10-p50-ladder-20261107-v1'}]",
+    "platform archive discovery failed: [{'path': 'backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/metadata.json', 'message': 'analysis limitations must be a string', 'exp_id': 'regime-adapt/quantile10-p50-ladder-20261107-v1'}]"
+  ]
+}

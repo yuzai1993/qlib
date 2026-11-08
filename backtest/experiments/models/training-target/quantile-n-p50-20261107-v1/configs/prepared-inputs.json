@@ -1,0 +1,648 @@
+{
+  "original_changes": 106,
+  "training_rows": 5448963,
+  "source_manifests": [
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    }
+  ],
+  "provider_inventory": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/provider-inputs.json.gz",
+    "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+    "size": 1937741
+  },
+  "inputs": {
+    "control_new": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/control_new.pkl",
+      "sha256": "c30e060163901ccee1793b06add4f3c464563b375274b2edc59e331fc051dd5c",
+      "size": 87259086
+    },
+    "control_old": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/control_old.pkl",
+      "sha256": "4f34c2cad0a107d5da46a5cf01bc46951454958b4d65515a589eb44d8ba25e98",
+      "size": 87259061
+    }
+  },
+  "variants": {
+    "quantile7": {
+      "bins": 7,
+      "scale": 0.49940749333000023,
+      "offset": -1.4979699629769214,
+      "scores": [
+        -1.4979699629769214,
+        -0.9985624696469212,
+        -0.49915497631692096,
+        0.00025251701307937857,
+        0.4996600103430795,
+        0.9990675036730796,
+        1.4984749970030802
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile7-new.pkl",
+        "sha256": "25d3c8759b75f4c2caf2bb2023f20a741aa52324c05077a2f6cc406b671bebb8",
+        "size": 65463234
+      },
+      "old": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile7-old.pkl",
+        "sha256": "25d3c8759b75f4c2caf2bb2023f20a741aa52324c05077a2f6cc406b671bebb8",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "d0fd3c4a77a9dabece3551aa792dc2d4e11c45658f3a6cf86b0e0215cba2373b"
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "d0fd3c4a77a9dabece3551aa792dc2d4e11c45658f3a6cf86b0e0215cba2373b"
+      },
+      "counts": [
+        777156,
+        778456,
+        778376,
+        778472,
+        778379,
+        778441,
+        779683
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448448476630735,
+      "actual_std": 0.9988157011484157,
+      "rms_error_to_continuous": 0.1430556692717164,
+      "membership_changes": 0,
+      "encoded_changes": 0,
+      "paired_fits_needed": false,
+      "identical_input_reuse": true,
+      "daily_max_bin_share": {
+        "median": 0.14311270125223613,
+        "max": 0.15196506550218342
+      }
+    },
+    "quantile15": {
+      "bins": 15,
+      "scale": 0.2311807035850926,
+      "offset": -1.6180749232572125,
+      "scores": [
+        -1.6180749232572125,
+        -1.38689421967212,
+        -1.1557135160870273,
+        -0.9245328125019346,
+        -0.6933521089168421,
+        -0.4621714053317494,
+        -0.2309907017466568,
+        0.00019000183843576046,
+        0.23137070542352833,
+        0.46255140900862113,
+        0.6937321125937137,
+        0.9249128161788063,
+        1.1560935197638988,
+        1.3872742233489914,
+        1.618454926934084
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile15-new.pkl",
+        "sha256": "26174ee04b1afe3898975f31c6b54325d1a21865ea722f2103090a8c3aa341a1",
+        "size": 65463234
+      },
+      "old": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile15-old.pkl",
+        "sha256": "5ac1deb03365ca5d636513df45df197941dc67eb6bb6077bfc1dc2e388344076",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "2688efb354b60c2efbfa4323ce6d0b1be61f0d591e2088d09d4cc450bcef237d"
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "b1d6b85b6ffbab9a07d423e49e4fe69f1cb5edf629b42c29a69c3597adadd19c"
+      },
+      "counts": [
+        361882,
+        363279,
+        363442,
+        363061,
+        363703,
+        363050,
+        362998,
+        363330,
+        363419,
+        363474,
+        362911,
+        363414,
+        363092,
+        363271,
+        364637
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.000944850744352099,
+      "actual_std": 0.9988157104618631,
+      "rms_error_to_continuous": 0.06662538486222508,
+      "membership_changes": 1,
+      "encoded_changes": 1,
+      "paired_fits_needed": true,
+      "identical_input_reuse": false,
+      "daily_max_bin_share": {
+        "median": 0.06696338529360918,
+        "max": 0.07684210526315789
+      }
+    },
+    "quantile20": {
+      "bins": 20,
+      "scale": 0.1732175837851888,
+      "offset": -1.6454085100099698,
+      "scores": [
+        -1.6454085100099698,
+        -1.472190926224781,
+        -1.2989733424395922,
+        -1.1257557586544034,
+        -0.9525381748692145,
+        -0.7793205910840257,
+        -0.6061030072988369,
+        -0.4328854235136481,
+        -0.2596678397284593,
+        -0.0864502559432705,
+        0.08676732784191832,
+        0.25998491162710713,
+        0.43320249541229594,
+        0.6064200791974848,
+        0.7796376629826736,
+        0.9528552467678624,
+        1.1260728305530512,
+        1.29929041433824,
+        1.4725079981234288,
+        1.6457255819086176
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile20-new.pkl",
+        "sha256": "26dc3b45902b361cfbe31878c223d4dfc6eebd3e3b9641a74a112e6fd0ad1064",
+        "size": 65463234
+      },
+      "old": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile20-old.pkl",
+        "sha256": "281505f5c6a297186ecd393e771134975c2a4288886836195107d28ea28d4be5",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "04d8775add8d1df91c1919dd3f60e92190f1a055f7f791c1036095e768d63ca0"
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "9a6a692186c883f83bdde8ba0c0b6c4ddf6db959057bc545a45dcba5303bcdf7"
+      },
+      "counts": [
+        270983,
+        272537,
+        272371,
+        272712,
+        272521,
+        272221,
+        272341,
+        272731,
+        272172,
+        273097,
+        271798,
+        272680,
+        272247,
+        272504,
+        272654,
+        272394,
+        272245,
+        272522,
+        272395,
+        273838
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448514118295139,
+      "actual_std": 0.998815715456186,
+      "rms_error_to_continuous": 0.049956543616085605,
+      "membership_changes": 2,
+      "encoded_changes": 2,
+      "paired_fits_needed": true,
+      "identical_input_reuse": false,
+      "daily_max_bin_share": {
+        "median": 0.05029705108186197,
+        "max": 0.06152512998266898
+      }
+    },
+    "quantile30": {
+      "bins": 30,
+      "scale": 0.11539754030104184,
+      "offset": -1.673122534349891,
+      "scores": [
+        -1.673122534349891,
+        -1.5577249940488491,
+        -1.4423274537478072,
+        -1.3269299134467656,
+        -1.2115323731457237,
+        -1.0961348328446818,
+        -0.98073729254364,
+        -0.8653397522425982,
+        -0.7499422119415563,
+        -0.6345446716405145,
+        -0.5191471313394727,
+        -0.4037495910384308,
+        -0.2883520507373889,
+        -0.17295451043634702,
+        -0.05755697013530536,
+        0.057840570165736516,
+        0.1732381104667784,
+        0.2886356507678203,
+        0.40403319106886193,
+        0.5194307313699038,
+        0.6348282716709457,
+        0.7502258119719876,
+        0.8656233522730294,
+        0.9810208925740713,
+        1.0964184328751132,
+        1.211815973176155,
+        1.327213513477197,
+        1.4426110537782384,
+        1.5580085940792803,
+        1.6734061343803222
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile30-new.pkl",
+        "sha256": "82a810e3eb903efb550b5f279a0bd24102f07ea3a19beb5b5291927824375822",
+        "size": 65463234
+      },
+      "old": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile30-old.pkl",
+        "sha256": "829d5f8fa3f6ce5584f02405c2b0a39cd0993b2d553343564d451cbe7dc58627",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "4abc1dbf0142b7efa76a30b24b799346cb24121e99e3e2bb68b301d947bc0e38"
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "db881b5086e093515f7d7f0e80e5c46425be5e12eb1dbe8da94d79bb0002c45b"
+      },
+      "counts": [
+        180191,
+        181691,
+        181638,
+        181641,
+        181770,
+        181672,
+        181415,
+        181646,
+        181681,
+        182022,
+        181113,
+        181937,
+        181376,
+        181622,
+        182271,
+        181059,
+        181549,
+        181870,
+        181466,
+        182008,
+        181277,
+        181634,
+        181551,
+        181863,
+        181595,
+        181497,
+        181675,
+        181596,
+        181578,
+        183059
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448544579262074,
+      "actual_std": 0.9988157014262039,
+      "rms_error_to_continuous": 0.03329900669435983,
+      "membership_changes": 1,
+      "encoded_changes": 1,
+      "paired_fits_needed": true,
+      "identical_input_reuse": false,
+      "daily_max_bin_share": {
+        "median": 0.0336734693877551,
+        "max": 0.04579339723109691
+      }
+    },
+    "quantile50": {
+      "bins": 50,
+      "scale": 0.06921370186681354,
+      "offset": -1.69566421076637,
+      "scores": [
+        -1.69566421076637,
+        -1.6264505088995564,
+        -1.557236807032743,
+        -1.4880231051659294,
+        -1.4188094032991159,
+        -1.3495957014323023,
+        -1.2803819995654888,
+        -1.2111682976986753,
+        -1.1419545958318618,
+        -1.0727408939650482,
+        -1.0035271920982347,
+        -0.9343134902314211,
+        -0.8650997883646074,
+        -0.7958860864977939,
+        -0.7266723846309804,
+        -0.6574586827641669,
+        -0.5882449808973533,
+        -0.5190312790305398,
+        -0.4498175771637263,
+        -0.38060387529691275,
+        -0.3113901734300992,
+        -0.2421764715632857,
+        -0.17296276969647217,
+        -0.10374906782965865,
+        -0.0345353659628449,
+        0.03467833590396863,
+        0.10389203777078215,
+        0.17310573963759568,
+        0.2423194415044092,
+        0.31153314337122273,
+        0.38074684523803626,
+        0.4499605471048498,
+        0.5191742489716633,
+        0.5883879508384768,
+        0.6576016527052904,
+        0.7268153545721039,
+        0.7960290564389174,
+        0.8652427583057309,
+        0.9344564601725445,
+        1.003670162039358,
+        1.0728838639061715,
+        1.142097565772985,
+        1.2113112676397986,
+        1.280524969506612,
+        1.3497386713734256,
+        1.4189523732402392,
+        1.4881660751070527,
+        1.5573797769738662,
+        1.6265934788406802,
+        1.6958071807074937
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile50-new.pkl",
+        "sha256": "00507a5537824b01206c8d2fd3465f195d80e9f6a9478217663eabc0ccdb76cf",
+        "size": 65463234
+      },
+      "old": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile50-old.pkl",
+        "sha256": "84481a667ad839c4fa3b7984140c2ae9ce3e4db41fc3b051f6983a79b7b8fdc7",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "e384c7b9abdee1e3a7b47809e8728e235813be4a58f8392685eaac04d7159042"
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "8071638f4619df7e69518aae1250f7f1f54f47fdb97a53996705f16a1768c55c"
+      },
+      "counts": [
+        107532,
+        109013,
+        108938,
+        109015,
+        109022,
+        108910,
+        108990,
+        108973,
+        108956,
+        109254,
+        108695,
+        109041,
+        108943,
+        109027,
+        109036,
+        108856,
+        108976,
+        109052,
+        108908,
+        109280,
+        108683,
+        108991,
+        108995,
+        108972,
+        109628,
+        108392,
+        108926,
+        109042,
+        108882,
+        109236,
+        108727,
+        109027,
+        108875,
+        109060,
+        109062,
+        108903,
+        108963,
+        109005,
+        108937,
+        109240,
+        108706,
+        109031,
+        108932,
+        109038,
+        109060,
+        108883,
+        108944,
+        109008,
+        108946,
+        110452
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448574789144516,
+      "actual_std": 0.9988157094314664,
+      "rms_error_to_continuous": 0.01997737382037964,
+      "membership_changes": 2,
+      "encoded_changes": 2,
+      "paired_fits_needed": true,
+      "identical_input_reuse": false,
+      "daily_max_bin_share": {
+        "median": 0.020387359836901122,
+        "max": 0.03351351351351351
+      }
+    },
+    "quantile3": {
+      "bins": 3,
+      "scale": 1.2232861169130942,
+      "offset": -1.2227808307056378,
+      "scores": [
+        -1.2227808307056378,
+        0.0005052862074563791,
+        1.2237914031205506
+      ],
+      "new": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile3-new.pkl",
+        "sha256": "75dd5828b028c80f5c08f0470c3e793e57a9b2d865b66d899ff90731fb08b24d",
+        "size": 65463234
+      },
+      "old": {
+        "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/data/quantile3-old.pkl",
+        "sha256": "75dd5828b028c80f5c08f0470c3e793e57a9b2d865b66d899ff90731fb08b24d",
+        "size": 65463234
+      },
+      "new_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "d384d7d3ea225800b8fd4ee26b0bd5c293c92c99d1396b24fea8851aec38bf39"
+      },
+      "old_signature": {
+        "shape": [
+          5448963
+        ],
+        "columns": [
+          "LABEL0"
+        ],
+        "dtypes": [
+          "float32"
+        ],
+        "index_sha256": "caedd978b05f0c2af702a46f896497b4b7ae74a6571494eaacf5d77416421b43",
+        "values_sha256": "d384d7d3ea225800b8fd4ee26b0bd5c293c92c99d1396b24fea8851aec38bf39"
+      },
+      "counts": [
+        1815367,
+        1816271,
+        1817325
+      ],
+      "target_mean": 0.0009448550239293172,
+      "target_std": 0.9988157090537705,
+      "actual_mean": 0.0009448432601949875,
+      "actual_std": 0.998815688939305,
+      "rms_error_to_continuous": 0.3378038572843796,
+      "membership_changes": 0,
+      "encoded_changes": 0,
+      "paired_fits_needed": false,
+      "identical_input_reuse": true,
+      "daily_max_bin_share": {
+        "median": 0.3335243553008596,
+        "max": 0.34050179211469533
+      }
+    }
+  },
+  "checks": [
+    "same5448963orderedrows",
+    "reference control pickles SHA verified",
+    "all frozen provider files verified",
+    "106 original float32differences",
+    "rational boundary and tied-midrank checks for alln",
+    "single affine transform fitted on reference training labels",
+    "paired old/new exact input identity diagnosed before fits",
+    "no reranking after grading"
+  ]
+}

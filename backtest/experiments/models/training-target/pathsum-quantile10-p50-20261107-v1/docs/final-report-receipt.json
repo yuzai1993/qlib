@@ -1,0 +1,43 @@
+{
+  "detail": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/reports/detail.html",
+    "sha256": "c14b64f840d5f58f0c2202a440f718e341f77f0519e5196b96cf675761619175",
+    "size": 25193
+  },
+  "total_report": {
+    "path": "backtest/experiments/reports/phase_m_v1_report.html",
+    "sha256": "795171cfbbab250675fd9ce222d8017c42de37f233649a1b779f49f71483bf80",
+    "size": 23231
+  },
+  "registry": {
+    "path": "backtest/experiments/registry.jsonl",
+    "sha256": "35f0b43147d82ec75cbc6cc8ce9b88f9200cf74ba0750b55ae92f93f0a875e8b",
+    "size": 36382
+  },
+  "metadata": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/metadata.json",
+    "sha256": "ad5187d625d2340cfb6cfc8bfc13d245421c747ce90cb9535bec2f42176f4b50",
+    "size": 30553
+  },
+  "summary": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/study-summary.json",
+    "sha256": "e037f54bad9b8602f016f3fc98451c768076729449b8898f950e0ef737027e67",
+    "size": 28695
+  },
+  "conclusion": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/research-conclusion.json",
+    "sha256": "02b5f3134b4378927715a4690ffb4f02da56b934b303e1f6c7f2d6dcec6ac480",
+    "size": 3246
+  },
+  "numerical_verification": {
+    "path": "backtest/experiments/models/training-target/pathsum-quantile10-p50-20261107-v1/docs/final-numerical-verification.json",
+    "sha256": "ad4ec743cb1d0f18b9566979dfb68a9263dcf999109b65ebefbd7cf9b1e10055",
+    "size": 11794
+  },
+  "html_checks": {
+    "local_links": 15,
+    "missing_links": [],
+    "figures": 2
+  },
+  "visual_check": "Both scientific PNGs viewed; labels and units checked; horizon label offsets corrected in plot_final_v2. Full HTML browser preview unavailable after earlier local-protocol rejection."
+}

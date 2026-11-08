@@ -1,0 +1,58 @@
+{
+  "exp_id": "training-target/label-grading-p50-20261106-v1/arms/control_new",
+  "archive_path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1",
+  "date": "2026-11-06",
+  "state": "completed",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "training-target",
+  "experiment_type": "training_target",
+  "display_name": "连续标签 · 同源H20对照",
+  "hypothesis": "Daily label grading suppresses irrelevant fine rank differences while preserving or improving predictive usefulness; robustness and return are assessed separately.",
+  "baseline_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "portable_eval_output": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/control-new.json",
+  "eval_output": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/metrics/control-new.json",
+  "detail_report": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/reports/detail.html",
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.2445518917762597,
+    "ir": 0.6474098947539955,
+    "ann": 0.3342333915319232,
+    "beta": 1.0469917795369432,
+    "ann_alpha": 0.24033759851119912,
+    "appraisal_ir": 0.6378804607497995,
+    "turnover_period": 0.8976668976668977,
+    "turnover": 0.17953337953337953,
+    "ann_cost": 0.03931062878262878,
+    "net_ann_excess": 0.2052412629936309,
+    "net_ann": 0.2949227627492944,
+    "net_ann_alpha": 0.20102696972857034,
+    "net_ann_vol": 0.5971968374940947,
+    "net_sharpe": 0.49384515160331993,
+    "rank_ic_mean": 0.0985574883393832
+  },
+  "parent_experiment": "training-target/label-grading-p50-20261106-v1",
+  "source_role": "paired_continuous_control",
+  "source_registration": "Covered by parent label-grading formal event",
+  "diagnostic_only": true,
+  "cleanup_retention_eligible": false,
+  "configs": [
+    "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/configs/frozen-study.json"
+  ],
+  "result_dirs": [
+    "backtest/result/horizonp50_20261105_h20_s42",
+    "backtest/result/horizonp50_20261105_h20_s1000",
+    "backtest/result/horizonp50_20261105_h20_s2000",
+    "backtest/result/horizonp50_20261105_h20_s3000",
+    "backtest/result/horizonp50_20261105_h20_s4000"
+  ]
+}

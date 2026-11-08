@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-label-grading-20261106.nWblY2/handoff.py",
+    "sha256": "30e4691ca743a80a03ca7b15203d8d29529063829f68f2de34b7ffe038b5e3d1",
+    "size": 1622
+  },
+  "source_text": "from common import *\nimport signal\n\nif __name__=='__main__':\n    save_source(__file__)\n    while True:\n        running=any(j['status']=='running' for j in read(PROGRESS)['jobs'])\n        fits=any(j['outcome']=='running' for j in read(STATE)['jobs'].values())\n        ps=subprocess.run(['ps','-p','59189','-o','state='],capture_output=True,text=True)\n        alive=ps.returncode==0 and not ps.stdout.strip().startswith('Z')\n        if not running and not fits and not alive:break\n        time.sleep(10)\n    os.kill(58281,signal.SIGTERM);os.kill(58281,signal.SIGCONT)\n    write(BASE/'docs/supervisor-handoff.json',{'at':time.time(),'active_fit_ended_before_old_dispatcher_termination':True,'old_dispatcher':58281,'new_dispatcher':str(TMP/'pipeline_v2.py'),'preserved_trainer':fingerprint(TMP/'train.py'),'scientific_changes':False})\n    for p in [TMP/'train_group_v2.py',TMP/'pipeline_v2.py']:save_source(p)\n    harness('event',{'type':'note','text':'Independent read-only review identified per-fit closeout reserve and horizon-only platform grouping. Frozen scientific plan and train adapter unchanged; dispatcher v2 checks a45-minute closeout reserve plus expected duration before every fit. Sources and handoff audit saved; no active fit terminated. Publication uses normal study entry and detailed four-recipe report.'})\n    print('handoff complete; resuming serial jobs with per-fit reserve',flush=True)\n    with (TMP/'pipeline-v2.log').open('w') as log:\n        result=subprocess.run([sys.executable,'-u',str(TMP/'pipeline_v2.py')],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT)\n    raise SystemExit(result.returncode)\n",
+  "purpose": "Exact temporary adapter source; remove executable at close, retain reconstructable audit."
+}

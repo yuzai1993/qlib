@@ -1,0 +1,106 @@
+{
+  "variant": "tails5",
+  "treatment": "new",
+  "components": [
+    {
+      "seed": 42,
+      "session": "labelgrade_20261106_tails5_new_s42",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "cf15639ef4b6b77cefcb9010535e5a8a31c5ce1f26272ac1c9df98faa01fa690",
+        "size": 59563026
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/tails5-new-s42.pkl",
+        "sha256": "82368cb416ca82de38517eeed873427e6e4e5ae35f5872faf942dcc4c208b4d1",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s42-a1.json",
+        "sha256": "97520a0f135e51df673fcd444df978a947b502531359d46d9ddbdfc4ee4694bd",
+        "size": 41044
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "labelgrade_20261106_tails5_new_s1000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "92843f7aa4af17ed15d9b64d5ebef0ddaebc59242c4a82b2a874c559851575d9",
+        "size": 58559720
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/tails5-new-s1000.pkl",
+        "sha256": "ff494df16c19a01188313ca55e14f597e2d07defd896ceec8a7f9d249ce461b4",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s1000-a1.json",
+        "sha256": "49fc7e4f6e185d9399b0b663d07a389edd0bde406d89387fe9a1010fcd2ae26a",
+        "size": 19881
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "labelgrade_20261106_tails5_new_s2000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "92b9280fe6ccdfe2b8e77ffe6bbaa3d773a2f9a8cb6efe3b9762b922735cc9e8",
+        "size": 59281886
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/tails5-new-s2000.pkl",
+        "sha256": "e4f0a6502529bcbd9439e3f1e03f55fbb7969bf794555e23b205c595517b6e6c",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s2000-a1.json",
+        "sha256": "65568e77ebff3f1e620dfc7b40a7fee9b353987ed8548490c04fc2ae64728b56",
+        "size": 34215
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "labelgrade_20261106_tails5_new_s3000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "4a3113327395292c449a8291de1a34dd5e692d1617d9f000288fe928f3fc7f6c",
+        "size": 59696778
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/tails5-new-s3000.pkl",
+        "sha256": "0738f3165ec6cb76ed65a0f006bc3cd9326b7ee84e23becbeb4254970cf8d88b",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s3000-a1.json",
+        "sha256": "07afbf89e8dbb5f3d5e261934ad43f264fe5832695f8f3d1aaeb7ce42fa2075b",
+        "size": 44118
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "labelgrade_20261106_tails5_new_s4000",
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_tails5_new_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5b3a86b819afe0dc0ec8bfc49ab7b2b6b861cbccc4b7266e507c041fa7984504",
+        "size": 59818163
+      },
+      "prediction": {
+        "path": "backtest/result/20261106_label_grading/tails5-new-s4000.pkl",
+        "sha256": "c46adeff5cf303043a2a3f8fffdf1ad7fe95cf5ad9c532a844d0a83c56083cb8",
+        "size": 83046132
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/tails5-new-s4000-a1.json",
+        "sha256": "89e0d6893cd8f24ebb41699756f16832cc4f2bc51a63742c2d1389ec61bfdac1",
+        "size": 45125
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261106_label_grading/tails5-new-ensemble.pkl",
+    "sha256": "63883910f52b62039d8700d2a487b4e44f0b4ed414b32120d316777345db2263",
+    "size": 83046157
+  }
+}

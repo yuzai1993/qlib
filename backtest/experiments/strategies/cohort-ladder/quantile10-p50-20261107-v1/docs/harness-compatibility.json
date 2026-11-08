@@ -1,0 +1,12 @@
+{
+  "native_coverage": "baseline/policy/input identities, wall budget, notes and closure",
+  "native_result_gate_limitation": "all_a_strategy pins model_ref to historical s5 v2; actual v5 cannot pass. No fabricated v2 identity and no native variants. Two serial account jobs/results independently verified in execution-state.json.",
+  "model_ref": "training-target/h20-quantile10-p50-v5",
+  "strategy_baseline_ref": "baseline/phase-m-v1-bt-v5",
+  "max_account_jobs": 3,
+  "expected_accounts": 2,
+  "new_model_fits": 0,
+  "prior_cumulative_model_fits": 176,
+  "selection_rule": "Fixed Top3 H5 ladder and fixed s5 on v5; compare official historical s5. No tuning or strategy promotion.",
+  "user_authorization": "将n=10晋升为模型的新baseline，并且跑一次真阶梯回测，跟回测baseline对比效果。"
+}

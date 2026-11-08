@@ -1,0 +1,20 @@
+{
+  "at": 1794022015.515827,
+  "pid": 97036,
+  "stage": "infer-quantile7-2021",
+  "children": [
+    [
+      "97233",
+      "97036",
+      "S"
+    ]
+  ],
+  "action": "Pause coordinator while current inference year finishes; versioned adapters correct primary control identity before any new canonical evaluation; no fit or scientific input change",
+  "completed_at": 1794022053.318939,
+  "completed_inference": {
+    "path": "backtest/experiments/models/training-target/quantile-n-p50-20261107-v1/docs/inference-quantile7-2021.json",
+    "sha256": "fce306b11fc34b4876e51d731b7359fb9d637d0df19d10d0c7d6f40472d4c332",
+    "size": 3292
+  },
+  "replacement_pipeline": "pipeline_single_v2.py"
+}

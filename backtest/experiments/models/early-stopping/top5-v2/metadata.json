@@ -9,26 +9,22 @@
   "records_directory": "backtest/experiments/models/early-stopping/top5-v2/records",
   "configs": [],
   "reports": [
-    "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
-    "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html"
+    "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html"
   ],
   "docs": [
-    "docs/research/20260809_regime_adaptation_plan.md",
-    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md"
+    "docs/research/20260809_regime_adaptation_plan.md"
   ],
   "data": [
     "backtest/experiments/models/early-stopping/top5-v2/metrics/eval_m0h20es_k123h2345.json"
   ],
   "shared_assets": [
     "docs/research/20260809_regime_adaptation_plan.md",
-    "backtest/experiments/_shared/docs/20260809_regime_adaptation_plan.md",
-    "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html",
-    "backtest/experiments/_shared/reports/regime_adapt_m0h20_t5h5es_report.html"
+    "backtest/experiments/models/early-stopping/top5-v2/reports/regime_adapt_m0h20_t5h5es_report.html"
   ],
   "recipe_sources": [
     {
       "role": "runner",
-      "path": "backtest/scripts/train_regime_arm.py",
+      "path": "backtest/scripts/train/train_regime_arm.py",
       "shared": true,
       "sha256": "7964200dff62326e202ad1f2ad61097c807c5968a4e738734da8b11e4426e26a"
     },
@@ -54,7 +50,8 @@
   ],
   "records": [
     "backtest/experiments/models/early-stopping/top5-v2/records/ce5c4daad76093a340dc5b651e195eb9de90ae1e1d689915c863e0ace9786e0e.json",
-    "backtest/experiments/models/early-stopping/top5-v2/records/791cc502da9b28b7172a16d1844abe4f51c1271a7d4004856810972ce6ec00a0.json"
+    "backtest/experiments/models/early-stopping/top5-v2/records/791cc502da9b28b7172a16d1844abe4f51c1271a7d4004856810972ce6ec00a0.json",
+    "backtest/experiments/models/early-stopping/top5-v2/records/4ca9543bcdb2200a5101eefb1f8e1baadf42b04b7afe8ad08fc7b7d72da84905.json"
   ],
   "inventory_kind": "asset_snapshot",
   "registry_authority": "backtest/experiments/registry.jsonl",
@@ -68,14 +65,14 @@
   "archive_path": "backtest/experiments/models/early-stopping/top5-v2",
   "experiment_type": "early_stopping",
   "analysis": {
-    "conclusion": "现行Top3×H5口径下净年化30.19%，较v1略升，夏普基本持平。 当前模型基线。",
+    "conclusion": "现行Top3×H5口径下净年化30.19%，较v1略升，夏普基本持平。 2026-11-07起作为历史模型基线，当前研究模型为v5。",
     "evidence": [
       "metrics/eval_m0h20es_k123h2345.json",
       "records/ce5c4daad76093a340dc5b651e195eb9de90ae1e1d689915c863e0ace9786e0e.json"
     ],
     "limitations": "历史晋升时采用Top5×H5，旧详细报告仍保存该口径；这里使用现行Top3×H5 JSON，不据此重述当时晋升依据。评估窗也用于早停，不是独立验证。",
     "review_status": "draft",
-    "updated_at": "2026-10-31"
+    "updated_at": "2026-11-07"
   },
   "change_summary": "早停由499天次日RankIC改为评估窗Top5×H5扣费净年化。",
   "comparison_baseline": {

@@ -1,6 +1,7 @@
 """Round-trip integration tests; the only fakes are clipboard, clock and broker."""
 
 import importlib.util
+import datetime as dt
 import json
 from pathlib import Path
 
@@ -55,6 +56,21 @@ def test_round_trip_retries_lost_response_without_a_second_order(relay):
     assert reply["ok"]
     assert reply["orders"][0]["id"] == "20261027-001"
     assert len(broker.submissions) == 1
+
+
+def test_automatic_status_identifies_the_loaded_runtime(relay, tmp_path):
+    from types import SimpleNamespace
+
+    (tmp_path / "inbox").mkdir()
+    args = SimpleNamespace(output_dir=str(tmp_path / "output"), bridge_root=str(tmp_path),
+                           state_dir=None, strategy="test", check=False, timeout=1, interval=1)
+    now = dt.datetime(2026, 11, 9, 17, 1, tzinfo=dt.timezone(dt.timedelta(hours=8)))
+    assert relay.run_automatic(args, MemoryClipboard(), now=lambda: now) == 0
+    result = json.loads((tmp_path / "output/automation.status.json").read_text())
+    assert result["status"] == "NO_SIGNAL"
+    assert result["runtime"]["relay_script"] == str(DIRECTORY / "clipboard_relay.py")
+    assert result["runtime"]["relay_version"]
+    assert set(result["runtime"]["sha256"]) == {"clipboard_auto.py", "clipboard_relay.py"}
 
 
 def test_relay_stops_on_new_session_instead_of_rebinding_trade(relay):

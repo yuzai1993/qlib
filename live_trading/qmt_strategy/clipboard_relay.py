@@ -153,6 +153,8 @@ def _show(response, output_dir):
 
 
 def run_automatic(args, clipboard, now=None, sleep=time.sleep):
+    import hashlib
+    import clipboard_auto
     from clipboard_auto import AutoRelay, atomic_write
 
     now = now or (lambda: dt.datetime.now(SHANGHAI))
@@ -161,6 +163,10 @@ def run_automatic(args, clipboard, now=None, sleep=time.sleep):
     state = Path(args.state_dir).resolve() if args.state_dir else output / "state"
     if not root.is_dir() or not (root / "inbox").is_dir():
         raise ValueError("bridge-root must be the existing Windows shared directory containing inbox")
+    sources = [Path(__file__).resolve(), Path(clipboard_auto.__file__).resolve()]
+    runtime = dict(relay_version=clipboard_auto.RELAY_SOURCE_VERSION,
+                   relay_script=str(sources[0]), automation_script=str(sources[1]),
+                   sha256={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources})
 
     def communicate(request):
         if args.check:
@@ -183,7 +189,9 @@ def run_automatic(args, clipboard, now=None, sleep=time.sleep):
 
     runner = AutoRelay(root, args.strategy, state, communicate, now=now)
     if args.check:
-        print(json.dumps(runner.check(), ensure_ascii=False, indent=2))
+        result = runner.check()
+        result["runtime"] = runtime
+        print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
 
     status_file = output / "automation.status.json"
@@ -213,6 +221,9 @@ def run_automatic(args, clipboard, now=None, sleep=time.sleep):
             error=error,
             session=runner.journal.get("session") if runner.journal else None,
             batch_id=runner.journal["batch"]["header"]["batch_id"] if runner.journal else None,
+            runtime=runtime,
+            quote_diagnostics=runner.journal.get("quote_diagnostics", {}) if runner.journal else {},
+            quote_retry_errors=runner.journal.get("phases", {}).get("SELL", {}).get("quote_errors", {}) if runner.journal else {},
         )
         atomic_write(status_file, dumps(payload) + "\n")
         atomic_write(root / "logs" / "clipboard" / (runner.day + "_automation.status.json"), dumps(payload) + "\n")

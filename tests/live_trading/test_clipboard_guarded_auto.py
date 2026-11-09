@@ -1,6 +1,7 @@
 """Guarded cash protocol using the real memory executor and local broker evidence."""
 
 import copy
+import datetime as dt
 import hashlib
 import json
 
@@ -69,6 +70,250 @@ class GuardedWorld(World):
         if not self.capability:
             response["capabilities"] = [c for c in response["capabilities"] if c != "topk-cash-v1"]
         return response
+
+
+def skew_quotes(world, offsets):
+    """Simulate QMT's external timestamp independently of the relay clock."""
+    snapshot = world.snapshot
+
+    def changed(symbols):
+        result = snapshot(symbols)
+        for code, quote in result["quotes"].items():
+            quote["timetag"] = (world.now + dt.timedelta(seconds=offsets.get(code, 0))).strftime("%Y%m%d %H:%M:%S")
+        return result
+
+    world.engine.snapshot = changed
+
+
+def test_guarded_future_quote_retries_after_clock_recovery_and_restart(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    offsets = {"301165.SZ": 8}
+    skew_quotes(w, offsets)
+    w.at("14:55:00")
+    w.runner.step()
+    assert not w.broker.submissions
+    assert not w.runner.journal["phases"]["SELL"]["skipped"]
+    evidence = w.runner.journal["quote_diagnostics"]["301165.SZ"]
+    assert evidence["age_seconds"] == -8
+    assert evidence["timetag"] == "20261027 14:55:08"
+    assert evidence["status"] == "FUTURE"
+    offsets.clear()
+    w.runner = auto.AutoRelay(tmp_path, STRATEGY, tmp_path / "local_state", w.exchange, now=lambda: w.now)
+    w.at("14:55:02")
+    w.runner.step()
+    w.runner.step()
+    assert len(w.broker.submissions) == 1
+    assert w.broker.submissions[0][0]["id"] == "sell0"
+
+
+def test_guarded_healthy_sell_proceeds_while_stale_sell_waits(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600), ("300214.SZ", 100)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600, "300214.SZ": 100}
+    offsets = {"300214.SZ": -181}
+    skew_quotes(w, offsets)
+    w.at("14:55:00")
+    w.runner.step()
+    assert [o["id"] for o, _ in w.broker.submissions] == ["sell0"]
+    w.fill(0, quantity=0, status=50)
+    offsets.clear()
+    w.at("14:55:02")
+    w.runner.step()
+    assert [o["id"] for o, _ in w.broker.submissions] == ["sell0", "sell1"]
+
+
+def test_guarded_bad_quote_expires_with_evidence_at_sell_deadline(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    skew_quotes(w, {"301165.SZ": 8})
+    w.at("14:55:00")
+    w.runner.step()
+    w.at("14:57:05")
+    w.runner.step()
+    result = w.runner.journal["phases"]["SELL"]["skipped"][0]
+    assert result["status"] == "EXPIRED"
+    assert "age_seconds=-8" in result["error"]
+    assert "14:55:08" in result["error"]
+    assert not w.broker.submissions
+    assert w.runner.journal["exported"]
+
+
+def test_guarded_sell_retry_replays_only_original_request_after_lost_reply(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    original = w.exchange
+
+    def lost_reply(request):
+        reply = original(request)
+        if request["type"] == "trade":
+            raise TimeoutError("lost sell response")
+        return reply
+
+    w.runner.exchange = lost_reply
+    w.at("14:55:00")
+    with pytest.raises(TimeoutError):
+        w.runner.step()
+    w.prices["301165.SZ"] = 100
+    w.runner = auto.AutoRelay(tmp_path, STRATEGY, tmp_path / "local_state", original, now=lambda: w.now)
+    w.runner.step()
+    trades = [r for r in w.requests if r["type"] == "trade"]
+    assert trades[0] == trades[1]
+    assert len(w.broker.submissions) == 1
+
+
+def test_guarded_clock_check_reports_quote_age_without_any_trade(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    skew_quotes(w, {"301165.SZ": 8})
+    w.at("14:55:00")
+    report = w.runner.check()
+    assert report["quote_diagnostics"]["301165.SZ"]["status"] == "FUTURE"
+    assert report["quote_diagnostics"]["301165.SZ"]["age_seconds"] == -8
+    assert report["relay_version"] == "2026-11-09-quote-retry-v1"
+    assert not w.broker.submissions
+
+
+def test_guarded_retry_does_not_allow_foreign_working_sells(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    skew_quotes(w, {"301165.SZ": 8})
+    w.at("14:55:00")
+    w.runner.step()
+    w.foreign = [dict(remark="manual", broker_order_id="manual", status=50, quantity=100,
+                      filled_quantity=0, side="SELL", stock_code="301165.SZ")]
+    w.at("14:55:02")
+    with pytest.raises(RuntimeError, match="foreign"):
+        w.runner.step()
+    assert not w.broker.submissions
+
+
+def test_guarded_old_terminal_sell_skip_never_reopens_after_upgrade(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    w.runner.discover()
+    order = w.runner.journal["batch"]["orders"][0]
+    w.runner.journal["phases"]["SELL"] = dict(
+        request=None, skipped=[auto.unsubmitted(order, "legacy stale quote")], acknowledged=True)
+    w.runner.save()
+    w.runner = auto.AutoRelay(tmp_path, STRATEGY, tmp_path / "local_state", w.exchange, now=lambda: w.now)
+    w.at("14:55:00")
+    w.runner.step()
+    assert not w.broker.submissions
+    assert w.runner.journal["phases"]["SELL"]["skipped"][0]["error"] == "legacy stale quote"
+
+
+def test_guarded_quote_query_crossing_sell_deadline_never_submits(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    snapshot = w.snapshot
+
+    def slow_snapshot(symbols):
+        w.at("14:57:05")
+        return snapshot(symbols)
+
+    w.engine.snapshot = slow_snapshot
+    w.at("14:57:04")
+    w.runner.step()
+    assert not w.broker.submissions
+    assert w.runner.journal["phases"]["SELL"]["skipped"][0]["status"] == "EXPIRED"
+
+
+def test_guarded_sell_retry_still_rejects_session_change(auto, tmp_path):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600), ("300214.SZ", 100)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600, "300214.SZ": 100}
+    skew_quotes(w, {"300214.SZ": 8})
+    w.at("14:55:00")
+    w.runner.step()
+    w.engine.session = "session-b"
+    w.at("14:55:02")
+    with pytest.raises(RuntimeError, match="session changed"):
+        w.runner.step()
+    assert len(w.broker.submissions) == 1
+
+
+@pytest.mark.parametrize("changed", ["quote_age", "foreign", "holdings", "fresh_price"])
+def test_guarded_sell_crash_before_clipboard_rechecks_evidence(auto, tmp_path, changed):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    skew_quotes(w, {"301165.SZ": -179})
+    original = w.exchange
+
+    def before_publication(request):
+        if request["type"] == "trade":
+            raise TimeoutError("not published")
+        return original(request)
+
+    w.runner.exchange = before_publication
+    w.at("14:55:00")
+    with pytest.raises(TimeoutError):
+        w.runner.step()
+    assert not w.broker.submissions
+    frozen = copy.deepcopy(w.runner.journal["phases"]["SELL"]["requests"][0]["request"])
+    w.at("14:56:59" if changed == "quote_age" else "14:55:01")
+    if changed == "foreign":
+        w.foreign = [dict(remark="manual", broker_order_id="manual", status=50, quantity=100,
+                          filled_quantity=0, side="SELL", stock_code="301165.SZ")]
+    if changed == "holdings":
+        w.holdings["301165.SZ"] = 100
+    if changed == "fresh_price":
+        snapshot = w.engine.snapshot
+
+        def missing_price(symbols):
+            result = snapshot(symbols)
+            for quote in result["quotes"].values():
+                quote["last"] = None
+            return result
+
+        w.engine.snapshot = missing_price
+    w.runner = auto.AutoRelay(tmp_path, STRATEGY, tmp_path / "local_state", original, now=lambda: w.now)
+    if changed == "foreign":
+        with pytest.raises(RuntimeError, match="foreign"):
+            w.runner.step()
+    else:
+        w.runner.step()
+    assert not w.broker.submissions
+    assert w.runner.journal["phases"]["SELL"]["requests"][0]["request"] == frozen
+
+
+@pytest.mark.parametrize("frozen", [False, True])
+def test_guarded_clock_rollback_cannot_submit_before_sell_window(auto, tmp_path, frozen):
+    guarded_signals(tmp_path, buys=[], sells=[("301165.SZ", 600)])
+    w = GuardedWorld(auto, tmp_path)
+    w.holdings = {"301165.SZ": 600}
+    offsets = {"301165.SZ": 0 if frozen else 8}
+    skew_quotes(w, offsets)
+    original = w.exchange
+
+    def before_publication(request):
+        if request["type"] == "trade":
+            raise TimeoutError("not published")
+        return original(request)
+
+    w.at("14:55:00")
+    if frozen:
+        w.runner.exchange = before_publication
+        with pytest.raises(TimeoutError):
+            w.runner.step()
+    else:
+        w.runner.step()
+    offsets.clear()
+    w.at("14:54:55")
+    w.runner = auto.AutoRelay(tmp_path, STRATEGY, tmp_path / "local_state", original, now=lambda: w.now)
+    w.runner.step()
+    assert not w.broker.submissions
+    w.at("14:55:01")
+    w.runner.step()
+    assert len(w.broker.submissions) == 1
 
 
 def test_guarded_empty_account_builds_five_with_post_sale_cash_and_durable_reservations(auto, tmp_path):

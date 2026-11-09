@@ -12,6 +12,26 @@ from pathlib import Path
 from qmt_clipboard import MAX_REQUEST_CHARS, PROTOCOL, SHANGHAI, TERMINAL, _identifier, dumps
 
 GUARDED_TOPK_PRICE_TYPE = "CLOSE_AUCTION_TOPK_CASH_V1"
+RELAY_SOURCE_VERSION = "2026-11-09-quote-retry-v1"
+
+
+class QuoteUnavailable(ValueError):
+    """A never-submitted order may obtain a fresh quote within its original window."""
+
+
+def quote_evidence(quote, now):
+    quote = quote if isinstance(quote, dict) else {}
+    evidence = dict(observed_at=now.isoformat(), timetag=quote.get("timetag"),
+                    last=quote.get("last"), age_seconds=None, status="INVALID")
+    try:
+        stamp = dt.datetime.strptime(quote["timetag"], "%Y%m%d %H:%M:%S").replace(tzinfo=SHANGHAI)
+        age = (now - stamp).total_seconds()
+        evidence["age_seconds"] = age
+        evidence["status"] = ("WRONG_DATE" if stamp.date() != now.date() else
+                              "FUTURE" if age < -5 else "STALE" if age > 180 else "FRESH")
+    except (KeyError, ValueError, TypeError):
+        pass
+    return evidence
 
 
 def atomic_write(path, text):
@@ -109,11 +129,17 @@ def prepare_orders(orders, snapshot, now):
     prepared, skipped = [], []
     for item in orders:
         code, side = item["stock_code"], item["side"]
-        quote = snapshot["quotes"][code]
-        stamp = dt.datetime.strptime(quote["timetag"], "%Y%m%d %H:%M:%S").replace(tzinfo=SHANGHAI)
-        if stamp.date() != now.date() or not -5 <= (now - stamp).total_seconds() <= 180:
-            raise ValueError("stale quote for " + code)
-        last = finite(quote["last"], "last price", minimum=0.000001)
+        quote = snapshot.get("quotes", {}).get(code)
+        evidence = quote_evidence(quote, now)
+        if evidence["status"] != "FRESH":
+            raise QuoteUnavailable(
+                "stale quote for %s: status=%s timetag=%s observed_at=%s age_seconds=%s; "
+                "required same day and -5 <= age <= 180; check Windows time sync" %
+                (code, evidence["status"], evidence["timetag"], evidence["observed_at"], evidence["age_seconds"]))
+        try:
+            last = finite(quote.get("last"), "last price", minimum=0.000001)
+        except ValueError as exc:
+            raise QuoteUnavailable("unavailable price for %s: %s" % (code, exc)) from exc
         if side == "BUY":
             price = math.ceil(round(last * 1.002 * 100, 6)) / 100
             if quote.get("upper") is not None and finite(quote["upper"], "upper limit") > 0:
@@ -341,6 +367,11 @@ class AutoRelay:
             available_cash=response["snapshot"]["account"]["available_cash"],
             positions=response["snapshot"]["positions"],
             quotes=response["snapshot"]["quotes"],
+            relay_version=RELAY_SOURCE_VERSION,
+            qmt_system_time=response.get("ts"),
+            quote_diagnostics={code: quote_evidence(response["snapshot"].get("quotes", {}).get(code),
+                                                    self.now().astimezone(SHANGHAI))
+                               for code in sorted({o["stock_code"] for o in self.journal["batch"]["orders"]})},
         )
         if self.guarded():
             contract = self.journal["batch"]["orders"][0]
@@ -348,8 +379,8 @@ class AutoRelay:
                           working_orders=response["snapshot"]["working_orders"], held_names=len(held))
         return result
 
-    def working_orders_clear(self, snapshot):
-        """Only exact durably attempted BUY reservations may still be working."""
+    def working_orders_clear(self, snapshot, allow_sells=False):
+        """Only exact durable own requests may be working; buys still exclude sells."""
         buy = self.journal["phases"].get("BUY", {})
         reserved = set(buy.get("cash_plan", {}).get("reserved", []))
         known = {}
@@ -360,10 +391,16 @@ class AutoRelay:
                 if order["id"] in reserved:
                     remark = "qc" + hashlib.sha256((self.journal["session"] + "/" + order["id"]).encode("ascii")).hexdigest()[:20]
                     known[remark] = order
+        if allow_sells:
+            for child in self.journal["phases"].get("SELL", {}).get("requests", []):
+                if child.get("attempted"):
+                    for order in child["request"]["orders"]:
+                        remark = "qc" + hashlib.sha256((self.journal["session"] + "/" + order["id"]).encode("ascii")).hexdigest()[:20]
+                        known[remark] = order
         remarks, broker_ids = set(), set()
         for active in snapshot["working_orders"]:
             order = known.get(active["remark"])
-            if (order is None or active["side"] != "BUY" or active["stock_code"] != order["symbol"]
+            if (order is None or active["side"] != order["side"] or active["stock_code"] != order["symbol"]
                     or active["quantity"] != order["quantity"]):
                 raise RuntimeError("foreign or unreserved working order blocks guarded trading")
             if active["remark"] in remarks or (active["broker_order_id"] and active["broker_order_id"] in broker_ids):
@@ -371,13 +408,127 @@ class AutoRelay:
             remarks.add(active["remark"])
             broker_ids.add(active["broker_order_id"])
 
-    def guarded_observation(self, symbols):
+    def guarded_observation(self, symbols, allow_sells=False):
         observation = self.call(self.request("snapshot", symbols=symbols))
         if observation.get("query_error"):
             raise RuntimeError(observation["query_error"])
         guarded_snapshot(observation.get("snapshot"))
-        self.working_orders_clear(observation["snapshot"])
+        self.working_orders_clear(observation["snapshot"], allow_sells=allow_sells)
+        observed_at = self.now().astimezone(SHANGHAI)
+        diagnostics = self.journal.setdefault("quote_diagnostics", {})
+        for symbol in symbols:
+            diagnostics[symbol] = quote_evidence(observation["snapshot"].get("quotes", {}).get(symbol), observed_at)
+        self.save()
         return observation
+
+    def guarded_sells(self, now):
+        """Retry quote reads only; every submitted sell keeps its original request."""
+        phases = self.journal["phases"]
+        sells = [o for o in self.journal["batch"]["orders"] if o["side"] == "SELL"]
+        phase = phases.get("SELL")
+        if phase is None:
+            if sells and now.strftime("%H:%M:%S") < "14:55:00":
+                return
+            phase = phases["SELL"] = dict(request=None, requests=[], skipped=[], acknowledged=False, quote_errors={})
+            self.save()
+        # Old, already-finalized skips and requests are never reinterpreted/replayed.
+        if "requests" not in phase:
+            if phase["request"] and not phase["acknowledged"]:
+                self.dispatch(phase)
+            return
+        for child in phase["requests"]:
+            if not child["acknowledged"]:
+                self.resume_guarded_sell(child)
+            for skipped in child["skipped"]:
+                if skipped not in phase["skipped"]:
+                    phase["skipped"].append(skipped)
+        reserved = {o["id"] for c in phase["requests"] for o in c["request"]["orders"]}
+        reserved.update(o["id"] for o in phase["skipped"])
+        pending = [o for o in sells if o["client_order_id"] not in reserved]
+        current = self.now().astimezone(SHANGHAI)
+        if pending and "14:55:00" <= current.strftime("%H:%M:%S") < "14:57:05":
+            observed = self.guarded_observation([o["stock_code"] for o in pending], allow_sells=True)
+            current = self.now().astimezone(SHANGHAI)
+            prepared = []
+            if "14:55:00" <= current.strftime("%H:%M:%S") < "14:57:05":
+                for order in pending:
+                    try:
+                        ready, rejected = prepare_orders([order], observed["snapshot"], current)
+                        prepared.extend(ready)
+                        phase["skipped"].extend(rejected)
+                        reserved.add(order["client_order_id"])
+                    except QuoteUnavailable as exc:
+                        phase["quote_errors"][order["client_order_id"]] = str(exc)
+                    except (ValueError, KeyError, TypeError, OverflowError) as exc:
+                        phase["skipped"].append(unsubmitted(order, "guarded sell unavailable: " + str(exc)))
+                        reserved.add(order["client_order_id"])
+                if prepared:
+                    child = dict(request=self.request("trade", orders=prepared, expires_at=self.day + "T14:57:05+08:00"),
+                                 skipped=[], acknowledged=False, attempted=True,
+                                 quotes={o["symbol"]: dict(observed["snapshot"]["quotes"][o["symbol"]]) for o in prepared})
+                    phase["requests"].append(child)
+                    self.save()  # Freeze identity, quantities and limits before any possible submission.
+                    self.dispatch(child)
+                    phase["skipped"].extend(child["skipped"])
+            pending = [o for o in pending if o["client_order_id"] not in reserved]
+        if pending and current.strftime("%H:%M:%S") >= "14:57:05":
+            for order in pending:
+                reason = "submission window missed"
+                if order["client_order_id"] in phase["quote_errors"]:
+                    reason += "; last quote error: " + phase["quote_errors"][order["client_order_id"]]
+                phase["skipped"].append(unsubmitted(order, reason, "EXPIRED"))
+            pending = []
+        phase["acknowledged"] = not pending and all(c["acknowledged"] for c in phase["requests"])
+        self.save()
+
+    def resume_guarded_sell(self, child):
+        """Executor evidence distinguishes a replay from a possible first submission."""
+        known = {o["id"]: o for o in self.journal["latest"]["orders"]}
+        orders = child["request"]["orders"]
+        for order in orders:
+            if order["id"] in known and any(known[order["id"]].get(k) != v for k, v in order.items()):
+                raise RuntimeError("executor sell differs from frozen guarded request")
+        missing = [o for o in orders if o["id"] not in known]
+        if not missing:
+            self.dispatch(child)  # Known IDs cannot cause a second submission.
+            return
+
+        def expire(reason):
+            original = {o["client_order_id"]: o for o in self.journal["batch"]["orders"]}
+            child["skipped"].extend(unsubmitted(original[o["id"]], reason, "EXPIRED") for o in missing)
+            child["acknowledged"] = True
+            self.save()
+
+        current = self.now().astimezone(SHANGHAI)
+        if current.strftime("%H:%M:%S") < "14:55:00":
+            return
+        if current.strftime("%H:%M:%S") >= "14:57:05":
+            expire("submission window missed before original sell request reached executor")
+            return
+        observed = self.guarded_observation([o["symbol"] for o in missing], allow_sells=True)
+        current = self.now().astimezone(SHANGHAI)
+        if current.strftime("%H:%M:%S") < "14:55:00":
+            return
+        if current.strftime("%H:%M:%S") >= "14:57:05":
+            expire("submission window missed while rechecking original sell request")
+            return
+        holdings = {p["stock_code"]: p for p in observed["snapshot"]["positions"]}
+        for order in missing:
+            frozen = quote_evidence(child.get("quotes", {}).get(order["symbol"]), current)
+            if frozen["status"] in ("STALE", "WRONG_DATE", "INVALID"):
+                expire("frozen sell quote no longer fresh; original request not submitted")
+                return
+            fresh = quote_evidence(observed["snapshot"].get("quotes", {}).get(order["symbol"]), current)
+            if frozen["status"] != "FRESH" or fresh["status"] != "FRESH":
+                return  # Wait within the original window; never change the frozen request.
+            try:
+                finite(fresh["last"], "fresh sell price", minimum=0.000001)
+            except ValueError:
+                return
+            if order["quantity"] > holdings.get(order["symbol"], {}).get("can_use_volume", 0):
+                expire("fresh sellable holding below frozen original quantity")
+                return
+        self.dispatch(child)
 
     def guarded_plan(self, orders, observation, observed_at):
         snapshot = observation["snapshot"]
@@ -447,36 +598,11 @@ class AutoRelay:
         reply = self.call(self.request("poll"))
         if reply.get("query_error"):
             return reply
+        self.guarded_sells(now)
         sell = phases.get("SELL")
-        if sell and sell["request"] and not sell["acknowledged"]:
-            self.dispatch(sell)
-            reply = self.journal["latest"]
+        reply = self.journal["latest"]
         orders = self.journal["batch"]["orders"]
-        wall = now.strftime("%H:%M:%S")
-        if sell is None:
-            sells = [o for o in orders if o["side"] == "SELL"]
-            if not sells or wall >= "14:55:00":
-                prepared, skipped = [], []
-                if sells and wall >= "14:57:05":
-                    skipped = [unsubmitted(o, "submission window missed", "EXPIRED") for o in sells]
-                elif sells:
-                    observed = self.guarded_observation(sorted({o["stock_code"] for o in sells}))
-                    observed_at = self.now().astimezone(SHANGHAI)
-                    if observed_at.strftime("%H:%M:%S") >= "14:57:05":
-                        return observed
-                    for order in sells:
-                        try:
-                            ready, rejected = prepare_orders([order], observed["snapshot"], observed_at)
-                            prepared.extend(ready)
-                            skipped.extend(rejected)
-                        except (ValueError, KeyError, TypeError, OverflowError) as exc:
-                            skipped.append(unsubmitted(order, "guarded sell unavailable: " + str(exc)))
-                request = self.request("trade", orders=prepared, expires_at=self.day + "T14:57:05+08:00") if prepared else None
-                sell = phases["SELL"] = dict(request=request, skipped=skipped, acknowledged=not prepared)
-                self.save()
-                if request:
-                    self.dispatch(sell)
-                    reply = self.journal["latest"]
+        wall = self.now().astimezone(SHANGHAI).strftime("%H:%M:%S")
         if "BUY" not in phases and wall >= "14:57:05":
             buys = [o for o in orders if o["side"] == "BUY"]
             states = {o["id"]: o["status"] for o in reply["orders"]}

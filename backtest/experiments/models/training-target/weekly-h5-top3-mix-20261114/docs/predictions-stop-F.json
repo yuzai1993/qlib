@@ -1,0 +1,106 @@
+{
+  "variant": "stop-F",
+  "components": [
+    {
+      "seed": 42,
+      "session": "h5mix_20261114_stop_f_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "fd6c0bce801e2c111508d94fe5658b89626f0a88c9ad95343e6687c8ebb30c24",
+        "size": 515285
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s42.json",
+        "sha256": "fcabc6e10370f0ebc34dbe4bf53853f6c63e2a50e64e3f54422241edad24fb51",
+        "size": 1010
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/stop-F-s42.pkl",
+        "sha256": "cea0437eee9a10f2073f22992c8a63c445af6d5dbe1e497bcb885d041c5ca660",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "h5mix_20261114_stop_f_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "aec2a46273dc09e8a00a5c1cb56a6d596f3e7dcb4b3a2ea91fab8f106e52486c",
+        "size": 205905
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s1000.json",
+        "sha256": "cdeda01a4e9c3b43a3dc3cbf6aeaaac06dcb722f216ca9393f629e9ac0f114d3",
+        "size": 1040
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/stop-F-s1000.pkl",
+        "sha256": "07136b4f905b49306c753804e8c973167ed66ff6957b437358464f8ea192b448",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "h5mix_20261114_stop_f_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f2a4df8b406ab5458c3b8c87cd82c8387dd2ffd24a50ac4ea0b8042c9ab486b7",
+        "size": 521122
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s2000.json",
+        "sha256": "f0bc49e33feede26e455b17e7e2f6a6e9c90c90386931d14de69c7735c37c2ef",
+        "size": 1041
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/stop-F-s2000.pkl",
+        "sha256": "1f84a484a0b0b06a21dc9f9539e11ebd31e9c314a44430a46b0ee1bf6237f6b5",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "h5mix_20261114_stop_f_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2d82fea79e0b5c495239fe77ceee854d21885651ea955599b9b66e0e3b4dde5e",
+        "size": 162479
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s3000.json",
+        "sha256": "ba229aa5b7d9989fc4b4984d5175ae03767b76dab97e64ee57ee271e6ba644a1",
+        "size": 1040
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/stop-F-s3000.pkl",
+        "sha256": "f85d87e1f0d01e083d1e5f38c74303f408aa89eb690aee60772f8d9b85f5ec0a",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "h5mix_20261114_stop_f_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1d90d886e87810fda30507ef97018382b267880d16897b5ccccf4ad9995ba02f",
+        "size": 430614
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s4000.json",
+        "sha256": "9dfeb5da44f8a0bc78f6fe7bacc46a563f26897fd117e8981b181946c4028834",
+        "size": 1040
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/stop-F-s4000.pkl",
+        "sha256": "5d0866c0cc433cbf013df92308a66c3437919f7669e4f0239b57c08ebfb86e7f",
+        "size": 83046132
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261114_weekly_top3mix/stop-F-ensemble.pkl",
+    "sha256": "260f3734fbfa266286252442e38ae121b53f62107e4d6dd60fb64acaf726c968",
+    "size": 83046157
+  },
+  "exact_common_finite_index": true
+}

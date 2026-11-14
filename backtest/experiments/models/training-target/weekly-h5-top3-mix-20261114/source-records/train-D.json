@@ -1,0 +1,33 @@
+{
+  "exp_id": "training-target/weekly-h5-top3-mix-20261114/train-D",
+  "parent_experiment": "training-target/weekly-h5-top3-mix-20261114",
+  "state": "completed",
+  "representative": false,
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "metrics": {
+    "net_ann": 0.2934949900230325,
+    "net_sharpe": 0.9539062965889668,
+    "net_vol": 0.3076769605909184,
+    "rank_ic": 0.19096213962948866,
+    "n": 646
+  },
+  "result_dirs": [
+    "backtest/result/h5mix_20261114_train_d_s42",
+    "backtest/result/h5mix_20261114_train_d_s1000",
+    "backtest/result/h5mix_20261114_train_d_s2000",
+    "backtest/result/h5mix_20261114_train_d_s3000",
+    "backtest/result/h5mix_20261114_train_d_s4000"
+  ],
+  "portable_eval_output": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-D.json",
+  "prediction_manifest": {
+    "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/predictions-train-D.json",
+    "sha256": "5077aa7c39485ce0d8881a6d70cf41d27ccaf23f8bea3d9ad02ebba19c4ff5d8",
+    "size": 4256
+  }
+}

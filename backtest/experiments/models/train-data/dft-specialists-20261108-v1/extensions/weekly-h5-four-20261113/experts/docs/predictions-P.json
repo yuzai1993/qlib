@@ -1,0 +1,106 @@
+{
+  "variant": "P",
+  "components": [
+    {
+      "seed": 42,
+      "session": "dftfour_20261113_p_s42",
+      "model": {
+        "path": "backtest/result/dftfour_20261113_p_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "c88bd31255ae7c8651e2eb50d179d6cd90b1152c85779c8c595f89ef638ddfbe",
+        "size": 58635903
+      },
+      "training": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/weekly-h5-four-P-s42-a1.json",
+        "sha256": "d8b303232289018e4030dc36145253c01456d77543990579dae84663ab7701a5",
+        "size": 31882
+      },
+      "prediction": {
+        "path": "backtest/result/20261113_weekly_h5_four/P-s42.pkl",
+        "sha256": "1c84d32d0dd4e0a2a08b6ef8cb9dba25383260c58ca5d6b5742234256777b9cc",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "dftfour_20261113_p_s1000",
+      "model": {
+        "path": "backtest/result/dftfour_20261113_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e9552996b7807bc6e6b1fe92d439960bd22cc35d04e26df6f805d2d1856648f7",
+        "size": 58701907
+      },
+      "training": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/weekly-h5-four-P-s1000-a1.json",
+        "sha256": "4fb0ada899d4b9dbb66f22c080f705390c0ada942aa25ec55e551e7c6aef0daa",
+        "size": 35549
+      },
+      "prediction": {
+        "path": "backtest/result/20261113_weekly_h5_four/P-s1000.pkl",
+        "sha256": "15c7d448518a5e7b4d439c269655eee99964929cb020802e27d648b3844bded4",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "dftfour_20261113_p_s2000",
+      "model": {
+        "path": "backtest/result/dftfour_20261113_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "51bb3d8bccaa8542d9807f05714458a1b6192a0481d9ed8309c5f2b05ac29028",
+        "size": 58675179
+      },
+      "training": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/weekly-h5-four-P-s2000-a1.json",
+        "sha256": "bd9907911a2777dc7f29a81d633c35830c799008b79b6f682a1854071d635abb",
+        "size": 34143
+      },
+      "prediction": {
+        "path": "backtest/result/20261113_weekly_h5_four/P-s2000.pkl",
+        "sha256": "4ea985993d88dd1ef2c9df16b48832bde3c2111548e408880ac9d7de100d9bb6",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "dftfour_20261113_p_s3000",
+      "model": {
+        "path": "backtest/result/dftfour_20261113_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1a5d5b324ad2ee9cf68580fddf3843cd076efae7d5bc21239ee5d307b1664d60",
+        "size": 58522001
+      },
+      "training": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/weekly-h5-four-P-s3000-a1.json",
+        "sha256": "4bbcf41af073e9e195a161f8be2af47e83c10867a8cd09ef4b94ba3337199e31",
+        "size": 25942
+      },
+      "prediction": {
+        "path": "backtest/result/20261113_weekly_h5_four/P-s3000.pkl",
+        "sha256": "2052c3c54be4a81af8fc1c6a7b4e5a1a2cc8fb11a526d551a59899fdc4194cb3",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "dftfour_20261113_p_s4000",
+      "model": {
+        "path": "backtest/result/dftfour_20261113_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5258a581c23471a33e7942eea4c83d9679544c2edf1f5cebd8c9c5fd9cc68042",
+        "size": 58539971
+      },
+      "training": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/weekly-h5-four-P-s4000-a1.json",
+        "sha256": "4641a68272584a0e2927f5729f0234aa06862cf13967a964fc34db7d7742ddec",
+        "size": 26789
+      },
+      "prediction": {
+        "path": "backtest/result/20261113_weekly_h5_four/P-s4000.pkl",
+        "sha256": "4802d395cc031eb964b80a715eb36163035459619a909058719ce621f6ab3465",
+        "size": 83046132
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261113_weekly_h5_four/P-ensemble.pkl",
+    "sha256": "6f2f9d83bd5d2523cd789d207517a59883fc439aaa3ac865daf0fae90d234f6e",
+    "size": 83046157
+  },
+  "exact_common_finite_index": true
+}

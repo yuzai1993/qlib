@@ -303,7 +303,7 @@ class ResearchCatalog:
                 continue
             kind = (
                 "model"
-                if row.get("phase_m_protocol") == "v1"
+                if row.get("phase_m_protocol") == "v1" or row.get("classification_protocol") == "monthly-k4-next-day-v1"
                 else ("strategy" if str(row.get("report_kind", "")).startswith("phase_m_v1_b") else None)
             )
             manifest = manifests.get(row["exp_id"])
@@ -311,7 +311,9 @@ class ResearchCatalog:
             if kind or typed:
                 if kind:
                     record = self._record(row, kind)
-                    record.update(track="all_a", protocol_id=f"phase_m_v1:{kind}", registered=True)
+                    protocol_id = ("market_style_classifier:model" if row.get("classification_protocol") == "monthly-k4-next-day-v1"
+                                   else f"phase_m_v1:{kind}")
+                    record.update(track="all_a", protocol_id=protocol_id, registered=True)
                 else:
                     placeholder = manifest or {
                         **classification, "exp_id": row["exp_id"], "title": row["exp_id"],
@@ -466,7 +468,9 @@ class ResearchCatalog:
         for record in records:
             manifest = manifests.get(record["id"], {})
             group = manifest.get("training_target_comparison")
-            if group is not None:
+            if record.get("classification_protocol") == "monthly-k4-next-day-v1":
+                continue  # Dedicated classifier comparison already contains its count baselines.
+            elif group is not None:
                 record["core_results"] = self._training_target_results(record, manifest, group, by_id, latest_rows)
             else:
                 record["core_results"] = self._baseline_results(record, manifest, comparison_records)
@@ -948,6 +952,8 @@ class ResearchCatalog:
         return record
 
     def _record(self, row: dict, kind: str) -> dict:
+        if row.get("classification_protocol") == "monthly-k4-next-day-v1":
+            return self._classification_record(row)
         warnings: list[str] = []
         # Registry-owned portable summaries survive cleanup of the original result.
         # An explicitly declared but broken portable source must remain visible.
@@ -1133,6 +1139,60 @@ class ResearchCatalog:
             "resources": resources,
             "source": str(eval_source or ""),
             "original_source": str(row.get("eval_output") or ""),
+        }
+
+    def _classification_record(self, row: dict) -> dict:
+        """Render classification evidence without stock-return metric fallbacks."""
+        warnings = []
+        source = row.get("portable_eval_output", row.get("eval_output"))
+        doc, source_status = self._load(source, warnings)
+        valid_protocol = (doc.get("classification_protocol") == "monthly-k4-next-day-v1"
+                          and doc.get("classes") == ["D", "F", "T", "P"] and doc.get("seeds") == SEEDS)
+        if source_status == "available" and not valid_protocol and row.get("state") == "completed":
+            warnings.append("分类评估协议或五种子清单不完整")
+        definitions = [{"key": k, "label": label, "format": "pct"} for k, label in
+                       (("accuracy", "整体准确率"), ("macro_f1", "Macro F1"), ("balanced_accuracy", "平衡准确率"))]
+        for cls in ("D", "F", "T", "P"):
+            definitions.extend({"key": f"{cls}_{k}", "label": f"{cls} {label}", "format": "pct"}
+                               for k, label in (("precision", "Precision"), ("recall", "Recall"), ("f1", "F1")))
+
+        def flatten(cell):
+            result = {key: _number(cell.get(key)) for key in ("accuracy", "macro_f1", "balanced_accuracy")}
+            for cls in ("D", "F", "T", "P"):
+                item = _dict(_dict(cell.get("per_class")).get(cls))
+                result.update({f"{cls}_{key}": _number(item.get(key)) for key in ("precision", "recall", "f1")})
+            return result
+
+        chosen = doc.get("chosen_candidate")
+        rows = []
+        for name, item in _dict(doc.get("baselines")).items():
+            rows.append({"id": name, "name": f"Baseline · {name}", "kind": "model", "track": "all_a",
+                         "version": "", "role": "baseline", "metrics": flatten(_dict(item.get("evaluation", item)))})
+        for name, item in _dict(doc.get("candidates")).items():
+            rows.append({"id": name, "name": name + ("（内层选定）" if name == chosen else ""), "kind": "model",
+                         "track": "all_a", "version": "", "role": "experiment", "metrics": flatten(_dict(item.get("evaluation")))})
+        metrics = flatten(_dict(_dict(_dict(doc.get("candidates")).get(chosen)).get("evaluation")))
+        resources = []
+        for path, category in ((row.get("detail_report"), "report"), (source, "metrics"), (row.get("plan"), "plan")):
+            resource = self._resource(path, category)
+            if resource:
+                resources.append(resource)
+        return {
+            "id": row["exp_id"], "kind": "model", "name": row.get("display_name", row["exp_id"]),
+            "version": "", "current": False, "is_baseline": False, "_explicit_current": False,
+            "status": row.get("state", "unknown"), "source_status": source_status, "date": row.get("date", ""),
+            "direction": row.get("direction", "model-structure"), "baseline_ref": row.get("baseline_ref"),
+            "seeds": _seed_ids(doc.get("seeds", row.get("seeds"))), "official": bool(valid_protocol and row.get("state") == "completed"),
+            "comparable": False, "comparison_key": None, "scope": "market_style_classification", "pool": "all",
+            "window": {"start": "2020-08-03", "end": "2026-07-31"}, "metrics": metrics, "years": {}, "regimes": {},
+            "protocol": "事后月度四分类 · 次交易日目标 · 五种子概率均值", "classification_protocol": "monthly-k4-next-day-v1",
+            "hypothesis": row.get("hypothesis", ""), "conclusion": row.get("conclusion", ""), "note": row.get("note", ""),
+            "promoted_to": "", "promoted_from": "", "warnings": warnings, "resources": resources,
+            "source": source or "", "original_source": row.get("eval_output", ""), "metric_definitions": definitions,
+            "core_results": {"kind": "market_style_classification", "title": "次日月度风格四分类",
+                             "status": "available" if rows and valid_protocol else "unavailable", "records": rows,
+                             "note": "D/F/T/P事后月度标签；模型仅按训练期内层指标选择。分类指标不与选股收益模型混比。",
+                             "warnings": warnings},
         }
 
     def _comparison_key(

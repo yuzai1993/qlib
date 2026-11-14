@@ -1,0 +1,780 @@
+{
+  "target": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/data/h5-quantile10.pkl",
+    "sha256": "55dca8ae93aebbe802e30c149868f3afcaa4398ecdc258f54794a195fcc3ee5c",
+    "size": 65703978
+  },
+  "horizon": 5,
+  "formula": "Ref($close,-6)/Ref($close,-1)-1",
+  "generation": "Raw return from t+1 close through t+6 close. On the frozen feature/listing/H40 legacy row universe, discard a stock only on its own H5 missing return, then compute equal-date cross-sectional average-tie percentile and CSRankNorm (p−0.5)×3.46. Derive exact doubled midranks, grade in ten right-closed bins with legacy old rank labels. Grade values use one positive affine transform calibrated on contemporary Nov3 H5 labels restricted to the full eligible pre-cutoff training union: match the reference continuous mean and population SD; no daily demeaning/reranking after grading and no style-specific calibration.",
+  "resolved_sources": "Legacy source is Nov2 prepared features, H40/listing base, old alternate H5 CSRankNorm and H5 raw cache. The refreshed Nov3 frozen raw H5 quotepanel is used only to reconcile rank labels and calibrate the affine encoding as in the v5 paired recipe. In the v5 regression the complete original H20 rows are used for that historical affine fit.",
+  "H5_not_in_H20": 72106,
+  "H20_not_in_H5": 52044,
+  "h5": {
+    "horizon": 5,
+    "training_dates": 2976,
+    "raw_formula": "close[t+6]/close[t+1]-1",
+    "rows": 5469025,
+    "own_horizon_invalid_after_legacy_base_on_training_dates": 61715,
+    "old_rank_replay_from_raw_all_blocks_exact": true,
+    "new_rank_replay_from_frozen_close_all_rows_exact": true,
+    "raw_old_vs_nov3_changed_exact": 1309,
+    "old_rank_vs_nov3_changed_float32": 165,
+    "old_vs_nov3_grade_changed": 1,
+    "canonical_target_mean": 0.0009429053828682884,
+    "canonical_target_std": 0.9988143217784099,
+    "scale": 0.34773789696351354,
+    "offset": -1.5645500066236375,
+    "scores_float32": [
+      -1.5645500421524048,
+      -1.2168121337890625,
+      -0.8690742254257202,
+      -0.5213363170623779,
+      -0.17359842360019684,
+      0.17413948476314545,
+      0.5218773484230042,
+      0.8696152567863464,
+      1.2173532247543335,
+      1.5650910139083862
+    ],
+    "affine_calibration_rows": 5451056,
+    "legacy_bin_counts_all": [
+      545618,
+      547050,
+      546784,
+      547039,
+      547364,
+      546265,
+      546915,
+      547000,
+      546743,
+      548247
+    ],
+    "legacy_bin_counts_mature": [
+      543823,
+      545253,
+      544987,
+      545243,
+      545566,
+      544468,
+      545120,
+      545202,
+      544947,
+      546447
+    ],
+    "cutoff_rows": 5451056,
+    "cutoff_dates": 2971,
+    "cutoff_last_signal": "2020-07-17",
+    "verified_nov3_close_files": 3631,
+    "frozen_weekly_h5_membership": {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+      "size": 274553
+    },
+    "old_csrank_manifest": {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/manifest.json",
+      "sha256": "d822858527ee92949098c5d1b7113da882f520a688460a337cab3bf54973e993",
+      "size": 11111983
+    },
+    "old_raw_manifest": {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/manifest.json",
+      "sha256": "fb29e43170c1a0e33e9a9b8dd0dc54b2a638c6843108f9089d03da0cb8c3730a",
+      "size": 11105139
+    },
+    "raw_old": {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/all.pkl",
+      "sha256": "7229c7d33241768c7dd24a20b19a3614ba5150c3837c92ee2403707f338d4ec8",
+      "size": 103003981
+    },
+    "source_blocks": [
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2004.pkl",
+          "sha256": "15b1252eabbf55bd1d8ecf056a29c5df7b542b20fefbeec803d5ab5659c150ba",
+          "size": 4174505
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2004.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            259799
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "e9ce70ce2504384dcc8a1795260be9702a416ae7a35ecec69dd57c21546600c0",
+          "values_sha256": "a54426a855b6f20e22021bfafcdba9464d7dc97ce93a7735b5ac0c30798c0e29"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2005.pkl",
+          "sha256": "ceab8a1be20b1c7daa2c7217e95ddb58032a5920e69f1a332b4a72665b271fd1",
+          "size": 4112202
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2005.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            255898
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "2ec2e238870fbb112a737b5bc0ebdcb59f527d7bbdc57109ad1110c6c20e5408",
+          "values_sha256": "7616f270b5baa8575d6dc1b494289cd9b291311d1172fa6cc03c0bbd714e1b3e"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2006.pkl",
+          "sha256": "28a52696deb781e54835c262fb7baf2f806c67c7b94d1e3314ddb23bcac7d909",
+          "size": 3663732
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2006.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            227810
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "6fdbba7fa9b4bc0907eb76d3a69fec6aab26708b1d082220397b5889127be239",
+          "values_sha256": "471de489018546c039c3487267a39400eccbd9d0017adf682bdea30e277b1bda"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2007.pkl",
+          "sha256": "5916ccdc0581941e38db9c4e975014de4c9522b78af3e5015f841be6120bcae1",
+          "size": 4340102
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2007.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            270001
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "24c98bff8e2926b311761e5f1534f41c0179d47cffbe9590ebf3b5c9d2bd626d",
+          "values_sha256": "7aed28c5dd2bf941d9016f85cc1185a43a6cce797a718963c9589254595db767"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2008.pkl",
+          "sha256": "685420bd7cff66716fefc06783171e1537aa00e381babda7392af908abc2e0ee",
+          "size": 4981480
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2008.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            310049
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "ea4f2b122e45251d453ca2d68c27f674a9901f97fa54a77be2854b1cec44d21d",
+          "values_sha256": "3ab43ed54fca243b88318bdf0d1007c6bcbaa8db067f3fba62bee98856f82ad0"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2009.pkl",
+          "sha256": "0522f91f54601bda9d339def4876d6130d76f65a2208578d3b7f457783d95dde",
+          "size": 5253230
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2009.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            326911
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "3eee7075d074c6fe151a361b820cd09034c5483e9465633b5982ffecbad9dd3f",
+          "values_sha256": "6cc3d2992c5b6fafd796abe877db7fb52fac15eb64bc26f095ef06fa9328c901"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2010.pkl",
+          "sha256": "4222d56d24cb7ebd337eab530410684cb4a62cbe402013412cfcd1356a68f181",
+          "size": 5861625
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2010.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            364716
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "93fcbb023175fd391318a85e0e92577b4171e477b8b00ee74c2a4f1a41027683",
+          "values_sha256": "c6a166da34b1bfff3312fd4467e7b18248326033d435a5a40f0c8edb648bdb8d"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2011.pkl",
+          "sha256": "d91f7f0e6a52a3aa5dc823ed1d98e84fa7dbcedf756d6fd41000e33689a5c2c5",
+          "size": 7059617
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2011.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            439435
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "4d66b26246cc581215755e77498da115a7ffc3475239c37eb27795fa0667da7d",
+          "values_sha256": "3fc83347d88cc1ac61f7fc9ba3f164744028ab6b409f0fddc1ee5cc2bd6a4204"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2012.pkl",
+          "sha256": "447c063cc1658978a3e32473efed1e4b292e3eace14257c3c9d0111616c7d295",
+          "size": 8013062
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2012.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            498961
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "664d2089ee045b4ee8402123593e14dd863d420ef2da82869824ac1bddf59f08",
+          "values_sha256": "a1507423e39a6c351902e7c8cbeb523bd41c0f3b439cb2df4771ce5343c27b57"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2013.pkl",
+          "sha256": "961fe001517174d63d54c0c657e8d04a812678fa0db9ddeceb96ed61171b3a41",
+          "size": 8064986
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2013.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            502177
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "50af277a464677d3ae71df8847e2d2f6f76da01a7d4fc63d739d96e29be9f248",
+          "values_sha256": "56101d3687486aa7a72067df7954dada1c69e30ba1947b63c8cbabe36edbf25a"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2014.pkl",
+          "sha256": "0a7cabf910aea0d50dda57ff08d6e5aaee64aa77d1bfafde8b10b8b59955d263",
+          "size": 7848754
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2014.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            488561
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "8b446c2308ac806e5e0b3ecfc6db52edb667b8db043bec799c025a2b9a09f348",
+          "values_sha256": "880cc8d1e6de463c825d7953c25c67c920b267f5634f21e11c07c57edd27ef70"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2015.pkl",
+          "sha256": "35dbb9a700b3cb05ad6b4025e2f70613d95ac78d23e68e9ff6bf3262260da015",
+          "size": 7578544
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2015.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            471555
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "82fe73257829c7486ff7ee9034e0019df2df624fb636cdc9f3e2fb00e802e649",
+          "values_sha256": "c3884d172a2e52ad5c76880f004afe2cd94b49f20e44ba90e7706a53e26f338a"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2016.pkl",
+          "sha256": "673f7c65556adc810e65e00d05c3d24114712850b1d5481a61a3cbda302f7e33",
+          "size": 8964343
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2016.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            557939
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "17b510c92e7b5e71fb8ef3e6d4f081f912a59b39c3515cb0b43462e623d12f8e",
+          "values_sha256": "81a8e7eb52bc5efa2cbe3cf6419bbadb3c0f79951d6a2d1bcee3d4c3844bff37"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2017.pkl",
+          "sha256": "f5e5125873d92ec64abac27900d4e8e1883adbf12fd84b2bc115d153faa040f4",
+          "size": 10439959
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2017.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            649933
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "498d5a7aae189fe7cfcd319f4555c92b098ec433a1d592708e3a1bd28469e3a5",
+          "values_sha256": "c7139ed5de169a0f29f1d4dff1b12352b5a1b4448045a83df98f0cd019333fc7"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2018.pkl",
+          "sha256": "2079da3edc2691b7116de976844633fae992a8063e7b427b744da7f471b2a506",
+          "size": 12107595
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2018.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            754092
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "008554f11017e56c6812a403aa588122c7571b3740ac37ff9e5b899af23318f3",
+          "values_sha256": "8d2281a28cc621ff1f61786d604a07bc78cac4a428523c3dc763ca16ccc992c6"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2019.pkl",
+          "sha256": "fa0213788c1664354e018d5bde6d520f2623e687ee567be41aececf1c7520a9c",
+          "size": 13227076
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2019.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            823909
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "60ccd3d5f366b5e8a9459757037aaadfb3830f148725e244c36dce4f1da6ad62",
+          "values_sha256": "66c8d78d712b0e1bfb90dc077b44a6f3dec2e16eee441ddb43548b2f103a7bc1"
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/9ada46f74d08460921638d4d91468b12b569af13e6c6418bad974e72fbbfa7ab/2020.pkl",
+          "sha256": "bf92cabea9ca48feaf06d28431faf23f03184408bd10aee88c58325c94c9c24b",
+          "size": 7971691
+        },
+        "missing_archived_raw_rank_block": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h5/2020.pkl",
+        "recovered_exact_signature": {
+          "shape": [
+            495447
+          ],
+          "columns": [
+            "LABEL0"
+          ],
+          "dtypes": [
+            "float64"
+          ],
+          "index_sha256": "bb0775635a5be97d00f09adc280eb9d5e30d1bc3233d60f68ef312b98b020c52",
+          "values_sha256": "42fe94ad6ef927f6cb845a20cda39edae22130d03a67ce1b6b707c04c7906e62"
+        }
+      }
+    ]
+  },
+  "h20_reproduction": {
+    "horizon": 20,
+    "training_dates": 2976,
+    "raw_formula": "close[t+21]/close[t+1]-1",
+    "rows": 5448963,
+    "own_horizon_invalid_after_legacy_base_on_training_dates": 81777,
+    "old_rank_replay_from_raw_all_blocks_exact": true,
+    "new_rank_replay_from_frozen_close_all_rows_exact": true,
+    "raw_old_vs_nov3_changed_exact": 1308,
+    "old_rank_vs_nov3_changed_float32": 106,
+    "old_vs_nov3_grade_changed": 1,
+    "canonical_target_mean": 0.0009448550239293172,
+    "canonical_target_std": 0.9988157090537705,
+    "scale": 0.34774330479829896,
+    "offset": -1.564601411089059,
+    "scores_float32": [
+      -1.5646014213562012,
+      -1.216858148574829,
+      -0.8691148161888123,
+      -0.5213714838027954,
+      -0.17362819612026215,
+      0.1741151064634323,
+      0.5218583941459656,
+      0.8696017265319824,
+      1.2173449993133545,
+      1.5650883913040161
+    ],
+    "affine_calibration_rows": 5448963,
+    "legacy_bin_counts_all": [
+      543520,
+      545083,
+      544742,
+      545072,
+      545269,
+      544478,
+      544751,
+      545047,
+      544768,
+      546233
+    ],
+    "legacy_bin_counts_mature": [
+      538512,
+      540068,
+      539729,
+      540052,
+      540255,
+      539467,
+      539732,
+      540033,
+      539754,
+      541211
+    ],
+    "cutoff_rows": 5398813,
+    "cutoff_dates": 2962,
+    "cutoff_last_signal": "2020-07-02",
+    "verified_nov3_close_files": 3630,
+    "frozen_weekly_h5_membership": {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+      "size": 274553
+    },
+    "old_csrank_manifest": {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/manifest.json",
+      "sha256": "149403d0bb65b1c2d1a7242c343b413b01bee28eb25be2849a48568109e3e0e5",
+      "size": 11111985
+    },
+    "old_raw_manifest": {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/df8476bc2982cc8e2e192282373620db7df005f5b04df6ff1c578154c24299d7/manifest.json",
+      "sha256": "6a240e72e20dca2e25ca08b8d7f73510a933e12a43e167a860a1b06b4cb7f97c",
+      "size": 11105142
+    },
+    "raw_old": {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/df8476bc2982cc8e2e192282373620db7df005f5b04df6ff1c578154c24299d7/all.pkl",
+      "sha256": "310e65b8425dcc9642f683d52fd918b03f18c264a3a862509db67fefb9d4e85a",
+      "size": 103003982
+    },
+    "source_blocks": [
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2004.pkl",
+          "sha256": "f94996b07f0426a5d43f1cecf06349b33194a836cd78f63a47a5724e4cf12843",
+          "size": 4174505
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2004.pkl",
+          "sha256": "84d57d79772977f89ae7a958cefbfc09626b6c506cb716fefef16860a73a68b5",
+          "size": 4174505
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2005.pkl",
+          "sha256": "1ebc212bc4a6e91862cb0438fc5137dcf7715174c1b3cbfbdece485a000c0185",
+          "size": 4112202
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2005.pkl",
+          "sha256": "83e4bc56c7d8f8bcdcb1166755cbe09cd9ee0d52d40654fd1c0308c862ec89ea",
+          "size": 4112202
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2006.pkl",
+          "sha256": "ab7ca025a0b03f8a8d11038ff87a6564de04c5caafdc99735d02edc8ef465018",
+          "size": 3663732
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2006.pkl",
+          "sha256": "72fd89b7f9a0251547525c3820536f92451a40bd8cf3a775643130b99f4a67b9",
+          "size": 3663732
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2007.pkl",
+          "sha256": "7147d1c8d84d03ad600885194b9c5a85b5eac4e775c0d1a6eafd79894860cdf8",
+          "size": 4340102
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2007.pkl",
+          "sha256": "167c814217d1fb57d9f9179e8ca27ef4eedea1856595ad132ff4d4a91db9bfc3",
+          "size": 4340102
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2008.pkl",
+          "sha256": "d8b4fbb1c8aa58b4aa06143354f40e584b916f7a232e062bb1d197af5a1a293e",
+          "size": 4981480
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2008.pkl",
+          "sha256": "beb69cda8c28d601e2b0b5ed9a82d4795db8900d30653d31f42c5c68bb766dfd",
+          "size": 4981480
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2009.pkl",
+          "sha256": "c65a855785b1418e2f4eb60d396447fe7fa1a88a3af7f432db53d4e84271c3fd",
+          "size": 5253230
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2009.pkl",
+          "sha256": "d19f0ce5b53dc6f47502d28f6dae1c6d94f37d05111b682e344eb43d17ad9f4b",
+          "size": 5253230
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2010.pkl",
+          "sha256": "15664b42c4bb5974d91115aec8fa291ee51a1022d272f8b0f9b643f0c890d5d7",
+          "size": 5861625
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2010.pkl",
+          "sha256": "9f2668e3e8c5aac501ddb8b6ef1b358bd36a24b00298e064f0c086a0e20a7cb9",
+          "size": 5861625
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2011.pkl",
+          "sha256": "e3633d79fd64ffb25c6b618cf3952db81da81ac6baa4c9b51f773c73d6850c1b",
+          "size": 7059617
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2011.pkl",
+          "sha256": "3184ec7c98b14af49459ba0259ac1f765becd5994656844cbcfb8d929340486c",
+          "size": 7059617
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2012.pkl",
+          "sha256": "3fc7f0af0d931e6f3dc78593d9225e8d9f35a0b749e30ecce71ac9a1b88809f2",
+          "size": 8013062
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2012.pkl",
+          "sha256": "2aa2be22ad668e7ba20cc6ccfdab6bf5c8c5313d6b196af87071edfbb9ab1540",
+          "size": 8013062
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2013.pkl",
+          "sha256": "860d9cdddde2baf2296bf2ace88a4f7b1a3d6d9a8f26da62f1bed7d28d93474a",
+          "size": 8064986
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2013.pkl",
+          "sha256": "8ba39a01c325fedb85daf9d88510ffd4d9bdf9e9832490aea4de926ee081a5f7",
+          "size": 8064986
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2014.pkl",
+          "sha256": "02d9ea34afd5665c8c361dcbb2d88b7f0d48e6a0393f3e3913f0f13ae75cb597",
+          "size": 7848754
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2014.pkl",
+          "sha256": "02d9ea34afd5665c8c361dcbb2d88b7f0d48e6a0393f3e3913f0f13ae75cb597",
+          "size": 7848754
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2015.pkl",
+          "sha256": "789540eab43a4402831a0f6efa30a3d82e9e944466b82c57fa62af38a79ddb7a",
+          "size": 7578544
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2015.pkl",
+          "sha256": "789540eab43a4402831a0f6efa30a3d82e9e944466b82c57fa62af38a79ddb7a",
+          "size": 7578544
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2016.pkl",
+          "sha256": "ab8e142b68fa0f5ab2f582847026ef637b0f75f01a37ef945013f99bdf74d75a",
+          "size": 8964343
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2016.pkl",
+          "sha256": "5cf49ee1473f8d134b2f432bbcda4faad64ae97ebdfe907fb836da28f380ae65",
+          "size": 8964343
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2017.pkl",
+          "sha256": "b4c16b2669aaee40092dc722fd6c268375ed3094fd156e53eeadbf2fa5a94e7d",
+          "size": 10439959
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2017.pkl",
+          "sha256": "7bab6217657d3a619a34f759432a158f125e7b007e60bf5f341d17b377f1fd13",
+          "size": 10439959
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2018.pkl",
+          "sha256": "2b406bcbd335bbc21e829ca6dc64acbf4cd767f6e62b91754bcea180fae9b8c8",
+          "size": 12107595
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2018.pkl",
+          "sha256": "372b54d2f6dfd3c0545fcbb89680dd13c03df58fb674b3f7321b34a518c18bfa",
+          "size": 12107595
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2019.pkl",
+          "sha256": "6642a61851d1b6f7f222bd12263c2b5d310780f68d3ccc2a394cb206acb85bb0",
+          "size": 13227076
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2019.pkl",
+          "sha256": "022aba9027979353ae4f4e4dbfffd4bfdf4ae40734381ca06dc2d4f573877484",
+          "size": 13227076
+        }
+      },
+      {
+        "legacy": {
+          "path": "backtest/datasets/regime-adapt-cache/shared-v1/labels/d0fba1f64cd02c02862839f79f8cdf6f11460742e059ed4be0fa5ec5a00ae34a/2020.pkl",
+          "sha256": "ec3e954fd1b51f6ca4e081d1c0794aea9b3319f6e2c9f513619b3273fae375a2",
+          "size": 7971691
+        },
+        "frozen_nov3": {
+          "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/data/labels/h20/2020.pkl",
+          "sha256": "9f52dbc17bb5247a4a93f1cac90ea6c6c25e7ca2ae851f994b919e2534fe66c9",
+          "size": 7971691
+        }
+      }
+    ],
+    "v5_original": {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+      "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+      "size": 65463234
+    },
+    "all_v5_rows_replayed_exact": true
+  },
+  "train_dates": {
+    "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+    "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a",
+    "size": 38931
+  },
+  "day_weights": {
+    "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+    "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+    "size": 65715
+  },
+  "provider_calendar": {
+    "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+    "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+    "size": 63635
+  },
+  "provider_inventory": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/provider-inputs.json.gz",
+    "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+    "size": 1937741
+  },
+  "feature_manifest": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+    "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+    "size": 11178449
+  },
+  "archived_v5_recipe": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/adapter-prepare.json",
+    "sha256": "2a426197eaf5207caef3feb20b1a2411a2df8cd37b58ab3699c6514312cffdf5",
+    "size": 6556
+  },
+  "old_grade_function": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/adapter-common.json",
+    "sha256": "14bd8e36d5250bac382f469116e50b843e42d768140830c3d9c9b4371793d588",
+    "size": 3605
+  },
+  "horizon_preparation": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+    "sha256": "90783e819314072df08549698fc85a8657fce1359f105d0735b4c678b5a272a3",
+    "size": 97032
+  },
+  "source_code": "\"\"\"Replay v5 H20 twice (old rank and updated quote source), then build causal-split H5 quantile10-old.\"\"\"\nimport gc\nimport gzip\nimport hashlib\nimport json\nimport sys\nfrom pathlib import Path\n\nimport numpy as np\nimport pandas as pd\n\nROOT = Path(\"/Users/yuxianqi/Project/qlib\")\nPARENT = ROOT / \"backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions\"\nOUT = PARENT / \"weekly-h5-four-20261113\"\nWEEK = PARENT / \"forward-spread-20261112/stages/weekly-h5/data/date-labels.csv\"\nGRADING = ROOT / \"backtest/experiments/models/training-target/label-grading-p50-20261106-v1\"\nUPDATED = ROOT / \"backtest/experiments/models/training-target/horizon-style-p50-20261105-v1\"\nCACHE = ROOT / \"backtest/datasets/regime-adapt-cache/shared-v1\"\nPROVIDER = ROOT / \"backtest/result/20261103_h20_causal_inputs/evaluation-provider\"\nDATES = ROOT / \"backtest/configs/regime-adapt/train_dates_v1.csv\"\nWEIGHTS = ROOT / \"backtest/configs/regime-adapt/day_weights_m0_v1.csv\"\nBOUNDARY = pd.Timestamp(\"2020-07-31\")\nsys.path.insert(0,str(ROOT))\nfrom backtest.scripts.prepare.prepare_regime_train_chunks import cache_value_summary\n\n\ndef load(p):\n    return json.loads(p.read_text())\n\n\ndef fp(p, expected=None):\n    with p.open(\"rb\") as stream:\n        sha = hashlib.file_digest(stream, \"sha256\").hexdigest()\n    rec = {\"path\": str(p.relative_to(ROOT)), \"sha256\": sha, \"size\": p.stat().st_size}\n    if expected:\n        assert sha == expected[\"sha256\"] and rec[\"size\"] == expected[\"size\"], p\n    return rec\n\n\ndef cache_manifest(kind, h):\n    for p in (CACHE / kind).glob(\"*/manifest.json\"):\n        m = load(p)\n        if m[\"spec\"][\"recipe\"][\"horizon\"] == h:\n            return p, m\n    raise RuntimeError((kind, h))\n\n\ndef save_json(p, obj):\n    tmp = p.with_suffix(\".tmp\")\n    tmp.write_text(json.dumps(obj, indent=2, ensure_ascii=False, allow_nan=False)+\"\\n\")\n    tmp.replace(p)\n\n\ndef quotes(index, cal, h, inventory, close_cache):\n    ids = cal.get_indexer(index.get_level_values(\"datetime\"))\n    assert (ids>=0).all()\n    inst = index.get_level_values(\"instrument\")\n    values = np.full(len(index),np.nan,dtype=\"float32\")\n    for name, positions in pd.Series(np.arange(len(index)),index=inst).groupby(level=0,sort=False):\n        if name not in close_cache:\n            stock_file = PROVIDER/\"features\"/name.lower()/\"close.day.bin\"\n            fp(stock_file, inventory[str(stock_file.relative_to(ROOT))])\n            close_cache[name] = np.fromfile(stock_file,dtype=\"<f4\")\n        block = close_cache[name]\n        pos = positions.to_numpy()\n        loc = ids[pos]-int(block[0])\n        ok = (loc+2>=1)&(loc+h+2<len(block))\n        values[pos[ok]] = block[loc[ok]+h+2]/block[loc[ok]+2]-np.float32(1)\n    return pd.Series(values,index=index)\n\n\ndef build(h, dates, cal, style, prepared, current, inventory, grade):\n    label_manifest, lm = cache_manifest(\"labels\", h)\n    raw_manifest, rm = cache_manifest(\"raw-labels\", h)\n    rp = raw_manifest.parent / rm[\"blocks\"][\"all\"][\"path\"]\n    raw_fp = fp(rp, rm[\"blocks\"][\"all\"])\n    raw = pd.read_pickle(rp)\n    series_old = []\n    series_new = []\n    excluded_na = 0\n    block_fps = []\n    close_cache = {}\n    for block in current[\"horizons\"][str(h)][\"blocks\"]:\n        yy = str(block[\"year\"])\n        old_block = lm[\"blocks\"][yy]\n        op, npth = label_manifest.parent / old_block[\"path\"], ROOT / block[\"path\"]\n        old = pd.read_pickle(op)\n        if npth.is_file():\n            record = {\"frozen_nov3\":fp(npth,block)}\n            new = pd.read_pickle(npth)\n        else:\n            raw_rebuilt = quotes(old.index,cal,h,inventory,close_cache)\n            new = ((raw_rebuilt.groupby(level=\"datetime\").rank(pct=True)-.5)*3.46).rename(\"LABEL0\")\n            sig = cache_value_summary(new)\n            assert sig==block[\"signature\"],(yy,sig,block[\"signature\"])\n            record = {\"missing_archived_raw_rank_block\":block[\"path\"],\"recovered_exact_signature\":sig}\n        block_fps.append({\"legacy\":fp(op, old_block),**record})\n        selected = old.index.get_level_values(\"datetime\").isin(dates)\n        assert old.index.equals(new.index) and old.isna().equals(new.isna())\n        old, new = old.loc[selected], new.loc[selected]\n        old_raw = raw.reindex(old.index)\n        assert old_raw.isna().equals(old.isna())\n        reconstructed = (old_raw.groupby(level=\"datetime\").rank(pct=True)-.5)*3.46\n        assert np.array_equal(old.to_numpy(), reconstructed.to_numpy(), equal_nan=True)\n        excluded_na += int(old.isna().sum())\n        series_old.append(old.dropna())\n        series_new.append(new.dropna())\n    old, new = pd.concat(series_old), pd.concat(series_new)\n    old_raw = raw.reindex(old.index)\n    del raw, series_old, series_new\n    gc.collect()\n    # Direct paired close lookup on the 2026-11-03 snapshot, including the raw old/new differences.\n    # Read only audited files relevant to the retained training cross-sections.\n    ids = cal.get_indexer(old.index.get_level_values(\"datetime\"))\n    direct = quotes(old.index,cal,h,inventory,close_cache)\n    quote_result = direct.to_numpy()\n    checked_stock_files = len(close_cache)\n    assert np.isfinite(quote_result).all()\n    updated_rank = (direct.groupby(level=\"datetime\").rank(pct=True)-.5)*3.46\n    assert np.array_equal(updated_rank.to_numpy(), new.to_numpy())\n    old_g, new_g = grade(old, \"quantile10\"), grade(new, \"quantile10\")\n    ready = style.ready_date.reindex(old.index.get_level_values(\"datetime\"))\n    assert ready.notna().all()\n    usable = ready.le(BOUNDARY).to_numpy() & (cal[ids+h+1]<=BOUNDARY)\n    fit_calibration = np.ones(len(old), dtype=bool) if h==20 else usable\n    c = new.loc[fit_calibration].astype(\"float32\").astype(\"float64\")\n    g = new_g.loc[fit_calibration]\n    mu, sd = float(c.mean()), float(c.std(ddof=0))\n    gmu, gsd = float(g.mean()), float(g.std(ddof=0))\n    scale = sd/gsd\n    offset = mu-scale*gmu\n    target = (old_g.astype(\"float64\")*scale+offset).astype(\"float32\").rename(\"LABEL0\")\n    rows_by_grade = old_g.value_counts().sort_index()\n    kept = old_g.loc[usable].value_counts().sort_index()\n    dates_after = old.index.get_level_values(\"datetime\")[usable]\n    assert all(np.diff((np.arange(10)*scale+offset).astype(\"float32\"))>0)\n    report = {\"horizon\":h,\"training_dates\":int(old.index.get_level_values(\"datetime\").nunique()),\n              \"raw_formula\":f\"close[t+{h+1}]/close[t+1]-1\", \"rows\":len(old),\n              \"own_horizon_invalid_after_legacy_base_on_training_dates\":excluded_na,\n              \"old_rank_replay_from_raw_all_blocks_exact\":True,\"new_rank_replay_from_frozen_close_all_rows_exact\":True,\n              \"raw_old_vs_nov3_changed_exact\":int((old_raw.to_numpy()!=quote_result).sum()),\n              \"old_rank_vs_nov3_changed_float32\":int((old.to_numpy(dtype=\"float32\")!=new.to_numpy(dtype=\"float32\")).sum()),\n              \"old_vs_nov3_grade_changed\":int(old_g.ne(new_g).sum()),\n              \"canonical_target_mean\":mu,\"canonical_target_std\":sd,\"scale\":scale,\"offset\":offset,\n              \"scores_float32\":list(map(float,(np.arange(10)*scale+offset).astype(\"float32\"))),\n              \"affine_calibration_rows\":len(g),\"legacy_bin_counts_all\":list(map(int,rows_by_grade)),\n              \"legacy_bin_counts_mature\":list(map(int,kept)),\"cutoff_rows\":int(usable.sum()),\"cutoff_dates\":int(dates_after.nunique()),\n              \"cutoff_last_signal\":str(dates_after.max().date()),\"verified_nov3_close_files\":checked_stock_files,\n              \"frozen_weekly_h5_membership\":fp(WEEK),\"old_csrank_manifest\":fp(label_manifest),\n              \"old_raw_manifest\":fp(raw_manifest),\"raw_old\":raw_fp,\"source_blocks\":block_fps}\n    if h==20:\n        refrec = prepared[\"variants\"][\"quantile10\"][\"old\"]\n        ref = pd.read_pickle(ROOT/refrec[\"path\"])\n        assert ref.equals(target) and np.array_equal(target.to_numpy(), ref.to_numpy())\n        assert (scale,offset)==(prepared[\"variants\"][\"quantile10\"][\"scale\"],prepared[\"variants\"][\"quantile10\"][\"offset\"])\n        report.update(v5_original=fp(ROOT/refrec[\"path\"],refrec),all_v5_rows_replayed_exact=True)\n    return target,report\n\n\ndef main():\n    for d in (\"docs\",\"data\"):\n        (OUT/d).mkdir(parents=True, exist_ok=True)\n    prepared = load(GRADING/\"configs/prepared-inputs.json\")\n    current = load(UPDATED/\"docs/prepared-labels.json\")\n    source = load(GRADING/\"docs/adapter-common.json\")[\"source_text\"]\n    ns = {}\n    exec(source[source.index(\"def grade(\"):],ns)\n    dates = pd.DatetimeIndex(pd.to_datetime(pd.read_csv(DATES,comment=\"#\").date))\n    cal = pd.DatetimeIndex(pd.to_datetime((PROVIDER/\"calendars/day.txt\").read_text().splitlines()))\n    style = pd.read_csv(WEEK,parse_dates=[\"datetime\",\"ready_date\"]).set_index(\"datetime\")\n    inventory_source = GRADING/\"docs/provider-inputs.json.gz\"\n    with gzip.open(inventory_source,\"rt\") as f:\n        inv = json.load(f)\n    inv = {str(Path(x[\"path\"]).relative_to(ROOT)) if Path(x[\"path\"]).is_absolute() else x[\"path\"]:x for x in inv[\"files\"]}\n    t20, r20 = build(20, dates, cal, style, prepared, current, inv, ns[\"grade\"])\n    print(\"v5 H20 exact\",r20[\"rows\"],flush=True)\n    t5, r5 = build(5, dates, cal, style, prepared, current, inv, ns[\"grade\"])\n    plus = int((~t5.index.isin(t20.index)).sum())\n    minus = int((~t20.index.isin(t5.index)).sum())\n    out = OUT/\"data/h5-quantile10.pkl\"\n    tmp = out.with_suffix(\".partial\");t5.to_pickle(tmp);tmp.replace(out)\n    assert pd.read_pickle(out).equals(t5)\n    doc = {\"target\":fp(out),\"horizon\":5,\"formula\":\"Ref($close,-6)/Ref($close,-1)-1\",\n           \"generation\":\"Raw return from t+1 close through t+6 close. On the frozen feature/listing/H40 legacy row universe, discard a stock only on its own H5 missing return, then compute equal-date cross-sectional average-tie percentile and CSRankNorm (p−0.5)×3.46. Derive exact doubled midranks, grade in ten right-closed bins with legacy old rank labels. Grade values use one positive affine transform calibrated on contemporary Nov3 H5 labels restricted to the full eligible pre-cutoff training union: match the reference continuous mean and population SD; no daily demeaning/reranking after grading and no style-specific calibration.\",\n           \"resolved_sources\":\"Legacy source is Nov2 prepared features, H40/listing base, old alternate H5 CSRankNorm and H5 raw cache. The refreshed Nov3 frozen raw H5 quotepanel is used only to reconcile rank labels and calibrate the affine encoding as in the v5 paired recipe. In the v5 regression the complete original H20 rows are used for that historical affine fit.\",\n           \"H5_not_in_H20\":plus,\"H20_not_in_H5\":minus,\"h5\":r5,\"h20_reproduction\":r20,\n           \"train_dates\":fp(DATES),\"day_weights\":fp(WEIGHTS),\"provider_calendar\":fp(PROVIDER/\"calendars/day.txt\"),\n           \"provider_inventory\":fp(inventory_source,prepared[\"provider_inventory\"]),\n           \"feature_manifest\":fp(ROOT/prepared[\"source_manifests\"][0][\"path\"],prepared[\"source_manifests\"][0]),\n           \"archived_v5_recipe\":fp(GRADING/\"docs/adapter-prepare.json\"),\"old_grade_function\":fp(GRADING/\"docs/adapter-common.json\"),\n           \"horizon_preparation\":fp(UPDATED/\"docs/prepared-labels.json\"),\"source_code\":Path(__file__).read_text(),\n           \"new_fits\":0}\n    save_json(OUT/\"docs/h5-target.json\",doc)\n    print(\"H5 ready\",len(t5),r5[\"cutoff_rows\"],plus,minus,doc[\"target\"],flush=True)\n\n\nif __name__==\"__main__\":\n    main()\n",
+  "new_fits": 0
+}

@@ -1,0 +1,22 @@
+{
+  "reversed_top3_date_changes": [
+    "2022-05-19",
+    "2022-05-20"
+  ],
+  "changed_source_or_t_minus_5_on_panic_dates": [],
+  "candidates": {
+    "forward": {
+      "n_days": 23,
+      "net_ann": 4.405480569921631,
+      "net_sharpe": 3.634524405902904,
+      "turnover": 0.19710144927536233
+    },
+    "reverse": {
+      "n_days": 23,
+      "net_ann": 4.405480569921631,
+      "net_sharpe": 3.634524405902904,
+      "turnover": 0.19710144927536233
+    }
+  },
+  "both_metrics_beat_v5_both_orders": true
+}

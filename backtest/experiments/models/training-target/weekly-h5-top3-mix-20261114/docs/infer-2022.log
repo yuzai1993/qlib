@@ -1,0 +1,8 @@
+[28971:MainThread](2026-11-14 11:21:01,794) INFO - qlib.Initialization - [config.py:473] - default_conf: client.
+[28971:MainThread](2026-11-14 11:21:02,089) INFO - qlib.Initialization - [__init__.py:82] - qlib successfully initialized based on client settings.
+[28971:MainThread](2026-11-14 11:21:02,089) INFO - qlib.Initialization - [__init__.py:84] - data_path={'__DEFAULT_FREQ': PosixPath('/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider')}
+[28971:MainThread](2026-11-14 11:23:02,446) INFO - qlib.timer - [log.py:127] - Time cost: 120.345s | Loading data Done
+[28971:MainThread](2026-11-14 11:23:05,337) INFO - qlib.timer - [log.py:127] - Time cost: 2.348s | ProcessInf Done
+[28971:MainThread](2026-11-14 11:23:05,355) INFO - qlib.timer - [log.py:127] - Time cost: 2.908s | fit & process data Done
+[28971:MainThread](2026-11-14 11:23:05,355) INFO - qlib.timer - [log.py:127] - Time cost: 123.254s | Init data Done
+inferred 2022 1114846 rows 60 specialists; five baseline replays recorded

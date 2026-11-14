@@ -1,15 +1,15 @@
 # 研究脚本入口
 
-脚本按使用阶段分为六类，共151个正式模块/入口（122个Python文件、29个shell文件，不含包标记）。同一功能只维护一份实现，跨目录使用明确的Python包导入。
+脚本按使用阶段分为六类，共156个正式模块/入口（127个Python文件、29个shell文件，不含包标记）。同一功能只维护一份实现，跨目录使用明确的Python包导入。
 
 | 目录 | 数量 | 放什么 | 常用入口 |
 |---|---:|---|---|
-| `prepare/` | 23 | 准备样本、特征、标签、配置及固定预测输入。 | `prepare_regime_train_chunks.py`、`build_regime_alt_labels.py` |
-| `train/` | 20 | 训练模型、选择训练轮次，以及串联训练流程的批处理配方。 | `train_regime_arm.py`、`run_backtest.py` |
+| `prepare/` | 25 | 准备样本、特征、标签、配置及固定预测输入。 | `prepare_regime_train_chunks.py`、`build_regime_alt_labels.py` |
+| `train/` | 21 | 训练模型、选择训练轮次，以及串联训练流程的批处理配方。 | `train_regime_arm.py`、`run_backtest.py` |
 | `evaluate/` | 49 | 预测、回测、计算指标、比较参数和诊断持仓；宇宙过滤也由这里统一提供。 | `eval_ic_multi_pool.py`、`run_pred_backtest.py`、`run_regime_phase_s.py` |
-| `report/` | 14 | 从登记和指标生成报告，以及报告共用的显示工具。 | `build_phase_m_v1_report.py`、`build_phase_m_v1_bt_report.py`、`build_strategy_group_reports.py` |
+| `report/` | 15 | 从登记和指标生成报告，以及报告共用的显示工具。 | `build_phase_m_v1_report.py`、`build_phase_m_v1_bt_report.py`、`build_strategy_group_reports.py` |
 | `register/` | 33 | 维护实验登记、完成结果登记及经批准的版本晋升。 | `experiment_registry.py`、`register_regime_ablation.py` |
-| `maintenance/` | 12 | 路径解析、配置加载、实验档案校验、协议检查、实验进度与产物清理。 | `research_layout.py`、`experiment_archive.py`、`experiment_harness.py`、`cleanup_experiment_artifacts.py` |
+| `maintenance/` | 13 | 路径解析、配置加载、实验档案校验、协议检查、实验进度与产物清理。 | `research_layout.py`、`experiment_archive.py`、`experiment_harness.py`、`cleanup_experiment_artifacts.py` |
 
 `train/run_backtest.py`是训练/工作流调度入口，`evaluate/run_pred_backtest.py`是免重训回测实现，二者有调用关系，不是两份重复回测器。
 
@@ -88,3 +88,28 @@ H40 先排名再过滤上市龄；其它 H 在原 H40 有效且满足上市龄�
 - 本轮删除6个已完成的一次性入口：旧模型归档补丁、RankIC补丁及其shell、两份固定策略收集器、固定日期vol20标签探针。来源指纹及理由见[删除凭证](../experiments/_catalog/audits/20261101-result-script-layout/script-retirements.json)。三个有复用价值的低价、停牌、个股追踪诊断继续保留。
 
 以后的一次性迁移/修复/核验工具放在仓库外任务临时目录，验证完成后删除；正式可复用能力归入以上六类，并保留必要测试。不要为了保留一份临时入口而复制公共逻辑。
+
+## 周度 H5 风格专家
+
+十档 RankIC 早停、Top3 SPO+ 和 T 风格待分析问题见[两项保留实验](../experiments/reports/weekly_h5_style_experts.html)。
+
+两项专家直接读取冻结的周标签和风格概率。重建周分类器的市场特征或回放固定股票篮子价差时，在仓库根目录运行以下命令恢复有效报价。
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/prepare/restore_weekly_h5_quotes.py
+```
+
+命令默认读取本地的 `backtest/result/20261103_h20_causal_inputs/evaluation-provider`。在其他机器上可用 `--provider` 指定同一份冻结行情。脚本合并归档中的 30 只股票报价，校验原始 SHA-256 后写入历史输入路径。
+
+## 历史月度四分类工具
+
+市场级独立协议 `monthly-k4-next-day-v1` 使用 D/F/T/P 事后月度标签，不套用选股收益指标。
+正式入口：`prepare/prepare_market_style.py` 准备，`train/train_market_style.py` 单次拟合，
+`report/build_market_style_report.py` 核验四候选五种子内层/最终共40份回执、评估并生成报告。
+每次真实准备或拟合前用 `maintenance/experiment_harness.py style` 检查及登记预算，详见
+[分类 Harness 合同](../../docs/research/experiment_harness.md#市场风格四分类专用伴随轨道)。
+
+训练2004-01-02～2020-07-31，评估2020-08-03～2026-07-31；目标跨窗的末日剔除。
+外部源先探测可用性，历史发布时间未验证的字段排除；当前接口日程不能证明全历史可得性。
+涨跌停相关列明确为阈值代理，指数发布前的回算数据屏蔽。标签验收不通过时不启动分类拟合。
+本协议独立于当前 v5 选股基线和 s5 执行策略，不赋予任何晋升或生产权限。

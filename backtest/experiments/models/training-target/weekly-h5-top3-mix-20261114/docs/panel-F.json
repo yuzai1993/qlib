@@ -1,0 +1,25 @@
+{
+  "train_rows": 1053160,
+  "train_dates": 614,
+  "features_sha": "0232970a599605488406b2922e0b32dff3a425c5d8a1546f2450a1cff507ac9b",
+  "weights_sha": "e57cebcbfc20b230c7a1d34e079afbf26796988d7d3a84398656f7c33358ff1e",
+  "raw_sha": "4e108e73ba1848de9d1151521e7d1fa65c30b58341a6d373c6b78a5606d02954",
+  "raw_source": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/all.pkl",
+    "sha256": "7229c7d33241768c7dd24a20b19a3614ba5150c3837c92ee2403707f338d4ec8",
+    "size": 103003981
+  },
+  "exact_grades": true,
+  "es_scale": 0.05608237162232399,
+  "valid": {
+    "file": {
+      "path": "/private/tmp/qlib-h5-top3.UmxWdc/valid-F.pkl",
+      "sha256": "1ecf08650631391b72a094d098fb16d82c694f85a14301bfd81d58a6b09e4362",
+      "size": 809428585
+    },
+    "scored_days": 137,
+    "context_days": 257,
+    "rows": 1186737,
+    "exact_previous_own_frame": true
+  }
+}

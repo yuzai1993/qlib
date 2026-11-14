@@ -1,0 +1,106 @@
+{
+  "variant": "P",
+  "components": [
+    {
+      "seed": 42,
+      "session": "wkric_20261114_p_s42",
+      "model": {
+        "path": "backtest/result/wkric_20261114_p_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5322c141edbbe3e6d1ecabfd56e722e05bcec77f362e7b6a48012dade01ef212",
+        "size": 192781
+      },
+      "training": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s42-a1.json",
+        "sha256": "57500ac5ec1dd69f7974e26a0cfebb8f32372d8316f94f83bddeb994f495cab2",
+        "size": 22219
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/P-s42.pkl",
+        "sha256": "528f33ca7f0dd53feb3cd0492cffc4feb55787ab399b5d9b157c4f7ae54a1b8a",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "wkric_20261114_p_s1000",
+      "model": {
+        "path": "backtest/result/wkric_20261114_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f4d9b2c96e8817a7710e16bd71193b645d8fc4fe2d78ed5b306ba5b642097e6c",
+        "size": 184009
+      },
+      "training": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s1000-a1.json",
+        "sha256": "24407ad99d25907857be18311251ffa82fa1fa248496c77cf58307a8f45ad10f",
+        "size": 22049
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/P-s1000.pkl",
+        "sha256": "8cf4e7e277abcca324882dd8e01da72dcce6fe95c32462e7506fa8de29a3a6f7",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "wkric_20261114_p_s2000",
+      "model": {
+        "path": "backtest/result/wkric_20261114_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e000d023a3687866330ed6f0523bf2b4258bb81a9a2a8fbab42b11043538c033",
+        "size": 136370
+      },
+      "training": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s2000-a1.json",
+        "sha256": "b58e18486e8ed61a1b6dcd794a1ff9a2626326085b149175824d41b65379078f",
+        "size": 21008
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/P-s2000.pkl",
+        "sha256": "2c7f66480124b22918d99a4bafb33269b750c9fb4dbe1d532bc981724cd31946",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "wkric_20261114_p_s3000",
+      "model": {
+        "path": "backtest/result/wkric_20261114_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5d9fcda6669fa182f8c855f7d3587c452cb473604cb3125c09f775a153509c14",
+        "size": 131349
+      },
+      "training": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s3000-a1.json",
+        "sha256": "1ce1a3edfe41586014a29cfa4095b6af7234b309a9ae4793a51ca1230a4b9253",
+        "size": 20842
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/P-s3000.pkl",
+        "sha256": "ea3ecaae00f7624e73fdf8d9138f4f8ec91c0eca01991d4185fd800f23de73a1",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "wkric_20261114_p_s4000",
+      "model": {
+        "path": "backtest/result/wkric_20261114_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7e6b5cd2bbdd8264bbd53edb688b4e715f8a4316bea1d4535d2f17633c8f9c2b",
+        "size": 166912
+      },
+      "training": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s4000-a1.json",
+        "sha256": "c2232806297922cc379e201afa7b2184fa32ed991908aaee72c70bae2aed2945",
+        "size": 21660
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/P-s4000.pkl",
+        "sha256": "741bcddf30e2ae84fa2c27f3c3f954258d972f9dab27feed8b50b5db8bf8c74d",
+        "size": 83046132
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261114_weekly_rankic/P-ensemble.pkl",
+    "sha256": "3eb75127a72dad724cd4dafabf56f4eef1b15546c825777aca28d8fa3dbc518d",
+    "size": 83046157
+  },
+  "exact_common_finite_index": true
+}

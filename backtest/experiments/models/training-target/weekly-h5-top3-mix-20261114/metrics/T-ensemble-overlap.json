@@ -1,0 +1,46 @@
+{
+  "rankic": {
+    "dates": 642,
+    "seeds": 5,
+    "mean_common_stocks": 1.761993769470405,
+    "fraction": 0.5873312564901351,
+    "inputs": {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/data/T-formal-heads.json",
+      "sha256": "6e622bc05fbcc2e35873454f22203f02047324d9fb2ad63b474f0a9ee49a45f2",
+      "size": 2085502
+    }
+  },
+  "train": {
+    "dates": 642,
+    "seeds": 5,
+    "mean_common_stocks": 1.4137071651090343,
+    "fraction": 0.4712357217030114,
+    "inputs": {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/data/train-T-formal-heads.json",
+      "sha256": "39fd75db2bf4c34ef665ac4d86b0094ab15701cf0a6fee9e419e830a508de948",
+      "size": 2085502
+    }
+  },
+  "stop": {
+    "dates": 642,
+    "seeds": 5,
+    "mean_common_stocks": 1.5420560747663552,
+    "fraction": 0.5140186915887851,
+    "inputs": {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/data/stop-T-formal-heads.json",
+      "sha256": "238deb38a734082dcbd51d653ea87f2742f8b7b870a576b64c01c21a3dc70005",
+      "size": 2085502
+    }
+  },
+  "joint": {
+    "dates": 642,
+    "seeds": 5,
+    "mean_common_stocks": 0.9052959501557633,
+    "fraction": 0.30176531671858775,
+    "inputs": {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/data/joint-T-formal-heads.json",
+      "sha256": "471512ea5b0e50d8c90315611dab26e1d5b5912cf8bd459afab6f0816465ae58",
+      "size": 2085502
+    }
+  }
+}

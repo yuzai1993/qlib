@@ -1,0 +1,198 @@
+{
+  "schema": "forward-spread-stage-v1",
+  "status": "closed",
+  "parent_exp_id": "train-data/dft-specialists-20261108-v1",
+  "stage_id": "forward-spread-20261112",
+  "contract": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/configs/contract.json",
+    "sha256": "5c0d4acb86ea709ef553551d6ea272861be94e6cacae10c4a52a1734ff07b37c",
+    "bytes": 5621
+  },
+  "baseline_digest": "edefdbe4cc0d652e38b6964f812b723b4448f13c6f45c75091368e598da93ce9",
+  "prior_cost": {
+    "stock_model_starts": 79,
+    "stock_model_successes": 75,
+    "earlier_next_day_classifiers": 40,
+    "earlier_style_clusters": 3
+  },
+  "expert_ledger": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/expert-state.json",
+  "stages": [
+    "monthly-h5",
+    "monthly-h20",
+    "weekly-h5",
+    "weekly-h20"
+  ],
+  "jobs": [
+    {
+      "stage": "monthly-h5",
+      "attempt": 1,
+      "outcome": "failed",
+      "started_at": "2026-11-11T16:31:49.527142+00:00",
+      "input": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/forward.parquet",
+        "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+        "bytes": 353855
+      },
+      "evidence": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/label-failure.json",
+        "sha256": "8602d5c096af112f6aa644417a8ca98db4677858d9563dc43e8ecb728cf11304",
+        "bytes": 603
+      },
+      "finished_at": "2026-11-11T16:31:49.704715+00:00"
+    },
+    {
+      "stage": "monthly-h5",
+      "attempt": 2,
+      "outcome": "succeeded",
+      "started_at": "2026-11-11T16:32:58.201152+00:00",
+      "input": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/forward.parquet",
+        "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+        "bytes": 353855
+      },
+      "evidence": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/label-fit.json",
+        "sha256": "e5785b0ea0918aa1438d44e09c75856558f6ef77047fea8fda3540faae35eb29",
+        "bytes": 8465
+      },
+      "finished_at": "2026-11-11T16:32:58.547086+00:00"
+    },
+    {
+      "stage": "monthly-h20",
+      "attempt": 1,
+      "outcome": "succeeded",
+      "started_at": "2026-11-11T16:32:59.537894+00:00",
+      "input": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/forward.parquet",
+        "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+        "bytes": 353855
+      },
+      "evidence": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/label-fit.json",
+        "sha256": "258e2ce7c842a87224c6537d6bf29b662a574c3be03d00a00448739d926cf3f1",
+        "bytes": 8453
+      },
+      "finished_at": "2026-11-11T16:32:59.848919+00:00"
+    },
+    {
+      "stage": "weekly-h5",
+      "attempt": 1,
+      "outcome": "succeeded",
+      "started_at": "2026-11-11T16:33:00.837513+00:00",
+      "input": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/forward.parquet",
+        "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+        "bytes": 353855
+      },
+      "evidence": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/label-fit.json",
+        "sha256": "4703a4eaf3db30c07b9eb1a1507655d080db39c73ddff10543ed313478c8716c",
+        "bytes": 8569
+      },
+      "finished_at": "2026-11-11T16:33:01.190831+00:00"
+    },
+    {
+      "stage": "weekly-h20",
+      "attempt": 1,
+      "outcome": "succeeded",
+      "started_at": "2026-11-11T16:33:02.171192+00:00",
+      "input": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/forward.parquet",
+        "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+        "bytes": 353855
+      },
+      "evidence": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/label-fit.json",
+        "sha256": "afdea61f50c6b3b88a8d295fdf0621402608e45d66deff8caede1e2e1394c588",
+        "bytes": 8551
+      },
+      "finished_at": "2026-11-11T16:33:02.529497+00:00"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-11T16:30:51.492596+00:00",
+      "kind": "initialized"
+    },
+    {
+      "at": "2026-11-11T16:31:49.527589+00:00",
+      "kind": "label-start",
+      "stage": "monthly-h5"
+    },
+    {
+      "at": "2026-11-11T16:31:49.704909+00:00",
+      "kind": "label-result",
+      "stage": "monthly-h5"
+    },
+    {
+      "at": "2026-11-11T16:32:58.201631+00:00",
+      "kind": "label-start",
+      "stage": "monthly-h5"
+    },
+    {
+      "at": "2026-11-11T16:32:58.547250+00:00",
+      "kind": "label-result",
+      "stage": "monthly-h5"
+    },
+    {
+      "at": "2026-11-11T16:32:59.538395+00:00",
+      "kind": "label-start",
+      "stage": "monthly-h20"
+    },
+    {
+      "at": "2026-11-11T16:32:59.849075+00:00",
+      "kind": "label-result",
+      "stage": "monthly-h20"
+    },
+    {
+      "at": "2026-11-11T16:33:00.837952+00:00",
+      "kind": "label-start",
+      "stage": "weekly-h5"
+    },
+    {
+      "at": "2026-11-11T16:33:01.191006+00:00",
+      "kind": "label-result",
+      "stage": "weekly-h5"
+    },
+    {
+      "at": "2026-11-11T16:33:02.171641+00:00",
+      "kind": "label-start",
+      "stage": "weekly-h20"
+    },
+    {
+      "at": "2026-11-11T16:33:02.529675+00:00",
+      "kind": "label-result",
+      "stage": "weekly-h20"
+    },
+    {
+      "at": "2026-11-11T16:33:41.147717+00:00",
+      "kind": "four_labels_locked",
+      "evidence": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/landed-lock.json",
+        "sha256": "4d85a57db4fd218d73dfcb1d23761a897875f5b08c7cc567ad997caf0c8e5997",
+        "bytes": 1704
+      }
+    },
+    {
+      "at": "2026-11-11T19:21:17.827766+00:00",
+      "kind": "closed",
+      "reason": "four_partitions_and_twelve_five_seed_specialists_evaluated",
+      "verification": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/final-verification.json",
+        "sha256": "802b8905c5a3401d91fc6ea3c62552e9693285f8f35d39566309023446a117ce",
+        "bytes": 5332
+      },
+      "expert_ledger": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/expert-state.json",
+        "sha256": "7bc8a6b25c16cf686f5e2d311733bb4ff53bc77958f8388628ee1e710f49d2dc",
+        "bytes": 174760
+      },
+      "cleanup": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/cleanup.json",
+        "sha256": "e2126bd00123317d0cbeeaf1f2ce07b42ed367f3f0a083969fc1675cfda8c0f9",
+        "bytes": 458
+      }
+    }
+  ],
+  "checksum": "5ba23458f37c3c5466e179847984bfa8131dcbb40835779f66243b848c729115"
+}

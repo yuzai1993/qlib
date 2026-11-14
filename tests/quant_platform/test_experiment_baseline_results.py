@@ -101,7 +101,15 @@ def test_all_retained_experiments_have_a_control_row_or_explicit_initial_placeho
     for record in records:
         result = record["core_results"]
         if result["kind"] == "training_target_comparison":
-            assert len(result["records"]) == 4
+            # Retained groups include both H1/H5/H10/H20 and H7/H15/H20.
+            assert len(result["records"]) >= 2
+            assert len({r["id"] for r in result["records"]}) == len(result["records"])
+            assert any("H20" in r["name"] for r in result["records"])
+            continue
+        if result["kind"] == "market_style_classification":
+            assert len(result["records"]) == 6
+            assert [r["role"] for r in result["records"]].count("baseline") == 2
+            assert all("accuracy" in r["metrics"] and "net_ann" not in r["metrics"] for r in result["records"])
             continue
         assert len(result["records"]) == 2, record["id"]
         assert result["records"][0]["role"] == "baseline"

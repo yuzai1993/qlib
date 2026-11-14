@@ -1,0 +1,546 @@
+{
+  "arms": {
+    "monthly-h5": {
+      "labels": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/date-labels.csv",
+        "sha256": "884faca46f973252ae03def029000eba069b6eda94416d986742b780f9fea3c3",
+        "bytes": 194181
+      },
+      "periods": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/period-labels.csv",
+        "sha256": "c83827a113eb269f3c3661f1e346f940a91bdd04ab209fc62b7f6ace0bc9cf5a",
+        "bytes": 46299
+      },
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/label-model.joblib",
+        "sha256": "5f84deda0ae8e65bd656fd29d32fa7ab67289f631d1abede74b35dae2c655d23",
+        "bytes": 2604
+      },
+      "fitted_periods": 208,
+      "evaluated_days": 1448,
+      "eval_days_whose_label_matures_after_window": 17,
+      "eval_first_and_last_ready_date": [
+        "2020-09-08",
+        "2026-08-10"
+      ],
+      "label_lag_trading_days": {
+        "minimum": 6,
+        "median": 16.0,
+        "maximum": 28
+      },
+      "cells": {
+        "D": {
+          "days": 897,
+          "periods": 44,
+          "cum_spread_percent": {
+            "small_big_h5": 1.1560823240290408,
+            "lowvol_highvol_h5": 0.7156326827321122,
+            "momentum_h5": -0.4975835245165978,
+            "small_big_h20": 3.180062603657087,
+            "lowvol_highvol_h20": 1.9514744748322994,
+            "momentum_h20": -1.4756645180711703
+          },
+          "same_day_equal_weight_market_pct": 0.07283199578523636
+        },
+        "F": {
+          "days": 91,
+          "periods": 5,
+          "cum_spread_percent": {
+            "small_big_h5": 0.08943003249242083,
+            "lowvol_highvol_h5": -1.8088313078016531,
+            "momentum_h5": -1.8770863023166964,
+            "small_big_h20": 0.6085646998874106,
+            "lowvol_highvol_h20": -6.878246283056316,
+            "momentum_h20": -4.541600313917785
+          },
+          "same_day_equal_weight_market_pct": 0.37623247504234314
+        },
+        "T": {
+          "days": 424,
+          "periods": 21,
+          "cum_spread_percent": {
+            "small_big_h5": -0.81945314159384,
+            "lowvol_highvol_h5": -0.46725804348616806,
+            "momentum_h5": 0.7672853984777763,
+            "small_big_h20": -1.1092513482270867,
+            "lowvol_highvol_h20": -0.35809774911646153,
+            "momentum_h20": 1.5153788346994914
+          },
+          "same_day_equal_weight_market_pct": -0.034529879689216614
+        },
+        "P": {
+          "days": 36,
+          "periods": 2,
+          "cum_spread_percent": {
+            "small_big_h5": 2.9882265694646373,
+            "lowvol_highvol_h5": 4.093150362475879,
+            "momentum_h5": -1.4485041998947659,
+            "small_big_h20": 5.812399128141502,
+            "lowvol_highvol_h20": 4.366822292407354,
+            "momentum_h20": -8.505486733176642
+          },
+          "same_day_equal_weight_market_pct": -0.6800223588943481
+        }
+      },
+      "agreement_prior_DFT_mergedP": 0.7983425414364641
+    },
+    "monthly-h20": {
+      "labels": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/date-labels.csv",
+        "sha256": "db9cf5b2b759278a684ae3cacaf8026eec8562cb04acee10087b5b1c6a3ed990",
+        "bytes": 194181
+      },
+      "periods": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/period-labels.csv",
+        "sha256": "42d11e2bf63aed8e24dfcb280462a708d41076c0837d53b6ddb0b1ac1cfa6d6c",
+        "bytes": 45889
+      },
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/label-model.joblib",
+        "sha256": "2d24fec3a8103ed1f34a5df07dbfa611c8e78b8bb1a313f311dabb70fdb8fe61",
+        "bytes": 2604
+      },
+      "fitted_periods": 208,
+      "evaluated_days": 1448,
+      "eval_days_whose_label_matures_after_window": 17,
+      "eval_first_and_last_ready_date": [
+        "2020-09-29",
+        "2026-08-31"
+      ],
+      "label_lag_trading_days": {
+        "minimum": 21,
+        "median": 31.0,
+        "maximum": 43
+      },
+      "cells": {
+        "D": {
+          "days": 935,
+          "periods": 46,
+          "cum_spread_percent": {
+            "small_big_h5": 0.8254972103744108,
+            "lowvol_highvol_h5": 0.68221880253753,
+            "momentum_h5": -0.23982677089528526,
+            "small_big_h20": 3.1798486925791054,
+            "lowvol_highvol_h20": 2.915725251510341,
+            "momentum_h20": -1.5127333989341987
+          },
+          "same_day_equal_weight_market_pct": 0.03761415556073189
+        },
+        "F": {
+          "days": 33,
+          "periods": 2,
+          "cum_spread_percent": {
+            "small_big_h5": 1.3819839833586505,
+            "lowvol_highvol_h5": 0.2778343094343489,
+            "momentum_h5": -0.6166337594164141,
+            "small_big_h20": 7.439382193666516,
+            "lowvol_highvol_h20": 3.3375709232958877,
+            "momentum_h20": -1.908325439206127
+          },
+          "same_day_equal_weight_market_pct": 0.3254956007003784
+        },
+        "T": {
+          "days": 408,
+          "periods": 20,
+          "cum_spread_percent": {
+            "small_big_h5": -0.38336660928668126,
+            "lowvol_highvol_h5": -0.6928246871193908,
+            "momentum_h5": 0.18386472679683757,
+            "small_big_h20": -2.2764231325994593,
+            "lowvol_highvol_h20": -3.9155064090200717,
+            "momentum_h20": 1.7071883567362365
+          },
+          "same_day_equal_weight_market_pct": 0.08050145208835602
+        },
+        "P": {
+          "days": 72,
+          "periods": 4,
+          "cum_spread_percent": {
+            "small_big_h5": 2.0033363265813224,
+            "lowvol_highvol_h5": 0.863669857951916,
+            "momentum_h5": -2.4221427906822,
+            "small_big_h20": 4.957525531709608,
+            "lowvol_highvol_h20": -1.5123887039307091,
+            "momentum_h20": -8.60813860846166
+          },
+          "same_day_equal_weight_market_pct": -0.2542944848537445
+        }
+      },
+      "agreement_prior_DFT_mergedP": 0.6470994475138122
+    },
+    "weekly-h5": {
+      "labels": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+        "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+        "bytes": 274553
+      },
+      "periods": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/period-labels.csv",
+        "sha256": "c86aa88161448131cfcee10b0d0edf891a38540201936a720b8d9dae5be227ad",
+        "bytes": 211931
+      },
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/label-model.joblib",
+        "sha256": "2f89dfd0ed9eaaeb5abf52d2f4a7553628b821c02ff9303516f79092fe7df6ab",
+        "bytes": 5312
+      },
+      "fitted_periods": 885,
+      "evaluated_days": 1448,
+      "eval_days_whose_label_matures_after_window": 4,
+      "eval_first_and_last_ready_date": [
+        "2020-08-17",
+        "2026-08-03"
+      ],
+      "label_lag_trading_days": {
+        "minimum": 6,
+        "median": 8.0,
+        "maximum": 10
+      },
+      "cells": {
+        "D": {
+          "days": 646,
+          "periods": 136,
+          "cum_spread_percent": {
+            "small_big_h5": 1.8761051217549631,
+            "lowvol_highvol_h5": 1.7530988937715246,
+            "momentum_h5": -0.7889452958843546,
+            "small_big_h20": 4.025347643797128,
+            "lowvol_highvol_h20": 3.051539740003299,
+            "momentum_h20": -1.9238894953264136
+          },
+          "same_day_equal_weight_market_pct": 0.06860283017158508
+        },
+        "F": {
+          "days": 137,
+          "periods": 31,
+          "cum_spread_percent": {
+            "small_big_h5": 0.4745338380635873,
+            "lowvol_highvol_h5": -1.976640941235271,
+            "momentum_h5": -1.3520244191176374,
+            "small_big_h20": 1.8383345926982642,
+            "lowvol_highvol_h20": -2.261101470131726,
+            "momentum_h20": -2.769763436827836
+          },
+          "same_day_equal_weight_market_pct": 0.508097767829895
+        },
+        "T": {
+          "days": 642,
+          "periods": 134,
+          "cum_spread_percent": {
+            "small_big_h5": -0.815990463086343,
+            "lowvol_highvol_h5": -0.5327504814016368,
+            "momentum_h5": 0.7390155459045523,
+            "small_big_h20": -0.479067240390532,
+            "lowvol_highvol_h20": -0.5588000996409687,
+            "momentum_h20": 0.6651629800792215
+          },
+          "same_day_equal_weight_market_pct": -0.05339585617184639
+        },
+        "P": {
+          "days": 23,
+          "periods": 5,
+          "cum_spread_percent": {
+            "small_big_h5": 2.2679493438614453,
+            "lowvol_highvol_h5": -4.048756406763974,
+            "momentum_h5": -5.37071265887631,
+            "small_big_h20": 4.441482233612434,
+            "lowvol_highvol_h20": -7.5152068520369735,
+            "momentum_h20": -8.929479397509409
+          },
+          "same_day_equal_weight_market_pct": -0.8348131775856018
+        }
+      },
+      "agreement_prior_DFT_mergedP": 0.5552486187845304
+    },
+    "weekly-h20": {
+      "labels": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/date-labels.csv",
+        "sha256": "efa1775d579fbab95793f648ceddb6e63723a4b2ed7e57022b4bdc4d31e2d1f8",
+        "bytes": 274553
+      },
+      "periods": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/period-labels.csv",
+        "sha256": "3920ec0d8660404961eab218522df05955b58a1d03601c9090afaddd4576f088",
+        "bytes": 210593
+      },
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/label-model.joblib",
+        "sha256": "0b1ddd98dd798d6f493d1d1a8c30954d98b0dcb20b659d40404c07e746d71edc",
+        "bytes": 5300
+      },
+      "fitted_periods": 882,
+      "evaluated_days": 1448,
+      "eval_days_whose_label_matures_after_window": 19,
+      "eval_first_and_last_ready_date": [
+        "2020-09-07",
+        "2026-08-24"
+      ],
+      "label_lag_trading_days": {
+        "minimum": 21,
+        "median": 23.0,
+        "maximum": 25
+      },
+      "cells": {
+        "D": {
+          "days": 604,
+          "periods": 126,
+          "cum_spread_percent": {
+            "small_big_h5": 1.4079238075318914,
+            "lowvol_highvol_h5": 1.1671358290620284,
+            "momentum_h5": -0.4303294033913053,
+            "small_big_h20": 5.236142010748732,
+            "lowvol_highvol_h20": 4.918770148882963,
+            "momentum_h20": -2.5701778306932628
+          },
+          "same_day_equal_weight_market_pct": 0.1744617074728012
+        },
+        "F": {
+          "days": 96,
+          "periods": 22,
+          "cum_spread_percent": {
+            "small_big_h5": 1.1155300628161058,
+            "lowvol_highvol_h5": -1.5972685323504265,
+            "momentum_h5": -2.122658603184391,
+            "small_big_h20": 1.8538687649803858,
+            "lowvol_highvol_h20": -6.288410994845132,
+            "momentum_h20": -5.496348104982948
+          },
+          "same_day_equal_weight_market_pct": 0.4770340025424957
+        },
+        "T": {
+          "days": 719,
+          "periods": 152,
+          "cum_spread_percent": {
+            "small_big_h5": -0.18897568803767625,
+            "lowvol_highvol_h5": -0.1988949805306418,
+            "momentum_h5": 0.2147602492014674,
+            "small_big_h20": -1.036222713548685,
+            "lowvol_highvol_h20": -1.5803702096279935,
+            "momentum_h20": 1.1973608620348224
+          },
+          "same_day_equal_weight_market_pct": -0.06574712693691254
+        },
+        "P": {
+          "days": 29,
+          "periods": 6,
+          "cum_spread_percent": {
+            "small_big_h5": -0.5631497932662224,
+            "lowvol_highvol_h5": 0.6188999781192377,
+            "momentum_h5": -1.1959603746774894,
+            "small_big_h20": 1.7676653533146298,
+            "lowvol_highvol_h20": -3.484109814824729,
+            "momentum_h20": -6.258594129106094
+          },
+          "same_day_equal_weight_market_pct": -1.4983439445495605
+        }
+      },
+      "agreement_prior_DFT_mergedP": 0.4585635359116022
+    }
+  },
+  "agreements": {
+    "monthly-h5__monthly-h20": {
+      "count": 1448,
+      "equal": 1029,
+      "fraction_equal": 0.710635359116022,
+      "T_union": 600,
+      "T_intersection": 232,
+      "confusion_rows_first_columns_second": {
+        "D": {
+          "D": 743,
+          "F": 15,
+          "T": 139,
+          "P": 0
+        },
+        "F": {
+          "D": 0,
+          "F": 18,
+          "T": 37,
+          "P": 36
+        },
+        "T": {
+          "D": 192,
+          "F": 0,
+          "T": 232,
+          "P": 0
+        },
+        "P": {
+          "D": 0,
+          "F": 0,
+          "T": 0,
+          "P": 36
+        }
+      }
+    },
+    "monthly-h5__weekly-h5": {
+      "count": 1448,
+      "equal": 894,
+      "fraction_equal": 0.6174033149171271,
+      "T_union": 740,
+      "T_intersection": 326,
+      "confusion_rows_first_columns_second": {
+        "D": {
+          "D": 526,
+          "F": 82,
+          "T": 284,
+          "P": 5
+        },
+        "F": {
+          "D": 14,
+          "F": 37,
+          "T": 27,
+          "P": 13
+        },
+        "T": {
+          "D": 80,
+          "F": 18,
+          "T": 326,
+          "P": 0
+        },
+        "P": {
+          "D": 26,
+          "F": 0,
+          "T": 5,
+          "P": 5
+        }
+      }
+    },
+    "monthly-h5__weekly-h20": {
+      "count": 1448,
+      "equal": 892,
+      "fraction_equal": 0.6160220994475138,
+      "T_union": 810,
+      "T_intersection": 333,
+      "confusion_rows_first_columns_second": {
+        "D": {
+          "D": 498,
+          "F": 40,
+          "T": 354,
+          "P": 5
+        },
+        "F": {
+          "D": 10,
+          "F": 51,
+          "T": 19,
+          "P": 11
+        },
+        "T": {
+          "D": 87,
+          "F": 1,
+          "T": 333,
+          "P": 3
+        },
+        "P": {
+          "D": 9,
+          "F": 4,
+          "T": 13,
+          "P": 10
+        }
+      }
+    },
+    "monthly-h20__weekly-h5": {
+      "count": 1448,
+      "equal": 774,
+      "fraction_equal": 0.5345303867403315,
+      "T_union": 781,
+      "T_intersection": 269,
+      "confusion_rows_first_columns_second": {
+        "D": {
+          "D": 486,
+          "F": 86,
+          "T": 358,
+          "P": 5
+        },
+        "F": {
+          "D": 20,
+          "F": 5,
+          "T": 4,
+          "P": 4
+        },
+        "T": {
+          "D": 106,
+          "F": 33,
+          "T": 269,
+          "P": 0
+        },
+        "P": {
+          "D": 34,
+          "F": 13,
+          "T": 11,
+          "P": 14
+        }
+      }
+    },
+    "monthly-h20__weekly-h20": {
+      "count": 1448,
+      "equal": 952,
+      "fraction_equal": 0.6574585635359116,
+      "T_union": 761,
+      "T_intersection": 366,
+      "confusion_rows_first_columns_second": {
+        "D": {
+          "D": 564,
+          "F": 29,
+          "T": 334,
+          "P": 8
+        },
+        "F": {
+          "D": 24,
+          "F": 5,
+          "T": 0,
+          "P": 4
+        },
+        "T": {
+          "D": 7,
+          "F": 35,
+          "T": 366,
+          "P": 0
+        },
+        "P": {
+          "D": 9,
+          "F": 27,
+          "T": 19,
+          "P": 17
+        }
+      }
+    },
+    "weekly-h5__weekly-h20": {
+      "count": 1448,
+      "equal": 959,
+      "fraction_equal": 0.662292817679558,
+      "T_union": 880,
+      "T_intersection": 481,
+      "confusion_rows_first_columns_second": {
+        "D": {
+          "D": 408,
+          "F": 31,
+          "T": 202,
+          "P": 5
+        },
+        "F": {
+          "D": 50,
+          "F": 51,
+          "T": 36,
+          "P": 0
+        },
+        "T": {
+          "D": 146,
+          "F": 10,
+          "T": 481,
+          "P": 5
+        },
+        "P": {
+          "D": 0,
+          "F": 4,
+          "T": 0,
+          "P": 19
+        }
+      }
+    }
+  },
+  "verified": true,
+  "figure": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/reports/spread-matrix.png",
+    "sha256": "902b42f433783b95e4d0161d39f10e0405042a9b779823ce78f5e3c3a1d7aea3",
+    "bytes": 184127
+  }
+}

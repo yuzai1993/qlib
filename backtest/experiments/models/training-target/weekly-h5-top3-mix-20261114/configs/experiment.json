@@ -1,0 +1,37 @@
+{
+  "hypothesis": "用 20% 的 Top3 选股收益代理损失和 20% 的 Top3 净收益早停，检验能否弥补纯 RankIC 早停专家的头部收益损失，同时保留截面排序能力。",
+  "main": "joint",
+  "arms": {
+    "control": "frozen grade MSE + grade RankIC (last round)",
+    "train": "grade MSE + SPO+ Top3; grade RankIC ES",
+    "stop": "grade MSE; mixed ES",
+    "joint": "same mixed train trajectory as train; mixed ES"
+  },
+  "coefficients": {
+    "train": 0.2,
+    "es": 0.2
+  },
+  "training": "date-wise weighted .8*(0.5 sum squared ten-grade errors) + .2*sqrt(3*n)*SPOplus(s,r). True daily standardized continuous H5 r (positive affine per day); feasible portfolio max individual weight 1/3 and sum 1. SPOplus = max_w (2s-r) dot w - 2s dot w(r) + r dot w(r); divide objective by .8 to keep regression curvature and tree regularization unchanged. sqrt(3*n) normalizes sparse portfolio gradients to the per-stock MSE root-mean-square scale. Symmetric fractional ties. Continuous H5 read from archived OLD training snapshot; fit uses mature training rows only.",
+  "early_stopping": "0.8 * mean own-style daily ten-grade RankIC + 0.2 * (mean own-style tradable Top3 H5 return - roundtrip cost * mean own-style H5-lag turnover) / train-only RMS of per-day cross-sectional raw H5 std, per style. Turnover on full calendar (lag 5) with expected overlap under independent uniform daily tie resolution preserving exactly three equal-weight holdings; costs on dates with valid lag only. Both components frozen before outcomes. Same seeds, training and lookahead cutoff as prior research. Official evaluation retains canonical ranking, audit reverse and expected tie scores.",
+  "patience": 50,
+  "cap": 200,
+  "train_window": [
+    "2004-01-02",
+    "2020-07-31"
+  ],
+  "eval_window": [
+    "2020-08-03",
+    "2026-07-31"
+  ],
+  "last_signal": "2026-07-23",
+  "controls": [
+    "pure_RankIC",
+    "old_top5_es",
+    "v5"
+  ],
+  "interpretation": "Compare official net_ann & net_sharpe on matched style dates versus pure RankIC, old Top5 ES and v5, report RankIC, paired seeds, actual prefix. Attribute main effect with two single-axis controls; no weight search. T/joint representative native evaluation, all twelve candidates reported.",
+  "route": "Following prior conditional request, if joint beats v5 on both official own-style metrics and reverse tie audit preserves that conclusion, route qualified experts with frozen lgb_full predictions; v5 fallback for others, unchanged 1m/risk0.9 Top3 H5 ladder. Use signal-day hard switch and probability mix, plus prior best identical rule with P mass on v5 if P qualifies. Compare v5 same ladder and prior identical routes. Zero classifier fits.",
+  "exposure": "historical_selection_window",
+  "reference": "https://arxiv.org/abs/1710.08005",
+  "preparation": "Checked actual frozen components of both former expert generations and v5; full DK_I rebuilt once per year for formal inference; ample free space for 60 formal predictions; max 40 planned fits (2 trajectories x 4 styles x 5 seeds), 60 selected models, control shares previously published predictions."
+}

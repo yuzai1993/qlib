@@ -1,0 +1,54 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+[23600:MainThread](2026-11-14 02:08:35,579) INFO - qlib.Initialization - [config.py:473] - default_conf: client.
+[23600:MainThread](2026-11-14 02:08:35,580) INFO - qlib.Initialization - [__init__.py:82] - qlib successfully initialized based on client settings.
+[23600:MainThread](2026-11-14 02:08:35,580) INFO - qlib.Initialization - [__init__.py:84] - data_path={'__DEFAULT_FREQ': PosixPath('/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider')}
+[universe_filter] 统计已写入 /Users/yuxianqi/Project/qlib/backtest/result/20261114_020835_wkric_20261114_hard_entry/run_01/universe_filter_stats.json
+/opt/anaconda3/envs/qlib/lib/python3.12/site-packages/mlflow/tracking/_tracking_service/utils.py:184: FutureWarning: The filesystem tracking backend (e.g., './mlruns') is deprecated as of February 2026. Consider transitioning to a database backend (e.g., 'sqlite:///mlflow.db') to take advantage of the latest MLflow features. See https://mlflow.org/docs/latest/self-hosting/migrate-from-file-store for migration guidance.
+  return FileStore(store_uri, store_uri)
+[23600:MainThread](2026-11-14 02:09:10,642) WARNING - qlib.workflow - [expm.py:230] - No valid experiment found. Create a new experiment with name backtest_20261114_020835_wkric_20261114_hard_entry_run01.
+[23600:MainThread](2026-11-14 02:09:10,650) INFO - qlib.workflow - [exp.py:258] - Experiment 829278482010306377 starts running ...
+[23600:MainThread](2026-11-14 02:09:10,895) INFO - qlib.workflow - [recorder.py:345] - Recorder d746558d95c6459aac41215f802b1b55 starts running under Experiment 829278482010306377 ...
+[23600:MainThread](2026-11-14 02:09:11,043) INFO - qlib.backtest caller - [__init__.py:93] - Create new exchange
+[23600:MainThread](2026-11-14 02:09:23,445) WARNING - qlib.online operator - [exchange.py:220] - $close field data contains nan.
+[23600:MainThread](2026-11-14 02:09:23,447) WARNING - qlib.online operator - [exchange.py:220] - $close field data contains nan.
+[23600:MainThread](2026-11-14 02:09:44,180) WARNING - qlib.BaseExecutor - [executor.py:121] - `common_infra` is not set for <qlib.backtest.executor.SimulatorExecutor object at 0x14e144e30>
+backtest loop:   0%|          | 0/1454 [00:00<?, ?it/s]/Users/yuxianqi/Project/qlib/qlib/utils/index_data.py:492: RuntimeWarning: Mean of empty slice
+  return np.nanmean(self.data)
+backtest loop:   2%|▏         | 25/1454 [00:00<00:05, 241.57it/s]backtest loop:   3%|▎         | 50/1454 [00:00<00:05, 236.72it/s]backtest loop:   5%|▌         | 74/1454 [00:00<00:05, 237.79it/s]backtest loop:   7%|▋         | 98/1454 [00:00<00:07, 190.39it/s]backtest loop:   8%|▊         | 122/1454 [00:00<00:06, 203.37it/s]backtest loop:  10%|▉         | 145/1454 [00:00<00:06, 210.47it/s]backtest loop:  12%|█▏        | 169/1454 [00:00<00:05, 217.03it/s]backtest loop:  13%|█▎        | 192/1454 [00:00<00:05, 218.47it/s]backtest loop:  15%|█▍        | 215/1454 [00:00<00:05, 217.80it/s]backtest loop:  16%|█▋        | 238/1454 [00:01<00:05, 219.05it/s]backtest loop:  18%|█▊        | 261/1454 [00:01<00:05, 220.44it/s]backtest loop:  20%|█▉        | 284/1454 [00:01<00:05, 219.51it/s]backtest loop:  21%|██        | 307/1454 [00:01<00:05, 217.87it/s]backtest loop:  23%|██▎       | 329/1454 [00:01<00:05, 216.46it/s]backtest loop:  24%|██▍       | 351/1454 [00:01<00:05, 215.55it/s]backtest loop:  26%|██▌       | 373/1454 [00:01<00:05, 215.32it/s]backtest loop:  27%|██▋       | 395/1454 [00:01<00:04, 212.84it/s]backtest loop:  29%|██▊       | 417/1454 [00:01<00:04, 212.37it/s]backtest loop:  30%|███       | 439/1454 [00:02<00:04, 210.84it/s]backtest loop:  32%|███▏      | 461/1454 [00:02<00:04, 209.83it/s]backtest loop:  33%|███▎      | 482/1454 [00:02<00:04, 209.49it/s]backtest loop:  35%|███▍      | 503/1454 [00:02<00:04, 208.83it/s]backtest loop:  36%|███▌      | 524/1454 [00:02<00:04, 206.71it/s]backtest loop:  37%|███▋      | 545/1454 [00:02<00:04, 205.95it/s]backtest loop:  39%|███▉      | 566/1454 [00:02<00:04, 205.41it/s]backtest loop:  40%|████      | 587/1454 [00:02<00:04, 204.59it/s]backtest loop:  42%|████▏     | 608/1454 [00:02<00:04, 203.54it/s]backtest loop:  43%|████▎     | 629/1454 [00:02<00:04, 202.41it/s]backtest loop:  45%|████▍     | 650/1454 [00:03<00:04, 200.43it/s]backtest loop:  46%|████▌     | 671/1454 [00:03<00:03, 199.64it/s]backtest loop:  48%|████▊     | 691/1454 [00:03<00:03, 199.36it/s]backtest loop:  49%|████▉     | 711/1454 [00:03<00:03, 198.06it/s]backtest loop:  50%|█████     | 731/1454 [00:03<00:03, 196.01it/s]backtest loop:  52%|█████▏    | 751/1454 [00:03<00:03, 195.15it/s]backtest loop:  53%|█████▎    | 771/1454 [00:03<00:03, 194.17it/s]backtest loop:  54%|█████▍    | 791/1454 [00:03<00:03, 193.84it/s]backtest loop:  56%|█████▌    | 811/1454 [00:03<00:03, 192.37it/s]backtest loop:  57%|█████▋    | 831/1454 [00:04<00:03, 191.60it/s]backtest loop:  59%|█████▊    | 851/1454 [00:04<00:03, 190.80it/s]backtest loop:  60%|█████▉    | 871/1454 [00:04<00:03, 190.10it/s]backtest loop:  61%|██████▏   | 891/1454 [00:04<00:02, 189.03it/s]backtest loop:  63%|██████▎   | 910/1454 [00:04<00:02, 189.28it/s]backtest loop:  64%|██████▍   | 929/1454 [00:04<00:02, 188.07it/s]backtest loop:  65%|██████▌   | 948/1454 [00:04<00:02, 188.44it/s]backtest loop:  67%|██████▋   | 968/1454 [00:04<00:02, 189.68it/s]backtest loop:  68%|██████▊   | 988/1454 [00:04<00:02, 191.27it/s]backtest loop:  69%|██████▉   | 1008/1454 [00:04<00:02, 193.26it/s]backtest loop:  71%|███████   | 1028/1454 [00:05<00:02, 192.19it/s]backtest loop:  72%|███████▏  | 1048/1454 [00:05<00:02, 191.31it/s]backtest loop:  73%|███████▎  | 1068/1454 [00:05<00:02, 191.06it/s]backtest loop:  75%|███████▍  | 1088/1454 [00:05<00:01, 189.39it/s]backtest loop:  76%|███████▌  | 1107/1454 [00:05<00:01, 188.66it/s]backtest loop:  77%|███████▋  | 1126/1454 [00:05<00:01, 188.24it/s]backtest loop:  79%|███████▊  | 1145/1454 [00:05<00:01, 188.67it/s]backtest loop:  80%|████████  | 1164/1454 [00:05<00:01, 188.48it/s]backtest loop:  81%|████████▏ | 1183/1454 [00:05<00:01, 188.40it/s]backtest loop:  83%|████████▎ | 1203/1454 [00:05<00:01, 189.24it/s]backtest loop:  84%|████████▍ | 1222/1454 [00:06<00:01, 189.27it/s]backtest loop:  85%|████████▌ | 1241/1454 [00:06<00:01, 188.51it/s]backtest loop:  87%|████████▋ | 1260/1454 [00:06<00:01, 187.06it/s]backtest loop:  88%|████████▊ | 1279/1454 [00:06<00:00, 187.36it/s]backtest loop:  89%|████████▉ | 1298/1454 [00:06<00:00, 187.57it/s]backtest loop:  91%|█████████ | 1317/1454 [00:06<00:00, 187.67it/s]backtest loop:  92%|█████████▏| 1336/1454 [00:06<00:00, 187.40it/s]backtest loop:  93%|█████████▎| 1355/1454 [00:06<00:00, 187.08it/s]backtest loop:  94%|█████████▍| 1374/1454 [00:06<00:00, 186.31it/s]backtest loop:  96%|█████████▌| 1393/1454 [00:06<00:00, 186.52it/s]backtest loop:  97%|█████████▋| 1412/1454 [00:07<00:00, 186.25it/s]backtest loop:  98%|█████████▊| 1431/1454 [00:07<00:00, 185.99it/s]backtest loop: 100%|█████████▉| 1450/1454 [00:07<00:00, 186.19it/s]backtest loop: 100%|██████████| 1454/1454 [00:07<00:00, 198.54it/s]
+[23600:MainThread](2026-11-14 02:09:51,569) INFO - qlib.workflow - [record_temp.py:522] - Portfolio analysis record 'port_analysis_1day.pkl' has been saved as the artifact of the Experiment 829278482010306377
+[23600:MainThread](2026-11-14 02:09:51,573) INFO - qlib.workflow - [record_temp.py:547] - Indicator analysis record 'indicator_analysis_1day.pkl' has been saved as the artifact of the Experiment 829278482010306377
+[23600:MainThread](2026-11-14 02:09:51,999) INFO - qlib.timer - [log.py:127] - Time cost: 0.000s | waiting `async_log` Done
+'The following are analysis results of benchmark return(1day).'
+                       risk
+mean               0.000317
+std                0.014844
+annualized_return  0.078437
+information_ratio  0.329792
+max_drawdown      -0.329371
+'The following are analysis results of the excess return without cost(1day).'
+                       risk
+mean               0.000512
+std                0.010381
+annualized_return  0.129608
+information_ratio  0.761185
+max_drawdown      -0.341585
+'The following are analysis results of the excess return with cost(1day).'
+                       risk
+mean               0.000349
+std                0.010382
+annualized_return  0.086714
+information_ratio  0.519297
+max_drawdown      -0.383178
+'The following are analysis results of indicators(1day).'
+        value
+ffr  0.998109
+pa   0.000000
+pos  0.000000
+Downloading artifacts:   0%|          | 0/1 [00:00<?, ?it/s]Downloading artifacts: 100%|██████████| 1/1 [00:00<00:00, 2261.08it/s]Downloading artifacts: 100%|██████████| 1/1 [00:00<00:00, 2028.19it/s]
+Downloading artifacts:   0%|          | 0/1 [00:00<?, ?it/s]Downloading artifacts: 100%|██████████| 1/1 [00:00<00:00, 3279.36it/s]Downloading artifacts: 100%|██████████| 1/1 [00:00<00:00, 2888.64it/s]
+[Run 1] 跳过出图（run.generate_figures=false）
+结果目录: /Users/yuxianqi/Project/qlib/backtest/result/20261114_020835_wkric_20261114_hard_entry
+成功: 1 / 1

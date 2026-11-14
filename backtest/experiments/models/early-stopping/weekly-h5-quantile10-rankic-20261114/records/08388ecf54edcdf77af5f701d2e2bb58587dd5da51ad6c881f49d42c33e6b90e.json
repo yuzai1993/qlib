@@ -1,0 +1,114 @@
+{
+  "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+  "archive_path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114",
+  "date": "2026-11-14",
+  "state": "completed",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "early-stopping",
+  "changed_axes": [
+    "own_style_H5_quantile10_rankic"
+  ],
+  "display_name": "周度 H5 四风格专家 · 十档 RankIC 早停",
+  "hypothesis": "在本风格验证日用预测与 H5 十档标签的日截面 Spearman 均值选轮，消除股票代码在早停中的作用，并检验各专家的 Top3×H5 净年化与夏普是否均高于 v5。",
+  "baseline_ref": "training-target/h20-quantile10-p50-v5",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "test_pools": [
+    "all"
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "detail_report": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/reports/detail.html",
+  "portable_eval_output": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/T.json",
+  "metrics": {
+    "net_ann": 0.16561092771749708,
+    "net_ann_vol": 0.39955249199228554,
+    "net_sharpe": 0.4144910394419331,
+    "ann": 0.2084621432407126,
+    "turnover": 0.1957033957033957,
+    "rank_ic_mean": 0.07372220481491147
+  },
+  "representative_candidate": "T; four individual candidates in detail",
+  "internal_candidates": [
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/source-records/D.json",
+      "sha256": "f1937cdc41a1b5859fb31a4330dfc219f6a6fbcfabc3e207613146d97439548f",
+      "size": 2170
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/source-records/F.json",
+      "sha256": "05f493c5f2d82648644916194869381d104f1ed409337708ab364babb841cfc6",
+      "size": 2164
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/source-records/T.json",
+      "sha256": "698b00f316f87a52918281e6d30b7fcad06aa939f04b53b00e91910978c79aac",
+      "size": 2172
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/source-records/P.json",
+      "sha256": "5c05f893af259f2a14aa8a55bcd49172b57ebcc59a4115e49eb90d8ad12717fd",
+      "size": 2405
+    }
+  ],
+  "configs": [
+    "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/experiment.json",
+    "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/harness-plan.json"
+  ],
+  "result_dirs": [
+    "backtest/result/20261114_weekly_rankic",
+    "backtest/result/wkric_20261114_t_s42",
+    "backtest/result/wkric_20261114_t_s1000",
+    "backtest/result/wkric_20261114_t_s2000",
+    "backtest/result/wkric_20261114_t_s3000",
+    "backtest/result/wkric_20261114_t_s4000",
+    "backtest/result/wkric_20261114_p_s42",
+    "backtest/result/wkric_20261114_p_s1000",
+    "backtest/result/wkric_20261114_p_s2000",
+    "backtest/result/wkric_20261114_p_s3000",
+    "backtest/result/wkric_20261114_p_s4000",
+    "backtest/result/wkric_20261114_d_s42",
+    "backtest/result/wkric_20261114_d_s1000",
+    "backtest/result/wkric_20261114_d_s2000",
+    "backtest/result/wkric_20261114_d_s3000",
+    "backtest/result/wkric_20261114_d_s4000",
+    "backtest/result/wkric_20261114_f_s42",
+    "backtest/result/wkric_20261114_f_s1000",
+    "backtest/result/wkric_20261114_f_s2000",
+    "backtest/result/wkric_20261114_f_s3000",
+    "backtest/result/wkric_20261114_f_s4000",
+    "backtest/result/20261114_020957_wkric_20261114_four_hard_signal",
+    "backtest/result/20261114_021115_wkric_20261114_four_soft_signal",
+    "backtest/result/20261114_021232_wkric_20261114_four_hard_entry",
+    "backtest/result/20261114_020556_wkric_20261114_hard_signal",
+    "backtest/result/20261114_020717_wkric_20261114_soft_signal",
+    "backtest/result/20261114_020835_wkric_20261114_hard_entry"
+  ],
+  "study_summary": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/four-style-comparison.json",
+  "qualified": [
+    "D",
+    "F",
+    "T",
+    "P"
+  ],
+  "conclusion": "满足同风格净年化与夏普均高于 v5 的专家为 D、F、T、P。该比较为历史选型。",
+  "harness": {
+    "campaign_id": "weekly-h5-quantile10-rankic-20261114",
+    "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1"
+  },
+  "derived_accounts": {
+    "four_hard_signal": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/account-four_hard_signal.json",
+    "four_soft_signal": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/account-four_soft_signal.json",
+    "four_hard_entry": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/account-four_hard_entry.json",
+    "hard_signal": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/account-hard_signal.json",
+    "soft_signal": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/account-soft_signal.json",
+    "hard_entry": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/account-hard_entry.json"
+  }
+}

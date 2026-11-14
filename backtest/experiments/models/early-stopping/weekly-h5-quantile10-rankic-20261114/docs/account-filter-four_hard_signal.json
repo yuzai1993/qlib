@@ -1,0 +1,36 @@
+{
+  "filter_stats": {
+    "n_days": 1454,
+    "n_raw": 6914485,
+    "n_keep": 6432354,
+    "keep_rate": 0.930272319630457,
+    "eligible_min": 3239,
+    "eligible_median": 4600.0,
+    "eligible_max": 4930,
+    "eligible_mean": 4423.902338376892,
+    "sample_day": "2023-08-01",
+    "sample_day_eligible": 4671,
+    "sample_day_raw": 4946,
+    "pool": "all",
+    "min_amount": 10000000.0,
+    "min_listing_days": 60,
+    "st_filter": "daily",
+    "n_st_symbols": 179474,
+    "min_recent_trading_days": 60
+  },
+  "signature": {
+    "shape": [
+      6914485,
+      1
+    ],
+    "columns": [
+      "score"
+    ],
+    "dtypes": [
+      "float64"
+    ],
+    "index_sha256": "ca3f03c500137cf593cf688d11a42167d2edf5d3f5c3a06e2964f5be03da4fb3",
+    "values_sha256": "953e4e607ca222ee4e15b3b465224ebc9306b750f9aacb3017849bb67902db8c"
+  },
+  "control": "backtest/experiments/strategies/cohort-ladder/quantile10-p50-20261107-v1/docs/ladder-signal.json"
+}

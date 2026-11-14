@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-h5-top3.UmxWdc/post.py",
+    "sha256": "ef3fbb00eac8846deaf411ae16c1cadffbbddf123300759cd8423c8865c234ed",
+    "size": 630
+  },
+  "source_text": "from common import *\ndef main():\n    save_source(__file__)\n    # Wait for the actual fit/infer/evaluate process, allowing safe recovery after failure.\n    pid=int(sys.argv[1])\n    while True:\n        try:os.kill(pid,0)\n        except ProcessLookupError:break\n        time.sleep(15)\n    assert all((BASE/'metrics'/f'{arm}.json').is_file() for arm in VARIANTS),'upstream stopped'\n    for name in ['analysis','strategy','publish']:\n        with (BASE/'docs'/f'{name}.log').open('a') as f:subprocess.run([sys.executable,'-u',str(TMP/f'{name}.py')],cwd=ROOT,stdout=f,stderr=subprocess.STDOUT,check=True)\nif __name__=='__main__':main()\n",
+  "purpose": "Task-only adapter; source retained as audit, executable removed at closure."
+}

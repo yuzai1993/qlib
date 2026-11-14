@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "campaign_id": "weekly-h5-top3-mix-20261114",
+  "idea": "用 20% 的 Top3 选股收益代理损失和 20% 的 Top3 净收益早停，检验能否弥补纯 RankIC 早停专家的头部收益损失，同时保留截面排序能力。",
+  "track": "all_a_model",
+  "direction": "training-target",
+  "anchor_exp_id": "training-target/weekly-h5-top3-mix-20261114",
+  "archive_path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114",
+  "baseline_ref": "training-target/h20-quantile10-p50-v5",
+  "allowed_changes": [
+    "top3_mix_factorial"
+  ],
+  "selection_rule": "Compare official net_ann & net_sharpe on matched style dates versus pure RankIC, old Top5 ES and v5, report RankIC, paired seeds, actual prefix. Attribute main effect with two single-axis controls; no weight search. T/joint representative native evaluation, all twelve candidates reported.",
+  "data_version": "2026-11-03",
+  "inputs": [
+    "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+    "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/experiment.json",
+    "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/evaluation.yaml",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/configs/prepared-inputs.json",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/docs/h5-target.json",
+    "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/all.pkl",
+    "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/four-style-comparison.json",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/metrics/v5.json",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+    "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+    "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+    "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+    "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+    "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-D.pkl",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-F.pkl",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-T.pkl",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-P.pkl",
+    "backtest/models/regime_adapt.py",
+    "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+    "backtest/scripts/train/train_regime_arm.py",
+    "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-D.json",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-D.json",
+    "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-F.json",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-F.json",
+    "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-T.json",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-T.json",
+    "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-P.json",
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-P.json"
+  ],
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "budget": {
+    "max_rounds": 1,
+    "max_variants": 1,
+    "max_attempts_per_variant": 3,
+    "max_wall_hours": 12,
+    "max_no_new_evidence_rounds": 1,
+    "concurrency": 1
+  },
+  "execution_budget": {
+    "max_model_fits": 46,
+    "new_label_horizons": [
+      5
+    ]
+  },
+  "scientific_candidates": [
+    "joint-D",
+    "joint-F",
+    "joint-T",
+    "joint-P",
+    "train-D",
+    "train-F",
+    "train-T",
+    "train-P",
+    "stop-D",
+    "stop-F",
+    "stop-T",
+    "stop-P"
+  ],
+  "temporary_directory": "/private/tmp/qlib-h5-top3.UmxWdc"
+}

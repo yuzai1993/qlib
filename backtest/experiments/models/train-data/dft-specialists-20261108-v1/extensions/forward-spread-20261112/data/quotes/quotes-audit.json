@@ -1,0 +1,697 @@
+{
+  "signal_window": [
+    "2003-02-11",
+    "2026-08-31"
+  ],
+  "n": 5724,
+  "evaluation_anchor_window": [
+    "2020-08-03",
+    "2026-07-23"
+  ],
+  "last_exit_h5": "2026-09-08",
+  "last_exit_h20": "2026-09-30",
+  "units": "decimal gross return spread, equal daily signal weighting if summarized",
+  "recipe": "At signal close, market-wide average-percentile ranks (low <= .30 and high >= .70) of trailing 20-session log mean amount, sample return std, or close[t]/close[t-20]-1. Freeze tails. Each leg equally weights stocks with valid adjusted active closes and positive amount at entry t+1 and exit t+h+1. Subtract returns of the two fixed baskets, low-high for amount/vol, high-low for momentum. Endpoints with missing quotes are omitted from each leg. No model, trade fills, fees, ST screens or signal fitting.",
+  "calendar_position": "Adjacent actual trading sessions; labels assigned to signal dates. H5/H20 need held-out future returns for the forward observation. The signal cut is distinct from the quote cutoff; 2026-09-30 is used solely to realize August fixed baskets.",
+  "coverage": {
+    "full": {
+      "small_big_h5": {
+        "long": {
+          "formed_stock_days": 4282604,
+          "valid_stock_days": 4241350,
+          "valid_fraction": 0.9903670757324282,
+          "minimum_daily_valid_count": 105,
+          "minimum_daily_valid_fraction": 0.598939929328622
+        },
+        "short": {
+          "formed_stock_days": 4288328,
+          "valid_stock_days": 4247549,
+          "valid_fraction": 0.990490699405456,
+          "minimum_daily_valid_count": 101,
+          "minimum_daily_valid_fraction": 0.6525573192239859
+        }
+      },
+      "lowvol_highvol_h5": {
+        "long": {
+          "formed_stock_days": 4267336,
+          "valid_stock_days": 4231827,
+          "valid_fraction": 0.9916788835001509,
+          "minimum_daily_valid_count": 100,
+          "minimum_daily_valid_fraction": 0.6654740608228981
+        },
+        "short": {
+          "formed_stock_days": 4273060,
+          "valid_stock_days": 4226394,
+          "valid_fraction": 0.9890790206549873,
+          "minimum_daily_valid_count": 87,
+          "minimum_daily_valid_fraction": 0.5482142857142858
+        }
+      },
+      "momentum_h5": {
+        "long": {
+          "formed_stock_days": 4520368,
+          "valid_stock_days": 4461603,
+          "valid_fraction": 0.9869999522162798,
+          "minimum_daily_valid_count": 192,
+          "minimum_daily_valid_fraction": 0.6369747899159663
+        },
+        "short": {
+          "formed_stock_days": 4514701,
+          "valid_stock_days": 4471963,
+          "valid_fraction": 0.9905335923685754,
+          "minimum_daily_valid_count": 209,
+          "minimum_daily_valid_fraction": 0.5117845117845118
+        }
+      },
+      "small_big_h20": {
+        "long": {
+          "formed_stock_days": 4282604,
+          "valid_stock_days": 4213828,
+          "valid_fraction": 0.9839406118333612,
+          "minimum_daily_valid_count": 91,
+          "minimum_daily_valid_fraction": 0.5711711711711712
+        },
+        "short": {
+          "formed_stock_days": 4288328,
+          "valid_stock_days": 4229142,
+          "valid_fraction": 0.9861983504993088,
+          "minimum_daily_valid_count": 100,
+          "minimum_daily_valid_fraction": 0.6223021582733813
+        }
+      },
+      "lowvol_highvol_h20": {
+        "long": {
+          "formed_stock_days": 4267336,
+          "valid_stock_days": 4210641,
+          "valid_fraction": 0.9867141935858812,
+          "minimum_daily_valid_count": 93,
+          "minimum_daily_valid_fraction": 0.7101449275362319
+        },
+        "short": {
+          "formed_stock_days": 4273060,
+          "valid_stock_days": 4201905,
+          "valid_fraction": 0.9833479988579613,
+          "minimum_daily_valid_count": 86,
+          "minimum_daily_valid_fraction": 0.4864376130198915
+        }
+      },
+      "momentum_h20": {
+        "long": {
+          "formed_stock_days": 4520368,
+          "valid_stock_days": 4436207,
+          "valid_fraction": 0.9813818255504861,
+          "minimum_daily_valid_count": 179,
+          "minimum_daily_valid_fraction": 0.4898989898989899
+        },
+        "short": {
+          "formed_stock_days": 4514701,
+          "valid_stock_days": 4445656,
+          "valid_fraction": 0.9847066284123799,
+          "minimum_daily_valid_count": 195,
+          "minimum_daily_valid_fraction": 0.6037099494097807
+        }
+      }
+    },
+    "eval": {
+      "small_big_h5": {
+        "long": {
+          "formed_stock_days": 2037802,
+          "valid_stock_days": 2035084,
+          "valid_fraction": 0.9986662099654432,
+          "minimum_daily_valid_count": 1083,
+          "minimum_daily_valid_fraction": 0.9796320630749015
+        },
+        "short": {
+          "formed_stock_days": 2039250,
+          "valid_stock_days": 2037112,
+          "valid_fraction": 0.9989515753340689,
+          "minimum_daily_valid_count": 1089,
+          "minimum_daily_valid_fraction": 0.9917971662938105
+        }
+      },
+      "lowvol_highvol_h5": {
+        "long": {
+          "formed_stock_days": 2036689,
+          "valid_stock_days": 2035020,
+          "valid_fraction": 0.9991805327175627,
+          "minimum_daily_valid_count": 1083,
+          "minimum_daily_valid_fraction": 0.9941373534338358
+        },
+        "short": {
+          "formed_stock_days": 2038137,
+          "valid_stock_days": 2034773,
+          "valid_fraction": 0.9983494730727129,
+          "minimum_daily_valid_count": 1088,
+          "minimum_daily_valid_fraction": 0.9758327890267798
+        }
+      },
+      "momentum_h5": {
+        "long": {
+          "formed_stock_days": 2049002,
+          "valid_stock_days": 2044993,
+          "valid_fraction": 0.9980434377321252,
+          "minimum_daily_valid_count": 1095,
+          "minimum_daily_valid_fraction": 0.9901768172888016
+        },
+        "short": {
+          "formed_stock_days": 2047617,
+          "valid_stock_days": 2045587,
+          "valid_fraction": 0.9990086036597664,
+          "minimum_daily_valid_count": 1096,
+          "minimum_daily_valid_fraction": 0.974757281553398
+        }
+      },
+      "small_big_h20": {
+        "long": {
+          "formed_stock_days": 2037802,
+          "valid_stock_days": 2033842,
+          "valid_fraction": 0.9980567297509768,
+          "minimum_daily_valid_count": 1082,
+          "minimum_daily_valid_fraction": 0.9801587301587301
+        },
+        "short": {
+          "formed_stock_days": 2039250,
+          "valid_stock_days": 2036509,
+          "valid_fraction": 0.9986558783866618,
+          "minimum_daily_valid_count": 1089,
+          "minimum_daily_valid_fraction": 0.9913735899137359
+        }
+      },
+      "lowvol_highvol_h20": {
+        "long": {
+          "formed_stock_days": 2036689,
+          "valid_stock_days": 2034230,
+          "valid_fraction": 0.9987926482639224,
+          "minimum_daily_valid_count": 1083,
+          "minimum_daily_valid_fraction": 0.9913391072618255
+        },
+        "short": {
+          "formed_stock_days": 2038137,
+          "valid_stock_days": 2034026,
+          "valid_fraction": 0.9979829618911781,
+          "minimum_daily_valid_count": 1087,
+          "minimum_daily_valid_fraction": 0.9784454604833442
+        }
+      },
+      "momentum_h20": {
+        "long": {
+          "formed_stock_days": 2049002,
+          "valid_stock_days": 2044239,
+          "valid_fraction": 0.9976754537086835,
+          "minimum_daily_valid_count": 1092,
+          "minimum_daily_valid_fraction": 0.9868334430546412
+        },
+        "short": {
+          "formed_stock_days": 2047617,
+          "valid_stock_days": 2044659,
+          "valid_fraction": 0.9985553939042311,
+          "minimum_daily_valid_count": 1094,
+          "minimum_daily_valid_fraction": 0.9754045307443365
+        }
+      }
+    }
+  },
+  "canonical_current_spread_replay": {
+    "full": {
+      "n_stocks": {
+        "exact_days": 5724,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      },
+      "small_big": {
+        "exact_days": 5724,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      },
+      "lowvol_highvol": {
+        "exact_days": 5724,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      },
+      "momentum": {
+        "exact_days": 5724,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      }
+    },
+    "eval": {
+      "n_stocks": {
+        "exact_days": 1448,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      },
+      "small_big": {
+        "exact_days": 1448,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      },
+      "lowvol_highvol": {
+        "exact_days": 1448,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      },
+      "momentum": {
+        "exact_days": 1448,
+        "max_abs": 0.0,
+        "mismatched_days": 0
+      }
+    }
+  },
+  "old_eval_forward_spreads_checks": {
+    "legacy": {
+      "D": {
+        "n": 1010,
+        "expected_pp": [
+          0.692771,
+          0.44856,
+          -0.256692,
+          2.245302,
+          1.234362,
+          -1.070746
+        ],
+        "observed_pp": [
+          0.692771315574646,
+          0.44856005907058716,
+          -0.256692111492157,
+          2.245302200317383,
+          1.2343623638153076,
+          -1.070745825767517
+        ],
+        "max_abs_error_pp": 3.6381530765794423e-07
+      },
+      "F": {
+        "n": 136,
+        "expected_pp": [
+          0.708738,
+          -0.384349,
+          -1.423012,
+          1.992763,
+          -0.864351,
+          -3.514012
+        ],
+        "observed_pp": [
+          0.7087376713752747,
+          -0.38434937596321106,
+          -1.423012137413025,
+          1.992762804031372,
+          -0.8643506169319153,
+          -3.5140116214752197
+        ],
+        "max_abs_error_pp": 3.8306808469723563e-07
+      },
+      "T": {
+        "n": 302,
+        "expected_pp": [
+          0.030413,
+          0.085367,
+          0.360345,
+          0.357776,
+          0.00255,
+          0.52558
+        ],
+        "observed_pp": [
+          0.030412839725613594,
+          0.0853666216135025,
+          0.3603452146053314,
+          0.35777586698532104,
+          0.0025497812312096357,
+          0.5255804657936096
+        ],
+        "max_abs_error_pp": 4.657936095719961e-07
+      }
+    },
+    "smooth": {
+      "D": {
+        "n": 867,
+        "expected_pp": [
+          0.909053,
+          0.489673,
+          -0.493537,
+          2.961373,
+          1.335697,
+          -1.390193
+        ],
+        "observed_pp": [
+          0.9090526103973389,
+          0.48967310786247253,
+          -0.4935374855995178,
+          2.9613733291625977,
+          1.335696816444397,
+          -1.3901934623718262
+        ],
+        "max_abs_error_pp": 4.855995178187911e-07
+      },
+      "F": {
+        "n": 92,
+        "expected_pp": [
+          0.503824,
+          -1.089153,
+          -1.475493,
+          1.297342,
+          -3.915039,
+          -2.725902
+        ],
+        "observed_pp": [
+          0.5038241744041443,
+          -1.0891532897949219,
+          -1.4754931926727295,
+          1.2973418235778809,
+          -3.9150390625,
+          -2.7259018421173096
+        ],
+        "max_abs_error_pp": 2.8979492183722755e-07
+      },
+      "T": {
+        "n": 431,
+        "expected_pp": [
+          -0.191729,
+          -0.308596,
+          0.507656,
+          -0.058365,
+          0.151581,
+          0.915864
+        ],
+        "observed_pp": [
+          -0.1917286366224289,
+          -0.30859601497650146,
+          0.5076557993888855,
+          -0.058364786207675934,
+          0.15158092975616455,
+          0.9158644676208496
+        ],
+        "max_abs_error_pp": 4.6762084959794947e-07
+      },
+      "P": {
+        "n": 58,
+        "expected_pp": [
+          0.920803,
+          4.055436,
+          0.015144,
+          -0.256751,
+          4.598749,
+          -5.849838
+        ],
+        "observed_pp": [
+          0.9208027124404907,
+          4.055436134338379,
+          0.015144159086048603,
+          -0.2567512094974518,
+          4.59874963760376,
+          -5.849837303161621
+        ],
+        "max_abs_error_pp": 6.968383789995869e-07
+      }
+    },
+    "monthly": {
+      "D": {
+        "n": 819,
+        "expected_pp": [
+          0.939805,
+          0.661924,
+          -0.504172,
+          2.778468,
+          1.467688,
+          -1.310723
+        ],
+        "observed_pp": [
+          0.9398049712181091,
+          0.6619241237640381,
+          -0.5041720271110535,
+          2.7784676551818848,
+          1.4676874876022339,
+          -1.3107231855392456
+        ],
+        "max_abs_error_pp": 5.12397766216921e-07
+      },
+      "F": {
+        "n": 113,
+        "expected_pp": [
+          0.674973,
+          -1.111766,
+          -1.570809,
+          1.936124,
+          -4.040661,
+          -3.111232
+        ],
+        "observed_pp": [
+          0.6749728322029114,
+          -1.1117656230926514,
+          -1.5708094835281372,
+          1.936124324798584,
+          -4.040660858154297,
+          -3.111231565475464
+        ],
+        "max_abs_error_pp": 4.83528137307232e-07
+      },
+      "T": {
+        "n": 458,
+        "expected_pp": [
+          -0.205473,
+          -0.491587,
+          0.536191,
+          0.365423,
+          0.257108,
+          0.794123
+        ],
+        "observed_pp": [
+          -0.20547319948673248,
+          -0.4915868043899536,
+          0.5361912846565247,
+          0.365423321723938,
+          0.2571079432964325,
+          0.794123113155365
+        ],
+        "max_abs_error_pp": 3.2172393799045906e-07
+      },
+      "P": {
+        "n": 58,
+        "expected_pp": [
+          0.920803,
+          4.055436,
+          0.015144,
+          -0.256751,
+          4.598749,
+          -5.849838
+        ],
+        "observed_pp": [
+          0.9208027124404907,
+          4.055436134338379,
+          0.015144159086048603,
+          -0.2567512094974518,
+          4.59874963760376,
+          -5.849837303161621
+        ],
+        "max_abs_error_pp": 6.968383789995869e-07
+      }
+    },
+    "weekly": {
+      "D": {
+        "n": 579,
+        "expected_pp": [
+          1.000857,
+          0.982805,
+          -0.394518,
+          2.459969,
+          1.66366,
+          -1.450036
+        ],
+        "observed_pp": [
+          1.0008574724197388,
+          0.9828054308891296,
+          -0.39451801776885986,
+          2.4599692821502686,
+          1.6636604070663452,
+          -1.4500365257263184
+        ],
+        "max_abs_error_pp": 5.257263182567584e-07
+      },
+      "F": {
+        "n": 145,
+        "expected_pp": [
+          0.604349,
+          -0.739456,
+          -0.977855,
+          1.864234,
+          -1.600829,
+          -2.355406
+        ],
+        "observed_pp": [
+          0.6043486595153809,
+          -0.7394564151763916,
+          -0.9778549075126648,
+          1.864234209060669,
+          -1.6008285284042358,
+          -2.3554060459136963
+        ],
+        "max_abs_error_pp": 4.7159576421762495e-07
+      },
+      "T": {
+        "n": 681,
+        "expected_pp": [
+          0.194812,
+          -0.006198,
+          0.154912,
+          1.339219,
+          0.784343,
+          0.063143
+        ],
+        "observed_pp": [
+          0.1948118507862091,
+          -0.006197864189743996,
+          0.1549118161201477,
+          1.3392187356948853,
+          0.7843431830406189,
+          0.06314264237880707
+        ],
+        "max_abs_error_pp": 3.5762119293680783e-07
+      },
+      "P": {
+        "n": 43,
+        "expected_pp": [
+          0.127398,
+          -0.722037,
+          -1.842895,
+          0.934308,
+          -3.147736,
+          -6.105321
+        ],
+        "observed_pp": [
+          0.1273980736732483,
+          -0.7220367789268494,
+          -1.8428951501846313,
+          0.9343084692955017,
+          -3.147735834121704,
+          -6.105320453643799
+        ],
+        "max_abs_error_pp": 5.463562011698286e-07
+      }
+    },
+    "daily": {
+      "D": {
+        "n": 668,
+        "expected_pp": [
+          0.65712,
+          0.376249,
+          -0.15007,
+          1.968464,
+          1.028439,
+          -0.812054
+        ],
+        "observed_pp": [
+          0.6571197509765625,
+          0.37624862790107727,
+          -0.1500699520111084,
+          1.9684642553329468,
+          1.0284385681152344,
+          -0.8120542168617249
+        ],
+        "max_abs_error_pp": 4.3188476572808554e-07
+      },
+      "F": {
+        "n": 68,
+        "expected_pp": [
+          0.951053,
+          -0.703684,
+          -1.558211,
+          2.182299,
+          -2.59721,
+          -3.755527
+        ],
+        "observed_pp": [
+          0.9510525465011597,
+          -0.703684389591217,
+          -1.5582114458084106,
+          2.1822993755340576,
+          -2.597209930419922,
+          -3.7555270195007324
+        ],
+        "max_abs_error_pp": 4.534988403692708e-07
+      },
+      "T": {
+        "n": 655,
+        "expected_pp": [
+          0.433137,
+          0.328627,
+          -0.065049,
+          1.687424,
+          1.160591,
+          -0.44691
+        ],
+        "observed_pp": [
+          0.4331366717815399,
+          0.32862716913223267,
+          -0.06504900008440018,
+          1.6874239444732666,
+          1.1605912446975708,
+          -0.4469100832939148
+        ],
+        "max_abs_error_pp": 3.282184600772453e-07
+      },
+      "P": {
+        "n": 57,
+        "expected_pp": [
+          0.314735,
+          0.137202,
+          -1.669337,
+          1.372389,
+          -2.467538,
+          -5.43999
+        ],
+        "observed_pp": [
+          0.3147352933883667,
+          0.13720154762268066,
+          -1.669337272644043,
+          1.3723886013031006,
+          -2.4675381183624268,
+          -5.439990043640137
+        ],
+        "max_abs_error_pp": 4.52377319326569e-07
+      }
+    }
+  },
+  "old_eval_order": [
+    "small_big_h5",
+    "lowvol_highvol_h5",
+    "momentum_h5",
+    "small_big_h20",
+    "lowvol_highvol_h20",
+    "momentum_h20"
+  ],
+  "artifacts": {
+    "effective-quotes.npz": {
+      "sha256": "735b4818fb660728e3d240ece733bee91eadbcfaefd833485c9259b8e61e10d8",
+      "size": 114105019
+    },
+    "input-inventory.json": {
+      "sha256": "c038fe62f12047d158bf369308be2685f328f0f3db8f201ad2739c5bddba9498",
+      "size": 8309694
+    },
+    "forward.parquet": {
+      "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+      "size": 353855
+    },
+    "coverage.parquet": {
+      "sha256": "df0fd88f41a9dec954ff1aeef9e07d69566ec9fbc9bbbf0562ba8364e33b6690",
+      "size": 374836
+    }
+  },
+  "external_validation_references": {
+    "backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/data/daily-market.parquet": {
+      "sha256": "f20d85dfdb0881a6fc207f19fad576a10fdf2bdec620792f56ed463d6479e3da",
+      "size": 1673679
+    },
+    "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/granularity-20261110/stages/daily/data/all-daily-ic.csv": {
+      "sha256": "a2a8f7407f66f3fd21b39b4d179b27a387b5812c80a1aa834f4b090509f72139",
+      "size": 84683
+    }
+  },
+  "was_readable_after_write": true,
+  "python": "3.12.13",
+  "pandas": "2.3.3",
+  "numpy": "2.4.3",
+  "pyarrow": "23.0.1",
+  "script": {
+    "sha256": "903921a46b4a461ddcf999e8bd1efaa1d5eaedb84064f9614372da4f2d4f17ee",
+    "size": 17097
+  }
+}

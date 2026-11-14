@@ -1,0 +1,89 @@
+{
+  "temporary": "cleaned",
+  "result": "no_changes",
+  "mlruns": "handled",
+  "retained_results": [
+    "backtest/result/20261114_020556_wkric_20261114_hard_signal",
+    "backtest/result/20261114_020717_wkric_20261114_soft_signal",
+    "backtest/result/20261114_020835_wkric_20261114_hard_entry",
+    "backtest/result/20261114_020957_wkric_20261114_four_hard_signal",
+    "backtest/result/20261114_021115_wkric_20261114_four_soft_signal",
+    "backtest/result/20261114_021232_wkric_20261114_four_hard_entry",
+    "backtest/result/20261114_weekly_rankic",
+    "backtest/result/wkric_20261114_d_s1000",
+    "backtest/result/wkric_20261114_d_s2000",
+    "backtest/result/wkric_20261114_d_s3000",
+    "backtest/result/wkric_20261114_d_s4000",
+    "backtest/result/wkric_20261114_d_s42",
+    "backtest/result/wkric_20261114_f_s1000",
+    "backtest/result/wkric_20261114_f_s2000",
+    "backtest/result/wkric_20261114_f_s3000",
+    "backtest/result/wkric_20261114_f_s4000",
+    "backtest/result/wkric_20261114_f_s42",
+    "backtest/result/wkric_20261114_p_s1000",
+    "backtest/result/wkric_20261114_p_s2000",
+    "backtest/result/wkric_20261114_p_s3000",
+    "backtest/result/wkric_20261114_p_s4000",
+    "backtest/result/wkric_20261114_p_s42",
+    "backtest/result/wkric_20261114_t_s1000",
+    "backtest/result/wkric_20261114_t_s2000",
+    "backtest/result/wkric_20261114_t_s3000",
+    "backtest/result/wkric_20261114_t_s4000",
+    "backtest/result/wkric_20261114_t_s42"
+  ],
+  "temporary_files_removed": 169,
+  "model_sessions": 20,
+  "raw_predictions": 24,
+  "account_mlruns_dependencies": [
+    {
+      "session": "backtest/result/20261114_021232_wkric_20261114_four_hard_entry",
+      "required_report": {
+        "path": "mlruns/192816701834106645/104a8ce4c59d463bbe3a4c5974c63d04/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "c265b0f763696f78a077557184d2bd2062fa8c934f826a29c65c08f4de460eb9",
+        "size": 117829
+      }
+    },
+    {
+      "session": "backtest/result/20261114_020957_wkric_20261114_four_hard_signal",
+      "required_report": {
+        "path": "mlruns/224913747815003411/6907aa3f415049239f910f576f934275/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "4f62ddb5c9ee0380b865cf0f45ca41f36df5c7b55e22a4d304bad1f5c9674741",
+        "size": 117829
+      }
+    },
+    {
+      "session": "backtest/result/20261114_021115_wkric_20261114_four_soft_signal",
+      "required_report": {
+        "path": "mlruns/975233764584152824/0d3fd5bad9de4f28982da255a09a5168/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "993ad7293ffd0c886b70ec3d6434443c0e89af926e276e8302f7ccd52d9a477f",
+        "size": 117829
+      }
+    },
+    {
+      "session": "backtest/result/20261114_020835_wkric_20261114_hard_entry",
+      "required_report": {
+        "path": "mlruns/829278482010306377/d746558d95c6459aac41215f802b1b55/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "7b03ab8317b50820dd9f7880b409ed46385d4a9d60ea618c127255074a1d79c1",
+        "size": 117829
+      }
+    },
+    {
+      "session": "backtest/result/20261114_020556_wkric_20261114_hard_signal",
+      "required_report": {
+        "path": "mlruns/980040580486662608/1ba766b21cf34e1b9f0df1f838144712/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "ba091322310b60f168b3a010280d3c0e99c1feb271fbab954053a20ca5d032fd",
+        "size": 117829
+      }
+    },
+    {
+      "session": "backtest/result/20261114_020717_wkric_20261114_soft_signal",
+      "required_report": {
+        "path": "mlruns/540908793428091714/2552f8a4278f4e53a14a525fa07c57a2/artifacts/portfolio_analysis/report_normal_1day.pkl",
+        "sha256": "21b3f39c564c8ed94d678472193cacc65f7e5711b6272ee22143283e96c687cf",
+        "size": 117829
+      }
+    }
+  ],
+  "non_task_candidates_left_untouched": [],
+  "retention_warning_count": 143
+}

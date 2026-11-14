@@ -1,0 +1,170 @@
+{
+  "scope": "Post-hoc model Top3/H5 return proxy using real head sets and full t-5 turnover. Oracle true weekly style only an explanatory ceiling comparator; never used in executed strategy. Accuracy here includes first fallback and cut to 1448 signal dates, unlike classifier report.",
+  "metrics": {
+    "v5": {
+      "all": {
+        "net_ann": 0.32050695390856143,
+        "net_sharpe": 0.5656362624345261,
+        "n_days": 1448,
+        "turnover": 0.18013398013398013
+      },
+      "D": {
+        "net_ann": 0.19734137083316075,
+        "net_sharpe": 0.49317000629914465,
+        "n_days": 646,
+        "turnover": 0.1811752470098804
+      },
+      "F": {
+        "net_ann": 1.7102134991556057,
+        "net_sharpe": 2.250765473103783,
+        "n_days": 137,
+        "turnover": 0.18442822384428226
+      },
+      "T": {
+        "net_ann": 0.03096746161069306,
+        "net_sharpe": 0.06113400930516197,
+        "n_days": 642,
+        "turnover": 0.177466251298027
+      },
+      "P": {
+        "net_ann": 3.5839149558268,
+        "net_sharpe": 3.1620587358619647,
+        "n_days": 23,
+        "turnover": 0.2
+      },
+      "correct": {
+        "net_ann": 0.1959795522253303,
+        "net_sharpe": 0.3781128367669296,
+        "n_days": 749,
+        "turnover": 0.18031319910514543
+      },
+      "wrong_or_no_forecast": {
+        "net_ann": 0.45394173041462377,
+        "net_sharpe": 0.8573895054189434,
+        "n_days": 699,
+        "turnover": 0.17994269340974212
+      }
+    },
+    "predicted": {
+      "all": {
+        "net_ann": 0.20227205382511868,
+        "net_sharpe": 0.4100262129213221,
+        "n_days": 1448,
+        "turnover": 0.19524139524139525
+      },
+      "D": {
+        "net_ann": -0.09466337865251453,
+        "net_sharpe": -0.26483377128283,
+        "n_days": 646,
+        "turnover": 0.19594383775351015
+      },
+      "F": {
+        "net_ann": 1.0714256590468136,
+        "net_sharpe": 2.26400813746012,
+        "n_days": 137,
+        "turnover": 0.1907542579075426
+      },
+      "T": {
+        "net_ann": 0.16700124910620814,
+        "net_sharpe": 0.3531948179083636,
+        "n_days": 642,
+        "turnover": 0.19543094496365523
+      },
+      "P": {
+        "net_ann": 4.349634360810212,
+        "net_sharpe": 3.9123607473466206,
+        "n_days": 23,
+        "turnover": 0.19710144927536233
+      },
+      "correct": {
+        "net_ann": 0.4362009806569326,
+        "net_sharpe": 0.8985995117976314,
+        "n_days": 749,
+        "turnover": 0.19642058165548099
+      },
+      "wrong_or_no_forecast": {
+        "net_ann": -0.048391069773451124,
+        "net_sharpe": -0.10943389538435311,
+        "n_days": 699,
+        "turnover": 0.19398280802292261
+      }
+    },
+    "oracle": {
+      "all": {
+        "net_ann": 0.6096180745641184,
+        "net_sharpe": 1.1373746353434124,
+        "n_days": 1448,
+        "turnover": 0.19584199584199585
+      },
+      "D": {
+        "net_ann": 0.2569262186491881,
+        "net_sharpe": 0.8831162499115267,
+        "n_days": 646,
+        "turnover": 0.19427977119084766
+      },
+      "F": {
+        "net_ann": 2.9605418877320675,
+        "net_sharpe": 3.3590627861932263,
+        "n_days": 137,
+        "turnover": 0.19416058394160585
+      },
+      "T": {
+        "net_ann": 0.3268670570885647,
+        "net_sharpe": 0.8003528726642622,
+        "n_days": 642,
+        "turnover": 0.19761163032191068
+      },
+      "P": {
+        "net_ann": 4.404845903254964,
+        "net_sharpe": 3.634000805479976,
+        "n_days": 23,
+        "turnover": 0.2
+      },
+      "correct": {
+        "net_ann": 0.4359658558247178,
+        "net_sharpe": 0.898115140902542,
+        "n_days": 749,
+        "turnover": 0.1974944071588367
+      },
+      "wrong_or_no_forecast": {
+        "net_ann": 0.7956902501901028,
+        "net_sharpe": 1.467923226618883,
+        "n_days": 699,
+        "turnover": 0.19407831900668576
+      }
+    }
+  },
+  "counts_by_true_and_predicted_style": {
+    "D": {
+      "D": 206,
+      "F": 41,
+      "P": 4,
+      "T": 117
+    },
+    "F": {
+      "D": 21,
+      "F": 30,
+      "P": 1,
+      "T": 25
+    },
+    "P": {
+      "D": 6,
+      "F": 3,
+      "P": 15,
+      "T": 2
+    },
+    "T": {
+      "D": 412,
+      "F": 63,
+      "P": 3,
+      "T": 498
+    },
+    "v5": {
+      "D": 1,
+      "F": 0,
+      "P": 0,
+      "T": 0
+    }
+  },
+  "correct_dates": 749
+}

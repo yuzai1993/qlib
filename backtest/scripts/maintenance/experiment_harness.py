@@ -1112,6 +1112,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=ROOT)
     sub = parser.add_subparsers(dest="command", required=True)
+    style = sub.add_parser(
+        "style", help="market-style classification: init, check, status, event"
+    )
+    style.add_argument("style_args", nargs=argparse.REMAINDER)
     init = sub.add_parser("init", help="freeze a real draft's task contract")
     init.add_argument("--plan", type=Path, required=True)
     for command in ("check", "status", "event"):
@@ -1121,6 +1125,10 @@ def main(argv=None):
             child.add_argument("--event", type=Path, required=True)
             child.add_argument("--expected-revision", type=int, required=True)
     args = parser.parse_args(argv)
+    if args.command == "style":
+        from backtest.scripts.maintenance import style_harness
+
+        return style_harness.main(args.style_args, default_root=args.repo_root)
     try:
         if args.command == "init":
             state = initialize(args.plan, repo_root=args.repo_root)

@@ -1,0 +1,106 @@
+{
+  "variant": "train-D",
+  "components": [
+    {
+      "seed": 42,
+      "session": "h5mix_20261114_train_d_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "56472729dc2880ba1fb25b7632d2c8fd81ea38d3e239970e8299514fdf0f7a67",
+        "size": 587250
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s42.json",
+        "sha256": "c4d7ab4f91b7bc8d189453c7a48766170f1b089718631404eaaed1b03eefba99",
+        "size": 1032
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/train-D-s42.pkl",
+        "sha256": "924efeff379c4c4d2cef7ad946704b8777500a449ba52ad5900b164f08d1fcb5",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 1000,
+      "session": "h5mix_20261114_train_d_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a5eba8e327014c973f041d224c17da92f24ba9639f53a5ed0cf2e15231eaacd4",
+        "size": 518876
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s1000.json",
+        "sha256": "0e3f03b3a44ee8e85304e34421290f78e3d1d460f72dba8f812a63c783f55231",
+        "size": 1024
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/train-D-s1000.pkl",
+        "sha256": "368ed52c55e08ff773671459d51efc47a60f2b5da5b49f487f5f72db1477054e",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 2000,
+      "session": "h5mix_20261114_train_d_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "82e755bdc72907a076f18abba621bd49bb13e6e4a77e92c97a5326e1f866a1b7",
+        "size": 643615
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s2000.json",
+        "sha256": "dcbae69e87aa99c599637f7f58f7fb72e662758d965807ab4f3671db06bc30bb",
+        "size": 1023
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/train-D-s2000.pkl",
+        "sha256": "1814c7b4e51a66c95894471de86efc244277ef131f2dfb9b5361638bac7bf356",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 3000,
+      "session": "h5mix_20261114_train_d_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "22bcb0df20fbd18a7c994236cb7c5704eec1378d62146809698a4919b267790a",
+        "size": 618064
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s3000.json",
+        "sha256": "9e22405e1a28091f1a0bb683cb60f0fa320433b788e48e6cbcfbb399db387aa6",
+        "size": 1021
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/train-D-s3000.pkl",
+        "sha256": "427db0bc26916b99444666db04ce08d85840cec818ecd8702f61063286d6b703",
+        "size": 83046132
+      }
+    },
+    {
+      "seed": 4000,
+      "session": "h5mix_20261114_train_d_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ce93a0469cf2999f8422dada7daaf2427b6e8276c7e5d3491237b510c681e945",
+        "size": 481082
+      },
+      "training": {
+        "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s4000.json",
+        "sha256": "92781df707b2823ffcc1493b6b6a3657bfef05dd9e66b6233bd4e599fd4622c9",
+        "size": 1023
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_top3mix/train-D-s4000.pkl",
+        "sha256": "70cf2dad1f67296cc314dc9480105516932d3d75421d4e88b6af0e4bf6d80570",
+        "size": 83046132
+      }
+    }
+  ],
+  "ensemble": {
+    "path": "backtest/result/20261114_weekly_top3mix/train-D-ensemble.pkl",
+    "sha256": "36ae56acc2c7defb05508d2944d4264520c68a9add0235101745dec1fea9789a",
+    "size": 83046157
+  },
+  "exact_common_finite_index": true
+}

@@ -1,0 +1,4687 @@
+{
+  "status": "completed",
+  "protocol": "weekly-h5-four-next-trading-day-20261113",
+  "primary": "lgb_full",
+  "classes": [
+    "D",
+    "F",
+    "T",
+    "P"
+  ],
+  "train": {
+    "n_days": 4018,
+    "signal_start": "2004-01-02",
+    "signal_end": "2020-07-16",
+    "target_start": "2004-01-05",
+    "target_end": "2020-07-17",
+    "last_label_ready": "2020-07-27",
+    "days_by_class": {
+      "D": 1504,
+      "F": 754,
+      "T": 1484,
+      "P": 276
+    },
+    "weeks_by_class": {
+      "D": 313,
+      "F": 162,
+      "T": 308,
+      "P": 57
+    }
+  },
+  "evaluation": {
+    "n_days": 1453,
+    "signal_start": "2020-08-03",
+    "signal_end": "2026-07-30",
+    "target_start": "2020-08-04",
+    "target_end": "2026-07-31",
+    "last_label_ready": "2026-08-10",
+    "days_by_class": {
+      "D": 646,
+      "F": 142,
+      "T": 642,
+      "P": 23
+    },
+    "weeks_by_class": {
+      "D": 136,
+      "F": 32,
+      "T": 134,
+      "P": 5
+    }
+  },
+  "candidates": {
+    "lgb_full": {
+      "arm": "lgb_full",
+      "metrics": {
+        "accuracy": 0.5189263592567103,
+        "macro_f1": 0.48631060745868065,
+        "weighted_f1": 0.4927293455677393,
+        "balanced_accuracy": 0.4983097924446907,
+        "logloss": 0.9590452159124032,
+        "brier": 0.5784609903109145,
+        "per_class": {
+          "D": {
+            "precision": 0.5597826086956522,
+            "recall": 0.3188854489164087,
+            "f1": 0.40631163708086787,
+            "support": 646
+          },
+          "F": {
+            "precision": 0.42168674698795183,
+            "recall": 0.24647887323943662,
+            "f1": 0.3111111111111111,
+            "support": 142
+          },
+          "T": {
+            "precision": 0.5102459016393442,
+            "recall": 0.7757009345794392,
+            "f1": 0.61557478368356,
+            "support": 642
+          },
+          "P": {
+            "precision": 0.5769230769230769,
+            "recall": 0.6521739130434783,
+            "f1": 0.6122448979591837,
+            "support": 23
+          }
+        },
+        "confusion_matrix": [
+          [
+            206,
+            22,
+            412,
+            6
+          ],
+          [
+            41,
+            35,
+            63,
+            3
+          ],
+          [
+            117,
+            25,
+            498,
+            2
+          ],
+          [
+            4,
+            1,
+            3,
+            15
+          ]
+        ],
+        "n_days": 1453,
+        "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+        "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+        "predicted_count": {
+          "D": 368,
+          "F": 83,
+          "T": 976,
+          "P": 26
+        },
+        "average_precision": {
+          "D": 0.5481394574561802,
+          "F": 0.35145311456965117,
+          "T": 0.5544716786215399,
+          "P": 0.7259546329360866
+        }
+      },
+      "slices": {
+        "first_target_of_week": {
+          "accuracy": 0.5032679738562091,
+          "macro_f1": 0.36890527163172726,
+          "weighted_f1": 0.47941089141058596,
+          "balanced_accuracy": 0.37646748894416804,
+          "logloss": 1.0020101462110607,
+          "brier": 0.6014213924526368,
+          "per_class": {
+            "D": {
+              "precision": 0.5945945945945946,
+              "recall": 0.32592592592592595,
+              "f1": 0.42105263157894735,
+              "support": 135
+            },
+            "F": {
+              "precision": 0.3684210526315789,
+              "recall": 0.21875,
+              "f1": 0.27450980392156865,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.4927536231884058,
+              "recall": 0.7611940298507462,
+              "f1": 0.5982404692082112,
+              "support": 134
+            },
+            "P": {
+              "precision": 0.16666666666666666,
+              "recall": 0.2,
+              "f1": 0.18181818181818182,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              44,
+              4,
+              85,
+              2
+            ],
+            [
+              4,
+              7,
+              18,
+              3
+            ],
+            [
+              25,
+              7,
+              102,
+              0
+            ],
+            [
+              1,
+              1,
+              2,
+              1
+            ]
+          ],
+          "n_days": 306,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 74,
+            "F": 19,
+            "T": 207,
+            "P": 6
+          },
+          "average_precision": {
+            "D": 0.5448043908042883,
+            "F": 0.2949563519600063,
+            "T": 0.5455228579835275,
+            "P": 0.20273015873015873
+          }
+        },
+        "later_targets": {
+          "accuracy": 0.5231037489102005,
+          "macro_f1": 0.5203423149913141,
+          "weighted_f1": 0.4964241080004913,
+          "balanced_accuracy": 0.5322190579228655,
+          "logloss": 0.9475829066958475,
+          "brier": 0.5723355473681357,
+          "per_class": {
+            "D": {
+              "precision": 0.5510204081632653,
+              "recall": 0.31702544031311153,
+              "f1": 0.40248447204968946,
+              "support": 511
+            },
+            "F": {
+              "precision": 0.4375,
+              "recall": 0.2545454545454545,
+              "f1": 0.3218390804597701,
+              "support": 110
+            },
+            "T": {
+              "precision": 0.5149544863459038,
+              "recall": 0.7795275590551181,
+              "f1": 0.620203602192639,
+              "support": 508
+            },
+            "P": {
+              "precision": 0.7,
+              "recall": 0.7777777777777778,
+              "f1": 0.7368421052631579,
+              "support": 18
+            }
+          },
+          "confusion_matrix": [
+            [
+              162,
+              18,
+              327,
+              4
+            ],
+            [
+              37,
+              28,
+              45,
+              0
+            ],
+            [
+              92,
+              18,
+              396,
+              2
+            ],
+            [
+              3,
+              0,
+              1,
+              14
+            ]
+          ],
+          "n_days": 1147,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 294,
+            "F": 64,
+            "T": 769,
+            "P": 20
+          },
+          "average_precision": {
+            "D": 0.5512621480656266,
+            "F": 0.3709668339930453,
+            "T": 0.5589042162970712,
+            "P": 0.8630844142438346
+          }
+        },
+        "mature_by_eval_end": {
+          "accuracy": 0.5190575190575191,
+          "macro_f1": 0.4863041495698837,
+          "weighted_f1": 0.49230063738081775,
+          "balanced_accuracy": 0.49205645118172375,
+          "logloss": 0.9570842075766649,
+          "brier": 0.57788858430313,
+          "per_class": {
+            "D": {
+              "precision": 0.5597826086956522,
+              "recall": 0.3213728549141966,
+              "f1": 0.40832507433102083,
+              "support": 641
+            },
+            "F": {
+              "precision": 0.4,
+              "recall": 0.21897810218978103,
+              "f1": 0.2830188679245283,
+              "support": 137
+            },
+            "T": {
+              "precision": 0.5102459016393442,
+              "recall": 0.7757009345794392,
+              "f1": 0.61557478368356,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.625,
+              "recall": 0.6521739130434783,
+              "f1": 0.6382978723404256,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              206,
+              19,
+              412,
+              4
+            ],
+            [
+              41,
+              30,
+              63,
+              3
+            ],
+            [
+              117,
+              25,
+              498,
+              2
+            ],
+            [
+              4,
+              1,
+              3,
+              15
+            ]
+          ],
+          "n_days": 1443,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 368,
+            "F": 75,
+            "T": 976,
+            "P": 24
+          },
+          "average_precision": {
+            "D": 0.5489972753997062,
+            "F": 0.3289078668293654,
+            "T": 0.5545231308204679,
+            "P": 0.7419353168551283
+          }
+        }
+      },
+      "yearly": {
+        "2020": {
+          "accuracy": 0.696078431372549,
+          "macro_f1": 0.3346753110948447,
+          "weighted_f1": 0.673037216559739,
+          "balanced_accuracy": 0.6859838274932615,
+          "logloss": 0.706213843559972,
+          "brier": 0.426222164542721,
+          "per_class": {
+            "D": {
+              "precision": 0.875,
+              "recall": 0.42857142857142855,
+              "f1": 0.5753424657534246,
+              "support": 49
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            },
+            "T": {
+              "precision": 0.6410256410256411,
+              "recall": 0.9433962264150944,
+              "f1": 0.7633587786259542,
+              "support": 53
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              21,
+              0,
+              28,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              50,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 102,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 24,
+            "F": 0,
+            "T": 78,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.7957065091244794,
+            "F": null,
+            "T": 0.7905547842884415,
+            "P": null
+          }
+        },
+        "2021": {
+          "accuracy": 0.48559670781893005,
+          "macro_f1": 0.21220192795535261,
+          "weighted_f1": 0.4051921587295622,
+          "balanced_accuracy": 0.3390804597701149,
+          "logloss": 0.9463241206562224,
+          "brier": 0.5745227447667035,
+          "per_class": {
+            "D": {
+              "precision": 0.5333333333333333,
+              "recall": 0.13793103448275862,
+              "f1": 0.2191780821917808,
+              "support": 116
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 11
+            },
+            "T": {
+              "precision": 0.49038461538461536,
+              "recall": 0.8793103448275862,
+              "f1": 0.6296296296296297,
+              "support": 116
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              16,
+              5,
+              95,
+              0
+            ],
+            [
+              0,
+              0,
+              11,
+              0
+            ],
+            [
+              14,
+              0,
+              102,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 243,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 30,
+            "F": 5,
+            "T": 208,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.5856967890829242,
+            "F": 0.0541321852942786,
+            "T": 0.6034938961294429,
+            "P": null
+          }
+        },
+        "2022": {
+          "accuracy": 0.5082644628099173,
+          "macro_f1": 0.5422536386852688,
+          "weighted_f1": 0.5056198336673396,
+          "balanced_accuracy": 0.5582205756013745,
+          "logloss": 1.0056397649190296,
+          "brier": 0.5898729477867358,
+          "per_class": {
+            "D": {
+              "precision": 0.48863636363636365,
+              "recall": 0.44329896907216493,
+              "f1": 0.4648648648648649,
+              "support": 97
+            },
+            "F": {
+              "precision": 0.43333333333333335,
+              "recall": 0.40625,
+              "f1": 0.41935483870967744,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.5338983050847458,
+              "recall": 0.5833333333333334,
+              "f1": 0.5575221238938053,
+              "support": 108
+            },
+            "P": {
+              "precision": 0.6666666666666666,
+              "recall": 0.8,
+              "f1": 0.7272727272727273,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              43,
+              7,
+              46,
+              1
+            ],
+            [
+              9,
+              13,
+              9,
+              1
+            ],
+            [
+              36,
+              9,
+              63,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              4
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 88,
+            "F": 30,
+            "T": 118,
+            "P": 6
+          },
+          "average_precision": {
+            "D": 0.47576447389486204,
+            "F": 0.493309408697895,
+            "T": 0.6080377378345363,
+            "P": 0.9428571428571428
+          }
+        },
+        "2023": {
+          "accuracy": 0.48760330578512395,
+          "macro_f1": 0.21622670807453417,
+          "weighted_f1": 0.3949810071351574,
+          "balanced_accuracy": 0.36948395674970524,
+          "logloss": 0.9291838048668044,
+          "brier": 0.6104664788020036,
+          "per_class": {
+            "D": {
+              "precision": 0.8260869565217391,
+              "recall": 0.14728682170542637,
+              "f1": 0.25,
+              "support": 129
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 10
+            },
+            "T": {
+              "precision": 0.4520547945205479,
+              "recall": 0.9611650485436893,
+              "f1": 0.6149068322981367,
+              "support": 103
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              19,
+              0,
+              110,
+              0
+            ],
+            [
+              0,
+              0,
+              10,
+              0
+            ],
+            [
+              4,
+              0,
+              99,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 23,
+            "F": 0,
+            "T": 219,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.6294642392354299,
+            "F": 0.34548572345011974,
+            "T": 0.46105400794872664,
+            "P": null
+          }
+        },
+        "2024": {
+          "accuracy": 0.4462809917355372,
+          "macro_f1": 0.46622929940985447,
+          "weighted_f1": 0.44291835869435314,
+          "balanced_accuracy": 0.4515643554558648,
+          "logloss": 1.1462844535025107,
+          "brier": 0.6556821221156415,
+          "per_class": {
+            "D": {
+              "precision": 0.47435897435897434,
+              "recall": 0.42045454545454547,
+              "f1": 0.4457831325301205,
+              "support": 88
+            },
+            "F": {
+              "precision": 0.5,
+              "recall": 0.3018867924528302,
+              "f1": 0.3764705882352941,
+              "support": 53
+            },
+            "T": {
+              "precision": 0.39669421487603307,
+              "recall": 0.5454545454545454,
+              "f1": 0.45933014354066987,
+              "support": 88
+            },
+            "P": {
+              "precision": 0.6363636363636364,
+              "recall": 0.5384615384615384,
+              "f1": 0.5833333333333334,
+              "support": 13
+            }
+          },
+          "confusion_matrix": [
+            [
+              37,
+              0,
+              51,
+              0
+            ],
+            [
+              15,
+              16,
+              20,
+              2
+            ],
+            [
+              22,
+              16,
+              48,
+              2
+            ],
+            [
+              4,
+              0,
+              2,
+              7
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 78,
+            "F": 32,
+            "T": 121,
+            "P": 11
+          },
+          "average_precision": {
+            "D": 0.500756163047851,
+            "F": 0.4362171628969512,
+            "T": 0.47405381403906177,
+            "P": 0.6911953894577338
+          }
+        },
+        "2025": {
+          "accuracy": 0.51440329218107,
+          "macro_f1": 0.48583400375435776,
+          "weighted_f1": 0.4897768242900986,
+          "balanced_accuracy": 0.4975616778808268,
+          "logloss": 0.9010957482792322,
+          "brier": 0.5553764992384855,
+          "per_class": {
+            "D": {
+              "precision": 0.5412844036697247,
+              "recall": 0.5042735042735043,
+              "f1": 0.5221238938053098,
+              "support": 117
+            },
+            "F": {
+              "precision": 0.3333333333333333,
+              "recall": 0.037037037037037035,
+              "f1": 0.06666666666666667,
+              "support": 27
+            },
+            "T": {
+              "precision": 0.48412698412698413,
+              "recall": 0.648936170212766,
+              "f1": 0.5545454545454546,
+              "support": 94
+            },
+            "P": {
+              "precision": 0.8,
+              "recall": 0.8,
+              "f1": 0.8,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              59,
+              2,
+              55,
+              1
+            ],
+            [
+              17,
+              1,
+              9,
+              0
+            ],
+            [
+              33,
+              0,
+              61,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              4
+            ]
+          ],
+          "n_days": 243,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 109,
+            "F": 3,
+            "T": 126,
+            "P": 5
+          },
+          "average_precision": {
+            "D": 0.5975815360855303,
+            "F": 0.4539823976005322,
+            "T": 0.5617783808470659,
+            "P": 0.8303030303030303
+          }
+        },
+        "2026": {
+          "accuracy": 0.6546762589928058,
+          "macro_f1": 0.3985826001955034,
+          "weighted_f1": 0.613479890574344,
+          "balanced_accuracy": 0.5710185185185185,
+          "logloss": 0.9130051574856813,
+          "brier": 0.5273843673286337,
+          "per_class": {
+            "D": {
+              "precision": 0.6875,
+              "recall": 0.22,
+              "f1": 0.3333333333333333,
+              "support": 50
+            },
+            "F": {
+              "precision": 0.38461538461538464,
+              "recall": 0.5555555555555556,
+              "f1": 0.45454545454545453,
+              "support": 9
+            },
+            "T": {
+              "precision": 0.7075471698113207,
+              "recall": 0.9375,
+              "f1": 0.8064516129032258,
+              "support": 80
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              11,
+              8,
+              27,
+              4
+            ],
+            [
+              0,
+              5,
+              4,
+              0
+            ],
+            [
+              5,
+              0,
+              75,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 139,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 16,
+            "F": 13,
+            "T": 106,
+            "P": 4
+          },
+          "average_precision": {
+            "D": 0.41506617082335373,
+            "F": 0.6045635523310027,
+            "T": 0.7180542226787527,
+            "P": null
+          }
+        }
+      },
+      "panic_weeks": {
+        "true_weeks": 5,
+        "hit_weeks": 4,
+        "first_session_hit_weeks": 1,
+        "false_alert_weeks": 8,
+        "weeks": [
+          {
+            "week": "2022-03-12/2022-03-18",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2022-04-23/2022-04-29",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2022-04-30/2022-05-06",
+            "label": "F",
+            "days": 2,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-01-27/2024-02-02",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-02-03/2024-02-09",
+            "label": "P",
+            "days": 4,
+            "predicted_p_days": 4,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-04-13/2024-04-19",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-04-20/2024-04-26",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-10-05/2024-10-11",
+            "label": "P",
+            "days": 4,
+            "predicted_p_days": 0,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-10-12/2024-10-18",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2025-04-05/2025-04-11",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2025-04-12/2025-04-18",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2026-07-04/2026-07-10",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-07-18/2026-07-24",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          }
+        ]
+      },
+      "uncertainty": {
+        "method": "paired circular bootstrap of consecutive 8 target weeks; day-weighted; 2000 draws seed42",
+        "absolute": {
+          "accuracy": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.4612711348145424,
+              0.5762603590186223
+            ]
+          },
+          "macro_f1": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.3692296129981395,
+              0.55521606573127
+            ]
+          },
+          "P_recall": {
+            "draws": 1993,
+            "95pct_interval": [
+              0.3076923076923077,
+              0.8888888888888888
+            ]
+          }
+        },
+        "minus_last_matured": {
+          "accuracy": {
+            "draws": 2000,
+            "95pct_interval": [
+              -0.01308823721409963,
+              0.12122351332877637
+            ]
+          },
+          "macro_f1": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.07282261477305414,
+              0.2725644297006603
+            ]
+          },
+          "P_recall": {
+            "draws": 1993,
+            "95pct_interval": [
+              0.3076923076923077,
+              0.8888888888888888
+            ]
+          }
+        }
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+        "sha256": "f76aecf2ab5808a61b74aa47bf44aa49ee4a31dba55f4a0f8f5dc8e9ffa3c4ad",
+        "size": 214980
+      },
+      "seeds": [
+        {
+          "job": "lgb_full-42-a1",
+          "seed": 42,
+          "best": 132,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s42-a1/model.joblib",
+            "sha256": "351925357a4e536f6097172b3c80708cb4b8ced22f0272440ae53f674f1c8631",
+            "size": 417697
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s42-a1/predictions.csv",
+            "sha256": "7c07855a863cd844f9fc6e2a075ec901414ba9948ad9ff864115001638a93934",
+            "size": 215316
+          }
+        },
+        {
+          "job": "lgb_full-1000-a1",
+          "seed": 1000,
+          "best": 108,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s1000-a1/model.joblib",
+            "sha256": "2722f6762e3b970b9f355dbb80c78d52013e686a7eb51f9d71ec5d6d88fae37b",
+            "size": 344730
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s1000-a1/predictions.csv",
+            "sha256": "38c94d1d234086c3a849a7d81ad8657e50c44073a54cd56295dd5d51b9bc2e27",
+            "size": 214840
+          }
+        },
+        {
+          "job": "lgb_full-2000-a1",
+          "seed": 2000,
+          "best": 98,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s2000-a1/model.joblib",
+            "sha256": "626975e3bb3a0673f7f41798a576d44acf9aef8aea8b1943e83ce0da0417aabf",
+            "size": 313556
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s2000-a1/predictions.csv",
+            "sha256": "ad99e07d3e05bf72ea406091f9c72932d8884a293d70b7876843a4000db4d73e",
+            "size": 214895
+          }
+        },
+        {
+          "job": "lgb_full-3000-a1",
+          "seed": 3000,
+          "best": 120,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s3000-a1/model.joblib",
+            "sha256": "373cf3fc01947ab7fc05fc4f64eea7e1f1e6c4270779dc4e2afbefc8cb956f3f",
+            "size": 381134
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s3000-a1/predictions.csv",
+            "sha256": "5646a258453a500c7a6c6dbb6dfd1f8c363e7c202bb11cf96df5a63b0b886e19",
+            "size": 215047
+          }
+        },
+        {
+          "job": "lgb_full-4000-a1",
+          "seed": 4000,
+          "best": 121,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s4000-a1/model.joblib",
+            "sha256": "052c41a6a232b8ec1428a3bfc2613c3d54d7f5bc11f071db5f212f0dc3103369",
+            "size": 383581
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s4000-a1/predictions.csv",
+            "sha256": "573242cd6c3780a50bd1fa6dd977209153f3e911b01dfbd8bb105d9b94805f3d",
+            "size": 215062
+          }
+        }
+      ],
+      "fixed50": {
+        "metrics": {
+          "accuracy": 0.5120440467997247,
+          "macro_f1": 0.49473464358069297,
+          "weighted_f1": 0.4820250286719896,
+          "balanced_accuracy": 0.4889552022820702,
+          "logloss": 0.9947647612890771,
+          "brier": 0.5801830962152023,
+          "per_class": {
+            "D": {
+              "precision": 0.5311653116531165,
+              "recall": 0.30340557275541796,
+              "f1": 0.38620689655172413,
+              "support": 646
+            },
+            "F": {
+              "precision": 0.5849056603773585,
+              "recall": 0.21830985915492956,
+              "f1": 0.31794871794871793,
+              "support": 142
+            },
+            "T": {
+              "precision": 0.4975222993062438,
+              "recall": 0.7819314641744548,
+              "f1": 0.6081162931556632,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.6818181818181818,
+              "recall": 0.6521739130434783,
+              "f1": 0.6666666666666666,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              196,
+              10,
+              438,
+              2
+            ],
+            [
+              43,
+              31,
+              65,
+              3
+            ],
+            [
+              126,
+              12,
+              502,
+              2
+            ],
+            [
+              4,
+              0,
+              4,
+              15
+            ]
+          ],
+          "n_days": 1453,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 369,
+            "F": 53,
+            "T": 1009,
+            "P": 22
+          },
+          "average_precision": {
+            "D": 0.5441981582874695,
+            "F": 0.3517564175598205,
+            "T": 0.5446038786421548,
+            "P": 0.7124157274426036
+          }
+        },
+        "predictions": {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-fixed50-lgb_full.csv",
+          "sha256": "e490930688c2b329808561e270ff01992955d2cec2d17d5558e5736455b1e7d0",
+          "size": 214331
+        }
+      }
+    },
+    "lgb_core": {
+      "arm": "lgb_core",
+      "metrics": {
+        "accuracy": 0.4879559532002753,
+        "macro_f1": 0.463875341237749,
+        "weighted_f1": 0.46867950509942696,
+        "balanced_accuracy": 0.47803206141920446,
+        "logloss": 0.9795264717402095,
+        "brier": 0.6006650662215167,
+        "per_class": {
+          "D": {
+            "precision": 0.5035799522673031,
+            "recall": 0.326625386996904,
+            "f1": 0.39624413145539905,
+            "support": 646
+          },
+          "F": {
+            "precision": 0.3548387096774194,
+            "recall": 0.2323943661971831,
+            "f1": 0.28085106382978725,
+            "support": 142
+          },
+          "T": {
+            "precision": 0.4923413566739606,
+            "recall": 0.7009345794392523,
+            "f1": 0.5784061696658098,
+            "support": 642
+          },
+          "P": {
+            "precision": 0.5555555555555556,
+            "recall": 0.6521739130434783,
+            "f1": 0.6,
+            "support": 23
+          }
+        },
+        "confusion_matrix": [
+          [
+            211,
+            24,
+            408,
+            3
+          ],
+          [
+            48,
+            33,
+            55,
+            6
+          ],
+          [
+            157,
+            32,
+            450,
+            3
+          ],
+          [
+            3,
+            4,
+            1,
+            15
+          ]
+        ],
+        "n_days": 1453,
+        "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+        "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+        "predicted_count": {
+          "D": 419,
+          "F": 93,
+          "T": 914,
+          "P": 27
+        },
+        "average_precision": {
+          "D": 0.5287955827920006,
+          "F": 0.3318374102053437,
+          "T": 0.516553183552747,
+          "P": 0.7065586476629802
+        }
+      },
+      "slices": {
+        "first_target_of_week": {
+          "accuracy": 0.4411764705882353,
+          "macro_f1": 0.3167161703684084,
+          "weighted_f1": 0.4244800864502262,
+          "balanced_accuracy": 0.32913989082365946,
+          "logloss": 1.0353655040391396,
+          "brier": 0.6316061950830757,
+          "per_class": {
+            "D": {
+              "precision": 0.46236559139784944,
+              "recall": 0.31851851851851853,
+              "f1": 0.37719298245614036,
+              "support": 135
+            },
+            "F": {
+              "precision": 0.2777777777777778,
+              "recall": 0.15625,
+              "f1": 0.2,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.45989304812834225,
+              "recall": 0.6417910447761194,
+              "f1": 0.5358255451713395,
+              "support": 134
+            },
+            "P": {
+              "precision": 0.125,
+              "recall": 0.2,
+              "f1": 0.15384615384615385,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              43,
+              6,
+              84,
+              2
+            ],
+            [
+              7,
+              5,
+              16,
+              4
+            ],
+            [
+              42,
+              5,
+              86,
+              1
+            ],
+            [
+              1,
+              2,
+              1,
+              1
+            ]
+          ],
+          "n_days": 306,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 93,
+            "F": 18,
+            "T": 187,
+            "P": 8
+          },
+          "average_precision": {
+            "D": 0.48011474797020887,
+            "F": 0.2727260827168648,
+            "T": 0.4821594306504988,
+            "P": 0.2855140977898148
+          }
+        },
+        "later_targets": {
+          "accuracy": 0.5004359197907585,
+          "macro_f1": 0.5125917088565646,
+          "weighted_f1": 0.4808231621493649,
+          "balanced_accuracy": 0.5194064471704424,
+          "logloss": 0.9646295721033544,
+          "brier": 0.5924105017649891,
+          "per_class": {
+            "D": {
+              "precision": 0.5153374233128835,
+              "recall": 0.3287671232876712,
+              "f1": 0.4014336917562724,
+              "support": 511
+            },
+            "F": {
+              "precision": 0.37333333333333335,
+              "recall": 0.2545454545454545,
+              "f1": 0.3027027027027027,
+              "support": 110
+            },
+            "T": {
+              "precision": 0.5006877579092159,
+              "recall": 0.7165354330708661,
+              "f1": 0.5894736842105263,
+              "support": 508
+            },
+            "P": {
+              "precision": 0.7368421052631579,
+              "recall": 0.7777777777777778,
+              "f1": 0.7567567567567568,
+              "support": 18
+            }
+          },
+          "confusion_matrix": [
+            [
+              168,
+              18,
+              324,
+              1
+            ],
+            [
+              41,
+              28,
+              39,
+              2
+            ],
+            [
+              115,
+              27,
+              364,
+              2
+            ],
+            [
+              2,
+              2,
+              0,
+              14
+            ]
+          ],
+          "n_days": 1147,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 326,
+            "F": 75,
+            "T": 727,
+            "P": 19
+          },
+          "average_precision": {
+            "D": 0.542277318413078,
+            "F": 0.3518397096721519,
+            "T": 0.5264643616004323,
+            "P": 0.8753592820859556
+          }
+        },
+        "mature_by_eval_end": {
+          "accuracy": 0.48925848925848925,
+          "macro_f1": 0.46280215393328716,
+          "weighted_f1": 0.46995088902737414,
+          "balanced_accuracy": 0.47674974231742134,
+          "logloss": 0.9773300758815626,
+          "brier": 0.5997679382229548,
+          "per_class": {
+            "D": {
+              "precision": 0.5035971223021583,
+              "recall": 0.32761310452418096,
+              "f1": 0.39697542533081287,
+              "support": 641
+            },
+            "F": {
+              "precision": 0.34831460674157305,
+              "recall": 0.22627737226277372,
+              "f1": 0.2743362831858407,
+              "support": 137
+            },
+            "T": {
+              "precision": 0.4945054945054945,
+              "recall": 0.7009345794392523,
+              "f1": 0.5798969072164949,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.5555555555555556,
+              "recall": 0.6521739130434783,
+              "f1": 0.6,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              210,
+              22,
+              406,
+              3
+            ],
+            [
+              47,
+              31,
+              53,
+              6
+            ],
+            [
+              157,
+              32,
+              450,
+              3
+            ],
+            [
+              3,
+              4,
+              1,
+              15
+            ]
+          ],
+          "n_days": 1443,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 417,
+            "F": 89,
+            "T": 910,
+            "P": 27
+          },
+          "average_precision": {
+            "D": 0.5296445752535034,
+            "F": 0.325137816970468,
+            "T": 0.5172452759760646,
+            "P": 0.7078002442518192
+          }
+        }
+      },
+      "yearly": {
+        "2020": {
+          "accuracy": 0.6372549019607843,
+          "macro_f1": 0.2957638279192274,
+          "weighted_f1": 0.5971655563015374,
+          "balanced_accuracy": 0.624759337697343,
+          "logloss": 0.718755065500554,
+          "brier": 0.4321353617127296,
+          "per_class": {
+            "D": {
+              "precision": 0.8333333333333334,
+              "recall": 0.30612244897959184,
+              "f1": 0.44776119402985076,
+              "support": 49
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            },
+            "T": {
+              "precision": 0.6024096385542169,
+              "recall": 0.9433962264150944,
+              "f1": 0.7352941176470589,
+              "support": 53
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              15,
+              1,
+              33,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              50,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 102,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 18,
+            "F": 1,
+            "T": 83,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.834915160951984,
+            "F": null,
+            "T": 0.8258771821069768,
+            "P": null
+          }
+        },
+        "2021": {
+          "accuracy": 0.522633744855967,
+          "macro_f1": 0.2527509457876443,
+          "weighted_f1": 0.4826190898990409,
+          "balanced_accuracy": 0.3649425287356322,
+          "logloss": 0.9375605808379689,
+          "brier": 0.590550233132553,
+          "per_class": {
+            "D": {
+              "precision": 0.5964912280701754,
+              "recall": 0.29310344827586204,
+              "f1": 0.3930635838150289,
+              "support": 116
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 11
+            },
+            "T": {
+              "precision": 0.5027027027027027,
+              "recall": 0.8017241379310345,
+              "f1": 0.6179401993355482,
+              "support": 116
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              34,
+              1,
+              81,
+              0
+            ],
+            [
+              0,
+              0,
+              11,
+              0
+            ],
+            [
+              23,
+              0,
+              93,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 243,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 57,
+            "F": 1,
+            "T": 185,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.5290530861392659,
+            "F": 0.11569533098754439,
+            "T": 0.4684616429709286,
+            "P": null
+          }
+        },
+        "2022": {
+          "accuracy": 0.41735537190082644,
+          "macro_f1": 0.4661151746900477,
+          "weighted_f1": 0.42222281116938365,
+          "balanced_accuracy": 0.49053908934707907,
+          "logloss": 1.0691251900066745,
+          "brier": 0.632517729861704,
+          "per_class": {
+            "D": {
+              "precision": 0.4375,
+              "recall": 0.4329896907216495,
+              "f1": 0.43523316062176165,
+              "support": 97
+            },
+            "F": {
+              "precision": 0.21739130434782608,
+              "recall": 0.3125,
+              "f1": 0.2564102564102564,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.4787234042553192,
+              "recall": 0.4166666666666667,
+              "f1": 0.44554455445544555,
+              "support": 108
+            },
+            "P": {
+              "precision": 0.6666666666666666,
+              "recall": 0.8,
+              "f1": 0.7272727272727273,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              42,
+              15,
+              39,
+              1
+            ],
+            [
+              11,
+              10,
+              10,
+              1
+            ],
+            [
+              43,
+              20,
+              45,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              4
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 96,
+            "F": 46,
+            "T": 94,
+            "P": 6
+          },
+          "average_precision": {
+            "D": 0.4722190381449749,
+            "F": 0.3390744208561933,
+            "T": 0.5593846067833077,
+            "P": 0.7725
+          }
+        },
+        "2023": {
+          "accuracy": 0.4834710743801653,
+          "macro_f1": 0.21655374658711699,
+          "weighted_f1": 0.39640421906300427,
+          "balanced_accuracy": 0.3655954441684855,
+          "logloss": 0.9548208874337674,
+          "brier": 0.6283953251086395,
+          "per_class": {
+            "D": {
+              "precision": 0.7692307692307693,
+              "recall": 0.15503875968992248,
+              "f1": 0.25806451612903225,
+              "support": 129
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 10
+            },
+            "T": {
+              "precision": 0.44907407407407407,
+              "recall": 0.941747572815534,
+              "f1": 0.6081504702194357,
+              "support": 103
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              20,
+              0,
+              109,
+              0
+            ],
+            [
+              0,
+              0,
+              10,
+              0
+            ],
+            [
+              6,
+              0,
+              97,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 26,
+            "F": 0,
+            "T": 216,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.6543037047371754,
+            "F": 0.18253363071071788,
+            "T": 0.47504378946447423,
+            "P": null
+          }
+        },
+        "2024": {
+          "accuracy": 0.45041322314049587,
+          "macro_f1": 0.4497964383051478,
+          "weighted_f1": 0.446094144896782,
+          "balanced_accuracy": 0.454405264546774,
+          "logloss": 1.152598959044127,
+          "brier": 0.661201953768712,
+          "per_class": {
+            "D": {
+              "precision": 0.45977011494252873,
+              "recall": 0.45454545454545453,
+              "f1": 0.45714285714285713,
+              "support": 88
+            },
+            "F": {
+              "precision": 0.47058823529411764,
+              "recall": 0.3018867924528302,
+              "f1": 0.367816091954023,
+              "support": 53
+            },
+            "T": {
+              "precision": 0.4339622641509434,
+              "recall": 0.5227272727272727,
+              "f1": 0.4742268041237113,
+              "support": 88
+            },
+            "P": {
+              "precision": 0.4666666666666667,
+              "recall": 0.5384615384615384,
+              "f1": 0.5,
+              "support": 13
+            }
+          },
+          "confusion_matrix": [
+            [
+              40,
+              3,
+              44,
+              1
+            ],
+            [
+              17,
+              16,
+              16,
+              4
+            ],
+            [
+              27,
+              12,
+              46,
+              3
+            ],
+            [
+              3,
+              3,
+              0,
+              7
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 87,
+            "F": 34,
+            "T": 106,
+            "P": 15
+          },
+          "average_precision": {
+            "D": 0.5576054010602385,
+            "F": 0.4397555058943582,
+            "T": 0.41203797632446826,
+            "P": 0.6137625102508046
+          }
+        },
+        "2025": {
+          "accuracy": 0.49794238683127573,
+          "macro_f1": 0.5125932144339678,
+          "weighted_f1": 0.48556646225976513,
+          "balanced_accuracy": 0.5169818754925137,
+          "logloss": 0.8934254534892557,
+          "brier": 0.5619185245947625,
+          "per_class": {
+            "D": {
+              "precision": 0.5098039215686274,
+              "recall": 0.4444444444444444,
+              "f1": 0.4748858447488584,
+              "support": 117
+            },
+            "F": {
+              "precision": 1.0,
+              "recall": 0.18518518518518517,
+              "f1": 0.3125,
+              "support": 27
+            },
+            "T": {
+              "precision": 0.46153846153846156,
+              "recall": 0.6382978723404256,
+              "f1": 0.5357142857142857,
+              "support": 94
+            },
+            "P": {
+              "precision": 0.6666666666666666,
+              "recall": 0.8,
+              "f1": 0.7272727272727273,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              52,
+              0,
+              64,
+              1
+            ],
+            [
+              16,
+              5,
+              5,
+              1
+            ],
+            [
+              34,
+              0,
+              60,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              4
+            ]
+          ],
+          "n_days": 243,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 102,
+            "F": 5,
+            "T": 130,
+            "P": 6
+          },
+          "average_precision": {
+            "D": 0.6094650868806033,
+            "F": 0.5934334993073105,
+            "T": 0.5279228021412827,
+            "P": 0.7758730158730158
+          }
+        },
+        "2026": {
+          "accuracy": 0.49640287769784175,
+          "macro_f1": 0.2787483266398929,
+          "weighted_f1": 0.4639064651892943,
+          "balanced_accuracy": 0.37324074074074076,
+          "logloss": 0.9804708027819173,
+          "brier": 0.6006244178602607,
+          "per_class": {
+            "D": {
+              "precision": 0.24242424242424243,
+              "recall": 0.16,
+              "f1": 0.1927710843373494,
+              "support": 50
+            },
+            "F": {
+              "precision": 0.3333333333333333,
+              "recall": 0.2222222222222222,
+              "f1": 0.26666666666666666,
+              "support": 9
+            },
+            "T": {
+              "precision": 0.59,
+              "recall": 0.7375,
+              "f1": 0.6555555555555556,
+              "support": 80
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              8,
+              4,
+              38,
+              0
+            ],
+            [
+              4,
+              2,
+              3,
+              0
+            ],
+            [
+              21,
+              0,
+              59,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 139,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 33,
+            "F": 6,
+            "T": 100,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.2798297745978564,
+            "F": 0.4067256236220767,
+            "T": 0.5991771544272639,
+            "P": null
+          }
+        }
+      },
+      "panic_weeks": {
+        "true_weeks": 5,
+        "hit_weeks": 5,
+        "first_session_hit_weeks": 1,
+        "false_alert_weeks": 10,
+        "weeks": [
+          {
+            "week": "2022-03-12/2022-03-18",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2022-04-23/2022-04-29",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2022-04-30/2022-05-06",
+            "label": "F",
+            "days": 2,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-01-27/2024-02-02",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-02-03/2024-02-09",
+            "label": "P",
+            "days": 4,
+            "predicted_p_days": 4,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-04-13/2024-04-19",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-04-20/2024-04-26",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-06-01/2024-06-07",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-06-08/2024-06-14",
+            "label": "T",
+            "days": 4,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-10-05/2024-10-11",
+            "label": "P",
+            "days": 4,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-10-12/2024-10-18",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-11-02/2024-11-08",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2025-01-04/2025-01-10",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2025-04-05/2025-04-11",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2025-04-12/2025-04-18",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          }
+        ]
+      },
+      "uncertainty": {
+        "method": "paired circular bootstrap of consecutive 8 target weeks; day-weighted; 2000 draws seed42",
+        "absolute": {
+          "accuracy": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.43710262997157245,
+              0.5383618191360161
+            ]
+          },
+          "macro_f1": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.3676924012631576,
+              0.5248718237856128
+            ]
+          },
+          "P_recall": {
+            "draws": 1993,
+            "95pct_interval": [
+              0.34782608695652173,
+              0.8888888888888888
+            ]
+          }
+        },
+        "minus_last_matured": {
+          "accuracy": {
+            "draws": 2000,
+            "95pct_interval": [
+              -0.03815433900796494,
+              0.08880354173030576
+            ]
+          },
+          "macro_f1": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.0723489934028426,
+              0.24489004881821
+            ]
+          },
+          "P_recall": {
+            "draws": 1993,
+            "95pct_interval": [
+              0.34782608695652173,
+              0.8888888888888888
+            ]
+          }
+        }
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_core.csv",
+        "sha256": "57e09e588e41615afaa14ee1d383d6280890afb1668ede98b7ac440343ec2a4e",
+        "size": 215394
+      },
+      "seeds": [
+        {
+          "job": "lgb_core-42-a1",
+          "seed": 42,
+          "best": 158,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s42-a1/model.joblib",
+            "sha256": "fc5d8be2a2bcd78dbab38a3c13cac9676a2a1f32b2e4f590c9cf9b06a5d95468",
+            "size": 482537
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s42-a1/predictions.csv",
+            "sha256": "aad49be04fa1caa37ef2c927054e5d03ebf9f25c88be5c898c7d6b9b57a0c61a",
+            "size": 215556
+          }
+        },
+        {
+          "job": "lgb_core-1000-a1",
+          "seed": 1000,
+          "best": 123,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s1000-a1/model.joblib",
+            "sha256": "b42325b70a178ddd02f531bcda79daa3f581adf27f5e44de07fcede42b39d31d",
+            "size": 377429
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s1000-a1/predictions.csv",
+            "sha256": "fb5a1f3c85ba4f9c422425c49e9122d226a33c6920dae64d9c60720e83deb960",
+            "size": 215104
+          }
+        },
+        {
+          "job": "lgb_core-2000-a1",
+          "seed": 2000,
+          "best": 161,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s2000-a1/model.joblib",
+            "sha256": "3dccc44456690b0053b4d149f2a2c451b2c370b44a2a778580401e1c5d594a51",
+            "size": 490129
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s2000-a1/predictions.csv",
+            "sha256": "34f4e67f48ef431e64113befb850097550c96f6ebb56ce1c664656fd2640d4c0",
+            "size": 215646
+          }
+        },
+        {
+          "job": "lgb_core-3000-a1",
+          "seed": 3000,
+          "best": 149,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s3000-a1/model.joblib",
+            "sha256": "bdd753fd45070f384c18b53687a494e845875ae68bd3a771440fe1c750c490dd",
+            "size": 453666
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s3000-a1/predictions.csv",
+            "sha256": "f91f02e7756a1f593875fe726182cff0a803c1075753d2ee3c43a62136277c94",
+            "size": 215490
+          }
+        },
+        {
+          "job": "lgb_core-4000-a1",
+          "seed": 4000,
+          "best": 150,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s4000-a1/model.joblib",
+            "sha256": "f282aa3162f330b8645695a53294196a719859c8c263f56b273df6939cd80af7",
+            "size": 458158
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_core/s4000-a1/predictions.csv",
+            "sha256": "d0aa29bf0d7f515c03cb0cc170347b317e0e433a88b1f85b98bc4ff2a86c3c23",
+            "size": 215502
+          }
+        }
+      ],
+      "fixed50": {
+        "metrics": {
+          "accuracy": 0.49208534067446663,
+          "macro_f1": 0.44651184844518343,
+          "weighted_f1": 0.46944190812517383,
+          "balanced_accuracy": 0.4525524193789635,
+          "logloss": 1.0130423186012791,
+          "brier": 0.5918471044072349,
+          "per_class": {
+            "D": {
+              "precision": 0.5072115384615384,
+              "recall": 0.326625386996904,
+              "f1": 0.3973634651600753,
+              "support": 646
+            },
+            "F": {
+              "precision": 0.3888888888888889,
+              "recall": 0.19718309859154928,
+              "f1": 0.2616822429906542,
+              "support": 142
+            },
+            "T": {
+              "precision": 0.4925531914893617,
+              "recall": 0.721183800623053,
+              "f1": 0.5853350189633375,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.52,
+              "recall": 0.5652173913043478,
+              "f1": 0.5416666666666666,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              211,
+              15,
+              418,
+              2
+            ],
+            [
+              51,
+              28,
+              56,
+              7
+            ],
+            [
+              150,
+              26,
+              463,
+              3
+            ],
+            [
+              4,
+              3,
+              3,
+              13
+            ]
+          ],
+          "n_days": 1453,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 416,
+            "F": 72,
+            "T": 940,
+            "P": 25
+          },
+          "average_precision": {
+            "D": 0.524260702158547,
+            "F": 0.33807186135237133,
+            "T": 0.51772047278535,
+            "P": 0.6373050108008728
+          }
+        },
+        "predictions": {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-fixed50-lgb_core.csv",
+          "sha256": "41e91269cea9cb4261dbaf7b3d0b6ae12a657ee895841313fdc8cac1ab09c952",
+          "size": 214287
+        }
+      }
+    },
+    "logistic_full": {
+      "arm": "logistic_full",
+      "metrics": {
+        "accuracy": 0.38059187887130075,
+        "macro_f1": 0.3052263575533599,
+        "weighted_f1": 0.3855964469093645,
+        "balanced_accuracy": 0.45046385439333636,
+        "logloss": 2.109384052615588,
+        "brier": 0.863305971898821,
+        "per_class": {
+          "D": {
+            "precision": 0.5412698412698412,
+            "recall": 0.5278637770897833,
+            "f1": 0.5344827586206896,
+            "support": 646
+          },
+          "F": {
+            "precision": 0.18181818181818182,
+            "recall": 0.6197183098591549,
+            "f1": 0.28115015974440893,
+            "support": 142
+          },
+          "T": {
+            "precision": 0.5594059405940595,
+            "recall": 0.17601246105919002,
+            "f1": 0.2677725118483412,
+            "support": 642
+          },
+          "P": {
+            "precision": 0.08029197080291971,
+            "recall": 0.4782608695652174,
+            "f1": 0.1375,
+            "support": 23
+          }
+        },
+        "confusion_matrix": [
+          [
+            341,
+            167,
+            78,
+            60
+          ],
+          [
+            32,
+            88,
+            8,
+            14
+          ],
+          [
+            254,
+            223,
+            113,
+            52
+          ],
+          [
+            3,
+            6,
+            3,
+            11
+          ]
+        ],
+        "n_days": 1453,
+        "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+        "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+        "predicted_count": {
+          "D": 630,
+          "F": 484,
+          "T": 202,
+          "P": 137
+        },
+        "average_precision": {
+          "D": 0.5615840628484597,
+          "F": 0.29864552398238736,
+          "T": 0.5171449904180991,
+          "P": 0.3130051907571689
+        }
+      },
+      "slices": {
+        "first_target_of_week": {
+          "accuracy": 0.37254901960784315,
+          "macro_f1": 0.28934315671603805,
+          "weighted_f1": 0.3853723043653254,
+          "balanced_accuracy": 0.39072519347705914,
+          "logloss": 2.2876216659536706,
+          "brier": 0.8719930728995423,
+          "per_class": {
+            "D": {
+              "precision": 0.5726495726495726,
+              "recall": 0.4962962962962963,
+              "f1": 0.5317460317460317,
+              "support": 135
+            },
+            "F": {
+              "precision": 0.1896551724137931,
+              "recall": 0.6875,
+              "f1": 0.2972972972972973,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.5581395348837209,
+              "recall": 0.1791044776119403,
+              "f1": 0.2711864406779661,
+              "support": 134
+            },
+            "P": {
+              "precision": 0.03333333333333333,
+              "recall": 0.2,
+              "f1": 0.05714285714285714,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              67,
+              39,
+              16,
+              13
+            ],
+            [
+              6,
+              22,
+              0,
+              4
+            ],
+            [
+              44,
+              54,
+              24,
+              12
+            ],
+            [
+              0,
+              1,
+              3,
+              1
+            ]
+          ],
+          "n_days": 306,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 117,
+            "F": 116,
+            "T": 43,
+            "P": 30
+          },
+          "average_precision": {
+            "D": 0.5912319283995067,
+            "F": 0.3674973263212301,
+            "T": 0.5041118773238806,
+            "P": 0.08192385303636018
+          }
+        },
+        "later_targets": {
+          "accuracy": 0.3827375762859634,
+          "macro_f1": 0.30954336108292607,
+          "weighted_f1": 0.38560560477742883,
+          "balanced_accuracy": 0.46673898211353715,
+          "logloss": 2.06183330311127,
+          "brier": 0.8609884017974953,
+          "per_class": {
+            "D": {
+              "precision": 0.5341130604288499,
+              "recall": 0.5362035225048923,
+              "f1": 0.53515625,
+              "support": 511
+            },
+            "F": {
+              "precision": 0.1793478260869565,
+              "recall": 0.6,
+              "f1": 0.27615062761506276,
+              "support": 110
+            },
+            "T": {
+              "precision": 0.559748427672956,
+              "recall": 0.17519685039370078,
+              "f1": 0.26686656671664166,
+              "support": 508
+            },
+            "P": {
+              "precision": 0.09345794392523364,
+              "recall": 0.5555555555555556,
+              "f1": 0.16,
+              "support": 18
+            }
+          },
+          "confusion_matrix": [
+            [
+              274,
+              128,
+              62,
+              47
+            ],
+            [
+              26,
+              66,
+              8,
+              10
+            ],
+            [
+              210,
+              169,
+              89,
+              40
+            ],
+            [
+              3,
+              5,
+              0,
+              10
+            ]
+          ],
+          "n_days": 1147,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 513,
+            "F": 368,
+            "T": 159,
+            "P": 107
+          },
+          "average_precision": {
+            "D": 0.5544856474113358,
+            "F": 0.2864702196877687,
+            "T": 0.5223105051606982,
+            "P": 0.394673631496371
+          }
+        },
+        "mature_by_eval_end": {
+          "accuracy": 0.37976437976437977,
+          "macro_f1": 0.30349112191039324,
+          "weighted_f1": 0.38544954454254426,
+          "balanced_accuracy": 0.4480235064834929,
+          "logloss": 2.1040349412992967,
+          "brier": 0.8632739056730128,
+          "per_class": {
+            "D": {
+              "precision": 0.5412698412698412,
+              "recall": 0.53198127925117,
+              "f1": 0.5365853658536586,
+              "support": 641
+            },
+            "F": {
+              "precision": 0.17473684210526316,
+              "recall": 0.6058394160583942,
+              "f1": 0.27124183006535946,
+              "support": 137
+            },
+            "T": {
+              "precision": 0.5594059405940595,
+              "recall": 0.17601246105919002,
+              "f1": 0.2677725118483412,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.08088235294117647,
+              "recall": 0.4782608695652174,
+              "f1": 0.13836477987421383,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              341,
+              163,
+              78,
+              59
+            ],
+            [
+              32,
+              83,
+              8,
+              14
+            ],
+            [
+              254,
+              223,
+              113,
+              52
+            ],
+            [
+              3,
+              6,
+              3,
+              11
+            ]
+          ],
+          "n_days": 1443,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 630,
+            "F": 475,
+            "T": 202,
+            "P": 136
+          },
+          "average_precision": {
+            "D": 0.5624735576392556,
+            "F": 0.28915215417967405,
+            "T": 0.5176386117363881,
+            "P": 0.31732621065528877
+          }
+        }
+      },
+      "yearly": {
+        "2020": {
+          "accuracy": 0.37254901960784315,
+          "macro_f1": 0.22914979757085022,
+          "weighted_f1": 0.45480670000793844,
+          "balanced_accuracy": 0.37851366961879096,
+          "logloss": 1.3668702713109677,
+          "brier": 0.7525489767307871,
+          "per_class": {
+            "D": {
+              "precision": 0.5652173913043478,
+              "recall": 0.5306122448979592,
+              "f1": 0.5473684210526316,
+              "support": 49
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            },
+            "T": {
+              "precision": 1.0,
+              "recall": 0.22641509433962265,
+              "f1": 0.36923076923076925,
+              "support": 53
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              26,
+              22,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              20,
+              12,
+              12,
+              9
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 102,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 46,
+            "F": 34,
+            "T": 12,
+            "P": 10
+          },
+          "average_precision": {
+            "D": 0.6691116688645754,
+            "F": null,
+            "T": 0.8062688223907136,
+            "P": null
+          }
+        },
+        "2021": {
+          "accuracy": 0.2716049382716049,
+          "macro_f1": 0.1566513219861411,
+          "weighted_f1": 0.2908106281166202,
+          "balanced_accuracy": 0.21708463949843262,
+          "logloss": 2.0737751153924693,
+          "brier": 0.9601954169873489,
+          "per_class": {
+            "D": {
+              "precision": 0.5405405405405406,
+              "recall": 0.5172413793103449,
+              "f1": 0.5286343612334802,
+              "support": 116
+            },
+            "F": {
+              "precision": 0.010752688172043012,
+              "recall": 0.09090909090909091,
+              "f1": 0.019230769230769232,
+              "support": 11
+            },
+            "T": {
+              "precision": 0.45454545454545453,
+              "recall": 0.04310344827586207,
+              "f1": 0.07874015748031496,
+              "support": 116
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              60,
+              36,
+              6,
+              14
+            ],
+            [
+              6,
+              1,
+              0,
+              4
+            ],
+            [
+              45,
+              56,
+              5,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 243,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 111,
+            "F": 93,
+            "T": 11,
+            "P": 28
+          },
+          "average_precision": {
+            "D": 0.5532033726370591,
+            "F": 0.035444208060448214,
+            "T": 0.5076189944989985,
+            "P": null
+          }
+        },
+        "2022": {
+          "accuracy": 0.38016528925619836,
+          "macro_f1": 0.337602552737171,
+          "weighted_f1": 0.4073694160331726,
+          "balanced_accuracy": 0.5281238067964873,
+          "logloss": 2.036072877848295,
+          "brier": 0.8663715877599537,
+          "per_class": {
+            "D": {
+              "precision": 0.5061728395061729,
+              "recall": 0.422680412371134,
+              "f1": 0.4606741573033708,
+              "support": 97
+            },
+            "F": {
+              "precision": 0.17647058823529413,
+              "recall": 0.375,
+              "f1": 0.24,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.6181818181818182,
+              "recall": 0.3148148148148148,
+              "f1": 0.4171779141104294,
+              "support": 108
+            },
+            "P": {
+              "precision": 0.13157894736842105,
+              "recall": 1.0,
+              "f1": 0.23255813953488372,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              41,
+              24,
+              17,
+              15
+            ],
+            [
+              8,
+              12,
+              4,
+              8
+            ],
+            [
+              32,
+              32,
+              34,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              5
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 81,
+            "F": 68,
+            "T": 55,
+            "P": 38
+          },
+          "average_precision": {
+            "D": 0.5047548633619326,
+            "F": 0.1989610814764611,
+            "T": 0.5450264809249202,
+            "P": 0.8766666666666667
+          }
+        },
+        "2023": {
+          "accuracy": 0.5330578512396694,
+          "macro_f1": 0.32518740120529543,
+          "weighted_f1": 0.5638121171705197,
+          "balanced_accuracy": 0.4601515265547778,
+          "logloss": 1.2876391090708417,
+          "brier": 0.6448393747606861,
+          "per_class": {
+            "D": {
+              "precision": 0.6517857142857143,
+              "recall": 0.5658914728682171,
+              "f1": 0.6058091286307054,
+              "support": 129
+            },
+            "F": {
+              "precision": 0.09375,
+              "recall": 0.3,
+              "f1": 0.14285714285714285,
+              "support": 10
+            },
+            "T": {
+              "precision": 0.5955056179775281,
+              "recall": 0.5145631067961165,
+              "f1": 0.5520833333333334,
+              "support": 103
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              73,
+              16,
+              36,
+              4
+            ],
+            [
+              5,
+              3,
+              0,
+              2
+            ],
+            [
+              34,
+              13,
+              53,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 112,
+            "F": 32,
+            "T": 89,
+            "P": 9
+          },
+          "average_precision": {
+            "D": 0.6204415484126874,
+            "F": 0.1054198335090552,
+            "T": 0.5985984603910355,
+            "P": null
+          }
+        },
+        "2024": {
+          "accuracy": 0.4049586776859504,
+          "macro_f1": 0.335446045313189,
+          "weighted_f1": 0.3318316481681673,
+          "balanced_accuracy": 0.41387798522232483,
+          "logloss": 3.16924583444283,
+          "brier": 0.963479531915073,
+          "per_class": {
+            "D": {
+              "precision": 0.5595238095238095,
+              "recall": 0.5340909090909091,
+              "f1": 0.5465116279069767,
+              "support": 88
+            },
+            "F": {
+              "precision": 0.3194444444444444,
+              "recall": 0.8679245283018868,
+              "f1": 0.467005076142132,
+              "support": 53
+            },
+            "T": {
+              "precision": 0.3333333333333333,
+              "recall": 0.022727272727272728,
+              "f1": 0.0425531914893617,
+              "support": 88
+            },
+            "P": {
+              "precision": 0.375,
+              "recall": 0.23076923076923078,
+              "f1": 0.2857142857142857,
+              "support": 13
+            }
+          },
+          "confusion_matrix": [
+            [
+              47,
+              39,
+              2,
+              0
+            ],
+            [
+              7,
+              46,
+              0,
+              0
+            ],
+            [
+              27,
+              54,
+              2,
+              5
+            ],
+            [
+              3,
+              5,
+              2,
+              3
+            ]
+          ],
+          "n_days": 242,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 84,
+            "F": 144,
+            "T": 6,
+            "P": 8
+          },
+          "average_precision": {
+            "D": 0.5457184629055749,
+            "F": 0.4723703600485665,
+            "T": 0.5412739064419998,
+            "P": 0.3752986496320062
+          }
+        },
+        "2025": {
+          "accuracy": 0.41975308641975306,
+          "macro_f1": 0.34723973658399887,
+          "weighted_f1": 0.3731007574359123,
+          "balanced_accuracy": 0.5000030308540947,
+          "logloss": 1.791850729610254,
+          "brier": 0.7736679356553066,
+          "per_class": {
+            "D": {
+              "precision": 0.5481481481481482,
+              "recall": 0.6324786324786325,
+              "f1": 0.5873015873015873,
+              "support": 117
+            },
+            "F": {
+              "precision": 0.296875,
+              "recall": 0.7037037037037037,
+              "f1": 0.4175824175824176,
+              "support": 27
+            },
+            "T": {
+              "precision": 0.21428571428571427,
+              "recall": 0.06382978723404255,
+              "f1": 0.09836065573770492,
+              "support": 94
+            },
+            "P": {
+              "precision": 0.1875,
+              "recall": 0.6,
+              "f1": 0.2857142857142857,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              74,
+              15,
+              17,
+              11
+            ],
+            [
+              4,
+              19,
+              4,
+              0
+            ],
+            [
+              57,
+              29,
+              6,
+              2
+            ],
+            [
+              0,
+              1,
+              1,
+              3
+            ]
+          ],
+          "n_days": 243,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 135,
+            "F": 64,
+            "T": 28,
+            "P": 16
+          },
+          "average_precision": {
+            "D": 0.6429693036752966,
+            "F": 0.3727503823848783,
+            "T": 0.3290905282050847,
+            "P": 0.6233333333333333
+          }
+        },
+        "2026": {
+          "accuracy": 0.2014388489208633,
+          "macro_f1": 0.15660775718246983,
+          "weighted_f1": 0.15946575865537246,
+          "balanced_accuracy": 0.39675925925925926,
+          "logloss": 2.984686242240814,
+          "brier": 1.1325157352290574,
+          "per_class": {
+            "D": {
+              "precision": 0.32786885245901637,
+              "recall": 0.4,
+              "f1": 0.36036036036036034,
+              "support": 50
+            },
+            "F": {
+              "precision": 0.14285714285714285,
+              "recall": 0.7777777777777778,
+              "f1": 0.2413793103448276,
+              "support": 9
+            },
+            "T": {
+              "precision": 1.0,
+              "recall": 0.0125,
+              "f1": 0.024691358024691357,
+              "support": 80
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": null,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix": [
+            [
+              20,
+              15,
+              0,
+              15
+            ],
+            [
+              2,
+              7,
+              0,
+              0
+            ],
+            [
+              39,
+              27,
+              1,
+              13
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 139,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 61,
+            "F": 49,
+            "T": 1,
+            "P": 28
+          },
+          "average_precision": {
+            "D": 0.359751480898689,
+            "F": 0.3857832926903145,
+            "T": 0.7536575816486475,
+            "P": null
+          }
+        }
+      },
+      "panic_weeks": {
+        "true_weeks": 5,
+        "hit_weeks": 3,
+        "first_session_hit_weeks": 1,
+        "false_alert_weeks": 55,
+        "weeks": [
+          {
+            "week": "2020-08-29/2020-09-04",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2020-12-12/2020-12-18",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2020-12-19/2020-12-25",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 5,
+            "at_first_session": true
+          },
+          {
+            "week": "2020-12-26/2021-01-01",
+            "label": "T",
+            "days": 4,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2021-01-02/2021-01-08",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2021-01-09/2021-01-15",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2021-01-16/2021-01-22",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2021-01-23/2021-01-29",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 5,
+            "at_first_session": true
+          },
+          {
+            "week": "2021-01-30/2021-02-05",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2021-02-06/2021-02-12",
+            "label": "D",
+            "days": 3,
+            "predicted_p_days": 3,
+            "at_first_session": true
+          },
+          {
+            "week": "2021-02-13/2021-02-19",
+            "label": "D",
+            "days": 2,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2021-02-20/2021-02-26",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2021-02-27/2021-03-05",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2021-03-06/2021-03-12",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2021-10-23/2021-10-29",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2022-03-12/2022-03-18",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2022-03-19/2022-03-25",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-03-26/2022-04-01",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-04-09/2022-04-15",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-04-16/2022-04-22",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-04-23/2022-04-29",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 5,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-04-30/2022-05-06",
+            "label": "F",
+            "days": 2,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-05-07/2022-05-13",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2022-05-14/2022-05-20",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-05-21/2022-05-27",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 5,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-05-28/2022-06-03",
+            "label": "T",
+            "days": 4,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-06-04/2022-06-10",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-10-08/2022-10-14",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2022-10-22/2022-10-28",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2023-04-22/2023-04-28",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2023-10-07/2023-10-13",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": true
+          },
+          {
+            "week": "2023-10-14/2023-10-20",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": true
+          },
+          {
+            "week": "2023-10-21/2023-10-27",
+            "label": "F",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-01-20/2024-01-26",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-01-27/2024-02-02",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-02-03/2024-02-09",
+            "label": "P",
+            "days": 4,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-04-13/2024-04-19",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 0,
+            "at_first_session": false
+          },
+          {
+            "week": "2024-08-10/2024-08-16",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2024-10-05/2024-10-11",
+            "label": "P",
+            "days": 4,
+            "predicted_p_days": 0,
+            "at_first_session": false
+          },
+          {
+            "week": "2025-04-05/2025-04-11",
+            "label": "P",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2025-09-13/2025-09-19",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2025-09-20/2025-09-26",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 5,
+            "at_first_session": true
+          },
+          {
+            "week": "2025-09-27/2025-10-03",
+            "label": "D",
+            "days": 2,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2025-10-04/2025-10-10",
+            "label": "D",
+            "days": 2,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2025-10-11/2025-10-17",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2025-12-13/2025-12-19",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-01-24/2026-01-30",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-04-18/2026-04-24",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": true
+          },
+          {
+            "week": "2026-04-25/2026-05-01",
+            "label": "T",
+            "days": 4,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-05-02/2026-05-08",
+            "label": "T",
+            "days": 3,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2026-05-16/2026-05-22",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-05-23/2026-05-29",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-05-30/2026-06-05",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-06-06/2026-06-12",
+            "label": "T",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-06-13/2026-06-19",
+            "label": "T",
+            "days": 4,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          },
+          {
+            "week": "2026-06-20/2026-06-26",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-06-27/2026-07-03",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 4,
+            "at_first_session": true
+          },
+          {
+            "week": "2026-07-04/2026-07-10",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 3,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-07-11/2026-07-17",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 2,
+            "at_first_session": false
+          },
+          {
+            "week": "2026-07-18/2026-07-24",
+            "label": "D",
+            "days": 5,
+            "predicted_p_days": 1,
+            "at_first_session": true
+          }
+        ]
+      },
+      "uncertainty": {
+        "method": "paired circular bootstrap of consecutive 8 target weeks; day-weighted; 2000 draws seed42",
+        "absolute": {
+          "accuracy": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.3110333269785287,
+              0.44905556692972004
+            ]
+          },
+          "macro_f1": {
+            "draws": 2000,
+            "95pct_interval": [
+              0.2426471790325292,
+              0.367435877423769
+            ]
+          },
+          "P_recall": {
+            "draws": 1993,
+            "95pct_interval": [
+              0.0,
+              0.8777777777777784
+            ]
+          }
+        },
+        "minus_last_matured": {
+          "accuracy": {
+            "draws": 2000,
+            "95pct_interval": [
+              -0.18245893766208815,
+              0.004839883237087361
+            ]
+          },
+          "macro_f1": {
+            "draws": 2000,
+            "95pct_interval": [
+              -0.06128629474065443,
+              0.08532104320809578
+            ]
+          },
+          "P_recall": {
+            "draws": 1993,
+            "95pct_interval": [
+              0.0,
+              0.8777777777777784
+            ]
+          }
+        }
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-logistic_full.csv",
+        "sha256": "6e7e531e5900d5ca598a30792e1d82ed761d9ad4251031709d2e396f555c4e21",
+        "size": 216980
+      },
+      "seeds": [
+        {
+          "job": "logistic_full-42-a1",
+          "seed": 42,
+          "best": 167,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s42-a1/model.joblib",
+            "sha256": "fb469f1276ab46a3288456b0119d509cb6ead17a32e47a2b6d4b6c88b53b3743",
+            "size": 30672
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s42-a1/predictions.csv",
+            "sha256": "227e5c1c523730bc2b4ba47c034b546a8bc771c32cc2e1ac072f063b1fe392da",
+            "size": 216972
+          }
+        },
+        {
+          "job": "logistic_full-1000-a1",
+          "seed": 1000,
+          "best": 167,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s1000-a1/model.joblib",
+            "sha256": "5cd8447c4fa26431aba610955cb296278fd40d1d4924eb24f7f88d58bf87c7cc",
+            "size": 30673
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s1000-a1/predictions.csv",
+            "sha256": "227e5c1c523730bc2b4ba47c034b546a8bc771c32cc2e1ac072f063b1fe392da",
+            "size": 216972
+          }
+        },
+        {
+          "job": "logistic_full-2000-a1",
+          "seed": 2000,
+          "best": 167,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s2000-a1/model.joblib",
+            "sha256": "4ac0e8d4c3093cc96ce5e2300d98bebf658717271725fa8f200745eee53ceaad",
+            "size": 30672
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s2000-a1/predictions.csv",
+            "sha256": "227e5c1c523730bc2b4ba47c034b546a8bc771c32cc2e1ac072f063b1fe392da",
+            "size": 216972
+          }
+        },
+        {
+          "job": "logistic_full-3000-a1",
+          "seed": 3000,
+          "best": 167,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s3000-a1/model.joblib",
+            "sha256": "c63d11186d7c340a55ad73cefc15f9a7fc4f55510d3d7af36da7271c7cd58b29",
+            "size": 30670
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s3000-a1/predictions.csv",
+            "sha256": "227e5c1c523730bc2b4ba47c034b546a8bc771c32cc2e1ac072f063b1fe392da",
+            "size": 216972
+          }
+        },
+        {
+          "job": "logistic_full-4000-a1",
+          "seed": 4000,
+          "best": 167,
+          "model": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s4000-a1/model.joblib",
+            "sha256": "d5f53f60885ecd6e415df0d963fe445cc586de8d5bc451dbb96a2ff71b58d95b",
+            "size": 30672
+          },
+          "predictions": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/logistic_full/s4000-a1/predictions.csv",
+            "sha256": "227e5c1c523730bc2b4ba47c034b546a8bc771c32cc2e1ac072f063b1fe392da",
+            "size": 216972
+          }
+        }
+      ]
+    }
+  },
+  "baselines": {
+    "training_majority": {
+      "metrics": {
+        "accuracy": 0.44459738472126636,
+        "macro_f1": 0.15388280133396856,
+        "weighted_f1": 0.2736635641066585,
+        "balanced_accuracy": 0.25,
+        "logloss": 20.018739356515855,
+        "brier": 1.1108052305574674,
+        "per_class": {
+          "D": {
+            "precision": 0.44459738472126636,
+            "recall": 1.0,
+            "f1": 0.6155312053358742,
+            "support": 646
+          },
+          "F": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 142
+          },
+          "T": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 642
+          },
+          "P": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 23
+          }
+        },
+        "confusion_matrix": [
+          [
+            646,
+            0,
+            0,
+            0
+          ],
+          [
+            142,
+            0,
+            0,
+            0
+          ],
+          [
+            642,
+            0,
+            0,
+            0
+          ],
+          [
+            23,
+            0,
+            0,
+            0
+          ]
+        ],
+        "n_days": 1453,
+        "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+        "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+        "predicted_count": {
+          "D": 1453,
+          "F": 0,
+          "T": 0,
+          "P": 0
+        },
+        "average_precision": {
+          "D": 0.44459738472126636,
+          "F": 0.09772883688919477,
+          "T": 0.44184445973847214,
+          "P": 0.015829318651066758
+        }
+      },
+      "slices": {
+        "first_target_of_week": {
+          "accuracy": 0.4411764705882353,
+          "macro_f1": 0.15306122448979592,
+          "weighted_f1": 0.27010804321728693,
+          "balanced_accuracy": 0.25,
+          "logloss": 20.142041599800763,
+          "brier": 1.1176470588235294,
+          "per_class": {
+            "D": {
+              "precision": 0.4411764705882353,
+              "recall": 1.0,
+              "f1": 0.6122448979591837,
+              "support": 135
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 134
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              135,
+              0,
+              0,
+              0
+            ],
+            [
+              32,
+              0,
+              0,
+              0
+            ],
+            [
+              134,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 306,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 306,
+            "F": 0,
+            "T": 0,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.4411764705882353,
+            "F": 0.10457516339869281,
+            "T": 0.43790849673202614,
+            "P": 0.016339869281045753
+          }
+        },
+        "later_targets": {
+          "accuracy": 0.4455100261551874,
+          "macro_f1": 0.15410132689987938,
+          "weighted_f1": 0.2746147447108574,
+          "balanced_accuracy": 0.25,
+          "logloss": 19.98584442500306,
+          "brier": 1.1089799476896252,
+          "per_class": {
+            "D": {
+              "precision": 0.4455100261551874,
+              "recall": 1.0,
+              "f1": 0.6164053075995175,
+              "support": 511
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 110
+            },
+            "T": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 508
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 18
+            }
+          },
+          "confusion_matrix": [
+            [
+              511,
+              0,
+              0,
+              0
+            ],
+            [
+              110,
+              0,
+              0,
+              0
+            ],
+            [
+              508,
+              0,
+              0,
+              0
+            ],
+            [
+              18,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 1147,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 1147,
+            "F": 0,
+            "T": 0,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.4455100261551874,
+            "F": 0.0959023539668701,
+            "T": 0.44289450741063646,
+            "P": 0.015693112467306015
+          }
+        },
+        "mature_by_eval_end": {
+          "accuracy": 0.4442134442134442,
+          "macro_f1": 0.15379078694817658,
+          "weighted_f1": 0.2732637406341821,
+          "balanced_accuracy": 0.25,
+          "logloss": 20.03257797510184,
+          "brier": 1.1115731115731116,
+          "per_class": {
+            "D": {
+              "precision": 0.4442134442134442,
+              "recall": 1.0,
+              "f1": 0.6151631477927063,
+              "support": 641
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 137
+            },
+            "T": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              641,
+              0,
+              0,
+              0
+            ],
+            [
+              137,
+              0,
+              0,
+              0
+            ],
+            [
+              642,
+              0,
+              0,
+              0
+            ],
+            [
+              23,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 1443,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 1443,
+            "F": 0,
+            "T": 0,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.4442134442134442,
+            "F": 0.09494109494109494,
+            "T": 0.44490644490644493,
+            "P": 0.01593901593901594
+          }
+        }
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/baseline-training_majority.csv",
+        "sha256": "33df06ece23ca3b61d541ea71361e2df3f2adefa091d600b67720e1031ed6a1f",
+        "size": 108782
+      }
+    },
+    "training_prior": {
+      "metrics": {
+        "accuracy": 0.44459738472126636,
+        "macro_f1": 0.15388280133396856,
+        "weighted_f1": 0.2736635641066585,
+        "balanced_accuracy": 0.25,
+        "logloss": 1.0828902789503179,
+        "brier": 0.6183830274000541,
+        "per_class": {
+          "D": {
+            "precision": 0.44459738472126636,
+            "recall": 1.0,
+            "f1": 0.6155312053358742,
+            "support": 646
+          },
+          "F": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 142
+          },
+          "T": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 642
+          },
+          "P": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 23
+          }
+        },
+        "confusion_matrix": [
+          [
+            646,
+            0,
+            0,
+            0
+          ],
+          [
+            142,
+            0,
+            0,
+            0
+          ],
+          [
+            642,
+            0,
+            0,
+            0
+          ],
+          [
+            23,
+            0,
+            0,
+            0
+          ]
+        ],
+        "n_days": 1453,
+        "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+        "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+        "predicted_count": {
+          "D": 1453,
+          "F": 0,
+          "T": 0,
+          "P": 0
+        },
+        "average_precision": {
+          "D": 0.44459738472126636,
+          "F": 0.09772883688919477,
+          "T": 0.44184445973847214,
+          "P": 0.015829318651066758
+        }
+      },
+      "slices": {
+        "first_target_of_week": {
+          "accuracy": 0.4411764705882353,
+          "macro_f1": 0.15306122448979592,
+          "weighted_f1": 0.27010804321728693,
+          "balanced_accuracy": 0.25,
+          "logloss": 1.0884305453973535,
+          "brier": 0.6212117888712382,
+          "per_class": {
+            "D": {
+              "precision": 0.4411764705882353,
+              "recall": 1.0,
+              "f1": 0.6122448979591837,
+              "support": 135
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 134
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              135,
+              0,
+              0,
+              0
+            ],
+            [
+              32,
+              0,
+              0,
+              0
+            ],
+            [
+              134,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 306,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 306,
+            "F": 0,
+            "T": 0,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.4411764705882353,
+            "F": 0.10457516339869281,
+            "T": 0.43790849673202614,
+            "P": 0.016339869281045753
+          }
+        },
+        "later_targets": {
+          "accuracy": 0.4455100261551874,
+          "macro_f1": 0.15410132689987938,
+          "weighted_f1": 0.2746147447108574,
+          "balanced_accuracy": 0.25,
+          "logloss": 1.0814122305346308,
+          "brier": 0.6176283621775759,
+          "per_class": {
+            "D": {
+              "precision": 0.4455100261551874,
+              "recall": 1.0,
+              "f1": 0.6164053075995175,
+              "support": 511
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 110
+            },
+            "T": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 508
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 18
+            }
+          },
+          "confusion_matrix": [
+            [
+              511,
+              0,
+              0,
+              0
+            ],
+            [
+              110,
+              0,
+              0,
+              0
+            ],
+            [
+              508,
+              0,
+              0,
+              0
+            ],
+            [
+              18,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 1147,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 1147,
+            "F": 0,
+            "T": 0,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.4455100261551874,
+            "F": 0.0959023539668701,
+            "T": 0.44289450741063646,
+            "P": 0.015693112467306015
+          }
+        },
+        "mature_by_eval_end": {
+          "accuracy": 0.4442134442134442,
+          "macro_f1": 0.15379078694817658,
+          "weighted_f1": 0.2732637406341821,
+          "balanced_accuracy": 0.25,
+          "logloss": 1.0811923487343393,
+          "brier": 0.6174398424881009,
+          "per_class": {
+            "D": {
+              "precision": 0.4442134442134442,
+              "recall": 1.0,
+              "f1": 0.6151631477927063,
+              "support": 641
+            },
+            "F": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 137
+            },
+            "T": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              641,
+              0,
+              0,
+              0
+            ],
+            [
+              137,
+              0,
+              0,
+              0
+            ],
+            [
+              642,
+              0,
+              0,
+              0
+            ],
+            [
+              23,
+              0,
+              0,
+              0
+            ]
+          ],
+          "n_days": 1443,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 1443,
+            "F": 0,
+            "T": 0,
+            "P": 0
+          },
+          "average_precision": {
+            "D": 0.4442134442134442,
+            "F": 0.09494109494109494,
+            "T": 0.44490644490644493,
+            "P": 0.01593901593901594
+          }
+        }
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/baseline-training_prior.csv",
+        "sha256": "69223d45ec17ecac79274d9891fde2c745e653db922854b6670155a03b547766",
+        "size": 213398
+      }
+    },
+    "last_matured": {
+      "metrics": {
+        "accuracy": 0.4638678596008259,
+        "macro_f1": 0.2919093749408052,
+        "weighted_f1": 0.4630000520337444,
+        "balanced_accuracy": 0.2918645375333509,
+        "logloss": 19.324161039313328,
+        "brier": 1.0722642807983482,
+        "per_class": {
+          "D": {
+            "precision": 0.4952978056426332,
+            "recall": 0.4891640866873065,
+            "f1": 0.49221183800623053,
+            "support": 646
+          },
+          "F": {
+            "precision": 0.16058394160583941,
+            "recall": 0.15492957746478872,
+            "f1": 0.15770609318996415,
+            "support": 142
+          },
+          "T": {
+            "precision": 0.5121951219512195,
+            "recall": 0.5233644859813084,
+            "f1": 0.5177195685670262,
+            "support": 642
+          },
+          "P": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 23
+          }
+        },
+        "confusion_matrix": [
+          [
+            316,
+            68,
+            257,
+            5
+          ],
+          [
+            54,
+            22,
+            59,
+            7
+          ],
+          [
+            253,
+            43,
+            336,
+            10
+          ],
+          [
+            15,
+            4,
+            4,
+            0
+          ]
+        ],
+        "n_days": 1453,
+        "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+        "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+        "predicted_count": {
+          "D": 638,
+          "F": 137,
+          "T": 656,
+          "P": 22
+        },
+        "average_precision": {
+          "D": 0.4693982098159288,
+          "F": 0.10746695170444957,
+          "T": 0.47866349790589136,
+          "P": 0.015829318651066758
+        }
+      },
+      "slices": {
+        "first_target_of_week": {
+          "accuracy": 0.4117647058823529,
+          "macro_f1": 0.2643403593984537,
+          "weighted_f1": 0.4106786129256238,
+          "balanced_accuracy": 0.2640072208402432,
+          "logloss": 21.202149052421852,
+          "brier": 1.1764705882352942,
+          "per_class": {
+            "D": {
+              "precision": 0.43609022556390975,
+              "recall": 0.42962962962962964,
+              "f1": 0.43283582089552236,
+              "support": 135
+            },
+            "F": {
+              "precision": 0.16666666666666666,
+              "recall": 0.15625,
+              "f1": 0.16129032258064516,
+              "support": 32
+            },
+            "T": {
+              "precision": 0.45652173913043476,
+              "recall": 0.4701492537313433,
+              "f1": 0.4632352941176471,
+              "support": 134
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 5
+            }
+          },
+          "confusion_matrix": [
+            [
+              58,
+              17,
+              59,
+              1
+            ],
+            [
+              10,
+              5,
+              15,
+              2
+            ],
+            [
+              62,
+              7,
+              63,
+              2
+            ],
+            [
+              3,
+              1,
+              1,
+              0
+            ]
+          ],
+          "n_days": 306,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 133,
+            "F": 30,
+            "T": 138,
+            "P": 5
+          },
+          "average_precision": {
+            "D": 0.43899126902222874,
+            "F": 0.11427696078431374,
+            "T": 0.44665949875515853,
+            "P": 0.016339869281045753
+          }
+        },
+        "later_targets": {
+          "accuracy": 0.4777680906713165,
+          "macro_f1": 0.2991799465219649,
+          "weighted_f1": 0.4769815399958749,
+          "balanced_accuracy": 0.2992098493136677,
+          "logloss": 18.823145928579926,
+          "brier": 1.0444638186573671,
+          "per_class": {
+            "D": {
+              "precision": 0.5108910891089109,
+              "recall": 0.5048923679060665,
+              "f1": 0.5078740157480315,
+              "support": 511
+            },
+            "F": {
+              "precision": 0.1588785046728972,
+              "recall": 0.15454545454545454,
+              "f1": 0.15668202764976957,
+              "support": 110
+            },
+            "T": {
+              "precision": 0.527027027027027,
+              "recall": 0.5374015748031497,
+              "f1": 0.5321637426900585,
+              "support": 508
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 18
+            }
+          },
+          "confusion_matrix": [
+            [
+              258,
+              51,
+              198,
+              4
+            ],
+            [
+              44,
+              17,
+              44,
+              5
+            ],
+            [
+              191,
+              36,
+              273,
+              8
+            ],
+            [
+              12,
+              3,
+              3,
+              0
+            ]
+          ],
+          "n_days": 1147,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 505,
+            "F": 107,
+            "T": 518,
+            "P": 17
+          },
+          "average_precision": {
+            "D": 0.4785204258461085,
+            "F": 0.1056350318032561,
+            "T": 0.4881074559446416,
+            "P": 0.015693112467306015
+          }
+        },
+        "mature_by_eval_end": {
+          "accuracy": 0.46361746361746364,
+          "macro_f1": 0.2921133085912857,
+          "weighted_f1": 0.46331388511939053,
+          "balanced_accuracy": 0.2922819586908587,
+          "logloss": 19.333186225347664,
+          "brier": 1.0727650727650728,
+          "per_class": {
+            "D": {
+              "precision": 0.49522292993630573,
+              "recall": 0.48517940717628705,
+              "f1": 0.49014972419227737,
+              "support": 641
+            },
+            "F": {
+              "precision": 0.16058394160583941,
+              "recall": 0.16058394160583941,
+              "f1": 0.16058394160583941,
+              "support": 137
+            },
+            "T": {
+              "precision": 0.5121951219512195,
+              "recall": 0.5233644859813084,
+              "f1": 0.5177195685670262,
+              "support": 642
+            },
+            "P": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 23
+            }
+          },
+          "confusion_matrix": [
+            [
+              311,
+              68,
+              257,
+              5
+            ],
+            [
+              49,
+              22,
+              59,
+              7
+            ],
+            [
+              253,
+              43,
+              336,
+              10
+            ],
+            [
+              15,
+              4,
+              4,
+              0
+            ]
+          ],
+          "n_days": 1443,
+          "macro_definition": "fixed four classes; absent-class F1=0; balanced_accuracy averages supported classes",
+          "brier_definition": "mean(sum_class((probability-one_hot_truth)^2)); range [0,2]",
+          "predicted_count": {
+            "D": 628,
+            "F": 137,
+            "T": 656,
+            "P": 22
+          },
+          "average_precision": {
+            "D": 0.46896219625682944,
+            "F": 0.10548228199674733,
+            "T": 0.48012294878034567,
+            "P": 0.01593901593901594
+          }
+        }
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/baseline-last_matured.csv",
+        "sha256": "9c7a8eda64ac6b051851f71869a425920a92d4bbd64c9f17a09395988e0d87b4",
+        "size": 108782
+      }
+    }
+  },
+  "primary_predictions": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+    "sha256": "f76aecf2ab5808a61b74aa47bf44aa49ee4a31dba55f4a0f8f5dc8e9ffa3c4ad",
+    "size": 214980
+  },
+  "expected_fits": 15,
+  "limitations": [
+    "Evaluation also used for early stopping; historical selection study.",
+    "Economic cluster naming reference uses historical full series. Expert H5 maturity, member eligibility and own-style ES differ from original v5; H5 full control and H20 old expert bridge reported.",
+    "P concentrated in few weeks, report raw counts and leave-week sensitivity.",
+    "Classifier date target and stock signal dates have distinct roles and coverage."
+  ]
+}

@@ -1,0 +1,1729 @@
+{
+  "schema_version": 2,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/harness-state.json",
+  "plan": {
+    "schema_version": 2,
+    "campaign_id": "weekly-h5-quantile10-rankic-20261114",
+    "idea": "在本风格验证日用预测与 H5 十档标签的日截面 Spearman 均值选轮，消除股票代码在早停中的作用，并检验各专家的 Top3×H5 净年化与夏普是否均高于 v5。",
+    "track": "all_a_model",
+    "direction": "early-stopping",
+    "anchor_exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+    "archive_path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114",
+    "baseline_ref": "training-target/h20-quantile10-p50-v5",
+    "allowed_changes": [
+      "own_style_es_on_H5_quantile10_rankic"
+    ],
+    "selection_rule": "Each style must pass tie check and both own-style official ensemble net_ann and net_sharpe strictly exceed the frozen v5 on the identical dates. RankIC supplementary. If any passes, backtest with v5 fallback for all unqualified styles. All four reported separately.",
+    "data_version": "2026-11-03",
+    "inputs": [
+      "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/evaluation.yaml",
+      "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/experiment.json",
+      "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/configs/prepared-inputs.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/docs/h5-target.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/metrics/v5.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/early-stopping-review.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/evaluation.json",
+      "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-T.pkl",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-P.pkl",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-D.pkl",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-F.pkl",
+      "backtest/models/regime_adapt.py",
+      "backtest/models/rankic_early_stop.py",
+      "backtest/scripts/train/train_regime_arm.py",
+      "backtest/scripts/evaluate/eval_ic_multi_pool.py"
+    ],
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "budget": {
+      "max_rounds": 1,
+      "max_variants": 1,
+      "max_attempts_per_variant": 3,
+      "max_wall_hours": 12,
+      "max_no_new_evidence_rounds": 1,
+      "concurrency": 1
+    },
+    "execution_budget": {
+      "max_model_fits": 28,
+      "new_label_horizons": [
+        5
+      ]
+    },
+    "scientific_candidates": [
+      "T",
+      "P",
+      "D",
+      "F"
+    ],
+    "temporary_directory": "/private/tmp/qlib-weekly-rankic.kOqbzG"
+  },
+  "plan_source": {
+    "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/harness-plan.json",
+    "sha256": "6be002ad4430f24db8c8653269e8ea26b0d9ab347825ffccf505a2ec1351479f",
+    "size": 4019
+  },
+  "inputs": [
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/experiment.json",
+      "sha256": "e001de7a6a4a4dff1d950c413d1511cff0682b63e41a9b98b8b5d7a752d29dbc",
+      "size": 2165
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/configs/prepared-inputs.json",
+      "sha256": "888de50c502347d3dfa046a25e8c89af37d0a7d71abbf765aa0d036d9ccc540e",
+      "size": 6369
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/docs/h5-target.json",
+      "sha256": "398a1a17cbd035e19b0bffa464e59ac9302ff21c34fe10796b766d2c688c0797",
+      "size": 45208
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/metrics/v5.json",
+      "sha256": "d54291ff22aebc4bb67aea239df351bbcadcb64304e58bc73e6106bdf51faff6",
+      "size": 109768
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/early-stopping-review.json",
+      "sha256": "c6626ebf4b9f45fd388d3c6d11956b2519362d43dd96b0a9cbcd69d820752cdf",
+      "size": 15476
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+      "sha256": "f76aecf2ab5808a61b74aa47bf44aa49ee4a31dba55f4a0f8f5dc8e9ffa3c4ad",
+      "size": 214980
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/evaluation.json",
+      "sha256": "6675521b08d8d021e8c6a03ec4f857ae174e9a15b111e958a4cbaea7c770dfa2",
+      "size": 132114
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+      "size": 274553
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+      "size": 9535
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+      "size": 30202983
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-T.pkl",
+      "sha256": "d8f34d76fea028cd396965deec086823e2ca5365ff91f33bb73823a4b45b35e8",
+      "size": 24542394
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-P.pkl",
+      "sha256": "9e3db5116ca661b973374f0d6ad7eac13aafd013063bfc76a395ab68c4f4227b",
+      "size": 4520010
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-D.pkl",
+      "sha256": "015062730ff204ae2d076b24c291cb3712c404023dd28a34af49071047eaedd5",
+      "size": 23939382
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-F.pkl",
+      "sha256": "268ed5e0f6385cafccb7e5f018b6a910b62f963fd3262cc078289f15a1be52a3",
+      "size": 12713598
+    },
+    {
+      "path": "backtest/models/regime_adapt.py",
+      "sha256": "9fd7fc084365535680cb8df08a263132c13561a5d5434f8b51a16c6d08a9526d",
+      "size": 15566
+    },
+    {
+      "path": "backtest/models/rankic_early_stop.py",
+      "sha256": "2320cce49ab762d1773881cd20e7974a8074bf1f95e94d2799cd9cb60619ca8c",
+      "size": 11309
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "8dfa2fcb39097ee0d19ea1c29dcbe3641e3237d9831b27c1db327a0fa6419a75",
+      "size": 33129
+    },
+    {
+      "path": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "sha256": "8cc35a510bb1b95d047a963f595dc1a4b8ac8e3102056c2c8a78d5c2b22b6026",
+      "size": 68674
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+      "size": 12415
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "d10dcea7e23d905c1fcfd25c841d368e3e1662fa3489dbd43dc8754129c4fcba",
+      "size": 64550
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "32d94bffdbb79180587eecb9bf91fc4537283d3cff8db9b581c69250593e04a8",
+      "size": 76004
+    }
+  ],
+  "baseline_sha256": "edefdbe4cc0d652e38b6964f812b723b4448f13c6f45c75091368e598da93ce9",
+  "baseline_model_ref": null,
+  "started_at": 1794590340.814859,
+  "deadline": 1794633540.814859,
+  "revision": 62,
+  "status": "closed",
+  "variants": {
+    "early-stopping/weekly-h5-quantile10-rankic-20261114": {
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "archive_path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "round": 1,
+      "hypothesis": "在本风格验证日用预测与 H5 十档标签的日截面 Spearman 均值选轮，消除股票代码在早停中的作用，并检验各专家的 Top3×H5 净年化与夏普是否均高于 v5。",
+      "changed_axis": "own_style_es_on_H5_quantile10_rankic",
+      "configs": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/experiment.json",
+          "sha256": "e001de7a6a4a4dff1d950c413d1511cff0682b63e41a9b98b8b5d7a752d29dbc",
+          "size": 2165
+        },
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/evaluation.yaml",
+          "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+          "size": 1006
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+          "outcome": "succeeded",
+          "started_at": 1794590341.1821408,
+          "command": [
+            "/opt/anaconda3/envs/qlib/bin/python",
+            "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py"
+          ],
+          "evaluation": {
+            "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/T.json",
+            "sha256": "567c8c7d12b7fccc2564b2af439c465afff196439028a575e368cb27ff9fbe0d",
+            "size": 110238
+          },
+          "finished_at": 1794593677.071627,
+          "evidence": [
+            {
+              "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/D.json",
+              "sha256": "fa27cee430a604a26b130e5b655c6f1c4b081843341c21c699d4ee13f4b1df98",
+              "size": 110147
+            },
+            {
+              "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/F.json",
+              "sha256": "326d50870e39388bf7e71e8d71c94a02f03c8c078cfe3adf17f28bd9497fdae4",
+              "size": 110170
+            },
+            {
+              "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/T.json",
+              "sha256": "567c8c7d12b7fccc2564b2af439c465afff196439028a575e368cb27ff9fbe0d",
+              "size": 110238
+            },
+            {
+              "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/P.json",
+              "sha256": "bedf1047f4a054a8f4002dd50da99985871e2a8ccd98ea6918268e3da3296dac",
+              "size": 110235
+            },
+            {
+              "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/four-style-comparison.json",
+              "sha256": "4b4fabd7e6901603c5fc48d367b371a4d4091f0b8df330284330e9af95f31bcb",
+              "size": 7266
+            }
+          ],
+          "reason": "",
+          "registered": {
+            "event_sha256": "1a4496f1f9b668a41ecf370186734a32a768bc49c4d46daef74b729c5a844742",
+            "detail_report": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/reports/detail.html"
+          },
+          "reported": [
+            {
+              "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/reports/detail.html",
+              "sha256": "0987a1d682458a52d85bd884dc6ce53fe00cbcb1357073ecfecde1079eb227e0",
+              "size": 7321
+            },
+            {
+              "path": "backtest/experiments/reports/phase_m_v1_report.html",
+              "sha256": "ce4ca83fb060f06553c8853bd60c998ad54382bc06fcc4be0664bb16363d7e2f",
+              "size": 47726
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reflections": [
+    {
+      "type": "reflection",
+      "round": 1,
+      "new_evidence": true,
+      "observations": "满足同风格净年化与夏普均高于 v5 的专家为 D、F、T、P。该比较为历史选型。",
+      "interpretation": "四个专家已逐轮反序，已在各自风格对照 v5；已按前置判据决定实际账户。",
+      "next_hypothesis": ""
+    }
+  ],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/cleanup.json",
+      "sha256": "5750ab38467dc3846f9e705e24d6e26453afe58f3228f49b48f77c97f8a9f808",
+      "size": 3882
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1794590340.997344,
+      "event": {
+        "type": "plan_variant",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "round": 1,
+        "archive_path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "hypothesis": "在本风格验证日用预测与 H5 十档标签的日截面 Spearman 均值选轮，消除股票代码在早停中的作用，并检验各专家的 Top3×H5 净年化与夏普是否均高于 v5。",
+        "changed_axis": "own_style_es_on_H5_quantile10_rankic",
+        "configs": [
+          "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/experiment.json",
+          "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/configs/evaluation.yaml"
+        ]
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1794590341.182144,
+      "event": {
+        "type": "start",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py"
+        ]
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1794590496.329393,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-T-s42-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "T",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1794590627.944067,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-T-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s42-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_t_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1794590628.527638,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-T-s1000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "T",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1794590787.345668,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-T-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s1000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_t_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1794590787.864046,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-T-s2000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "T",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1794590911.089323,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-T-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s2000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_t_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1794590911.6178792,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-T-s3000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "T",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 10,
+      "time": 1794591066.740557,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-T-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s3000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_t_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 11,
+      "time": 1794591067.286467,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-T-s4000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "T",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 12,
+      "time": 1794591214.543123,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-T-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s4000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_t_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 13,
+      "time": 1794591223.508735,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-P-s42-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "P",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 14,
+      "time": 1794591229.989486,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-P-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s42-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_p_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 15,
+      "time": 1794591230.38989,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-P-s1000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "P",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 16,
+      "time": 1794591236.7929149,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-P-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s1000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_p_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 17,
+      "time": 1794591237.218901,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-P-s2000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "P",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 18,
+      "time": 1794591243.652899,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-P-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s2000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_p_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 19,
+      "time": 1794591244.1059442,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-P-s3000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "P",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 20,
+      "time": 1794591250.381611,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-P-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s3000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_p_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 21,
+      "time": 1794591250.797604,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-P-s4000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "P",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 22,
+      "time": 1794591256.820692,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-P-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s4000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_p_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 23,
+      "time": 1794591275.543175,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-D-s42-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "D",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 24,
+      "time": 1794591361.4296598,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-D-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s42-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_d_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 25,
+      "time": 1794591361.949653,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-D-s1000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "D",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 26,
+      "time": 1794591429.3456728,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-D-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s1000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_d_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 27,
+      "time": 1794591429.86847,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-D-s2000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "D",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 28,
+      "time": 1794591505.126413,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-D-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s2000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_d_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 29,
+      "time": 1794591505.647789,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-D-s3000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "D",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 30,
+      "time": 1794591583.370183,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-D-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s3000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_d_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 31,
+      "time": 1794591583.9122372,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-D-s4000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "D",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 32,
+      "time": 1794591672.6720798,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-D-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s4000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_d_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 33,
+      "time": 1794591684.296284,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-F-s42-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "F",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 34,
+      "time": 1794591702.422773,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-F-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s42-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_f_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 35,
+      "time": 1794591702.842953,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-F-s1000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "F",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 36,
+      "time": 1794591722.389107,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-F-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s1000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_f_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 37,
+      "time": 1794591722.817,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-F-s2000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "F",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 38,
+      "time": 1794591743.275688,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-F-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s2000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_f_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 39,
+      "time": 1794591743.704656,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-F-s3000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "F",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 40,
+      "time": 1794591761.38466,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-F-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s3000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_f_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 41,
+      "time": 1794591761.8141298,
+      "event": {
+        "type": "fit_start",
+        "job_id": "weekly-h5-rankic-F-s4000-a1",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+          "fit",
+          "F",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 42,
+      "time": 1794591781.401191,
+      "event": {
+        "type": "fit_result",
+        "job_id": "weekly-h5-rankic-F-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s4000-a1.json",
+          "/Users/yuxianqi/Project/qlib/backtest/result/wkric_20261114_f_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 43,
+      "time": 1794593155.678884,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account hard_signal"
+      }
+    },
+    {
+      "revision": 44,
+      "time": 1794593235.086247,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account hard_signal backtest/result/20261114_020556_wkric_20261114_hard_signal"
+      }
+    },
+    {
+      "revision": 45,
+      "time": 1794593236.9712782,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account soft_signal"
+      }
+    },
+    {
+      "revision": 46,
+      "time": 1794593313.416339,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account soft_signal backtest/result/20261114_020717_wkric_20261114_soft_signal"
+      }
+    },
+    {
+      "revision": 47,
+      "time": 1794593315.246238,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account hard_entry"
+      }
+    },
+    {
+      "revision": 48,
+      "time": 1794593392.2568479,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account hard_entry backtest/result/20261114_020835_wkric_20261114_hard_entry"
+      }
+    },
+    {
+      "revision": 49,
+      "time": 1794593393.429569,
+      "event": {
+        "type": "note",
+        "text": "P confirmed after full-calendar reverse top3 replay: identical own-style holdings, fees and both model metrics. Run four experts under the original gate; retain D/F/T-only fallback accounts as sensitivity. No model refit."
+      }
+    },
+    {
+      "revision": 50,
+      "time": 1794593397.410774,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account four_hard_signal"
+      }
+    },
+    {
+      "revision": 51,
+      "time": 1794593472.939422,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account four_hard_signal backtest/result/20261114_020957_wkric_20261114_four_hard_signal"
+      }
+    },
+    {
+      "revision": 52,
+      "time": 1794593474.755574,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account four_soft_signal"
+      }
+    },
+    {
+      "revision": 53,
+      "time": 1794593550.219695,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account four_soft_signal backtest/result/20261114_021115_wkric_20261114_four_soft_signal"
+      }
+    },
+    {
+      "revision": 54,
+      "time": 1794593552.0398788,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account four_hard_entry"
+      }
+    },
+    {
+      "revision": 55,
+      "time": 1794593628.2807539,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account four_hard_entry backtest/result/20261114_021232_wkric_20261114_four_hard_entry"
+      }
+    },
+    {
+      "revision": 56,
+      "time": 1794593677.071629,
+      "event": {
+        "type": "result",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+        "outcome": "succeeded",
+        "evaluation": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/T.json",
+        "evidence": [
+          "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/D.json",
+          "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/F.json",
+          "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/T.json",
+          "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/P.json",
+          "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/four-style-comparison.json"
+        ]
+      }
+    },
+    {
+      "revision": 57,
+      "time": 1794593680.109504,
+      "event": {
+        "type": "registered",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114"
+      }
+    },
+    {
+      "revision": 58,
+      "time": 1794593680.215678,
+      "event": {
+        "type": "reported",
+        "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114"
+      }
+    },
+    {
+      "revision": 59,
+      "time": 1794593680.43743,
+      "event": {
+        "type": "reflection",
+        "round": 1,
+        "new_evidence": true,
+        "observations": "满足同风格净年化与夏普均高于 v5 的专家为 D、F、T、P。该比较为历史选型。",
+        "interpretation": "四个专家已逐轮反序，已在各自风格对照 v5；已按前置判据决定实际账户。",
+        "next_hypothesis": ""
+      }
+    },
+    {
+      "revision": 60,
+      "time": 1794593680.4420102,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 61,
+      "time": 1794593691.849419,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/cleanup.json"
+      }
+    },
+    {
+      "revision": 62,
+      "time": 1794593692.0660548,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "jobs": {
+    "weekly-h5-rankic-T-s42-a1": {
+      "job_id": "weekly-h5-rankic-T-s42-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "T",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794590496.329391,
+      "finished_at": 1794590627.944064,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s42-a1.json",
+          "sha256": "558989f7bc43bde70815d18afc105d93638096d0c71764d2820a818571333da6",
+          "size": 39125
+        },
+        {
+          "path": "backtest/result/wkric_20261114_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "1e631ff30dac1786b17f44a0ff30463a74d3eddc602b499cface7b6bf45885d4",
+          "size": 1388523
+        }
+      ]
+    },
+    "weekly-h5-rankic-T-s1000-a1": {
+      "job_id": "weekly-h5-rankic-T-s1000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "T",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794590628.527636,
+      "finished_at": 1794590787.345666,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s1000-a1.json",
+          "sha256": "3688b8dbdb4b1ad4b82091c4d3bc603289547032837740f66efdd3eba849fbfb",
+          "size": 45608
+        },
+        {
+          "path": "backtest/result/wkric_20261114_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f4c5fd1fc8a8141a89d0167b0187c92940eda07323143370cd84caaa564f219c",
+          "size": 1835350
+        }
+      ]
+    },
+    "weekly-h5-rankic-T-s2000-a1": {
+      "job_id": "weekly-h5-rankic-T-s2000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "T",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794590787.864044,
+      "finished_at": 1794590911.089321,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s2000-a1.json",
+          "sha256": "c96910bb7f80886d6dfad5836c490e5b3966cd19fa2ec0f3f347dcf318c9f5f8",
+          "size": 38117
+        },
+        {
+          "path": "backtest/result/wkric_20261114_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5127c70ff66135416a69724daf52442b86883448238279e1155a3b41e365f3f1",
+          "size": 1290349
+        }
+      ]
+    },
+    "weekly-h5-rankic-T-s3000-a1": {
+      "job_id": "weekly-h5-rankic-T-s3000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "T",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794590911.617878,
+      "finished_at": 1794591066.740556,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s3000-a1.json",
+          "sha256": "3b26b6781dd8758be0ec109f8582154a959023d2ca1d835b21892efaf184c91c",
+          "size": 45616
+        },
+        {
+          "path": "backtest/result/wkric_20261114_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "589fe723b12cd39d987985124674b49e1bd01d59ffa73e9849ff5e51910d3037",
+          "size": 1836306
+        }
+      ]
+    },
+    "weekly-h5-rankic-T-s4000-a1": {
+      "job_id": "weekly-h5-rankic-T-s4000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "T",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591067.286465,
+      "finished_at": 1794591214.5431209,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-T-s4000-a1.json",
+          "sha256": "46fdce5adc489b81066d9e526060bd27afee6938610eafe8e1bc708bb014217e",
+          "size": 43954
+        },
+        {
+          "path": "backtest/result/wkric_20261114_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "48b7278ecc4175a0c8197377d950c28628ca456c21271b2db52751eb12dac4d7",
+          "size": 1750494
+        }
+      ]
+    },
+    "weekly-h5-rankic-P-s42-a1": {
+      "job_id": "weekly-h5-rankic-P-s42-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "P",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591223.508733,
+      "finished_at": 1794591229.989484,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s42-a1.json",
+          "sha256": "57500ac5ec1dd69f7974e26a0cfebb8f32372d8316f94f83bddeb994f495cab2",
+          "size": 22219
+        },
+        {
+          "path": "backtest/result/wkric_20261114_p_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5322c141edbbe3e6d1ecabfd56e722e05bcec77f362e7b6a48012dade01ef212",
+          "size": 192781
+        }
+      ]
+    },
+    "weekly-h5-rankic-P-s1000-a1": {
+      "job_id": "weekly-h5-rankic-P-s1000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "P",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591230.389889,
+      "finished_at": 1794591236.792913,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s1000-a1.json",
+          "sha256": "24407ad99d25907857be18311251ffa82fa1fa248496c77cf58307a8f45ad10f",
+          "size": 22049
+        },
+        {
+          "path": "backtest/result/wkric_20261114_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f4d9b2c96e8817a7710e16bd71193b645d8fc4fe2d78ed5b306ba5b642097e6c",
+          "size": 184009
+        }
+      ]
+    },
+    "weekly-h5-rankic-P-s2000-a1": {
+      "job_id": "weekly-h5-rankic-P-s2000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "P",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591237.2189,
+      "finished_at": 1794591243.6528971,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s2000-a1.json",
+          "sha256": "b58e18486e8ed61a1b6dcd794a1ff9a2626326085b149175824d41b65379078f",
+          "size": 21008
+        },
+        {
+          "path": "backtest/result/wkric_20261114_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e000d023a3687866330ed6f0523bf2b4258bb81a9a2a8fbab42b11043538c033",
+          "size": 136370
+        }
+      ]
+    },
+    "weekly-h5-rankic-P-s3000-a1": {
+      "job_id": "weekly-h5-rankic-P-s3000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "P",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591244.105943,
+      "finished_at": 1794591250.381609,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s3000-a1.json",
+          "sha256": "1ce1a3edfe41586014a29cfa4095b6af7234b309a9ae4793a51ca1230a4b9253",
+          "size": 20842
+        },
+        {
+          "path": "backtest/result/wkric_20261114_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5d9fcda6669fa182f8c855f7d3587c452cb473604cb3125c09f775a153509c14",
+          "size": 131349
+        }
+      ]
+    },
+    "weekly-h5-rankic-P-s4000-a1": {
+      "job_id": "weekly-h5-rankic-P-s4000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "P",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591250.797602,
+      "finished_at": 1794591256.82069,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-P-s4000-a1.json",
+          "sha256": "c2232806297922cc379e201afa7b2184fa32ed991908aaee72c70bae2aed2945",
+          "size": 21660
+        },
+        {
+          "path": "backtest/result/wkric_20261114_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7e6b5cd2bbdd8264bbd53edb688b4e715f8a4316bea1d4535d2f17633c8f9c2b",
+          "size": 166912
+        }
+      ]
+    },
+    "weekly-h5-rankic-D-s42-a1": {
+      "job_id": "weekly-h5-rankic-D-s42-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "D",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591275.5431738,
+      "finished_at": 1794591361.4296582,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s42-a1.json",
+          "sha256": "c10f1ff19b92d66cb363f573019b35ac121e4658d8624d35959ca25639c4fe7b",
+          "size": 28908
+        },
+        {
+          "path": "backtest/result/wkric_20261114_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "de2083aabe3dca53dbc8c3911b399e46199c4243d2e766d785fb810775859999",
+          "size": 749638
+        }
+      ]
+    },
+    "weekly-h5-rankic-D-s1000-a1": {
+      "job_id": "weekly-h5-rankic-D-s1000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "D",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591361.949651,
+      "finished_at": 1794591429.345671,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s1000-a1.json",
+          "sha256": "bd6f8834ebd9e572dd80739789a62eea00cadaaf6ae24209b8a406a9f0608ac4",
+          "size": 26133
+        },
+        {
+          "path": "backtest/result/wkric_20261114_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "00632a1f283f8ebef6b6176323bbdc172cb9a0ed638a9e0e8f01817ec3f2eb56",
+          "size": 538742
+        }
+      ]
+    },
+    "weekly-h5-rankic-D-s2000-a1": {
+      "job_id": "weekly-h5-rankic-D-s2000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "D",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591429.868468,
+      "finished_at": 1794591505.126411,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s2000-a1.json",
+          "sha256": "b3756db4ea21100a1127424fe6bca816bce283cdb9b3d37fcd1f2a71004dafb8",
+          "size": 26556
+        },
+        {
+          "path": "backtest/result/wkric_20261114_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "265da7b766d49fadcc60ceb70df59f2e5aeb9c26c880ec1bd703523e77c19528",
+          "size": 584498
+        }
+      ]
+    },
+    "weekly-h5-rankic-D-s3000-a1": {
+      "job_id": "weekly-h5-rankic-D-s3000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "D",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591505.647788,
+      "finished_at": 1794591583.370181,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s3000-a1.json",
+          "sha256": "ad2ad0d436d63b5ef74498eb2628a9b440d8fa1f9762baa3d59dbd104387fc76",
+          "size": 26949
+        },
+        {
+          "path": "backtest/result/wkric_20261114_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "06a7dbb5478f94ce990d6f83a009063001f96863af1ea56bdc7ed3cbe9de0121",
+          "size": 603708
+        }
+      ]
+    },
+    "weekly-h5-rankic-D-s4000-a1": {
+      "job_id": "weekly-h5-rankic-D-s4000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "D",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591583.912235,
+      "finished_at": 1794591672.6720781,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-D-s4000-a1.json",
+          "sha256": "9cbf6ed78af6ba7e353a64cb74c1b1d13cd9acf2acbc81d864aa3e9291a16faf",
+          "size": 30164
+        },
+        {
+          "path": "backtest/result/wkric_20261114_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "be7b1b642cbe3f937ea83021ae2e8b10fb9237df3c19d192890ce8a5713edd87",
+          "size": 813837
+        }
+      ]
+    },
+    "weekly-h5-rankic-F-s42-a1": {
+      "job_id": "weekly-h5-rankic-F-s42-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "F",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591684.2962828,
+      "finished_at": 1794591702.422771,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s42-a1.json",
+          "sha256": "a7ae2d4ecf7196886f2b3fef0907860111a95892c22f756bb0cda66962375a41",
+          "size": 22288
+        },
+        {
+          "path": "backtest/result/wkric_20261114_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "466ad371dacbe4027fe271bf89d04b24dc498d12e03f97161b55e0ae359f86fe",
+          "size": 255839
+        }
+      ]
+    },
+    "weekly-h5-rankic-F-s1000-a1": {
+      "job_id": "weekly-h5-rankic-F-s1000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "F",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591702.8429508,
+      "finished_at": 1794591722.3891048,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s1000-a1.json",
+          "sha256": "fa39e1e4528a80ac706e07d5e728f2a0480d7ad26fff8e54a04274017578c220",
+          "size": 22108
+        },
+        {
+          "path": "backtest/result/wkric_20261114_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "eedddc41e6f24017bb73a967657c5d33b06d8bbb8710c8014a79044c70b9acb6",
+          "size": 247216
+        }
+      ]
+    },
+    "weekly-h5-rankic-F-s2000-a1": {
+      "job_id": "weekly-h5-rankic-F-s2000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "F",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591722.816998,
+      "finished_at": 1794591743.2756858,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s2000-a1.json",
+          "sha256": "1676764b24eb497cd28a071f506a50041662e239e622718bc6e606f454a1d953",
+          "size": 22692
+        },
+        {
+          "path": "backtest/result/wkric_20261114_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f8b6e0134cdb947dfa74e48082d553cf0923ac7a9f2986351904e130a1b326d7",
+          "size": 279542
+        }
+      ]
+    },
+    "weekly-h5-rankic-F-s3000-a1": {
+      "job_id": "weekly-h5-rankic-F-s3000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "F",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591743.7046552,
+      "finished_at": 1794591761.384659,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s3000-a1.json",
+          "sha256": "413013600f12be9b190a659c4094b4f3714a64fb1e4ad17d874a8136f37b3af8",
+          "size": 21924
+        },
+        {
+          "path": "backtest/result/wkric_20261114_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "4945154af276aaaeb3b765a7f4b29fb53217fd7c726a0b5ed533c481af2770b8",
+          "size": 231064
+        }
+      ]
+    },
+    "weekly-h5-rankic-F-s4000-a1": {
+      "job_id": "weekly-h5-rankic-F-s4000-a1",
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "attempt_id": "weekly-h5-quantile10-rankic-20261114/early-stopping/weekly-h5-quantile10-rankic-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-weekly-rankic.kOqbzG/run.py",
+        "fit",
+        "F",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794591761.8141282,
+      "finished_at": 1794591781.4011898,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/weekly-h5-rankic-F-s4000-a1.json",
+          "sha256": "db08695bc87c8c8d4d12c88788850f44beb989990a777a6e7a6918bb7b9f80f6",
+          "size": 23105
+        },
+        {
+          "path": "backtest/result/wkric_20261114_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7caca8da1bb610ced52c92dfe8eae843ea062c7098a0570e26a94accd7e5ae19",
+          "size": 309538
+        }
+      ]
+    }
+  },
+  "checksum": "146060c1fd0767cf92ea60ba24a0b0ef5c295ce13ba94b9bf2f68a20a7076da8"
+}

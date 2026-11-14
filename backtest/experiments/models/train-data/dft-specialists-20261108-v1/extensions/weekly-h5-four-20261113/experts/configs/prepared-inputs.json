@@ -1,0 +1,153 @@
+{
+  "data_version": "2026-11-03",
+  "frozen_market_inventory": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/provider-inputs.json.gz",
+    "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+    "size": 1937741
+  },
+  "baseline_manifest": {
+    "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+    "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+    "size": 9535
+  },
+  "feature_manifest": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+    "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+    "size": 11178449
+  },
+  "validation_manifest": {
+    "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+    "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+    "size": 11122379
+  },
+  "day_weights": {
+    "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+    "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+    "size": 65715
+  },
+  "frozen_st": {
+    "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+    "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+    "size": 30202983
+  },
+  "training_target": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/data/h5-quantile10.pkl",
+    "sha256": "55dca8ae93aebbe802e30c149868f3afcaa4398ecdc258f54794a195fcc3ee5c",
+    "size": 65703978
+  },
+  "target_audit": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/docs/h5-target.json",
+    "sha256": "398a1a17cbd035e19b0bffa464e59ac9302ff21c34fe10796b766d2c688c0797",
+    "size": 45208
+  },
+  "granularity": "weekly-h5-four",
+  "eval_regime": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+    "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+    "size": 274553
+  },
+  "subsets": {
+    "ALL": {
+      "rows": 5451056,
+      "row_share": 1.0,
+      "dates": 2971,
+      "start": "2004-01-07",
+      "end": "2020-07-17",
+      "target": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-ALL.pkl",
+        "sha256": "d43806b89139eecb06ae6f2c083b7f0f923c7beb0481c1461d2bdb0527d20f17",
+        "size": 65488350
+      },
+      "label_sha256": "3c739ee29dff1ecdc2ad8906bfdb035d18a947c9128e1454d44d9c5b1593849b",
+      "weight_sha256": "cbe4fb5f469ffff0523cc400f11e4b3736358eda3b5bd49d0398ba7d66c8ea63"
+    },
+    "D": {
+      "rows": 1988642,
+      "row_share": 0.36481775274368855,
+      "dates": 1071,
+      "start": "2004-02-02",
+      "end": "2020-07-17",
+      "target": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-D.pkl",
+        "sha256": "015062730ff204ae2d076b24c291cb3712c404023dd28a34af49071047eaedd5",
+        "size": 23939382
+      },
+      "label_sha256": "e8235ba051cafb95df6369dbb97a8f4d4820120ce2fc4f665e3fb05be467f60d",
+      "weight_sha256": "05c61d82cc54df1fdedb5a5d6dea710d8cd54aebe4ae605abdc24b60e6624bfa"
+    },
+    "F": {
+      "rows": 1053160,
+      "row_share": 0.1932029316888324,
+      "dates": 614,
+      "start": "2004-01-07",
+      "end": "2020-05-29",
+      "target": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-F.pkl",
+        "sha256": "268ed5e0f6385cafccb7e5f018b6a910b62f963fd3262cc078289f15a1be52a3",
+        "size": 12713598
+      },
+      "label_sha256": "9ee2cd6c0e0a5fba26de3638d89aa8943304b5fe1124aaf8177da28d829d7706",
+      "weight_sha256": "e57cebcbfc20b230c7a1d34e079afbf26796988d7d3a84398656f7c33358ff1e"
+    },
+    "T": {
+      "rows": 2038893,
+      "row_share": 0.3740363335104244,
+      "dates": 1044,
+      "start": "2004-02-09",
+      "end": "2020-07-03",
+      "target": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-T.pkl",
+        "sha256": "d8f34d76fea028cd396965deec086823e2ca5365ff91f33bb73823a4b45b35e8",
+        "size": 24542394
+      },
+      "label_sha256": "6d85c54bc10d8decdc5028667fdd108f3712aea1a449f3aba0ccb295149e9c4a",
+      "weight_sha256": "8b114444e022a3d76bb91b4b0818509a854bb9de4c1f18c1abbc46bf1f422d80"
+    },
+    "P": {
+      "rows": 370361,
+      "row_share": 0.06794298205705464,
+      "dates": 242,
+      "start": "2006-06-05",
+      "end": "2020-02-07",
+      "target": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-P.pkl",
+        "sha256": "9e3db5116ca661b973374f0d6ad7eac13aafd013063bfc76a395ab68c4f4227b",
+        "size": 4520010
+      },
+      "label_sha256": "4e1761ed42b677213a47bd5f63a7705d1c5b828400273a58527bf7591acd3459",
+      "weight_sha256": "e2ace0f1f1feae604fffdffba13567100c379ab1e77dc51ce52545e0fff27990"
+    }
+  },
+  "eligible_train_rows": 5451056,
+  "eligible_train_dates": 2971,
+  "eval_day_counts": {
+    "D": 646,
+    "T": 642,
+    "F": 137,
+    "P": 23,
+    "ALL": 1448
+  },
+  "train_day_counts": {
+    "D": 1071,
+    "T": 1044,
+    "F": 614,
+    "P": 242,
+    "ALL": 2971
+  },
+  "train_boundary": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/train-boundary-audit.json",
+    "sha256": "8a9f79108f8252286303934c0ed0aaae9df73ec6c9bed7864c0f14bb1d611879",
+    "size": 765
+  },
+  "train_date_eligibility": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/train-date-eligibility.csv",
+    "sha256": "00414e0242f6c782b644fff892c6fc6da0721cb8329245255a3625c70ca7e553",
+    "size": 163572
+  },
+  "eval_four_label_counts": {
+    "D": 646,
+    "T": 642,
+    "F": 137,
+    "P": 23
+  }
+}

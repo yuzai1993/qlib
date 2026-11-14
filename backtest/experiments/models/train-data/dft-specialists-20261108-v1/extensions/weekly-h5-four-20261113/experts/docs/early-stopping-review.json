@@ -1,0 +1,557 @@
+{
+  "new_fits": 0,
+  "mode": "recorded-trajectory-only",
+  "scope": "Full 1448-session turnover and one scoring calendar per family. Reversed stock tie priority is a diagnostic and its unobserved stopping round is never extrapolated.",
+  "models": [
+    {
+      "family": "ALL",
+      "seed": 42,
+      "scored_days": 1448,
+      "forward": {
+        "best_iteration_observed": 34,
+        "best_score_observed": 0.25814960143383703,
+        "stop_round_observed": 84,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 34,
+        "best_score_observed": 0.25814960143383703,
+        "stop_round_observed": 84,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "ALL",
+      "seed": 1000,
+      "scored_days": 1448,
+      "forward": {
+        "best_iteration_observed": 32,
+        "best_score_observed": 0.27390506123428576,
+        "stop_round_observed": 82,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 32,
+        "best_score_observed": 0.27390506123428576,
+        "stop_round_observed": 82,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "ALL",
+      "seed": 2000,
+      "scored_days": 1448,
+      "forward": {
+        "best_iteration_observed": 48,
+        "best_score_observed": 0.27219813028272277,
+        "stop_round_observed": 98,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 48,
+        "best_score_observed": 0.27219813028272277,
+        "stop_round_observed": 98,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "ALL",
+      "seed": 3000,
+      "scored_days": 1448,
+      "forward": {
+        "best_iteration_observed": 10,
+        "best_score_observed": 0.26140348126175517,
+        "stop_round_observed": 60,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 15,
+        "best_score_observed": 0.2612574136482906,
+        "stop_round_observed": null,
+        "truncated": true,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 66,
+      "short_tree": false
+    },
+    {
+      "family": "ALL",
+      "seed": 4000,
+      "scored_days": 1448,
+      "forward": {
+        "best_iteration_observed": 78,
+        "best_score_observed": 0.24861446217457825,
+        "stop_round_observed": 128,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 78,
+        "best_score_observed": 0.24861446217457825,
+        "stop_round_observed": 128,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "D",
+      "seed": 42,
+      "scored_days": 646,
+      "forward": {
+        "best_iteration_observed": 16,
+        "best_score_observed": 0.3215847435335126,
+        "stop_round_observed": 66,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 16,
+        "best_score_observed": 0.3215847435335126,
+        "stop_round_observed": 66,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 8,
+      "short_tree": false
+    },
+    {
+      "family": "D",
+      "seed": 1000,
+      "scored_days": 646,
+      "forward": {
+        "best_iteration_observed": 18,
+        "best_score_observed": 0.32194299374226826,
+        "stop_round_observed": 68,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 18,
+        "best_score_observed": 0.32194299374226826,
+        "stop_round_observed": 68,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 1,
+      "short_tree": false
+    },
+    {
+      "family": "D",
+      "seed": 2000,
+      "scored_days": 646,
+      "forward": {
+        "best_iteration_observed": 50,
+        "best_score_observed": 0.2678544056541544,
+        "stop_round_observed": 100,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 50,
+        "best_score_observed": 0.2678544056541544,
+        "stop_round_observed": 100,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "D",
+      "seed": 3000,
+      "scored_days": 646,
+      "forward": {
+        "best_iteration_observed": 28,
+        "best_score_observed": 0.2970014343688765,
+        "stop_round_observed": 78,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 28,
+        "best_score_observed": 0.2970014343688765,
+        "stop_round_observed": 78,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "D",
+      "seed": 4000,
+      "scored_days": 646,
+      "forward": {
+        "best_iteration_observed": 44,
+        "best_score_observed": 0.30319459912642605,
+        "stop_round_observed": 94,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 44,
+        "best_score_observed": 0.30319459912642605,
+        "stop_round_observed": 94,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "F",
+      "seed": 42,
+      "scored_days": 137,
+      "forward": {
+        "best_iteration_observed": 5,
+        "best_score_observed": 3.1012114407891374,
+        "stop_round_observed": 55,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 5,
+        "best_score_observed": 3.1665815163325073,
+        "stop_round_observed": 55,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 687,
+      "short_tree": true
+    },
+    {
+      "family": "F",
+      "seed": 1000,
+      "scored_days": 137,
+      "forward": {
+        "best_iteration_observed": 13,
+        "best_score_observed": 3.0763520023459887,
+        "stop_round_observed": 63,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 6,
+        "best_score_observed": 3.0828480386276023,
+        "stop_round_observed": 56,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 32,
+      "short_tree": false
+    },
+    {
+      "family": "F",
+      "seed": 2000,
+      "scored_days": 137,
+      "forward": {
+        "best_iteration_observed": 47,
+        "best_score_observed": 3.104002203376424,
+        "stop_round_observed": 97,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 47,
+        "best_score_observed": 3.104002203376424,
+        "stop_round_observed": 97,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "F",
+      "seed": 3000,
+      "scored_days": 137,
+      "forward": {
+        "best_iteration_observed": 19,
+        "best_score_observed": 3.0798664620534297,
+        "stop_round_observed": 69,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 19,
+        "best_score_observed": 3.0798664620534297,
+        "stop_round_observed": 69,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 1,
+      "short_tree": false
+    },
+    {
+      "family": "F",
+      "seed": 4000,
+      "scored_days": 137,
+      "forward": {
+        "best_iteration_observed": 8,
+        "best_score_observed": 3.203189861961565,
+        "stop_round_observed": 58,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 8,
+        "best_score_observed": 3.217743659632829,
+        "stop_round_observed": 58,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 299,
+      "short_tree": false
+    },
+    {
+      "family": "T",
+      "seed": 42,
+      "scored_days": 642,
+      "forward": {
+        "best_iteration_observed": 16,
+        "best_score_observed": 0.38413096414302694,
+        "stop_round_observed": 66,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 4,
+        "best_score_observed": 0.39065463260470007,
+        "stop_round_observed": 54,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "T",
+      "seed": 1000,
+      "scored_days": 642,
+      "forward": {
+        "best_iteration_observed": 19,
+        "best_score_observed": 0.3667988503141528,
+        "stop_round_observed": 69,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 1,
+        "best_score_observed": 0.4143077886530083,
+        "stop_round_observed": 51,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "T",
+      "seed": 2000,
+      "scored_days": 642,
+      "forward": {
+        "best_iteration_observed": 52,
+        "best_score_observed": 0.4004676836278541,
+        "stop_round_observed": 102,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 1,
+        "best_score_observed": 0.4091486225922177,
+        "stop_round_observed": 51,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 0,
+      "short_tree": false
+    },
+    {
+      "family": "T",
+      "seed": 3000,
+      "scored_days": 642,
+      "forward": {
+        "best_iteration_observed": 9,
+        "best_score_observed": 0.32605734579145723,
+        "stop_round_observed": 59,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 1,
+        "best_score_observed": 0.4352156480857706,
+        "stop_round_observed": 51,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 55,
+      "short_tree": false
+    },
+    {
+      "family": "T",
+      "seed": 4000,
+      "scored_days": 642,
+      "forward": {
+        "best_iteration_observed": 6,
+        "best_score_observed": 0.38187678259521435,
+        "stop_round_observed": 56,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 1,
+        "best_score_observed": 0.4076686874637949,
+        "stop_round_observed": 51,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 383,
+      "short_tree": false
+    },
+    {
+      "family": "P",
+      "seed": 42,
+      "scored_days": 23,
+      "forward": {
+        "best_iteration_observed": 15,
+        "best_score_observed": 4.634895576048344,
+        "stop_round_observed": 65,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 15,
+        "best_score_observed": 4.634895576048344,
+        "stop_round_observed": 65,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 22,
+      "short_tree": false
+    },
+    {
+      "family": "P",
+      "seed": 1000,
+      "scored_days": 23,
+      "forward": {
+        "best_iteration_observed": 23,
+        "best_score_observed": 4.883791282097528,
+        "stop_round_observed": 73,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 23,
+        "best_score_observed": 4.883791282097528,
+        "stop_round_observed": 73,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 4,
+      "short_tree": false
+    },
+    {
+      "family": "P",
+      "seed": 2000,
+      "scored_days": 23,
+      "forward": {
+        "best_iteration_observed": 20,
+        "best_score_observed": 4.7040991113372135,
+        "stop_round_observed": 70,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 1,
+        "best_score_observed": 4.814485857866569,
+        "stop_round_observed": 51,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 4,
+      "short_tree": false
+    },
+    {
+      "family": "P",
+      "seed": 3000,
+      "scored_days": 23,
+      "forward": {
+        "best_iteration_observed": 2,
+        "best_score_observed": 4.3939530038262395,
+        "stop_round_observed": 52,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 2,
+        "best_score_observed": 4.4996527310138195,
+        "stop_round_observed": 52,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": false,
+      "best_round_tie_days": 1210,
+      "short_tree": true
+    },
+    {
+      "family": "P",
+      "seed": 4000,
+      "scored_days": 23,
+      "forward": {
+        "best_iteration_observed": 4,
+        "best_score_observed": 4.60133729846052,
+        "stop_round_observed": 54,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_tie_priority": {
+        "best_iteration_observed": 1,
+        "best_score_observed": 4.70108804996225,
+        "stop_round_observed": 51,
+        "truncated": false,
+        "hit_cap": false
+      },
+      "reverse_observed_best_changed": true,
+      "best_round_tie_days": 599,
+      "short_tree": true
+    }
+  ]
+}

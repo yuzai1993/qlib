@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>周度 H5 风格专家实验</title>
+<style>body{max-width:54rem;margin:3rem auto;padding:0 1rem;font:16px/1.65 system-ui,sans-serif;color:#20313b}h1,h2{line-height:1.3}a{color:#146470}</style>
+<h1>周度 H5 风格专家实验</h1>
+<ol><li><a href="../models/early-stopping/weekly-h5-quantile10-rankic-20261114/reports/detail.html">D、F、T、恐慌四风格专家 · 十档 RankIC 早停</a></li>
+<li><a href="../models/training-target/weekly-h5-top3-mix-20261114/reports/detail.html">四风格专家 · Top3 SPO+ 训练目标</a></li></ol>
+<h2>Top3 SPO+ 的 T 风格待分析问题</h2><p>相对纯十档 RankIC 早停专家，只在训练损失中加入 Top3 SPO+ 时，四种风格的五种子合成 RankIC 分别为D 0.19012 → 0.19096，F 0.20888 → 0.21262，恐慌 0.23946 → 0.24950，T 0.07421 → 0.07048。</p><p>训练和早停同时引入 Top3 目标时，T 的 5 个单种子净年化和夏普均提高，但合成组合的净年化从 32.71% 降至 25.00%，夏普从 0.801 降至 0.638。单种子 Top3 与合成 Top3 的平均重合数从 1.76 只降至 0.91 只。</p><p>待分析：T 风格下，哪些交易日和股票造成各种子的头部持仓分歧，以及这种分歧能否解释合成后的收益下降。当前仅记录现象，原因待验证。</p>
+<p><a href="../models/training-target/weekly-h5-top3-mix-20261114/metrics/comparison.json">逐风格和逐种子指标</a> · <a href="../models/training-target/weekly-h5-top3-mix-20261114/metrics/T-ensemble-overlap.json">T 风格持仓重合统计</a></p></html>

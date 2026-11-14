@@ -1,0 +1,87 @@
+{
+  "features": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/data/features.parquet",
+    "sha256": "6dcaa95d623e72f70f019bd43b2d3ad0ee5a73514782e4197fd3bcfa90de381b",
+    "size": 16361596
+  },
+  "targets": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/data/targets.parquet",
+    "sha256": "a832fa1c9045a7e663fda3249a96a8c7b25bbcbe0a64eaa31de950ca704a49ab",
+    "size": 152387
+  },
+  "manifest": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/configs/feature-manifest.json",
+    "sha256": "7fad6926e9c615511a410682d623b59ff690feacc65673444b20c022f7420b0c",
+    "size": 13655
+  },
+  "frozen_partition": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+    "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+    "size": 274553
+  },
+  "train": {
+    "n_days": 4018,
+    "signal_start": "2004-01-02",
+    "signal_end": "2020-07-16",
+    "target_start": "2004-01-05",
+    "target_end": "2020-07-17",
+    "last_label_ready": "2020-07-27",
+    "days_by_class": {
+      "D": 1504,
+      "F": 754,
+      "T": 1484,
+      "P": 276
+    },
+    "weeks_by_class": {
+      "D": 313,
+      "F": 162,
+      "T": 308,
+      "P": 57
+    }
+  },
+  "eval": {
+    "n_days": 1453,
+    "signal_start": "2020-08-03",
+    "signal_end": "2026-07-30",
+    "target_start": "2020-08-04",
+    "target_end": "2026-07-31",
+    "last_label_ready": "2026-08-10",
+    "days_by_class": {
+      "D": 646,
+      "F": 142,
+      "T": 642,
+      "P": 23
+    },
+    "weeks_by_class": {
+      "D": 136,
+      "F": 32,
+      "T": 134,
+      "P": 5
+    }
+  },
+  "original_nfeatures": 361,
+  "derived_nfeatures": 38,
+  "core_nfeatures": 64,
+  "source_asof_reconstruction_probes": [
+    "2007-05-31",
+    "2015-07-09",
+    "2020-07-31",
+    "2024-02-05",
+    "2026-07-23"
+  ],
+  "exit_after_evaluation_end": 10,
+  "train_excluded_immature_signal_dates": [
+    "2020-07-17",
+    "2020-07-20",
+    "2020-07-21",
+    "2020-07-22",
+    "2020-07-23",
+    "2020-07-24",
+    "2020-07-27",
+    "2020-07-28",
+    "2020-07-29",
+    "2020-07-30",
+    "2020-07-31"
+  ],
+  "external_inputs": "The original 6 external probes lack verified historic publication time and were not used."
+}

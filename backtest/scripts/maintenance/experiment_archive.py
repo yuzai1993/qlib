@@ -516,7 +516,8 @@ def classify_experiment(row: dict) -> dict:
     """Classify historical research identity without changing phase or direction."""
     report = str(row.get("report_kind") or "")
     kind = "strategy" if row.get("phase") == "S" or report.startswith("phase_m_v1_b") else "model"
-    all_a = row.get("phase_m_protocol") == "v1" or report.startswith("phase_m_v1_b")
+    all_a = (row.get("phase_m_protocol") == "v1" or report.startswith("phase_m_v1_b")
+             or row.get("classification_protocol") == "monthly-k4-next-day-v1")
     if kind == "model" and (report == "eval_protocol_diag" or str(row.get("exp_id", "")).startswith("diag/")):
         source = " ".join(str(row.get(key, "")) for key in ("eval_protocol", "baseline_ref", "hypothesis"))
         all_a = all_a or any(marker in source.lower() for marker in ("全a", "all_a", "all-a", "phase-m-v1"))

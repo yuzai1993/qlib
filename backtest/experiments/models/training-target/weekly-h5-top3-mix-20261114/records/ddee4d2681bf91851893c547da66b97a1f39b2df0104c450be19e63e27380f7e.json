@@ -1,0 +1,193 @@
+{
+  "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+  "archive_path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114",
+  "date": "2026-11-14",
+  "phase": "M",
+  "state": "completed",
+  "phase_m_protocol": "v1",
+  "direction": "training-target",
+  "changed_axes": [
+    "top3_return_in_training_and_early_stop_factorial"
+  ],
+  "display_name": "周度 H5 四专家 · Top3 收益混合训练与早停",
+  "hypothesis": "用 20% 的 Top3 选股收益代理损失和 20% 的 Top3 净收益早停，检验能否弥补纯 RankIC 早停专家的头部收益损失，同时保留截面排序能力。",
+  "baseline_ref": "training-target/h20-quantile10-p50-v5",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "test_pools": [
+    "all"
+  ],
+  "data_version": "2026-11-03",
+  "evaluation_mode": "historical_selection_window",
+  "representative_candidate": "joint-T full calendar; not an oracle strategy",
+  "portable_eval_output": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-T.json",
+  "metrics": {
+    "n_days": 1448,
+    "ann_excess": 0.0939292916458659,
+    "ir": 0.26639271202200676,
+    "ann": 0.18361079140152936,
+    "beta": 0.6574527729362886,
+    "ann_alpha": 0.12464944070608333,
+    "appraisal_ir": 0.393128584644969,
+    "turnover_period": 0.9762069762069763,
+    "turnover": 0.19524139524139525,
+    "ann_cost": 0.042750055902055904,
+    "net_ann_excess": 0.051179235743809996,
+    "net_ann": 0.14086073549947345,
+    "net_ann_alpha": 0.08189938480402742,
+    "net_ann_vol": 0.42368544016328946,
+    "net_sharpe": 0.3324653673375827,
+    "rank_ic_mean": 0.07026636927406059
+  },
+  "result_dirs": [
+    "backtest/result/h5mix_20261114_stop_p_s42",
+    "backtest/result/h5mix_20261114_joint_p_s42",
+    "backtest/result/h5mix_20261114_train_p_s42",
+    "backtest/result/h5mix_20261114_stop_p_s1000",
+    "backtest/result/h5mix_20261114_joint_p_s1000",
+    "backtest/result/h5mix_20261114_train_p_s1000",
+    "backtest/result/h5mix_20261114_stop_p_s2000",
+    "backtest/result/h5mix_20261114_joint_p_s2000",
+    "backtest/result/h5mix_20261114_train_p_s2000",
+    "backtest/result/h5mix_20261114_stop_p_s3000",
+    "backtest/result/h5mix_20261114_joint_p_s3000",
+    "backtest/result/h5mix_20261114_train_p_s3000",
+    "backtest/result/h5mix_20261114_stop_p_s4000",
+    "backtest/result/h5mix_20261114_joint_p_s4000",
+    "backtest/result/h5mix_20261114_train_p_s4000",
+    "backtest/result/h5mix_20261114_stop_t_s42",
+    "backtest/result/h5mix_20261114_joint_t_s42",
+    "backtest/result/h5mix_20261114_train_t_s42",
+    "backtest/result/h5mix_20261114_stop_t_s1000",
+    "backtest/result/h5mix_20261114_joint_t_s1000",
+    "backtest/result/h5mix_20261114_train_t_s1000",
+    "backtest/result/h5mix_20261114_stop_t_s2000",
+    "backtest/result/h5mix_20261114_joint_t_s2000",
+    "backtest/result/h5mix_20261114_train_t_s2000",
+    "backtest/result/h5mix_20261114_stop_t_s3000",
+    "backtest/result/h5mix_20261114_joint_t_s3000",
+    "backtest/result/h5mix_20261114_train_t_s3000",
+    "backtest/result/h5mix_20261114_stop_t_s4000",
+    "backtest/result/h5mix_20261114_joint_t_s4000",
+    "backtest/result/h5mix_20261114_train_t_s4000",
+    "backtest/result/h5mix_20261114_stop_d_s42",
+    "backtest/result/h5mix_20261114_joint_d_s42",
+    "backtest/result/h5mix_20261114_train_d_s42",
+    "backtest/result/h5mix_20261114_stop_d_s1000",
+    "backtest/result/h5mix_20261114_joint_d_s1000",
+    "backtest/result/h5mix_20261114_train_d_s1000",
+    "backtest/result/h5mix_20261114_stop_d_s2000",
+    "backtest/result/h5mix_20261114_joint_d_s2000",
+    "backtest/result/h5mix_20261114_train_d_s2000",
+    "backtest/result/h5mix_20261114_stop_d_s3000",
+    "backtest/result/h5mix_20261114_joint_d_s3000",
+    "backtest/result/h5mix_20261114_train_d_s3000",
+    "backtest/result/h5mix_20261114_stop_d_s4000",
+    "backtest/result/h5mix_20261114_joint_d_s4000",
+    "backtest/result/h5mix_20261114_train_d_s4000",
+    "backtest/result/h5mix_20261114_stop_f_s42",
+    "backtest/result/h5mix_20261114_joint_f_s42",
+    "backtest/result/h5mix_20261114_train_f_s42",
+    "backtest/result/h5mix_20261114_stop_f_s1000",
+    "backtest/result/h5mix_20261114_joint_f_s1000",
+    "backtest/result/h5mix_20261114_train_f_s1000",
+    "backtest/result/h5mix_20261114_stop_f_s2000",
+    "backtest/result/h5mix_20261114_joint_f_s2000",
+    "backtest/result/h5mix_20261114_train_f_s2000",
+    "backtest/result/h5mix_20261114_stop_f_s3000",
+    "backtest/result/h5mix_20261114_joint_f_s3000",
+    "backtest/result/h5mix_20261114_train_f_s3000",
+    "backtest/result/h5mix_20261114_stop_f_s4000",
+    "backtest/result/h5mix_20261114_joint_f_s4000",
+    "backtest/result/h5mix_20261114_train_f_s4000",
+    "backtest/result/20261114_weekly_top3mix",
+    "backtest/result/20261114_114849_wk3mix_20261114_hard_signal",
+    "backtest/result/20261114_115009_wk3mix_20261114_soft_signal",
+    "backtest/result/20261114_115128_wk3mix_20261114_soft_p_v5"
+  ],
+  "configs": [
+    "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/experiment.json",
+    "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/harness-plan.json"
+  ],
+  "detail_report": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/reports/detail.html",
+  "study_summary": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/comparison.json",
+  "internal_candidates": [
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/joint-D.json",
+      "sha256": "6c7b1451b2885c3f5084bc26a067dc867fad4d8ce270167c986990de0866f1b2",
+      "size": 1085
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/joint-F.json",
+      "sha256": "dd376720b2135b04cc52bc8456e358ece71909138f11571874237dabea139bf8",
+      "size": 1083
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/joint-P.json",
+      "sha256": "3e75f77578ff9c438a658847863c4b6bb59ce79848de7a04b6ff0d4d6b2b94b8",
+      "size": 1082
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/joint-T.json",
+      "sha256": "7d2e3391362e90a290c32afdab8f535cd8fa27517b9701e2f025a88f85667902",
+      "size": 1084
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/stop-D.json",
+      "sha256": "6b9338edc5ecd820180b759eeda821d019d15c5d3590d275941fd524197d1ef9",
+      "size": 1077
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/stop-F.json",
+      "sha256": "460416d0b7dac554a29bd63da1c9fa721b3208dcb6c7b3a3984edbf2732ed894",
+      "size": 1073
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/stop-P.json",
+      "sha256": "487dd0a9c19b9218fd6fb1b1fd0ffc18f2db1cb40d429a31cbe3859810b6dc6b",
+      "size": 1072
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/stop-T.json",
+      "sha256": "52108465c44d404d4a46f72e01b35e75dbab7a203ac0aae21efe1681dd4013d8",
+      "size": 1078
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/train-D.json",
+      "sha256": "905b6b56390c02ac604315c77e4277004dd3cb7c37feb8ba2f7bfe148fdd1c51",
+      "size": 1084
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/train-F.json",
+      "sha256": "04b133eea457ea68e7e89a8a263f84812c8ba868ca382e61171f7edb4dfb27f8",
+      "size": 1083
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/train-P.json",
+      "sha256": "77c73cdd036659b26e239415385076c65dc26278e8505f30c89d774bbb73cf45",
+      "size": 1079
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/source-records/train-T.json",
+      "sha256": "072040c91069badbfc0ca08601a44231bd7e25aceb0e447ba680a415dba13df6",
+      "size": 1085
+    }
+  ],
+  "execution_audit": {
+    "fits": 40,
+    "selected_models": 60,
+    "failed": []
+  },
+  "conditional_account_report": "backtest/experiments/strategies/cohort-ladder/weekly-h5-top3-mix-routing-20261114/reports/detail.html",
+  "conclusion": "对纯 RankIC 专家同时改善净年化和夏普的风格为 D、F、P。",
+  "harness": {
+    "campaign_id": "weekly-h5-top3-mix-20261114",
+    "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1"
+  }
+}

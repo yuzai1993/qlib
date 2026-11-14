@@ -1,0 +1,201 @@
+{
+  "id": "weekly-h5-four-20261113",
+  "stage_id": "weekly-h5-four-20261113",
+  "parent_exp_id": "train-data/dft-specialists-20261108-v1",
+  "track": "all_a_model + market-level four-class research",
+  "user_scope": "固定周度H5；个股训练标签改H5；D/F/T/P单列；预测下一交易日的周风格。",
+  "baseline_ref": "training-target/h20-quantile10-p50-v5",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "classes": [
+    "D",
+    "F",
+    "T",
+    "P"
+  ],
+  "partition": "frozen weekly-h5 style4; no reclustering, no smoothing, six sessions from last weekly signal to realization",
+  "train_window": [
+    "2004-01-02",
+    "2020-07-31"
+  ],
+  "evaluation_window": [
+    "2020-08-03",
+    "2026-07-31"
+  ],
+  "stock_signal_end": "2026-07-23",
+  "classifier_signal_end": "2026-07-30",
+  "prior_cost": {
+    "stock_starts": 139,
+    "stock_successes": 135,
+    "classification_fits": 40,
+    "label_kmeans_starts": 8,
+    "label_kmeans_successes": 7
+  },
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+      "size": 12415
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "d10dcea7e23d905c1fcfd25c841d368e3e1662fa3489dbd43dc8754129c4fcba",
+      "size": 64550
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "32d94bffdbb79180587eecb9bf91fc4537283d3cff8db9b581c69250593e04a8",
+      "size": 76004
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/harness-state.json",
+      "sha256": "87580d2a32d6c0a8568d0e1b072db22788b4328f3cf10b538357d1c49dc819b5",
+      "size": 57140
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/docs/style-harness-state.json",
+      "sha256": "09cc30b3ca40b600b2237b61e0ea0f8efee867feb639f9826efff58f04513d52",
+      "size": 189987
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/stage-state.json",
+      "sha256": "8fc9d2004404802f0342691be13ab31bfb6f20679bcbcb21a66fc9b25e751d30",
+      "size": 7616
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/expert-state.json",
+      "sha256": "7bc8a6b25c16cf686f5e2d311733bb4ff53bc77958f8388628ee1e710f49d2dc",
+      "size": 174760
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/partition-verification.json",
+      "sha256": "be3906ed5dbe0de405493b93f08c2083bf9f9eff1d6f81129f8f488d9625ad9c",
+      "size": 17161
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+      "size": 274553
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/period-labels.csv",
+      "sha256": "c86aa88161448131cfcee10b0d0edf891a38540201936a720b8d9dae5be227ad",
+      "size": 211931
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/label-model.joblib",
+      "sha256": "2f89dfd0ed9eaaeb5abf52d2f4a7553628b821c02ff9303516f79092fe7df6ab",
+      "size": 5312
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/label-fit.json",
+      "sha256": "4703a4eaf3db30c07b9eb1a1507655d080db39c73ddff10543ed313478c8716c",
+      "size": 8569
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/forward.parquet",
+      "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+      "size": 353855
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/effective-quotes.npz",
+      "sha256": "735b4818fb660728e3d240ece733bee91eadbcfaefd833485c9259b8e61e10d8",
+      "size": 114105019
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/data/features.parquet",
+      "sha256": "c952ff806ed0b2ad51eb923979471481f1ef0f785adb2da9e21be7bc555cebde",
+      "size": 15319418
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/configs/feature-manifest.json",
+      "sha256": "f85fbf5f94ac41573b48a209f9e3d68966316c6c2859129a2286fdc99bf9c9f7",
+      "size": 170166
+    },
+    {
+      "path": "backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/data/daily-market.parquet",
+      "sha256": "f20d85dfdb0881a6fc207f19fad576a10fdf2bdec620792f56ed463d6479e3da",
+      "size": 1673679
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+      "size": 9535
+    },
+    {
+      "path": "backtest/market_style/modeling.py",
+      "sha256": "a2c9f204e32d39ab6e0c9a1e37ba3cc9a0831912c8bc4776cbd0aae8427137e6",
+      "size": 15782
+    },
+    {
+      "path": "backtest/market_style/evaluation.py",
+      "sha256": "dbce98c0fa32b0443a5613ce5a150535c4c9a4d88422aec8a3cc0061a9d0246e",
+      "size": 20070
+    }
+  ],
+  "stock": {
+    "candidate_styles": [
+      "D",
+      "F",
+      "T",
+      "P"
+    ],
+    "matched_control": "ALL_H5",
+    "target": "raw adjusted close(t+6)/close(t+1)-1; v5 old per-day equal-count deciles fixed affine encoding using actual H5 eligible universe",
+    "training_boundary": "include only original allowed training dates, H5 target exit and frozen weekly style ready_date <=2020-07-31; matched H5 control is exact union of style rows",
+    "features_weights_params": "original 164 features, M0 weights and v5 hyperparameters including 200 max rounds, patience50. Top5×H5 net_ann on own style dates (ALL across dates) with complete 1448-session turnover context.",
+    "evaluation": "unchanged official Top3×H5 daily cross-section zscore 5-seed blend and H5 RankIC; own-style versus frozen v5 main, matched H5 reference and prior H20 experts re-scored on original 4 labels diagnostic; money figures annualized within style, no automatic promotion",
+    "criterion": "strict positive same-date delta on both net_ann and net_sharpe for each style. RankIC, paired seeds, period robustness, uncertainty of five P weeks separately.",
+    "representative_candidate": "ALL_H5 full-period, administrative only"
+  },
+  "representative_candidate": "ALL_H5 full-period",
+  "classifier": {
+    "arms": [
+      "lgb_full",
+      "lgb_core",
+      "logistic_full"
+    ],
+    "primary": "lgb_full",
+    "features": "Frozen 361 historical features available at t close plus as-of weekly market path, lagged end-of-holding returns available by t, last matured weekly factors, and already observable partial fixed-basket returns; no unconfirmed labels. Core=26 historical compact variables plus new weekly observations.",
+    "target": "features at t close, actual next trading day u; y=raw weekly style4 at u; first/last signal and target dates both inside split. Training only with weekly ready_date <=2020-07-31.",
+    "asof": "Date-only bars at close; no external data with unverified publication timestamps; no use of future outcome or intervening last-week label as feature before ready_date.",
+    "recipe": "Existing LGBM multiclass depth5/15 leaves, sqrt_inverse class frequencies calculated in train; 1000 round cap, multi_logloss early stopping patience50 on historical eval directly; one prefix at 50 rounds of the same trajectory with no eval-selected iterations as sensitivity. Logistic as frozen linear comparator, original C=0.1, median/scale learned in train, five seeds. All five probability vectors arithmetic averaged in D,F,T,P order; argmax, no threshold tuning or model choice based on test.",
+    "controls": [
+      "training-prior and majority",
+      "persistence of most recently fully matured weekly label available on signal date"
+    ],
+    "evaluation": [
+      "daily accuracy/macro-F1/balanced accuracy/logloss/Brier/confusion/precision/recall/F1 each class",
+      "first tradable target of each week vs later targets",
+      "within-eval maturity sensitivity and P event hits",
+      "bootstrap by contiguous blocks of 8 weeks"
+    ],
+    "data_version_classifier": "historical frozen 2026-11-06 source stock panel, effective quote panel through 2026-09-30 used only per as-of available endpoints, same historical inputs as frozen weekly H5"
+  },
+  "budget": {
+    "new_kmeans": 0,
+    "stock_scientific_fits": 25,
+    "stock_max_starts": 29,
+    "classification_scientific_fits": 15,
+    "classification_max_starts": 18,
+    "wall_hours": 18,
+    "one_expensive_stock_fit_at_a_time": true
+  },
+  "status_backend": "Both original native protocols are closed. The native classifier only supports monthly-k4-next-day-v1 and matching inner receipts. This bounded supplement owns weekly no-inner classifier starts in docs/stage-state.json and stock starts in experts/docs/expert-state.json under one parent.",
+  "limitations": [
+    "Evaluation also used for early stopping; historical selection study.",
+    "Economic cluster naming reference uses historical full series. Expert H5 maturity, member eligibility and own-style ES differ from original v5; H5 full control and H20 old expert bridge reported.",
+    "P concentrated in few weeks, report raw counts and leave-week sensitivity.",
+    "Classifier date target and stock signal dates have distinct roles and coverage."
+  ]
+}

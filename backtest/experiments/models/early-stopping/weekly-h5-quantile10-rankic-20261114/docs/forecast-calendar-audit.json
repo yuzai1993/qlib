@@ -1,0 +1,17 @@
+{
+  "signal_calendar": 1454,
+  "predictions": 1453,
+  "latest_input": "date close",
+  "predicted_day": "next trading day",
+  "primary": "lgb_full",
+  "no_true_class_columns_read": [
+    "date",
+    "target_date",
+    "predicted_label",
+    "p_D",
+    "p_F",
+    "p_T",
+    "p_P"
+  ],
+  "frozen_eval_end": "2026-07-31"
+}

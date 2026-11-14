@@ -1,0 +1,77 @@
+{
+  "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114/T",
+  "parent_experiment": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+  "state": "completed",
+  "source_role": "candidate",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "evaluation_mode": "historical_selection_window",
+  "data_version": "2026-11-03",
+  "portable_eval_output": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/T.json",
+  "result_dirs": [
+    "backtest/result/wkric_20261114_t_s42",
+    "backtest/result/wkric_20261114_t_s1000",
+    "backtest/result/wkric_20261114_t_s2000",
+    "backtest/result/wkric_20261114_t_s3000",
+    "backtest/result/wkric_20261114_t_s4000"
+  ],
+  "metrics": {
+    "candidate": {
+      "net_ann": 0.32709442988191884,
+      "net_sharpe": 0.800909608084306,
+      "net_ann_vol": 0.4084036782431607,
+      "turnover": 0.19657320872274145,
+      "ann": 0.3701360996638503,
+      "days": 642,
+      "rank_ic": 0.07421492907928769
+    },
+    "v5": {
+      "net_ann": 0.03096746161069306,
+      "net_sharpe": 0.06113400930516197,
+      "net_ann_vol": 0.5065504775928096,
+      "turnover": 0.177466251298027,
+      "ann": 0.06982547199490906,
+      "days": 642,
+      "rank_ic": 0.05083806723394034
+    },
+    "previous": {
+      "net_ann": 0.38669454224356137,
+      "net_sharpe": 0.9686693533853499,
+      "net_ann_vol": 0.3992017925333589,
+      "turnover": 0.19636552440290755,
+      "ann": 0.429690737466822,
+      "days": 642,
+      "rank_ic": 0.07073757988807501
+    },
+    "passed": true,
+    "best_rounds": [
+      95,
+      127,
+      90,
+      127,
+      119
+    ],
+    "best_es_rankic": [
+      0.0717385360330291,
+      0.07148531500112854,
+      0.07114371574967923,
+      0.07003148690449562,
+      0.07133892443048945
+    ],
+    "paired_wins": {
+      "net_ann": 5,
+      "net_sharpe": 5
+    },
+    "all_top3_ties": 0,
+    "own_top3_ties": 0,
+    "rounds_checked": 808,
+    "order_invariant": true,
+    "order_max_error": 4.163336342344337e-17
+  },
+  "prediction_manifest": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-T.json"
+}

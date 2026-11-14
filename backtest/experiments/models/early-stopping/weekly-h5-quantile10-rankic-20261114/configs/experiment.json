@@ -1,0 +1,28 @@
+{
+  "hypothesis": "在本风格验证日用预测与 H5 十档标签的日截面 Spearman 均值选轮，消除股票代码在早停中的作用，并检验各专家的 Top3×H5 净年化与夏普是否均高于 v5。",
+  "variants": [
+    "T",
+    "P",
+    "D",
+    "F"
+  ],
+  "loss": "weighted mse on frozen H5 stock quantile10 targets",
+  "validation": "Same 1448-session cached H5 universe; grade all finite stocks in each original filtered validation cross section before splitting by its weekly style. No ex-post t+1 entry rejection in a prediction-quality RankIC. Average ties; ten right-closed bins; positive training affine score. Equal weight per valid day; min 20 stocks. No inner validation.",
+  "patience": 50,
+  "upper": 200,
+  "signal_end": "2026-07-23",
+  "evaluation_end": "2026-07-31",
+  "scored_days": {
+    "D": 646,
+    "T": 642,
+    "F": 137,
+    "P": 23,
+    "ALL": 1448
+  },
+  "tie_check": "Replay every round with reversed stock order in each day; same best iteration and abs error <1e-12. Audit official final Top3 boundary.",
+  "gate": "Each style must pass tie check and both own-style official ensemble net_ann and net_sharpe strictly exceed the frozen v5 on the identical dates. RankIC supplementary. If any passes, backtest with v5 fallback for all unqualified styles. All four reported separately.",
+  "backtests": "Frozen primary lgb_full next-day forecast at t close. Use predicted label for the next session assigned to expert signals, also verify against one-session offset with same-day decision restrictions. Hard routes approved experts else v5; probability blend of approved standardized expert signals plus remaining mass on v5. Compare same execution v5 and historical s5. Same predeclared Top3 H5 ladder execution, historical window/cost, no fitted routing thresholds.",
+  "control": "Old Top5-ES experts D/F/T/P and v5, all use exact prior official evaluation datasets and protocol.",
+  "anchor": "T full-universe canonical output for native one-parent result; all four internal candidates and gate shown in the report, never publish anchor as a routed result.",
+  "temporary": "/private/tmp/qlib-weekly-rankic.kOqbzG"
+}

@@ -1,0 +1,32 @@
+{
+  "job_id": "stop-D-s4000",
+  "fit": "ordinary-D-s4000-a1",
+  "model": {
+    "path": "backtest/result/h5mix_20261114_stop_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "79e390f3d44c74d953de49c6b381404ae0fa789c876649a61dca82ca0479c621",
+    "size": 717131
+  },
+  "session": "h5mix_20261114_stop_d_s4000",
+  "best": 44,
+  "stopped": 94,
+  "score_at_best": {
+    "ic": 0.18438798788182975,
+    "gross_h5": 0.006990798578911891,
+    "turnover": 0.9667186687467498,
+    "net_h5": 0.006101417403664881,
+    "mixed": 0.16920792334946502,
+    "top3_tie_days": 0,
+    "n": 646,
+    "n_ic": 646,
+    "reverse_mixed": 0.16920792334946505,
+    "reverse_ic": 0.18438798788182978,
+    "max_reverse_error": 2.7755575615628914e-17
+  },
+  "reverse_best": 44,
+  "trace": {
+    "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s4000-a1-trace.json",
+    "sha256": "5cea68a3223bbb4cd1c7bee5ae7be13b42d117f8021eb482bac0cf7231cdc79d",
+    "size": 39036
+  },
+  "es_scale": 0.05624065548181534
+}

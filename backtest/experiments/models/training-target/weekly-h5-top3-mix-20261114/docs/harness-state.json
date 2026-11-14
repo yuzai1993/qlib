@@ -1,0 +1,3531 @@
+{
+  "schema_version": 2,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/harness-state.json",
+  "plan": {
+    "schema_version": 2,
+    "campaign_id": "weekly-h5-top3-mix-20261114",
+    "idea": "用 20% 的 Top3 选股收益代理损失和 20% 的 Top3 净收益早停，检验能否弥补纯 RankIC 早停专家的头部收益损失，同时保留截面排序能力。",
+    "track": "all_a_model",
+    "direction": "training-target",
+    "anchor_exp_id": "training-target/weekly-h5-top3-mix-20261114",
+    "archive_path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114",
+    "baseline_ref": "training-target/h20-quantile10-p50-v5",
+    "allowed_changes": [
+      "top3_mix_factorial"
+    ],
+    "selection_rule": "Compare official net_ann & net_sharpe on matched style dates versus pure RankIC, old Top5 ES and v5, report RankIC, paired seeds, actual prefix. Attribute main effect with two single-axis controls; no weight search. T/joint representative native evaluation, all twelve candidates reported.",
+    "data_version": "2026-11-03",
+    "inputs": [
+      "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/experiment.json",
+      "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/evaluation.yaml",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/configs/prepared-inputs.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/docs/h5-target.json",
+      "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/all.pkl",
+      "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/four-style-comparison.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/metrics/v5.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+      "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-D.pkl",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-F.pkl",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-T.pkl",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-P.pkl",
+      "backtest/models/regime_adapt.py",
+      "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "backtest/scripts/train/train_regime_arm.py",
+      "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-D.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-D.json",
+      "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-F.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-F.json",
+      "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-T.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-T.json",
+      "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-P.json",
+      "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-P.json"
+    ],
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "budget": {
+      "max_rounds": 1,
+      "max_variants": 1,
+      "max_attempts_per_variant": 3,
+      "max_wall_hours": 12,
+      "max_no_new_evidence_rounds": 1,
+      "concurrency": 1
+    },
+    "execution_budget": {
+      "max_model_fits": 46,
+      "new_label_horizons": [
+        5
+      ]
+    },
+    "scientific_candidates": [
+      "joint-D",
+      "joint-F",
+      "joint-T",
+      "joint-P",
+      "train-D",
+      "train-F",
+      "train-T",
+      "train-P",
+      "stop-D",
+      "stop-F",
+      "stop-T",
+      "stop-P"
+    ],
+    "temporary_directory": "/private/tmp/qlib-h5-top3.UmxWdc"
+  },
+  "plan_source": {
+    "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/harness-plan.json",
+    "sha256": "8a29be6a3b86f86c34a120cc6cd4db0615da65657e3469b77c461412dddf4732",
+    "size": 5026
+  },
+  "inputs": [
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/experiment.json",
+      "sha256": "f568ffc5dee4275872bbff334ad644f1f930dd5190ca7b9956e875eb943f3823",
+      "size": 3132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/configs/prepared-inputs.json",
+      "sha256": "888de50c502347d3dfa046a25e8c89af37d0a7d71abbf765aa0d036d9ccc540e",
+      "size": 6369
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/docs/h5-target.json",
+      "sha256": "398a1a17cbd035e19b0bffa464e59ac9302ff21c34fe10796b766d2c688c0797",
+      "size": 45208
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/raw-labels/88c74922a14e25a63a0ea741ae55aadfad4573b37da3b870552d2c4aac270ab1/all.pkl",
+      "sha256": "7229c7d33241768c7dd24a20b19a3614ba5150c3837c92ee2403707f338d4ec8",
+      "size": 103003981
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/metrics/four-style-comparison.json",
+      "sha256": "4b4fabd7e6901603c5fc48d367b371a4d4091f0b8df330284330e9af95f31bcb",
+      "size": 7266
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/metrics/v5.json",
+      "sha256": "d54291ff22aebc4bb67aea239df351bbcadcb64304e58bc73e6106bdf51faff6",
+      "size": 109768
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+      "sha256": "f76aecf2ab5808a61b74aa47bf44aa49ee4a31dba55f4a0f8f5dc8e9ffa3c4ad",
+      "size": 214980
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+      "size": 274553
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+      "size": 9535
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+      "size": 30202983
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-D.pkl",
+      "sha256": "015062730ff204ae2d076b24c291cb3712c404023dd28a34af49071047eaedd5",
+      "size": 23939382
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-F.pkl",
+      "sha256": "268ed5e0f6385cafccb7e5f018b6a910b62f963fd3262cc078289f15a1be52a3",
+      "size": 12713598
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-T.pkl",
+      "sha256": "d8f34d76fea028cd396965deec086823e2ca5365ff91f33bb73823a4b45b35e8",
+      "size": 24542394
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/data/target-P.pkl",
+      "sha256": "9e3db5116ca661b973374f0d6ad7eac13aafd013063bfc76a395ab68c4f4227b",
+      "size": 4520010
+    },
+    {
+      "path": "backtest/models/regime_adapt.py",
+      "sha256": "9fd7fc084365535680cb8df08a263132c13561a5d5434f8b51a16c6d08a9526d",
+      "size": 15566
+    },
+    {
+      "path": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "sha256": "8cc35a510bb1b95d047a963f595dc1a4b8ac8e3102056c2c8a78d5c2b22b6026",
+      "size": 68674
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "8dfa2fcb39097ee0d19ea1c29dcbe3641e3237d9831b27c1db327a0fa6419a75",
+      "size": 33129
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-D.json",
+      "sha256": "057883ba89a946252f9161109c9f7ec214cc1ee463ff3641c1ee4e16a01c18e0",
+      "size": 4263
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-D.json",
+      "sha256": "69ac6723e56fa37d4c5d3250fe38db0b0a694195beb71c394ee4ce72b51e810b",
+      "size": 4439
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-F.json",
+      "sha256": "a2a8e76990db17fd6cca4747c7b69aeb9ec8c29263575ab70298fd5f27253ae2",
+      "size": 4263
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-F.json",
+      "sha256": "71d9576c03acae27ee6b272c21837b043b7de46516078b5ea48611bb51ef66ab",
+      "size": 4439
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-T.json",
+      "sha256": "01c86ae78b650138242d62598689f01da6a4d6ddafa95595387ada0a7a7e46ec",
+      "size": 4268
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-T.json",
+      "sha256": "4fdcfa7afb35a8ad9cd17aa0aeafa92cd1d92826d84355c6d287c8da2e3cfefc",
+      "size": 4439
+    },
+    {
+      "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/docs/predictions-P.json",
+      "sha256": "ffc35c7397941288c7eea4e1de04cb06f09110183fe934ef073a5e34eb3b25bc",
+      "size": 4263
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/experts/docs/predictions-P.json",
+      "sha256": "b21b00b8431a076329eadc700983563cc70df5136e79d19f61793838d65a6033",
+      "size": 4439
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+      "size": 12415
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "d10dcea7e23d905c1fcfd25c841d368e3e1662fa3489dbd43dc8754129c4fcba",
+      "size": 64550
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "32d94bffdbb79180587eecb9bf91fc4537283d3cff8db9b581c69250593e04a8",
+      "size": 76004
+    }
+  ],
+  "baseline_sha256": "edefdbe4cc0d652e38b6964f812b723b4448f13c6f45c75091368e598da93ce9",
+  "baseline_model_ref": null,
+  "started_at": 1794623399.228134,
+  "deadline": 1794666599.228134,
+  "revision": 95,
+  "status": "closed",
+  "variants": {
+    "training-target/weekly-h5-top3-mix-20261114": {
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "archive_path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114",
+      "round": 1,
+      "hypothesis": "用 20% 的 Top3 选股收益代理损失和 20% 的 Top3 净收益早停，检验能否弥补纯 RankIC 早停专家的头部收益损失，同时保留截面排序能力。",
+      "changed_axis": "top3_mix_factorial",
+      "configs": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/experiment.json",
+          "sha256": "f568ffc5dee4275872bbff334ad644f1f930dd5190ca7b9956e875eb943f3823",
+          "size": 3132
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/evaluation.yaml",
+          "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+          "size": 1006
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+          "outcome": "succeeded",
+          "started_at": 1794623399.6570082,
+          "command": [
+            "/opt/anaconda3/envs/qlib/bin/python",
+            "/private/tmp/qlib-h5-top3.UmxWdc/run.py"
+          ],
+          "evaluation": {
+            "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-T.json",
+            "sha256": "aa8cecdc5f6336f2506b5bf0b7ed9afeeb87acb07c684278d38558b35b01d35c",
+            "size": 109995
+          },
+          "finished_at": 1794628413.148324,
+          "evidence": [
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-D.json",
+              "sha256": "5dc49148b64192eaa0d42b311872b30a9c0650bfe0637266a335e245e0648165",
+              "size": 110108
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-F.json",
+              "sha256": "f3c317857808e74ba5447ff60f50fc4e94ef023225f8d9467fa280a949ca7467",
+              "size": 110162
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-T.json",
+              "sha256": "aa8cecdc5f6336f2506b5bf0b7ed9afeeb87acb07c684278d38558b35b01d35c",
+              "size": 109995
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-P.json",
+              "sha256": "73f768e59c01996e46ae3f8398bbc91ee6bc8475d660f03212bdeaa08d304851",
+              "size": 110193
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-D.json",
+              "sha256": "88aaf2814eedb6fa5c55a29bf16b351e0459c592605d5209e948c9c01106520d",
+              "size": 110086
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-F.json",
+              "sha256": "b2cb8fc5e6326617a326d4212b662d31f09205c7fae5ef3221321871e90bfa43",
+              "size": 110248
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-T.json",
+              "sha256": "4744cb419133a1afe6c6d5d3c590f9505d734cc8e1140e860f7595d6a998c6d2",
+              "size": 110117
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-P.json",
+              "sha256": "35cc886afe050ec3f193728509a053bc4d5ec4d391a233ab66516f51fc615092",
+              "size": 110255
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-D.json",
+              "sha256": "9ba811c878c7dd10b0567c38aeb13b6339ac561be6ce734a85eda0dd7b073d22",
+              "size": 110044
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-F.json",
+              "sha256": "aa548061fb29a97f84591964763251814e98f6fb2d69ab2b021032daf1415993",
+              "size": 110039
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-T.json",
+              "sha256": "33f7413764aa2a0084d9faf9c855ae93cb4e684f1c444e8d3d43162b158b4a35",
+              "size": 110123
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-P.json",
+              "sha256": "947a4c544150a860cc3dd4a6c2c7bc1068395fc9474dd9c9f74cfdbbff4786ef",
+              "size": 110123
+            },
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/comparison.json",
+              "sha256": "9000902fc9a5b356f2ed03b0717466b0bf1697dcc3d0b9aa9e5f9d7c20d761a6",
+              "size": 17859
+            }
+          ],
+          "reason": "",
+          "registered": {
+            "event_sha256": "4e541501289ea4d3b274ae7a28b3d5d48964ce8d3561a15c0ac8c70cd0b7aaff",
+            "detail_report": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/reports/detail.html"
+          },
+          "reported": [
+            {
+              "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/reports/detail.html",
+              "sha256": "5bd6b89e03c14d61fd561ebe4ac73f6f51245d36aa6bf42beecb6e1881b14637",
+              "size": 10185
+            },
+            {
+              "path": "backtest/experiments/reports/phase_m_v1_report.html",
+              "sha256": "da3a92d81952e6700a8462ae4cb00fe3f8ece533397330052f2fda65e2887d22",
+              "size": 48206
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reflections": [
+    {
+      "type": "reflection",
+      "round": 1,
+      "new_evidence": true,
+      "observations": "对纯 RankIC 专家同时改善净年化和夏普的风格为 D、F、P。",
+      "interpretation": "联合目标和两个单因素对照均经五种子合成评估，所有风格按同一公式判读。",
+      "next_hypothesis": ""
+    }
+  ],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/cleanup.json",
+      "sha256": "83737d9e113de49d54d543c4af255ce8cc08848c72f8cbd0d38e1f060b26b850",
+      "size": 4352
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1794623399.443485,
+      "event": {
+        "type": "plan_variant",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "archive_path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114",
+        "round": 1,
+        "hypothesis": "用 20% 的 Top3 选股收益代理损失和 20% 的 Top3 净收益早停，检验能否弥补纯 RankIC 早停专家的头部收益损失，同时保留截面排序能力。",
+        "changed_axis": "top3_mix_factorial",
+        "configs": [
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/experiment.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/configs/evaluation.yaml"
+        ]
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1794623399.6570098,
+      "event": {
+        "type": "start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py"
+        ]
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1794623623.736737,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-P-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "ordinary",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1794623630.580697,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-P-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s42.json",
+          "backtest/result/h5mix_20261114_stop_p_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1794623631.089492,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-P-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "mixed",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1794623638.508436,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-P-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s42.json",
+          "backtest/result/h5mix_20261114_joint_p_s42/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s42.json",
+          "backtest/result/h5mix_20261114_train_p_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1794623639.0177548,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-P-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "ordinary",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1794623646.4970381,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-P-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s1000.json",
+          "backtest/result/h5mix_20261114_stop_p_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1794623647.010771,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-P-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "mixed",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 10,
+      "time": 1794623654.106625,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-P-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s1000.json",
+          "backtest/result/h5mix_20261114_joint_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s1000.json",
+          "backtest/result/h5mix_20261114_train_p_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 11,
+      "time": 1794623654.63006,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-P-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "ordinary",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 12,
+      "time": 1794623662.085771,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-P-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s2000.json",
+          "backtest/result/h5mix_20261114_stop_p_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 13,
+      "time": 1794623662.5944169,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-P-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "mixed",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 14,
+      "time": 1794623668.735491,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-P-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s2000.json",
+          "backtest/result/h5mix_20261114_joint_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s2000.json",
+          "backtest/result/h5mix_20261114_train_p_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 15,
+      "time": 1794623669.2602282,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-P-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "ordinary",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 16,
+      "time": 1794623675.990826,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-P-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s3000.json",
+          "backtest/result/h5mix_20261114_stop_p_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 17,
+      "time": 1794623676.5181272,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-P-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "mixed",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 18,
+      "time": 1794623683.183968,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-P-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s3000.json",
+          "backtest/result/h5mix_20261114_joint_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s3000.json",
+          "backtest/result/h5mix_20261114_train_p_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 19,
+      "time": 1794623683.709206,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-P-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "ordinary",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 20,
+      "time": 1794623690.2487738,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-P-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s4000.json",
+          "backtest/result/h5mix_20261114_stop_p_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 21,
+      "time": 1794623690.782214,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-P-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "P",
+          "mixed",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 22,
+      "time": 1794623698.0300212,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-P-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s4000.json",
+          "backtest/result/h5mix_20261114_joint_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s4000.json",
+          "backtest/result/h5mix_20261114_train_p_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 23,
+      "time": 1794623710.613961,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-T-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "ordinary",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 24,
+      "time": 1794623854.756212,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-T-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s42.json",
+          "backtest/result/h5mix_20261114_stop_t_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 25,
+      "time": 1794623855.332918,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-T-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "mixed",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 26,
+      "time": 1794623970.1558971,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-T-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s42.json",
+          "backtest/result/h5mix_20261114_joint_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s42.json",
+          "backtest/result/h5mix_20261114_train_t_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 27,
+      "time": 1794623970.707781,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-T-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "ordinary",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 28,
+      "time": 1794624130.784388,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-T-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s1000.json",
+          "backtest/result/h5mix_20261114_stop_t_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 29,
+      "time": 1794624131.337043,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-T-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "mixed",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 30,
+      "time": 1794624225.571842,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-T-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s1000.json",
+          "backtest/result/h5mix_20261114_joint_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s1000.json",
+          "backtest/result/h5mix_20261114_train_t_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 31,
+      "time": 1794624226.155183,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-T-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "ordinary",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 32,
+      "time": 1794624355.316041,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-T-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s2000.json",
+          "backtest/result/h5mix_20261114_stop_t_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 33,
+      "time": 1794624355.855583,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-T-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "mixed",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 34,
+      "time": 1794624428.6403189,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-T-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s2000.json",
+          "backtest/result/h5mix_20261114_joint_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s2000.json",
+          "backtest/result/h5mix_20261114_train_t_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 35,
+      "time": 1794624429.1965408,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-T-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "ordinary",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 36,
+      "time": 1794624600.899754,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-T-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s3000.json",
+          "backtest/result/h5mix_20261114_stop_t_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 37,
+      "time": 1794624601.437564,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-T-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "mixed",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 38,
+      "time": 1794624688.467826,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-T-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s3000.json",
+          "backtest/result/h5mix_20261114_joint_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s3000.json",
+          "backtest/result/h5mix_20261114_train_t_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 39,
+      "time": 1794624689.0040908,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-T-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "ordinary",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 40,
+      "time": 1794624854.274436,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-T-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s4000.json",
+          "backtest/result/h5mix_20261114_stop_t_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 41,
+      "time": 1794624854.8045042,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-T-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "T",
+          "mixed",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 42,
+      "time": 1794625021.731329,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-T-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s4000.json",
+          "backtest/result/h5mix_20261114_joint_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s4000.json",
+          "backtest/result/h5mix_20261114_train_t_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 43,
+      "time": 1794625034.8634062,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-D-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "ordinary",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 44,
+      "time": 1794625131.491575,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-D-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s42.json",
+          "backtest/result/h5mix_20261114_stop_d_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 45,
+      "time": 1794625132.074115,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-D-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "mixed",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 46,
+      "time": 1794625222.5344262,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-D-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s42.json",
+          "backtest/result/h5mix_20261114_joint_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s42.json",
+          "backtest/result/h5mix_20261114_train_d_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 47,
+      "time": 1794625223.1269739,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-D-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "ordinary",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 48,
+      "time": 1794625301.6750982,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-D-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s1000.json",
+          "backtest/result/h5mix_20261114_stop_d_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 49,
+      "time": 1794625302.241945,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-D-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "mixed",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 50,
+      "time": 1794625379.354589,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-D-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s1000.json",
+          "backtest/result/h5mix_20261114_joint_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s1000.json",
+          "backtest/result/h5mix_20261114_train_d_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 51,
+      "time": 1794625379.9144058,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-D-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "ordinary",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 52,
+      "time": 1794625471.144276,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-D-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s2000.json",
+          "backtest/result/h5mix_20261114_stop_d_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 53,
+      "time": 1794625471.680994,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-D-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "mixed",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 54,
+      "time": 1794625556.521974,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-D-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s2000.json",
+          "backtest/result/h5mix_20261114_joint_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s2000.json",
+          "backtest/result/h5mix_20261114_train_d_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 55,
+      "time": 1794625557.077121,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-D-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "ordinary",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 56,
+      "time": 1794625637.220219,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-D-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s3000.json",
+          "backtest/result/h5mix_20261114_stop_d_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 57,
+      "time": 1794625637.761634,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-D-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "mixed",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 58,
+      "time": 1794625715.4867,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-D-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s3000.json",
+          "backtest/result/h5mix_20261114_joint_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s3000.json",
+          "backtest/result/h5mix_20261114_train_d_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 59,
+      "time": 1794625716.026474,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-D-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "ordinary",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 60,
+      "time": 1794625812.8328562,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-D-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s4000.json",
+          "backtest/result/h5mix_20261114_stop_d_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 61,
+      "time": 1794625813.39945,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-D-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "D",
+          "mixed",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 62,
+      "time": 1794625892.777768,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-D-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s4000.json",
+          "backtest/result/h5mix_20261114_joint_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s4000.json",
+          "backtest/result/h5mix_20261114_train_d_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 63,
+      "time": 1794625903.4970071,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-F-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "ordinary",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 64,
+      "time": 1794625933.528363,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-F-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s42.json",
+          "backtest/result/h5mix_20261114_stop_f_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 65,
+      "time": 1794625934.083508,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-F-s42-a1",
+        "seed": 42,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "mixed",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 66,
+      "time": 1794625955.044801,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-F-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s42-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s42.json",
+          "backtest/result/h5mix_20261114_joint_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s42.json",
+          "backtest/result/h5mix_20261114_train_f_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 67,
+      "time": 1794625955.56925,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-F-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "ordinary",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 68,
+      "time": 1794625976.388492,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-F-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s1000.json",
+          "backtest/result/h5mix_20261114_stop_f_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 69,
+      "time": 1794625976.904031,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-F-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "mixed",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 70,
+      "time": 1794626012.3147242,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-F-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s1000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s1000.json",
+          "backtest/result/h5mix_20261114_joint_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s1000.json",
+          "backtest/result/h5mix_20261114_train_f_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 71,
+      "time": 1794626012.8363678,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-F-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "ordinary",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 72,
+      "time": 1794626041.2227468,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-F-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s2000.json",
+          "backtest/result/h5mix_20261114_stop_f_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 73,
+      "time": 1794626041.777119,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-F-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "mixed",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 74,
+      "time": 1794626062.876822,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-F-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s2000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s2000.json",
+          "backtest/result/h5mix_20261114_joint_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s2000.json",
+          "backtest/result/h5mix_20261114_train_f_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 75,
+      "time": 1794626063.416939,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-F-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "ordinary",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 76,
+      "time": 1794626083.902014,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-F-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s3000.json",
+          "backtest/result/h5mix_20261114_stop_f_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 77,
+      "time": 1794626084.446192,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-F-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "mixed",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 78,
+      "time": 1794626104.2658591,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-F-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s3000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s3000.json",
+          "backtest/result/h5mix_20261114_joint_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s3000.json",
+          "backtest/result/h5mix_20261114_train_f_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 79,
+      "time": 1794626104.8079019,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "ordinary-F-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "ordinary",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 80,
+      "time": 1794626133.717664,
+      "event": {
+        "type": "fit_result",
+        "job_id": "ordinary-F-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s4000.json",
+          "backtest/result/h5mix_20261114_stop_f_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 81,
+      "time": 1794626134.334949,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "job_id": "mixed-F-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 5,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+          "fit",
+          "F",
+          "mixed",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 82,
+      "time": 1794626165.2715662,
+      "event": {
+        "type": "fit_result",
+        "job_id": "mixed-F-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s4000-a1-trace.json",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s4000.json",
+          "backtest/result/h5mix_20261114_joint_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s4000.json",
+          "backtest/result/h5mix_20261114_train_f_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 83,
+      "time": 1794628128.364204,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account hard_signal"
+      }
+    },
+    {
+      "revision": 84,
+      "time": 1794628207.012768,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account hard_signal backtest/result/20261114_114849_wk3mix_20261114_hard_signal"
+      }
+    },
+    {
+      "revision": 85,
+      "time": 1794628209.154512,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account soft_signal"
+      }
+    },
+    {
+      "revision": 86,
+      "time": 1794628286.4455628,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account soft_signal backtest/result/20261114_115009_wk3mix_20261114_soft_signal"
+      }
+    },
+    {
+      "revision": 87,
+      "time": 1794628288.587426,
+      "event": {
+        "type": "note",
+        "text": "Start derived offline ladder account soft_p_v5"
+      }
+    },
+    {
+      "revision": 88,
+      "time": 1794628364.667208,
+      "event": {
+        "type": "note",
+        "text": "Completed derived offline ladder account soft_p_v5 backtest/result/20261114_115128_wk3mix_20261114_soft_p_v5"
+      }
+    },
+    {
+      "revision": 89,
+      "time": 1794628413.1483269,
+      "event": {
+        "type": "result",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+        "outcome": "succeeded",
+        "evaluation": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-T.json",
+        "evidence": [
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-D.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-F.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-T.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/joint-P.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-D.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-F.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-T.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/train-P.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-D.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-F.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-T.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/stop-P.json",
+          "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/metrics/comparison.json"
+        ]
+      }
+    },
+    {
+      "revision": 90,
+      "time": 1794628416.4098492,
+      "event": {
+        "type": "registered",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114"
+      }
+    },
+    {
+      "revision": 91,
+      "time": 1794628416.5302012,
+      "event": {
+        "type": "reported",
+        "exp_id": "training-target/weekly-h5-top3-mix-20261114"
+      }
+    },
+    {
+      "revision": 92,
+      "time": 1794628416.810034,
+      "event": {
+        "type": "reflection",
+        "round": 1,
+        "new_evidence": true,
+        "observations": "对纯 RankIC 专家同时改善净年化和夏普的风格为 D、F、P。",
+        "interpretation": "联合目标和两个单因素对照均经五种子合成评估，所有风格按同一公式判读。",
+        "next_hypothesis": ""
+      }
+    },
+    {
+      "revision": 93,
+      "time": 1794628416.8172958,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 94,
+      "time": 1794628427.860276,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/cleanup.json"
+      }
+    },
+    {
+      "revision": 95,
+      "time": 1794628428.1023061,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "jobs": {
+    "ordinary-P-s42-a1": {
+      "job_id": "ordinary-P-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "ordinary",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623623.7367349,
+      "finished_at": 1794623630.580696,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s42-a1-trace.json",
+          "sha256": "f9e47aa3bd794ee0727620e14ed9357c8c473809bf2947e58b5e16018d5cb423",
+          "size": 24432
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s42.json",
+          "sha256": "aac352f7e546d54774068dd025ab049cb6703ae00532955b5874e8b915b9ccaf",
+          "size": 1027
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_p_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7300e99cbfa048cc3200bf7fd8725ff24162bf039346b680f686753a73abeb17",
+          "size": 197773
+        }
+      ]
+    },
+    "mixed-P-s42-a1": {
+      "job_id": "mixed-P-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "mixed",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623631.089491,
+      "finished_at": 1794623638.5084338,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s42-a1-trace.json",
+          "sha256": "c79cf2d934ef7f108e2a3ac36b90e3cda2024a177b0bf71585c2f91ca380333d",
+          "size": 25413
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s42.json",
+          "sha256": "88e741eb7f66cdc237c68769fe53479e5ce1187e628abc9d004cbd3d1e2beadb",
+          "size": 1023
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_p_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ce103e489d1321b4fea8e898ecfd255b611acbf3e663de4d61c1a7b3833b41f7",
+          "size": 227660
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s42.json",
+          "sha256": "74ac20effc1c3bb66752858a58d7ab3307adf93508e1bc4210e73f01eebd293c",
+          "size": 1013
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_p_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e400cd5f87919b6d0e9dba1c1416a0ac69cb82a77250666f64c4a705d2c41484",
+          "size": 189586
+        }
+      ]
+    },
+    "ordinary-P-s1000-a1": {
+      "job_id": "ordinary-P-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "ordinary",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623639.017754,
+      "finished_at": 1794623646.497036,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s1000-a1-trace.json",
+          "sha256": "2a00ffaf1286ac1595fa1d6c7621ba758d7f1d981b9fe59a3cc1dc26999d1cf8",
+          "size": 26613
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s1000.json",
+          "sha256": "532c889397d7b9f3d4e97c6e9f288a108d02e7d825bdb5a751127fa8faf0954f",
+          "size": 1037
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "167d71e85d2fbc1aaa0e1730845c77b1b8f993dfcb8a7b81d619ea7a5b8bcb37",
+          "size": 262558
+        }
+      ]
+    },
+    "mixed-P-s1000-a1": {
+      "job_id": "mixed-P-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "mixed",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623647.010769,
+      "finished_at": 1794623654.106623,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s1000-a1-trace.json",
+          "sha256": "1603ded3daf1238f13d8e731e5dcaf95143926be4876295d1891ee378cdb719a",
+          "size": 24015
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s1000.json",
+          "sha256": "701f83233e1b34b64358db2b85817ae53b005bdd82770e2a81d963bc870ea5ff",
+          "size": 1034
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "4bf13abe5fb91727772b3bd45b3eed9ebb403bb7d59b1cdb3688850cdbd81392",
+          "size": 196784
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s1000.json",
+          "sha256": "78f0baba60dff46088bac95d342dba46f2af767bb328d917cfbee63aa6723806",
+          "size": 1031
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "3382d547cbc4a4686d1bb7113fc3297d628c018ceebfb1d3fd547fe1b0e92977",
+          "size": 149548
+        }
+      ]
+    },
+    "ordinary-P-s2000-a1": {
+      "job_id": "ordinary-P-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "ordinary",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623654.630059,
+      "finished_at": 1794623662.085769,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s2000-a1-trace.json",
+          "sha256": "fe450beebfce1914b78f015bc53262f0a85fd6fc2ba43c8d52086a6568949a8a",
+          "size": 27243
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s2000.json",
+          "sha256": "ff575469010be465c529f6364a3bdef487de08c49e19e8045c27c42aba921115",
+          "size": 1038
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "961d79ec6403e679421fb86a92f5231385194b4f14410138997392bd98dc2eb6",
+          "size": 255507
+        }
+      ]
+    },
+    "mixed-P-s2000-a1": {
+      "job_id": "mixed-P-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "mixed",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623662.5944161,
+      "finished_at": 1794623668.73549,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s2000-a1-trace.json",
+          "sha256": "15ce2acce0d62719ea89b71febb9b5ca5bae7760b14e82d1c37001a787fbc03e",
+          "size": 20225
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s2000.json",
+          "sha256": "49d4280672982c45b3c0537eb60d31247b77c45011505f95ca1ba23186027332",
+          "size": 1034
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a8a07369c55c269301978e97f63fac8615c78c6a123a925613b070b31f097e6d",
+          "size": 102017
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s2000.json",
+          "sha256": "a3fdd5fef6d24b5bffd1eb6bb4686730d04b04bbaef6f894c1c4052eda74ab6b",
+          "size": 1034
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f10474830d9ece4cc80dd22bdb4691bab8f7d9514513f093797dfe06c5e5801d",
+          "size": 91325
+        }
+      ]
+    },
+    "ordinary-P-s3000-a1": {
+      "job_id": "ordinary-P-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "ordinary",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623669.260227,
+      "finished_at": 1794623675.990824,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s3000-a1-trace.json",
+          "sha256": "e3230cce28abf3a83e24ab01143a8c3e327c38f85e5cfe77974e736144639f36",
+          "size": 24213
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s3000.json",
+          "sha256": "87109051bf1f335e3e50eb62d88c6695a64698675588f2c68b02206837ced124",
+          "size": 1039
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5fd528723c77718273f173eddf1034a1dfa9f88131364c729eafe379705f82d6",
+          "size": 193047
+        }
+      ]
+    },
+    "mixed-P-s3000-a1": {
+      "job_id": "mixed-P-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "mixed",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623676.518125,
+      "finished_at": 1794623683.1839669,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s3000-a1-trace.json",
+          "sha256": "8a2eed6c9046945ff70014b9318cb01bf9c4891534e243e9b933d549c897db91",
+          "size": 22573
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s3000.json",
+          "sha256": "d8423ad79e5a62acfd0ada112edb3ee123ff4dda78cedede0eb1d6df8b086470",
+          "size": 1031
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d6165a00c8b591ac44093b7723198336c11fd563dab86bbdc6e7940f22044a14",
+          "size": 159965
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s3000.json",
+          "sha256": "e4ebcde15a526438d08bb7fa930bebdce85566b220733adcf701c8d199252853",
+          "size": 1034
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "673486bbf1d1afbcb3319aec8a1d1363304be1c1713523be06be305927e9221e",
+          "size": 128984
+        }
+      ]
+    },
+    "ordinary-P-s4000-a1": {
+      "job_id": "ordinary-P-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "ordinary",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623683.709204,
+      "finished_at": 1794623690.2487721,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-P-s4000-a1-trace.json",
+          "sha256": "3092aa730c9e5f90423adb2a89706e93263092ee06b34594b6820de9e72c4dd8",
+          "size": 22722
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-P-s4000.json",
+          "sha256": "34529adc1fa9a916673a17f50d7b5878ae1f5f2d2944c29429eab4bf5b0da57e",
+          "size": 1036
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "3c64c85a2aac7c2e60554321c088b002bef7f8fc46f1bbd0a427e813538c97b3",
+          "size": 166028
+        }
+      ]
+    },
+    "mixed-P-s4000-a1": {
+      "job_id": "mixed-P-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "P",
+        "mixed",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623690.7822132,
+      "finished_at": 1794623698.030019,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-P-s4000-a1-trace.json",
+          "sha256": "468c7af21f3eba1ae14e9e5e1243b4505116bf2ee70af75b50a10084520a4d93",
+          "size": 24551
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-P-s4000.json",
+          "sha256": "5d9fc6e3b4f3f57ec058756a20ce110bf633a6672c596616d3972d8e0accb7aa",
+          "size": 1013
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b5b128aa64f4a8723822286aab590281f1165967def6cd89d948f128e712f00e",
+          "size": 142841
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-P-s4000.json",
+          "sha256": "280820ec1795ee3a34df39696849b30107314cfed24c1ac4aa7da060a38126c9",
+          "size": 1038
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "eef48b7e87cb25f50b080e0ab3b5a917f0d8806451478b5c31e09407d97a7657",
+          "size": 220634
+        }
+      ]
+    },
+    "ordinary-T-s42-a1": {
+      "job_id": "ordinary-T-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "ordinary",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623710.613958,
+      "finished_at": 1794623854.7562099,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s42-a1-trace.json",
+          "sha256": "c49b6cd1f99aa770cbaeba227b690ec2fed7515ec9c94c85d1bacf5c3eabe26b",
+          "size": 55988
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s42.json",
+          "sha256": "766e74b7c02b6f20e4e93641bb903ee542aad4c01ac364d49980c3a92107323f",
+          "size": 1015
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "508cd320220c516e288ae3fc991b32cd6aa4ea3a683f244cb66f78a6ac7c0987",
+          "size": 318189
+        }
+      ]
+    },
+    "mixed-T-s42-a1": {
+      "job_id": "mixed-T-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "mixed",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623855.332916,
+      "finished_at": 1794623970.155895,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s42-a1-trace.json",
+          "sha256": "f0a4aae9dc14fc7b703e14d6642c1d4a314d12e533ef5b3fa0879303d570c8da",
+          "size": 46677
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s42.json",
+          "sha256": "5bce0c21078578ca20baf2ce930a8cef487837d0bcc6c184159a2b41d28b5829",
+          "size": 1032
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "72ada1144f31bd655b02629208a4f3c2a17ece6587422b84157719639041710a",
+          "size": 749954
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s42.json",
+          "sha256": "5b391590916abad0bf94531b4a2e4c4542810987a3cc43c032daf56e2bcfc93d",
+          "size": 1031
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e92fba5f5dde36373f32eb163806d40bda210626b9cd4e64e5990d1f6150299c",
+          "size": 1125776
+        }
+      ]
+    },
+    "ordinary-T-s1000-a1": {
+      "job_id": "ordinary-T-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "ordinary",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794623970.7077801,
+      "finished_at": 1794624130.7843862,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s1000-a1-trace.json",
+          "sha256": "e745811fd924ca25d2180de403228fcaeeca513a86a5d38e6d65a0430d3a8b20",
+          "size": 68068
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s1000.json",
+          "sha256": "4395b62b2057d1502fafae89239fca839aae42f4507772ebe33db76c60a21956",
+          "size": 1043
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "eaede90b14829eec85eba7fbdcd7a5108ac0b2c309c67623f4d0d0e3460d2af2",
+          "size": 431487
+        }
+      ]
+    },
+    "mixed-T-s1000-a1": {
+      "job_id": "mixed-T-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "mixed",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794624131.337041,
+      "finished_at": 1794624225.571841,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s1000-a1-trace.json",
+          "sha256": "9fe940ee555344aa3a66cb112f7c05de84a95dffee08af2cf3483e270a47a378",
+          "size": 36815
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s1000.json",
+          "sha256": "7f8a97afef876438fd55132d9a5aba51af18e34ec9824076a0c1b7ae75663e72",
+          "size": 1021
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "c0d071aa4cf1680f75c3a2112e9f56173d8cbb7c08fe3f10378699735b7e6d6e",
+          "size": 771932
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s1000.json",
+          "sha256": "af06602a77b7dc34d9e1496f5d6dcf3cb66324765794cfeacb398e6c7a3dabe1",
+          "size": 1024
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7ffaff79101174f5bd29b71352bf57cbc43e4914f7d32d2f2b09191e1de14553",
+          "size": 796018
+        }
+      ]
+    },
+    "ordinary-T-s2000-a1": {
+      "job_id": "ordinary-T-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "ordinary",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794624226.1551821,
+      "finished_at": 1794624355.3160388,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s2000-a1-trace.json",
+          "sha256": "c977f0bf12bb8274b6e8fbb7614e6073e40d205e07e71999befd8e5c7fd08019",
+          "size": 53834
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s2000.json",
+          "sha256": "3f3e53f560bfd1b8fb1b073379eea35faa909cb34dc3336a6b399a02abbc29ba",
+          "size": 1045
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "72746f9f3e4efa1e5495771c394bbd45b84249c683a91a0305c254cbf154bb8e",
+          "size": 614784
+        }
+      ]
+    },
+    "mixed-T-s2000-a1": {
+      "job_id": "mixed-T-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "mixed",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794624355.855582,
+      "finished_at": 1794624428.640317,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s2000-a1-trace.json",
+          "sha256": "ad1a2b60aa946e4e67fcb48b6feaa2725955d57176906d1529efa255f9eedeaf",
+          "size": 30053
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s2000.json",
+          "sha256": "28aaf7bdd52b948136ea8be12170da999e5f895b0d3b9f891ff5e68ebbdf2c07",
+          "size": 1023
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "037b48494fb670b5232a61c73f87d201ead62b86b161bb3541e4e2e2bc0d4225",
+          "size": 149505
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s2000.json",
+          "sha256": "20926a3e94687d4a56e239f5539b8dc1de26e702530b1032fd2705dbdc506374",
+          "size": 1023
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8933db253adaabd53b861f08c8e9f9c5bdeb0f4a003252891d465ccea9087da3",
+          "size": 504832
+        }
+      ]
+    },
+    "ordinary-T-s3000-a1": {
+      "job_id": "ordinary-T-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "ordinary",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794624429.196539,
+      "finished_at": 1794624600.899752,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s3000-a1-trace.json",
+          "sha256": "8d732e4a53c60aec6de18b49b2e6efe8ef7bb42f254dcf224e672a768b78a3e2",
+          "size": 68108
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s3000.json",
+          "sha256": "271e108d9133ff4ca52d64fb90489269991f678b2b493c2f5e4bba7c73d65895",
+          "size": 1046
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "55c3a46c925261c1eb9fc36179b325573e1ce74355d469cfb84e426e8fb9ea19",
+          "size": 281854
+        }
+      ]
+    },
+    "mixed-T-s3000-a1": {
+      "job_id": "mixed-T-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "mixed",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794624601.437563,
+      "finished_at": 1794624688.4678242,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s3000-a1-trace.json",
+          "sha256": "755cf2c128280f92dcf561fd737cc10de62841a6a0511d84d5d88a6f73e1e999",
+          "size": 33558
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s3000.json",
+          "sha256": "65a20f6be71e2505753aac845b2960a34b98bcaf186be18e814e9bfade97f36f",
+          "size": 1039
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fd5bf6f96a5ce44875d8a798ddb98dc63c6848925bb2854c2e8465b709821fb4",
+          "size": 115557
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s3000.json",
+          "sha256": "947cc60574af0ddfbc869168ccec2f20163233777fe1ebb69733aace2f6aa22b",
+          "size": 1041
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "346a02cbd9d5d6f039223c9907952cfa9d8480b2c15c1d21cb5b777ea5639c1b",
+          "size": 655249
+        }
+      ]
+    },
+    "ordinary-T-s4000-a1": {
+      "job_id": "ordinary-T-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "ordinary",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794624689.00409,
+      "finished_at": 1794624854.274434,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-T-s4000-a1-trace.json",
+          "sha256": "5287815c6c72505761abd3d440d345bb72944d7bd9669bad541963441397a0de",
+          "size": 64826
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-T-s4000.json",
+          "sha256": "f5d4370d5f6681983e0bf01d9973dab4afd6ee28f731557d64745bfc45f26dc2",
+          "size": 1026
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "72372f6f83fc2745a70b3b1f70f73ae3d668bd1b57da6b77222efca1a8d3826b",
+          "size": 186604
+        }
+      ]
+    },
+    "mixed-T-s4000-a1": {
+      "job_id": "mixed-T-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "T",
+        "mixed",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794624854.804503,
+      "finished_at": 1794625021.731327,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-T-s4000-a1-trace.json",
+          "sha256": "f51e999cef58792a7ec1ba921c9ccbfa7ffaea8827555c3999292fb5c74b4d30",
+          "size": 68295
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-T-s4000.json",
+          "sha256": "0186225569239a24a77b189f2b2297f5547d4819fe3ab76bb38aee52026c64b8",
+          "size": 1025
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f2c8732d27d5b8ea19794642446ab57ced7f92e83ad688d8e9de9e64ba25d848",
+          "size": 1907327
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-T-s4000.json",
+          "sha256": "99938bc3d9b45f214efd1819fbc5a598ad981511b90e6eb202cd617fb43729f8",
+          "size": 1022
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7927d68e734402b138845b9fd1c0bcfa1ad37451272c3479d45d93d352e72564",
+          "size": 1334373
+        }
+      ]
+    },
+    "ordinary-D-s42-a1": {
+      "job_id": "ordinary-D-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "ordinary",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625034.863404,
+      "finished_at": 1794625131.491573,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s42-a1-trace.json",
+          "sha256": "00de7cd5c3455181c6e83f4ccec787d8262d81020596a0e790ef8824ec85d293",
+          "size": 36721
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s42.json",
+          "sha256": "220d9cd4c7b7d2bc5f1e591b1e56b78cdbe677c86721f7f4a820740b00372452",
+          "size": 1016
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7db4f6a9327fff6d2550cff815eff1c0765c0863a6d1b986ee869f0c5fc486ca",
+          "size": 337921
+        }
+      ]
+    },
+    "mixed-D-s42-a1": {
+      "job_id": "mixed-D-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "mixed",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625132.0741131,
+      "finished_at": 1794625222.534423,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s42-a1-trace.json",
+          "sha256": "18d1f353c40c2ae5cbf382261732e548b000a0fc53c3e63df0ceab3142b30547",
+          "size": 36004
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s42.json",
+          "sha256": "ee6d9697c5324757af5ab0dc09d5347b530c27686418dd60d1f31daefc4f6f56",
+          "size": 1031
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5664ae289188cb4ca60db58325e1c9feabcaaf386939f75592a0943a4a01ae97",
+          "size": 747461
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s42.json",
+          "sha256": "c4d7ab4f91b7bc8d189453c7a48766170f1b089718631404eaaed1b03eefba99",
+          "size": 1032
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "56472729dc2880ba1fb25b7632d2c8fd81ea38d3e239970e8299514fdf0f7a67",
+          "size": 587250
+        }
+      ]
+    },
+    "ordinary-D-s1000-a1": {
+      "job_id": "ordinary-D-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "ordinary",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625223.126973,
+      "finished_at": 1794625301.675097,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s1000-a1-trace.json",
+          "sha256": "72c5c9e4ecd39670fcc247cbe8a70b92a6c648b6a9e40c9594d508fef6f6f83c",
+          "size": 31364
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s1000.json",
+          "sha256": "b7b4be0649dc64729329251e02eb7118d367c078def8895e5251a0cbe030f197",
+          "size": 1025
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "334da6da9e9b3ea12fe8ea0ff015f773b8fd8d2fc69af400dfe3c2025e63eeed",
+          "size": 434103
+        }
+      ]
+    },
+    "mixed-D-s1000-a1": {
+      "job_id": "mixed-D-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "mixed",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625302.241944,
+      "finished_at": 1794625379.3545868,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s1000-a1-trace.json",
+          "sha256": "53baed822e1790018479d64bc16740e0ac06d9e303d5a2f71952debda7c6e18d",
+          "size": 29872
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s1000.json",
+          "sha256": "f4fbb839133ab04d94b0d8ebc0a062068918dd475196e1c1e36558abb3fbeaca",
+          "size": 1023
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d93ed8e65873ba1e2b93da9f66bab0c6f3cc65f03a46c7007781c019cfe0bb46",
+          "size": 378158
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s1000.json",
+          "sha256": "0e3f03b3a44ee8e85304e34421290f78e3d1d460f72dba8f812a63c783f55231",
+          "size": 1024
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a5eba8e327014c973f041d224c17da92f24ba9639f53a5ed0cf2e15231eaacd4",
+          "size": 518876
+        }
+      ]
+    },
+    "ordinary-D-s2000-a1": {
+      "job_id": "ordinary-D-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "ordinary",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625379.9144042,
+      "finished_at": 1794625471.144275,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s2000-a1-trace.json",
+          "sha256": "eaa151ca016419264c8d272c6fc24ea523805546aa07cd2a8a339ee6b2be2328",
+          "size": 35162
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s2000.json",
+          "sha256": "39e9173548de88f0a120c6855b5b361c921851d3ce6d54d490ec8cb151881751",
+          "size": 1042
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5ff19c7a637c732016369626b8a99a753856f086c0fc70bc8ba65019d7884804",
+          "size": 688649
+        }
+      ]
+    },
+    "mixed-D-s2000-a1": {
+      "job_id": "mixed-D-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "mixed",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625471.680993,
+      "finished_at": 1794625556.521972,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s2000-a1-trace.json",
+          "sha256": "5895def81190ca88a1c5cc9689bec0afd4a756fc9f4074f835449a10f04502a0",
+          "size": 32720
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s2000.json",
+          "sha256": "a1c665ab1b9ce24bbf8da5b6060ea37ac68f1d7d70ea4457a23b4e63796ded8e",
+          "size": 1042
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d1a0fcd21c43f8454789345aa2b6b4615287791185c3b5c870455fad0b1ca3b9",
+          "size": 272159
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s2000.json",
+          "sha256": "dcbae69e87aa99c599637f7f58f7fb72e662758d965807ab4f3671db06bc30bb",
+          "size": 1023
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "82e755bdc72907a076f18abba621bd49bb13e6e4a77e92c97a5326e1f866a1b7",
+          "size": 643615
+        }
+      ]
+    },
+    "ordinary-D-s3000-a1": {
+      "job_id": "ordinary-D-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "ordinary",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625557.07712,
+      "finished_at": 1794625637.2202182,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s3000-a1-trace.json",
+          "sha256": "e7514842adc131bb9a2e8e4390b10acacf90d7221cf393ae1170c07329623f7f",
+          "size": 32866
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s3000.json",
+          "sha256": "10d0380153dda24789252a44e3e36e9db90ae618dcea7123dadb53863f8da8b3",
+          "size": 1044
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "3eba800165e3db394d9532f44c9f1baac58022c61a2522a8d224e7cd544a7d79",
+          "size": 526783
+        }
+      ]
+    },
+    "mixed-D-s3000-a1": {
+      "job_id": "mixed-D-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "mixed",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625637.761633,
+      "finished_at": 1794625715.486698,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s3000-a1-trace.json",
+          "sha256": "8542ab78898b3b3debd342814267c612b167740ef088cf519fb545cb338e09c8",
+          "size": 32060
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s3000.json",
+          "sha256": "15a4a6769f1f698b1494c9733493386decb5eb7380e2193d26f572e79380b45e",
+          "size": 1018
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2df3b03c73f006de303b4e0f52a4c99eea474e2274c98a0bd3d4ba65baed770b",
+          "size": 459816
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s3000.json",
+          "sha256": "9e22405e1a28091f1a0bb683cb60f0fa320433b788e48e6cbcfbb399db387aa6",
+          "size": 1021
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "22bcb0df20fbd18a7c994236cb7c5704eec1378d62146809698a4919b267790a",
+          "size": 618064
+        }
+      ]
+    },
+    "ordinary-D-s4000-a1": {
+      "job_id": "ordinary-D-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "ordinary",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625716.026473,
+      "finished_at": 1794625812.832854,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-D-s4000-a1-trace.json",
+          "sha256": "5cea68a3223bbb4cd1c7bee5ae7be13b42d117f8021eb482bac0cf7231cdc79d",
+          "size": 39036
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-D-s4000.json",
+          "sha256": "8484e8af4bd6897f9ecbf9ca7d4b49289b6f6d1c6517332dd40382f4240d06b7",
+          "size": 1045
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "79e390f3d44c74d953de49c6b381404ae0fa789c876649a61dca82ca0479c621",
+          "size": 717131
+        }
+      ]
+    },
+    "mixed-D-s4000-a1": {
+      "job_id": "mixed-D-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "D",
+        "mixed",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625813.399449,
+      "finished_at": 1794625892.777767,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-D-s4000-a1-trace.json",
+          "sha256": "7daf5ffb50082cb5085b7d7bbe6b52bca7c7f610ade1397bbca0bd915cee1101",
+          "size": 30005
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-D-s4000.json",
+          "sha256": "8526c14de11bf3fad48aaea626001b611c81d326b4c00257ca41e9f16419f4b4",
+          "size": 1019
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a6eaa5d4777aaf255635cbf309d969f290d537b36e663e3ad107570b2137596e",
+          "size": 539228
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-D-s4000.json",
+          "sha256": "92781df707b2823ffcc1493b6b6a3657bfef05dd9e66b6233bd4e599fd4622c9",
+          "size": 1023
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ce93a0469cf2999f8422dada7daaf2427b6e8276c7e5d3491237b510c681e945",
+          "size": 481082
+        }
+      ]
+    },
+    "ordinary-F-s42-a1": {
+      "job_id": "ordinary-F-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "ordinary",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625903.4970062,
+      "finished_at": 1794625933.528362,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s42-a1-trace.json",
+          "sha256": "80a086c4652e5c9ad22a059068b225b813207215836e42ff6734686e35e3ad5a",
+          "size": 32872
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s42.json",
+          "sha256": "fcabc6e10370f0ebc34dbe4bf53853f6c63e2a50e64e3f54422241edad24fb51",
+          "size": 1010
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fd6c0bce801e2c111508d94fe5658b89626f0a88c9ad95343e6687c8ebb30c24",
+          "size": 515285
+        }
+      ]
+    },
+    "mixed-F-s42-a1": {
+      "job_id": "mixed-F-s42-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 42,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "mixed",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625934.083505,
+      "finished_at": 1794625955.044799,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s42-a1-trace.json",
+          "sha256": "304518375d0ee4c33f635006f42092da08a80dc48f27076b66cef2b68d76efed",
+          "size": 22141
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s42.json",
+          "sha256": "887232a5a211686909f1c832e76c27e836c4b109bcefad7093aa0675b3b53c5d",
+          "size": 1006
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a605028294ddf0c692ce7baf0772e75efe3a4f173be0b4e010f8341442b54dcc",
+          "size": 192475
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s42.json",
+          "sha256": "321980f0875c4274ff226f4244522a1c759e7ae1cb27a1a368bb71b373546949",
+          "size": 1006
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "642a15e0ff0250d0200f38292153f677ef0efc058a3b47bcff8cec213b51424e",
+          "size": 192471
+        }
+      ]
+    },
+    "ordinary-F-s1000-a1": {
+      "job_id": "ordinary-F-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "ordinary",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625955.569248,
+      "finished_at": 1794625976.388491,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s1000-a1-trace.json",
+          "sha256": "696474fc0039760045fcf0659aa00240960467b02d5fdf1537ffee26dc2a19cf",
+          "size": 23715
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s1000.json",
+          "sha256": "cdeda01a4e9c3b43a3dc3cbf6aeaaac06dcb722f216ca9393f629e9ac0f114d3",
+          "size": 1040
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "aec2a46273dc09e8a00a5c1cb56a6d596f3e7dcb4b3a2ea91fab8f106e52486c",
+          "size": 205905
+        }
+      ]
+    },
+    "mixed-F-s1000-a1": {
+      "job_id": "mixed-F-s1000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 1000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "mixed",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794625976.9040298,
+      "finished_at": 1794626012.314723,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s1000-a1-trace.json",
+          "sha256": "8523f22485cebfce87f6866e9bdb64de2ae954778664b3330fe2725f1f981ed4",
+          "size": 39360
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s1000.json",
+          "sha256": "8f0922d5060cd11ac7c1c2b0295fd749a98ff53406446e8ac9e9688bf6793f89",
+          "size": 1038
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "932d25a33fa5bbc5d9233ba5669ffa342faccaf77f604a5705c56d13fb06d091",
+          "size": 723666
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s1000.json",
+          "sha256": "aec28d97b606d5a79d5b2e45f9811b1045e0a37fbe1f9dcfe65ce2f654d0cc2b",
+          "size": 1037
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5fb8102fd8297765906c5c1f5f3c13e3a7ee50b719ae67c97151a4ba89a7ebae",
+          "size": 246096
+        }
+      ]
+    },
+    "ordinary-F-s2000-a1": {
+      "job_id": "ordinary-F-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "ordinary",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794626012.8363671,
+      "finished_at": 1794626041.2227461,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s2000-a1-trace.json",
+          "sha256": "3d55a1767893875af952a36fc12f333566233d20cf4f8862549805c7881a37a3",
+          "size": 34080
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s2000.json",
+          "sha256": "f0bc49e33feede26e455b17e7e2f6a6e9c90c90386931d14de69c7735c37c2ef",
+          "size": 1041
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f2a4df8b406ab5458c3b8c87cd82c8387dd2ffd24a50ac4ea0b8042c9ab486b7",
+          "size": 521122
+        }
+      ]
+    },
+    "mixed-F-s2000-a1": {
+      "job_id": "mixed-F-s2000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 2000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "mixed",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794626041.777117,
+      "finished_at": 1794626062.8768198,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s2000-a1-trace.json",
+          "sha256": "2b972a862245f7efdea29a5ee7c040cfa226a1fb4b5594c518f5e9243edb9c4f",
+          "size": 24487
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s2000.json",
+          "sha256": "c2ffcd1e446dfaa69ee33211765278c113ba71e0d979d6ecbf12231cdc996bc4",
+          "size": 1036
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "870f7313573b1bb8d891eea7813ca57dcca38de77fe1d8970ff93b09a765b1e8",
+          "size": 274529
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s2000.json",
+          "sha256": "aa9b9d84939083199f99b483b4d9922885bef29d7e9572bef378bd01a5ec56d0",
+          "size": 1038
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d237683debbc01515713a2b83bbcac861f389f3dacf5ab4311888ebee9788da1",
+          "size": 211272
+        }
+      ]
+    },
+    "ordinary-F-s3000-a1": {
+      "job_id": "ordinary-F-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "ordinary",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794626063.4169369,
+      "finished_at": 1794626083.9020119,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s3000-a1-trace.json",
+          "sha256": "ddd1ddb3ccf6afd4821b15ebd38cbcb5b1b783610961eb5321bc9a2e485d2bce",
+          "size": 23309
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s3000.json",
+          "sha256": "ba229aa5b7d9989fc4b4984d5175ae03767b76dab97e64ee57ee271e6ba644a1",
+          "size": 1040
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2d82fea79e0b5c495239fe77ceee854d21885651ea955599b9b66e0e3b4dde5e",
+          "size": 162479
+        }
+      ]
+    },
+    "mixed-F-s3000-a1": {
+      "job_id": "mixed-F-s3000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 3000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "mixed",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794626084.44619,
+      "finished_at": 1794626104.265857,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s3000-a1-trace.json",
+          "sha256": "ced227db2342a7aa689ccb237d7e71c3e7904ebba2743dd6178aab7af5367bb4",
+          "size": 22465
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s3000.json",
+          "sha256": "9e0bc715fb3e6fb4eed92acbf25d34b1e07ba8c0ea5b1b2602fa1c5982588061",
+          "size": 1037
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b14cc2e8c78a236b60f1d2bfbbc00bfd86be57fb8c75bd309330f7bc1567b800",
+          "size": 195733
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s3000.json",
+          "sha256": "022046ba3c73d7b5cbf878679ceaedd9411cecb5a34ff90a10f496832cdd1ba0",
+          "size": 1034
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ff51e3c64400397c047fc98f8037ec1db640dd9b72dd0b5270682ff274222bbd",
+          "size": 208483
+        }
+      ]
+    },
+    "ordinary-F-s4000-a1": {
+      "job_id": "ordinary-F-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "ordinary",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794626104.8079,
+      "finished_at": 1794626133.7176619,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/ordinary-F-s4000-a1-trace.json",
+          "sha256": "6ea2159df5ac8cd96ca392387d51ed224d8d40dfdabc2a76cdd0e60f211687ce",
+          "size": 30605
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/stop-F-s4000.json",
+          "sha256": "9dfeb5da44f8a0bc78f6fe7bacc46a563f26897fd117e8981b181946c4028834",
+          "size": 1040
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_stop_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "1d90d886e87810fda30507ef97018382b267880d16897b5ccccf4ad9995ba02f",
+          "size": 430614
+        }
+      ]
+    },
+    "mixed-F-s4000-a1": {
+      "job_id": "mixed-F-s4000-a1",
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "attempt_id": "weekly-h5-top3-mix-20261114/training-target/weekly-h5-top3-mix-20261114/a1",
+      "seed": 4000,
+      "label_horizon": 5,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-h5-top3.UmxWdc/run.py",
+        "fit",
+        "F",
+        "mixed",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794626134.334947,
+      "finished_at": 1794626165.271565,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/mixed-F-s4000-a1-trace.json",
+          "sha256": "f8befb076597dc76f22f491926915dbea76fc88f16eef575150e44e7432365ca",
+          "size": 32889
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/joint-F-s4000.json",
+          "sha256": "33eb8910a8a22562560efa3c2319009be0c215b12d424c63a5da92976e10c47a",
+          "size": 1017
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_joint_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ba4de88cbfcbd6613ba1d60e9cd8b774fcd502999d4b4074ce90fc0a1f25a347",
+          "size": 527434
+        },
+        {
+          "path": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114/docs/train-F-s4000.json",
+          "sha256": "95cd404acfae5f63843154ae9815ca06dc30e54ca89aae51bf633cda23776eb1",
+          "size": 1021
+        },
+        {
+          "path": "backtest/result/h5mix_20261114_train_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "be7dbb46a8213b05921834e2092ef96b510041be898ebb055a92fc26e03f7898",
+          "size": 206622
+        }
+      ]
+    }
+  },
+  "checksum": "d84ebbaf718db777d9a8eff4012fa642be1707aeaa76056843ff22384dc549f9"
+}

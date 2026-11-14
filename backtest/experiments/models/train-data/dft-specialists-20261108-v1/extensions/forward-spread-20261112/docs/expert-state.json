@@ -1,0 +1,4802 @@
+{
+  "schema": "forward-spread-experts-v1",
+  "status": "closed",
+  "created_at": 1794414913.6637928,
+  "deadline": 1794501051.492596,
+  "max_model_fit_starts": 64,
+  "scientific_fits": 60,
+  "revision": 141,
+  "events": [
+    {
+      "revision": 1,
+      "at": 1794414918.430082,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/configs/prepared-inputs.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/configs/evaluation.yaml",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/train-boundary-audit.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/train-date-eligibility.csv",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/target-D.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/target-F.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/target-T.pkl"
+      ]
+    },
+    {
+      "revision": 2,
+      "at": 1794414918.4310348,
+      "type": "stage_status",
+      "values": {
+        "status": "prepared"
+      }
+    },
+    {
+      "revision": 3,
+      "at": 1794414935.669138,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/preflight.json"
+      ]
+    },
+    {
+      "revision": 4,
+      "at": 1794414955.731581,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-train.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-style_metric.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-common.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-fast_metric.json"
+      ]
+    },
+    {
+      "revision": 5,
+      "at": 1794414956.2622871,
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 6,
+      "at": 1794415099.3257332,
+      "type": "fit_result",
+      "job_id": "monthly-h5-D-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s42-a1.json",
+          "sha256": "da441c08932b2bc48f80cd780615bc970dc5405e915df813108a98cd3f2e03d8",
+          "size": 56773
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "63591a049dbdd30ea481868adbed2fd53a9005dd1dd6848a78a359588fce8c54",
+          "size": 59576387
+        }
+      ]
+    },
+    {
+      "revision": 7,
+      "at": 1794415100.684243,
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 8,
+      "at": 1794415242.818742,
+      "type": "fit_result",
+      "job_id": "monthly-h5-D-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s1000-a1.json",
+          "sha256": "fc452a20f8f558819229f7247cb7e5b4f552d704db4dc0f91b27b5e2d2a85d1c",
+          "size": 56355
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f7ad56c315c75bd80df31c8b620e1fcaad053dc3fc01cd50254997357bdc645f",
+          "size": 59565463
+        }
+      ]
+    },
+    {
+      "revision": 9,
+      "at": 1794415244.084936,
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 10,
+      "at": 1794415384.93233,
+      "type": "fit_result",
+      "job_id": "monthly-h5-D-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s2000-a1.json",
+          "sha256": "81c8befaf444a6b29b7cf0c681a80adf7fa4abae53d864dfecf4992adab4c1f6",
+          "size": 53125
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6b04cf57b22cba102bbd38a1d7417ca5dbf69a6bdf0bd0f66ad13661a07cf17d",
+          "size": 59478023
+        }
+      ]
+    },
+    {
+      "revision": 11,
+      "at": 1794415386.200019,
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 12,
+      "at": 1794415478.995996,
+      "type": "fit_result",
+      "job_id": "monthly-h5-D-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s3000-a1.json",
+          "sha256": "e6e506360ed421866526a764029e0e722f2329b56c345a687d4a0e1440b0dc8d",
+          "size": 27598
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9ae60d847abe26695a3a8a6a44d2810ac9c404e03dad56735b942b72ccd69d42",
+          "size": 58602467
+        }
+      ]
+    },
+    {
+      "revision": 13,
+      "at": 1794415480.321284,
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 14,
+      "at": 1794415581.857497,
+      "type": "fit_result",
+      "job_id": "monthly-h5-D-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s4000-a1.json",
+          "sha256": "0ab82efa024933be3f231f171d9586b4d709e0de8655e7990901b74a4292deb9",
+          "size": 30852
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ab0437aaf39dd4c9c987525e7948e7470a99e0d9001978ff821e0e8cc70ba944",
+          "size": 58728052
+        }
+      ]
+    },
+    {
+      "revision": 15,
+      "at": 1794415583.120204,
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 16,
+      "at": 1794415647.723187,
+      "type": "fit_result",
+      "job_id": "monthly-h5-F-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s42-a1.json",
+          "sha256": "09f63ae151ed4b74917ddbd51bec45b69c4fb025ab42949753613b2109516bf7",
+          "size": 25954
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "cc1439b9e21bbf21ad144902f98cd55d2f8f827cb56a97ba29534c363be9d0cb",
+          "size": 58528826
+        }
+      ]
+    },
+    {
+      "revision": 17,
+      "at": 1794415648.8718238,
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 18,
+      "at": 1794415722.1397939,
+      "type": "fit_result",
+      "job_id": "monthly-h5-F-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s1000-a1.json",
+          "sha256": "aab521d6500b2486961a03eb5b634ad0635f826f9a091cfdf73206a3b4ac4305",
+          "size": 33784
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6e8e0e378f813eec07a81cb84610c1ce8a6b2dbf7e63601623bbf3f9859ab1c1",
+          "size": 58727672
+        }
+      ]
+    },
+    {
+      "revision": 19,
+      "at": 1794415723.2856588,
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 20,
+      "at": 1794415788.6100538,
+      "type": "fit_result",
+      "job_id": "monthly-h5-F-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s2000-a1.json",
+          "sha256": "7ad87dcac6235bcb3f5a538a38e81984f1e4bb2866607d57c3550e211ba3ecb0",
+          "size": 26439
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "17a220d2547a5d528e206ab9434b5dcca1e85bcd2c4a7296c660c20218abf0e9",
+          "size": 58537037
+        }
+      ]
+    },
+    {
+      "revision": 21,
+      "at": 1794415789.76385,
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 22,
+      "at": 1794415871.734354,
+      "type": "fit_result",
+      "job_id": "monthly-h5-F-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s3000-a1.json",
+          "sha256": "f6df87eea7c55a5a52b28748f2ce93d892b7aa06618a59088a27cf8d25eaab8b",
+          "size": 41091
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "30e28937daaa5a5bdd23e46da46214610ec844ac07c4444f81acba2d55a71cb9",
+          "size": 58892394
+        }
+      ]
+    },
+    {
+      "revision": 23,
+      "at": 1794415872.890731,
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 24,
+      "at": 1794415939.061207,
+      "type": "fit_result",
+      "job_id": "monthly-h5-F-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s4000-a1.json",
+          "sha256": "caa2d1656ef7fe8cdcc1d46451c8966b07734aa6b95f3dbeb0346126d206a966",
+          "size": 26473
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "077ee4d12e3f52f7458fd5a6febc134ec24b7d1ac04a767489642e92d927ae94",
+          "size": 58532902
+        }
+      ]
+    },
+    {
+      "revision": 25,
+      "at": 1794415940.2175732,
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 26,
+      "at": 1794416128.3905,
+      "type": "fit_result",
+      "job_id": "monthly-h5-T-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s42-a1.json",
+          "sha256": "d8c7c2f9e3ffe8c635a1d07857b53b68d9a6a50879af938c6d1f2942119619ca",
+          "size": 95436
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "08eb2ee7818530aaaeac0e7343a75000a0bf38dd3b1c920c8fa5efe5170d23fb",
+          "size": 60586590
+        }
+      ]
+    },
+    {
+      "revision": 27,
+      "at": 1794416129.6109052,
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 28,
+      "at": 1794416319.294606,
+      "type": "fit_result",
+      "job_id": "monthly-h5-T-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s1000-a1.json",
+          "sha256": "aa5e2ddbf8d1ef297c1e6d813f620505bb94a24a654be0c35503fd6d83794b4c",
+          "size": 95473
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "57757baf45a0735a6c4f1203f1fd8184b876367bde0d73149dc2a13afa5e482a",
+          "size": 60891281
+        }
+      ]
+    },
+    {
+      "revision": 29,
+      "at": 1794416320.688212,
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 30,
+      "at": 1794416505.113178,
+      "type": "fit_result",
+      "job_id": "monthly-h5-T-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s2000-a1.json",
+          "sha256": "9287c0bfe514e10b78ba6e18a67ec4b8eb3ca2f213f8c374117df552be5c6de6",
+          "size": 95520
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "093c54a625297087c5abae12719dfa30acecd845859f90a575d959d997e9da45",
+          "size": 60843594
+        }
+      ]
+    },
+    {
+      "revision": 31,
+      "at": 1794416506.393431,
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 32,
+      "at": 1794416692.188777,
+      "type": "fit_result",
+      "job_id": "monthly-h5-T-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s3000-a1.json",
+          "sha256": "ecf44695334ab3d6c86ecf88c6b513dc24d96cd50156ea4b954635dfb1657dfe",
+          "size": 95557
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "aca2ce59a63c05d21faa13f340d817a474cddd7f46225caf4ac613bd9f845cc3",
+          "size": 60690260
+        }
+      ]
+    },
+    {
+      "revision": 33,
+      "at": 1794416693.397481,
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 34,
+      "at": 1794416867.664656,
+      "type": "fit_result",
+      "job_id": "monthly-h5-T-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s4000-a1.json",
+          "sha256": "3293d24c171026d3d63a2dd2b5c746046aec7ec8d82ffb3621ccbbfbbae14612",
+          "size": 95603
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "91ba0c7869eb61e4a19bfb653ec2ffcc3b99c031e504461697f505bc12fe8f5e",
+          "size": 60548208
+        }
+      ]
+    },
+    {
+      "revision": 35,
+      "at": 1794418314.48485,
+      "type": "stage_status",
+      "values": {
+        "status": "completed",
+        "verified": true,
+        "evidence": [
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/expert-summary.json",
+            "sha256": "03e57f3b6aa7e36de9189e6f28b82a2f3ac17da4e766eabf1dbae0ef37551f22",
+            "size": 45648
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/numerical-verification.json",
+            "sha256": "77acb84f36b4c10e97222d52aa48e2d239c3628019cf8985153042c90bad3cf1",
+            "size": 9391
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/scientific-acceptance.json",
+            "sha256": "284edb5ac5fcb2fbcb0518edf4d79c2ae3ed1cd2ec919578e02e99ad9ae41be2",
+            "size": 163964
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/ensemble-head-gap.json",
+            "sha256": "4db72288e80541ac2f70c43805b2bec6c27bbcbdba090ac08657aed26f4accbf",
+            "size": 2762
+          }
+        ]
+      }
+    },
+    {
+      "revision": 36,
+      "at": 1794418318.3050308,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/configs/prepared-inputs.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/configs/evaluation.yaml",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/train-boundary-audit.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/train-date-eligibility.csv",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/target-D.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/target-F.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/target-T.pkl"
+      ]
+    },
+    {
+      "revision": 37,
+      "at": 1794418318.307105,
+      "type": "stage_status",
+      "values": {
+        "status": "prepared"
+      }
+    },
+    {
+      "revision": 38,
+      "at": 1794418334.8893561,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/preflight.json"
+      ]
+    },
+    {
+      "revision": 39,
+      "at": 1794418350.407404,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-train.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-style_metric.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-common.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-fast_metric.json"
+      ]
+    },
+    {
+      "revision": 40,
+      "at": 1794418351.046905,
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 41,
+      "at": 1794418457.3775811,
+      "type": "fit_result",
+      "job_id": "monthly-h20-D-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s42-a1.json",
+          "sha256": "5a391d56f9022d22fba9b80cdfd85614e0d562fff23a05f452737a51fe4236aa",
+          "size": 33289
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2c047a3b6f43e40e464e0aa24a2c6d321bc1674f580f587f6fd9079cd54905ae",
+          "size": 58827836
+        }
+      ]
+    },
+    {
+      "revision": 42,
+      "at": 1794418458.837837,
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 43,
+      "at": 1794418564.922106,
+      "type": "fit_result",
+      "job_id": "monthly-h20-D-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s1000-a1.json",
+          "sha256": "d2db27336538e507e9975767e64a9ea7c15f392b77f2f9a8fe77de85e64bd69f",
+          "size": 34249
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "bd7542d215733a3858f8f17d26a9658742917cab15978df5c3bc87656f719a1f",
+          "size": 58868953
+        }
+      ]
+    },
+    {
+      "revision": 44,
+      "at": 1794418566.304652,
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 45,
+      "at": 1794418674.951079,
+      "type": "fit_result",
+      "job_id": "monthly-h20-D-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s2000-a1.json",
+          "sha256": "8cb5e14a0f9a78c60798a888849d073b89428a436bf86ab3ccf1770d8a8ec813",
+          "size": 28217
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "64d4673f54e37390355b7464799ca63436e38168fb22c37d7576859505350819",
+          "size": 58630600
+        }
+      ]
+    },
+    {
+      "revision": 46,
+      "at": 1794418676.483111,
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 47,
+      "at": 1794418807.713577,
+      "type": "fit_result",
+      "job_id": "monthly-h20-D-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s3000-a1.json",
+          "sha256": "13379cc239f40c8a47989d21869ea4c1eb1d79a81d7c9f05976fba96b490edec",
+          "size": 33745
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9dde0f0fbb5b058c162cc0ba3ed25abc7e40653c20a8c4df289aa1c0daa01966",
+          "size": 58840399
+        }
+      ]
+    },
+    {
+      "revision": 48,
+      "at": 1794418809.1570728,
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 49,
+      "at": 1794418961.540979,
+      "type": "fit_result",
+      "job_id": "monthly-h20-D-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s4000-a1.json",
+          "sha256": "555e2b1f4efe01e75cd4901f78f8dd0fe39b7ea2703ee45a2894348e11a2f0bb",
+          "size": 53364
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "39e7401692a6995ed994d9bf8f51677e121b55c759636e09e5533bda721af361",
+          "size": 59493752
+        }
+      ]
+    },
+    {
+      "revision": 50,
+      "at": 1794418962.995501,
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 51,
+      "at": 1794419031.95689,
+      "type": "fit_result",
+      "job_id": "monthly-h20-F-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s42-a1.json",
+          "sha256": "77cc524ae20d1d9c42a5312b2ed3e28d5ec6090cade6d72a2ed08c8e2f2b3568",
+          "size": 26008
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "108271d1ff1a92a2aa2a9a0e3ed8a4f73776b59dcc6c98be6bc068469d3c27fa",
+          "size": 58527322
+        }
+      ]
+    },
+    {
+      "revision": 52,
+      "at": 1794419033.224397,
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 53,
+      "at": 1794419108.19525,
+      "type": "fit_result",
+      "job_id": "monthly-h20-F-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s1000-a1.json",
+          "sha256": "7cbbcf568dd7b4dad850cf71e72345410e2cdef32c9ec99e94ac325e8e8cdf8d",
+          "size": 31105
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "24a8a98856be5d1fb34acd0dcd46aa52c422e40008918b23eaac2e1d2b89dbae",
+          "size": 58652180
+        }
+      ]
+    },
+    {
+      "revision": 54,
+      "at": 1794419109.505537,
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 55,
+      "at": 1794419181.8466601,
+      "type": "fit_result",
+      "job_id": "monthly-h20-F-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s2000-a1.json",
+          "sha256": "8ee603c71ed3b0ed2c0c41009c2c5bc83ea35f63fcce6bd90b2dae438b4e89e7",
+          "size": 26098
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8b6f712aea03d0cedec13e72113a268f00ba8cc9c4ccaf5905630ac1d459ab16",
+          "size": 58525005
+        }
+      ]
+    },
+    {
+      "revision": 56,
+      "at": 1794419183.165289,
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 57,
+      "at": 1794419252.061244,
+      "type": "fit_result",
+      "job_id": "monthly-h20-F-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s3000-a1.json",
+          "sha256": "f64cec66da2e6f98dd0991b220705aa08aeacd882824b59e253e257b4cd99e54",
+          "size": 25575
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d70e8564063184e70c485c7f24498515f264407a4f48ddae369b158636da6d69",
+          "size": 58514800
+        }
+      ]
+    },
+    {
+      "revision": 58,
+      "at": 1794419253.398101,
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 59,
+      "at": 1794419320.297649,
+      "type": "fit_result",
+      "job_id": "monthly-h20-F-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s4000-a1.json",
+          "sha256": "564e3534586d32a4dc237a0dadfa2319fc323027c0007d2459c27b44ced7fca3",
+          "size": 26040
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d05795b11661c8a9843230f3fd328f41e050c11199c4bb1095086c393e996889",
+          "size": 58526036
+        }
+      ]
+    },
+    {
+      "revision": 60,
+      "at": 1794419321.601994,
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 61,
+      "at": 1794419396.3256588,
+      "type": "fit_result",
+      "job_id": "monthly-h20-T-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s42-a1.json",
+          "sha256": "15e99c37f0835f30908f95e05774caf3f6d601028a8ce0217252846bad6ba299",
+          "size": 29307
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "58af0a1fb6a3b8f3bfa6e14c44485e59f2ae832fcebd9922380635ceb8466b41",
+          "size": 58639169
+        }
+      ]
+    },
+    {
+      "revision": 62,
+      "at": 1794419397.749148,
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 63,
+      "at": 1794419508.258634,
+      "type": "fit_result",
+      "job_id": "monthly-h20-T-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s1000-a1.json",
+          "sha256": "591c8339ee5fd5a90446dcde64ecdee501d520e4db04c49fd2ac948b7868f4bd",
+          "size": 50527
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "aceb0609a5b9010f272c0e4ab599274b46c45f9872e9ff2c4108bc1b4a7a861c",
+          "size": 59190217
+        }
+      ]
+    },
+    {
+      "revision": 64,
+      "at": 1794419509.583314,
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 65,
+      "at": 1794419628.5803258,
+      "type": "fit_result",
+      "job_id": "monthly-h20-T-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s2000-a1.json",
+          "sha256": "6aee82a9b88f179e5ee19fa5cbeaf2629100406fe03482a96023d2fa4d95d182",
+          "size": 61235
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f8d8e98c64aa8bf91d2b6c4ae91f2e290bc89e8d356a884f8af272341bdf390c",
+          "size": 59501574
+        }
+      ]
+    },
+    {
+      "revision": 66,
+      "at": 1794419629.856048,
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 67,
+      "at": 1794419702.748124,
+      "type": "fit_result",
+      "job_id": "monthly-h20-T-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s3000-a1.json",
+          "sha256": "6ad76b08b3382a4d999ef112512c97d8ca883bae3e92368e29ecafd40f23d321",
+          "size": 30242
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "97c116e07e0e3563c1ae06767f50d4050fa9016092512700a3666758065c26f5",
+          "size": 58667818
+        }
+      ]
+    },
+    {
+      "revision": 68,
+      "at": 1794419704.018643,
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 69,
+      "at": 1794419774.991189,
+      "type": "fit_result",
+      "job_id": "monthly-h20-T-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s4000-a1.json",
+          "sha256": "220862443df443ec27ed84677f5bf6394ba0313deb424507b3589168a999241a",
+          "size": 29325
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ef844b476e91239c2e92b1952473c022b5181c5cd753682876782de0999368a6",
+          "size": 58640617
+        }
+      ]
+    },
+    {
+      "revision": 70,
+      "at": 1794420206.714846,
+      "type": "stage_status",
+      "values": {
+        "status": "completed",
+        "verified": true,
+        "evidence": [
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/expert-summary.json",
+            "sha256": "ca70e7199dbb4925c6fea3be7a20b20179d8b739978c478948ecfa082808ee32",
+            "size": 45662
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/numerical-verification.json",
+            "sha256": "248e4fdf843fc499e19391d607be49b08933d72094111e392218e7e8dccb1376",
+            "size": 9414
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/scientific-acceptance.json",
+            "sha256": "e2a3aaf93ca919c7fa38d5984f415b239bcce2ac7ffc9c0888f36f92b4d5d4b7",
+            "size": 163523
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/ensemble-head-gap.json",
+            "sha256": "9a6eede90c74491c090502d2891e5db5289c625167e2816de98eab570bb9fc93",
+            "size": 2776
+          }
+        ]
+      }
+    },
+    {
+      "revision": 71,
+      "at": 1794420210.484786,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/configs/prepared-inputs.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/configs/evaluation.yaml",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/train-boundary-audit.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/train-date-eligibility.csv",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/target-D.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/target-F.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/target-T.pkl"
+      ]
+    },
+    {
+      "revision": 72,
+      "at": 1794420210.488748,
+      "type": "stage_status",
+      "values": {
+        "status": "prepared"
+      }
+    },
+    {
+      "revision": 73,
+      "at": 1794420226.8882072,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/preflight.json"
+      ]
+    },
+    {
+      "revision": 74,
+      "at": 1794420242.3545449,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-train.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-style_metric.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-common.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-fast_metric.json"
+      ]
+    },
+    {
+      "revision": 75,
+      "at": 1794420243.112004,
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 76,
+      "at": 1794420331.241936,
+      "type": "fit_result",
+      "job_id": "weekly-h5-D-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s42-a1.json",
+          "sha256": "3c526bf1ae22498a093c780933748070b40ecf6c1edd5170f29700f4927daad7",
+          "size": 30373
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5eac7eadfb2add23f2f6b47eeb886ef39e9c116f35204adf520ce740ae410fa8",
+          "size": 58697639
+        }
+      ]
+    },
+    {
+      "revision": 77,
+      "at": 1794420332.748118,
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 78,
+      "at": 1794420472.5918772,
+      "type": "fit_result",
+      "job_id": "weekly-h5-D-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s1000-a1.json",
+          "sha256": "365ec46436b3dc0c95d8bc34dc0f150390e80ccae6e4743e64814eaaead890ee",
+          "size": 74498
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fb81bf7635f3615197786dfa097b930b9b95b0594b10f70e77e262471c8facd4",
+          "size": 60045654
+        }
+      ]
+    },
+    {
+      "revision": 79,
+      "at": 1794420474.167308,
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 80,
+      "at": 1794420621.739116,
+      "type": "fit_result",
+      "job_id": "weekly-h5-D-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s2000-a1.json",
+          "sha256": "6ea57ea58babda66c24c344a5ae9d7a02356e3251885646ea0b000313fc33d73",
+          "size": 66066
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "1f49ff0b9415e1ac4c36f6afab0b38519b5be669001011baa8298c10a21721da",
+          "size": 59808721
+        }
+      ]
+    },
+    {
+      "revision": 81,
+      "at": 1794420623.3110368,
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 82,
+      "at": 1794420794.0668821,
+      "type": "fit_result",
+      "job_id": "weekly-h5-D-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s3000-a1.json",
+          "sha256": "801e7d85b768b5e9fe8c4f3c26908c7cf28531160780b1f3c75ff2aa5e57d5a5",
+          "size": 71204
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fd98e80708384dc125f769f133d300628e9be9f15e5e4b6dfe238d1dae251bdf",
+          "size": 59969551
+        }
+      ]
+    },
+    {
+      "revision": 83,
+      "at": 1794420796.0267699,
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 84,
+      "at": 1794420918.184661,
+      "type": "fit_result",
+      "job_id": "weekly-h5-D-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s4000-a1.json",
+          "sha256": "2c2cd80ff57b9b2d88ada10a8405a55e9351f793042596d30abaef419d886d6d",
+          "size": 57266
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "bcc917d79a203bd54a24c6c71e19ec43a27384e5eff0cff85abb602000dd5ac6",
+          "size": 59532110
+        }
+      ]
+    },
+    {
+      "revision": 85,
+      "at": 1794420919.672839,
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 86,
+      "at": 1794420984.99395,
+      "type": "fit_result",
+      "job_id": "weekly-h5-F-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s42-a1.json",
+          "sha256": "b8bf289b3fe345fc37dd8c3b536a6eae8506a38f1d089f9211af68a79f066a3b",
+          "size": 26465
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5c0ba2b20f9d33a0273a17f5a52e01b74eeaf082c8f159b5faf346e01cdf6b2f",
+          "size": 58550309
+        }
+      ]
+    },
+    {
+      "revision": 87,
+      "at": 1794420986.3628328,
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 88,
+      "at": 1794421052.024726,
+      "type": "fit_result",
+      "job_id": "weekly-h5-F-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s1000-a1.json",
+          "sha256": "b27eaf6420944f486ba19d9241ce4a09971a18151404dde3abd224c30f94c437",
+          "size": 26442
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8822ff68306c1e744e0b1a1ae579ef762ccf2d9118d869b4d22c30df782429b4",
+          "size": 58549575
+        }
+      ]
+    },
+    {
+      "revision": 89,
+      "at": 1794421053.399431,
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 90,
+      "at": 1794421124.959496,
+      "type": "fit_result",
+      "job_id": "weekly-h5-F-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s2000-a1.json",
+          "sha256": "e76b3ae8516873a06db6e8ff20684e7c70d96bb0aea1c61479bce2a1e18bd965",
+          "size": 29686
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "90c59b8f2f1b8ccd4627f88371b72d0fc1a63603d29171fd946e1f57bc7abacd",
+          "size": 58650436
+        }
+      ]
+    },
+    {
+      "revision": 91,
+      "at": 1794421126.354701,
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 92,
+      "at": 1794421192.059582,
+      "type": "fit_result",
+      "job_id": "weekly-h5-F-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s3000-a1.json",
+          "sha256": "212bcd855cb36bdf8e0b7b5cdacbeca6a26252edffb0807b227ea36af65f81aa",
+          "size": 26479
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ef43de6649e1352beb4de04b245c35d540146a050799b6b54b8fe09d7f4c485e",
+          "size": 58550455
+        }
+      ]
+    },
+    {
+      "revision": 93,
+      "at": 1794421193.462796,
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 94,
+      "at": 1794421261.343369,
+      "type": "fit_result",
+      "job_id": "weekly-h5-F-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s4000-a1.json",
+          "sha256": "0f48b79882ed4a3af2eb1d8a654516d81a3428ee7d5d4c9fa4965ebfdee8b347",
+          "size": 27404
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fb1e3b7da4a509b9588552f035d79062cc745877fdbde3ba985b682fc51d28e0",
+          "size": 58578441
+        }
+      ]
+    },
+    {
+      "revision": 95,
+      "at": 1794421262.7374258,
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 96,
+      "at": 1794421449.3605728,
+      "type": "fit_result",
+      "job_id": "weekly-h5-T-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s42-a1.json",
+          "sha256": "cbe82cc0fab52f922e678cff1cee044bb8a14587755470eb9f3674b8afae098e",
+          "size": 96045
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ff6afc4404737bbe713bc2c1cdc32254fec4dca3c94dc2264d1f4f026d66be2d",
+          "size": 61308671
+        }
+      ]
+    },
+    {
+      "revision": 97,
+      "at": 1794421450.89644,
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 98,
+      "at": 1794421602.714566,
+      "type": "fit_result",
+      "job_id": "weekly-h5-T-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s1000-a1.json",
+          "sha256": "0ab024223733288bffcb2f322bc91fcd5e913dedfe73ed9c7d571a2431df2aba",
+          "size": 69837
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2038900ffaa2dce146fa0aaa983af10a59bffb52c0020c775eb5664baeac379f",
+          "size": 59823249
+        }
+      ]
+    },
+    {
+      "revision": 99,
+      "at": 1794421604.266041,
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 100,
+      "at": 1794421703.506924,
+      "type": "fit_result",
+      "job_id": "weekly-h5-T-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s2000-a1.json",
+          "sha256": "b2016767ec86d2afbd7ab0f171fab109a9c3eaa8e12c3121d53963c7e2369c51",
+          "size": 33167
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "91e46efef93d0c31abdc11d2cfd6ae9e1fe99b459518213667d316b3a6a53491",
+          "size": 58775528
+        }
+      ]
+    },
+    {
+      "revision": 101,
+      "at": 1794421705.0532749,
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 102,
+      "at": 1794421917.8658838,
+      "type": "fit_result",
+      "job_id": "weekly-h5-T-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s3000-a1.json",
+          "sha256": "211a486fefae84f41587bc6df59da034cb034d0587feddfb266c4cb41eff46ee",
+          "size": 95829
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2881b0a78ce32f3e9f6eda5f4a8f590827c810cfaad0ab6d4b32d72b7c3f089b",
+          "size": 61261364
+        }
+      ]
+    },
+    {
+      "revision": 103,
+      "at": 1794421919.3820758,
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 104,
+      "at": 1794422091.804596,
+      "type": "fit_result",
+      "job_id": "weekly-h5-T-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s4000-a1.json",
+          "sha256": "3f34c161f9b16925fc89c9c3f730f66f2da6607d90610a8113dd3c760489c3e7",
+          "size": 95966
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "dd97d9c61e03d2f69992da8f74420884d6631c415b7a5c42fd91e15266a01dbd",
+          "size": 60952181
+        }
+      ]
+    },
+    {
+      "revision": 105,
+      "at": 1794422599.419211,
+      "type": "stage_status",
+      "values": {
+        "status": "completed",
+        "verified": true,
+        "evidence": [
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/expert-summary.json",
+            "sha256": "3f032651e1cf6c89d7878442f9987f28d757302797d30b1594897cbedb9375fc",
+            "size": 45687
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/numerical-verification.json",
+            "sha256": "7fdf44de132c16741d69e3f0a7e45ea38ff50b81fcd4daec721add8ca989ea0d",
+            "size": 9366
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/scientific-acceptance.json",
+            "sha256": "4352a42565f2551decb88587588f88d0cf5441114b29e8bbba93972baf38af0d",
+            "size": 163245
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/ensemble-head-gap.json",
+            "sha256": "503cc6f5d1d0dc7785f98428058b56a49e5d66db1679522363385d82af2d475d",
+            "size": 2783
+          }
+        ]
+      }
+    },
+    {
+      "revision": 106,
+      "at": 1794422603.4315798,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/configs/prepared-inputs.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/configs/evaluation.yaml",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/train-boundary-audit.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/train-date-eligibility.csv",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/target-D.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/target-F.pkl",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/target-T.pkl"
+      ]
+    },
+    {
+      "revision": 107,
+      "at": 1794422603.436432,
+      "type": "stage_status",
+      "values": {
+        "status": "prepared"
+      }
+    },
+    {
+      "revision": 108,
+      "at": 1794422620.2129269,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/preflight.json"
+      ]
+    },
+    {
+      "revision": 109,
+      "at": 1794422635.746737,
+      "type": "freeze",
+      "paths": [
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-train.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-style_metric.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-common.json",
+        "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-fast_metric.json"
+      ]
+    },
+    {
+      "revision": 110,
+      "at": 1794422636.603474,
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 111,
+      "at": 1794422729.1766841,
+      "type": "fit_result",
+      "job_id": "weekly-h20-D-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s42-a1.json",
+          "sha256": "5c2551a091ceeb0c56ce948a227d24e0e5250b8424febeed44f4ae1659b13540",
+          "size": 34505
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "528819b6ad148c32d87415c2db83ddb0fee3309d78c042cdce8620291a1b0435",
+          "size": 58843429
+        }
+      ]
+    },
+    {
+      "revision": 112,
+      "at": 1794422730.794883,
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 113,
+      "at": 1794422898.46626,
+      "type": "fit_result",
+      "job_id": "weekly-h20-D-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s1000-a1.json",
+          "sha256": "2ac92b2cdab6f791a3c04a689b47f23f6b307381fd6093b1a962a964884077b8",
+          "size": 88436
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d804d42492e0c96007a4bdeaa97fd2979750734a7ec0b3e3f9af6d29e8be7b7e",
+          "size": 60512029
+        }
+      ]
+    },
+    {
+      "revision": 114,
+      "at": 1794422900.11863,
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 115,
+      "at": 1794423023.893628,
+      "type": "fit_result",
+      "job_id": "weekly-h20-D-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s2000-a1.json",
+          "sha256": "f8c2551871ef28e34fc771ae2ad5da057f7c4c9e92d98e125cd8fb4d562d5ff6",
+          "size": 43823
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "92d0a6eb3b2ff80f58467cc8d5c47725381de479564ac999ad70214f775f697c",
+          "size": 59143180
+        }
+      ]
+    },
+    {
+      "revision": 116,
+      "at": 1794423025.5303319,
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 117,
+      "at": 1794423120.0623481,
+      "type": "fit_result",
+      "job_id": "weekly-h20-D-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s3000-a1.json",
+          "sha256": "48fc655e2b5d7513c5f1a62c2591ce3259dcd0ffbd2abccac1cab50ca415003f",
+          "size": 30382
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "91141a4a9163b012ad7887f0fb8a63a11edef876285cf135bfe9c25e3cb7e908",
+          "size": 58710704
+        }
+      ]
+    },
+    {
+      "revision": 118,
+      "at": 1794423121.6686049,
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 119,
+      "at": 1794423207.342775,
+      "type": "fit_result",
+      "job_id": "weekly-h20-D-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s4000-a1.json",
+          "sha256": "c1b59b51a5672ecdd106827f16ce937b9de0474609dc2a9b86c87e0815025547",
+          "size": 29931
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "16aeb3cd9c167c7e9c5dd5a24fe9fbcb913b7edc1c4b440387c7bd799b9f8c0b",
+          "size": 58692418
+        }
+      ]
+    },
+    {
+      "revision": 120,
+      "at": 1794423208.946343,
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 121,
+      "at": 1794423269.926135,
+      "type": "fit_result",
+      "job_id": "weekly-h20-F-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s42-a1.json",
+          "sha256": "fb74d682717d8db5d68fb8ff5447c53657af2853f4fdd57e2ceedfb6d07fd0c8",
+          "size": 27832
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6c26f984bd5b916a67f33b411a582ab2699be06df07e5ee5ba813e7b49ea24eb",
+          "size": 58589187
+        }
+      ]
+    },
+    {
+      "revision": 122,
+      "at": 1794423271.403168,
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 123,
+      "at": 1794423332.508179,
+      "type": "fit_result",
+      "job_id": "weekly-h20-F-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s1000-a1.json",
+          "sha256": "3e02d62d1ce4be96cb4825d8e241bb18c4aca9840dc73c58c3d6a6ac9ae06e9e",
+          "size": 26902
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "405ee51cc12417ab0188c16aa2c447247e265f57425675df7033985f904cb694",
+          "size": 58563799
+        }
+      ]
+    },
+    {
+      "revision": 124,
+      "at": 1794423334.031441,
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 125,
+      "at": 1794423397.065234,
+      "type": "fit_result",
+      "job_id": "weekly-h20-F-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s2000-a1.json",
+          "sha256": "ae65568541859a3cafb344f810d968d26595c3284f5628bf7ebd7ee22c1a7bb0",
+          "size": 26930
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "44608d676da472e5478680198db9f1bd2c375fb7acd4ccbd27b9b2e48377353c",
+          "size": 58563303
+        }
+      ]
+    },
+    {
+      "revision": 126,
+      "at": 1794423398.576968,
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 127,
+      "at": 1794423463.7468538,
+      "type": "fit_result",
+      "job_id": "weekly-h20-F-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s3000-a1.json",
+          "sha256": "8fd5740f377be5910e91145ce307b1ae459fbbd86429896e3831838db9b1eecc",
+          "size": 29683
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "670c30600080f75391baa86f132cef55f9114fa0ad87c04f5ef2f896d0ffcd44",
+          "size": 58639711
+        }
+      ]
+    },
+    {
+      "revision": 128,
+      "at": 1794423465.2535172,
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 129,
+      "at": 1794423540.5234408,
+      "type": "fit_result",
+      "job_id": "weekly-h20-F-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s4000-a1.json",
+          "sha256": "762cf796a2316108a405274fbb481b039228bb8d847ef3067378b85421f7cb6d",
+          "size": 41096
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "72a7f06ce45134906a00c842f2113148d1cc61f3c2846c1cd361829cbc6d0243",
+          "size": 58886120
+        }
+      ]
+    },
+    {
+      "revision": 130,
+      "at": 1794423542.079704,
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 131,
+      "at": 1794423637.274566,
+      "type": "fit_result",
+      "job_id": "weekly-h20-T-s42-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s42-a1.json",
+          "sha256": "c7750e48e3d658cc6f953bceab03fbec733027cc7706bcb59c748732a85e004f",
+          "size": 37505
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "be91bf351ccb1e510f2b6fade300a518dcf2d7d8a8f481055e14dec65f20034e",
+          "size": 58912021
+        }
+      ]
+    },
+    {
+      "revision": 132,
+      "at": 1794423638.911828,
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 133,
+      "at": 1794423852.764797,
+      "type": "fit_result",
+      "job_id": "weekly-h20-T-s1000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s1000-a1.json",
+          "sha256": "a450a5452cf6e5549a185c1f204b9bf9b4680298be6a213f5a1883ee7467da25",
+          "size": 95313
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "672c7fc7224f263211b66190800f96cdcb045e539c232ccb0656745c7b858d2d",
+          "size": 61342510
+        }
+      ]
+    },
+    {
+      "revision": 134,
+      "at": 1794423854.51113,
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 135,
+      "at": 1794424043.452907,
+      "type": "fit_result",
+      "job_id": "weekly-h20-T-s2000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s2000-a1.json",
+          "sha256": "3f06e6a0f10c190e712d3b380d9ab84c85eef381cf284176f94548b0c48d091c",
+          "size": 75004
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b8cd43a4b7752595492beab3bec2c03e42bd898d5c2aac054b248a76a32cbdb4",
+          "size": 60051344
+        }
+      ]
+    },
+    {
+      "revision": 136,
+      "at": 1794424045.1241732,
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 137,
+      "at": 1794424211.563158,
+      "type": "fit_result",
+      "job_id": "weekly-h20-T-s3000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s3000-a1.json",
+          "sha256": "7d883991e234a62198baf0c42e33b0865d41d1f7c4f23441dfe0258d16573d3f",
+          "size": 63177
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7d64d0e410b6bd184a0d877151e1daa0c8837152ceedfce7cdae15cc15b7e6af",
+          "size": 59652571
+        }
+      ]
+    },
+    {
+      "revision": 138,
+      "at": 1794424213.23872,
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ]
+    },
+    {
+      "revision": 139,
+      "at": 1794424328.324453,
+      "type": "fit_result",
+      "job_id": "weekly-h20-T-s4000-a1",
+      "outcome": "succeeded",
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s4000-a1.json",
+          "sha256": "3c56c287f3a05751ecccf75afb50334b3e0adee259adbb574a27d8ff9d20802c",
+          "size": 36524
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "dd201a1b46ec13b6c9735db98a60250a15e721d4d393640f76734b5a85bab636",
+          "size": 58886923
+        }
+      ]
+    },
+    {
+      "revision": 140,
+      "at": 1794424799.394757,
+      "type": "stage_status",
+      "values": {
+        "status": "completed",
+        "verified": true,
+        "evidence": [
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/expert-summary.json",
+            "sha256": "1c3cd6a7461cc5a33d2ad07cb58f73e18ddedfd94098fa428a498043ba0f34cc",
+            "size": 45494
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/numerical-verification.json",
+            "sha256": "f8905d246e5a7d0d52fcb96975bca112a4776874921a29c9724916dec9139224",
+            "size": 9386
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/scientific-acceptance.json",
+            "sha256": "ee8ffa7fccb128c58e1d176d44fb2491eacb14b0666f6fa26d9883f58402ebdb",
+            "size": 115990
+          },
+          {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/ensemble-head-gap.json",
+            "sha256": "7dce6d9186c5ac7a48117d4556b0251982d91357c386bef70fdac3f1d49e33e3",
+            "size": 2771
+          }
+        ]
+      }
+    },
+    {
+      "revision": 141,
+      "at": 1794424799.406671,
+      "type": "close",
+      "reason": "All 60 frozen expert fits and four stage numerical verifications complete."
+    }
+  ],
+  "jobs": {
+    "monthly-h5-D-s42-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 54331,
+      "started_at": 1794414956.262285,
+      "finished_at": 1794415099.325731,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s42-a1.json",
+          "sha256": "da441c08932b2bc48f80cd780615bc970dc5405e915df813108a98cd3f2e03d8",
+          "size": 56773
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "63591a049dbdd30ea481868adbed2fd53a9005dd1dd6848a78a359588fce8c54",
+          "size": 59576387
+        }
+      ]
+    },
+    "monthly-h5-D-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 54986,
+      "started_at": 1794415100.6842408,
+      "finished_at": 1794415242.818741,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s1000-a1.json",
+          "sha256": "fc452a20f8f558819229f7247cb7e5b4f552d704db4dc0f91b27b5e2d2a85d1c",
+          "size": 56355
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f7ad56c315c75bd80df31c8b620e1fcaad053dc3fc01cd50254997357bdc645f",
+          "size": 59565463
+        }
+      ]
+    },
+    "monthly-h5-D-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 55695,
+      "started_at": 1794415244.084934,
+      "finished_at": 1794415384.932329,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s2000-a1.json",
+          "sha256": "81c8befaf444a6b29b7cf0c681a80adf7fa4abae53d864dfecf4992adab4c1f6",
+          "size": 53125
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6b04cf57b22cba102bbd38a1d7417ca5dbf69a6bdf0bd0f66ad13661a07cf17d",
+          "size": 59478023
+        }
+      ]
+    },
+    "monthly-h5-D-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 56361,
+      "started_at": 1794415386.200017,
+      "finished_at": 1794415478.9959948,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s3000-a1.json",
+          "sha256": "e6e506360ed421866526a764029e0e722f2329b56c345a687d4a0e1440b0dc8d",
+          "size": 27598
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9ae60d847abe26695a3a8a6a44d2810ac9c404e03dad56735b942b72ccd69d42",
+          "size": 58602467
+        }
+      ]
+    },
+    "monthly-h5-D-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 56690,
+      "started_at": 1794415480.3212821,
+      "finished_at": 1794415581.857495,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-D-s4000-a1.json",
+          "sha256": "0ab82efa024933be3f231f171d9586b4d709e0de8655e7990901b74a4292deb9",
+          "size": 30852
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ab0437aaf39dd4c9c987525e7948e7470a99e0d9001978ff821e0e8cc70ba944",
+          "size": 58728052
+        }
+      ]
+    },
+    "monthly-h5-F-s42-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 57109,
+      "started_at": 1794415583.120202,
+      "finished_at": 1794415647.7231848,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s42-a1.json",
+          "sha256": "09f63ae151ed4b74917ddbd51bec45b69c4fb025ab42949753613b2109516bf7",
+          "size": 25954
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "cc1439b9e21bbf21ad144902f98cd55d2f8f827cb56a97ba29534c363be9d0cb",
+          "size": 58528826
+        }
+      ]
+    },
+    "monthly-h5-F-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 57308,
+      "started_at": 1794415648.8718212,
+      "finished_at": 1794415722.139792,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s1000-a1.json",
+          "sha256": "aab521d6500b2486961a03eb5b634ad0635f826f9a091cfdf73206a3b4ac4305",
+          "size": 33784
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6e8e0e378f813eec07a81cb84610c1ce8a6b2dbf7e63601623bbf3f9859ab1c1",
+          "size": 58727672
+        }
+      ]
+    },
+    "monthly-h5-F-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 57561,
+      "started_at": 1794415723.285656,
+      "finished_at": 1794415788.610053,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s2000-a1.json",
+          "sha256": "7ad87dcac6235bcb3f5a538a38e81984f1e4bb2866607d57c3550e211ba3ecb0",
+          "size": 26439
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "17a220d2547a5d528e206ab9434b5dcca1e85bcd2c4a7296c660c20218abf0e9",
+          "size": 58537037
+        }
+      ]
+    },
+    "monthly-h5-F-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 57764,
+      "started_at": 1794415789.7638478,
+      "finished_at": 1794415871.7343519,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s3000-a1.json",
+          "sha256": "f6df87eea7c55a5a52b28748f2ce93d892b7aa06618a59088a27cf8d25eaab8b",
+          "size": 41091
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "30e28937daaa5a5bdd23e46da46214610ec844ac07c4444f81acba2d55a71cb9",
+          "size": 58892394
+        }
+      ]
+    },
+    "monthly-h5-F-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 58077,
+      "started_at": 1794415872.890729,
+      "finished_at": 1794415939.0611992,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-F-s4000-a1.json",
+          "sha256": "caa2d1656ef7fe8cdcc1d46451c8966b07734aa6b95f3dbeb0346126d206a966",
+          "size": 26473
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "077ee4d12e3f52f7458fd5a6febc134ec24b7d1ac04a767489642e92d927ae94",
+          "size": 58532902
+        }
+      ]
+    },
+    "monthly-h5-T-s42-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 58294,
+      "started_at": 1794415940.21757,
+      "finished_at": 1794416128.3904939,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s42-a1.json",
+          "sha256": "d8c7c2f9e3ffe8c635a1d07857b53b68d9a6a50879af938c6d1f2942119619ca",
+          "size": 95436
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "08eb2ee7818530aaaeac0e7343a75000a0bf38dd3b1c920c8fa5efe5170d23fb",
+          "size": 60586590
+        }
+      ]
+    },
+    "monthly-h5-T-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 59428,
+      "started_at": 1794416129.610903,
+      "finished_at": 1794416319.294604,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s1000-a1.json",
+          "sha256": "aa5e2ddbf8d1ef297c1e6d813f620505bb94a24a654be0c35503fd6d83794b4c",
+          "size": 95473
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "57757baf45a0735a6c4f1203f1fd8184b876367bde0d73149dc2a13afa5e482a",
+          "size": 60891281
+        }
+      ]
+    },
+    "monthly-h5-T-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 60488,
+      "started_at": 1794416320.68821,
+      "finished_at": 1794416505.113176,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s2000-a1.json",
+          "sha256": "9287c0bfe514e10b78ba6e18a67ec4b8eb3ca2f213f8c374117df552be5c6de6",
+          "size": 95520
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "093c54a625297087c5abae12719dfa30acecd845859f90a575d959d997e9da45",
+          "size": 60843594
+        }
+      ]
+    },
+    "monthly-h5-T-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 61442,
+      "started_at": 1794416506.393429,
+      "finished_at": 1794416692.1887748,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s3000-a1.json",
+          "sha256": "ecf44695334ab3d6c86ecf88c6b513dc24d96cd50156ea4b954635dfb1657dfe",
+          "size": 95557
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "aca2ce59a63c05d21faa13f340d817a474cddd7f46225caf4ac613bd9f845cc3",
+          "size": 60690260
+        }
+      ]
+    },
+    "monthly-h5-T-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h5-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h5",
+      "outcome": "succeeded",
+      "pid": 62527,
+      "started_at": 1794416693.3974779,
+      "finished_at": 1794416867.664412,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/monthly-h5-T-s4000-a1.json",
+          "sha256": "3293d24c171026d3d63a2dd2b5c746046aec7ec8d82ffb3621ccbbfbbae14612",
+          "size": 95603
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h5_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "91ba0c7869eb61e4a19bfb653ec2ffcc3b99c031e504461697f505bc12fe8f5e",
+          "size": 60548208
+        }
+      ]
+    },
+    "monthly-h20-D-s42-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 64473,
+      "started_at": 1794418351.0469031,
+      "finished_at": 1794418457.37758,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s42-a1.json",
+          "sha256": "5a391d56f9022d22fba9b80cdfd85614e0d562fff23a05f452737a51fe4236aa",
+          "size": 33289
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2c047a3b6f43e40e464e0aa24a2c6d321bc1674f580f587f6fd9079cd54905ae",
+          "size": 58827836
+        }
+      ]
+    },
+    "monthly-h20-D-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 64854,
+      "started_at": 1794418458.837834,
+      "finished_at": 1794418564.9221041,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s1000-a1.json",
+          "sha256": "d2db27336538e507e9975767e64a9ea7c15f392b77f2f9a8fe77de85e64bd69f",
+          "size": 34249
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "bd7542d215733a3858f8f17d26a9658742917cab15978df5c3bc87656f719a1f",
+          "size": 58868953
+        }
+      ]
+    },
+    "monthly-h20-D-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 65282,
+      "started_at": 1794418566.30465,
+      "finished_at": 1794418674.951078,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s2000-a1.json",
+          "sha256": "8cb5e14a0f9a78c60798a888849d073b89428a436bf86ab3ccf1770d8a8ec813",
+          "size": 28217
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "64d4673f54e37390355b7464799ca63436e38168fb22c37d7576859505350819",
+          "size": 58630600
+        }
+      ]
+    },
+    "monthly-h20-D-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 65741,
+      "started_at": 1794418676.4831092,
+      "finished_at": 1794418807.713575,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s3000-a1.json",
+          "sha256": "13379cc239f40c8a47989d21869ea4c1eb1d79a81d7c9f05976fba96b490edec",
+          "size": 33745
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9dde0f0fbb5b058c162cc0ba3ed25abc7e40653c20a8c4df289aa1c0daa01966",
+          "size": 58840399
+        }
+      ]
+    },
+    "monthly-h20-D-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 66255,
+      "started_at": 1794418809.157071,
+      "finished_at": 1794418961.5407941,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-D-s4000-a1.json",
+          "sha256": "555e2b1f4efe01e75cd4901f78f8dd0fe39b7ea2703ee45a2894348e11a2f0bb",
+          "size": 53364
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "39e7401692a6995ed994d9bf8f51677e121b55c759636e09e5533bda721af361",
+          "size": 59493752
+        }
+      ]
+    },
+    "monthly-h20-F-s42-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 66896,
+      "started_at": 1794418962.995488,
+      "finished_at": 1794419031.956888,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s42-a1.json",
+          "sha256": "77cc524ae20d1d9c42a5312b2ed3e28d5ec6090cade6d72a2ed08c8e2f2b3568",
+          "size": 26008
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "108271d1ff1a92a2aa2a9a0e3ed8a4f73776b59dcc6c98be6bc068469d3c27fa",
+          "size": 58527322
+        }
+      ]
+    },
+    "monthly-h20-F-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 67223,
+      "started_at": 1794419033.224394,
+      "finished_at": 1794419108.1952488,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s1000-a1.json",
+          "sha256": "7cbbcf568dd7b4dad850cf71e72345410e2cdef32c9ec99e94ac325e8e8cdf8d",
+          "size": 31105
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "24a8a98856be5d1fb34acd0dcd46aa52c422e40008918b23eaac2e1d2b89dbae",
+          "size": 58652180
+        }
+      ]
+    },
+    "monthly-h20-F-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 67529,
+      "started_at": 1794419109.505535,
+      "finished_at": 1794419181.846658,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s2000-a1.json",
+          "sha256": "8ee603c71ed3b0ed2c0c41009c2c5bc83ea35f63fcce6bd90b2dae438b4e89e7",
+          "size": 26098
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8b6f712aea03d0cedec13e72113a268f00ba8cc9c4ccaf5905630ac1d459ab16",
+          "size": 58525005
+        }
+      ]
+    },
+    "monthly-h20-F-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 67777,
+      "started_at": 1794419183.165287,
+      "finished_at": 1794419252.061237,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s3000-a1.json",
+          "sha256": "f64cec66da2e6f98dd0991b220705aa08aeacd882824b59e253e257b4cd99e54",
+          "size": 25575
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d70e8564063184e70c485c7f24498515f264407a4f48ddae369b158636da6d69",
+          "size": 58514800
+        }
+      ]
+    },
+    "monthly-h20-F-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 68009,
+      "started_at": 1794419253.398098,
+      "finished_at": 1794419320.297647,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-F-s4000-a1.json",
+          "sha256": "564e3534586d32a4dc237a0dadfa2319fc323027c0007d2459c27b44ced7fca3",
+          "size": 26040
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d05795b11661c8a9843230f3fd328f41e050c11199c4bb1095086c393e996889",
+          "size": 58526036
+        }
+      ]
+    },
+    "monthly-h20-T-s42-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 68245,
+      "started_at": 1794419321.601991,
+      "finished_at": 1794419396.3256571,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s42-a1.json",
+          "sha256": "15e99c37f0835f30908f95e05774caf3f6d601028a8ce0217252846bad6ba299",
+          "size": 29307
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "58af0a1fb6a3b8f3bfa6e14c44485e59f2ae832fcebd9922380635ceb8466b41",
+          "size": 58639169
+        }
+      ]
+    },
+    "monthly-h20-T-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 68569,
+      "started_at": 1794419397.7491462,
+      "finished_at": 1794419508.258632,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s1000-a1.json",
+          "sha256": "591c8339ee5fd5a90446dcde64ecdee501d520e4db04c49fd2ac948b7868f4bd",
+          "size": 50527
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "aceb0609a5b9010f272c0e4ab599274b46c45f9872e9ff2c4108bc1b4a7a861c",
+          "size": 59190217
+        }
+      ]
+    },
+    "monthly-h20-T-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 69068,
+      "started_at": 1794419509.583311,
+      "finished_at": 1794419628.5803242,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s2000-a1.json",
+          "sha256": "6aee82a9b88f179e5ee19fa5cbeaf2629100406fe03482a96023d2fa4d95d182",
+          "size": 61235
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f8d8e98c64aa8bf91d2b6c4ae91f2e290bc89e8d356a884f8af272341bdf390c",
+          "size": 59501574
+        }
+      ]
+    },
+    "monthly-h20-T-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 69600,
+      "started_at": 1794419629.856046,
+      "finished_at": 1794419702.748123,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s3000-a1.json",
+          "sha256": "6ad76b08b3382a4d999ef112512c97d8ca883bae3e92368e29ecafd40f23d321",
+          "size": 30242
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "97c116e07e0e3563c1ae06767f50d4050fa9016092512700a3666758065c26f5",
+          "size": 58667818
+        }
+      ]
+    },
+    "monthly-h20-T-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "monthly-h20-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "monthly-h20",
+      "outcome": "succeeded",
+      "pid": 69853,
+      "started_at": 1794419704.018641,
+      "finished_at": 1794419774.9911869,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/monthly-h20-T-s4000-a1.json",
+          "sha256": "220862443df443ec27ed84677f5bf6394ba0313deb424507b3589168a999241a",
+          "size": 29325
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_monthly-h20_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ef844b476e91239c2e92b1952473c022b5181c5cd753682876782de0999368a6",
+          "size": 58640617
+        }
+      ]
+    },
+    "weekly-h5-D-s42-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 70690,
+      "started_at": 1794420243.112001,
+      "finished_at": 1794420331.241934,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s42-a1.json",
+          "sha256": "3c526bf1ae22498a093c780933748070b40ecf6c1edd5170f29700f4927daad7",
+          "size": 30373
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5eac7eadfb2add23f2f6b47eeb886ef39e9c116f35204adf520ce740ae410fa8",
+          "size": 58697639
+        }
+      ]
+    },
+    "weekly-h5-D-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 71073,
+      "started_at": 1794420332.748116,
+      "finished_at": 1794420472.591876,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s1000-a1.json",
+          "sha256": "365ec46436b3dc0c95d8bc34dc0f150390e80ccae6e4743e64814eaaead890ee",
+          "size": 74498
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fb81bf7635f3615197786dfa097b930b9b95b0594b10f70e77e262471c8facd4",
+          "size": 60045654
+        }
+      ]
+    },
+    "weekly-h5-D-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 71711,
+      "started_at": 1794420474.167306,
+      "finished_at": 1794420621.739114,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s2000-a1.json",
+          "sha256": "6ea57ea58babda66c24c344a5ae9d7a02356e3251885646ea0b000313fc33d73",
+          "size": 66066
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "1f49ff0b9415e1ac4c36f6afab0b38519b5be669001011baa8298c10a21721da",
+          "size": 59808721
+        }
+      ]
+    },
+    "weekly-h5-D-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 72483,
+      "started_at": 1794420623.3110342,
+      "finished_at": 1794420794.06688,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s3000-a1.json",
+          "sha256": "801e7d85b768b5e9fe8c4f3c26908c7cf28531160780b1f3c75ff2aa5e57d5a5",
+          "size": 71204
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fd98e80708384dc125f769f133d300628e9be9f15e5e4b6dfe238d1dae251bdf",
+          "size": 59969551
+        }
+      ]
+    },
+    "weekly-h5-D-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 73278,
+      "started_at": 1794420796.026767,
+      "finished_at": 1794420918.184659,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-D-s4000-a1.json",
+          "sha256": "2c2cd80ff57b9b2d88ada10a8405a55e9351f793042596d30abaef419d886d6d",
+          "size": 57266
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "bcc917d79a203bd54a24c6c71e19ec43a27384e5eff0cff85abb602000dd5ac6",
+          "size": 59532110
+        }
+      ]
+    },
+    "weekly-h5-F-s42-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 73808,
+      "started_at": 1794420919.672837,
+      "finished_at": 1794420984.993949,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s42-a1.json",
+          "sha256": "b8bf289b3fe345fc37dd8c3b536a6eae8506a38f1d089f9211af68a79f066a3b",
+          "size": 26465
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "5c0ba2b20f9d33a0273a17f5a52e01b74eeaf082c8f159b5faf346e01cdf6b2f",
+          "size": 58550309
+        }
+      ]
+    },
+    "weekly-h5-F-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 74013,
+      "started_at": 1794420986.362831,
+      "finished_at": 1794421052.024725,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s1000-a1.json",
+          "sha256": "b27eaf6420944f486ba19d9241ce4a09971a18151404dde3abd224c30f94c437",
+          "size": 26442
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "8822ff68306c1e744e0b1a1ae579ef762ccf2d9118d869b4d22c30df782429b4",
+          "size": 58549575
+        }
+      ]
+    },
+    "weekly-h5-F-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 74244,
+      "started_at": 1794421053.399429,
+      "finished_at": 1794421124.9594939,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s2000-a1.json",
+          "sha256": "e76b3ae8516873a06db6e8ff20684e7c70d96bb0aea1c61479bce2a1e18bd965",
+          "size": 29686
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "90c59b8f2f1b8ccd4627f88371b72d0fc1a63603d29171fd946e1f57bc7abacd",
+          "size": 58650436
+        }
+      ]
+    },
+    "weekly-h5-F-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 74473,
+      "started_at": 1794421126.354699,
+      "finished_at": 1794421192.0595798,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s3000-a1.json",
+          "sha256": "212bcd855cb36bdf8e0b7b5cdacbeca6a26252edffb0807b227ea36af65f81aa",
+          "size": 26479
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ef43de6649e1352beb4de04b245c35d540146a050799b6b54b8fe09d7f4c485e",
+          "size": 58550455
+        }
+      ]
+    },
+    "weekly-h5-F-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 74688,
+      "started_at": 1794421193.4627929,
+      "finished_at": 1794421261.3433669,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-F-s4000-a1.json",
+          "sha256": "0f48b79882ed4a3af2eb1d8a654516d81a3428ee7d5d4c9fa4965ebfdee8b347",
+          "size": 27404
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fb1e3b7da4a509b9588552f035d79062cc745877fdbde3ba985b682fc51d28e0",
+          "size": 58578441
+        }
+      ]
+    },
+    "weekly-h5-T-s42-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 74945,
+      "started_at": 1794421262.7374232,
+      "finished_at": 1794421449.360571,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s42-a1.json",
+          "sha256": "cbe82cc0fab52f922e678cff1cee044bb8a14587755470eb9f3674b8afae098e",
+          "size": 96045
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ff6afc4404737bbe713bc2c1cdc32254fec4dca3c94dc2264d1f4f026d66be2d",
+          "size": 61308671
+        }
+      ]
+    },
+    "weekly-h5-T-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 75954,
+      "started_at": 1794421450.8964381,
+      "finished_at": 1794421602.714564,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s1000-a1.json",
+          "sha256": "0ab024223733288bffcb2f322bc91fcd5e913dedfe73ed9c7d571a2431df2aba",
+          "size": 69837
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2038900ffaa2dce146fa0aaa983af10a59bffb52c0020c775eb5664baeac379f",
+          "size": 59823249
+        }
+      ]
+    },
+    "weekly-h5-T-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 76728,
+      "started_at": 1794421604.266038,
+      "finished_at": 1794421703.506735,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s2000-a1.json",
+          "sha256": "b2016767ec86d2afbd7ab0f171fab109a9c3eaa8e12c3121d53963c7e2369c51",
+          "size": 33167
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "91e46efef93d0c31abdc11d2cfd6ae9e1fe99b459518213667d316b3a6a53491",
+          "size": 58775528
+        }
+      ]
+    },
+    "weekly-h5-T-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 77157,
+      "started_at": 1794421705.0532732,
+      "finished_at": 1794421917.8658829,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s3000-a1.json",
+          "sha256": "211a486fefae84f41587bc6df59da034cb034d0587feddfb266c4cb41eff46ee",
+          "size": 95829
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2881b0a78ce32f3e9f6eda5f4a8f590827c810cfaad0ab6d4b32d72b7c3f089b",
+          "size": 61261364
+        }
+      ]
+    },
+    "weekly-h5-T-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h5-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h5",
+      "outcome": "succeeded",
+      "pid": 78305,
+      "started_at": 1794421919.382074,
+      "finished_at": 1794422091.8045938,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/weekly-h5-T-s4000-a1.json",
+          "sha256": "3f34c161f9b16925fc89c9c3f730f66f2da6607d90610a8113dd3c760489c3e7",
+          "size": 95966
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h5_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "dd97d9c61e03d2f69992da8f74420884d6631c415b7a5c42fd91e15266a01dbd",
+          "size": 60952181
+        }
+      ]
+    },
+    "weekly-h20-D-s42-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s42-a1",
+      "variant": "D",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 79846,
+      "started_at": 1794422636.6034718,
+      "finished_at": 1794422729.176682,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s42-a1.json",
+          "sha256": "5c2551a091ceeb0c56ce948a227d24e0e5250b8424febeed44f4ae1659b13540",
+          "size": 34505
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "528819b6ad148c32d87415c2db83ddb0fee3309d78c042cdce8620291a1b0435",
+          "size": 58843429
+        }
+      ]
+    },
+    "weekly-h20-D-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s1000-a1",
+      "variant": "D",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 80188,
+      "started_at": 1794422730.794881,
+      "finished_at": 1794422898.4662578,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s1000-a1.json",
+          "sha256": "2ac92b2cdab6f791a3c04a689b47f23f6b307381fd6093b1a962a964884077b8",
+          "size": 88436
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d804d42492e0c96007a4bdeaa97fd2979750734a7ec0b3e3f9af6d29e8be7b7e",
+          "size": 60512029
+        }
+      ]
+    },
+    "weekly-h20-D-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s2000-a1",
+      "variant": "D",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 81042,
+      "started_at": 1794422900.118628,
+      "finished_at": 1794423023.8936262,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s2000-a1.json",
+          "sha256": "f8c2551871ef28e34fc771ae2ad5da057f7c4c9e92d98e125cd8fb4d562d5ff6",
+          "size": 43823
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "92d0a6eb3b2ff80f58467cc8d5c47725381de479564ac999ad70214f775f697c",
+          "size": 59143180
+        }
+      ]
+    },
+    "weekly-h20-D-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s3000-a1",
+      "variant": "D",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 81544,
+      "started_at": 1794423025.5303302,
+      "finished_at": 1794423120.062346,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s3000-a1.json",
+          "sha256": "48fc655e2b5d7513c5f1a62c2591ce3259dcd0ffbd2abccac1cab50ca415003f",
+          "size": 30382
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "91141a4a9163b012ad7887f0fb8a63a11edef876285cf135bfe9c25e3cb7e908",
+          "size": 58710704
+        }
+      ]
+    },
+    "weekly-h20-D-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-D-s4000-a1",
+      "variant": "D",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "D",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 81913,
+      "started_at": 1794423121.668603,
+      "finished_at": 1794423207.342773,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-D-s4000-a1.json",
+          "sha256": "c1b59b51a5672ecdd106827f16ce937b9de0474609dc2a9b86c87e0815025547",
+          "size": 29931
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "16aeb3cd9c167c7e9c5dd5a24fe9fbcb913b7edc1c4b440387c7bd799b9f8c0b",
+          "size": 58692418
+        }
+      ]
+    },
+    "weekly-h20-F-s42-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s42-a1",
+      "variant": "F",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 82233,
+      "started_at": 1794423208.94634,
+      "finished_at": 1794423269.926133,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s42-a1.json",
+          "sha256": "fb74d682717d8db5d68fb8ff5447c53657af2853f4fdd57e2ceedfb6d07fd0c8",
+          "size": 27832
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6c26f984bd5b916a67f33b411a582ab2699be06df07e5ee5ba813e7b49ea24eb",
+          "size": 58589187
+        }
+      ]
+    },
+    "weekly-h20-F-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s1000-a1",
+      "variant": "F",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 82465,
+      "started_at": 1794423271.403166,
+      "finished_at": 1794423332.5081768,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s1000-a1.json",
+          "sha256": "3e02d62d1ce4be96cb4825d8e241bb18c4aca9840dc73c58c3d6a6ac9ae06e9e",
+          "size": 26902
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "405ee51cc12417ab0188c16aa2c447247e265f57425675df7033985f904cb694",
+          "size": 58563799
+        }
+      ]
+    },
+    "weekly-h20-F-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s2000-a1",
+      "variant": "F",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 82690,
+      "started_at": 1794423334.031439,
+      "finished_at": 1794423397.065233,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s2000-a1.json",
+          "sha256": "ae65568541859a3cafb344f810d968d26595c3284f5628bf7ebd7ee22c1a7bb0",
+          "size": 26930
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "44608d676da472e5478680198db9f1bd2c375fb7acd4ccbd27b9b2e48377353c",
+          "size": 58563303
+        }
+      ]
+    },
+    "weekly-h20-F-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s3000-a1",
+      "variant": "F",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 82917,
+      "started_at": 1794423398.5769658,
+      "finished_at": 1794423463.7468522,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s3000-a1.json",
+          "sha256": "8fd5740f377be5910e91145ce307b1ae459fbbd86429896e3831838db9b1eecc",
+          "size": 29683
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "670c30600080f75391baa86f132cef55f9114fa0ad87c04f5ef2f896d0ffcd44",
+          "size": 58639711
+        }
+      ]
+    },
+    "weekly-h20-F-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-F-s4000-a1",
+      "variant": "F",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "F",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 83136,
+      "started_at": 1794423465.253515,
+      "finished_at": 1794423540.523435,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-F-s4000-a1.json",
+          "sha256": "762cf796a2316108a405274fbb481b039228bb8d847ef3067378b85421f7cb6d",
+          "size": 41096
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "72a7f06ce45134906a00c842f2113148d1cc61f3c2846c1cd361829cbc6d0243",
+          "size": 58886120
+        }
+      ]
+    },
+    "weekly-h20-T-s42-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s42-a1",
+      "variant": "T",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "42",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 83420,
+      "started_at": 1794423542.079702,
+      "finished_at": 1794423637.274564,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s42-a1.json",
+          "sha256": "c7750e48e3d658cc6f953bceab03fbec733027cc7706bcb59c748732a85e004f",
+          "size": 37505
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "be91bf351ccb1e510f2b6fade300a518dcf2d7d8a8f481055e14dec65f20034e",
+          "size": 58912021
+        }
+      ]
+    },
+    "weekly-h20-T-s1000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s1000-a1",
+      "variant": "T",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "1000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 83827,
+      "started_at": 1794423638.911825,
+      "finished_at": 1794423852.7647932,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s1000-a1.json",
+          "sha256": "a450a5452cf6e5549a185c1f204b9bf9b4680298be6a213f5a1883ee7467da25",
+          "size": 95313
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "672c7fc7224f263211b66190800f96cdcb045e539c232ccb0656745c7b858d2d",
+          "size": 61342510
+        }
+      ]
+    },
+    "weekly-h20-T-s2000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s2000-a1",
+      "variant": "T",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "2000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 84881,
+      "started_at": 1794423854.511128,
+      "finished_at": 1794424043.452905,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s2000-a1.json",
+          "sha256": "3f06e6a0f10c190e712d3b380d9ab84c85eef381cf284176f94548b0c48d091c",
+          "size": 75004
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b8cd43a4b7752595492beab3bec2c03e42bd898d5c2aac054b248a76a32cbdb4",
+          "size": 60051344
+        }
+      ]
+    },
+    "weekly-h20-T-s3000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s3000-a1",
+      "variant": "T",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "3000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 85864,
+      "started_at": 1794424045.12417,
+      "finished_at": 1794424211.563156,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s3000-a1.json",
+          "sha256": "7d883991e234a62198baf0c42e33b0865d41d1f7c4f23441dfe0258d16573d3f",
+          "size": 63177
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7d64d0e410b6bd184a0d877151e1daa0c8837152ceedfce7cdae15cc15b7e6af",
+          "size": 59652571
+        }
+      ]
+    },
+    "weekly-h20-T-s4000-a1": {
+      "type": "fit_start",
+      "job_id": "weekly-h20-T-s4000-a1",
+      "variant": "T",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-forward-spreads-20261112.Wl6xmg/experts/train.py",
+        "T",
+        "4000",
+        "--attempt",
+        "1"
+      ],
+      "kind": "model",
+      "stage": "weekly-h20",
+      "outcome": "succeeded",
+      "pid": 86724,
+      "started_at": 1794424213.238718,
+      "finished_at": 1794424328.324451,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/weekly-h20-T-s4000-a1.json",
+          "sha256": "3c56c287f3a05751ecccf75afb50334b3e0adee259adbb574a27d8ff9d20802c",
+          "size": 36524
+        },
+        {
+          "path": "backtest/result/dftfw_20261112_weekly-h20_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "dd201a1b46ec13b6c9735db98a60250a15e721d4d393640f76734b5a85bab636",
+          "size": 58886923
+        }
+      ]
+    }
+  },
+  "inputs": [
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/landed-lock.json",
+      "sha256": "4d85a57db4fd218d73dfcb1d23761a897875f5b08c7cc567ad997caf0c8e5997",
+      "size": 1704
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/configs/contract.json",
+      "sha256": "5c0d4acb86ea709ef553551d6ea272861be94e6cacae10c4a52a1734ff07b37c",
+      "size": 5621
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+      "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+      "size": 65463234
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/date-labels.csv",
+      "sha256": "884faca46f973252ae03def029000eba069b6eda94416d986742b780f9fea3c3",
+      "size": 194181
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/date-labels.csv",
+      "sha256": "db9cf5b2b759278a684ae3cacaf8026eec8562cb04acee10087b5b1c6a3ed990",
+      "size": 194181
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+      "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+      "size": 274553
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/date-labels.csv",
+      "sha256": "efa1775d579fbab95793f648ceddb6e63723a4b2ed7e57022b4bdc4d31e2d1f8",
+      "size": 274553
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+      "size": 9535
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+      "size": 30202983
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/configs/prepared-inputs.json",
+      "sha256": "54dfc4819e6cdcaf99a30f1df578f8a6eb3904108f95aa76d69bc34535ac9d68",
+      "size": 4830
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/train-boundary-audit.json",
+      "sha256": "2ba7503c0e7dba8fe51728087a8ef4e3b0e1ef5f5d939121b69bbfa9422e8ae8",
+      "size": 707
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/train-date-eligibility.csv",
+      "sha256": "6872884e1feb6b7887530292964b58a2854d30c9a1b8190a42ac5be9a54d2e91",
+      "size": 169560
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/target-D.pkl",
+      "sha256": "d798ae4efea402485b0635128cc1aa471a6d5477db12e1060596507c11d04ced",
+      "size": 33872814
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/target-F.pkl",
+      "sha256": "2868a0a82dbd97c50f7f3c5926e5718a467195bb0dad743dd4f93c640c91292f",
+      "size": 11811498
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/data/target-T.pkl",
+      "sha256": "6ca8ea9fc0c34acf0090c9fe2423b3a816ce6bc54d2edf64d69ba08a41647416",
+      "size": 19242618
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/preflight.json",
+      "sha256": "b33b04d7385fcd0e68b4d7da739bbe024495e05411fd9ed104cdc5127dc0f472",
+      "size": 619
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-train.json",
+      "sha256": "da50fb8eff2fe9505ad1fdf584494f9d7cc845d6791645f4c4ebd4c5fe15c982",
+      "size": 11123
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-style_metric.json",
+      "sha256": "bb95d892e4e3ed7ecacde4581797544e702fe0a5d383421b4f25f61548d5f77a",
+      "size": 1091
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-common.json",
+      "sha256": "3f46738eeda394f80b3afc0a6342f65cf21660728698b338adfd98dc8ab79647",
+      "size": 7326
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/docs/adapter-fast_metric.json",
+      "sha256": "09565f2dfbb9cc5cb87c660126b84c0f0f0ea3fbe562b1547f37ae2329e6b1d4",
+      "size": 3112
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/configs/prepared-inputs.json",
+      "sha256": "43273cda04408632fa070fe786035ceaa6c037e7f951a695cf6bc65965414e50",
+      "size": 4838
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/train-boundary-audit.json",
+      "sha256": "8c10ff77aa9e07d443559d23631480ea4fb782064a31f65fc3dc3c04686002ad",
+      "size": 707
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/train-date-eligibility.csv",
+      "sha256": "cff0e9cff78733c6cdd03d1a0535eef4625fa6b04bea5b2b256b3139d093cc6f",
+      "size": 169560
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/target-D.pkl",
+      "sha256": "221bc0a51cd67b464d94ed563c56225b214e67bb708530ec086a75830af8d8a7",
+      "size": 40461222
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/target-F.pkl",
+      "sha256": "36dfb2cdf61e605df961178f863653b88d86906eb64654c00bfc5e21e009899d",
+      "size": 11267478
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/data/target-T.pkl",
+      "sha256": "c1fc28566bc3a52e8a4b99e4a0c91463066db460bc47b19dc1fa888f7cf65d70",
+      "size": 13198230
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/preflight.json",
+      "sha256": "0d768d100cf1650a50f105e9cf5ca97b4fd9c1ea5708e1ef5810ef8bd567993e",
+      "size": 620
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/configs/prepared-inputs.json",
+      "sha256": "3022885780caa8d122fc4e0906b536875e41c38872b183b469fc4eda0ca54c94",
+      "size": 4830
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/train-boundary-audit.json",
+      "sha256": "7f080926f78f396e9fa8a06aec3d92df71c4e9e90b686a4e046c8b932c11f23b",
+      "size": 711
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/train-date-eligibility.csv",
+      "sha256": "c08bf2ee52b980f6e570c8935377d3d0ec7a63e81528b545d80bd36449caf5fb",
+      "size": 169547
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/target-D.pkl",
+      "sha256": "641e058501cf554fa039b3e5ff1cb34dc7ffc07467034657ba3c0038fc86a452",
+      "size": 27936714
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/target-F.pkl",
+      "sha256": "bfedf3975ab0b7e687811fee3ec7b038f032781cc14478044c975b5c22c13efd",
+      "size": 12656202
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/target-T.pkl",
+      "sha256": "97d1f928e8120273f7144ae63d3b98cdefaedb2cb8d6125fbf91355f8a4d417a",
+      "size": 24419874
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/preflight.json",
+      "sha256": "2448bf79121acc330576cdd60cb5e77937dc962f622452281a07a1f951dc94f3",
+      "size": 620
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/configs/prepared-inputs.json",
+      "sha256": "6e01860613958576bc3887853cd819dc4055b7c96573fc8e271d39d14ed31535",
+      "size": 4830
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/train-boundary-audit.json",
+      "sha256": "e061e79bf1c76f937711e24259014f39c7f128fa6f905f2743aa6822a4480d65",
+      "size": 708
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/train-date-eligibility.csv",
+      "sha256": "bca870106b548a53858a60205d29e8f6c507959bde44025e6a109a7d9a003669",
+      "size": 169562
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/target-D.pkl",
+      "sha256": "9e03cacd25fd7007464b73ae9d3ccaf88a8fc1832bf320086c85dd8efffa2e89",
+      "size": 28018890
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/target-F.pkl",
+      "sha256": "b8eb48d5fc00daf4fd5bad5a89c99bb7f00fb9740fe9e4c695bdf9eef980239d",
+      "size": 7439322
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/data/target-T.pkl",
+      "sha256": "19b2ecd0d5359251f4ff966efbae555432b27baec6457eec94acf0014f46ab0f",
+      "size": 29425890
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/preflight.json",
+      "sha256": "bd6b0dab1b692f4a305725128f450ddf9e3ed21291bebe4a30ce66b56561011b",
+      "size": 619
+    }
+  ],
+  "stages": {
+    "monthly-h5": {
+      "status": "completed",
+      "verified": true,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/expert-summary.json",
+          "sha256": "03e57f3b6aa7e36de9189e6f28b82a2f3ac17da4e766eabf1dbae0ef37551f22",
+          "size": 45648
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/numerical-verification.json",
+          "sha256": "77acb84f36b4c10e97222d52aa48e2d239c3628019cf8985153042c90bad3cf1",
+          "size": 9391
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/scientific-acceptance.json",
+          "sha256": "284edb5ac5fcb2fbcb0518edf4d79c2ae3ed1cd2ec919578e02e99ad9ae41be2",
+          "size": 163964
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h5/docs/ensemble-head-gap.json",
+          "sha256": "4db72288e80541ac2f70c43805b2bec6c27bbcbdba090ac08657aed26f4accbf",
+          "size": 2762
+        }
+      ]
+    },
+    "monthly-h20": {
+      "status": "completed",
+      "verified": true,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/expert-summary.json",
+          "sha256": "ca70e7199dbb4925c6fea3be7a20b20179d8b739978c478948ecfa082808ee32",
+          "size": 45662
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/numerical-verification.json",
+          "sha256": "248e4fdf843fc499e19391d607be49b08933d72094111e392218e7e8dccb1376",
+          "size": 9414
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/scientific-acceptance.json",
+          "sha256": "e2a3aaf93ca919c7fa38d5984f415b239bcce2ac7ffc9c0888f36f92b4d5d4b7",
+          "size": 163523
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/monthly-h20/docs/ensemble-head-gap.json",
+          "sha256": "9a6eede90c74491c090502d2891e5db5289c625167e2816de98eab570bb9fc93",
+          "size": 2776
+        }
+      ]
+    },
+    "weekly-h5": {
+      "status": "completed",
+      "verified": true,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/expert-summary.json",
+          "sha256": "3f032651e1cf6c89d7878442f9987f28d757302797d30b1594897cbedb9375fc",
+          "size": 45687
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/numerical-verification.json",
+          "sha256": "7fdf44de132c16741d69e3f0a7e45ea38ff50b81fcd4daec721add8ca989ea0d",
+          "size": 9366
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/scientific-acceptance.json",
+          "sha256": "4352a42565f2551decb88587588f88d0cf5441114b29e8bbba93972baf38af0d",
+          "size": 163245
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/docs/ensemble-head-gap.json",
+          "sha256": "503cc6f5d1d0dc7785f98428058b56a49e5d66db1679522363385d82af2d475d",
+          "size": 2783
+        }
+      ]
+    },
+    "weekly-h20": {
+      "status": "completed",
+      "verified": true,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/expert-summary.json",
+          "sha256": "1c3cd6a7461cc5a33d2ad07cb58f73e18ddedfd94098fa428a498043ba0f34cc",
+          "size": 45494
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/numerical-verification.json",
+          "sha256": "f8905d246e5a7d0d52fcb96975bca112a4776874921a29c9724916dec9139224",
+          "size": 9386
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/scientific-acceptance.json",
+          "sha256": "ee8ffa7fccb128c58e1d176d44fb2491eacb14b0666f6fa26d9883f58402ebdb",
+          "size": 115990
+        },
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h20/docs/ensemble-head-gap.json",
+          "sha256": "7dce6d9186c5ac7a48117d4556b0251982d91357c386bef70fdac3f1d49e33e3",
+          "size": 2771
+        }
+      ]
+    }
+  },
+  "baseline_digest": "edefdbe4cc0d652e38b6964f812b723b4448f13c6f45c75091368e598da93ce9",
+  "prior_model_fits": {
+    "starts": 79,
+    "success": 75
+  },
+  "accounting": "Expert ledger only. Shared clustering/transform costs are recorded by the central campaign.",
+  "checksum": "404b7ef87ac6dd878fb0c933490829dcc3d1bf4261e92d9e074b1f0ee4c091b3"
+}

@@ -1,0 +1,1479 @@
+{
+  "schema_version": 2,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/harness-state.json",
+  "plan": {
+    "schema_version": 2,
+    "campaign_id": "dft-specialists-20261108-v1",
+    "idea": "先确认风格划分，每种风格的样本训练模型在该风格上应优于全样本模型；先验证当前DFT。",
+    "track": "all_a_model",
+    "direction": "train-data",
+    "anchor_exp_id": "train-data/dft-specialists-20261108-v1",
+    "archive_path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1",
+    "baseline_ref": "training-target/h20-quantile10-p50-v5",
+    "allowed_changes": [
+      "training_regime_subset"
+    ],
+    "selection_rule": "Compare own-style specialist vs all-style v5 on the same dates; net_ann and net_sharpe both positive deltas supports the operational claim in this historical selection window. Report each style separately, seed wins, cross-style matrix and RankIC; no automatic promotion.",
+    "data_version": "2026-11-03",
+    "inputs": [
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/train_dates_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/provider-inputs.json.gz",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/prepared-inputs.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/evaluation.yaml",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/frozen-study.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/environment.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/adapter-common.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/adapter-train.json",
+      "/Users/yuxianqi/Project/qlib/backtest/models/regime_adapt.py",
+      "/Users/yuxianqi/Project/qlib/backtest/models/rankic_early_stop.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/train/train_regime_arm.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "/Users/yuxianqi/Project/qlib/backtest/scripts/evaluate/ensemble_preds.py",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "/Users/yuxianqi/Project/qlib/backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/data/target-D.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/data/target-F.pkl",
+      "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/data/target-T.pkl"
+    ],
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "budget": {
+      "max_rounds": 1,
+      "max_variants": 1,
+      "max_attempts_per_variant": 2,
+      "max_wall_hours": 8,
+      "max_no_new_evidence_rounds": 1,
+      "concurrency": 1
+    },
+    "execution_budget": {
+      "max_model_fits": 17,
+      "new_label_horizons": [
+        20
+      ]
+    },
+    "scientific_candidate_count": 3,
+    "temporary_directory": "/private/tmp/qlib-dft-specialist-20261108.KPH3zx",
+    "known_native_scope_gap": "One parent native variant plus per-fit jobs; supplemental ledger tracks three internal science candidates and receipts. Native result uses predesignated D actual five sessions; report covers all three."
+  },
+  "plan_source": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/harness-plan.json",
+    "sha256": "728f32e108cf0a6a25b947ffae5b3bb4ecbce49f92943b4c8f2327062d6ff904",
+    "size": 6267
+  },
+  "inputs": [
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/features/edb1833a2cbb1ff7b1ffd6a408fa9d2e559367cbb49f9d94e8fa34a9f55bdb11/manifest.json",
+      "sha256": "84e3efc14caac86b0978fa5387e89614896113f3276657c107f2dfc7d3feab6b",
+      "size": 11178449
+    },
+    {
+      "path": "backtest/datasets/regime-adapt-cache/shared-v1/validation/50fd959518b0bbf3692afc5f35bbc2a56fa801adc49c79018d736b47e53d2fe7/manifest.json",
+      "sha256": "a4b5445d8d51aab20f5e5da0f231e49221aef4e6346bcc0ea42c0f49be59712e",
+      "size": 11122379
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+      "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+      "size": 65463234
+    },
+    {
+      "path": "backtest/configs/regime-adapt/train_dates_v1.csv",
+      "sha256": "9e129b31cb74109c3e425942fc468483cac492bccf83db4bbe4b36f4c183218a",
+      "size": 38931
+    },
+    {
+      "path": "backtest/configs/regime-adapt/day_weights_m0_v1.csv",
+      "sha256": "c729e0655081653b8829fbf341fa103742bf908f66ef9103cc2b0ad779df3fa6",
+      "size": 65715
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+      "size": 1203
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "backtest/result/20261103_h20_causal_inputs/st_daily.csv",
+      "sha256": "774261b654e573e40b0b4650ed27263c1520bca11455fab59cbb173fb5e68e88",
+      "size": 30202983
+    },
+    {
+      "path": "backtest/experiments/models/training-target/quantile10-p50-v5/configs/model-manifest.json",
+      "sha256": "45bdf3c225c399c61f6a79bb50deb31ea68d9e12deb50931d088feb001136583",
+      "size": 9535
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/provider-inputs.json.gz",
+      "sha256": "ff6fd2034e54b892eef840c875a770131d890009027fb8d7f2807768cab4c686",
+      "size": 1937741
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/prepared-inputs.json",
+      "sha256": "055b03d8c54a8d1cd85e29380ac2615f16e8053050da8330f4b5198a62ef64ea",
+      "size": 4441
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725",
+      "size": 1006
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/frozen-study.json",
+      "sha256": "cc19efdee935d41046972d2700ac47c917f5b9d66925a56d18a0ba69fb25bb40",
+      "size": 4729
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/environment.json",
+      "sha256": "b8a10cb1e06db476bc62d4fba6702f090d36086996995d1de9d65fb45dc6848d",
+      "size": 390
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/adapter-common.json",
+      "sha256": "8282d5d9a19c52af03042c6f00bccc7c9a1cc1ea28ddb1e0591f3e74774becfd",
+      "size": 3446
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/adapter-train.json",
+      "sha256": "704b9ab06aa9671a092174f4e2bfdcf433be84927100dd33b666c1de223ec03c",
+      "size": 8939
+    },
+    {
+      "path": "backtest/models/regime_adapt.py",
+      "sha256": "9fd7fc084365535680cb8df08a263132c13561a5d5434f8b51a16c6d08a9526d",
+      "size": 15566
+    },
+    {
+      "path": "backtest/models/rankic_early_stop.py",
+      "sha256": "2320cce49ab762d1773881cd20e7974a8074bf1f95e94d2799cd9cb60619ca8c",
+      "size": 11309
+    },
+    {
+      "path": "backtest/scripts/train/train_regime_arm.py",
+      "sha256": "8dfa2fcb39097ee0d19ea1c29dcbe3641e3237d9831b27c1db327a0fa6419a75",
+      "size": 33129
+    },
+    {
+      "path": "backtest/scripts/evaluate/eval_ic_multi_pool.py",
+      "sha256": "8cc35a510bb1b95d047a963f595dc1a4b8ac8e3102056c2c8a78d5c2b22b6026",
+      "size": 68674
+    },
+    {
+      "path": "backtest/scripts/evaluate/ensemble_preds.py",
+      "sha256": "610a1ae3aca04b787cfbc56199d0515052902a3d072509df093b295600a02ef7",
+      "size": 3534
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+      "size": 59488457
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+      "sha256": "8bad9ee807084e769140728cef32cff0e4ff66ad736504e5ed7b74bbe337e6f2",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+      "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+      "size": 38305
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+      "size": 59781408
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+      "sha256": "9f52cfa2e9b11b93a7c15af1f7f1dcbf94a0014a34d573f20dc250cd4d14d439",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+      "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+      "size": 44465
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+      "size": 60495908
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+      "sha256": "09f99b5e2a6b8b176f3176dc8c2325a22d0425fbaa271c8fcbbe4f59a0bf3131",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+      "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+      "size": 59236
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+      "size": 59546157
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+      "sha256": "4136b5c13beb1d882170f6f957cdea7c8389c4406bd2069d68b494aabb39cbb4",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+      "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+      "size": 39348
+    },
+    {
+      "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+      "size": 60125167
+    },
+    {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+      "sha256": "e93ada017614ffd229cefe1b2061c76d9163efee5d253f7ea8c8c8fb0a03586c",
+      "size": 83046132
+    },
+    {
+      "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+      "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+      "size": 51355
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/data/target-D.pkl",
+      "sha256": "c016bec9ae000abf3d38af8526f4a7d4df8696993c424645930eedd7d003f7f8",
+      "size": 41973702
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/data/target-F.pkl",
+      "sha256": "642e042ef640dd11d4df036f2ee7d3454ee7f67f6805058049546b0b11e96ead",
+      "size": 17271930
+    },
+    {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/data/target-T.pkl",
+      "sha256": "d4a87696588a72361748bbbd20de609c764d4b1ae68c28c157b8e3b030b9ece9",
+      "size": 6368958
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+      "size": 12415
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "d10dcea7e23d905c1fcfd25c841d368e3e1662fa3489dbd43dc8754129c4fcba",
+      "size": 64550
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "32d94bffdbb79180587eecb9bf91fc4537283d3cff8db9b581c69250593e04a8",
+      "size": 76004
+    }
+  ],
+  "baseline_sha256": "edefdbe4cc0d652e38b6964f812b723b4448f13c6f45c75091368e598da93ce9",
+  "baseline_model_ref": null,
+  "started_at": 1794148937.1033442,
+  "deadline": 1794177737.1033442,
+  "revision": 41,
+  "status": "closed",
+  "variants": {
+    "train-data/dft-specialists-20261108-v1": {
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "archive_path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1",
+      "round": 1,
+      "hypothesis": "原DFT风格内样本训练的专属选股模型，在对应风格的Top3×H5净年化与夏普优于使用全部既定训练样本的v5模型。",
+      "changed_axis": "training_regime_subset",
+      "configs": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/frozen-study.json",
+          "sha256": "cc19efdee935d41046972d2700ac47c917f5b9d66925a56d18a0ba69fb25bb40",
+          "size": 4729
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+          "outcome": "succeeded",
+          "started_at": 1794148938.719174,
+          "command": [
+            "/opt/anaconda3/envs/qlib/bin/python",
+            "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+            "D",
+            "42"
+          ],
+          "evaluation": {
+            "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/D.json",
+            "sha256": "0267639c9f2635ce9c7a9396c1280ac3de666f912517437709f0b772e3e973e3",
+            "size": 98933
+          },
+          "finished_at": 1794157044.980462,
+          "evidence": [
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/D.json",
+              "sha256": "0267639c9f2635ce9c7a9396c1280ac3de666f912517437709f0b772e3e973e3",
+              "size": 98933
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/F.json",
+              "sha256": "a9cf7d79e8d807c30274fb30890d7e89631815dd15c7c5c8855eca1b4c3d7dd5",
+              "size": 99031
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/T.json",
+              "sha256": "d5757e50ff2a5b3a8a915f71d10b4971188db2015fa97a97a34907daf14413a7",
+              "size": 99522
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/all.json",
+              "sha256": "af0fa8d99ade50a2f888f670756685a415cd4cfa7a29e20b5336acb76e101d03",
+              "size": 98934
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/numerical-verification.json",
+              "sha256": "89eb3de02ae4849a3ba0fe19b656f7ab8af4732bed28ae687dab70237797338e",
+              "size": 6558
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/study-summary.json",
+              "sha256": "dc10af5073899022e5fc3343d0165bcdea0a06bc74e5fa406f4d6467b03464c9",
+              "size": 25645
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/internal-source-index.json",
+              "sha256": "dd1da30a99725d0153bdc5b68d44c8be7ca7a74b97f9984aa3a97886e773b9e6",
+              "size": 1260
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/scientific-acceptance.json",
+              "sha256": "cc3b1cf284d8b794cc1b1902216c21b547d1b3d26e87c4ad475dfd23363c57e7",
+              "size": 118584
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/ensemble-head-gap.json",
+              "sha256": "1b2abf1f5fbc3f0433ee4ca77508d20200da09a390fd4a25c0d362d317db3955",
+              "size": 2727
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/final-review.json",
+              "sha256": "00d05b0b84903a1b72877b633c25edc065ce549bc931f155f429a10d869a4d29",
+              "size": 876
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/browser-render-verification.json",
+              "sha256": "c6b439eadee03d33aa4cf600d74d94720ff0d585f6f9f9d274e2419bbf248719",
+              "size": 1012
+            },
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/visual-inspection.json",
+              "sha256": "99e6460f9e6e224366bfcd549e3594e459cfefe587b98ab6f503a91ffcb87317",
+              "size": 303
+            }
+          ],
+          "reason": "",
+          "registered": {
+            "event_sha256": "7a74a1c2b78436730c31bca3049ca0253d5f67c50e49e992f087e0213fcf01eb",
+            "detail_report": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/reports/detail.html"
+          },
+          "reported": [
+            {
+              "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/reports/detail.html",
+              "sha256": "fb60f602d4c94a6f4e87979b152ae909f257b4c1972aab4e61b78ebacff009f0",
+              "size": 12423
+            },
+            {
+              "path": "backtest/experiments/reports/phase_m_v1_report.html",
+              "sha256": "e4978295c669dad27278082cda7384379caf0fcbfadbecadb29c610070e29cfd",
+              "size": 24883
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reflections": [
+    {
+      "type": "reflection",
+      "round": 1,
+      "observations": "1/3种风格的对应专属模型同时提高净年化与夏普；本窗口未全面支持三类均应胜出的命题。",
+      "interpretation": "原DFT、同一v5样本基底、只改训练风格日期。官方五种子合成信号与逐种子成对结果分开，跨风格矩阵检验针对性。历史选型窗口参与全窗早停，F/T时期有限；不是独立样本外。仅训练样本过滤；未检验各风格自身窗口早停，不能把本轮结论等同后者。",
+      "new_evidence": true,
+      "next_hypothesis": ""
+    }
+  ],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/harness-cleanup.json",
+      "sha256": "df829b327eed85b74e28415ab56d3e4ff9ed3a883f9672699cf96f9ec189ec75",
+      "size": 2286
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1794148938.191539,
+      "event": {
+        "type": "plan_variant",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "archive_path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1",
+        "round": 1,
+        "changed_axis": "training_regime_subset",
+        "hypothesis": "原DFT风格内样本训练的专属选股模型，在对应风格的Top3×H5净年化与夏普优于使用全部既定训练样本的v5模型。",
+        "configs": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/configs/frozen-study.json"
+        ]
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1794148938.7191749,
+      "event": {
+        "type": "start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "D",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1794148962.6378398,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "D-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "D",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1794148963.122986,
+      "event": {
+        "type": "fit_result",
+        "job_id": "D-s42-a1",
+        "outcome": "failed",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s42-a1-failure.json"
+        ]
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1794149012.669783,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "D-s42-a2",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train_retry.py",
+          "D",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1794149738.445987,
+      "event": {
+        "type": "fit_result",
+        "job_id": "D-s42-a2",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s42-a2.json",
+          "backtest/result/dft_20261108_d_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1794149740.918071,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "D-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "D",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1794150163.5074902,
+      "event": {
+        "type": "fit_result",
+        "job_id": "D-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s1000-a1.json",
+          "backtest/result/dft_20261108_d_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1794150165.833488,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "D-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "D",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 10,
+      "time": 1794150779.6957319,
+      "event": {
+        "type": "fit_result",
+        "job_id": "D-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s2000-a1.json",
+          "backtest/result/dft_20261108_d_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 11,
+      "time": 1794150782.121017,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "D-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "D",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 12,
+      "time": 1794151411.792705,
+      "event": {
+        "type": "fit_result",
+        "job_id": "D-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s3000-a1.json",
+          "backtest/result/dft_20261108_d_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 13,
+      "time": 1794151414.575953,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "D-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "D",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 14,
+      "time": 1794151917.480436,
+      "event": {
+        "type": "fit_result",
+        "job_id": "D-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s4000-a1.json",
+          "backtest/result/dft_20261108_d_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 15,
+      "time": 1794151919.927082,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "F-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "F",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 16,
+      "time": 1794152247.400683,
+      "event": {
+        "type": "fit_result",
+        "job_id": "F-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s42-a1.json",
+          "backtest/result/dft_20261108_f_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 17,
+      "time": 1794152249.7481742,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "F-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "F",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 18,
+      "time": 1794152598.559666,
+      "event": {
+        "type": "fit_result",
+        "job_id": "F-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s1000-a1.json",
+          "backtest/result/dft_20261108_f_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 19,
+      "time": 1794152600.8748229,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "F-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "F",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 20,
+      "time": 1794152958.3088121,
+      "event": {
+        "type": "fit_result",
+        "job_id": "F-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s2000-a1.json",
+          "backtest/result/dft_20261108_f_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 21,
+      "time": 1794152960.5923278,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "F-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "F",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 22,
+      "time": 1794153291.206971,
+      "event": {
+        "type": "fit_result",
+        "job_id": "F-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s3000-a1.json",
+          "backtest/result/dft_20261108_f_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 23,
+      "time": 1794153293.503807,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "F-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "F",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 24,
+      "time": 1794153601.931734,
+      "event": {
+        "type": "fit_result",
+        "job_id": "F-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s4000-a1.json",
+          "backtest/result/dft_20261108_f_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 25,
+      "time": 1794153604.250896,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "T-s42-a1",
+        "seed": 42,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "T",
+          "42"
+        ]
+      }
+    },
+    {
+      "revision": 26,
+      "time": 1794153866.599398,
+      "event": {
+        "type": "fit_result",
+        "job_id": "T-s42-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s42-a1.json",
+          "backtest/result/dft_20261108_t_s42/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 27,
+      "time": 1794153868.8953102,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "T-s1000-a1",
+        "seed": 1000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "T",
+          "1000"
+        ]
+      }
+    },
+    {
+      "revision": 28,
+      "time": 1794154118.6639209,
+      "event": {
+        "type": "fit_result",
+        "job_id": "T-s1000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s1000-a1.json",
+          "backtest/result/dft_20261108_t_s1000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 29,
+      "time": 1794154120.954388,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "T-s2000-a1",
+        "seed": 2000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "T",
+          "2000"
+        ]
+      }
+    },
+    {
+      "revision": 30,
+      "time": 1794154386.820823,
+      "event": {
+        "type": "fit_result",
+        "job_id": "T-s2000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s2000-a1.json",
+          "backtest/result/dft_20261108_t_s2000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 31,
+      "time": 1794154389.40451,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "T-s3000-a1",
+        "seed": 3000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "T",
+          "3000"
+        ]
+      }
+    },
+    {
+      "revision": 32,
+      "time": 1794154872.841116,
+      "event": {
+        "type": "fit_result",
+        "job_id": "T-s3000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s3000-a1.json",
+          "backtest/result/dft_20261108_t_s3000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 33,
+      "time": 1794154875.053909,
+      "event": {
+        "type": "fit_start",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "job_id": "T-s4000-a1",
+        "seed": 4000,
+        "label_horizon": 20,
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+          "T",
+          "4000"
+        ]
+      }
+    },
+    {
+      "revision": 34,
+      "time": 1794155348.267864,
+      "event": {
+        "type": "fit_result",
+        "job_id": "T-s4000-a1",
+        "outcome": "succeeded",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s4000-a1.json",
+          "backtest/result/dft_20261108_t_s4000/run_01/artifacts_root/artifacts/trained_model"
+        ]
+      }
+    },
+    {
+      "revision": 35,
+      "time": 1794157044.9804642,
+      "event": {
+        "type": "result",
+        "exp_id": "train-data/dft-specialists-20261108-v1",
+        "outcome": "succeeded",
+        "evaluation": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/D.json",
+        "evidence": [
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/D.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/F.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/T.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/metrics/all.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/numerical-verification.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/study-summary.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/internal-source-index.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/scientific-acceptance.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/ensemble-head-gap.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/final-review.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/browser-render-verification.json",
+          "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/visual-inspection.json"
+        ]
+      }
+    },
+    {
+      "revision": 36,
+      "time": 1794157045.093573,
+      "event": {
+        "type": "registered",
+        "exp_id": "train-data/dft-specialists-20261108-v1"
+      }
+    },
+    {
+      "revision": 37,
+      "time": 1794157045.195172,
+      "event": {
+        "type": "reported",
+        "exp_id": "train-data/dft-specialists-20261108-v1"
+      }
+    },
+    {
+      "revision": 38,
+      "time": 1794157045.806068,
+      "event": {
+        "type": "reflection",
+        "round": 1,
+        "observations": "1/3种风格的对应专属模型同时提高净年化与夏普；本窗口未全面支持三类均应胜出的命题。",
+        "interpretation": "原DFT、同一v5样本基底、只改训练风格日期。官方五种子合成信号与逐种子成对结果分开，跨风格矩阵检验针对性。历史选型窗口参与全窗早停，F/T时期有限；不是独立样本外。仅训练样本过滤；未检验各风格自身窗口早停，不能把本轮结论等同后者。",
+        "new_evidence": true,
+        "next_hypothesis": ""
+      }
+    },
+    {
+      "revision": 39,
+      "time": 1794157045.84873,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 40,
+      "time": 1794157200.264608,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/harness-cleanup.json"
+      }
+    },
+    {
+      "revision": 41,
+      "time": 1794157200.8441331,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "jobs": {
+    "D-s42-a1": {
+      "job_id": "D-s42-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "D",
+        "42"
+      ],
+      "outcome": "failed",
+      "started_at": 1794148962.6378381,
+      "finished_at": 1794148963.122985,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s42-a1-failure.json",
+          "sha256": "24205bd955e35502fc0579e8ad49d73546829a0a82ff5ad13bedae321ca62e49",
+          "size": 3183
+        }
+      ]
+    },
+    "D-s42-a2": {
+      "job_id": "D-s42-a2",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train_retry.py",
+        "D",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794149012.669781,
+      "finished_at": 1794149738.445984,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s42-a2.json",
+          "sha256": "97881c3bacd779d87790b14edeaff0d953ddbb4e59ff30b4baf356c8dba5379e",
+          "size": 63049
+        },
+        {
+          "path": "backtest/result/dft_20261108_d_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "fc6ee7a32e30fc4897da3313f989419e8cfe2458566e78c037128d2cec4de7aa",
+          "size": 60578190
+        }
+      ]
+    },
+    "D-s1000-a1": {
+      "job_id": "D-s1000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "D",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794149740.918069,
+      "finished_at": 1794150163.507487,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s1000-a1.json",
+          "sha256": "e818ffb490d2d0c707e6cd6df3cae869d7b828fa56cc84fb7afa9933e40253aa",
+          "size": 32145
+        },
+        {
+          "path": "backtest/result/dft_20261108_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "76c5270e365fe5458359710459105a806c00a904d52ac1a041dc5c1044fc0835",
+          "size": 59155585
+        }
+      ]
+    },
+    "D-s2000-a1": {
+      "job_id": "D-s2000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "D",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794150165.833486,
+      "finished_at": 1794150779.69573,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s2000-a1.json",
+          "sha256": "9d382d666e15a78cd85875f080a654b174534416b7b1e8d1dc07a88b4ee2dd12",
+          "size": 49963
+        },
+        {
+          "path": "backtest/result/dft_20261108_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d500d3000bb73e261bc1fe6c55fc420818db5ae61efc82a90eea88abb5ae9dd0",
+          "size": 59966687
+        }
+      ]
+    },
+    "D-s3000-a1": {
+      "job_id": "D-s3000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "D",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794150782.121015,
+      "finished_at": 1794151411.792702,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s3000-a1.json",
+          "sha256": "ee541d219b350d69ce70fc250ad3b2329b14246d8fb0d43737b77ddaddf6e27a",
+          "size": 44457
+        },
+        {
+          "path": "backtest/result/dft_20261108_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "e5ad488ec7551f854acf30a42ba20ddc5da9a1649c6eb215b84318f5d4f74cd0",
+          "size": 59731651
+        }
+      ]
+    },
+    "D-s4000-a1": {
+      "job_id": "D-s4000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "D",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794151414.575951,
+      "finished_at": 1794151917.480433,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/D-s4000-a1.json",
+          "sha256": "afcb383ca2d7af79767ced3e0389c50efd1f41b0a5b7583cbf836acb6a3c8920",
+          "size": 34486
+        },
+        {
+          "path": "backtest/result/dft_20261108_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ead4bd6edea9b6362252cc5e09c656fa30e76db2c119667db91d3be671af80fd",
+          "size": 59276639
+        }
+      ]
+    },
+    "F-s42-a1": {
+      "job_id": "F-s42-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "F",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794151919.92708,
+      "finished_at": 1794152247.4006798,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s42-a1.json",
+          "sha256": "a586baa0000167ec16320b85caf3a2bb467b537c4457032696e49409e5cdb3d1",
+          "size": 25580
+        },
+        {
+          "path": "backtest/result/dft_20261108_f_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "82f75668f17979416442cc43fafac0e827b92a561112e35f6b8bae306f0b2b67",
+          "size": 58748005
+        }
+      ]
+    },
+    "F-s1000-a1": {
+      "job_id": "F-s1000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "F",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794152249.748173,
+      "finished_at": 1794152598.559663,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s1000-a1.json",
+          "sha256": "6db26c9e6ee23c51fcc964d2043895887826511789ab038d6d837c70fa9fd553",
+          "size": 29971
+        },
+        {
+          "path": "backtest/result/dft_20261108_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f315a58911fedc39ffef56847bdd1cdc71f99a2e1de98ba156c0a39ffde095e4",
+          "size": 58910069
+        }
+      ]
+    },
+    "F-s2000-a1": {
+      "job_id": "F-s2000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "F",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794152600.8748212,
+      "finished_at": 1794152958.308809,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s2000-a1.json",
+          "sha256": "1adac031a3dadb0891361858654c3c33618d1b633773d65619b8c8d5d9f5e681",
+          "size": 31028
+        },
+        {
+          "path": "backtest/result/dft_20261108_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "a1e0dd66d002f7fb0f4c515d355251ef173fcd742f4eca644d9ddb650fb44322",
+          "size": 58951141
+        }
+      ]
+    },
+    "F-s3000-a1": {
+      "job_id": "F-s3000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "F",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794152960.5923269,
+      "finished_at": 1794153291.206968,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s3000-a1.json",
+          "sha256": "d91021ddba4edcbb6eb8a15285d1d8e8aeea0fdcad7712a61e28803d2cf6b928",
+          "size": 25570
+        },
+        {
+          "path": "backtest/result/dft_20261108_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f46c139345b1805ced48599f53cc2a5167976d5411609c2aa84d101b088a51f8",
+          "size": 58751109
+        }
+      ]
+    },
+    "F-s4000-a1": {
+      "job_id": "F-s4000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "F",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794153293.5038059,
+      "finished_at": 1794153601.931731,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/F-s4000-a1.json",
+          "sha256": "856a3717dae8667ce756a3f2f61db8435bf457210b0f2670c28ddcf3b032d7da",
+          "size": 24208
+        },
+        {
+          "path": "backtest/result/dft_20261108_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "2aa566164b1acde38ebea87a5b321e44e332590610a0b616b3d30947f17a40e4",
+          "size": 58709513
+        }
+      ]
+    },
+    "T-s42-a1": {
+      "job_id": "T-s42-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 42,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "T",
+        "42"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794153604.250895,
+      "finished_at": 1794153866.599395,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s42-a1.json",
+          "sha256": "01adf84889faec108ca640981d7e62dc5ee24145976e12355a41fbb5c922962d",
+          "size": 19178
+        },
+        {
+          "path": "backtest/result/dft_20261108_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "40ceeca20311e8ebfb760a9adff892eb5c1c5106eea9f8a53dd6871a0350c078",
+          "size": 58513225
+        }
+      ]
+    },
+    "T-s1000-a1": {
+      "job_id": "T-s1000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 1000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "T",
+        "1000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794153868.895309,
+      "finished_at": 1794154118.663918,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s1000-a1.json",
+          "sha256": "7d832563a161116013ab5d0f0a1e3d32cd6dc4e82cd0f89b0077563982796999",
+          "size": 19153
+        },
+        {
+          "path": "backtest/result/dft_20261108_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "c8a5e0f625015f2650b969d0d8fe80f5030da64c4bae6a2612d2a92234dfb25c",
+          "size": 58512302
+        }
+      ]
+    },
+    "T-s2000-a1": {
+      "job_id": "T-s2000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 2000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "T",
+        "2000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794154120.954387,
+      "finished_at": 1794154386.8208199,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s2000-a1.json",
+          "sha256": "c6518ed8279d62911b99e9a02aab9f1f28d07e3b65e21a42dbbb3854513d1a7a",
+          "size": 19202
+        },
+        {
+          "path": "backtest/result/dft_20261108_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9036f30c729a834605bc5dcdc866eab7bfa9a64c355dad6033375ae7ee39cfff",
+          "size": 58512962
+        }
+      ]
+    },
+    "T-s3000-a1": {
+      "job_id": "T-s3000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 3000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "T",
+        "3000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794154389.4045079,
+      "finished_at": 1794154872.841113,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s3000-a1.json",
+          "sha256": "69f6a111165fdfe3936cdad7f5a08f3389bec76b5a4e6ca9a8d73a2fd42490f4",
+          "size": 43529
+        },
+        {
+          "path": "backtest/result/dft_20261108_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "827903dcfcf6b6d5834cc0fd0cccb6f77571263564115f6d4274f91465c247f2",
+          "size": 59163624
+        }
+      ]
+    },
+    "T-s4000-a1": {
+      "job_id": "T-s4000-a1",
+      "exp_id": "train-data/dft-specialists-20261108-v1",
+      "attempt_id": "dft-specialists-20261108-v1/train-data/dft-specialists-20261108-v1/a1",
+      "seed": 4000,
+      "label_horizon": 20,
+      "command": [
+        "/opt/anaconda3/envs/qlib/bin/python",
+        "/private/tmp/qlib-dft-specialist-20261108.KPH3zx/train.py",
+        "T",
+        "4000"
+      ],
+      "outcome": "succeeded",
+      "started_at": 1794154875.053907,
+      "finished_at": 1794155348.26786,
+      "evidence": [
+        {
+          "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/docs/T-s4000-a1.json",
+          "sha256": "fc8c9f7026e235efc8eab725f26f85f7e81b9a0a42f1f522cfc8352a7f2ab32b",
+          "size": 42141
+        },
+        {
+          "path": "backtest/result/dft_20261108_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "628505b2f67b062d778c6e89fcd27b864ee9e6e88d99d49ce6bdeb5ff2c29a01",
+          "size": 59123563
+        }
+      ]
+    }
+  },
+  "checksum": "630134c3640643eb8d41c86bf3a669b29a1373e701da7a6a39eb7b4cc51e4792"
+}

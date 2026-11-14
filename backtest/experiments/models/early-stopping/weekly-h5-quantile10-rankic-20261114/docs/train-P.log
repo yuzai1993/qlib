@@ -1,0 +1,40 @@
+[22187:MainThread](2026-11-14 01:33:37,929) INFO - qlib.Initialization - [config.py:473] - default_conf: client.
+[22187:MainThread](2026-11-14 01:33:37,930) INFO - qlib.Initialization - [__init__.py:82] - qlib successfully initialized based on client settings.
+[22187:MainThread](2026-11-14 01:33:37,930) INFO - qlib.Initialization - [__init__.py:84] - data_path={'__DEFAULT_FREQ': PosixPath('/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider')}
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.219015
+[40]	valid's daily_rank_ic: 0.207419
+[60]	valid's daily_rank_ic: 0.201815
+Early stopping, best iteration is:
+[12]	valid's daily_rank_ic: 0.222658
+Evaluated only: daily_rank_ic
+fit P 42 best 12 rounds 62 rankic 0.2226578779765269 duration 6.480630159378052
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.229331
+[40]	valid's daily_rank_ic: 0.218495
+[60]	valid's daily_rank_ic: 0.211608
+Early stopping, best iteration is:
+[11]	valid's daily_rank_ic: 0.230219
+Evaluated only: daily_rank_ic
+fit P 1000 best 11 rounds 61 rankic 0.23021924388140758 duration 6.406733989715576
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.218535
+[40]	valid's daily_rank_ic: 0.205922
+Early stopping, best iteration is:
+[6]	valid's daily_rank_ic: 0.23073
+Evaluated only: daily_rank_ic
+fit P 2000 best 6 rounds 56 rankic 0.23073011866307014 duration 6.43444299697876
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.206622
+[40]	valid's daily_rank_ic: 0.204258
+Early stopping, best iteration is:
+[5]	valid's daily_rank_ic: 0.216056
+Evaluated only: daily_rank_ic
+fit P 3000 best 5 rounds 55 rankic 0.2160561478632644 duration 6.274649143218994
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.221037
+[40]	valid's daily_rank_ic: 0.209034
+Early stopping, best iteration is:
+[9]	valid's daily_rank_ic: 0.234435
+Evaluated only: daily_rank_ic
+fit P 4000 best 9 rounds 59 rankic 0.23443540262038456 duration 6.022977113723755

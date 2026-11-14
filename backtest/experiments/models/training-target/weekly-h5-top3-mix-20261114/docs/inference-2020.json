@@ -1,0 +1,1367 @@
+{
+  "year": 2020,
+  "segment": [
+    "2020-08-03",
+    "2020-12-31"
+  ],
+  "formal_DK_I": true,
+  "feature_signature": {
+    "shape": [
+      396659,
+      164
+    ],
+    "columns": [
+      "KMID",
+      "KLEN",
+      "KMID2",
+      "KUP",
+      "KUP2",
+      "KLOW",
+      "KLOW2",
+      "KSFT",
+      "KSFT2",
+      "OPEN0",
+      "HIGH0",
+      "LOW0",
+      "VWAP0",
+      "ROC5",
+      "ROC10",
+      "ROC20",
+      "ROC30",
+      "ROC60",
+      "MA5",
+      "MA10",
+      "MA20",
+      "MA30",
+      "MA60",
+      "STD5",
+      "STD10",
+      "STD20",
+      "STD30",
+      "STD60",
+      "BETA5",
+      "BETA10",
+      "BETA20",
+      "BETA30",
+      "BETA60",
+      "RSQR5",
+      "RSQR10",
+      "RSQR20",
+      "RSQR30",
+      "RSQR60",
+      "RESI5",
+      "RESI10",
+      "RESI20",
+      "RESI30",
+      "RESI60",
+      "MAX5",
+      "MAX10",
+      "MAX20",
+      "MAX30",
+      "MAX60",
+      "MIN5",
+      "MIN10",
+      "MIN20",
+      "MIN30",
+      "MIN60",
+      "QTLU5",
+      "QTLU10",
+      "QTLU20",
+      "QTLU30",
+      "QTLU60",
+      "QTLD5",
+      "QTLD10",
+      "QTLD20",
+      "QTLD30",
+      "QTLD60",
+      "RANK5",
+      "RANK10",
+      "RANK20",
+      "RANK30",
+      "RANK60",
+      "RSV5",
+      "RSV10",
+      "RSV20",
+      "RSV30",
+      "RSV60",
+      "IMAX5",
+      "IMAX10",
+      "IMAX20",
+      "IMAX30",
+      "IMAX60",
+      "IMIN5",
+      "IMIN10",
+      "IMIN20",
+      "IMIN30",
+      "IMIN60",
+      "IMXD5",
+      "IMXD10",
+      "IMXD20",
+      "IMXD30",
+      "IMXD60",
+      "CORR5",
+      "CORR10",
+      "CORR20",
+      "CORR30",
+      "CORR60",
+      "CORD5",
+      "CORD10",
+      "CORD20",
+      "CORD30",
+      "CORD60",
+      "CNTP5",
+      "CNTP10",
+      "CNTP20",
+      "CNTP30",
+      "CNTP60",
+      "CNTN5",
+      "CNTN10",
+      "CNTN20",
+      "CNTN30",
+      "CNTN60",
+      "CNTD5",
+      "CNTD10",
+      "CNTD20",
+      "CNTD30",
+      "CNTD60",
+      "SUMP5",
+      "SUMP10",
+      "SUMP20",
+      "SUMP30",
+      "SUMP60",
+      "SUMN5",
+      "SUMN10",
+      "SUMN20",
+      "SUMN30",
+      "SUMN60",
+      "SUMD5",
+      "SUMD10",
+      "SUMD20",
+      "SUMD30",
+      "SUMD60",
+      "VMA5",
+      "VMA10",
+      "VMA20",
+      "VMA30",
+      "VMA60",
+      "VSTD5",
+      "VSTD10",
+      "VSTD20",
+      "VSTD30",
+      "VSTD60",
+      "WVMA5",
+      "WVMA10",
+      "WVMA20",
+      "WVMA30",
+      "WVMA60",
+      "VSUMP5",
+      "VSUMP10",
+      "VSUMP20",
+      "VSUMP30",
+      "VSUMP60",
+      "VSUMN5",
+      "VSUMN10",
+      "VSUMN20",
+      "VSUMN30",
+      "VSUMN60",
+      "VSUMD5",
+      "VSUMD10",
+      "VSUMD20",
+      "VSUMD30",
+      "VSUMD60",
+      "RNG120",
+      "HIGH120",
+      "IMAXC120",
+      "FREQ_UP20",
+      "FREQ_DOWN20",
+      "FREQ_MA60_20"
+    ],
+    "dtypes": [
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32",
+      "float32"
+    ],
+    "index_sha256": "da30e4ba1f99c3c223a06542838be7dfcb167f1e77ab403f06ff489e5960ab4a",
+    "values_sha256": "c573778b2ab624d24da717e018f905a0c158dfcab2aa7fae84aa236a9d13f9a3"
+  },
+  "baseline_exact_replay": [
+    {
+      "seed": 42,
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+        "size": 59488457
+      },
+      "exact_prediction": true,
+      "max_abs_difference": 0.0,
+      "comparison": "diagnostic; canonical frozen v5 score files are authoritative"
+    },
+    {
+      "seed": 1000,
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+        "size": 59781408
+      },
+      "exact_prediction": true,
+      "max_abs_difference": 0.0,
+      "comparison": "diagnostic; canonical frozen v5 score files are authoritative"
+    },
+    {
+      "seed": 2000,
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+        "size": 60495908
+      },
+      "exact_prediction": true,
+      "max_abs_difference": 0.0,
+      "comparison": "diagnostic; canonical frozen v5 score files are authoritative"
+    },
+    {
+      "seed": 3000,
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+        "size": 59546157
+      },
+      "exact_prediction": true,
+      "max_abs_difference": 0.0,
+      "comparison": "diagnostic; canonical frozen v5 score files are authoritative"
+    },
+    {
+      "seed": 4000,
+      "model": {
+        "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+        "size": 60125167
+      },
+      "exact_prediction": true,
+      "max_abs_difference": 0.0,
+      "comparison": "diagnostic; canonical frozen v5 score files are authoritative"
+    }
+  ],
+  "predictions": [
+    {
+      "variant": "stop-P",
+      "job_id": "stop-P-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_stop_p_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_p_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7300e99cbfa048cc3200bf7fd8725ff24162bf039346b680f686753a73abeb17",
+        "size": 197773
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-P-s42-2020.pkl",
+        "sha256": "d9227b231367ae4247214c2d9de688676a6aded767c7b0ca0bcee53abc5394b8",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-P",
+      "job_id": "joint-P-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_joint_p_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_p_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ce103e489d1321b4fea8e898ecfd255b611acbf3e663de4d61c1a7b3833b41f7",
+        "size": 227660
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-P-s42-2020.pkl",
+        "sha256": "5b03cb8b3926209d471ed3345b8986ce5734d1c9f38900073e990fe99f88da95",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-P",
+      "job_id": "train-P-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_train_p_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_p_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e400cd5f87919b6d0e9dba1c1416a0ac69cb82a77250666f64c4a705d2c41484",
+        "size": 189586
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-P-s42-2020.pkl",
+        "sha256": "337640b10c0093e5f618fffc03c878de77b1ce73a9a5fb9d33a4be3f0ac8774d",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-P",
+      "job_id": "stop-P-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_stop_p_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "167d71e85d2fbc1aaa0e1730845c77b1b8f993dfcb8a7b81d619ea7a5b8bcb37",
+        "size": 262558
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-P-s1000-2020.pkl",
+        "sha256": "fa551397a3347a38c6102b45fb30a3796de4e1ab94e772375e532a4888213837",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-P",
+      "job_id": "joint-P-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_joint_p_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "4bf13abe5fb91727772b3bd45b3eed9ebb403bb7d59b1cdb3688850cdbd81392",
+        "size": 196784
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-P-s1000-2020.pkl",
+        "sha256": "5d8fdd4dc04b12de8a4dda90b148ecdcb1b98188613d079a8f83d997d1407b3e",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-P",
+      "job_id": "train-P-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_train_p_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_p_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3382d547cbc4a4686d1bb7113fc3297d628c018ceebfb1d3fd547fe1b0e92977",
+        "size": 149548
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-P-s1000-2020.pkl",
+        "sha256": "20f561d992b790a60d40231febd3915305abdefc635bc52361528529517d88ce",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-P",
+      "job_id": "stop-P-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_stop_p_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "961d79ec6403e679421fb86a92f5231385194b4f14410138997392bd98dc2eb6",
+        "size": 255507
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-P-s2000-2020.pkl",
+        "sha256": "80bb62e77ff1119e2bbf6052a2af08ec92821c7dd41974a81658c7af5e28e995",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-P",
+      "job_id": "joint-P-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_joint_p_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a8a07369c55c269301978e97f63fac8615c78c6a123a925613b070b31f097e6d",
+        "size": 102017
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-P-s2000-2020.pkl",
+        "sha256": "cc6422dd6e2d467e13a42c8b2671e1944efb372243cbb2e00a23e731b5d3e123",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-P",
+      "job_id": "train-P-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_train_p_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_p_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f10474830d9ece4cc80dd22bdb4691bab8f7d9514513f093797dfe06c5e5801d",
+        "size": 91325
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-P-s2000-2020.pkl",
+        "sha256": "5a477cd1fb0947fb73862e256fddd5b2b30d233697816d5358d41180ce13d41e",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-P",
+      "job_id": "stop-P-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_stop_p_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5fd528723c77718273f173eddf1034a1dfa9f88131364c729eafe379705f82d6",
+        "size": 193047
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-P-s3000-2020.pkl",
+        "sha256": "24a0cdfd0c5aa112a3ed86b375c01f16fc9e1d64f006d89f096dc7257773390f",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-P",
+      "job_id": "joint-P-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_joint_p_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d6165a00c8b591ac44093b7723198336c11fd563dab86bbdc6e7940f22044a14",
+        "size": 159965
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-P-s3000-2020.pkl",
+        "sha256": "d4d42448d8be82f65c7a3649d2a75655058b39b6fad1cb0c265465aadff9eee0",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-P",
+      "job_id": "train-P-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_train_p_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_p_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "673486bbf1d1afbcb3319aec8a1d1363304be1c1713523be06be305927e9221e",
+        "size": 128984
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-P-s3000-2020.pkl",
+        "sha256": "c2b53637add2c201ecca61517dd6ae7920c8d57a8716de0e8a88143235069133",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-P",
+      "job_id": "stop-P-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_stop_p_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3c64c85a2aac7c2e60554321c088b002bef7f8fc46f1bbd0a427e813538c97b3",
+        "size": 166028
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-P-s4000-2020.pkl",
+        "sha256": "611e0bd7eac21e5ef9ccce8739932b7ba8d0739fe8482dbc8d35920be391f67d",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-P",
+      "job_id": "joint-P-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_joint_p_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b5b128aa64f4a8723822286aab590281f1165967def6cd89d948f128e712f00e",
+        "size": 142841
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-P-s4000-2020.pkl",
+        "sha256": "0872e8e9fb43bbf8f3d578cf4d4a270f45ab0cbba90d3064801498ebf883ed07",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-P",
+      "job_id": "train-P-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_train_p_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_p_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "eef48b7e87cb25f50b080e0ab3b5a917f0d8806451478b5c31e09407d97a7657",
+        "size": 220634
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-P-s4000-2020.pkl",
+        "sha256": "afedc7441661499d97ccc75adb8af8ec4f33480408a3d9bdbd0c089cfb46d9e8",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-T",
+      "job_id": "stop-T-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_stop_t_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_t_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "508cd320220c516e288ae3fc991b32cd6aa4ea3a683f244cb66f78a6ac7c0987",
+        "size": 318189
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-T-s42-2020.pkl",
+        "sha256": "04f21316bd977ac57a0978fdb8c6c72c1e54ae9c6e8b6740c842ef321872fb58",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-T",
+      "job_id": "joint-T-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_joint_t_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_t_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "72ada1144f31bd655b02629208a4f3c2a17ece6587422b84157719639041710a",
+        "size": 749954
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-T-s42-2020.pkl",
+        "sha256": "a08baa165535b2b2ce1091c14b62c4640a7711064854044a40979109e097c426",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-T",
+      "job_id": "train-T-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_train_t_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_t_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "e92fba5f5dde36373f32eb163806d40bda210626b9cd4e64e5990d1f6150299c",
+        "size": 1125776
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-T-s42-2020.pkl",
+        "sha256": "d5321abf33d50299f4b21f6e3871d125da7bd2ede986321f9e5024273a9302ae",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-T",
+      "job_id": "stop-T-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_stop_t_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "eaede90b14829eec85eba7fbdcd7a5108ac0b2c309c67623f4d0d0e3460d2af2",
+        "size": 431487
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-T-s1000-2020.pkl",
+        "sha256": "d23e1b3c91d91b2066d58104cf2dbc3f43e9e9df3eba7ba50bee8b902431661e",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-T",
+      "job_id": "joint-T-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_joint_t_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "c0d071aa4cf1680f75c3a2112e9f56173d8cbb7c08fe3f10378699735b7e6d6e",
+        "size": 771932
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-T-s1000-2020.pkl",
+        "sha256": "442f261570878639c7cb433b6dfa10b94226b57ff0e7a73798f82fa04b9e90f8",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-T",
+      "job_id": "train-T-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_train_t_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7ffaff79101174f5bd29b71352bf57cbc43e4914f7d32d2f2b09191e1de14553",
+        "size": 796018
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-T-s1000-2020.pkl",
+        "sha256": "7f5a6aab7b21fd2c184d616d84e6436618d01c48242543067154f6931d5c58fc",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-T",
+      "job_id": "stop-T-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_stop_t_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "72746f9f3e4efa1e5495771c394bbd45b84249c683a91a0305c254cbf154bb8e",
+        "size": 614784
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-T-s2000-2020.pkl",
+        "sha256": "287724992c783532527d96d2df935e2a766e34e727330ce9708a7cb664cdf8fb",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-T",
+      "job_id": "joint-T-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_joint_t_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "037b48494fb670b5232a61c73f87d201ead62b86b161bb3541e4e2e2bc0d4225",
+        "size": 149505
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-T-s2000-2020.pkl",
+        "sha256": "bb2be7ad35c27b611a82c68655bd0a6a89b39ad9fe020e714995a707e289bd40",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-T",
+      "job_id": "train-T-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_train_t_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "8933db253adaabd53b861f08c8e9f9c5bdeb0f4a003252891d465ccea9087da3",
+        "size": 504832
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-T-s2000-2020.pkl",
+        "sha256": "3e7a22f402253310beeb73c8b3bbf0be8e6e2ae3bbed4591c2b99e0f77d46e89",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-T",
+      "job_id": "stop-T-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_stop_t_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "55c3a46c925261c1eb9fc36179b325573e1ce74355d469cfb84e426e8fb9ea19",
+        "size": 281854
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-T-s3000-2020.pkl",
+        "sha256": "26a3a38df3a733c86e9dc5afbc0a36a745b0e86cc340cdb45ff765d6060f18f3",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-T",
+      "job_id": "joint-T-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_joint_t_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "fd5bf6f96a5ce44875d8a798ddb98dc63c6848925bb2854c2e8465b709821fb4",
+        "size": 115557
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-T-s3000-2020.pkl",
+        "sha256": "5904da5e639839b6401bbd240532da251fdfc85eb84e4e1ee3d253cb684c670d",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-T",
+      "job_id": "train-T-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_train_t_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "346a02cbd9d5d6f039223c9907952cfa9d8480b2c15c1d21cb5b777ea5639c1b",
+        "size": 655249
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-T-s3000-2020.pkl",
+        "sha256": "d268b664b00b03005444bef57148286c30e69010517afcdc3991c3d99dff3e01",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-T",
+      "job_id": "stop-T-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_stop_t_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "72372f6f83fc2745a70b3b1f70f73ae3d668bd1b57da6b77222efca1a8d3826b",
+        "size": 186604
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-T-s4000-2020.pkl",
+        "sha256": "b11800d8029a94f69979b29bac8ecce006a2993e09f01b0581aad040e8521555",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-T",
+      "job_id": "joint-T-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_joint_t_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f2c8732d27d5b8ea19794642446ab57ced7f92e83ad688d8e9de9e64ba25d848",
+        "size": 1907327
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-T-s4000-2020.pkl",
+        "sha256": "337174ead54c23554094db5ef3811000faae139e535269f3cd3447330068b5f8",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-T",
+      "job_id": "train-T-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_train_t_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7927d68e734402b138845b9fd1c0bcfa1ad37451272c3479d45d93d352e72564",
+        "size": 1334373
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-T-s4000-2020.pkl",
+        "sha256": "5c48de8db719b3fc9185cc5a06e79f6580b5544d3df908b341b42d178f40202c",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-D",
+      "job_id": "stop-D-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_stop_d_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_d_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "7db4f6a9327fff6d2550cff815eff1c0765c0863a6d1b986ee869f0c5fc486ca",
+        "size": 337921
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-D-s42-2020.pkl",
+        "sha256": "5fcfb8cacb3eb946c25c05f6ee21ed026454cc8b6801f143a6d01d58e15c2861",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-D",
+      "job_id": "joint-D-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_joint_d_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_d_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5664ae289188cb4ca60db58325e1c9feabcaaf386939f75592a0943a4a01ae97",
+        "size": 747461
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-D-s42-2020.pkl",
+        "sha256": "00c9fa985248537b9a2db76c2df724b8a6fd1728a6ca56c97925345e549bba60",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-D",
+      "job_id": "train-D-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_train_d_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "56472729dc2880ba1fb25b7632d2c8fd81ea38d3e239970e8299514fdf0f7a67",
+        "size": 587250
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-D-s42-2020.pkl",
+        "sha256": "12cdfea85df73dab5363e52ef3872d4d0ad4228a92e73a3bc0faa68af0d97fd3",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-D",
+      "job_id": "stop-D-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_stop_d_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "334da6da9e9b3ea12fe8ea0ff015f773b8fd8d2fc69af400dfe3c2025e63eeed",
+        "size": 434103
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-D-s1000-2020.pkl",
+        "sha256": "cc49bb9b532124cbd3f0ac1054451737b6ef83e6124ff71332bc51f1db99e622",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-D",
+      "job_id": "joint-D-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_joint_d_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d93ed8e65873ba1e2b93da9f66bab0c6f3cc65f03a46c7007781c019cfe0bb46",
+        "size": 378158
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-D-s1000-2020.pkl",
+        "sha256": "db700899d9c552d1247304f3cd68b6b00e3dad80758a8a408ff4a08e02e84943",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-D",
+      "job_id": "train-D-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_train_d_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a5eba8e327014c973f041d224c17da92f24ba9639f53a5ed0cf2e15231eaacd4",
+        "size": 518876
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-D-s1000-2020.pkl",
+        "sha256": "c8f7a5b0ef9b978f1e8cc32f8b0bea0ea7af5bf02d9191421d9ea013bf0c9e0f",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-D",
+      "job_id": "stop-D-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_stop_d_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5ff19c7a637c732016369626b8a99a753856f086c0fc70bc8ba65019d7884804",
+        "size": 688649
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-D-s2000-2020.pkl",
+        "sha256": "210334d03c9183e7852eea93804a16e419be80ac143bd567da920f9de31a614e",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-D",
+      "job_id": "joint-D-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_joint_d_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d1a0fcd21c43f8454789345aa2b6b4615287791185c3b5c870455fad0b1ca3b9",
+        "size": 272159
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-D-s2000-2020.pkl",
+        "sha256": "fb7129bdbae7e2f3498ce304323c1249295fca9c86d3e99768e982f236db4432",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-D",
+      "job_id": "train-D-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_train_d_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "82e755bdc72907a076f18abba621bd49bb13e6e4a77e92c97a5326e1f866a1b7",
+        "size": 643615
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-D-s2000-2020.pkl",
+        "sha256": "de16ebf0b0b3ead0cfce3460f676eae254b30c2476f3e6dc455a904480f91846",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-D",
+      "job_id": "stop-D-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_stop_d_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "3eba800165e3db394d9532f44c9f1baac58022c61a2522a8d224e7cd544a7d79",
+        "size": 526783
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-D-s3000-2020.pkl",
+        "sha256": "a94f4ae8cec2b67965a2715b7e3cc6a3c562ff3c95b53286c608051887fc8621",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-D",
+      "job_id": "joint-D-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_joint_d_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2df3b03c73f006de303b4e0f52a4c99eea474e2274c98a0bd3d4ba65baed770b",
+        "size": 459816
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-D-s3000-2020.pkl",
+        "sha256": "699bfc15524855cd661c200c0081147af42a5e75316a17ba0ac2765e1edb3b7d",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-D",
+      "job_id": "train-D-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_train_d_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "22bcb0df20fbd18a7c994236cb7c5704eec1378d62146809698a4919b267790a",
+        "size": 618064
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-D-s3000-2020.pkl",
+        "sha256": "d56df6c9cc0d607eb22e951dfc1ee8b5e7f8540295ea93594beb2b81ed6af562",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-D",
+      "job_id": "stop-D-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_stop_d_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "79e390f3d44c74d953de49c6b381404ae0fa789c876649a61dca82ca0479c621",
+        "size": 717131
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-D-s4000-2020.pkl",
+        "sha256": "fbfbca3e5cf88655dfcee2f299a6eca19c314862aeee3d7d728cbc005c19150f",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-D",
+      "job_id": "joint-D-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_joint_d_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a6eaa5d4777aaf255635cbf309d969f290d537b36e663e3ad107570b2137596e",
+        "size": 539228
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-D-s4000-2020.pkl",
+        "sha256": "e50c0105f6d43588bdc621fee06ac5149a3b12b5ffc3005aaea3aab84cc1284a",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-D",
+      "job_id": "train-D-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_train_d_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_d_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ce93a0469cf2999f8422dada7daaf2427b6e8276c7e5d3491237b510c681e945",
+        "size": 481082
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-D-s4000-2020.pkl",
+        "sha256": "b5346a09dd06f1a3408e693b78389a5208becc7b8307aa0909ab1177dfa18117",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-F",
+      "job_id": "stop-F-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_stop_f_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "fd6c0bce801e2c111508d94fe5658b89626f0a88c9ad95343e6687c8ebb30c24",
+        "size": 515285
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-F-s42-2020.pkl",
+        "sha256": "4edc610a57e37c902a3097b8d09a35e369992286e5b0f69177939808ec0ce0e5",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-F",
+      "job_id": "joint-F-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_joint_f_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_f_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "a605028294ddf0c692ce7baf0772e75efe3a4f173be0b4e010f8341442b54dcc",
+        "size": 192475
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-F-s42-2020.pkl",
+        "sha256": "b023a8b1f6826e65a8b40dd8b09c14cb7c8cc6df54068f554e48557779327a4f",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-F",
+      "job_id": "train-F-s42",
+      "seed": 42,
+      "session": "h5mix_20261114_train_f_s42",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_f_s42/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "642a15e0ff0250d0200f38292153f677ef0efc058a3b47bcff8cec213b51424e",
+        "size": 192471
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-F-s42-2020.pkl",
+        "sha256": "b023a8b1f6826e65a8b40dd8b09c14cb7c8cc6df54068f554e48557779327a4f",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-F",
+      "job_id": "stop-F-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_stop_f_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "aec2a46273dc09e8a00a5c1cb56a6d596f3e7dcb4b3a2ea91fab8f106e52486c",
+        "size": 205905
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-F-s1000-2020.pkl",
+        "sha256": "2e1bd13dc3c60be9e068c345f66fd04cf7d98a900da73e79ed11826106db5e4d",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-F",
+      "job_id": "joint-F-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_joint_f_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "932d25a33fa5bbc5d9233ba5669ffa342faccaf77f604a5705c56d13fb06d091",
+        "size": 723666
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-F-s1000-2020.pkl",
+        "sha256": "2d4dd5ddc20969319678760d85403fe7d4d4cd6ab6ee3b7460cb7443d93ebde7",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-F",
+      "job_id": "train-F-s1000",
+      "seed": 1000,
+      "session": "h5mix_20261114_train_f_s1000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_f_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "5fb8102fd8297765906c5c1f5f3c13e3a7ee50b719ae67c97151a4ba89a7ebae",
+        "size": 246096
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-F-s1000-2020.pkl",
+        "sha256": "f71394e8ea3749b9f4158cb34bcd43a6cc0b0236d95a3cbfe620709b893af748",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-F",
+      "job_id": "stop-F-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_stop_f_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "f2a4df8b406ab5458c3b8c87cd82c8387dd2ffd24a50ac4ea0b8042c9ab486b7",
+        "size": 521122
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-F-s2000-2020.pkl",
+        "sha256": "1f544f01867d4bb02faef68868274fa7f96df27aa8149ef17ead69e016f51cd5",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-F",
+      "job_id": "joint-F-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_joint_f_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "870f7313573b1bb8d891eea7813ca57dcca38de77fe1d8970ff93b09a765b1e8",
+        "size": 274529
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-F-s2000-2020.pkl",
+        "sha256": "947f27a2259a2529a8fa211494f43d2579a03e26a348d6b63c551b653c8018b2",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-F",
+      "job_id": "train-F-s2000",
+      "seed": 2000,
+      "session": "h5mix_20261114_train_f_s2000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_f_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "d237683debbc01515713a2b83bbcac861f389f3dacf5ab4311888ebee9788da1",
+        "size": 211272
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-F-s2000-2020.pkl",
+        "sha256": "92287884e8d1a02d45e83290f7d329816288c34e6887427ec87b8d7d7a73d61a",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-F",
+      "job_id": "stop-F-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_stop_f_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "2d82fea79e0b5c495239fe77ceee854d21885651ea955599b9b66e0e3b4dde5e",
+        "size": 162479
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-F-s3000-2020.pkl",
+        "sha256": "4becccec7ed42026d3b6ca6b1f8ac868a2db8d3187f84f82693b92267fff736e",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-F",
+      "job_id": "joint-F-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_joint_f_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "b14cc2e8c78a236b60f1d2bfbbc00bfd86be57fb8c75bd309330f7bc1567b800",
+        "size": 195733
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-F-s3000-2020.pkl",
+        "sha256": "63574636bcf145711bc516af3660bf38e62f2b7559cee36fb4937f0f4ec83c66",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-F",
+      "job_id": "train-F-s3000",
+      "seed": 3000,
+      "session": "h5mix_20261114_train_f_s3000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_f_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ff51e3c64400397c047fc98f8037ec1db640dd9b72dd0b5270682ff274222bbd",
+        "size": 208483
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-F-s3000-2020.pkl",
+        "sha256": "7d555f6710d4db3e74dc35383614cea5c0697f4a66b798d9b633310bfb6a1343",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "stop-F",
+      "job_id": "stop-F-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_stop_f_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_stop_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "1d90d886e87810fda30507ef97018382b267880d16897b5ccccf4ad9995ba02f",
+        "size": 430614
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-stop-F-s4000-2020.pkl",
+        "sha256": "a829a208063c15ed9857932ab6bc09208e7af48a9a02e4fe30ad6c835d4c3da4",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "joint-F",
+      "job_id": "joint-F-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_joint_f_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_joint_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "ba4de88cbfcbd6613ba1d60e9cd8b774fcd502999d4b4074ce90fc0a1f25a347",
+        "size": 527434
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-joint-F-s4000-2020.pkl",
+        "sha256": "fa5b2650184b2a079dba8faca16fdf2739b2d4f06a505f994373917b901e1501",
+        "size": 6394259
+      }
+    },
+    {
+      "variant": "train-F",
+      "job_id": "train-F-s4000",
+      "seed": 4000,
+      "session": "h5mix_20261114_train_f_s4000",
+      "model": {
+        "path": "backtest/result/h5mix_20261114_train_f_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "sha256": "be7dbb46a8213b05921834e2092ef96b510041be898ebb055a92fc26e03f7898",
+        "size": 206622
+      },
+      "prediction_part": {
+        "path": "/private/tmp/qlib-h5-top3.UmxWdc/weekly-h5-top3mix-infer-train-F-s4000-2020.pkl",
+        "sha256": "c4acacc65def85fc2b059445e0b839dd88b1e966547411afd767c512c1604fed",
+        "size": 6394259
+      }
+    }
+  ]
+}

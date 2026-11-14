@@ -1,0 +1,782 @@
+{
+  "by_style": {
+    "D": {
+      "metrics": {
+        "v5": {
+          "net_ann": 0.19734137083316075,
+          "net_sharpe": 0.49317000629914465,
+          "net_vol": 0.40014876880703565,
+          "rank_ic": 0.15713562145146817,
+          "n": 646
+        },
+        "top5": {
+          "net_ann": 0.315492648830653,
+          "net_sharpe": 1.126595389594267,
+          "net_vol": 0.28004077750067374,
+          "rank_ic": 0.18986539618672257,
+          "n": 646
+        },
+        "rankic": {
+          "net_ann": 0.2579282196892297,
+          "net_sharpe": 0.8865603647455104,
+          "net_vol": 0.29093136795402386,
+          "rank_ic": 0.19011840094784171,
+          "n": 646
+        },
+        "stop": {
+          "net_ann": 0.2815597141030679,
+          "net_sharpe": 1.0230953094737738,
+          "net_vol": 0.27520379723750993,
+          "rank_ic": 0.18983136804682496,
+          "n": 646
+        },
+        "train": {
+          "net_ann": 0.2934949900230325,
+          "net_sharpe": 0.9539062965889668,
+          "net_vol": 0.3076769605909184,
+          "rank_ic": 0.19096213962948866,
+          "n": 646
+        },
+        "joint": {
+          "net_ann": 0.27248207042545813,
+          "net_sharpe": 0.972801049869893,
+          "net_vol": 0.28010051023475063,
+          "rank_ic": 0.19023357308403818,
+          "n": 646
+        }
+      },
+      "choices": {
+        "stop": {
+          "rounds": [
+            15,
+            22,
+            41,
+            29,
+            44
+          ],
+          "stopped": [
+            65,
+            72,
+            91,
+            79,
+            94
+          ],
+          "ties_at_best": [
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 0
+            },
+            "top5": {
+              "net_ann": 4,
+              "net_sharpe": 3,
+              "rank_ic": 3
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "train": {
+          "rounds": [
+            32,
+            27,
+            35,
+            33,
+            24
+          ],
+          "stopped": [
+            82,
+            77,
+            85,
+            83,
+            74
+          ],
+          "ties_at_best": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 3,
+              "net_sharpe": 3,
+              "rank_ic": 4
+            },
+            "top5": {
+              "net_ann": 0,
+              "net_sharpe": 0,
+              "rank_ic": 5
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "joint": {
+          "rounds": [
+            43,
+            18,
+            11,
+            23,
+            28
+          ],
+          "stopped": [
+            93,
+            68,
+            61,
+            73,
+            78
+          ],
+          "ties_at_best": [
+            0,
+            1,
+            42,
+            0,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 5,
+              "net_sharpe": 4,
+              "rank_ic": 1
+            },
+            "top5": {
+              "net_ann": 3,
+              "net_sharpe": 3,
+              "rank_ic": 3
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        }
+      },
+      "reverse_portfolio": {
+        "boundary_tie_dates": [],
+        "own_boundary_tie_dates": [],
+        "original": {
+          "net_ann": 0.27248207042545813,
+          "net_sharpe": 0.972801049869893,
+          "n_days": 646,
+          "turnover": 0.19011960478419138
+        },
+        "reverse": {
+          "net_ann": 0.27248207042545813,
+          "net_sharpe": 0.972801049869893,
+          "n_days": 646,
+          "turnover": 0.19011960478419138
+        }
+      },
+      "qualified": true
+    },
+    "F": {
+      "metrics": {
+        "v5": {
+          "net_ann": 1.7102134991556057,
+          "net_sharpe": 2.250765473103783,
+          "net_vol": 0.7598363843733742,
+          "rank_ic": 0.03771987742756054,
+          "n": 137
+        },
+        "top5": {
+          "net_ann": 3.2889250769788085,
+          "net_sharpe": 3.930614908621193,
+          "net_vol": 0.8367456882547977,
+          "rank_ic": 0.20798874218058278,
+          "n": 137
+        },
+        "rankic": {
+          "net_ann": 2.9673610799461794,
+          "net_sharpe": 3.3667999152955845,
+          "net_vol": 0.8813594970301831,
+          "rank_ic": 0.20887617211552548,
+          "n": 137
+        },
+        "stop": {
+          "net_ann": 3.23686048049665,
+          "net_sharpe": 3.842828894564779,
+          "net_vol": 0.8423118929585445,
+          "rank_ic": 0.20727052944191202,
+          "n": 137
+        },
+        "train": {
+          "net_ann": 2.8328382795372105,
+          "net_sharpe": 3.203464499062619,
+          "net_vol": 0.8843045647504884,
+          "rank_ic": 0.21262029646066152,
+          "n": 137
+        },
+        "joint": {
+          "net_ann": 3.0234274467593556,
+          "net_sharpe": 3.6396424832196903,
+          "net_vol": 0.8306935257236528,
+          "rank_ic": 0.2099124828876307,
+          "n": 137
+        }
+      },
+      "choices": {
+        "stop": {
+          "rounds": [
+            35,
+            8,
+            38,
+            5,
+            29
+          ],
+          "stopped": [
+            85,
+            58,
+            88,
+            55,
+            79
+          ],
+          "ties_at_best": [
+            0,
+            32,
+            0,
+            63,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 0
+            },
+            "top5": {
+              "net_ann": 5,
+              "net_sharpe": 4,
+              "rank_ic": 1
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "train": {
+          "rounds": [
+            7,
+            11,
+            8,
+            8,
+            8
+          ],
+          "stopped": [
+            57,
+            61,
+            58,
+            58,
+            58
+          ],
+          "ties_at_best": [
+            28,
+            3,
+            14,
+            10,
+            10
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 2,
+              "net_sharpe": 1,
+              "rank_ic": 3
+            },
+            "top5": {
+              "net_ann": 1,
+              "net_sharpe": 0,
+              "rank_ic": 5
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "joint": {
+          "rounds": [
+            7,
+            52,
+            13,
+            7,
+            35
+          ],
+          "stopped": [
+            57,
+            102,
+            63,
+            57,
+            85
+          ],
+          "ties_at_best": [
+            28,
+            0,
+            2,
+            15,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 4,
+              "net_sharpe": 3,
+              "rank_ic": 2
+            },
+            "top5": {
+              "net_ann": 4,
+              "net_sharpe": 1,
+              "rank_ic": 3
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        }
+      },
+      "reverse_portfolio": {
+        "boundary_tie_dates": [],
+        "own_boundary_tie_dates": [],
+        "original": {
+          "net_ann": 3.0234274467593556,
+          "net_sharpe": 3.6396424832196903,
+          "n_days": 137,
+          "turnover": 0.17031630170316306
+        },
+        "reverse": {
+          "net_ann": 3.0234274467593556,
+          "net_sharpe": 3.6396424832196903,
+          "n_days": 137,
+          "turnover": 0.17031630170316306
+        }
+      },
+      "qualified": true
+    },
+    "T": {
+      "metrics": {
+        "v5": {
+          "net_ann": 0.03096746161069306,
+          "net_sharpe": 0.06113400930516197,
+          "net_vol": 0.5065504775928096,
+          "rank_ic": 0.05083806723394034,
+          "n": 642
+        },
+        "top5": {
+          "net_ann": 0.38669454224356137,
+          "net_sharpe": 0.9686693533853499,
+          "net_vol": 0.3992017925333589,
+          "rank_ic": 0.07073757988807501,
+          "n": 642
+        },
+        "rankic": {
+          "net_ann": 0.32709442988191884,
+          "net_sharpe": 0.800909608084306,
+          "net_vol": 0.4084036782431607,
+          "rank_ic": 0.07421492907928769,
+          "n": 642
+        },
+        "stop": {
+          "net_ann": 0.36010880935134165,
+          "net_sharpe": 0.9375613513833229,
+          "net_vol": 0.38409092783103727,
+          "rank_ic": 0.07046184051778336,
+          "n": 642
+        },
+        "train": {
+          "net_ann": 0.30150976089321463,
+          "net_sharpe": 0.7403166219497904,
+          "net_vol": 0.40727136464817015,
+          "rank_ic": 0.0704817727549213,
+          "n": 642
+        },
+        "joint": {
+          "net_ann": 0.2500008619775307,
+          "net_sharpe": 0.6380167332237828,
+          "net_vol": 0.3918406037947025,
+          "rank_ic": 0.07035662010445932,
+          "n": 642
+        }
+      },
+      "choices": {
+        "stop": {
+          "rounds": [
+            15,
+            25,
+            38,
+            12,
+            6
+          ],
+          "stopped": [
+            65,
+            75,
+            88,
+            62,
+            56
+          ],
+          "ties_at_best": [
+            1,
+            0,
+            0,
+            1,
+            189
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 0
+            },
+            "top5": {
+              "net_ann": 4,
+              "net_sharpe": 3,
+              "rank_ic": 2
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "train": {
+          "rounds": [
+            71,
+            46,
+            28,
+            37,
+            85
+          ],
+          "stopped": [
+            121,
+            96,
+            78,
+            87,
+            135
+          ],
+          "ties_at_best": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 2,
+              "net_sharpe": 1,
+              "rank_ic": 0
+            },
+            "top5": {
+              "net_ann": 0,
+              "net_sharpe": 0,
+              "rank_ic": 2
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "joint": {
+          "rounds": [
+            44,
+            44,
+            4,
+            2,
+            128
+          ],
+          "stopped": [
+            94,
+            94,
+            54,
+            52,
+            178
+          ],
+          "ties_at_best": [
+            0,
+            0,
+            260,
+            495,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 0
+            },
+            "top5": {
+              "net_ann": 4,
+              "net_sharpe": 1,
+              "rank_ic": 1
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        }
+      },
+      "reverse_portfolio": {
+        "boundary_tie_dates": [],
+        "own_boundary_tie_dates": [],
+        "original": {
+          "net_ann": 0.2500008619775307,
+          "net_sharpe": 0.6380167332237828,
+          "n_days": 642,
+          "turnover": 0.19574247144340604
+        },
+        "reverse": {
+          "net_ann": 0.2500008619775307,
+          "net_sharpe": 0.6380167332237828,
+          "n_days": 642,
+          "turnover": 0.19574247144340604
+        }
+      },
+      "qualified": true
+    },
+    "P": {
+      "metrics": {
+        "v5": {
+          "net_ann": 3.5839149558268,
+          "net_sharpe": 3.1620587358619647,
+          "net_vol": 1.1334118861172384,
+          "rank_ic": 0.1816779250867249,
+          "n": 23
+        },
+        "top5": {
+          "net_ann": 4.502170675141377,
+          "net_sharpe": 3.6829144703593655,
+          "net_vol": 1.2224477954553399,
+          "rank_ic": 0.2365011153466395,
+          "n": 23
+        },
+        "rankic": {
+          "net_ann": 4.405480569921631,
+          "net_sharpe": 3.634524405902904,
+          "net_vol": 1.2121202330534915,
+          "rank_ic": 0.23946441335143093,
+          "n": 23
+        },
+        "stop": {
+          "net_ann": 4.478473303517658,
+          "net_sharpe": 3.691516979399922,
+          "net_vol": 1.213179657173258,
+          "rank_ic": 0.23254960991540397,
+          "n": 23
+        },
+        "train": {
+          "net_ann": 4.62848892795629,
+          "net_sharpe": 4.136206804816431,
+          "net_vol": 1.1190177731361544,
+          "rank_ic": 0.2495005491051773,
+          "n": 23
+        },
+        "joint": {
+          "net_ann": 4.430063592757958,
+          "net_sharpe": 4.0668752393272545,
+          "net_vol": 1.0893040312421245,
+          "rank_ic": 0.23402428053213392,
+          "n": 23
+        }
+      },
+      "choices": {
+        "stop": {
+          "rounds": [
+            13,
+            20,
+            20,
+            12,
+            9
+          ],
+          "stopped": [
+            63,
+            70,
+            70,
+            62,
+            59
+          ],
+          "ties_at_best": [
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 4,
+              "net_sharpe": 4,
+              "rank_ic": 0
+            },
+            "top5": {
+              "net_ann": 3,
+              "net_sharpe": 1,
+              "rank_ic": 3
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 4,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "train": {
+          "rounds": [
+            11,
+            7,
+            1,
+            5,
+            14
+          ],
+          "stopped": [
+            61,
+            57,
+            51,
+            55,
+            64
+          ],
+          "ties_at_best": [
+            0,
+            8,
+            22,
+            14,
+            0
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 3,
+              "net_sharpe": 5,
+              "rank_ic": 4
+            },
+            "top5": {
+              "net_ann": 3,
+              "net_sharpe": 2,
+              "rank_ic": 5
+            },
+            "v5": {
+              "net_ann": 4,
+              "net_sharpe": 4,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        },
+        "joint": {
+          "rounds": [
+            16,
+            12,
+            2,
+            8,
+            6
+          ],
+          "stopped": [
+            66,
+            62,
+            52,
+            58,
+            56
+          ],
+          "ties_at_best": [
+            0,
+            0,
+            19,
+            5,
+            6
+          ],
+          "seed_wins": {
+            "rankic": {
+              "net_ann": 5,
+              "net_sharpe": 5,
+              "rank_ic": 1
+            },
+            "top5": {
+              "net_ann": 3,
+              "net_sharpe": 4,
+              "rank_ic": 1
+            },
+            "v5": {
+              "net_ann": 5,
+              "net_sharpe": 4,
+              "rank_ic": 5
+            }
+          },
+          "reverse_selected": true
+        }
+      },
+      "reverse_portfolio": {
+        "boundary_tie_dates": [
+          "2022-06-06",
+          "2024-02-27",
+          "2024-05-15"
+        ],
+        "own_boundary_tie_dates": [],
+        "original": {
+          "net_ann": 4.430063592757958,
+          "net_sharpe": 4.0668752393272545,
+          "n_days": 23,
+          "turnover": 0.19710144927536233
+        },
+        "reverse": {
+          "net_ann": 4.430063592757958,
+          "net_sharpe": 4.0668752393272545,
+          "n_days": 23,
+          "turnover": 0.19710144927536233
+        }
+      },
+      "qualified": true
+    }
+  },
+  "qualified": [
+    "D",
+    "F",
+    "T",
+    "P"
+  ],
+  "oracle_style_rankic_daily_weighted": {
+    "v5": 0.09909797383039266,
+    "top5": 0.13950314610254108,
+    "rankic": 0.1412888042597502,
+    "stop": 0.13923499235653455,
+    "train": 0.14052371101784447,
+    "joint": 0.1396411650049696
+  },
+  "bridge": {
+    "n": 20,
+    "changed_best": 0,
+    "max_rankic_trace_drift": 0.0
+  },
+  "new_model_fits": 40,
+  "selected_models": 60,
+  "control": "grade MSE plus pure own-style grade RankIC early stop"
+}

@@ -1,0 +1,9 @@
+{
+  "source": {
+    "path": "/private/tmp/qlib-weekly-rankic.kOqbzG/postprocess.py",
+    "sha256": "93b204882494c0476d3aca7169692550b08ffc96f51ff2d9d89c43e102cc9410",
+    "size": 734
+  },
+  "source_text": "from common import *\nimport traceback\nif __name__=='__main__':\n    save_source(__file__)\n    # Wait only on this known training/inference pipeline process. Never launch training from this monitor.\n    pid=int(sys.argv[1])\n    while True:\n        try:os.kill(pid,0)\n        except ProcessLookupError:break\n        time.sleep(15)\n    for v in VARIANTS:\n        if not (BASE/'metrics'/f'{v}.json').is_file():\n            print('Training or inference requires attention before conditional evaluation:',v,flush=True);sys.exit(2)\n    for n in ['strategy','finalize']:\n        with (BASE/'docs'/f'{n}.log').open('a') as f:\n            subprocess.run([sys.executable,str(TMP/f'{n}.py')],cwd=ROOT,stdout=f,stderr=subprocess.STDOUT,check=True)\n",
+  "purpose": "Task-only adapter; source retained as audit, executable removed at closure."
+}

@@ -1,0 +1,3491 @@
+{
+  "accepted": true,
+  "retrospective": true,
+  "fit_start": "2003-02-28",
+  "fit_end": "2026-08-31",
+  "centers": {
+    "0": {
+      "mkt": -0.1823834776878357,
+      "mkt_vol": 0.03459237143397331,
+      "small_big": 0.06732911616563797,
+      "lowvol_highvol": 0.10594144463539124,
+      "momentum": 0.007939686998724937
+    },
+    "1": {
+      "mkt": -0.00030048470944166183,
+      "mkt_vol": 0.013178114779293537,
+      "small_big": 0.03895533084869385,
+      "lowvol_highvol": 0.022186849266290665,
+      "momentum": -0.018293216824531555
+    },
+    "2": {
+      "mkt": 0.10855941474437714,
+      "mkt_vol": 0.025415293872356415,
+      "small_big": 0.03919500112533569,
+      "lowvol_highvol": -0.02136019989848137,
+      "momentum": -0.043375950306653976
+    },
+    "3": {
+      "mkt": 0.012737038545310497,
+      "mkt_vol": 0.014468967914581299,
+      "small_big": -0.020615041255950928,
+      "lowvol_highvol": -0.01861511543393135,
+      "momentum": 0.028409812599420547
+    }
+  },
+  "raw_counts": {
+    "1": 145,
+    "3": 72,
+    "2": 53,
+    "0": 13
+  },
+  "scaler_mean": [
+    0.01503943424637334,
+    0.016781991513860627,
+    0.025147892475085393,
+    0.007498067020448484,
+    -0.009903602445228256
+  ],
+  "scaler_scale": [
+    0.09002050736694897,
+    0.008566873149701261,
+    0.0476297553521311,
+    0.04871974448691416,
+    0.04462954718591375
+  ],
+  "kmeans_inertia": 861.0216674804688,
+  "n_init": 100,
+  "monthly_coverage": [
+    {
+      "month": "2003-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 14,
+        "momentum": 14
+      }
+    },
+    {
+      "month": "2003-03",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2003-04",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2003-05",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2003-06",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2003-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2003-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2003-09",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2003-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2003-11",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2003-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2004-01",
+      "sessions": 13,
+      "valid_days": {
+        "mkt": 13,
+        "small_big": 13,
+        "lowvol_highvol": 13,
+        "momentum": 13
+      }
+    },
+    {
+      "month": "2004-02",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2004-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2004-04",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2004-05",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2004-06",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2004-07",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2004-08",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2004-09",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2004-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2004-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2004-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2005-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2005-02",
+      "sessions": 13,
+      "valid_days": {
+        "mkt": 13,
+        "small_big": 13,
+        "lowvol_highvol": 13,
+        "momentum": 13
+      }
+    },
+    {
+      "month": "2005-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2005-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2005-05",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2005-06",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2005-07",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2005-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2005-09",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2005-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2005-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2005-12",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2006-01",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2006-02",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2006-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2006-04",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2006-05",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2006-06",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2006-07",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2006-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2006-09",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2006-10",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2006-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2006-12",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2007-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2007-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2007-03",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2007-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2007-05",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2007-06",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2007-07",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2007-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2007-09",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2007-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2007-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2007-12",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2008-01",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2008-02",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2008-03",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2008-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2008-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2008-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2008-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2008-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2008-09",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2008-10",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2008-11",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2008-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2009-01",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2009-02",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2009-03",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2009-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2009-05",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2009-06",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2009-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2009-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2009-09",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2009-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2009-11",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2009-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2010-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2010-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2010-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2010-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2010-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2010-06",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2010-07",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2010-08",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2010-09",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2010-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2010-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2010-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2011-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2011-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2011-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2011-04",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2011-05",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2011-06",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2011-07",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2011-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2011-09",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2011-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2011-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2011-12",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2012-01",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2012-02",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2012-03",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2012-04",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2012-05",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2012-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2012-07",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2012-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2012-09",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2012-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2012-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2012-12",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2013-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2013-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2013-03",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2013-04",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2013-05",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2013-06",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2013-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2013-08",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2013-09",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2013-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2013-11",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2013-12",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2014-01",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2014-02",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2014-03",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2014-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2014-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2014-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2014-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2014-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2014-09",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2014-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2014-11",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2014-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2015-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2015-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2015-03",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2015-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2015-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2015-06",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2015-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2015-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2015-09",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2015-10",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2015-11",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2015-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2016-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2016-02",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2016-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2016-04",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2016-05",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2016-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2016-07",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2016-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2016-09",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2016-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2016-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2016-12",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2017-01",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2017-02",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2017-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2017-04",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2017-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2017-06",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2017-07",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2017-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2017-09",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2017-10",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2017-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2017-12",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2018-01",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2018-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2018-03",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2018-04",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2018-05",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2018-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2018-07",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2018-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2018-09",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2018-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2018-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2018-12",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2019-01",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2019-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2019-03",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2019-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2019-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2019-06",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2019-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2019-08",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2019-09",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2019-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2019-11",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2019-12",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2020-01",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2020-02",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2020-03",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2020-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2020-05",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2020-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2020-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2020-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2020-09",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2020-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2020-11",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2020-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2021-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2021-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2021-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2021-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2021-05",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2021-06",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2021-07",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2021-08",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2021-09",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2021-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2021-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2021-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2022-01",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2022-02",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2022-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2022-04",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2022-05",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2022-06",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2022-07",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2022-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2022-09",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2022-10",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2022-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2022-12",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2023-01",
+      "sessions": 16,
+      "valid_days": {
+        "mkt": 16,
+        "small_big": 16,
+        "lowvol_highvol": 16,
+        "momentum": 16
+      }
+    },
+    {
+      "month": "2023-02",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2023-03",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2023-04",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2023-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2023-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2023-07",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2023-08",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2023-09",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2023-10",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2023-11",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2023-12",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2024-01",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2024-02",
+      "sessions": 15,
+      "valid_days": {
+        "mkt": 15,
+        "small_big": 15,
+        "lowvol_highvol": 15,
+        "momentum": 15
+      }
+    },
+    {
+      "month": "2024-03",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2024-04",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2024-05",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2024-06",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2024-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2024-08",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2024-09",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2024-10",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2024-11",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2024-12",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2025-01",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2025-02",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2025-03",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2025-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2025-05",
+      "sessions": 19,
+      "valid_days": {
+        "mkt": 19,
+        "small_big": 19,
+        "lowvol_highvol": 19,
+        "momentum": 19
+      }
+    },
+    {
+      "month": "2025-06",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2025-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2025-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2025-09",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2025-10",
+      "sessions": 17,
+      "valid_days": {
+        "mkt": 17,
+        "small_big": 17,
+        "lowvol_highvol": 17,
+        "momentum": 17
+      }
+    },
+    {
+      "month": "2025-11",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2025-12",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2026-01",
+      "sessions": 20,
+      "valid_days": {
+        "mkt": 20,
+        "small_big": 20,
+        "lowvol_highvol": 20,
+        "momentum": 20
+      }
+    },
+    {
+      "month": "2026-02",
+      "sessions": 14,
+      "valid_days": {
+        "mkt": 14,
+        "small_big": 14,
+        "lowvol_highvol": 14,
+        "momentum": 14
+      }
+    },
+    {
+      "month": "2026-03",
+      "sessions": 22,
+      "valid_days": {
+        "mkt": 22,
+        "small_big": 22,
+        "lowvol_highvol": 22,
+        "momentum": 22
+      }
+    },
+    {
+      "month": "2026-04",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2026-05",
+      "sessions": 18,
+      "valid_days": {
+        "mkt": 18,
+        "small_big": 18,
+        "lowvol_highvol": 18,
+        "momentum": 18
+      }
+    },
+    {
+      "month": "2026-06",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    },
+    {
+      "month": "2026-07",
+      "sessions": 23,
+      "valid_days": {
+        "mkt": 23,
+        "small_big": 23,
+        "lowvol_highvol": 23,
+        "momentum": 23
+      }
+    },
+    {
+      "month": "2026-08",
+      "sessions": 21,
+      "valid_days": {
+        "mkt": 21,
+        "small_big": 21,
+        "lowvol_highvol": 21,
+        "momentum": 21
+      }
+    }
+  ],
+  "warning": "Full-history KMeans and centered 3-month smoothing; reconstructed, not exact legacy labels.",
+  "mapping": {
+    "0": "P",
+    "3": "T",
+    "2": "F",
+    "1": "D"
+  },
+  "smoothed_counts": {
+    "D": 163,
+    "T": 57,
+    "F": 55,
+    "P": 8
+  },
+  "training_counts": {
+    "D": 114,
+    "F": 49,
+    "T": 31,
+    "P": 5
+  },
+  "episodes": [
+    {
+      "label": "D",
+      "start": "2003-02",
+      "end": "2003-03",
+      "n_months": 2
+    },
+    {
+      "label": "T",
+      "start": "2003-04",
+      "end": "2003-06",
+      "n_months": 3
+    },
+    {
+      "label": "D",
+      "start": "2003-07",
+      "end": "2003-09",
+      "n_months": 3
+    },
+    {
+      "label": "T",
+      "start": "2003-10",
+      "end": "2003-11",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2003-12",
+      "end": "2004-08",
+      "n_months": 9
+    },
+    {
+      "label": "F",
+      "start": "2004-09",
+      "end": "2004-09",
+      "n_months": 1
+    },
+    {
+      "label": "T",
+      "start": "2004-10",
+      "end": "2004-10",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2004-11",
+      "end": "2005-05",
+      "n_months": 7
+    },
+    {
+      "label": "F",
+      "start": "2005-06",
+      "end": "2005-08",
+      "n_months": 3
+    },
+    {
+      "label": "D",
+      "start": "2005-09",
+      "end": "2006-01",
+      "n_months": 5
+    },
+    {
+      "label": "T",
+      "start": "2006-02",
+      "end": "2006-04",
+      "n_months": 3
+    },
+    {
+      "label": "F",
+      "start": "2006-05",
+      "end": "2006-06",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2006-07",
+      "end": "2006-10",
+      "n_months": 4
+    },
+    {
+      "label": "T",
+      "start": "2006-11",
+      "end": "2006-12",
+      "n_months": 2
+    },
+    {
+      "label": "F",
+      "start": "2007-01",
+      "end": "2007-08",
+      "n_months": 8
+    },
+    {
+      "label": "T",
+      "start": "2007-09",
+      "end": "2007-09",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2007-10",
+      "end": "2007-11",
+      "n_months": 2
+    },
+    {
+      "label": "F",
+      "start": "2007-12",
+      "end": "2008-06",
+      "n_months": 7
+    },
+    {
+      "label": "P",
+      "start": "2008-07",
+      "end": "2008-07",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2008-08",
+      "end": "2008-08",
+      "n_months": 1
+    },
+    {
+      "label": "P",
+      "start": "2008-09",
+      "end": "2008-09",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2008-10",
+      "end": "2009-04",
+      "n_months": 7
+    },
+    {
+      "label": "D",
+      "start": "2009-05",
+      "end": "2009-06",
+      "n_months": 2
+    },
+    {
+      "label": "T",
+      "start": "2009-07",
+      "end": "2009-07",
+      "n_months": 1
+    },
+    {
+      "label": "P",
+      "start": "2009-08",
+      "end": "2009-08",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2009-09",
+      "end": "2009-09",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2009-10",
+      "end": "2009-11",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2009-12",
+      "end": "2010-03",
+      "n_months": 4
+    },
+    {
+      "label": "T",
+      "start": "2010-04",
+      "end": "2010-05",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2010-06",
+      "end": "2010-12",
+      "n_months": 7
+    },
+    {
+      "label": "T",
+      "start": "2011-01",
+      "end": "2011-01",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2011-02",
+      "end": "2011-02",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2011-03",
+      "end": "2011-04",
+      "n_months": 2
+    },
+    {
+      "label": "T",
+      "start": "2011-05",
+      "end": "2011-05",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2011-06",
+      "end": "2011-10",
+      "n_months": 5
+    },
+    {
+      "label": "T",
+      "start": "2011-11",
+      "end": "2011-12",
+      "n_months": 2
+    },
+    {
+      "label": "F",
+      "start": "2012-01",
+      "end": "2012-02",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2012-03",
+      "end": "2013-04",
+      "n_months": 14
+    },
+    {
+      "label": "T",
+      "start": "2013-05",
+      "end": "2013-07",
+      "n_months": 3
+    },
+    {
+      "label": "D",
+      "start": "2013-08",
+      "end": "2013-11",
+      "n_months": 4
+    },
+    {
+      "label": "T",
+      "start": "2013-12",
+      "end": "2013-12",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2014-01",
+      "end": "2014-10",
+      "n_months": 10
+    },
+    {
+      "label": "T",
+      "start": "2014-11",
+      "end": "2015-01",
+      "n_months": 3
+    },
+    {
+      "label": "F",
+      "start": "2015-02",
+      "end": "2015-06",
+      "n_months": 5
+    },
+    {
+      "label": "P",
+      "start": "2015-07",
+      "end": "2015-07",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2015-08",
+      "end": "2015-11",
+      "n_months": 4
+    },
+    {
+      "label": "D",
+      "start": "2015-12",
+      "end": "2015-12",
+      "n_months": 1
+    },
+    {
+      "label": "P",
+      "start": "2016-01",
+      "end": "2016-01",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2016-02",
+      "end": "2016-03",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2016-04",
+      "end": "2016-04",
+      "n_months": 1
+    },
+    {
+      "label": "T",
+      "start": "2016-05",
+      "end": "2016-06",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2016-07",
+      "end": "2018-01",
+      "n_months": 19
+    },
+    {
+      "label": "T",
+      "start": "2018-02",
+      "end": "2018-02",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2018-03",
+      "end": "2018-03",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2018-04",
+      "end": "2019-01",
+      "n_months": 10
+    },
+    {
+      "label": "F",
+      "start": "2019-02",
+      "end": "2019-03",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2019-04",
+      "end": "2019-11",
+      "n_months": 8
+    },
+    {
+      "label": "T",
+      "start": "2019-12",
+      "end": "2020-06",
+      "n_months": 7
+    },
+    {
+      "label": "F",
+      "start": "2020-07",
+      "end": "2020-07",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2020-08",
+      "end": "2020-10",
+      "n_months": 3
+    },
+    {
+      "label": "T",
+      "start": "2020-11",
+      "end": "2021-01",
+      "n_months": 3
+    },
+    {
+      "label": "D",
+      "start": "2021-02",
+      "end": "2021-04",
+      "n_months": 3
+    },
+    {
+      "label": "T",
+      "start": "2021-05",
+      "end": "2021-08",
+      "n_months": 4
+    },
+    {
+      "label": "D",
+      "start": "2021-09",
+      "end": "2022-01",
+      "n_months": 5
+    },
+    {
+      "label": "T",
+      "start": "2022-02",
+      "end": "2022-03",
+      "n_months": 2
+    },
+    {
+      "label": "P",
+      "start": "2022-04",
+      "end": "2022-04",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2022-05",
+      "end": "2022-05",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2022-06",
+      "end": "2023-02",
+      "n_months": 9
+    },
+    {
+      "label": "T",
+      "start": "2023-03",
+      "end": "2023-04",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2023-05",
+      "end": "2023-12",
+      "n_months": 8
+    },
+    {
+      "label": "P",
+      "start": "2024-01",
+      "end": "2024-01",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2024-02",
+      "end": "2024-02",
+      "n_months": 1
+    },
+    {
+      "label": "T",
+      "start": "2024-03",
+      "end": "2024-03",
+      "n_months": 1
+    },
+    {
+      "label": "D",
+      "start": "2024-04",
+      "end": "2024-08",
+      "n_months": 5
+    },
+    {
+      "label": "F",
+      "start": "2024-09",
+      "end": "2024-11",
+      "n_months": 3
+    },
+    {
+      "label": "D",
+      "start": "2024-12",
+      "end": "2025-07",
+      "n_months": 8
+    },
+    {
+      "label": "T",
+      "start": "2025-08",
+      "end": "2025-09",
+      "n_months": 2
+    },
+    {
+      "label": "D",
+      "start": "2025-10",
+      "end": "2025-11",
+      "n_months": 2
+    },
+    {
+      "label": "T",
+      "start": "2025-12",
+      "end": "2026-06",
+      "n_months": 7
+    },
+    {
+      "label": "P",
+      "start": "2026-07",
+      "end": "2026-07",
+      "n_months": 1
+    },
+    {
+      "label": "F",
+      "start": "2026-08",
+      "end": "2026-08",
+      "n_months": 1
+    }
+  ],
+  "legacy_comparison": {
+    "n_months": 72,
+    "agreement": 0.8194444444444444,
+    "differences": [
+      {
+        "month": "2020-11",
+        "old": "D",
+        "new_merged": "T"
+      },
+      {
+        "month": "2020-12",
+        "old": "D",
+        "new_merged": "T"
+      },
+      {
+        "month": "2021-01",
+        "old": "D",
+        "new_merged": "T"
+      },
+      {
+        "month": "2021-09",
+        "old": "T",
+        "new_merged": "D"
+      },
+      {
+        "month": "2022-02",
+        "old": "D",
+        "new_merged": "T"
+      },
+      {
+        "month": "2022-03",
+        "old": "D",
+        "new_merged": "T"
+      },
+      {
+        "month": "2022-05",
+        "old": "D",
+        "new_merged": "F"
+      },
+      {
+        "month": "2023-03",
+        "old": "D",
+        "new_merged": "T"
+      },
+      {
+        "month": "2023-04",
+        "old": "D",
+        "new_merged": "T"
+      },
+      {
+        "month": "2024-03",
+        "old": "F",
+        "new_merged": "T"
+      },
+      {
+        "month": "2024-04",
+        "old": "F",
+        "new_merged": "D"
+      },
+      {
+        "month": "2024-12",
+        "old": "F",
+        "new_merged": "D"
+      },
+      {
+        "month": "2026-07",
+        "old": "T",
+        "new_merged": "D"
+      }
+    ]
+  },
+  "inputs": {
+    "daily_market": {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/data/daily-market.parquet",
+      "sha256": "f20d85dfdb0881a6fc207f19fad576a10fdf2bdec620792f56ed463d6479e3da",
+      "size": 1673679
+    },
+    "legacy": {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/strategies/topk-dropout/v2-top5-hold-f100/variants/bt-v5/configs/monthly_regime_labels_eval_window_v1.csv",
+      "sha256": "0a5463ec1512bb8b6ff792800d25a8c850a4e73e7ba1359f625950b6cfa80b5f",
+      "size": 1203
+    },
+    "recipe": {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/scripts/prepare/prepare_market_style.py",
+      "sha256": "629c28d4cbc25e384a249a5f7cbb301d0b5d813e1c77aaa93a1c3b95af43fa32",
+      "size": 8387
+    }
+  },
+  "model": {
+    "path": "/Users/yuxianqi/Project/qlib/backtest/result/20261108_style_classifier/labels/label-model.joblib",
+    "sha256": "cbcc2ad26085d2d75cc4f5d317188febd1f5ad1def918a3a12d366f98fa4c473",
+    "size": 2733
+  },
+  "elapsed_seconds": 37.15509796142578
+}

@@ -1,0 +1,6 @@
+[29719:MainThread](2026-11-14 11:41:01,463) INFO - qlib.Initialization - [config.py:473] - default_conf: client.
+[29719:MainThread](2026-11-14 11:41:01,792) INFO - qlib.Initialization - [__init__.py:82] - qlib successfully initialized based on client settings.
+[29719:MainThread](2026-11-14 11:41:01,792) INFO - qlib.Initialization - [__init__.py:84] - data_path={'__DEFAULT_FREQ': PosixPath('/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider')}
+[all] t+1 可成交率=0.9854 （剔除 100859 个样本日）
+[all] official=seed_zscore_mean k3h5 net_ann=0.11493553459841449 net_vol=0.784319164034885 net_sharpe=0.14654179047103122
+weekly-h5-top3mix train-F official evaluation complete

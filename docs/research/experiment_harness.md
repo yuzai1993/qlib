@@ -518,3 +518,96 @@ cleanup.outcome=complete 要求审计 result=applied/no_changes、mlruns=handled
 - 临时适配器启动前保存完整源文及实际运行环境、模块来源和关键二进制指纹，只有SHA不足以重建已删除工具。收尾保留必要日志、模型与精简诊断证据，再删除执行脚本和冗余数组；不能倒推补造以前缺失的源文。
 - 同一档案关闭后补充阶段仍是正式harness的能力缺口。保留旧关闭状态，以明确有限的补充账本登记输入、进程、预算、失败和累计成本，不另建平台入口，也不宣称工具扩展已实现。
 - 差距收窄须同时展示两侧绝对收益与分年风险，区分旧组下降和新组改善。模型238/H算术年化、账户算术年化及CAGR分别报告；规则、集中度与资金暴露同时变化时，不能把全部变化只归因于持有期。
+
+## 市场风格四分类专用伴随轨道
+
+`market_style_classifier` 使用隔离的 `style_harness.py` 状态机，正式入口为
+`experiment_harness.py --repo-root <仓库> style {init,check,status,event}`。
+原有 `all_a_model` / `all_a_strategy` 生命周期与指标规则不变。此分类协议是
+`monthly-k4-next-day-v1`，固定类别顺序 D/F/T/P，分类对照
+`market-style/majority-prior-v1` 是训练期多数类/先验概率协议锚，不是股票模型基线。
+不写 `phase_m_protocol=v1`，不作基线晋升或生产切换。
+
+唯一父档案为 `models/model-structure/style-classifier-k4-20261108-v1`，元数据
+`kind=model,track=all_a`，四个内部候选固定为 `logistic_full,lgb_core,lgb_full,extra_full`，
+各用种子 `[42,1000,2000,3000,4000]`。状态保存在该父档案的
+`docs/style-harness-state.json`；不创建四个平台实验入口。
+
+合同 JSON 放在父档案 `configs/`，必填以下字段：
+
+```json
+{
+  "schema_version": 1,
+  "track": "market_style_classifier",
+  "campaign_id": "style-k4-20261108-v1",
+  "exp_id": "model-structure/style-classifier-k4-20261108-v1",
+  "archive_path": "backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1",
+  "classification_protocol": "monthly-k4-next-day-v1",
+  "baseline_ref": "market-style/majority-prior-v1",
+  "data_version": "实际源数据版本",
+  "classes": ["D", "F", "T", "P"],
+  "seeds": [42, 1000, 2000, 3000, 4000],
+  "candidates": ["logistic_full", "lgb_core", "lgb_full", "extra_full"],
+  "inputs": ["实际规则、源数据审计、源码及运行配置普通文件路径"],
+  "budget": {}
+}
+```
+
+`inputs` 必须列出实际存在的输入文件，包括影响研究的源码、配置、标签规则及源数据
+身份依据；不得用尚未生成的特征路径占位。初始化冻结这些文件、合同、AGENTS、实验规范
+和本协议的实际 SHA256。先 `init`，再进行任何科学数据准备；准备完成时追加冻结生成物。
+预算不可重置：从初始化起8小时，最多42次分类fit（40个正常配置＋最多2次同配置技术
+重试），额外一次标签KMeans准备fit（100次内部初始化），昂贵任务并发1。状态有校验和、
+独立稳定锁、单调revision；重复init、旧revision、重复job_id、重复成功配置均拒绝。
+
+```bash
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/experiment_harness.py \
+  --repo-root /Users/yuxianqi/Project/qlib style init --plan <父档案/configs/harness-plan.json>
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/experiment_harness.py \
+  --repo-root /Users/yuxianqi/Project/qlib style check --state <父档案/docs/style-harness-state.json>
+/opt/anaconda3/envs/qlib/bin/python backtest/scripts/maintenance/experiment_harness.py \
+  --repo-root /Users/yuxianqi/Project/qlib style event --state <同上> \
+  --event <仓库外临时事件.json> --expected-revision <当前revision>
+```
+
+Python API 为 `initialize(plan_path, repo_root=...)`、
+`inspect_state(state_path, repo_root=..., check_drift=True)`、
+`append_event(state_path,event,expected_revision=...,repo_root=...)`。`status` 仅检验状态
+身份/校验和；`check` 额外验证冻结输入、成功回执及实际模型/预测SHA、预算和运行状态。
+每次实际准备或fit前必须先check，再追加start事件，start成功才可由外部执行器启动。
+返回的 `remaining_budget` 和 `next_stage` 用于恢复；工具本身不启动进程。
+
+事件对象均有 `type`：
+
+- `start_preparation`：`argv` 为非空字符串数组；信用立即消耗，失败不能重置。
+- `prepared`：`outcome=completed|invalid|failed`、`evidence=[持久文件路径]`。
+  completed另需 `inputs={features,targets,manifest,label_audit,preparation_result}` 五个
+  路径，全部纳入evidence。核对实际特征/目标/manifest指纹、类别、data_version、标签
+  audit.accepted、准备回执的1次标签fit/100次初始化/0次分类fit；随后生成物不可漂移。
+  invalid/failed写明 `reason` 并留证；此路径可以零分类fit完成正式失败收尾。
+- `start_fit`：`job_id,candidate,seed,phase=inner|final,argv`。
+  final另给 `inner_receipt` 路径，必须是同候选/种子的成功inner回执。
+  重试必须用新job_id、`retry_of=最近失败的同配置job_id`，保留相同argv；技术重试累计最多2次。
+- `fit_result`：`job_id,outcome=succeeded|failed,evidence`；成功另给 `receipt` 路径并将它
+  纳入evidence，失败给 `reason`。成功回执必须是实际单fit，保存模型、预测、配置和相应
+  指纹；核对D/F/T/P概率、目标日期覆盖、指标与冻结输入。所有final必须保存精确inner链；
+  LGB最终轮数必须等于对应inner选定轮数。失败仍保留持久日志/证据。
+- `result`：`outcome=succeeded|invalid|failed,evidence`；成功给 `evaluation` 路径并纳入
+  evidence，失败给 `reason`。成功需40个一致回执、每候选五个实际模型、全部种子预测、
+  五种子算术平均概率、统一预测日期、有限分类指标和训练期分类对照；只允许内层排序选型。
+- `registered`：外部使用正式append_registry写入后才追加。核对最新父exp_id事件的协议、
+  baseline_ref/data_version/classes/seeds、state、结果路径及SHA。`harness` 中须有精确
+  `campaign_id,state_path`；结果路径字段 `portable_eval_output`、SHA字段
+  `portable_eval_sha256`。`candidates` 是四候选的字典，各含state；成功时models必须与
+  evaluation对应五模型记录完全一致。失败state为invalid或failed，仍登记真实失败证据。
+- `reported`：核对登记的 `detail_report` 实际非空且在父档案内，专用汇总页
+  `backtest/experiments/reports/market_style_report.html` 实际链接到它。
+- `stop`：冻结非空 `reason`，禁止后续start；已运行作业仍可提交真实结果。漂移或超时后
+  可以读取status、记录失败/stop并完成清理，不以恢复流程绕过预算。
+- `cleanup`：`audit` 为父档案/result内持久JSON，要求
+  `temporary=cleaned,result=applied|no_changes,mlruns=handled|not_applicable`；先实际登记、
+  报告并stop，所有作业已结束。成功路径重新核验完整科学证据，失败路径保存失败证据。
+- `close`：要求stop、实际登记/报告和未漂移cleanup审计，无运行中作业；关闭后拒绝事件。
+
+这些凭证只约束本分类研究。不得以本任务清理历史生产模型，或把事后聚类标签解释为
+实时可用状态；分类报告使用独立汇总页，不混入选股收益表。

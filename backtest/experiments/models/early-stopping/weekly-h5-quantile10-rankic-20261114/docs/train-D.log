@@ -1,0 +1,49 @@
+[22279:MainThread](2026-11-14 01:34:20,126) INFO - qlib.Initialization - [config.py:473] - default_conf: client.
+[22279:MainThread](2026-11-14 01:34:20,128) INFO - qlib.Initialization - [__init__.py:82] - qlib successfully initialized based on client settings.
+[22279:MainThread](2026-11-14 01:34:20,128) INFO - qlib.Initialization - [__init__.py:84] - data_path={'__DEFAULT_FREQ': PosixPath('/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider')}
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.183847
+[40]	valid's daily_rank_ic: 0.184493
+[60]	valid's daily_rank_ic: 0.18398
+[80]	valid's daily_rank_ic: 0.183948
+Early stopping, best iteration is:
+[45]	valid's daily_rank_ic: 0.185006
+Evaluated only: daily_rank_ic
+fit D 42 best 45 rounds 95 rankic 0.1850058605740415 duration 85.88746976852417
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.185251
+[40]	valid's daily_rank_ic: 0.185214
+[60]	valid's daily_rank_ic: 0.185262
+[80]	valid's daily_rank_ic: 0.185094
+Early stopping, best iteration is:
+[31]	valid's daily_rank_ic: 0.185641
+Evaluated only: daily_rank_ic
+fit D 1000 best 31 rounds 81 rankic 0.18564103815561547 duration 67.39631795883179
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.184594
+[40]	valid's daily_rank_ic: 0.185564
+[60]	valid's daily_rank_ic: 0.184903
+[80]	valid's daily_rank_ic: 0.184754
+Early stopping, best iteration is:
+[33]	valid's daily_rank_ic: 0.186259
+Evaluated only: daily_rank_ic
+fit D 2000 best 33 rounds 83 rankic 0.18625859477952417 duration 75.25750780105591
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.184141
+[40]	valid's daily_rank_ic: 0.185514
+[60]	valid's daily_rank_ic: 0.185177
+[80]	valid's daily_rank_ic: 0.184703
+Early stopping, best iteration is:
+[35]	valid's daily_rank_ic: 0.185931
+Evaluated only: daily_rank_ic
+fit D 3000 best 35 rounds 85 rankic 0.1859306659567335 duration 77.72294306755066
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.183431
+[40]	valid's daily_rank_ic: 0.184399
+[60]	valid's daily_rank_ic: 0.184148
+[80]	valid's daily_rank_ic: 0.184073
+[100]	valid's daily_rank_ic: 0.183889
+Early stopping, best iteration is:
+[51]	valid's daily_rank_ic: 0.185003
+Evaluated only: daily_rank_ic
+fit D 4000 best 51 rounds 101 rankic 0.18500280212752024 duration 88.75938487052917

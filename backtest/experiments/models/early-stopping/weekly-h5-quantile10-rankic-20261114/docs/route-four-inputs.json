@@ -1,0 +1,115 @@
+{
+  "classifier": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/ensemble-lgb_full.csv",
+    "sha256": "f76aecf2ab5808a61b74aa47bf44aa49ee4a31dba55f4a0f8f5dc8e9ffa3c4ad",
+    "size": 214980
+  },
+  "permitted_classifier_columns": [
+    "date",
+    "target_date",
+    "predicted_label",
+    "p_D",
+    "p_F",
+    "p_T",
+    "p_P"
+  ],
+  "clock": "For signal t, primary uses prediction produced t-1 targeting t (the expert training membership date), current stock features t, execution t+1. hard_entry uses prediction made t for t+1. At most current close used.",
+  "qualified": [
+    "D",
+    "F",
+    "T",
+    "P"
+  ],
+  "sources": {
+    "v5": {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+      "sha256": "45ad0d4f05e84bd2594b95fd6fd660acb2345668ec3488813893d78c7d0155f0",
+      "size": 83046157
+    },
+    "D": {
+      "path": "backtest/result/20261114_weekly_rankic/D-ensemble.pkl",
+      "sha256": "d56e0a96d093f48d3e3044153fc6ede886bb09e97d0dbaf24a3d56ec247a7044",
+      "size": 83046157
+    },
+    "F": {
+      "path": "backtest/result/20261114_weekly_rankic/F-ensemble.pkl",
+      "sha256": "62687782b25defa35804459e1625da6540173a43883b027aa7543051852286b7",
+      "size": 83046157
+    },
+    "T": {
+      "path": "backtest/result/20261114_weekly_rankic/T-ensemble.pkl",
+      "sha256": "607b2983779cfdac201f40414a6ac5f998a460fe3f4c90f4e18c384eac8f7110",
+      "size": 83046157
+    },
+    "P": {
+      "path": "backtest/result/20261114_weekly_rankic/P-ensemble.pkl",
+      "sha256": "3eb75127a72dad724cd4dafabf56f4eef1b15546c825777aca28d8fa3dbc518d",
+      "size": 83046157
+    }
+  },
+  "routes": {
+    "four_hard_signal": {
+      "weights_file": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/data/route-four_hard_signal-weights.csv",
+        "sha256": "fccf8531345cd4f4cccccf3531fb0046196b2f2a97bf9cdf11026392ca9274a7",
+        "size": 45097
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/route-four_hard_signal.pkl",
+        "sha256": "e2391b3bc74d79e8e45b8f36a3aa310acd4628623c13757ca411bc9c53443c03",
+        "size": 83046157
+      },
+      "join_key": "target_date",
+      "mean_weights": {
+        "v5": 0.000687757909215956,
+        "D": 0.2530949105914718,
+        "F": 0.057083906464924346,
+        "T": 0.671251719394773,
+        "P": 0.017881705639614855
+      },
+      "missing_forecast_v5_fallback": 1
+    },
+    "four_soft_signal": {
+      "weights_file": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/data/route-four_soft_signal-weights.csv",
+        "sha256": "24bbd88fed8add7eab386dba579780081c501987cc3855007099333780198935",
+        "size": 131611
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/route-four_soft_signal.pkl",
+        "sha256": "a8d1a441f10cb5af9a8bd0bf028d13fd5db8f9a63ee62fa946fb79f3defe261b",
+        "size": 83046157
+      },
+      "join_key": "target_date",
+      "mean_weights": {
+        "v5": 0.000687757909215956,
+        "D": 0.33417381288876585,
+        "F": 0.15484662979804228,
+        "T": 0.47509376565917266,
+        "P": 0.03519803374480302
+      },
+      "missing_forecast_v5_fallback": 1
+    },
+    "four_hard_entry": {
+      "weights_file": {
+        "path": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114/data/route-four_hard_entry-weights.csv",
+        "sha256": "fd66e17bc087789baff137485cb8dc53422b9590725cd74d9cbf5c3504060e28",
+        "size": 45097
+      },
+      "prediction": {
+        "path": "backtest/result/20261114_weekly_rankic/route-four_hard_entry.pkl",
+        "sha256": "367aa655768bad2fc03681ce661db79b29850fa6d77acccb751296217a9d3659",
+        "size": 83046157
+      },
+      "join_key": "date",
+      "mean_weights": {
+        "v5": 0.000687757909215956,
+        "D": 0.2530949105914718,
+        "F": 0.057083906464924346,
+        "T": 0.671251719394773,
+        "P": 0.017881705639614855
+      },
+      "missing_forecast_v5_fallback": 1
+    }
+  }
+}

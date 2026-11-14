@@ -1,0 +1,66 @@
+[21760:MainThread](2026-11-14 01:21:20,548) INFO - qlib.Initialization - [config.py:473] - default_conf: client.
+[21760:MainThread](2026-11-14 01:21:20,550) INFO - qlib.Initialization - [__init__.py:82] - qlib successfully initialized based on client settings.
+[21760:MainThread](2026-11-14 01:21:20,550) INFO - qlib.Initialization - [__init__.py:84] - data_path={'__DEFAULT_FREQ': PosixPath('/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider')}
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.0678302
+[40]	valid's daily_rank_ic: 0.0705538
+[60]	valid's daily_rank_ic: 0.07106
+[80]	valid's daily_rank_ic: 0.0715938
+[100]	valid's daily_rank_ic: 0.0714825
+[120]	valid's daily_rank_ic: 0.07144
+[140]	valid's daily_rank_ic: 0.0711314
+Early stopping, best iteration is:
+[95]	valid's daily_rank_ic: 0.0717385
+Evaluated only: daily_rank_ic
+fit T 42 best 95 rounds 145 rankic 0.0717385360330291 duration 131.6195797920227
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.0680541
+[40]	valid's daily_rank_ic: 0.0699867
+[60]	valid's daily_rank_ic: 0.0710792
+[80]	valid's daily_rank_ic: 0.0707307
+[100]	valid's daily_rank_ic: 0.0711872
+[120]	valid's daily_rank_ic: 0.0711163
+[140]	valid's daily_rank_ic: 0.0711479
+[160]	valid's daily_rank_ic: 0.0710972
+Early stopping, best iteration is:
+[127]	valid's daily_rank_ic: 0.0714853
+Evaluated only: daily_rank_ic
+fit T 1000 best 127 rounds 177 rankic 0.07148531500112854 duration 158.81453728675842
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.0677681
+[40]	valid's daily_rank_ic: 0.0703198
+[60]	valid's daily_rank_ic: 0.0706818
+[80]	valid's daily_rank_ic: 0.0706403
+[100]	valid's daily_rank_ic: 0.0709463
+[120]	valid's daily_rank_ic: 0.0709376
+[140]	valid's daily_rank_ic: 0.0709168
+Early stopping, best iteration is:
+[90]	valid's daily_rank_ic: 0.0711437
+Evaluated only: daily_rank_ic
+fit T 2000 best 90 rounds 140 rankic 0.07114371574967923 duration 123.22508907318115
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.0673013
+[40]	valid's daily_rank_ic: 0.0693813
+[60]	valid's daily_rank_ic: 0.0695998
+[80]	valid's daily_rank_ic: 0.0696941
+[100]	valid's daily_rank_ic: 0.0696422
+[120]	valid's daily_rank_ic: 0.0698644
+[140]	valid's daily_rank_ic: 0.0697402
+[160]	valid's daily_rank_ic: 0.0696034
+Early stopping, best iteration is:
+[127]	valid's daily_rank_ic: 0.0700315
+Evaluated only: daily_rank_ic
+fit T 3000 best 127 rounds 177 rankic 0.07003148690449562 duration 155.12319993972778
+Training until validation scores don't improve for 50 rounds
+[20]	valid's daily_rank_ic: 0.067741
+[40]	valid's daily_rank_ic: 0.0690761
+[60]	valid's daily_rank_ic: 0.0702907
+[80]	valid's daily_rank_ic: 0.070713
+[100]	valid's daily_rank_ic: 0.0709503
+[120]	valid's daily_rank_ic: 0.0712731
+[140]	valid's daily_rank_ic: 0.0710062
+[160]	valid's daily_rank_ic: 0.0706476
+Early stopping, best iteration is:
+[119]	valid's daily_rank_ic: 0.0713389
+Evaluated only: daily_rank_ic
+fit T 4000 best 119 rounds 169 rankic 0.07133892443048945 duration 147.2554681301117

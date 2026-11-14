@@ -1,0 +1,278 @@
+{
+  "stage": "weekly-h5",
+  "outcome": "succeeded",
+  "n_init": 100,
+  "seed": 42,
+  "kmeans_fits": 1,
+  "scaler_fits": 1,
+  "feature_names": [
+    "mkt",
+    "mkt_vol",
+    "small_big",
+    "lowvol_highvol",
+    "momentum"
+  ],
+  "fit_rule": "Exact complete signal periods with last basket exit <= 2020-07-31; no evaluation features used for scale/centers. Each period one fit observation.",
+  "fit_periods": 885,
+  "all_periods": 1198,
+  "max_fit_ready_date": "2020-07-27",
+  "last_fit_period": "2020-07-11/2020-07-17",
+  "first_signal_date": "2003-02-17",
+  "last_signal_date": "2026-08-28",
+  "first_omitted_incomplete_periods": {
+    "2003-02-08/2003-02-14": {
+      "actual": 4,
+      "calendar": 5
+    },
+    "2026-08-29/2026-09-04": {
+      "actual": 1,
+      "calendar": 5
+    }
+  },
+  "period_features": "Sum realized same-period daily market returns; monthly market volatility sample sd inside month, weekly volatility last-day rolling 5-day sample sd; three forward spread features are mean cumulative H fixed-basket spread across that period's signal dates. Units decimal.",
+  "mapping_rule": "Hungarian squared Euclidean distance in each fit's standardized space to historical frozen originally full-history monthly reference. Naming convention is retrospective; new centers/scaler limited to mature training periods.",
+  "mapping": {
+    "0": "T",
+    "1": "F",
+    "2": "P",
+    "3": "D"
+  },
+  "reference_centers_standardized": [
+    [
+      -2.1930880546569824,
+      2.0789825916290283,
+      0.8856065273284912,
+      2.0206053256988525,
+      0.3998088836669922
+    ],
+    [
+      -0.17040471732616425,
+      -0.4206758737564087,
+      0.2898910641670227,
+      0.3014954626560211,
+      -0.187983438372612
+    ],
+    [
+      1.0388741493225098,
+      1.0077542066574097,
+      0.29492300748825073,
+      -0.5923320651054382,
+      -0.7500041723251343
+    ],
+    [
+      -0.02557634748518467,
+      -0.2699962556362152,
+      -0.9608055949211121,
+      -0.5359876751899719,
+      0.858476459980011
+    ]
+  ],
+  "squared_distances": [
+    [
+      16.20339719411571,
+      1.7759096222948167,
+      6.653571763850898,
+      0.41812077015875937
+    ],
+    [
+      21.96682496378629,
+      2.847823909739505,
+      1.0161985469400547,
+      3.960404148706556
+    ],
+    [
+      6.607594432315468,
+      12.020524920385306,
+      10.734369655628855,
+      14.843230527216798
+    ],
+    [
+      14.195294626036208,
+      0.5593569345248703,
+      3.939096731173104,
+      5.349291066619032
+    ]
+  ],
+  "reference": {
+    "path": "/Users/yuxianqi/Project/qlib/backtest/result/20261108_style_classifier/labels/label-model.joblib",
+    "sha256": "cbcc2ad26085d2d75cc4f5d317188febd1f5ad1def918a3a12d366f98fa4c473",
+    "size": 2733
+  },
+  "trained_centers_standardized": [
+    [
+      -0.35166620721842,
+      -0.314631295169291,
+      -0.6528361413047418,
+      -0.14023014150409627,
+      0.6169714352829948
+    ],
+    [
+      0.6401145561466299,
+      0.21446415398478738,
+      0.10784406138978046,
+      -0.9762724242900778,
+      -0.5367637103185412
+    ],
+    [
+      -1.7533633494226961,
+      2.586511304942013,
+      -0.01184858587539658,
+      -0.00019752781480731943,
+      -0.7260602775148036
+    ],
+    [
+      0.35389679519699163,
+      -0.23595925947177987,
+      0.6398454186576661,
+      0.6538659182881432,
+      -0.24890669065507695
+    ]
+  ],
+  "trained_centers_raw_by_style": {
+    "T": {
+      "mkt": -0.011812883598531302,
+      "mkt_vol": 0.013209253464945654,
+      "small_big": -0.004756172115880307,
+      "lowvol_highvol": -0.0007668133854871655,
+      "momentum": 0.005919258383209626
+    },
+    "F": {
+      "mkt": 0.032573583867815614,
+      "mkt_vol": 0.019047163892784255,
+      "small_big": 0.0067541765481975565,
+      "lowvol_highvol": -0.015001443425980282,
+      "momentum": -0.01377207840147115
+    },
+    "P": {
+      "mkt": -0.07454487729946302,
+      "mkt_vol": 0.04521975490644349,
+      "small_big": 0.004943028975711122,
+      "lowvol_highvol": 0.0016174110616638986,
+      "momentum": -0.017002891358028967
+    },
+    "D": {
+      "mkt": 0.019764104390136254,
+      "mkt_vol": 0.014077301561583211,
+      "small_big": 0.014804236337087754,
+      "lowvol_highvol": 0.01275363152561006,
+      "momentum": -0.008859088152680203
+    }
+  },
+  "economic_direction_checks": {
+    "T_large_amount_leads": true,
+    "T_high_vol_leads": true,
+    "T_positive_momentum": true,
+    "T_largest_momentum": true,
+    "D_low_amount_and_low_vol_lead": true,
+    "F_market_positive_and_momentum_negative": true,
+    "P_market_lowest_and_negative": true,
+    "P_market_vol_above_median": true
+  },
+  "scaler_mean": [
+    0.003925696178669563,
+    0.01668081860868265,
+    0.005122317662493011,
+    0.0016207742113805846,
+    -0.004610881367669743
+  ],
+  "scaler_scale": [
+    0.04475431376158821,
+    0.011033756644802547,
+    0.015131652727789272,
+    0.01702620828345956,
+    0.017067467225689897
+  ],
+  "train_canonical_days_before_maturity_filter": 2976,
+  "train_eligible_days": 2962,
+  "train_eligible_by_style4": {
+    "D": {
+      "days": 1063,
+      "rows": 1952224
+    },
+    "F": {
+      "days": 614,
+      "rows": 1048377
+    },
+    "T": {
+      "days": 1043,
+      "rows": 2028683
+    },
+    "P": {
+      "days": 242,
+      "rows": 369529
+    }
+  },
+  "train_omitted_immature_rows": 17963,
+  "train_omitted_immature_days": 5,
+  "train_omitted_either_boundary_rows": 50150,
+  "train_omitted_either_boundary_days": 14,
+  "train_eligible_rule": "Signal is an existing v5 training date; both period label ready_date and t+21 H20 individual-stock target exit must be <= 2020-07-31.",
+  "evaluation_counts": {
+    "D": 646,
+    "F": 137,
+    "T": 642,
+    "P": 23
+  },
+  "all_counts": {
+    "D": 2206,
+    "F": 921,
+    "T": 2293,
+    "P": 299
+  },
+  "fit_period_counts": {
+    "D": 321,
+    "F": 166,
+    "T": 341,
+    "P": 57
+  },
+  "signal_and_ready_ranges_eval": [
+    "2020-08-03",
+    "2026-07-23",
+    "2020-08-17",
+    "2026-08-03"
+  ],
+  "input_fingerprints": [
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/data/daily-market.parquet",
+      "sha256": "f20d85dfdb0881a6fc207f19fad576a10fdf2bdec620792f56ed463d6479e3da",
+      "size": 1673679
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/data/quotes/forward.parquet",
+      "sha256": "df2846afedeef9f19888c36c929602e1680718a3a28a7cdf2fd58fd02f739a75",
+      "size": 353855
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1/docs/label-audit.json",
+      "sha256": "1ab801a76a4773fb30dc4b2d06413c732f7dded39d1f3a32053a815364198924",
+      "size": 65753
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/result/20261103_h20_causal_inputs/evaluation-provider/calendars/day.txt",
+      "sha256": "be7df8349fdb87a3f148e18c3f5bda4ded0d17745dfcea7663f6487b3b60fa94",
+      "size": 63635
+    },
+    {
+      "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+      "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+      "size": 65463234
+    }
+  ],
+  "saved_model": {
+    "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/label-model.joblib",
+    "sha256": "2f89dfd0ed9eaaeb5abf52d2f4a7553628b821c02ff9303516f79092fe7df6ab",
+    "size": 5312
+  },
+  "date_labels": {
+    "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/date-labels.csv",
+    "sha256": "58a9cf353357eb8cd84829f408337f25621e0c37f55f4687b9359dc046fec2b0",
+    "size": 274553
+  },
+  "period_labels": {
+    "path": "/Users/yuxianqi/Project/qlib/backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/forward-spread-20261112/stages/weekly-h5/data/period-labels.csv",
+    "sha256": "c86aa88161448131cfcee10b0d0edf891a38540201936a720b8d9dae5be227ad",
+    "size": 211931
+  },
+  "reload_verification": "Persisted model+scaler predict every original/CSV period label, persisted complete dates and maturity fields match.",
+  "period_labels_diagnostic": "Peer labels within a week or month use the same ready_date; they cannot be known on an earlier signal day."
+}

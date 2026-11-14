@@ -1,0 +1,97 @@
+{
+  "id": "weekly-h5-four-20261113/classifier/lgb_full",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "inputs": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/docs/input-audit.json",
+    "sha256": "fa0a02a720f8b0ee037a4b8e97f5587feb4c42dc29f10fc3a10765069757accc",
+    "size": 2505
+  },
+  "model_results": [
+    {
+      "job": "lgb_full-42-a1",
+      "seed": 42,
+      "best": 132,
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s42-a1/model.joblib",
+        "sha256": "351925357a4e536f6097172b3c80708cb4b8ced22f0272440ae53f674f1c8631",
+        "size": 417697
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s42-a1/predictions.csv",
+        "sha256": "7c07855a863cd844f9fc6e2a075ec901414ba9948ad9ff864115001638a93934",
+        "size": 215316
+      }
+    },
+    {
+      "job": "lgb_full-1000-a1",
+      "seed": 1000,
+      "best": 108,
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s1000-a1/model.joblib",
+        "sha256": "2722f6762e3b970b9f355dbb80c78d52013e686a7eb51f9d71ec5d6d88fae37b",
+        "size": 344730
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s1000-a1/predictions.csv",
+        "sha256": "38c94d1d234086c3a849a7d81ad8657e50c44073a54cd56295dd5d51b9bc2e27",
+        "size": 214840
+      }
+    },
+    {
+      "job": "lgb_full-2000-a1",
+      "seed": 2000,
+      "best": 98,
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s2000-a1/model.joblib",
+        "sha256": "626975e3bb3a0673f7f41798a576d44acf9aef8aea8b1943e83ce0da0417aabf",
+        "size": 313556
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s2000-a1/predictions.csv",
+        "sha256": "ad99e07d3e05bf72ea406091f9c72932d8884a293d70b7876843a4000db4d73e",
+        "size": 214895
+      }
+    },
+    {
+      "job": "lgb_full-3000-a1",
+      "seed": 3000,
+      "best": 120,
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s3000-a1/model.joblib",
+        "sha256": "373cf3fc01947ab7fc05fc4f64eea7e1f1e6c4270779dc4e2afbefc8cb956f3f",
+        "size": 381134
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s3000-a1/predictions.csv",
+        "sha256": "5646a258453a500c7a6c6dbb6dfd1f8c363e7c202bb11cf96df5a63b0b886e19",
+        "size": 215047
+      }
+    },
+    {
+      "job": "lgb_full-4000-a1",
+      "seed": 4000,
+      "best": 121,
+      "model": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s4000-a1/model.joblib",
+        "sha256": "052c41a6a232b8ec1428a3bfc2613c3d54d7f5bc11f071db5f212f0dc3103369",
+        "size": 383581
+      },
+      "predictions": {
+        "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/models/lgb_full/s4000-a1/predictions.csv",
+        "sha256": "573242cd6c3780a50bd1fa6dd977209153f3e911b01dfbd8bb105d9b94805f3d",
+        "size": 215062
+      }
+    }
+  ],
+  "metrics": {
+    "path": "backtest/experiments/models/train-data/dft-specialists-20261108-v1/extensions/weekly-h5-four-20261113/classifier/metrics/lgb_full.json",
+    "sha256": "0098e4c8e8065ee99419aa099d7f4cc95ed763cf49b6b6d8b38ff991b9717478",
+    "size": 28341
+  }
+}

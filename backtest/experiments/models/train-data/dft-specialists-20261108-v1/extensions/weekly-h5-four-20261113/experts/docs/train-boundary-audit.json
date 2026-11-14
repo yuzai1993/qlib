@@ -1,0 +1,48 @@
+{
+  "original": {
+    "rows": 5469025,
+    "dates": 2976
+  },
+  "missing_membership": {
+    "dates": 0,
+    "rows": 0
+  },
+  "membership_ready_after_cutoff_or_missing": {
+    "dates": 5,
+    "rows": 17969
+  },
+  "stock_target_exit_after_cutoff": {
+    "dates": 3,
+    "rows": 10794
+  },
+  "excluded_by_both": {
+    "dates": 3,
+    "rows": 10794
+  },
+  "removed_by_target_after_membership_filter": {
+    "dates": 0,
+    "rows": 0
+  },
+  "retained": {
+    "dates": 2971,
+    "rows": 5451056
+  },
+  "retained_by_style": {
+    "D": {
+      "dates": 1071,
+      "rows": 1988642
+    },
+    "F": {
+      "dates": 614,
+      "rows": 1053160
+    },
+    "T": {
+      "dates": 1044,
+      "rows": 2038893
+    },
+    "P": {
+      "dates": 242,
+      "rows": 370361
+    }
+  }
+}

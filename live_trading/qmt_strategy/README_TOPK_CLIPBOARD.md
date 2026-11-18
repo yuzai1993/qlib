@@ -4,6 +4,16 @@
 
 2026-11-09 外部 relay 修复版为 `2026-11-09-quote-retry-v1`，更新 `clipboard_auto.py` 和 `clipboard_relay.py`；本次无需修改 QMT 编辑器源码。操作者提供的计划任务 Action 已确认实际运行目录为 `D:\qmt_bridge\strategy\bt_v5_clipboard_20261030`，下文独立目录安装示例不是这台机器的当前路径。更新必须以任务的 `Actions` 为准。
 
+### Windows SSH 管理与通信恢复（2026-11-18）
+
+Mac 可通过 `ssh qlib-windows` 连接当前 Windows 主机 `192.168.0.110` 的 `yuzai` 用户。Windows OpenSSH 服务已设置自动启动，仅允许 Mac 地址 `192.168.0.101` 使用专用公钥认证；Mac 私钥保存在 `~/.ssh/qlib_windows_ed25519`，主机公钥固定在 `~/.ssh/known_hosts_qlib_windows`。地址变化时须核对防火墙与授权公钥的来源限制，不能直接放宽为任意来源。
+
+SSH 会话处于非交互会话，不能直接用于 QMT 剪贴板通信；relay 必须在 QMT 所在用户的交互桌面中运行。日常 `QlibClipboardRelayTop5` 仅启动 relay，仍要求 QMT 已登录且剪贴板策略正在运行。按本页 `auto --check` 步骤，以实际 `poll` 与账户快照响应验证通信，不能用客户端进程存在或信号 `.done` 文件代替。
+
+本次 SSH 安装后启动失败的原因是主机私钥归个人用户持有并带个人访问权限；修正为 SYSTEM／Administrators 权限后，服务启动及 Mac 密钥登录通过。主机私钥权限要求见 [Win32-OpenSSH 官方说明](https://github.com/PowerShell/Win32-OpenSSH/wiki/Security-protection-of-various-files-in-win32-openssh)。生产机本地恢复审计为 `live_trading/logs/ssh_setup_20261118.json`，该运行记录按日志忽略规则保留在本机。
+
+11月18日通信恢复后，只读检查返回 `READY`，5只持仓股数一致、无活动委托；正式 relay 在盘后将两笔未提交计划记为 `EXPIRED` 并回传快照，Mac 导入及盘后对账通过。恢复时，旧执行 journal 已完成收尾，11月19日的 `001` 批次（3卖3买）处于待执行状态。临时诊断任务和安装脚本已清理。
+
 ### Windows 时间与报价异常
 
 11月9日 Windows 的 `w32tm /query /status` 显示 `Free-running System Clock`、从未成功同步；NTP 实测系统慢约7.83秒。报价校验要求同日且 `-5 <= Windows时间 - 行情时间 <= 180` 秒，因此领先电脑超过5秒也会被旧版统一报为 `stale quote`。原卖出瞬间的报价未保留，精确卖出偏差不可追溯；当天保留的买入快照已重现相同校验错误。

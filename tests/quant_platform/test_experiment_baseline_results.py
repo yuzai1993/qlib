@@ -106,10 +106,10 @@ def test_all_retained_experiments_have_a_control_row_or_explicit_initial_placeho
             assert len({r["id"] for r in result["records"]}) == len(result["records"])
             assert any("H20" in r["name"] for r in result["records"])
             continue
-        if result["kind"] == "market_style_classification":
-            assert len(result["records"]) == 6
-            assert [r["role"] for r in result["records"]].count("baseline") == 2
-            assert all("accuracy" in r["metrics"] and "net_ann" not in r["metrics"] for r in result["records"])
+        if result["kind"] == "style_experts":
+            assert len(result["records"]) >= 2
+            assert sum(r["role"] == "experiment" for r in result["records"]) == 1
+            assert all(r["metrics"]["rank_ic_grade"] is not None for r in result["records"])
             continue
         assert len(result["records"]) == 2, record["id"]
         assert result["records"][0]["role"] == "baseline"

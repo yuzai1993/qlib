@@ -1,0 +1,29 @@
+{
+  "removed": [
+    "backtest/market_style/__init__.py",
+    "backtest/market_style/data.py",
+    "backtest/market_style/evaluation.py",
+    "backtest/market_style/external.py",
+    "backtest/market_style/labels.py",
+    "backtest/market_style/modeling.py",
+    "backtest/market_style/reporting.py",
+    "backtest/scripts/maintenance/style_harness.py",
+    "backtest/scripts/prepare/prepare_market_style.py",
+    "backtest/scripts/prepare/restore_weekly_h5_quotes.py",
+    "backtest/scripts/report/build_market_style_report.py",
+    "backtest/scripts/train/train_market_style.py",
+    "tests/backtest/test_market_style_data.py",
+    "tests/backtest/test_market_style_external.py",
+    "tests/backtest/test_market_style_harness.py",
+    "tests/backtest/test_market_style_labels.py",
+    "tests/backtest/test_market_style_modeling.py",
+    "tests/quant_platform/test_market_style_classification.py"
+  ],
+  "reverted_classifier_extensions": [
+    "quant_platform/research.py",
+    "backtest/scripts/maintenance/experiment_archive.py",
+    "backtest/scripts/maintenance/experiment_harness.py",
+    "docs/research/experiment_harness.md",
+    "backtest/scripts/README.md"
+  ]
+}

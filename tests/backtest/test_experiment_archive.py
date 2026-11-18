@@ -46,7 +46,7 @@ def test_category_manifest_preserves_stable_id_and_declares_its_physical_directo
     assert archive.archive_directory(tmp_path, "group/arm", "model") == tmp_path / relative
     assert archive.EXPERIMENT_TYPES == {"training_target": "训练目标", "early_stopping": "早停方法",
         "model_structure": "模型结构", "features": "特征", "evaluation_method": "评估方法",
-        "strategy_backtest": "策略回测", "uncategorized": "未分类"}
+        "strategy_backtest": "策略回测", "style_experts": "风格专家", "uncategorized": "未分类"}
 
 
 @pytest.mark.parametrize("changes", [

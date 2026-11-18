@@ -1,0 +1,15 @@
+{
+  "status": "completed",
+  "new_fits": 0,
+  "parent_campaigns": [
+    "t-nont-h20-calendar-month-20261115",
+    "t-nont-h7-h20-blocks-20261114",
+    "monthly-h20-expert-routing-20261115"
+  ],
+  "temporary_directory": "/private/tmp/qlib-style-consolidate.aFMXKVmB",
+  "source_commit": "ff958708",
+  "registry_rows_after_cutoff": 1,
+  "retained_models": 15,
+  "temporary_cleanup": "completed; scripts, copied HEAD, test logs and quote work copies removed after preserving source and validation evidence",
+  "verification": "backtest/experiments/_catalog/audits/20261118-style-expert-consolidation/validation.json"
+}

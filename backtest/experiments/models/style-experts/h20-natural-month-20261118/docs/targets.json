@@ -1,0 +1,23 @@
+{
+  "H20": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+    "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+    "size": 65463234
+  },
+  "H7": {
+    "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/stock-H7-quantile10.pkl",
+    "sha256": "84585c6cb25c38074250c987c1fc2dc40fbbd660d1655226434a1acfc18a8ce9",
+    "size": 43770300
+  },
+  "H7_source": {
+    "path": "backtest/experiments/models/training-target/horizon-style-p50-20261105-v1/docs/prepared-labels.json",
+    "sha256": "90783e819314072df08549698fc85a8657fce1359f105d0735b4c678b5a272a3",
+    "size": 97032
+  },
+  "H7_scale": 0.3477446904052393,
+  "H7_offset": -1.564609427018771,
+  "H7_calibration_rows": 5447465,
+  "H7_last_mature_train_signal": "2020-07-21",
+  "full_h20_rows": 5448963,
+  "full_h7_rows": 5461850
+}

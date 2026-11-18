@@ -1,0 +1,29 @@
+{
+  "training_rows": 5448963,
+  "valid_rows": 6406375,
+  "training_days": 2976,
+  "valid_days": 1433,
+  "training_min": "2004-01-07",
+  "training_max": "2020-07-30",
+  "validation_min": "2020-08-03",
+  "validation_max": "2026-07-02",
+  "valid_grade_counts": [
+    639980,
+    640700,
+    640566,
+    640715,
+    640865,
+    640397,
+    640572,
+    640707,
+    640596,
+    641277
+  ],
+  "train_target": {
+    "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/data/quantile10-old.pkl",
+    "sha256": "6c032316b8bae4e4fbe28ef7f2abd1a39789c4b99218aa58c18a51a258e3fcd7",
+    "size": 65463234
+  },
+  "early_stop": "cross-sectional Spearman against actual 10 grade labels, equally weighted daily mean",
+  "data_scope": "all20"
+}

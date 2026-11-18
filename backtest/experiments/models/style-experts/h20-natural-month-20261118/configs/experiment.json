@@ -1,0 +1,15 @@
+{
+  "question": "自然月 H20 风格专家在事后风格与对应持有期下，对 v5 的完整评估周期收益、风险与十档 RankIC 是否改善",
+  "style": "四簇历史语义映射后合并为 T / 非T；自然月五变量，其中三项风格利差用前瞻H20，月内同标签，未平滑",
+  "training": "T uses H20, nonT uses H7. Weighted MSE on daily ten-bin labels, true daily Spearman against ten bins on matching-style evaluation dates for early stopping. patience=50, maximum200, five fixed seeds.",
+  "evaluation": "Full calendar 2020-08-03..2026-07-31. 1431 common signals through 2026-06-30, complete monthly H20 style labels and stock outcomes within evaluation cutoff. Top3, enter next close, retain cohort until its H20/H7 exit; cross-month holdings retained. Same stock universe, dates and fees for all controls.",
+  "rankic": "Original global H5 RankIC plus daily ten-bin RankIC on same 1431 days, using H20 target on actual T days and H7 on nonT days, for EVERY compared signal including fixed-horizon controls.",
+  "new_fits": 0,
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ]
+}

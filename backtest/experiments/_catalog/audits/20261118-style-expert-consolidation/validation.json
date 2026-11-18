@@ -1,0 +1,56 @@
+{
+  "checked_model_training_prediction_fingerprints": 64,
+  "retained_model_groups": {
+    "T": 5,
+    "nonT": 5,
+    "new_v5": 5,
+    "official_v5": 5
+  },
+  "registry_prior_cutoff_unchanged": true,
+  "registry_post_cutoff": 1,
+  "platform_post_cutoff": 1,
+  "platform_comparison_rows": 7,
+  "platform_source_status": "available",
+  "platform_record_warnings": [],
+  "python_tests": {
+    "passed": 643,
+    "failed": 7,
+    "all_failures_reproduced_on_original_HEAD": true,
+    "preexisting_failures": [
+      "tests/quant_platform/test_benchmark_catalog.py::test_real_benchmark_v1_is_restored_and_study_marks_its_output",
+      "tests/quant_platform/test_historical_baseline_sources.py::test_real_current_model_is_v2_and_v1_only_remains_a_historical_reference",
+      "tests/quant_platform/test_strategy_archive_dedup.py::test_retained_strategy_reports_and_current_model_and_bt_are_unchanged",
+      "tests/quant_platform/test_strategy_archive_dedup.py::test_v2_top5_drop1_hold1_is_listed_once_and_remains_a_benchmark",
+      "tests/quant_platform/test_strategy_display_versions.py::test_real_current_strategy_and_benchmark_metrics_keep_their_original_versions",
+      "tests/quant_platform/test_strategy_history.py::test_real_history_covers_all_eight_rows_and_preserves_registry_and_versions",
+      "tests/quant_platform/test_training_target_comparison.py::test_real_label_study_uses_v3_h20_and_preserves_historical_grid"
+    ]
+  },
+  "frontend_tests": {
+    "passed": 134,
+    "failed": 0
+  },
+  "catalog_preexisting_warnings": [
+    "策略历史对照版本与引用不符：regime-adapt/quantile10-p50-ladder-20261107-v1"
+  ],
+  "prior_head": "ff95870877bcc286bfce2c7db748d21dec2b9691",
+  "live_platform": {
+    "health": "ok",
+    "port": 8090,
+    "web_service_reloaded": true,
+    "post_cutoff_records": 1,
+    "comparison_rows": 7,
+    "browser_preview": "CUA connection timed out; live API and frontend tests verified"
+  },
+  "retained_input_replay": {
+    "passed": true,
+    "portfolios": 7,
+    "absolute_tolerance": 1e-12,
+    "deleted_archives_required": false
+  },
+  "temporary_cleanup": {
+    "directory": "/private/tmp/qlib-style-consolidate.aFMXKVmB",
+    "source_and_evidence_captured": true,
+    "removed": true
+  }
+}

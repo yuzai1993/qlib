@@ -1,0 +1,173 @@
+{
+  "reason": "User 2026-11-18 retained one natural-month expert experiment after Nov07 and requested removal of all other related work.",
+  "removed_registry": [
+    {
+      "exp_id": "early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "date": "2026-11-14"
+    },
+    {
+      "exp_id": "training-target/weekly-h5-top3-mix-20261114",
+      "date": "2026-11-14"
+    },
+    {
+      "exp_id": "train-data/t-nont-h7-h20-blocks-20261114",
+      "date": "2026-11-15"
+    },
+    {
+      "exp_id": "train-data/t-nont-h7-h20-blocks-20261114",
+      "date": "2026-11-15"
+    },
+    {
+      "exp_id": "train-data/t-nont-h20-calendar-month-20261115",
+      "date": "2026-11-15"
+    },
+    {
+      "exp_id": "train-data/t-nont-h20-calendar-month-20261115",
+      "date": "2026-11-15"
+    },
+    {
+      "exp_id": "early-stopping/monthly-h20-expert-routing-20261115",
+      "date": "2026-11-15"
+    },
+    {
+      "exp_id": "early-stopping/monthly-h20-expert-routing-20261115",
+      "date": "2026-11-16"
+    }
+  ],
+  "retired_archives": [
+    {
+      "directory": "backtest/experiments/models/train-data/t-nont-h20-calendar-month-20261115",
+      "files": 90,
+      "bytes": 3116348
+    },
+    {
+      "directory": "backtest/experiments/models/train-data/t-nont-h7-h20-blocks-20261114",
+      "files": 229,
+      "bytes": 56958599
+    },
+    {
+      "directory": "backtest/experiments/models/early-stopping/monthly-h20-expert-routing-20261115",
+      "files": 52,
+      "bytes": 2628375
+    },
+    {
+      "directory": "backtest/experiments/models/early-stopping/weekly-h5-quantile10-rankic-20261114",
+      "files": 146,
+      "bytes": 13704352
+    },
+    {
+      "directory": "backtest/experiments/models/training-target/weekly-h5-top3-mix-20261114",
+      "files": 298,
+      "bytes": 34620031
+    },
+    {
+      "directory": "backtest/experiments/models/train-data/dft-specialists-20261108-v1",
+      "files": 166,
+      "bytes": 250984969
+    },
+    {
+      "directory": "backtest/experiments/models/model-structure/style-classifier-k4-20261108-v1",
+      "files": 7,
+      "bytes": 23995356
+    },
+    {
+      "directory": "backtest/experiments/strategies/cohort-ladder/weekly-h5-top3-mix-routing-20261114",
+      "files": 1,
+      "bytes": 2180
+    }
+  ],
+  "retained_experiment": "style-experts/h20-natural-month-20261118",
+  "prediction_moves": [
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-T-s42.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/T-s42.pkl",
+      "sha256": "dc4db7933c2ad04113ad9989f0c59baeac4cf46f5190a6931c9f13297de8285d"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-T-s1000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/T-s1000.pkl",
+      "sha256": "ab2f4ee3c88521c435f7c53533171e76d4bfe0d5151b38c2ab11b93ce229e431"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-T-s2000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/T-s2000.pkl",
+      "sha256": "331547ce26422ddabc7808e8a24ec9186bbd460a44800afe23e13ff3a5ce12f8"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-T-s3000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/T-s3000.pkl",
+      "sha256": "2decc28ae1409c6fe2b65c95528e53d348d4f4bdff2f84a54d802a9c1e58321e"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-T-s4000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/T-s4000.pkl",
+      "sha256": "18aebae01eefc97844747ae92a1b9106f5613206f0c43ccc577b5d0c9c5cb924"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-T-ensemble.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/T-ensemble.pkl",
+      "sha256": "aa351f5c01b4fd7c35c9e9127e6fb2228c9fd72550550e513e006276a5fba73c"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-N-s42.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/N-s42.pkl",
+      "sha256": "bce685930438b48cc7055165fb8d83366aebf20bc269917a117d6342dc0c8cf8"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-N-s1000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/N-s1000.pkl",
+      "sha256": "8f2b3243ceb39efa1e614f7e5da7f74b15bdb808e812d09330a7499efa2c8ee9"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-N-s2000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/N-s2000.pkl",
+      "sha256": "26776cdc8d202e25525c6a792a74844a588d0f36aeea54110601acdc9040ddbe"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-N-s3000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/N-s3000.pkl",
+      "sha256": "e441f941e651bd9f27782c5b5e0da658e3201ca4379dce2ad7cb26c89c98c4ab"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-N-s4000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/N-s4000.pkl",
+      "sha256": "66a356191d0ae916a4f89cd2599fdd65629bc4cb2f4a641274850f1855c72c73"
+    },
+    {
+      "old": "backtest/result/20261115_h20_month/h20month-N-ensemble.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/N-ensemble.pkl",
+      "sha256": "10edf0f3fc9cb3f6f10b0742473e802c635071d2e130450aa7c7cbc1146d464e"
+    },
+    {
+      "old": "backtest/result/20261114_t_nont_horizons/all20-s42.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/V-s42.pkl",
+      "sha256": "180ff4e7ca24bd6b928f0f6626ff60cfe415ea3089b9e91dd827268eb2d0136c"
+    },
+    {
+      "old": "backtest/result/20261114_t_nont_horizons/all20-s1000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/V-s1000.pkl",
+      "sha256": "b18360599ec3457075b314df6c5c805079014bfa09d0c384a08b3f75f8925110"
+    },
+    {
+      "old": "backtest/result/20261114_t_nont_horizons/all20-s2000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/V-s2000.pkl",
+      "sha256": "946064055e9e2e4ed62a8673ff71437548796f7282a8a378799e427fbfea1bd9"
+    },
+    {
+      "old": "backtest/result/20261114_t_nont_horizons/all20-s3000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/V-s3000.pkl",
+      "sha256": "60b33baa9561457382eb859badab40d7f08d3f21f94cc2af5210b7ed5b8b4d04"
+    },
+    {
+      "old": "backtest/result/20261114_t_nont_horizons/all20-s4000.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/V-s4000.pkl",
+      "sha256": "fa09d2cc6aa3a5df1f3d7173b48524c6452a4d533298940db0ba2c4823ab5ec9"
+    },
+    {
+      "old": "backtest/result/20261114_t_nont_horizons/all20-ensemble.pkl",
+      "new": "backtest/result/20261118_natural_month_experts/V-ensemble.pkl",
+      "sha256": "2eb03a16ed185b3fa403a1e4d5ca1d48d27251bd281bd22abc53fc6d79482962"
+    }
+  ],
+  "source_commit": "ff95870877bcc286bfce2c7db748d21dec2b9691"
+}

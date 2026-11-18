@@ -1,0 +1,196 @@
+{
+  "schema_version": 2,
+  "entity_type": "experiment",
+  "exp_id": "style-experts/h20-natural-month-20261118",
+  "archive_path": "backtest/experiments/models/style-experts/h20-natural-month-20261118",
+  "kind": "model",
+  "track": "all_a",
+  "phase": "M",
+  "direction": "style-experts",
+  "title": "自然月 H20 · T／非 T 风格专家",
+  "experiment_type": "style_experts",
+  "activity": "model_research",
+  "role": "experiment",
+  "inventory_kind": "asset_snapshot",
+  "registry_authority": "backtest/experiments/registry.jsonl",
+  "change_summary": "自然月 H20 利差划分 T／非 T，T 用 H20 标签、非 T 用 H7 标签，十档 RankIC 早停，按事后风格启用对应专家和持有期。",
+  "model_profile": {
+    "structure": "两组单 LightGBM 专家，各五种子；全样本 v5 作对照。",
+    "features": "Alpha158＋range，164 列。",
+    "training_target": "T 使用 H20、非 T 使用 H7 的日截面等样本十档标签；M0 加权 MSE 回归。",
+    "early_stopping": "本风格评估日期的十档标签日截面 Spearman 均值，patience 50，上限 200。",
+    "prediction_signal": "五种子逐日 z-score 后等权合成，按事后自然月标签选择 T 或非 T 专家。",
+    "training_sample": {
+      "pool": "全A",
+      "time_range": "2004-01-02 至 2020-07-31",
+      "filters": "训练标签及月度风格均须在训练截止日兑现，再筛选对应风格。"
+    },
+    "evaluation_sample": {
+      "pool": "全A",
+      "time_range": "2020-08-03 至 2026-07-31",
+      "filters": "1431 个共同信号日；上市满60日，日频ST，成交额≥1000万元，入场可成交。"
+    },
+    "changes": "自然月 H20 划分，两位专家分别使用 H20／H7，事后持有期跟随风格。",
+    "model_paths": [
+      {
+        "path": "backtest/result/tnm26_h20month_t_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "T 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "T 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "T 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "T 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "T 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_n_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "N 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_n_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "N 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_n_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "N 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_n_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "N 专家"
+      },
+      {
+        "path": "backtest/result/tnm26_h20month_n_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "N 专家"
+      },
+      {
+        "path": "backtest/result/tn26_all20_s42/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 42,
+        "label": "新 v5"
+      },
+      {
+        "path": "backtest/result/tn26_all20_s1000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 1000,
+        "label": "新 v5"
+      },
+      {
+        "path": "backtest/result/tn26_all20_s2000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 2000,
+        "label": "新 v5"
+      },
+      {
+        "path": "backtest/result/tn26_all20_s3000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 3000,
+        "label": "新 v5"
+      },
+      {
+        "path": "backtest/result/tn26_all20_s4000/run_01/artifacts_root/artifacts/trained_model",
+        "seed": 4000,
+        "label": "新 v5"
+      }
+    ]
+  },
+  "changed_axes": [],
+  "configs": [
+    {
+      "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/evaluation.yaml",
+      "sha256": "9dea069fa03b9448ab44cf951c35d363015ca5d2e2b73da5e4b5c49ef8d24725"
+    },
+    {
+      "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/experiment.json",
+      "sha256": "ff58196ee1693b8f4aa7208d6b750c33346e5a1f096fdbdc92ecf35e0ac7d3de"
+    },
+    {
+      "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/models.json",
+      "sha256": "6f46574e0a521df50404751fd745b2e9548230b19fef08e841fce14c722789ce"
+    },
+    {
+      "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/style-labels.json",
+      "sha256": "b12850089b864db15d29c6b8bd0fd1d6d3ec0fe4a9e4f8a980271a4a47e7cdca"
+    }
+  ],
+  "reports": [
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/reports/detail.html"
+  ],
+  "records": [
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/records/24d68d66be396a9e7a6ac2a3d07ba50201ff8777f9481ff022f688aaa166490f.json"
+  ],
+  "data": [
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/N-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/N-h20-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/N-h7-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/O-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/O-h20-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/O-h7-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/T-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/T-h20-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/T-h7-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/V-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/V-h20-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/V-h7-daily-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/comparison-grade-rankic.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/forward-h20.parquet",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/h20month-clusters.joblib",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/h20month-dates.parquet",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/h20month-periods.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/market-return.parquet",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/portfolio-daily.parquet",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/selected-stock-close.parquet",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/selected-stock-volume.parquet",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/stock-H7-quantile10.pkl",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/top3-baskets.csv",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/metrics/comparison.json"
+  ],
+  "docs": [
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-population.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s1000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s2000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s3000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s4000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s42.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/cluster-h20month.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/consolidation-state.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-population.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s1000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s2000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s3000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s4000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s42.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-population.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s1000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s2000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s3000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s4000.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s42.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/recipes.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/replayed-early-stop-all20.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/replayed-early-stop-h20month-N.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/replayed-early-stop-h20month-T.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/reproduction.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/targets.json"
+  ],
+  "records_directory": "backtest/experiments/models/style-experts/h20-natural-month-20261118/records",
+  "metrics_source": {
+    "path": "metrics/comparison.json",
+    "sha256": "550ca9db8e36b29233cf66ff2e33b066836d8cac352aa54cac996752a3196383"
+  }
+}

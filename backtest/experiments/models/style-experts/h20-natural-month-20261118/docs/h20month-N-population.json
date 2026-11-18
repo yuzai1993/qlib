@@ -1,0 +1,29 @@
+{
+  "training_rows": 4309327,
+  "valid_rows": 4583735,
+  "training_days": 2425,
+  "valid_days": 1023,
+  "training_min": "2004-01-07",
+  "training_max": "2020-03-31",
+  "validation_min": "2020-08-03",
+  "validation_max": "2026-06-30",
+  "valid_grade_counts": [
+    457915,
+    458384,
+    458294,
+    458386,
+    458669,
+    458239,
+    458265,
+    458438,
+    458302,
+    458843
+  ],
+  "train_target": {
+    "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/stock-H7-quantile10.pkl",
+    "sha256": "84585c6cb25c38074250c987c1fc2dc40fbbd660d1655226434a1acfc18a8ce9",
+    "size": 43770300
+  },
+  "early_stop": "cross-sectional Spearman against actual 10 grade labels, equally weighted daily mean",
+  "data_scope": "h20month-N"
+}

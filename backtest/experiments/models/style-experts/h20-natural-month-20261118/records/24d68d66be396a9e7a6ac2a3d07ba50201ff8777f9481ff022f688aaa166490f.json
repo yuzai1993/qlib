@@ -1,0 +1,67 @@
+{
+  "exp_id": "style-experts/h20-natural-month-20261118",
+  "archive_path": "backtest/experiments/models/style-experts/h20-natural-month-20261118",
+  "date": "2026-11-18",
+  "state": "completed",
+  "phase": "M",
+  "phase_m_protocol": "v1",
+  "direction": "style-experts",
+  "experiment_type": "style_experts",
+  "display_name": "自然月 H20 · T／非 T 风格专家",
+  "baseline_ref": "training-target/h20-quantile10-p50-v5",
+  "data_version": "2026-11-03",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "train_pool": "all",
+  "test_pools": [
+    "all"
+  ],
+  "style_expert_protocol": "natural-month-h20-oracle-v1",
+  "evaluation_mode": "historical_selection_window",
+  "hypothesis": "自然月 H20 风格专家在事后风格与对应持有期下，对 v5 的完整评估周期收益、风险与十档 RankIC 是否改善",
+  "portable_eval_output": "backtest/experiments/models/style-experts/h20-natural-month-20261118/metrics/comparison.json",
+  "portable_eval_sha256": "550ca9db8e36b29233cf66ff2e33b066836d8cac352aa54cac996752a3196383",
+  "detail_report": "backtest/experiments/models/style-experts/h20-natural-month-20261118/reports/detail.html",
+  "metrics": {
+    "net_ann": 0.39462299793054206,
+    "net_ann_vol": 0.2919857560234685,
+    "net_sharpe": 1.3515145509318065,
+    "ann": 0.4217313069733533,
+    "turnover": 0.1235853658342571,
+    "rank_ic_mean": 0.10192559305272363,
+    "rank_ic_grade": 0.11522067332667628,
+    "cagr": 0.42221213798921825,
+    "max_drawdown": -0.32448400092882634,
+    "ann_cost": 0.027066989396085085
+  },
+  "configs": [
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/evaluation.yaml",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/experiment.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/models.json",
+    "backtest/experiments/models/style-experts/h20-natural-month-20261118/configs/style-labels.json"
+  ],
+  "result_dirs": [
+    "backtest/result/20261118_natural_month_experts",
+    "backtest/result/tnm26_h20month_t_s42",
+    "backtest/result/tnm26_h20month_t_s1000",
+    "backtest/result/tnm26_h20month_t_s2000",
+    "backtest/result/tnm26_h20month_t_s3000",
+    "backtest/result/tnm26_h20month_t_s4000",
+    "backtest/result/tnm26_h20month_n_s42",
+    "backtest/result/tnm26_h20month_n_s1000",
+    "backtest/result/tnm26_h20month_n_s2000",
+    "backtest/result/tnm26_h20month_n_s3000",
+    "backtest/result/tnm26_h20month_n_s4000",
+    "backtest/result/tn26_all20_s42",
+    "backtest/result/tn26_all20_s1000",
+    "backtest/result/tn26_all20_s2000",
+    "backtest/result/tn26_all20_s3000",
+    "backtest/result/tn26_all20_s4000"
+  ],
+  "conclusion": "事后自然月专家全窗净 CAGR 42.22%、净夏普 1.352、十档 RankIC 0.11522。T 用 H20、非 T 用 H7。对照原 v5、新 v5 及相同持有期的 v5，全部采用共同日期和费用。"
+}

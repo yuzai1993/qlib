@@ -26,7 +26,7 @@
     function download(name,text,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
     const pageHead=(eyebrow,title,subtitle,actions='')=>`<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2><div class="subtitle">${subtitle}</div></div><div class="page-actions">${actions}</div></div>`;
     const trackLabel=track=>track==='csi1000'?'CSI1000':track==='all_a'?'全A':track;
-    const metricContext=(kind,track)=>!track?'暂无股票范围':track==='csi1000'?(kind==='model'?'CSI1000 · IC / RankIC · B6-M':'CSI1000 · 扣费绝对收益 / 邻域 P25 · B4-S'):(kind==='model'?'固定 top3 × h5 · 算术年化':'执行层复合收益 · CAGR');
+    const metricContext=(kind,track)=>!track?'暂无股票范围':track==='csi1000'?(kind==='model'?'CSI1000 · IC / RankIC · B6-M':'CSI1000 · 扣费绝对收益 / 邻域 P25 · B4-S'):(kind==='model'?(state.module==='records'?'持有期与指标口径见各实验详情':'固定 top3 × h5 · 算术年化'):'执行层复合收益 · CAGR');
     function metricDefinitions(view=state.view){return R.metricDefinitions(R.definitionsForTrack(state.catalog,state.kind,state.track),state.kind,view);}
     const historyRecords=()=>Array.isArray(state.catalog.experiment_records)?state.catalog.experiment_records:state.catalog.records||[];
     const scopedRecords=()=>R.recordsForTrack(historyRecords(),state.kind,state.track);

@@ -1,0 +1,80 @@
+{
+  "stage": "h20month",
+  "complete_blocks": 282,
+  "fit_blocks": 208,
+  "counts": [
+    {
+      "fit": false,
+      "style": "N",
+      "n": 54
+    },
+    {
+      "fit": false,
+      "style": "T",
+      "n": 20
+    },
+    {
+      "fit": true,
+      "style": "N",
+      "n": 173
+    },
+    {
+      "fit": true,
+      "style": "T",
+      "n": 35
+    }
+  ],
+  "model": {
+    "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/h20month-clusters.joblib",
+    "sha256": "cec0592ca72e1c07d3204a095d683ac74117686ba036ffba6ce6750e6308fe7d",
+    "size": 2541
+  },
+  "mapping": {
+    "0": "D",
+    "1": "T",
+    "2": "P",
+    "3": "F"
+  },
+  "centers_by_style": {
+    "D": {
+      "mkt": 0.0025151995941996574,
+      "mkt_vol": 0.014308266341686249,
+      "small_big": 0.01837397739291191,
+      "lowvol_highvol": 0.017344914376735687,
+      "momentum": -0.00944841094315052
+    },
+    "T": {
+      "mkt": 0.033068083226680756,
+      "mkt_vol": 0.013783184811472893,
+      "small_big": -0.021239977329969406,
+      "lowvol_highvol": -0.024277102202177048,
+      "momentum": 0.01614927500486374
+    },
+    "P": {
+      "mkt": -0.11456916481256485,
+      "mkt_vol": 0.03509338200092316,
+      "small_big": 0.019077491015195847,
+      "lowvol_highvol": -0.0026760241016745567,
+      "momentum": -0.05467045307159424
+    },
+    "F": {
+      "mkt": 0.15115413069725037,
+      "mkt_vol": 0.022920982912182808,
+      "small_big": 0.05762186273932457,
+      "lowvol_highvol": 0.0008547152392566204,
+      "momentum": -0.031249037012457848
+    }
+  },
+  "first": "2003-03-03",
+  "last": "2026-08-31",
+  "periods": {
+    "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/h20month-periods.csv",
+    "sha256": "05c36eac50a763b05dcab30944c3c3c30389760258f188a452317e467ceba310",
+    "size": 30722
+  },
+  "dates": {
+    "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/data/h20month-dates.parquet",
+    "sha256": "16c66355a638170ea52208763c4fe7b295dd12365f96fac3f762685cf61dbc6d",
+    "size": 69133
+  }
+}

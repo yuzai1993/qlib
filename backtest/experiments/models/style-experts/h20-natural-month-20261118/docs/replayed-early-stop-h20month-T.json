@@ -1,0 +1,47 @@
+{
+  "scope": "h20month-T",
+  "horizon": 20,
+  "source": "Full saved-model predictions scored with eval_ic_multi_pool.daily_ic and actual decile labels on the same days.",
+  "seeds": [
+    {
+      "seed": 42,
+      "best_round": 98,
+      "days": 408,
+      "recomputed": 0.08136714773052642,
+      "early_stop": 0.08136714773052642,
+      "absolute_error": 0.0
+    },
+    {
+      "seed": 1000,
+      "best_round": 145,
+      "days": 408,
+      "recomputed": 0.08087470153160989,
+      "early_stop": 0.08087470153160989,
+      "absolute_error": 0.0
+    },
+    {
+      "seed": 2000,
+      "best_round": 97,
+      "days": 408,
+      "recomputed": 0.0812423300602861,
+      "early_stop": 0.0812423300602861,
+      "absolute_error": 0.0
+    },
+    {
+      "seed": 3000,
+      "best_round": 92,
+      "days": 408,
+      "recomputed": 0.08152258080098643,
+      "early_stop": 0.08152258080098643,
+      "absolute_error": 0.0
+    },
+    {
+      "seed": 4000,
+      "best_round": 179,
+      "days": 408,
+      "recomputed": 0.08207977581237162,
+      "early_stop": 0.0820797758123716,
+      "absolute_error": 2.7755575615628914e-17
+    }
+  ]
+}

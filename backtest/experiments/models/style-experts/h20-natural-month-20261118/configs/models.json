@@ -1,0 +1,421 @@
+{
+  "T": {
+    "components": [
+      {
+        "seed": 42,
+        "session": "tnm26_h20month_t_s42",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_t_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "12f5cf2ac94eeac872fa223bcc094d0c906708aaf5db78f6246fea938c0c4a3a",
+          "size": 1286566
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s42.json",
+          "sha256": "2a32b84456a9e1739309997dd57cb7f87603211a96838a44a73a02039df40357",
+          "size": 22754
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/T-s42.pkl",
+          "sha256": "dc4db7933c2ad04113ad9989f0c59baeac4cf46f5190a6931c9f13297de8285d",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 1000,
+        "session": "tnm26_h20month_t_s1000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_t_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "72f6880366418a09f90d34f3202b045964602a169d49996751674a050235237e",
+          "size": 1848702
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s1000.json",
+          "sha256": "5f7ae2538ac0ef7f49c03ada92da4835f7e1931b3ca1a57274c5cb4916939ae9",
+          "size": 29740
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/T-s1000.pkl",
+          "sha256": "ab2f4ee3c88521c435f7c53533171e76d4bfe0d5151b38c2ab11b93ce229e431",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 2000,
+        "session": "tnm26_h20month_t_s2000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_t_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f45dc4b4410f34a74dfb5407db24254f30c896abde9c6a29cf40a19f6d1e3e49",
+          "size": 1322611
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s2000.json",
+          "sha256": "aa6da3ca24b484846293ff67ce1aaa31ec1672acfb79cf023160ed1325b904b6",
+          "size": 22614
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/T-s2000.pkl",
+          "sha256": "331547ce26422ddabc7808e8a24ec9186bbd460a44800afe23e13ff3a5ce12f8",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 3000,
+        "session": "tnm26_h20month_t_s3000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_t_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b376742db56d7a23fa9b20053bc42a5a1343b1adc3fd5d997a28e7fb6552ce9f",
+          "size": 1230098
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s3000.json",
+          "sha256": "9d44bd1f546b8dfa0c8511edce483bb214bd6bdad0bf9516088c9f33f7924fcc",
+          "size": 21883
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/T-s3000.pkl",
+          "sha256": "2decc28ae1409c6fe2b65c95528e53d348d4f4bdff2f84a54d802a9c1e58321e",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 4000,
+        "session": "tnm26_h20month_t_s4000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_t_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "74a27159a05f1253029949a8c97fb055d8f8fd5da25160037215ae8d490896a4",
+          "size": 2299410
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-T-s4000.json",
+          "sha256": "904dbc026240e437fe4be6767cd44f0ab5d3acbdb2887d443281b69a64e66faf",
+          "size": 30471
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/T-s4000.pkl",
+          "sha256": "18aebae01eefc97844747ae92a1b9106f5613206f0c43ccc577b5d0c9c5cb924",
+          "size": 83046132
+        }
+      }
+    ],
+    "ensemble": {
+      "path": "backtest/result/20261118_natural_month_experts/T-ensemble.pkl",
+      "sha256": "aa351f5c01b4fd7c35c9e9127e6fb2228c9fd72550550e513e006276a5fba73c",
+      "size": 83046157
+    },
+    "full_finite_index": true
+  },
+  "N": {
+    "components": [
+      {
+        "seed": 42,
+        "session": "tnm26_h20month_n_s42",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_n_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "174a781050321475d2b2429c31120ec4c8f94fb3e674e349eb7615b08ef5848d",
+          "size": 1555688
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s42.json",
+          "sha256": "c2ee0e665684c8cbf96fbb8a0e4daa78780c5bc78a5e1580e3b05f40977f9504",
+          "size": 21427
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/N-s42.pkl",
+          "sha256": "bce685930438b48cc7055165fb8d83366aebf20bc269917a117d6342dc0c8cf8",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 1000,
+        "session": "tnm26_h20month_n_s1000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_n_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "93e07b35d9289944ee64c1567a2f34e3fb735bf1e814ac474aafb58d1393603a",
+          "size": 1683439
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s1000.json",
+          "sha256": "d852180655458751eb9935472c5ed6273c7776b6c26fea2955f6070ef794eeee",
+          "size": 23365
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/N-s1000.pkl",
+          "sha256": "8f2b3243ceb39efa1e614f7e5da7f74b15bdb808e812d09330a7499efa2c8ee9",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 2000,
+        "session": "tnm26_h20month_n_s2000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_n_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "471e1601bb64b7cbec9295d7cb86bc046ea961ceb6b6fdfce7e8591e254f5eb1",
+          "size": 1398632
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s2000.json",
+          "sha256": "8f0b42869a554c529abc23370bf419a7c7bccb2d0bbbc02e78acf7a5ec1e4ff5",
+          "size": 20394
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/N-s2000.pkl",
+          "sha256": "26776cdc8d202e25525c6a792a74844a588d0f36aeea54110601acdc9040ddbe",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 3000,
+        "session": "tnm26_h20month_n_s3000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_n_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "ce7e0312d8cbd8585699c6f4c2151f9fcf2f662fa32176f97a1995b46bd952d1",
+          "size": 1152204
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s3000.json",
+          "sha256": "bcff4f041769602ae2a9b35c7aaafcfc64ef2a26e2667e646e45d814caf6ce18",
+          "size": 18018
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/N-s3000.pkl",
+          "sha256": "e441f941e651bd9f27782c5b5e0da658e3201ca4379dce2ad7cb26c89c98c4ab",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 4000,
+        "session": "tnm26_h20month_n_s4000",
+        "model": {
+          "path": "backtest/result/tnm26_h20month_n_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "7fdf6c27a4fbc68426a08fd71bb46d1117aac71b5dea56d0859f2fa3c252531b",
+          "size": 1806860
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/h20month-N-s4000.json",
+          "sha256": "5c815e885521c779e2f4e074aebd0fc8c1e0c6b01818dd5475b7848131f1c008",
+          "size": 24428
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/N-s4000.pkl",
+          "sha256": "66a356191d0ae916a4f89cd2599fdd65629bc4cb2f4a641274850f1855c72c73",
+          "size": 83046132
+        }
+      }
+    ],
+    "ensemble": {
+      "path": "backtest/result/20261118_natural_month_experts/N-ensemble.pkl",
+      "sha256": "10edf0f3fc9cb3f6f10b0742473e802c635071d2e130450aa7c7cbc1146d464e",
+      "size": 83046157
+    },
+    "full_finite_index": true
+  },
+  "V": {
+    "components": [
+      {
+        "seed": 42,
+        "session": "tn26_all20_s42",
+        "model": {
+          "path": "backtest/result/tn26_all20_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9ea835abc806f1ee93748b05abe1c36aed65d97dcde5806dbc62ee41f7222b79",
+          "size": 2659614
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s42.json",
+          "sha256": "1f8424fc86a0262be132cb3810d88029169f3e9f5aa3a1cfc579d0ed37851cca",
+          "size": 30616
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/V-s42.pkl",
+          "sha256": "180ff4e7ca24bd6b928f0f6626ff60cfe415ea3089b9e91dd827268eb2d0136c",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 1000,
+        "session": "tn26_all20_s1000",
+        "model": {
+          "path": "backtest/result/tn26_all20_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "6819acca245066a1fb12dd7151ac30491d686505ea978eb33a74bafbb31b7605",
+          "size": 1762145
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s1000.json",
+          "sha256": "32922be0762104075dbe5877058a317764847dbe95c47d392860b0ea862624af",
+          "size": 23338
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/V-s1000.pkl",
+          "sha256": "b18360599ec3457075b314df6c5c805079014bfa09d0c384a08b3f75f8925110",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 2000,
+        "session": "tn26_all20_s2000",
+        "model": {
+          "path": "backtest/result/tn26_all20_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "232d6a2a2100cd8ca306937c2ab21fc8ccad4e85994124df23496569835dd0d2",
+          "size": 1643277
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s2000.json",
+          "sha256": "950dd0426ed97d9e7bfbae4eaf3911d3e6e90458835a08269e577160ca344ca2",
+          "size": 22028
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/V-s2000.pkl",
+          "sha256": "946064055e9e2e4ed62a8673ff71437548796f7282a8a378799e427fbfea1bd9",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 3000,
+        "session": "tn26_all20_s3000",
+        "model": {
+          "path": "backtest/result/tn26_all20_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "03fcdde15e9df2e9a1019582ba123efd9a7e00b79a5a545b6152decb93864502",
+          "size": 2401183
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s3000.json",
+          "sha256": "6a1cfd6ad5b32db05387cb5fa97ea12315644fc6907a93ed853497739abdef8d",
+          "size": 28698
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/V-s3000.pkl",
+          "sha256": "60b33baa9561457382eb859badab40d7f08d3f21f94cc2af5210b7ed5b8b4d04",
+          "size": 83046132
+        }
+      },
+      {
+        "seed": 4000,
+        "session": "tn26_all20_s4000",
+        "model": {
+          "path": "backtest/result/tn26_all20_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "4bcaaf57ddd95b2a02c40708fa42a083115c806aacdbb447c0d790c19a3c7a8d",
+          "size": 2086447
+        },
+        "training": {
+          "path": "backtest/experiments/models/style-experts/h20-natural-month-20261118/docs/all20-s4000.json",
+          "sha256": "9909a5ca43d0e26735f92f5d99be7baca79041a8356134a6d20869fa63507eaf",
+          "size": 26024
+        },
+        "prediction": {
+          "path": "backtest/result/20261118_natural_month_experts/V-s4000.pkl",
+          "sha256": "fa09d2cc6aa3a5df1f3d7173b48524c6452a4d533298940db0ba2c4823ab5ec9",
+          "size": 83046132
+        }
+      }
+    ],
+    "ensemble": {
+      "path": "backtest/result/20261118_natural_month_experts/V-ensemble.pkl",
+      "sha256": "2eb03a16ed185b3fa403a1e4d5ca1d48d27251bd281bd22abc53fc6d79482962",
+      "size": 83046157
+    },
+    "full_finite_index": true
+  },
+  "O": {
+    "components": [
+      {
+        "seed": 42,
+        "session": "labelgrade_20261106_quantile10_old_s42",
+        "model": {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s42/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "b9df5f68b212348865fe611ca725c2decdeceec7ce1e165eb8b11af9ab0c3837",
+          "size": 59488457
+        },
+        "prediction": {
+          "path": "backtest/result/20261106_label_grading/quantile10-old-s42.pkl",
+          "sha256": "8bad9ee807084e769140728cef32cff0e4ff66ad736504e5ed7b74bbe337e6f2",
+          "size": 83046132
+        },
+        "training": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s42-a1.json",
+          "sha256": "2b59955f653f85e2f71adc3a2d4ec7ae7e3d5b0013dc2d66855e9231857352ee",
+          "size": 38305
+        }
+      },
+      {
+        "seed": 1000,
+        "session": "labelgrade_20261106_quantile10_old_s1000",
+        "model": {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s1000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "f45298b52219c7eeb18c120ab39efb38a5bca1fc5497dbd3a71c3517c8da4340",
+          "size": 59781408
+        },
+        "prediction": {
+          "path": "backtest/result/20261106_label_grading/quantile10-old-s1000.pkl",
+          "sha256": "9f52cfa2e9b11b93a7c15af1f7f1dcbf94a0014a34d573f20dc250cd4d14d439",
+          "size": 83046132
+        },
+        "training": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s1000-a1.json",
+          "sha256": "15f9eb1484dbc5e4b4ff5bfe52f6e5d28b24cf8af39056554df81e6274a0b913",
+          "size": 44465
+        }
+      },
+      {
+        "seed": 2000,
+        "session": "labelgrade_20261106_quantile10_old_s2000",
+        "model": {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s2000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "9d04213c35c204cb5a2639d01db39a46e8e6b4da18879d0fe594d04633fe779c",
+          "size": 60495908
+        },
+        "prediction": {
+          "path": "backtest/result/20261106_label_grading/quantile10-old-s2000.pkl",
+          "sha256": "09f99b5e2a6b8b176f3176dc8c2325a22d0425fbaa271c8fcbbe4f59a0bf3131",
+          "size": 83046132
+        },
+        "training": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s2000-a1.json",
+          "sha256": "f7e301e2e448bf841a4ca46c4d049fae2a33144e550f5b05f0ef81d81070761d",
+          "size": 59236
+        }
+      },
+      {
+        "seed": 3000,
+        "session": "labelgrade_20261106_quantile10_old_s3000",
+        "model": {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s3000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "d7de33924b4947c144e8eae0d443d916d930397ef81fb9171eacc651c26f366d",
+          "size": 59546157
+        },
+        "prediction": {
+          "path": "backtest/result/20261106_label_grading/quantile10-old-s3000.pkl",
+          "sha256": "4136b5c13beb1d882170f6f957cdea7c8389c4406bd2069d68b494aabb39cbb4",
+          "size": 83046132
+        },
+        "training": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s3000-a1.json",
+          "sha256": "8cb6e8a248c8f1efce64558afce4d7c5938ae1110ed663104901a2d32cd682d3",
+          "size": 39348
+        }
+      },
+      {
+        "seed": 4000,
+        "session": "labelgrade_20261106_quantile10_old_s4000",
+        "model": {
+          "path": "backtest/result/labelgrade_20261106_quantile10_old_s4000/run_01/artifacts_root/artifacts/trained_model",
+          "sha256": "0719f8a38ca09bdf2926e068a4d433f4f7aee4e5f3e675a592a04e66c19caba5",
+          "size": 60125167
+        },
+        "prediction": {
+          "path": "backtest/result/20261106_label_grading/quantile10-old-s4000.pkl",
+          "sha256": "e93ada017614ffd229cefe1b2061c76d9163efee5d253f7ea8c8c8fb0a03586c",
+          "size": 83046132
+        },
+        "training": {
+          "path": "backtest/experiments/models/training-target/label-grading-p50-20261106-v1/docs/quantile10-old-s4000-a1.json",
+          "sha256": "83046f427ac7871ca4cab4e14728f414fd8e34ad405669e0e94e7cbdf905c11a",
+          "size": 51355
+        }
+      }
+    ],
+    "ensemble": {
+      "path": "backtest/result/20261106_label_grading/quantile10-old-ensemble.pkl",
+      "sha256": "45ad0d4f05e84bd2594b95fd6fd660acb2345668ec3488813893d78c7d0155f0",
+      "size": 83046157
+    }
+  }
+}

@@ -174,7 +174,7 @@ def test_guarded_clock_check_reports_quote_age_without_any_trade(auto, tmp_path)
     report = w.runner.check()
     assert report["quote_diagnostics"]["301165.SZ"]["status"] == "FUTURE"
     assert report["quote_diagnostics"]["301165.SZ"]["age_seconds"] == -8
-    assert report["relay_version"] == "2026-11-09-quote-retry-v1"
+    assert report["relay_version"] == "2026-11-20-reconciled-prior-orders-v2"
     assert not w.broker.submissions
 
 

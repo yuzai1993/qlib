@@ -12,7 +12,7 @@ from pathlib import Path
 from qmt_clipboard import MAX_REQUEST_CHARS, PROTOCOL, SHANGHAI, TERMINAL, _identifier, dumps
 
 GUARDED_TOPK_PRICE_TYPE = "CLOSE_AUCTION_TOPK_CASH_V1"
-RELAY_SOURCE_VERSION = "2026-11-09-quote-retry-v1"
+RELAY_SOURCE_VERSION = "2026-11-20-reconciled-prior-orders-v2"
 
 
 class QuoteUnavailable(ValueError):
@@ -356,7 +356,7 @@ class AutoRelay:
             held = guarded_snapshot(response.get("snapshot"))
             if "BUY" in self.journal["phases"]:
                 self.validate_guarded_plan(self.journal["phases"]["BUY"])
-            self.working_orders_clear(response["snapshot"])
+            reconciled = self.working_orders_clear(response["snapshot"])
             if len(held) > self.journal["batch"]["orders"][0]["max_positions"]:
                 raise ValueError("held positions exceed guarded max_positions")
         result = dict(
@@ -376,11 +376,86 @@ class AutoRelay:
         if self.guarded():
             contract = self.journal["batch"]["orders"][0]
             result.update(max_positions=contract["max_positions"], cash_risk_degree=contract["cash_risk_degree"],
-                          working_orders=response["snapshot"]["working_orders"], held_names=len(held))
+                          working_orders=response["snapshot"]["working_orders"], held_names=len(held),
+                          reconciled_prior_orders=reconciled)
         return result
 
+    def reconciled_prior_order(self, active, account_id):
+        """Recognize an operator-closed day order; never infer expiry from age alone."""
+        try:
+            date, time = active.get("insert_date"), active.get("insert_time")
+            if not isinstance(date, str) or not re.fullmatch(r"\d{8}", date):
+                return False
+            day = dt.datetime.strptime(date, "%Y%m%d").date().isoformat()
+            if isinstance(time, str) and re.fullmatch(r"\d{6}", time):
+                time = time[:2] + ":" + time[2:4] + ":" + time[4:]
+            # Insert date is not a trading day. Reject overnight submissions, which
+            # may be queued for the next session despite an earlier calendar date.
+            if (day >= self.day or not isinstance(time, str)
+                    or not re.fullmatch(r"\d{2}:\d{2}:\d{2}", time)
+                    or not "09:15:00" <= time <= "15:00:00"
+                    or active["filled_quantity"] != 0 or not active["broker_order_id"]):
+                return False
+            dt.datetime.strptime(time, "%H:%M:%S")
+            path = self.state_dir / (day + "_" + self.strategy + ".json")
+            previous = json.loads(path.read_text(encoding="utf-8"))
+            meta = previous["operator_reconciliation"]
+            header = previous["batch"]["header"]
+            batch_id = _identifier(header["batch_id"], "batch_id")
+            closed_at = dt.datetime.fromisoformat(meta["at"])
+            # The operator's display snapshot may be redacted. Account identity
+            # must come from the original durable execution budget observation.
+            prior_account = previous["phases"]["BUY"]["cash_plan"]["snapshot"]["account"]["account_id"]
+            if (previous["day"] != day or previous["strategy"] != self.strategy
+                    or previous["exported"] is not True or previous["snapshot_exported"] is not True
+                    or header["trade_date"] != day or header["strategy_id"] != self.strategy
+                    or header["account_type"] != "STOCK" or header.get("mode", "LIVE") not in ("", "LIVE")
+                    or not batch_id.startswith(date + "_" + self.strategy + "_")
+                    or meta["method"] != "operator_confirmed_day_order_expiry"
+                    or not account_id or prior_account != account_id
+                    or closed_at.tzinfo is None or closed_at > self.now().astimezone(SHANGHAI)
+                    or closed_at.astimezone(SHANGHAI).date().isoformat() <= day):
+                return False
+            evidence = dict(broker_order_id=active["broker_order_id"], stock_code=active["stock_code"],
+                            quantity=active["quantity"], filled_quantity=0, terminal_status="EXPIRED")
+            if meta["zero_fill_orders"].count(evidence) != 1:
+                return False
+            # Use the local bridge root, not the Mac absolute path in the audit.
+            receipt = self.root / "archive" / ("fills_" + batch_id + ".jsonl")
+            if not receipt.with_suffix(".done").is_file():
+                return False
+            raw = receipt.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != meta["fill_receipt_sha256"]:
+                return False
+            rows = [json.loads(line) for line in raw.decode("utf-8-sig").splitlines()]
+            matches = [row for row in rows if row.get("qmt_order_id") == active["broker_order_id"]]
+            if len(matches) != 1:
+                return False
+            row = matches[0]
+            expected = dict(type="fill_event", batch_id=batch_id, mode="LIVE", status="EXPIRED",
+                            stock_code=active["stock_code"], side=active["side"],
+                            requested_qty=active["quantity"], filled_qty=0, avg_price=0)
+            if any(row.get(key) != value for key, value in expected.items()):
+                return False
+            planned = [o for o in previous["batch"]["orders"] if o["client_order_id"] == row["client_order_id"]]
+            parents = [o for o in previous["latest"]["orders"] if o["id"] == row["client_order_id"]]
+            if (len(planned) != 1 or len(parents) != 1
+                    or planned[0]["stock_code"] != active["stock_code"] or planned[0]["side"] != active["side"]):
+                return False
+            parent = parents[0]
+            if (parent["symbol"] != active["stock_code"] or parent["side"] != active["side"]
+                    or parent["quantity"] != active["quantity"] or parent["filled_quantity"] != 0
+                    or len(parent["broker_orders"]) != 1):
+                return False
+            child = parent["broker_orders"][0]
+            return (child["broker_order_id"] == active["broker_order_id"]
+                    and child["quantity"] == active["quantity"] and child["filled_quantity"] == 0)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            # Missing, corrupt or incompatible evidence retains the normal block.
+            return False
+
     def working_orders_clear(self, snapshot, allow_sells=False):
-        """Only exact durable own requests may be working; buys still exclude sells."""
+        """Require own reservations or exact archived prior-day expiry evidence."""
         buy = self.journal["phases"].get("BUY", {})
         reserved = set(buy.get("cash_plan", {}).get("reserved", []))
         known = {}
@@ -397,16 +472,22 @@ class AutoRelay:
                     for order in child["request"]["orders"]:
                         remark = "qc" + hashlib.sha256((self.journal["session"] + "/" + order["id"]).encode("ascii")).hexdigest()[:20]
                         known[remark] = order
-        remarks, broker_ids = set(), set()
+        remarks, broker_ids, reconciled = set(), set(), []
         for active in snapshot["working_orders"]:
+            if active["broker_order_id"] and active["broker_order_id"] in broker_ids:
+                raise RuntimeError("multiple working broker orders exceed one guarded reservation")
+            broker_ids.add(active["broker_order_id"])
+            if self.reconciled_prior_order(active, snapshot["account"].get("account_id")):
+                reconciled.append(active)
+                continue
             order = known.get(active["remark"])
             if (order is None or active["side"] != order["side"] or active["stock_code"] != order["symbol"]
                     or active["quantity"] != order["quantity"]):
                 raise RuntimeError("foreign or unreserved working order blocks guarded trading")
-            if active["remark"] in remarks or (active["broker_order_id"] and active["broker_order_id"] in broker_ids):
+            if active["remark"] in remarks:
                 raise RuntimeError("multiple working broker orders exceed one guarded reservation")
             remarks.add(active["remark"])
-            broker_ids.add(active["broker_order_id"])
+        return reconciled
 
     def guarded_observation(self, symbols, allow_sells=False):
         observation = self.call(self.request("snapshot", symbols=symbols))

@@ -183,6 +183,16 @@ def qmt_order(**changes):
     return SimpleNamespace(**value)
 
 
+def test_snapshot_preserves_broker_order_date_and_time_without_hiding_old_orders(mod, monkeypatch):
+    broker = broker_snapshot_source(mod, monkeypatch, orders=[
+        qmt_order(m_strInsertDate="20261119", m_strInsertTime="14:57:09"),
+    ])
+    data = broker.snapshot([])
+    assert len(data["working_orders"]) == 1
+    assert data["working_orders"][0]["insert_date"] == "20261119"
+    assert data["working_orders"][0]["insert_time"] == "14:57:09"
+
+
 def test_guarded_snapshot_keeps_all_account_working_orders_and_maps_offset_side(mod, monkeypatch):
     broker = broker_snapshot_source(
         mod, monkeypatch,
@@ -195,9 +205,9 @@ def test_guarded_snapshot_keeps_all_account_working_orders_and_maps_offset_side(
     data = broker.snapshot([])
     assert data["working_orders"] == [
         {"remark": "foreign", "broker_order_id": "broker-1", "status": 50, "quantity": 100,
-         "filled_quantity": 0, "side": "BUY", "stock_code": "600000.SH"},
+         "filled_quantity": 0, "side": "BUY", "stock_code": "600000.SH", "insert_date": None, "insert_time": None},
         {"remark": "foreign", "broker_order_id": "broker-2", "status": 55, "quantity": 100,
-         "filled_quantity": 40, "side": "SELL", "stock_code": "600000.SH"},
+         "filled_quantity": 40, "side": "SELL", "stock_code": "600000.SH", "insert_date": None, "insert_time": None},
     ]
 
 
@@ -317,7 +327,7 @@ def test_explicit_snapshot_provider_advertises_guarded_capability_and_source(mod
     assert result["ok"]
     assert result["snapshot"]["working_orders"] == []
     assert set(result["capabilities"]) == {"snapshot-v1", "topk-cash-v1"}
-    assert result["source_version"] == "2026-10-30-topk-cash-clipboard-v1"
+    assert result["source_version"] == "2026-11-20-order-date-v1"
 
 
 @pytest.mark.parametrize("status,filled,expected", [(57, 0, "REJECTED"), (54, 0, "CANCELED"), (53, 40, "CANCELED")])
@@ -623,7 +633,7 @@ def test_qmt_init_and_timer_work_without_any_file_access(mod, monkeypatch):
     reply = json.loads(clip.text)
     assert reply["session"] == mod._runtime.engine.session
     assert set(reply["capabilities"]) == {"snapshot-v1", "topk-cash-v1"}
-    assert reply["source_version"] == "2026-10-30-topk-cash-clipboard-v1"
+    assert reply["source_version"] == "2026-11-20-order-date-v1"
     # QMT also expects a handlebar entry point; it must not create a second engine.
     mod.handlebar(context)
 

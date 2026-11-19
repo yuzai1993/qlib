@@ -1,6 +1,6 @@
 # 10/30 新版 Top5 剪贴板部署
 
-本说明用于 `alla_v2_top5d1f100_postclose_real`：v2 五种子模型，Topk5/drop1/hold1/跌出前100强卖，risk=1.0。QMT 与 relay 必须一起更新。新版 QMT 的 `source_version` 为 `2026-10-30-topk-cash-clipboard-v1`，能力包含 `snapshot-v1,topk-cash-v1`。
+本说明用于 `alla_v2_top5d1f100_postclose_real`：v2 五种子模型，Topk5/drop1/hold1/跌出前100强卖，risk=1.0。QMT 与 relay 必须一起更新。当前 QMT 的 `source_version` 为 `2026-11-20-order-date-v1`，relay 为 `2026-11-20-reconciled-prior-orders-v2`，能力包含 `snapshot-v1,topk-cash-v1`。
 
 2026-11-09 外部 relay 修复版为 `2026-11-09-quote-retry-v1`，更新 `clipboard_auto.py` 和 `clipboard_relay.py`；本次无需修改 QMT 编辑器源码。操作者提供的计划任务 Action 已确认实际运行目录为 `D:\qmt_bridge\strategy\bt_v5_clipboard_20261030`，下文独立目录安装示例不是这台机器的当前路径。更新必须以任务的 `Actions` 为准。
 
@@ -13,6 +13,16 @@ SSH 会话处于非交互会话，不能直接用于 QMT 剪贴板通信；relay
 本次 SSH 安装后启动失败的原因是主机私钥归个人用户持有并带个人访问权限；修正为 SYSTEM／Administrators 权限后，服务启动及 Mac 密钥登录通过。主机私钥权限要求见 [Win32-OpenSSH 官方说明](https://github.com/PowerShell/Win32-OpenSSH/wiki/Security-protection-of-various-files-in-win32-openssh)。生产机本地恢复审计为 `live_trading/logs/ssh_setup_20261118.json`，该运行记录按日志忽略规则保留在本机。
 
 11月18日通信恢复后，只读检查返回 `READY`，5只持仓股数一致、无活动委托；正式 relay 在盘后将两笔未提交计划记为 `EXPIRED` 并回传快照，Mac 导入及盘后对账通过。恢复时，旧执行 journal 已完成收尾，11月19日的 `001` 批次（3卖3买）处于待执行状态。临时诊断任务和安装脚本已清理。
+
+### 跨日旧委托缓存（2026-11-20）
+
+QMT 重启重连后，券商仍可能回推前一日的零成交委托为“已报”。快照保留所有原始活动委托，并透传 `m_strInsertDate`、`m_strInsertTime` 为 `insert_date`、`insert_time`；relay 支持 `HHMMSS` 和 `HH:MM:SS` 两种时间表示，快照保留原值。仅凭重启或状态码不能判断它是今日挂单；委托字段定义见 [QMT 官方数据结构](https://dict.thinktrader.net/innerApi/data_structure.html)。
+
+relay 只识别已明确核销的前日记录：委托日期早于执行日、提交时间在09:15～15:00内、零成交；同账号同策略的前日 journal 已导出回执及快照，且含 `operator_confirmed_day_order_expiry` 审计；原始父单、券商子单、人工确认清单及归档 `EXPIRED` 回执的编号、股票、方向和数量一致，回执完成标志与SHA-256有效。缺少证据、日期不明、隔夜提交、成交量变化及今日未知挂单仍阻止交易。回执按当前桥根下的 `archive/fills_<batch_id>.jsonl` 查找，不能删除这些运行证据来“清理缓存”。
+
+`auto --check` 的 `working_orders` 继续显示原始委托，`reconciled_prior_orders` 单独列出通过上述核验的旧记录；正式执行也使用相同门禁。该处理不改写券商状态，不重放昨日订单，不以券商资金快照覆盖账本现金。本次运行核验保存在 `live_trading/logs/qmt_refresh_20261120.json`。
+
+11月20日00:37，新 QMT 策略与 relay v2 的正式只读检查返回 `READY`：两笔旧委托均匹配昨日归档回执，三只持仓与账本一致，今日 `002` 批次的一卖三买通过验收，journal 无交易请求。正式任务仍于工作日14:54:54启动，临时诊断任务已撤除。夜间行情仍为昨日收盘，执行窗口会重新验证当日报价、资金和持仓；本次验收不代表已经成交。
 
 ### Windows 时间与报价异常
 
@@ -101,7 +111,7 @@ py .\clipboard_relay.py status --timeout 30 --output-dir .\output
 输出应为 `no orders`，并明确包含：
 
 ```text
-source_version=2026-10-30-topk-cash-clipboard-v1 capabilities=snapshot-v1,topk-cash-v1
+source_version=2026-11-20-order-date-v1 capabilities=snapshot-v1,topk-cash-v1
 ```
 
 再检查今天的共享信号及账户：

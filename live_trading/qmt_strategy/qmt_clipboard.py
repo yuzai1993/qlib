@@ -20,7 +20,7 @@ from collections import OrderedDict, deque
 ACCOUNT_ID = ""
 STRATEGY_NAME = "qlib_clipboard"
 PROTOCOL = "qlib-clipboard-v1"
-SOURCE_VERSION = "2026-10-30-topk-cash-clipboard-v1"
+SOURCE_VERSION = "2026-11-20-order-date-v1"
 MAX_REQUEST_CHARS = 262144
 MAX_TEXT_CHARS = 1024 * 1024  # Responses include the whole 200-order session.
 MAX_ORDERS = 40
@@ -520,6 +520,8 @@ class QmtBroker:
                 remark=remark, broker_order_id=broker_id, status=status,
                 quantity=quantity, filled_quantity=filled,
                 side="BUY" if offset == 48 else "SELL", stock_code=symbol(item),
+                insert_date=getattr(item, "m_strInsertDate", None),
+                insert_time=getattr(item, "m_strInsertTime", None),
             ))
         quotes = {}
         try:

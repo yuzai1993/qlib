@@ -70,7 +70,7 @@ def test_automatic_status_identifies_the_loaded_runtime(relay, tmp_path):
     assert result["status"] == "NO_SIGNAL"
     assert result["runtime"]["relay_script"] == str(DIRECTORY / "clipboard_relay.py")
     assert result["runtime"]["relay_version"]
-    assert set(result["runtime"]["sha256"]) == {"clipboard_auto.py", "clipboard_relay.py"}
+    assert set(result["runtime"]["sha256"]) == {"clipboard_auto.py", "clipboard_relay.py", "clipboard_settlement.py"}
 
 
 def test_relay_stops_on_new_session_instead_of_rebinding_trade(relay):

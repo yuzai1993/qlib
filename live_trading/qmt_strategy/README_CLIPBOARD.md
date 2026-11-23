@@ -13,9 +13,10 @@
 - [qmt_clipboard.py](qmt_clipboard.py)
 - [clipboard_relay.py](clipboard_relay.py)
 - [clipboard_auto.py](clipboard_auto.py)
+- [clipboard_settlement.py](clipboard_settlement.py)
 - [install_clipboard_task.ps1](install_clipboard_task.ps1)
 
-在 QMT 新建内置 Python 策略，把 `qmt_clipboard.py` **整份源码复制进去**，将 `ACCOUNT_ID = ""` 改成本地账号，并在 QMT UI 绑定同一账户。源码保持 ASCII / GBK，兼容内置 Python 3.6。QMT 不从磁盘导入这份脚本或配置；外部中转程序则正常从磁盘运行两个文件。
+在 QMT 新建内置 Python 策略，把 `qmt_clipboard.py` **整份源码复制进去**，将 `ACCOUNT_ID = ""` 改成本地账号，并在 QMT UI 绑定同一账户。源码保持 ASCII / GBK，兼容内置 Python 3.6。QMT 不从磁盘导入这份脚本或配置；外部中转程序从同目录导入 automation 和 settlement 模块。
 
 外部中转使用普通 Windows Python 3.8+。与 QMT 在同一用户的交互桌面运行，不作为 Session 0 系统服务。一次只启动一个 QMT 剪贴板策略；中转脚本通过 Windows 会话内互斥对象限制为一个进程。即使此前已部署手动 MVP，也必须用新版源码更新 QMT，旧版不支持账户/行情查询，自动模式会拒绝运行。
 
@@ -77,7 +78,7 @@ py clipboard_relay.py auto --bridge-root D:\qmt_bridge --timeout 30
 - 14:55–14:57:05 卖出；14:57:05–14:59 买入。实际发送可能晚一个轮询/通信周期。买入前重新查询券商可用资金，卖单状态不明时不买；已接受但未成交的卖单不预支回款，按实际现金缩量。
 - 限价沿用原 0.2% 偏移及分档取整，夹到可用涨跌停；行情须是当日且不旧于 180 秒。目标金额按现价定量后，再按限价预算上限、可用资金和手续费缩量，避免超预算导致 Mac 拒绝导入。单批次内预留资金，买入按整百股，科创板最低 200 股；卖出检查实际可卖数量及零股清仓。
 - 手续费预留按现有账户配置：佣金 0.0000854、最低 5 元、过户费 0.00001（定量时所有股票保守预留）。实际记账仍由 Mac 的费用配置计算。
-- 中转每次收到响应都保存本地结果/日志，并同步到共享目录 `logs/clipboard/`。整批均确认终态后发布 `outbound/fills_<batch>.jsonl/.done`；未成交/过期也有明确回执。17:00 发布 `outbound/account_<batch>.jsonl/.done`，17:01 退出。
+- 中转每次收到响应都保存本地结果/日志，并同步到共享目录 `logs/clipboard/`。已确认终态先发布编号部分回执，整批均确认终态后发布 `outbound/fills_<batch>.jsonl/.done`。Top5 在17:00核对委托、成交和持仓一致后，可将当日零成交已报单记为EXPIRED（当日未成交），矛盾则待核对；详见新版部署说明。17:00 发布 `outbound/account_<batch>.jsonl/.done`，17:01 退出。
 - Mac 20:00 原调度自动导入这些旧格式回执和账户快照、更新持仓，再产生下一交易日信号。活跃部分成交或 UNKNOWN 不会伪造成终态；未确认完毕时中转返回非零。
 
 当前自动模式支持现有全 A 池的沪深 A 股及 `CLOSE_AUCTION_LIMIT`，不包含北交所、盘后固定价格和多批次优选。一天同策略存在多个 `.done` 时拒绝执行，需核对重复发布。

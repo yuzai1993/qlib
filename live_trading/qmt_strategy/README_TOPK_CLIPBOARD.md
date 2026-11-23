@@ -1,6 +1,6 @@
 # 10/30 新版 Top5 剪贴板部署
 
-本说明用于 `alla_v2_top5d1f100_postclose_real`：v2 五种子模型，Topk5/drop1/hold1/跌出前100强卖，risk=1.0。QMT 与 relay 必须一起更新。当前 QMT 的 `source_version` 为 `2026-11-20-order-date-v1`，relay 为 `2026-11-20-reconciled-prior-orders-v2`，能力包含 `snapshot-v1,topk-cash-v1`。
+本说明用于 `alla_v2_top5d1f100_postclose_real`：v2 五种子模型，Topk5/drop1/hold1/跌出前100强卖，risk=1.0。QMT 与 relay 必须一起更新。当前版本为 QMT `2026-11-20-postclose-evidence-v1`、relay `2026-11-23-cleared-remark-v1`，能力包含 `snapshot-v1,topk-cash-v1,day-close-v1`；部署后须核对实际响应版本，不能以磁盘源码代替运行版本。
 
 2026-11-09 外部 relay 修复版为 `2026-11-09-quote-retry-v1`，更新 `clipboard_auto.py` 和 `clipboard_relay.py`；本次无需修改 QMT 编辑器源码。操作者提供的计划任务 Action 已确认实际运行目录为 `D:\qmt_bridge\strategy\bt_v5_clipboard_20261030`，下文独立目录安装示例不是这台机器的当前路径。更新必须以任务的 `Actions` 为准。
 
@@ -18,7 +18,7 @@ SSH 会话处于非交互会话，不能直接用于 QMT 剪贴板通信；relay
 
 QMT 重启重连后，券商仍可能回推前一日的零成交委托为“已报”。快照保留所有原始活动委托，并透传 `m_strInsertDate`、`m_strInsertTime` 为 `insert_date`、`insert_time`；relay 支持 `HHMMSS` 和 `HH:MM:SS` 两种时间表示，快照保留原值。仅凭重启或状态码不能判断它是今日挂单；委托字段定义见 [QMT 官方数据结构](https://dict.thinktrader.net/innerApi/data_structure.html)。
 
-relay 只识别已明确核销的前日记录：委托日期早于执行日、提交时间在09:15～15:00内、零成交；同账号同策略的前日 journal 已导出回执及快照，且含 `operator_confirmed_day_order_expiry` 审计；原始父单、券商子单、人工确认清单及归档 `EXPIRED` 回执的编号、股票、方向和数量一致，回执完成标志与SHA-256有效。缺少证据、日期不明、隔夜提交、成交量变化及今日未知挂单仍阻止交易。回执按当前桥根下的 `archive/fills_<batch_id>.jsonl` 查找，不能删除这些运行证据来“清理缓存”。
+relay 只识别已明确结案的前日记录：委托日期早于执行日、提交时间在09:15～15:00内、零成交；同账号同策略的前日 journal 已导出回执及快照，且含人工确认 `operator_confirmed_day_order_expiry` 或自动核对 `verified_postclose_day_order_expiry` 审计，结案时间不得早于原交易日17点。原始父单、券商子单、确认清单及归档 `EXPIRED` 回执的编号、股票、方向和数量必须一致，回执完成标志与SHA-256有效；自动核对还须能从保存的基线与盘后快照复算，当前活动委托与已核对原记录一致。缺少证据、日期不明、隔夜提交、成交量变化及今日未知挂单仍阻止交易。回执按当前桥根下的 `archive/fills_<batch_id>.jsonl` 查找，不能删除这些运行证据来“清理缓存”。
 
 `auto --check` 的 `working_orders` 继续显示原始委托，`reconciled_prior_orders` 单独列出通过上述核验的旧记录；正式执行也使用相同门禁。该处理不改写券商状态，不重放昨日订单，不以券商资金快照覆盖账本现金。本次运行核验保存在 `live_trading/logs/qmt_refresh_20261120.json`。
 
@@ -90,7 +90,7 @@ Set-Location $target
 py --version
 ```
 
-包内四个运行文件必须来自同一版：`qmt_clipboard.py`、`clipboard_relay.py`、`clipboard_auto.py`、`install_clipboard_task.ps1`。外部relay使用普通Windows Python3.8+，只依赖标准库，无需安装Qlib。`D:\qmt_bridge`是共享根，Mac对应 `/Volumes/qmt_bridge`；它不是安装目录。首次安装使用新的 `D:\qmt_clipboard_top5`，保留旧目录作审计；后续更新继续用这个新目录，保留它自己的state，不能每天换目录来重跑。
+包内五个运行文件必须来自同一版：`qmt_clipboard.py`、`clipboard_relay.py`、`clipboard_auto.py`、`clipboard_settlement.py`、`install_clipboard_task.ps1`。外部relay使用普通Windows Python3.8+，只依赖标准库，无需安装Qlib。`D:\qmt_bridge`是共享根，Mac对应 `/Volumes/qmt_bridge`；它不是安装目录。首次安装使用新的 `D:\qmt_clipboard_top5`，保留旧目录作审计；后续更新继续用这个新目录，保留它自己的state，不能每天换目录来重跑。
 
 ## 2. 更新QMT内置策略
 
@@ -111,7 +111,7 @@ py .\clipboard_relay.py status --timeout 30 --output-dir .\output
 输出应为 `no orders`，并明确包含：
 
 ```text
-source_version=2026-11-20-order-date-v1 capabilities=snapshot-v1,topk-cash-v1
+source_version=2026-11-20-postclose-evidence-v1 capabilities=snapshot-v1,topk-cash-v1,day-close-v1
 ```
 
 再检查今天的共享信号及账户：
@@ -144,6 +144,20 @@ Start-ScheduledTask -TaskName QlibClipboardRelayTop5
 启动auto后将按时间处理当天有效批次：卖单14:55后，买单14:57:05后，14:59停止新增买入请求，17:00导出账户快照，17:01退出。买入等待全部卖单终态；部分卖出剩余持仓仍占名额，其他活动委托阻止买入。新协议冻结候选和预算，失败候选的份额保留现金，重启沿用原请求。策略满仓上限5只，实际建仓可能因整手、费用或不可成交而少于5只。
 
 ## 5. 日志、回执与Mac后续导入
+
+### 17点核对与独立回执（2026-11-20）
+
+已确认终态逐笔导出为不可变的 `fills_<batch>_partial_<序号>_<摘要>.jsonl/.done`，不再因另一笔“已报、零成交”阻塞。全部结案后生成原路径 `fills_<batch>.jsonl/.done`，Mac 先导入同批按序编号的部分回执、再导入最终回执，累计成交量、金额和费用幂等。成交金额使用独立 DEAL 明细求和，避免原始委托均价截断。DEAL 查询缺失或冲突时，相应成交继续待核对，不把空查询当成零成交。
+
+首笔持久化交易请求前保存持仓和逐笔成交基线。17:00 后重新核对同账号、同日、同会话的委托、全部新增成交与完整持仓；新增成交必须匹配本批次，基线持仓加减成交量必须等于盘后持仓。证据一致的正常时段当日零成交“已报”单记为 `EXPIRED`，message 标明“当日未成交”；部分成交未终态、UNKNOWN、额外手工交易、缺失基线或持仓矛盾均保留待核对。原始 QMT 状态不改写，也不伪造撤单。
+
+最终回执落盘后，relay 发送不下单的 `close_day` 确认。QMT 仅在原始委托仍完全一致时允许下一日轮换会话；后续成交变化会使确认失效。journal 保存基线、盘后证据、回执摘要和确认请求，不得删除以重新执行。`postclose_reconcile_error`、`receipt_reconcile_error` 在 journal 与 `automation.status.json` 中解释待核对原因。自动结案需要本次新增的 `clipboard_settlement.py`；历史 journal 缺少基线时不自动补造。
+
+11月20日实际批次已按三笔真实成交和一笔用户确认的未成交补齐4笔回执，并重建账本、日报和下一交易日计划。原11月23日001批次已隔离并标记被002替代，具体买量仍由原执行窗口核算。委托、持仓和现金明细保存在本机审计 `live_trading/logs/reconciliation_20261120.json`。
+
+11月20日晚，1638项实盘模块测试通过，Windows包已部署并完成语法与摘要检查；当时因QMT维护暂缓编辑器更新。已有交易的journal必须保留，不可清除后重绑会话。临时验收任务已撤除，正式计划任务保持原设置。
+
+11月23日维护后，先按用户确认结案一笔未成交委托，补齐当日3笔最终回执（另两笔成交已由部分回执导入）；现金和持仓未重复更新。用户随后加载新QMT源码，真实poll/snapshot验证上述版本及DEAL能力通过，持仓与账本一致，独立成交明细确认两笔成交及一笔零成交。重连会清空券商缓存的remark：外部relay仅对空串作单向兼容，不同非空备注仍拒绝；自动结案其余保存字段逐项相同，人工结案的账号、委托号、日期、数量、零成交、status50及归档摘要检查不变。261项相关回归通过。11月24日计划从当前账本重算一致，使用新快照离线重放旧委托门禁通过，不替代执行窗口的报价与资金检查。验收无交易请求，保留所有原journal和委托号；审计为 `live_trading/logs/qmt_acceptance_20261123.json` 和 `live_trading/logs/reconciliation_20261123.json`。
 
 查看 `D:\qmt_clipboard_top5\output\automation.status.json`、该目录下的会话result/log及 `output\state`。共享副本在 `D:\qmt_bridge\logs\clipboard`，终态回执和账户快照在 `D:\qmt_bridge\outbound`。`COMPLETE`表示回执与快照导出完成，不表示全部买单成交；逐笔核对实际状态和成交量。
 

@@ -11,6 +11,7 @@ import json
 import logging
 import math
 import os
+import re
 import sqlite3
 from datetime import datetime
 from contextlib import contextmanager
@@ -3121,6 +3122,14 @@ class LiveRecorder:
             return {r["stock_code"]: r["market_value"] for r in rows}
 
 
+def _fill_receipt_order(path: Path) -> tuple:
+    """Keep batch order and apply numbered progress receipts before their final."""
+    partial = re.fullmatch(r"(fills_.+)_partial_([0-9]+)_[0-9a-f]{16}", path.stem)
+    if partial:
+        return partial[1] + path.suffix, 0, int(partial[2]), path.name
+    return path.name, 1, 0, path.name
+
+
 class FillImporter:
     """扫描共享目录 outbound/，导入回执并归档。"""
 
@@ -3150,7 +3159,7 @@ class FillImporter:
             return 0
 
         count = 0
-        for done_path in sorted(self.outbound.glob("fills_*.done")):
+        for done_path in sorted(self.outbound.glob("fills_*.done"), key=_fill_receipt_order):
             jsonl_path = done_path.with_suffix(".jsonl")
             if not jsonl_path.exists():
                 logger.warning("done without jsonl: %s", done_path)

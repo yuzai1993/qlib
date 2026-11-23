@@ -68,7 +68,7 @@ def exchange(clipboard, request, timeout=10, interval=1, clock=time.monotonic, s
     )
     if clipboard_error:
         message += "; last clipboard error: " + clipboard_error
-    if request.get("type") in ("poll", "snapshot"):
+    if request.get("type") in ("poll", "snapshot", "close_day"):
         message += "; read-only request; no order was submitted by this request"
     else:
         message += "; trade outcome unknown; do not retry with a new order ID"
@@ -155,6 +155,7 @@ def _show(response, output_dir):
 def run_automatic(args, clipboard, now=None, sleep=time.sleep):
     import hashlib
     import clipboard_auto
+    import clipboard_settlement
     from clipboard_auto import AutoRelay, atomic_write
 
     now = now or (lambda: dt.datetime.now(SHANGHAI))
@@ -163,7 +164,8 @@ def run_automatic(args, clipboard, now=None, sleep=time.sleep):
     state = Path(args.state_dir).resolve() if args.state_dir else output / "state"
     if not root.is_dir() or not (root / "inbox").is_dir():
         raise ValueError("bridge-root must be the existing Windows shared directory containing inbox")
-    sources = [Path(__file__).resolve(), Path(clipboard_auto.__file__).resolve()]
+    sources = [Path(__file__).resolve(), Path(clipboard_auto.__file__).resolve(),
+               Path(clipboard_settlement.__file__).resolve()]
     runtime = dict(relay_version=clipboard_auto.RELAY_SOURCE_VERSION,
                    relay_script=str(sources[0]), automation_script=str(sources[1]),
                    sha256={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources})
@@ -224,6 +226,8 @@ def run_automatic(args, clipboard, now=None, sleep=time.sleep):
             runtime=runtime,
             quote_diagnostics=runner.journal.get("quote_diagnostics", {}) if runner.journal else {},
             quote_retry_errors=runner.journal.get("phases", {}).get("SELL", {}).get("quote_errors", {}) if runner.journal else {},
+            postclose_reconcile_error=runner.journal.get("postclose_reconcile_error", "") if runner.journal else "",
+            receipt_reconcile_error=runner.journal.get("receipt_reconcile_error", "") if runner.journal else "",
         )
         atomic_write(status_file, dumps(payload) + "\n")
         atomic_write(root / "logs" / "clipboard" / (runner.day + "_automation.status.json"), dumps(payload) + "\n")

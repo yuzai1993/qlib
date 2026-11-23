@@ -1063,6 +1063,45 @@ def test_reimport_is_idempotent(env):
     assert recorder.get_positions()["600000.SH"]["shares"] == 500
 
 
+def test_sequenced_partial_receipts_import_before_corrected_final(env):
+    bridge_root, recorder, importer = env
+    recorder.set_cash(100000.0)
+    partial = _fill(side="BUY", stock_code="600000.SH", price=10.450)
+    _record_plan(recorder, [dict(partial, target_value=9000.0)])
+    final = dict(partial, avg_price=10.45125)
+    _write_fills(bridge_root, [final])
+    _write_fills(bridge_root, [dict(partial, avg_price=10.4505)], BATCH_ID + "_partial_000002_0000000000000000")
+    _write_fills(bridge_root, [partial], BATCH_ID + "_partial_000001_ffffffffffffffff")
+
+    assert importer.import_fills() == 3
+    fee = order_total_fee("BUY", 8361.0, DEFAULT_FEES, "600000.SH")
+    assert recorder.get_cash() == pytest.approx(100000.0 - 8361.0 - fee)
+    assert recorder.get_positions()["600000.SH"]["shares"] == 800
+    assert recorder.get_fills(BATCH_ID)[0]["applied_amount"] == pytest.approx(8361.0)
+
+    before = recorder.get_cash(), recorder.get_positions(), recorder.get_fills(BATCH_ID)
+    _write_fills(bridge_root, [final])
+    assert importer.import_fills() == 1
+    assert (recorder.get_cash(), recorder.get_positions(), recorder.get_fills(BATCH_ID)) == before
+
+
+def test_receipts_preserve_batch_order_before_applying_later_sell(env):
+    bridge_root, recorder, importer = env
+    later_batch = "20260715_csi300_topk10_001"
+    sell = _fill(stock_code="600000.SH", batch_id=later_batch)
+    sell["ts"] = "2026-07-15T15:00:00+08:00"
+    _record_plan(recorder, [sell], batch_id=later_batch, trade_date="2026-07-15")
+    _write_fills(bridge_root, [sell], later_batch)
+
+    buy = _fill(side="BUY", stock_code="600000.SH", status="PARTIAL", filled=400)
+    _record_plan(recorder, [buy])
+    _write_fills(bridge_root, [buy], BATCH_ID + "_partial_000001_ffffffffffffffff")
+    _write_fills(bridge_root, [dict(buy, status="FILLED", filled_qty=800)])
+
+    assert importer.import_fills() == 3
+    assert recorder.get_positions() == {}
+
+
 def test_non_terminal_and_rejected_do_not_change_positions(env):
     bridge_root, recorder, importer = env
     recorder.upsert_position("000001.SZ", 800, 10.0)

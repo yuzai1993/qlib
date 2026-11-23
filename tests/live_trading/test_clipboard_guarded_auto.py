@@ -174,7 +174,7 @@ def test_guarded_clock_check_reports_quote_age_without_any_trade(auto, tmp_path)
     report = w.runner.check()
     assert report["quote_diagnostics"]["301165.SZ"]["status"] == "FUTURE"
     assert report["quote_diagnostics"]["301165.SZ"]["age_seconds"] == -8
-    assert report["relay_version"] == "2026-11-20-reconciled-prior-orders-v2"
+    assert report["relay_version"] == "2026-11-23-cleared-remark-v1"
     assert not w.broker.submissions
 
 
@@ -676,7 +676,7 @@ def test_guarded_fills_and_skips_import_into_mac_ledger(auto, tmp_path):
     w.at("17:00:00")
     w.runner.step()
     importer = FillImporter(tmp_path, recorder)
-    assert importer.import_fills() == 5
+    assert importer.import_fills() == 6  # Early skipped candidate plus all five final results.
     assert importer.import_broker_snapshots() == 1
     assert set(recorder.get_positions()) == set(BUY_CODES[1:])
     assert recorder.get_cash() == pytest.approx(52201.07616, abs=0.01)

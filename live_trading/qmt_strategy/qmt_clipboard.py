@@ -20,7 +20,7 @@ from collections import OrderedDict, deque
 ACCOUNT_ID = ""
 STRATEGY_NAME = "qlib_clipboard"
 PROTOCOL = "qlib-clipboard-v1"
-SOURCE_VERSION = "2026-11-20-order-date-v1"
+SOURCE_VERSION = "2026-11-20-postclose-evidence-v1"
 MAX_REQUEST_CHARS = 262144
 MAX_TEXT_CHARS = 1024 * 1024  # Responses include the whole 200-order session.
 MAX_ORDERS = 40
@@ -197,6 +197,7 @@ class Engine:
         self.logs = deque(maxlen=100)
         self.sequence = 0
         self.query_error = ""
+        self.closed_fingerprint = None
         self.log("INFO", "started; orders are not restored after restart")
 
     def log(self, level, message):
@@ -327,16 +328,49 @@ class Engine:
                 self.log("ERROR", "query failed: " + error)
             self.query_error = error
 
+    def _order_evidence(self):
+        result = []
+        for state in self.orders.values():
+            item = dict(state["order"])
+            item.update({key: state[key] for key in ("status", "filled_quantity", "average_price", "error", "remark")})
+            item["broker_orders"] = list(state["broker_orders"].values())
+            result.append(item)
+        return result
+
+    def _day_closed(self):
+        return bool(not self.query_error and self.closed_fingerprint
+                    and self.closed_fingerprint == dumps(self._order_evidence()))
+
+    def _acknowledge_close(self, request):
+        """Acknowledge the relay's verified close, without rewriting broker states."""
+        now = self.now().astimezone(SHANGHAI)
+        if now.date().isoformat() != self.day or now.strftime("%H:%M:%S") < "17:00:00":
+            raise ValueError("day closure requires the same day after 17:00")
+        self._refresh()
+        evidence = self._order_evidence()
+        if self.query_error or request.get("orders") != evidence:
+            raise ValueError("day closure evidence differs from current broker orders")
+        for order in evidence:
+            if order["status"] in TERMINAL:
+                continue
+            children = order["broker_orders"]
+            if (order["status"] != "ACCEPTED" or order["filled_quantity"] != 0 or len(children) != 1
+                    or children[0]["status"] != 50 or children[0]["filled_quantity"] != 0
+                    or children[0]["quantity"] != order["quantity"] or not children[0]["broker_order_id"]):
+                raise ValueError("day closure contains unresolved or changed broker evidence")
+        self.closed_fingerprint = dumps(evidence)
+
     def handle(self, request):
         error = ""
         observation = None
         try:
-            if request.get("protocol") != PROTOCOL or request.get("type") not in ("trade", "poll", "snapshot"):
+            if request.get("protocol") != PROTOCOL or request.get("type") not in ("trade", "poll", "snapshot", "close_day"):
                 raise ValueError("unsupported protocol or request type")
             _identifier(request.get("request_id"), "request_id")
             today = self.now().astimezone(SHANGHAI).date().isoformat()
             if request["type"] == "poll" and not request.get("session") and today != self.day:
-                if all(item["status"] in TERMINAL for item in self.orders.values()):
+                self._refresh()  # A late broker change invalidates an earlier close acknowledgement.
+                if not self.query_error and (all(item["status"] in TERMINAL for item in self.orders.values()) or self._day_closed()):
                     self.orders.clear()
                     self.requests.clear()
                     self.logs.clear()
@@ -344,6 +378,7 @@ class Engine:
                     self.session = uuid.uuid4().hex
                     self.day = today
                     self.query_error = ""
+                    self.closed_fingerprint = None
                     self.log("INFO", "new trading day; settled session rotated")
             session = request.get("session")
             if session != self.session and not (request["type"] == "poll" and not session):
@@ -363,16 +398,13 @@ class Engine:
                 if self.snapshot is None:
                     raise ValueError("snapshot API unavailable; update QMT strategy")
                 observation = self.snapshot(symbols)
+            elif request["type"] == "close_day":
+                self._acknowledge_close(request)
             self._refresh()
         except Exception as exc:
             error = str(exc)[:300]
             self.log("ERROR", error)
-        snapshot = []
-        for state in self.orders.values():
-            item = dict(state["order"])
-            item.update({key: state[key] for key in ("status", "filled_quantity", "average_price", "error", "remark")})
-            item["broker_orders"] = list(state["broker_orders"].values())
-            snapshot.append(item)
+        snapshot = self._order_evidence()
         return dict(
             protocol=PROTOCOL,
             type="response",
@@ -386,6 +418,7 @@ class Engine:
             error=error,
             ts=self.now().isoformat(),
             query_error=self.query_error,
+            day_closed=self._day_closed(),
             orders=snapshot,
             logs=list(self.logs),
         )
@@ -549,6 +582,32 @@ class QmtBroker:
                 # An unavailable candidate keeps its allocation idle; account,
                 # positions and working orders above still require full evidence.
                 continue
+        # Independent fills are required for post-close expiry. Failure here
+        # must not silently turn an incomplete query into an empty deal list.
+        deals, deals_error = [], ""
+        try:
+            raw_deals = get_trade_detail_data(self.account, "STOCK", "DEAL")  # noqa: F821
+            if not isinstance(raw_deals, (list, tuple)):
+                raise ValueError("DEAL query returned no usable list")
+            for item in raw_deals:
+                broker_id = getattr(item, "m_strOrderSysID", None)
+                trade_id = getattr(item, "m_strTradeID", None)
+                trade_date = getattr(item, "m_strTradeDate", None)
+                trade_time = getattr(item, "m_strTradeTime", None)
+                offset = getattr(item, "m_nOffsetFlag", None)
+                price, amount = number(item, "m_dPrice"), number(item, "m_dTradeAmount")
+                if (not all(isinstance(value, str) and value for value in
+                            (broker_id, trade_id, trade_date, trade_time))
+                        or type(offset) is not int or offset not in (48, 49)
+                        or price is None or price <= 0 or amount is None or amount <= 0
+                        or getattr(item, "m_strAccountID", self.account) != self.account):
+                    raise ValueError("invalid DEAL evidence")
+                deals.append(dict(broker_order_id=broker_id, trade_id=trade_id,
+                                  stock_code=symbol(item), side="BUY" if offset == 48 else "SELL",
+                                  quantity=integer(item, "m_nVolume", "DEAL quantity", minimum=1),
+                                  price=price, amount=amount, trade_date=trade_date, trade_time=trade_time))
+        except Exception as exc:
+            deals, deals_error = None, ("DEAL query: " + str(exc))[:300]
         return dict(
             account=dict(
                 account_id=identity,
@@ -559,6 +618,8 @@ class QmtBroker:
             ),
             positions=positions,
             working_orders=working_orders,
+            deals=deals,
+            deals_error=deals_error,
             quotes=quotes,
         )
 
@@ -589,7 +650,7 @@ class Runtime:
             if (
                 not isinstance(request, dict)
                 or request.get("protocol") != PROTOCOL
-                or request.get("type") not in ("trade", "poll", "snapshot")
+                or request.get("type") not in ("trade", "poll", "snapshot", "close_day")
             ):
                 return
             if request["type"] not in self.announced_types:
@@ -626,7 +687,7 @@ def init(ContextInfo):
     ContextInfo.set_account(ACCOUNT_ID)
     broker = QmtBroker(ContextInfo, ACCOUNT_ID)
     runtime = Runtime(Clipboard(), Engine(
-        broker.submit, broker.query, snapshot=broker.snapshot, capabilities=["topk-cash-v1"],
+        broker.submit, broker.query, snapshot=broker.snapshot, capabilities=["topk-cash-v1", "day-close-v1"],
     ))
     first = datetime.datetime.now() + datetime.timedelta(seconds=1)
     # Install before registration, since some QMT versions call overdue timers inline.
@@ -642,7 +703,7 @@ def init(ContextInfo):
         _runtime = None
         raise
     print("[qlib_clipboard] ready session=" + runtime.engine.session
-          + " capabilities=snapshot-v1,topk-cash-v1 diagnostics=1 source_version=" + SOURCE_VERSION)
+          + " capabilities=snapshot-v1,topk-cash-v1,day-close-v1 diagnostics=1 source_version=" + SOURCE_VERSION)
 
 
 def timer_callback(ContextInfo):

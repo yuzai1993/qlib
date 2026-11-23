@@ -12,7 +12,7 @@ if ((Get-TimeZone).Id -ne 'China Standard Time') {
 if (!(Test-Path -LiteralPath (Join-Path $BridgeRoot 'inbox') -PathType Container)) {
     throw 'BridgeRoot must be the Windows shared directory containing inbox.'
 }
-foreach ($file in @('qmt_clipboard.py', 'clipboard_relay.py', 'clipboard_auto.py')) {
+foreach ($file in @('qmt_clipboard.py', 'clipboard_relay.py', 'clipboard_auto.py', 'clipboard_settlement.py')) {
     if (!(Test-Path -LiteralPath (Join-Path $PSScriptRoot $file) -PathType Leaf)) {
         throw "Missing deployment file: $file"
     }

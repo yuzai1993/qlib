@@ -10,9 +10,10 @@ import uuid
 from pathlib import Path
 
 from qmt_clipboard import MAX_REQUEST_CHARS, PROTOCOL, SHANGHAI, TERMINAL, _identifier, dumps
+from clipboard_settlement import confirmed_fill_prices, reconcile_day_orders
 
 GUARDED_TOPK_PRICE_TYPE = "CLOSE_AUCTION_TOPK_CASH_V1"
-RELAY_SOURCE_VERSION = "2026-11-20-reconciled-prior-orders-v2"
+RELAY_SOURCE_VERSION = "2026-11-23-cleared-remark-v1"
 
 
 class QuoteUnavailable(ValueError):
@@ -304,7 +305,11 @@ class AutoRelay:
         elif batch:
             for path in self.state_dir.glob("????-??-??_" + self.strategy + ".json"):
                 previous = json.loads(path.read_text(encoding="utf-8"))
-                if previous["day"] < self.day and not previous["exported"]:
+                closed = previous.get("day_order_reconciliation")
+                unsettled_close = closed and (not closed.get("acknowledged")
+                                              or previous["latest"].get("query_error")
+                                              or previous["latest"]["orders"] != closed["evidence"]["observation"]["orders"])
+                if previous["day"] < self.day and (not previous["exported"] or unsettled_close):
                     raise RuntimeError("previous day has unresolved journal: " + path.name)
             self.journal = dict(
                 day=self.day,
@@ -399,26 +404,53 @@ class AutoRelay:
             dt.datetime.strptime(time, "%H:%M:%S")
             path = self.state_dir / (day + "_" + self.strategy + ".json")
             previous = json.loads(path.read_text(encoding="utf-8"))
-            meta = previous["operator_reconciliation"]
+            automatic = "day_order_reconciliation" in previous
+            meta = previous["day_order_reconciliation" if automatic else "operator_reconciliation"]
             header = previous["batch"]["header"]
             batch_id = _identifier(header["batch_id"], "batch_id")
             closed_at = dt.datetime.fromisoformat(meta["at"])
             # The operator's display snapshot may be redacted. Account identity
             # must come from the original durable execution budget observation.
-            prior_account = previous["phases"]["BUY"]["cash_plan"]["snapshot"]["account"]["account_id"]
+            prior_snapshot = (previous["settlement_baseline"]["snapshot"] if automatic else
+                              previous["phases"]["BUY"]["cash_plan"]["snapshot"])
+            prior_account = prior_snapshot["account"]["account_id"]
+            earliest_close = dt.datetime.fromisoformat(day + "T17:00:00+08:00")
             if (previous["day"] != day or previous["strategy"] != self.strategy
                     or previous["exported"] is not True or previous["snapshot_exported"] is not True
                     or header["trade_date"] != day or header["strategy_id"] != self.strategy
                     or header["account_type"] != "STOCK" or header.get("mode", "LIVE") not in ("", "LIVE")
                     or not batch_id.startswith(date + "_" + self.strategy + "_")
-                    or meta["method"] != "operator_confirmed_day_order_expiry"
+                    or meta["method"] != ("verified_postclose_day_order_expiry" if automatic else
+                                          "operator_confirmed_day_order_expiry")
                     or not account_id or prior_account != account_id
                     or closed_at.tzinfo is None or closed_at > self.now().astimezone(SHANGHAI)
-                    or closed_at.astimezone(SHANGHAI).date().isoformat() <= day):
+                    or closed_at < earliest_close):
                 return False
+            if automatic:
+                proof = meta["evidence"]
+                checked = reconcile_day_orders(previous, proof["observation"], closed_at,
+                                               ignored_prior_orders=proof["ignored_prior_orders"])
+                if (checked["zero_fill_orders"] != meta["zero_fill_orders"]
+                        or checked["exact_fills"] != meta["exact_fills"]
+                        or previous["latest"]["orders"] != proof["observation"]["orders"]):
+                    return False
+                prior_working = [item for item in proof["observation"]["snapshot"]["working_orders"]
+                                 if item["broker_order_id"] == active["broker_order_id"]]
+                current_raw = dict(active, insert_time=active["insert_time"].replace(":", ""))
+                if len(prior_working) != 1:
+                    return False
+                prior_raw = dict(prior_working[0], insert_time=prior_working[0]["insert_time"].replace(":", ""))
+                # QMT reconnect can clear its client remark. The broker ID and
+                # all other saved order facts still have to match exactly.
+                if current_raw.get("remark") == "":
+                    prior_raw["remark"] = ""
+                if prior_raw != current_raw:
+                    return False
             evidence = dict(broker_order_id=active["broker_order_id"], stock_code=active["stock_code"],
                             quantity=active["quantity"], filled_quantity=0, terminal_status="EXPIRED")
-            if meta["zero_fill_orders"].count(evidence) != 1:
+            matches = [item for item in meta["zero_fill_orders"]
+                       if all(item.get(key) == value for key, value in evidence.items())]
+            if len(matches) != 1:
                 return False
             # Use the local bridge root, not the Mac absolute path in the audit.
             receipt = self.root / "archive" / ("fills_" + batch_id + ".jsonl")
@@ -449,7 +481,9 @@ class AutoRelay:
                 return False
             child = parent["broker_orders"][0]
             return (child["broker_order_id"] == active["broker_order_id"]
-                    and child["quantity"] == active["quantity"] and child["filled_quantity"] == 0)
+                    and child["quantity"] == active["quantity"] and child["filled_quantity"] == 0
+                    and child["status"] == active["status"] == 50
+                    and (active["remark"] == "" or parent.get("remark", active["remark"]) == active["remark"]))
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             # Missing, corrupt or incompatible evidence retains the normal block.
             return False
@@ -495,6 +529,8 @@ class AutoRelay:
             raise RuntimeError(observation["query_error"])
         guarded_snapshot(observation.get("snapshot"))
         self.working_orders_clear(observation["snapshot"], allow_sells=allow_sells)
+        if not self.has_requests() and "settlement_baseline" not in self.journal:
+            self.journal["settlement_baseline"] = dict(snapshot=observation["snapshot"], ts=observation["ts"])
         observed_at = self.now().astimezone(SHANGHAI)
         diagnostics = self.journal.setdefault("quote_diagnostics", {})
         for symbol in symbols:
@@ -753,10 +789,64 @@ class AutoRelay:
                         buy["skipped"].append(skipped)
             self.save()
         self.export_fills()
-        if now.strftime("%H:%M:%S") >= "17:00:00" and not self.journal["snapshot_exported"]:
-            observed = self.guarded_observation([])
-            self.export_account(observed["snapshot"], observed["ts"])
+        if now.strftime("%H:%M:%S") >= "17:00:00":
+            self.postclose()
         return self.journal["latest"]
+
+    def closure_matches(self):
+        meta = self.journal.get("day_order_reconciliation")
+        return not meta or (not self.journal["latest"].get("query_error")
+                            and self.journal["latest"]["orders"] == meta["evidence"]["observation"]["orders"])
+
+    def postclose(self):
+        """Reconcile all account evidence before overlaying expiry; never rewrite raw orders."""
+        state = self.journal
+        meta = state.get("day_order_reconciliation")
+        if not self.closure_matches():
+            state["postclose_reconcile_error"] = "ORDER evidence changed after day-order reconciliation"
+            self.save()
+            return
+        if state["snapshot_exported"] and state["exported"] and (not meta or meta.get("acknowledged")):
+            return
+        try:
+            observed = self.call(self.request("snapshot", symbols=[]))
+            if observed.get("query_error"):
+                raise ValueError(observed["query_error"])
+            guarded_snapshot(observed.get("snapshot"))
+            if not state["snapshot_exported"]:
+                self.export_account(observed["snapshot"], observed["ts"])
+            if state["exported"] and not meta:
+                return
+            if "day-close-v1" not in observed.get("capabilities", []):
+                raise ValueError("update QMT strategy: day-close-v1 capability missing")
+            ignored = self.working_orders_clear(observed["snapshot"], allow_sells=True)
+            now = self.now().astimezone(SHANGHAI)
+            result = reconcile_day_orders(state, observed, now, ignored_prior_orders=ignored)
+            if not result["zero_fill_orders"]:
+                raise ValueError("no verified zero-fill day orders to close")
+            if meta is None:
+                meta = dict(method="verified_postclose_day_order_expiry", at=now.isoformat(),
+                            evidence=dict(observation=observed, ignored_prior_orders=ignored),
+                            acknowledged=False, **result)
+                state["day_order_reconciliation"] = meta
+                self.save()
+            elif (result["zero_fill_orders"] != meta["zero_fill_orders"]
+                  or result["exact_fills"] != meta["exact_fills"] or not self.closure_matches()):
+                raise ValueError("postclose evidence changed before close acknowledgment")
+            self.export_fills()
+            if not state["exported"]:
+                raise ValueError("final receipt not durably published")
+            if "request" not in meta:
+                meta["request"] = self.request("close_day", orders=meta["evidence"]["observation"]["orders"])
+                self.save()
+            reply = self.call(meta["request"])
+            if reply.get("day_closed") is not True or not self.closure_matches():
+                raise ValueError("QMT did not acknowledge reconciled day closure")
+            meta["acknowledged"] = True
+            state.pop("postclose_reconcile_error", None)
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
+            state["postclose_reconcile_error"] = str(exc)
+        self.save()
 
     def step(self):
         now = self.now().astimezone(SHANGHAI)
@@ -828,28 +918,84 @@ class AutoRelay:
             self.export_account(observed["snapshot"], observed["ts"])
         return self.journal["latest"]
 
-    def publish(self, prefix, rows):
+    def publish(self, prefix, rows, suffix=""):
         batch_id = self.journal["batch"]["header"]["batch_id"]
-        path = self.root / "outbound" / (prefix + "_" + batch_id + ".jsonl")
-        atomic_write(path, "".join(dumps(row) + "\n" for row in rows))
+        path = self.root / "outbound" / (prefix + "_" + batch_id + suffix + ".jsonl")
+        wire = "".join(dumps(row) + "\n" for row in rows)
+        if prefix == "fills":
+            archived = self.root / "archive" / path.name
+            if archived.exists():
+                if archived.read_text(encoding="utf-8") != wire or not archived.with_suffix(".done").exists():
+                    raise ValueError("archived fill receipt differs from durable publication")
+                return
+            if path.with_suffix(".done").exists():
+                if not path.exists() or path.read_text(encoding="utf-8") != wire:
+                    raise ValueError("completed fill receipt differs from durable publication")
+                return
+        atomic_write(path, wire)
         atomic_write(path.with_suffix(".done"), "done\n")
 
     def export_fills(self):
         state = self.journal
         if state["exported"] or len(state["phases"]) != 2 or state["latest"].get("query_error"):
             return
+        if not self.closure_matches():
+            raise ValueError("ORDER evidence changed after day-order reconciliation")
+        publications = state.setdefault("receipt_exports", {})
+        # Complete every persisted intent in order, even if the next poll has
+        # advanced an order. Publication may have crashed after exposing .done.
+        for publication in sorted(publications.values(), key=lambda item: item["sequence"]):
+            if not publication["published"]:
+                self.publish("fills", publication["rows"], suffix=publication["suffix"])
+                publication["published"] = True
+                self.save()
+        prices = {}
+        independent_prices = "day-close-v1" in state["latest"].get("capabilities", [])
+        if independent_prices and any(o["status"] in TERMINAL and o["filled_quantity"]
+                                      for o in state["latest"]["orders"]):
+            observation = state["latest"]
+            if observation.get("snapshot") is None:
+                observation = self.call(self.request("snapshot", symbols=[]))
+            errors = []
+            for parent in observation["orders"]:
+                if parent["status"] not in TERMINAL or not parent["filled_quantity"]:
+                    continue
+                try:
+                    prices.update(confirmed_fill_prices(dict(observation, orders=[parent])))
+                except (ValueError, KeyError, TypeError) as exc:
+                    errors.append(parent["id"] + ": " + str(exc))
+            if errors:
+                state["receipt_reconcile_error"] = "; ".join(errors)
+            else:
+                state.pop("receipt_reconcile_error", None)
+            self.save()
+            if not self.closure_matches():
+                raise ValueError("ORDER evidence changed after day-order reconciliation")
         known = {item["id"]: item for item in state["latest"]["orders"]}
         for phase in state["phases"].values():
             if not phase["acknowledged"]:
                 return
             known.update({item["id"]: item for item in phase["skipped"]})
-        rows = []
+        closure = state.get("day_order_reconciliation", {})
+        for expiry in closure.get("zero_fill_orders", []):
+            original = known[expiry["client_order_id"]]
+            known[expiry["client_order_id"]] = dict(original, status="EXPIRED",
+                                                  error="当日未成交：17点委托、成交及持仓核对一致")
+        rows, all_terminal = [], True
         for order in state["batch"]["orders"]:
             result = known.get(order["client_order_id"])
             if result is None or result["status"] not in TERMINAL + ("SKIPPED",):
-                return
+                all_terminal = False
+                continue
             filled = result["filled_quantity"]
+            if filled and independent_prices and order["client_order_id"] not in prices:
+                all_terminal = False
+                continue
             average = finite(result["average_price"], "fill price")
+            average = prices.get(order["client_order_id"], average)
+            exact = closure.get("exact_fills", {}).get(order["client_order_id"])
+            if exact:
+                average = exact["average_price"]
             if filled and average <= 0:
                 raise ValueError("positive fill has no usable price")
             status = result["status"]
@@ -882,8 +1028,29 @@ class AutoRelay:
                     intended_qty=requested,
                 )
             )
-        self.publish("fills", rows)
-        state["exported"] = True
+        if not rows and not all_terminal:
+            return
+        # Freeze publication bytes before exposing .done. A restart after Mac
+        # archival must use this exact receipt, including its original timestamp.
+        identity = [{key: value for key, value in row.items() if key != "ts"} for row in rows]
+        digest = hashlib.sha256(dumps(identity).encode("utf-8")).hexdigest()
+        key = "final" if all_terminal else digest
+        publication = publications.get(key)
+        if publication is None:
+            sequence = len(publications) + 1
+            publication = dict(rows=rows, suffix="" if all_terminal else "_partial_%06d_%s" % (sequence, digest[:16]),
+                               published=False, fingerprint=digest, sequence=sequence)
+            publications[key] = publication
+            self.save()
+        elif publication["fingerprint"] != digest:
+            raise ValueError("final receipt changed after durable publication intent")
+        if not publication["published"]:
+            self.publish("fills", publication["rows"], suffix=publication["suffix"])
+            publication["published"] = True
+        state["exported"] = all_terminal
+        if all_terminal and closure:
+            wire = "".join(dumps(row) + "\n" for row in publication["rows"])
+            closure["fill_receipt_sha256"] = hashlib.sha256(wire.encode("utf-8")).hexdigest()
         self.save()
 
     def export_account(self, snapshot, stamp):
@@ -895,4 +1062,6 @@ class AutoRelay:
         self.save()
 
     def complete(self):
-        return self.journal is None or (self.journal["exported"] and self.journal["snapshot_exported"])
+        return self.journal is None or (self.journal["exported"] and self.journal["snapshot_exported"]
+                                       and self.closure_matches()
+                                       and self.journal.get("day_order_reconciliation", {}).get("acknowledged", True))

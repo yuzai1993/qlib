@@ -174,3 +174,30 @@ def test_duplicate_old_broker_order_still_blocks(auto, tmp_path):
     with pytest.raises(RuntimeError, match="multiple working broker orders"):
         w.runner.check()
     assert not w.broker.submissions
+
+
+def test_operator_closed_broker_id_survives_qmt_restart_clearing_remark(auto, tmp_path):
+    w, state, _ = prepared_world(auto, tmp_path)
+    previous = json.loads(state.read_text())
+    parent = previous['latest']['orders'][0]
+    parent['remark'] = 'original-client-tag'
+    parent['broker_orders'][0]['remark'] = 'original-client-tag'
+    state.write_text(json.dumps(previous))
+    assert w.foreign[0]['remark'] == ''
+    assert w.runner.check()['reconciled_prior_orders'] == w.foreign
+    w.foreign[0]['remark'] = 'different-nonempty-tag'
+    with pytest.raises(RuntimeError, match='working order'):
+        w.runner.check()
+
+
+@pytest.mark.parametrize('closed_at,accepted', [('16:59:59', False), ('17:00:00', True), ('22:30:00', True)])
+def test_operator_expiry_can_close_on_original_day_after_17(auto, tmp_path, closed_at, accepted):
+    w, state, _ = prepared_world(auto, tmp_path)
+    previous = json.loads(state.read_text())
+    previous['operator_reconciliation']['at'] = '2026-10-26T' + closed_at + '+08:00'
+    state.write_text(json.dumps(previous))
+    if accepted:
+        assert w.runner.check()['reconciled_prior_orders'] == w.foreign
+    else:
+        with pytest.raises(RuntimeError, match='working order'):
+            w.runner.check()

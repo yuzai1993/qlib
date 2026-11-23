@@ -247,7 +247,7 @@ def test_incomplete_or_conflicting_batch_is_not_traded(auto, tmp_path):
     assert not w.broker.submissions
 
 
-def test_unknown_sell_blocks_buy_and_terminal_export(auto, tmp_path):
+def test_unknown_sell_blocks_buy_but_known_expiry_exports_independently(auto, tmp_path):
     signals(tmp_path)
     w = World(auto, tmp_path)
     w.broker.submit_error = RuntimeError("uncertain submit")
@@ -258,7 +258,10 @@ def test_unknown_sell_blocks_buy_and_terminal_export(auto, tmp_path):
     w.at("15:01:00")
     w.runner.step()
     assert len(w.broker.submissions) == 1
-    assert not list((tmp_path / "outbound").glob("fills_*.done"))
+    assert not w.runner.journal["exported"]
+    partial = next((tmp_path / "outbound").glob("fills_*_partial_*.jsonl"))
+    rows = [json.loads(line) for line in partial.read_text().splitlines()]
+    assert len(rows) == 1 and rows[0]["side"] == "BUY" and rows[0]["status"] == "EXPIRED"
 
 
 def test_late_start_expires_instead_of_trading(auto, tmp_path):
@@ -346,7 +349,7 @@ def test_real_publisher_clipboard_and_mac_ledger_roundtrip(auto, tmp_path):
     w.at("17:00:00")
     w.runner.step()
     importer = FillImporter(tmp_path, recorder)
-    assert importer.import_fills() == 2
+    assert importer.import_fills() == 3  # One early sell receipt plus the complete final receipt.
     assert importer.import_broker_snapshots() == 1
     assert "301165.SZ" not in recorder.get_positions()
     assert recorder.get_positions()["300214.SZ"]["shares"] == 4900

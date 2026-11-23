@@ -154,11 +154,12 @@ def test_snapshot_normalizes_qmt_fields(mod, monkeypatch):
     assert data["quotes"]["301165.SZ"] == {"last": 77.0, "timetag": "20261027 14:55:00", "upper": 92.4, "lower": 61.6}
 
 
-def broker_snapshot_source(mod, monkeypatch, positions=(), orders=()):
+def broker_snapshot_source(mod, monkeypatch, positions=(), orders=(), deals=()):
     records = {
         "ACCOUNT": [SimpleNamespace(m_strAccountID="local", m_dAvailable=1000)],
         "POSITION": list(positions),
         "ORDER": orders,
+        "DEAL": deals,
     }
     monkeypatch.setattr(mod, "get_trade_detail_data", lambda *args: records[args[-1]], raising=False)
     return mod.QmtBroker(SimpleNamespace(), "local")
@@ -181,6 +182,25 @@ def qmt_order(**changes):
     )
     value.update(changes)
     return SimpleNamespace(**value)
+
+
+def test_snapshot_exposes_independent_deal_identity_quantity_and_exact_amount(mod, monkeypatch):
+    deal = SimpleNamespace(m_strOrderSysID="broker-1", m_strTradeID="deal-1", m_strInstrumentID="600000",
+                           m_strExchangeID="SH", m_nOffsetFlag=48, m_nVolume=100, m_dPrice=10.23,
+                           m_dTradeAmount=1023.0, m_strTradeDate="20261120", m_strTradeTime="150000")
+    data = broker_snapshot_source(mod, monkeypatch, deals=[deal]).snapshot([])
+    assert data["deals_error"] == ""
+    assert data["deals"] == [dict(broker_order_id="broker-1", trade_id="deal-1", stock_code="600000.SH",
+                                  side="BUY", quantity=100, price=10.23, amount=1023.0,
+                                  trade_date="20261120", trade_time="150000")]
+
+
+@pytest.mark.parametrize("deals", [None, {}, [SimpleNamespace()]])
+def test_snapshot_preserves_account_but_marks_incomplete_deals_unusable_for_expiry(mod, monkeypatch, deals):
+    data = broker_snapshot_source(mod, monkeypatch, deals=deals).snapshot([])
+    assert data["account"]["available_cash"] == 1000
+    assert data["deals"] is None
+    assert "DEAL" in data["deals_error"]
 
 
 def test_snapshot_preserves_broker_order_date_and_time_without_hiding_old_orders(mod, monkeypatch):
@@ -327,7 +347,7 @@ def test_explicit_snapshot_provider_advertises_guarded_capability_and_source(mod
     assert result["ok"]
     assert result["snapshot"]["working_orders"] == []
     assert set(result["capabilities"]) == {"snapshot-v1", "topk-cash-v1"}
-    assert result["source_version"] == "2026-11-20-order-date-v1"
+    assert result["source_version"] == "2026-11-20-postclose-evidence-v1"
 
 
 @pytest.mark.parametrize("status,filled,expected", [(57, 0, "REJECTED"), (54, 0, "CANCELED"), (53, 40, "CANCELED")])
@@ -369,6 +389,46 @@ def test_new_day_rotates_only_settled_session(mod):
     assert fresh["session"] != "session-a"
     assert fresh["day"] == "2026-10-28"
     assert fresh["orders"] == []
+
+
+def test_verified_close_ack_preserves_raw_orders_and_allows_next_day_rotation(mod):
+    broker = Broker()
+    moment = [NOW]
+    executor = mod.Engine(broker.submit, broker.query, session="session-a", now=lambda: moment[0])
+    reply = executor.handle(request())
+    broker.rows = [row(reply["orders"][0]["remark"], filled_quantity=0, average_price=0, status=50)]
+    raw = executor.handle(request(type="poll"))["orders"]
+    close = request(type="close_day", request_id="close-1", orders=raw)
+    assert not executor.handle(close)["ok"], "cannot acknowledge expiry before 17:00"
+    moment[0] = NOW.replace(hour=9, minute=0)
+    reply = executor.handle(close)
+    assert reply["ok"] and reply["day_closed"]
+    assert reply["orders"] == raw
+    assert executor.handle(close)["day_closed"], "acknowledgement is idempotent"
+    moment[0] += dt.timedelta(days=1)
+    fresh = executor.handle(request(type="poll", session=None))
+    assert fresh["day"] == "2026-10-28" and fresh["orders"] == []
+    assert len(broker.submissions) == 1
+
+
+def test_close_ack_rejects_changed_order_and_late_partial_fill_prevents_rollover(mod):
+    broker = Broker()
+    moment = [NOW]
+    executor = mod.Engine(broker.submit, broker.query, session="session-a", now=lambda: moment[0])
+    reply = executor.handle(request())
+    broker.rows = [row(reply["orders"][0]["remark"], filled_quantity=0, average_price=0, status=50)]
+    raw = executor.handle(request(type="poll"))["orders"]
+    moment[0] = NOW.replace(hour=9, minute=0)
+    changed = copy.deepcopy(raw)
+    changed[0]["quantity"] = 200
+    assert not executor.handle(request(type="close_day", orders=changed))["ok"]
+    assert executor.handle(request(type="close_day", orders=raw))["day_closed"]
+    broker.rows[0].update(status=55, filled_quantity=40, average_price=10.1)
+    moment[0] += dt.timedelta(days=1)
+    blocked = executor.handle(request(type="poll", session=None))
+    assert blocked["day"] == "2026-10-27" and not blocked["day_closed"]
+    assert blocked["orders"][0]["filled_quantity"] == 40
+    assert len(broker.submissions) == 1
 
 
 def row(remark, **changes):
@@ -632,8 +692,8 @@ def test_qmt_init_and_timer_work_without_any_file_access(mod, monkeypatch):
     context.callback(context)
     reply = json.loads(clip.text)
     assert reply["session"] == mod._runtime.engine.session
-    assert set(reply["capabilities"]) == {"snapshot-v1", "topk-cash-v1"}
-    assert reply["source_version"] == "2026-11-20-order-date-v1"
+    assert set(reply["capabilities"]) == {"snapshot-v1", "topk-cash-v1", "day-close-v1"}
+    assert reply["source_version"] == "2026-11-20-postclose-evidence-v1"
     # QMT also expects a handlebar entry point; it must not create a second engine.
     mod.handlebar(context)
 

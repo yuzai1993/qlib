@@ -1,0 +1,24 @@
+{"job": "breadth5", "kind": "account", "status": "running", "time": 1795538653.6594691, "policy": "breadth5", "signal_date": "prior close"}
+{"job": "breadth5", "kind": "account", "status": "succeeded", "time": 1795538663.909695, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/breadth5/receipt.json"}
+{"job": "breadth5_fixed", "kind": "account", "status": "running", "time": 1795538664.968391, "policy": "fixed", "paired": "breadth5", "target": 0.72008803173907}
+{"job": "breadth5_fixed", "kind": "account", "status": "succeeded", "time": 1795538675.166729, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/breadth5_fixed/receipt.json"}
+{"job": "absolute5", "kind": "account", "status": "running", "time": 1795538676.263166, "policy": "absolute5", "signal_date": "prior close"}
+{"job": "absolute5", "kind": "account", "status": "succeeded", "time": 1795538686.4003332, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute5/receipt.json"}
+{"job": "absolute5_fixed", "kind": "account", "status": "running", "time": 1795538687.5021598, "policy": "fixed", "paired": "absolute5", "target": 0.8849249351235252}
+{"job": "absolute5_fixed", "kind": "account", "status": "succeeded", "time": 1795538697.637082, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute5_fixed/receipt.json"}
+{"job": "breadth3", "kind": "account", "status": "running", "time": 1795538698.716369, "policy": "breadth3", "signal_date": "prior close"}
+{"job": "breadth3", "kind": "account", "status": "succeeded", "time": 1795538708.898725, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/breadth3/receipt.json"}
+{"job": "breadth3_fixed", "kind": "account", "status": "running", "time": 1795538709.973949, "policy": "fixed", "paired": "breadth3", "target": 0.7396271998209127}
+{"job": "breadth3_fixed", "kind": "account", "status": "succeeded", "time": 1795538720.172821, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/breadth3_fixed/receipt.json"}
+{"job": "breadth7", "kind": "account", "status": "running", "time": 1795538721.191582, "policy": "breadth7", "signal_date": "prior close"}
+{"job": "breadth7", "kind": "account", "status": "succeeded", "time": 1795538731.3416152, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/breadth7/receipt.json"}
+{"job": "breadth7_fixed", "kind": "account", "status": "running", "time": 1795538732.425846, "policy": "fixed", "paired": "breadth7", "target": 0.7029035708965533}
+{"job": "breadth7_fixed", "kind": "account", "status": "succeeded", "time": 1795538742.584176, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/breadth7_fixed/receipt.json"}
+{"job": "absolute3", "kind": "account", "status": "running", "time": 1795538743.664853, "policy": "absolute3", "signal_date": "prior close"}
+{"job": "absolute3", "kind": "account", "status": "succeeded", "time": 1795538753.8679612, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute3/receipt.json"}
+{"job": "absolute3_fixed", "kind": "account", "status": "running", "time": 1795538754.877888, "policy": "fixed", "paired": "absolute3", "target": 0.8837063412158518}
+{"job": "absolute3_fixed", "kind": "account", "status": "succeeded", "time": 1795538765.278837, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute3_fixed/receipt.json"}
+{"job": "absolute7", "kind": "account", "status": "running", "time": 1795538766.378175, "policy": "absolute7", "signal_date": "prior close"}
+{"job": "absolute7", "kind": "account", "status": "succeeded", "time": 1795538776.5771132, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute7/receipt.json"}
+{"job": "absolute7_fixed", "kind": "account", "status": "running", "time": 1795538777.589926, "policy": "fixed", "paired": "absolute7", "target": 0.8852206899189241}
+{"job": "absolute7_fixed", "kind": "account", "status": "succeeded", "time": 1795538787.772104, "receipt": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute7_fixed/receipt.json"}

@@ -1,0 +1,48 @@
+{
+  "data_version": "2026-11-24",
+  "prediction_snapshot": "2026-11-20",
+  "period": [
+    "2020-08-03",
+    "2026-11-20"
+  ],
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "bank_windows": {
+    "summer": [
+      "2026-05-12",
+      "2026-07-20"
+    ],
+    "autumn": [
+      "2026-08-18",
+      "2026-11-20"
+    ],
+    "november": [
+      "2026-11-06",
+      "2026-11-20"
+    ]
+  },
+  "axis": "signal_persistence",
+  "arms": {
+    "breadth": [
+      3,
+      5,
+      7
+    ],
+    "absolute": [
+      3,
+      5,
+      7
+    ]
+  },
+  "primary": "breadth5",
+  "selection": "All four neighbors are reported. For each rule compare the two neighbors with the original five-day rule and each real account with its own full-window, ex-post mean-equity fixed control. Support for reducing drawdown beyond static exposure requires strictly smaller full-window drawdown than the control. Interpret CAGR cost jointly; no threshold selection on observed periods.",
+  "controls": "Constant cap set from dynamic actual exposure, maximum gap 0.005, one correction if required. Matching uses no P&L. Both original rules rerun on current quotes.",
+  "full_cost": "4 new candidates, 2 parent reproductions, 6 fixed controls; at most 6 matching corrections and 2 technical retries. Zero fits. Both predecessors were closed. Prior rounds observed test and extension. 5 fits, 56+10 completed simulations in market-risk and threshold rounds.",
+  "formula": "Market NAV < MA60 AND breadth20 < 0.4 triggers 45%; k consecutive false observations restore 90%. Absolute signal is eligible mean raw forecast, rolling k days (min periods 1); strictly below zero triggers 45%, else 90%. Use prior close.",
+  "input_check": "Previous frozen SHA checked for models, score series, market diagnostics and execution source. Quote database uses current version; compare repeated parent controls to archived records."
+}

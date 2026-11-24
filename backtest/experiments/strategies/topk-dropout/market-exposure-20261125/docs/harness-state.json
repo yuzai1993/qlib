@@ -1,0 +1,478 @@
+{
+  "schema_version": 2,
+  "repo_root": "/Users/yuxianqi/Project/qlib",
+  "state_path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/harness-state.json",
+  "plan": {
+    "schema_version": 2,
+    "campaign_id": "market-exposure-20261125",
+    "anchor_exp_id": "topk-dropout/market-exposure-20261125",
+    "idea": "Check smoothing and re-entry timing against exposure-matched fixed accounts",
+    "track": "all_a_strategy",
+    "direction": "phase-m-v1-bt",
+    "archive_path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125",
+    "baseline_ref": "baseline/phase-m-v1-bt-v5",
+    "allowed_changes": [
+      "signal_persistence"
+    ],
+    "selection_rule": "All four neighbors are reported. For each rule compare the two neighbors with the original five-day rule and each real account with its own full-window, ex-post mean-equity fixed control. Support for reducing drawdown beyond static exposure requires strictly smaller full-window drawdown than the control. Interpret CAGR cost jointly; no threshold selection on observed periods.",
+    "seeds": [
+      42,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "data_version": "2026-11-24",
+    "inputs": [
+      "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/frozen-study.json",
+      "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/v2_top5.yaml",
+      "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/market-signals.csv.gz",
+      "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/input-validation.json",
+      "/Users/yuxianqi/.qlib/qlib_data/cn_data/calendars/day.txt",
+      "/private/tmp/qlib-overlay-20261125-wxqZ2a/account_adapter.py",
+      "/private/tmp/qlib-overlay-20261125-wxqZ2a/runner_base.py",
+      "/private/tmp/qlib-overlay-20261125-wxqZ2a/experiment.py",
+      "/private/tmp/qlib-overlay-20261125-wxqZ2a/common.py",
+      "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/risk-signals-complete.csv",
+      "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/market-forecast-diagnostics.csv",
+      "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/v2-filtered.pkl",
+      "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/eligible-mask.pkl",
+      "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/absolute-ensemble.pkl",
+      "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/accounts/risk_market_absolute/report_normal.csv",
+      "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/benchmark-ew.csv",
+      "qlib/contrib/strategy/signal_strategy.py",
+      "backtest/scripts/evaluate/strategy_stability_metrics.py",
+      "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s42-pred.pkl",
+      "backtest/result/absolute_h20_market_20261121_s42/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s1000-pred.pkl",
+      "backtest/result/absolute_h20_market_20261121_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s2000-pred.pkl",
+      "backtest/result/absolute_h20_market_20261121_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s3000-pred.pkl",
+      "backtest/result/absolute_h20_market_20261121_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s4000-pred.pkl",
+      "backtest/result/absolute_h20_market_20261121_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s42-pred.pkl",
+      "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s1000-pred.pkl",
+      "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s2000-pred.pkl",
+      "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s3000-pred.pkl",
+      "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s4000-pred.pkl"
+    ],
+    "budget": {
+      "max_rounds": 1,
+      "max_variants": 1,
+      "max_attempts_per_variant": 2,
+      "max_wall_hours": 2,
+      "max_no_new_evidence_rounds": 2,
+      "concurrency": 1
+    },
+    "supplemental_budget": "4 new candidates, 2 parent reproductions, 6 fixed controls; at most 6 matching corrections and 2 technical retries. Zero fits. Both predecessors were closed. Prior rounds observed test and extension. 5 fits, 56+10 completed simulations in market-risk and threshold rounds."
+  },
+  "plan_source": {
+    "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/harness-plan.json",
+    "sha256": "8fb882ca25d8ecbd1fe7abbc11c1d94334a4bec6c3e551c6e71cef352bab3cbf",
+    "size": 5036
+  },
+  "inputs": [
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/frozen-study.json",
+      "sha256": "58960b8b481bd3bc43e7c354811643c26387164893c76b465188de8a845eca9e",
+      "size": 1905
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/v2_top5.yaml",
+      "sha256": "05b493bd1869259de5b9953533b84069b8daa3d024cd3fff2ec69f383c9dfc76",
+      "size": 1607
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/market-signals.csv.gz",
+      "sha256": "56be9eb51e2d23e36208da3ee8a422c92eb4cb6ead9b0e17b3e5fc04e1f23602",
+      "size": 41018
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/input-validation.json",
+      "sha256": "8e255c9b96dc5c726cc054f642a8821d63373a83577a2f6b1e45735a28ca6cde",
+      "size": 6304
+    },
+    {
+      "path": "/Users/yuxianqi/.qlib/qlib_data/cn_data/calendars/day.txt",
+      "sha256": "344bcead61757933f3f9f65b13eca86f6e31c152f2434a5e86c8cde352e32531",
+      "size": 63800
+    },
+    {
+      "path": "/private/tmp/qlib-overlay-20261125-wxqZ2a/account_adapter.py",
+      "sha256": "29f0e0b5d86711ea9e2898aae424e4083b78b6da91c0d4420d7be57f641bbc58",
+      "size": 5028
+    },
+    {
+      "path": "/private/tmp/qlib-overlay-20261125-wxqZ2a/runner_base.py",
+      "sha256": "eb8076a4a5e8082e5de6189aaaa4f8c2de069b1b1f4db477ec275aa561090c64",
+      "size": 9038
+    },
+    {
+      "path": "/private/tmp/qlib-overlay-20261125-wxqZ2a/experiment.py",
+      "sha256": "3b2405493f82b7a9c593fcefc339449b9d6549e1e1b94e6fef16175519c6659b",
+      "size": 2850
+    },
+    {
+      "path": "/private/tmp/qlib-overlay-20261125-wxqZ2a/common.py",
+      "sha256": "089256d2fa6c39ef031bed89a246fd049088ba053dee17010157f63223774847",
+      "size": 1933
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/risk-signals-complete.csv",
+      "sha256": "7d88433788ff74c4a74898e62feab3b0ea0408b864a8c182f3720c5c8865f2dd",
+      "size": 334141
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/market-forecast-diagnostics.csv",
+      "sha256": "a3dea828a6083af04cbdbd574122e6057ef66196c7f9e08de8af17c7d4129803",
+      "size": 346305
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/v2-filtered.pkl",
+      "sha256": "0a18ef1556af5e4cc5339bcc6db6c9d5724eb174170227122a5d8e4f7a572afe",
+      "size": 81628634
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/eligible-mask.pkl",
+      "sha256": "ff7472934a8a3c3d81020276dd241f2e07b086bfed71bf33a4fd32f9c11d9316",
+      "size": 65780669
+    },
+    {
+      "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/absolute-ensemble.pkl",
+      "sha256": "6be8c60cbc47a72a255c82e0d59ebf3d08a8d3b41b505abf28d5236f8f282a80",
+      "size": 87607951
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/accounts/risk_market_absolute/report_normal.csv",
+      "sha256": "559bb7f5b67f2208e283f42c1b64884c43382ea1ab6fb8bc6bd37e3661e02071",
+      "size": 286880
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/benchmark-ew.csv",
+      "sha256": "f7284465fcaa5288080df02e42471fcb1d186202fa7e8b67b020ccb4f1d4dc1d",
+      "size": 39538
+    },
+    {
+      "path": "qlib/contrib/strategy/signal_strategy.py",
+      "sha256": "87b40cfb43cdfb1e6f40df6be344b540b6d8f3d8f059eff2b542370ca383adb4",
+      "size": 34188
+    },
+    {
+      "path": "backtest/scripts/evaluate/strategy_stability_metrics.py",
+      "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb",
+      "size": 7327
+    },
+    {
+      "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s42-pred.pkl",
+      "sha256": "279369de982e02496016c1c212ba33a2075618a80a33927b5d49b6943e9f3fcd",
+      "size": 87607926
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "cc5cb9f54624c07b0e98ca9df4627230f6c01121caf14c515894ea4d05e5717f",
+      "size": 59136156
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f9dd882f4d51bf9b22765dc3c2a12f9557eb1495c360a7cc1f4d51500df159d0",
+      "size": 59420562
+    },
+    {
+      "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s1000-pred.pkl",
+      "sha256": "24d4196cff12e9284815054cb40d46dc31ae2f957a70bee3c5c5bafebed04b01",
+      "size": 87607926
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "308fac9dd1472d451f9ac29947f47442363f776b88360fd568043a3175cb8829",
+      "size": 59015461
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "11ef36f8cc3471d63b4e20347bbccfcf88a581921be75c886b5b23bd569fdd5c",
+      "size": 59858749
+    },
+    {
+      "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s2000-pred.pkl",
+      "sha256": "545c50ece71f536b8c5219da86919c40fc752ba09613f23b31cb3f72298f348a",
+      "size": 87607926
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "b70b3656a09f105fd57a2f267200e1d6988b3a7a9d57f056d8d3db6a98e77d62",
+      "size": 59350514
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e9dc7e206949a7586fe281e6d9dd8381ca53a1082dd808f09c1e58b9adad9a27",
+      "size": 59520498
+    },
+    {
+      "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s3000-pred.pkl",
+      "sha256": "7fde5902c59b24e2dac73b59c6fe99c4d8c00376daeb7064c120bc33971a7b69",
+      "size": 87607926
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "65d69c62020b78d261eda9fc5005e28fcb0c69b330bca8e3dd2689918a782af8",
+      "size": 59004716
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "0b99b0ea4404b94621c86e0ed63a3c42a2257ced673d37cdd3f28e97cdda7092",
+      "size": 59768134
+    },
+    {
+      "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s4000-pred.pkl",
+      "sha256": "a25998c84164de8768c0ae3427bebe43d7ccb0876d95bb17af571f2840e25007",
+      "size": 87607926
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "2e44b5476c0fa94120b431f05c38756d1a7c1ccdde2a6c9c0353dd8eedc487b7",
+      "size": 59865487
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e0149f18d70e6c44b9023644513a563d13eafd42df49c20f62b0f9ad198ecf4c",
+      "size": 59607205
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s42-pred.pkl",
+      "sha256": "2354ac9c5a0f962da3d44e658e06476a5b816a6ebd020bdea600f6feb2b932bf",
+      "size": 87682873
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s1000-pred.pkl",
+      "sha256": "c60f1a815fc10fd6ea5fa213c6892ad6c9fcda11eabaffe76fd2fecb3acc2d10",
+      "size": 87682873
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s2000-pred.pkl",
+      "sha256": "0afcfbc41e857ab8ad2f32c3fa6d7bbf3a09d912493ec38904a7c68761f4759a",
+      "size": 87682873
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s3000-pred.pkl",
+      "sha256": "291b6c28b761c6bfd0f8796500098e3b20a65bd975d2dd89efca49132f0e383c",
+      "size": 87682873
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s4000-pred.pkl",
+      "sha256": "7d0303518f507e123011a5ddc1e36a142188c8a00151250f7fda1d876be953d7",
+      "size": 87682873
+    }
+  ],
+  "policies": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "14f3bddb4e5b5257a0869e0140224d25d1c1e52671d748314e0b43a4fe30a90a",
+      "size": 12415
+    },
+    {
+      "path": "backtest/EXPERIMENT_STANDARD.md",
+      "sha256": "d10dcea7e23d905c1fcfd25c841d368e3e1662fa3489dbd43dc8754129c4fcba",
+      "size": 64550
+    },
+    {
+      "path": "docs/research/experiment_harness.md",
+      "sha256": "0fd45a20651eede9ad4f9de8ffb83eb03025f7df4347e90e8e53cfd621b8db39",
+      "size": 69317
+    }
+  ],
+  "baseline_sha256": "8db514bd7a5c66eb8d48e5d6997c68bb9b886bd822c3a8faf33aa0fef1b4d55b",
+  "baseline_model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "started_at": 1795538618.950944,
+  "deadline": 1795545818.950944,
+  "revision": 9,
+  "status": "closed",
+  "variants": {
+    "topk-dropout/market-exposure-20261125": {
+      "exp_id": "topk-dropout/market-exposure-20261125",
+      "archive_path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125",
+      "round": 1,
+      "hypothesis": "Nearby re-entry or smoothing horizons can reduce net account drawdown beyond the effect of mean exposure.",
+      "changed_axis": "signal_persistence",
+      "configs": [
+        {
+          "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/frozen-study.json",
+          "sha256": "58960b8b481bd3bc43e7c354811643c26387164893c76b465188de8a845eca9e",
+          "size": 1905
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "market-exposure-20261125/topk-dropout/market-exposure-20261125/a1",
+          "outcome": "succeeded",
+          "started_at": 1795538621.789342,
+          "command": [
+            "/opt/anaconda3/envs/qlib/bin/python",
+            "/private/tmp/qlib-overlay-20261125-wxqZ2a/experiment.py"
+          ],
+          "evaluation": {
+            "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/metrics/evaluation.json",
+            "sha256": "0bcf306f80b45f020f8babf74638f4063a60c638c7f5423a7b1afd56cbfd4a85",
+            "size": 85020
+          },
+          "finished_at": 1795538863.81725,
+          "evidence": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/metrics/evaluation.json",
+              "sha256": "0bcf306f80b45f020f8babf74638f4063a60c638c7f5423a7b1afd56cbfd4a85",
+              "size": 85020
+            },
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/reconciliation.json",
+              "sha256": "6439c3f68b2c956e8d3b1c56b9a80d9ce02227464a2b32ebfe8f2ca66adb820b",
+              "size": 2424
+            }
+          ],
+          "reason": "",
+          "registered": {
+            "event_sha256": "102f8eb3ee0809c0bb2ff6ab811d2a0494297e5f92761bc8c087334168d33e39",
+            "detail_report": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/reports/detail.html"
+          },
+          "reported": [
+            {
+              "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/reports/detail.html",
+              "sha256": "512223f78d27047788abdb7e7df8287baad6ec5fdbdca024300be0a48cd1823c",
+              "size": 12004
+            },
+            {
+              "path": "backtest/experiments/reports/phase_m_v1_bt_report.html",
+              "sha256": "b824bbd52114b7f4998d2080552d8a6de0fae2a3763141e71c156359db4ca278",
+              "size": 19257
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reflections": [
+    {
+      "type": "reflection",
+      "round": 1,
+      "observations": "Three breadth drawdowns improve on fixed controls by 6.32/4.43/2.20 percentage points. Absolute-return smoothers earn more but retain 30.65% drawdown. Faster breadth recovery incurs a November reversal.",
+      "interpretation": "Full-history matched evidence supports breadth for drawdown and zero-threshold absolute for historical return. No independent forward period or promotion.",
+      "new_evidence": true,
+      "next_hypothesis": ""
+    }
+  ],
+  "stop": {
+    "type": "stop",
+    "reason": "hypotheses_exhausted"
+  },
+  "cleanup": {
+    "type": "cleanup",
+    "outcome": "complete",
+    "audit": {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/harness-cleanup.json",
+      "sha256": "20bb49cc9326607d66e807df99fc0e96212bab2e5805f0ce51cc40028f03f526",
+      "size": 1036
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "time": 1795538619.9168918,
+      "event": {
+        "type": "plan_variant",
+        "exp_id": "topk-dropout/market-exposure-20261125",
+        "archive_path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125",
+        "round": 1,
+        "changed_axis": "signal_persistence",
+        "hypothesis": "Nearby re-entry or smoothing horizons can reduce net account drawdown beyond the effect of mean exposure.",
+        "configs": [
+          "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/frozen-study.json"
+        ]
+      }
+    },
+    {
+      "revision": 2,
+      "time": 1795538621.7893429,
+      "event": {
+        "type": "start",
+        "exp_id": "topk-dropout/market-exposure-20261125",
+        "command": [
+          "/opt/anaconda3/envs/qlib/bin/python",
+          "/private/tmp/qlib-overlay-20261125-wxqZ2a/experiment.py"
+        ]
+      }
+    },
+    {
+      "revision": 3,
+      "time": 1795538863.817253,
+      "event": {
+        "type": "result",
+        "exp_id": "topk-dropout/market-exposure-20261125",
+        "outcome": "succeeded",
+        "evaluation": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/metrics/evaluation.json",
+        "evidence": [
+          "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/metrics/evaluation.json",
+          "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/reconciliation.json"
+        ]
+      }
+    },
+    {
+      "revision": 4,
+      "time": 1795538864.6317031,
+      "event": {
+        "type": "registered",
+        "exp_id": "topk-dropout/market-exposure-20261125"
+      }
+    },
+    {
+      "revision": 5,
+      "time": 1795538868.321086,
+      "event": {
+        "type": "reported",
+        "exp_id": "topk-dropout/market-exposure-20261125"
+      }
+    },
+    {
+      "revision": 6,
+      "time": 1795538925.899689,
+      "event": {
+        "type": "reflection",
+        "round": 1,
+        "observations": "Three breadth drawdowns improve on fixed controls by 6.32/4.43/2.20 percentage points. Absolute-return smoothers earn more but retain 30.65% drawdown. Faster breadth recovery incurs a November reversal.",
+        "interpretation": "Full-history matched evidence supports breadth for drawdown and zero-threshold absolute for historical return. No independent forward period or promotion.",
+        "new_evidence": true,
+        "next_hypothesis": ""
+      }
+    },
+    {
+      "revision": 7,
+      "time": 1795538925.976684,
+      "event": {
+        "type": "stop",
+        "reason": "hypotheses_exhausted"
+      }
+    },
+    {
+      "revision": 8,
+      "time": 1795539002.685484,
+      "event": {
+        "type": "cleanup",
+        "outcome": "complete",
+        "audit": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/harness-cleanup.json"
+      }
+    },
+    {
+      "revision": 9,
+      "time": 1795539002.826567,
+      "event": {
+        "type": "close"
+      }
+    }
+  ],
+  "jobs": {},
+  "checksum": "b3f8f4929447db2dd2c271a7824ea6fee15551bab2494a4464a76b3d0ef7523d"
+}

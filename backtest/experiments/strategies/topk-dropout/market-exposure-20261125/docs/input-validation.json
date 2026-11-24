@@ -1,0 +1,147 @@
+[
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/risk-signals-complete.csv",
+    "sha256": "7d88433788ff74c4a74898e62feab3b0ea0408b864a8c182f3720c5c8865f2dd",
+    "size": 334141
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/market-forecast-diagnostics.csv",
+    "sha256": "a3dea828a6083af04cbdbd574122e6057ef66196c7f9e08de8af17c7d4129803",
+    "size": 346305
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/v2-filtered.pkl",
+    "sha256": "0a18ef1556af5e4cc5339bcc6db6c9d5724eb174170227122a5d8e4f7a572afe",
+    "size": 81628634
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/eligible-mask.pkl",
+    "sha256": "ff7472934a8a3c3d81020276dd241f2e07b086bfed71bf33a4fd32f9c11d9316",
+    "size": 65780669
+  },
+  {
+    "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/absolute-ensemble.pkl",
+    "sha256": "6be8c60cbc47a72a255c82e0d59ebf3d08a8d3b41b505abf28d5236f8f282a80",
+    "size": 87607951
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/market-risk-20261121/data/accounts/risk_market_absolute/report_normal.csv",
+    "sha256": "559bb7f5b67f2208e283f42c1b64884c43382ea1ab6fb8bc6bd37e3661e02071",
+    "size": 286880
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/benchmark-ew.csv",
+    "sha256": "f7284465fcaa5288080df02e42471fcb1d186202fa7e8b67b020ccb4f1d4dc1d",
+    "size": 39538
+  },
+  {
+    "path": "qlib/contrib/strategy/signal_strategy.py",
+    "sha256": "87b40cfb43cdfb1e6f40df6be344b540b6d8f3d8f059eff2b542370ca383adb4",
+    "size": 34188
+  },
+  {
+    "path": "backtest/scripts/evaluate/strategy_stability_metrics.py",
+    "sha256": "60571ebbc05e594b14f3663b22b72204762fb083ac8a725224f3b776d3865feb",
+    "size": 7327
+  },
+  {
+    "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s42-pred.pkl",
+    "sha256": "279369de982e02496016c1c212ba33a2075618a80a33927b5d49b6943e9f3fcd",
+    "size": 87607926
+  },
+  {
+    "path": "backtest/result/absolute_h20_market_20261121_s42/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "cc5cb9f54624c07b0e98ca9df4627230f6c01121caf14c515894ea4d05e5717f",
+    "size": 59136156
+  },
+  {
+    "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "f9dd882f4d51bf9b22765dc3c2a12f9557eb1495c360a7cc1f4d51500df159d0",
+    "size": 59420562
+  },
+  {
+    "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s1000-pred.pkl",
+    "sha256": "24d4196cff12e9284815054cb40d46dc31ae2f957a70bee3c5c5bafebed04b01",
+    "size": 87607926
+  },
+  {
+    "path": "backtest/result/absolute_h20_market_20261121_s1000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "308fac9dd1472d451f9ac29947f47442363f776b88360fd568043a3175cb8829",
+    "size": 59015461
+  },
+  {
+    "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "11ef36f8cc3471d63b4e20347bbccfcf88a581921be75c886b5b23bd569fdd5c",
+    "size": 59858749
+  },
+  {
+    "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s2000-pred.pkl",
+    "sha256": "545c50ece71f536b8c5219da86919c40fc752ba09613f23b31cb3f72298f348a",
+    "size": 87607926
+  },
+  {
+    "path": "backtest/result/absolute_h20_market_20261121_s2000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "b70b3656a09f105fd57a2f267200e1d6988b3a7a9d57f056d8d3db6a98e77d62",
+    "size": 59350514
+  },
+  {
+    "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "e9dc7e206949a7586fe281e6d9dd8381ca53a1082dd808f09c1e58b9adad9a27",
+    "size": 59520498
+  },
+  {
+    "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s3000-pred.pkl",
+    "sha256": "7fde5902c59b24e2dac73b59c6fe99c4d8c00376daeb7064c120bc33971a7b69",
+    "size": 87607926
+  },
+  {
+    "path": "backtest/result/absolute_h20_market_20261121_s3000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "65d69c62020b78d261eda9fc5005e28fcb0c69b330bca8e3dd2689918a782af8",
+    "size": 59004716
+  },
+  {
+    "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "0b99b0ea4404b94621c86e0ed63a3c42a2257ced673d37cdd3f28e97cdda7092",
+    "size": 59768134
+  },
+  {
+    "path": "backtest/experiments/models/training-target/absolute-return-h20-20261121/data/s4000-pred.pkl",
+    "sha256": "a25998c84164de8768c0ae3427bebe43d7ccb0876d95bb17af571f2840e25007",
+    "size": 87607926
+  },
+  {
+    "path": "backtest/result/absolute_h20_market_20261121_s4000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "2e44b5476c0fa94120b431f05c38756d1a7c1ccdde2a6c9c0353dd8eedc487b7",
+    "size": 59865487
+  },
+  {
+    "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+    "sha256": "e0149f18d70e6c44b9023644513a563d13eafd42df49c20f62b0f9ad198ecf4c",
+    "size": 59607205
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s42-pred.pkl",
+    "sha256": "2354ac9c5a0f962da3d44e658e06476a5b816a6ebd020bdea600f6feb2b932bf",
+    "size": 87682873
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s1000-pred.pkl",
+    "sha256": "c60f1a815fc10fd6ea5fa213c6892ad6c9fcda11eabaffe76fd2fecb3acc2d10",
+    "size": 87682873
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s2000-pred.pkl",
+    "sha256": "0afcfbc41e857ab8ad2f32c3fa6d7bbf3a09d912493ec38904a7c68761f4759a",
+    "size": 87682873
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s3000-pred.pkl",
+    "sha256": "291b6c28b761c6bfd0f8796500098e3b20a65bd975d2dd89efca49132f0e383c",
+    "size": 87682873
+  },
+  {
+    "path": "backtest/experiments/strategies/topk-dropout/drawdown-20261121/data/v2-s4000-pred.pkl",
+    "sha256": "7d0303518f507e123011a5ddc1e36a142188c8a00151250f7fda1d876be953d7",
+    "size": 87682873
+  }
+]

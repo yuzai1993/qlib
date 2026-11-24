@@ -1,0 +1,27 @@
+{
+  "account_reconciliation": {
+    "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/reconciliation.json",
+    "sha256": "6439c3f68b2c956e8d3b1c56b9a80d9ce02227464a2b32ebfe8f2ca66adb820b",
+    "size": 2424
+  },
+  "verified_all_account_receipts": true,
+  "previously_observed_period": true,
+  "account_runs": 12,
+  "matching_corrections": 0,
+  "model_fits": 0,
+  "absolute_source_models_protected": 5,
+  "model_seed_scores_verified": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "source_version": "2026-11-20",
+  "quote_version": "2026-11-24",
+  "max_full_position_difference": 0.0029708131719513586,
+  "report_links_and_canvas_typecheck": "passed",
+  "registered": "topk-dropout/market-exposure-20261125",
+  "analysis_archive_checksum": "6534e6e7706133e2ccd6f0e9a4c171fa08ffa8d43651899ec2e826581876f67f",
+  "mlflow_files_changed_since_campaign_start": []
+}

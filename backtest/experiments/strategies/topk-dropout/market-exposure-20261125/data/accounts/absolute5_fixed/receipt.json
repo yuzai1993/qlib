@@ -1,0 +1,31 @@
+{
+  "name": "absolute5_fixed",
+  "elapsed_seconds": 10.133477210998535,
+  "inputs": {
+    "policy": "fixed",
+    "paired": "absolute5",
+    "target": 0.8849249351235252
+  },
+  "files": [
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute5_fixed/report_normal.csv",
+      "sha256": "c3155b8a82fe27edd82f95cf8594bea13bb716c7185318cef803623075903075",
+      "size": 286734
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute5_fixed/positions.csv.gz",
+      "sha256": "30cd26d7ac7eed45cbc3ede398625a595202ea6ccad0735744cb472220d21041",
+      "size": 239975
+    },
+    {
+      "path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/data/accounts/absolute5_fixed/metrics.json",
+      "sha256": "f16a72149a457d76dfde3c1b1f4d19ffaa358cc07d4c7f7eb8d0c17ba291a663",
+      "size": 12204
+    }
+  ],
+  "adapter": {
+    "path": "/private/tmp/qlib-overlay-20261125-wxqZ2a/account_adapter.py",
+    "sha256": "29f0e0b5d86711ea9e2898aae424e4083b78b6da91c0d4420d7be57f641bbc58",
+    "size": 5028
+  }
+}

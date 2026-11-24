@@ -1,0 +1,72 @@
+run:
+  mode: pred_backtest
+  note: drawdown_20261121_v2_top5
+  n_runs: 1
+  generate_figures: false
+data:
+  provider_uri: ~/.qlib/qlib_data/cn_data
+  region: cn
+  instruments: all
+  benchmark: SH000985
+  handler:
+    class: Alpha158Technical
+    module_path: backtest.features.technical
+    start_time: '2020-02-03'
+    end_time: '2026-11-20'
+    fit_start_time: '2020-02-03'
+    fit_end_time: '2020-08-03'
+    infer_processors:
+    - class: ProcessInf
+    feature_groups:
+    - range
+    instruments:
+      market: all
+      filter_pipe:
+      - filter_type: NameDFilter
+        name_rule_re: ^(SH60|SH68|SZ00|SZ30)
+        filter_start_time: null
+        filter_end_time: null
+    label:
+    - - Ref($close, -21)/Ref($close, -1)-1
+    - - LABEL0
+segments:
+  train:
+  - '2020-02-03'
+  - '2020-07-31'
+  valid:
+  - '2020-08-03'
+  - '2026-11-20'
+  test:
+  - '2020-08-03'
+  - '2026-11-20'
+model:
+  class: RegimeSingleLGBMModel
+  module_path: backtest.models.regime_adapt
+strategy:
+  class: TopkDropoutStrategy
+  module_path: qlib.contrib.strategy.signal_strategy
+  topk: 5
+  n_drop: 1
+  kwargs:
+    hold_thresh: 1
+    risk_degree: 0.9
+    only_tradable: false
+    forbid_all_trade_at_limit: false
+    force_sell_rank: 100
+    initial_buy_count: null
+backtest:
+  account: 1000000
+  exchange_kwargs:
+    freq: day
+    deal_price: close
+    limit_threshold: market_cn
+    open_cost: 0.00021
+    close_cost: 0.00071
+    min_cost: 5.0
+    trade_unit: 100
+universe_filter:
+  st_daily: scripts/data_collector/tushare/st_daily.csv
+  min_amount: 10000000
+  min_listing_days: 60
+  min_recent_trading_days: 60
+  pool: all

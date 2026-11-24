@@ -1,0 +1,103 @@
+{
+  "exp_id": "topk-dropout/market-exposure-20261125",
+  "archive_path": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125",
+  "kind": "strategy",
+  "track": "all_a",
+  "phase": "S",
+  "direction": "phase-m-v1-bt",
+  "report_kind": "phase_m_v1_bt",
+  "date": "2026-11-25",
+  "state": "completed",
+  "display_name": "趋势广度与绝对收益零阈值的时间窗口验证",
+  "hypothesis": "Nearby re-entry or smoothing horizons can reduce net account drawdown beyond the effect of mean exposure.",
+  "baseline_ref": "baseline/phase-m-v1-bt-v5",
+  "model_ref": "regime-adapt/m0-h20-t5h5-es-v1",
+  "data_version": "2026-11-24",
+  "seeds": [
+    42,
+    1000,
+    2000,
+    3000,
+    4000
+  ],
+  "test_pools": [
+    "all"
+  ],
+  "train_pool": "all",
+  "evaluation_mode": "historical_selection_window",
+  "eval_output": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/metrics/evaluation.json",
+  "portable_eval_output": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/metrics/evaluation.json",
+  "detail_report": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/reports/detail.html",
+  "configs": [
+    "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/frozen-study.json",
+    "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/configs/v2_top5.yaml"
+  ],
+  "harness": {
+    "campaign_id": "market-exposure-20261125",
+    "attempt_id": "market-exposure-20261125/topk-dropout/market-exposure-20261125/a1"
+  },
+  "conclusion": "趋势＋广度的恢复期设为3、5、7天，动态账户的全期最大回撤幅度分别比各自固定仓位对照小6.32、4.43、2.20个百分点。原版5天平均实际仓位72.01%，固定对照71.72%，扣费年化25.48%与26.26%，最大回撤20.94%与25.37%。 绝对收益零阈值的3、5、7天平滑均取得高于各自固定对照的扣费年化收益，最大回撤均为30.65%，比固定对照深0.44至0.61个百分点。完整H20样本的下跌召回率落在3.77%至3.91%。",
+  "eval_protocol": "v2 五种子 | s5 Top5与总仓位90%/45% | 账户100万元，同费用，每组同均仓对照",
+  "diagnostic_only": true,
+  "cleanup_retention_eligible": false,
+  "frozen_model_dependencies": [
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "cc5cb9f54624c07b0e98ca9df4627230f6c01121caf14c515894ea4d05e5717f",
+      "size": 59136156
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s42/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "f9dd882f4d51bf9b22765dc3c2a12f9557eb1495c360a7cc1f4d51500df159d0",
+      "size": 59420562
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "308fac9dd1472d451f9ac29947f47442363f776b88360fd568043a3175cb8829",
+      "size": 59015461
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s1000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "11ef36f8cc3471d63b4e20347bbccfcf88a581921be75c886b5b23bd569fdd5c",
+      "size": 59858749
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "b70b3656a09f105fd57a2f267200e1d6988b3a7a9d57f056d8d3db6a98e77d62",
+      "size": 59350514
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s2000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e9dc7e206949a7586fe281e6d9dd8381ca53a1082dd808f09c1e58b9adad9a27",
+      "size": 59520498
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "65d69c62020b78d261eda9fc5005e28fcb0c69b330bca8e3dd2689918a782af8",
+      "size": 59004716
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s3000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "0b99b0ea4404b94621c86e0ed63a3c42a2257ced673d37cdd3f28e97cdda7092",
+      "size": 59768134
+    },
+    {
+      "path": "backtest/result/absolute_h20_market_20261121_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "2e44b5476c0fa94120b431f05c38756d1a7c1ccdde2a6c9c0353dd8eedc487b7",
+      "size": 59865487
+    },
+    {
+      "path": "backtest/result/regimeadaptfast_m0h20_t5h5es_s4000/run_01/artifacts_root/artifacts/trained_model",
+      "sha256": "e0149f18d70e6c44b9023644513a563d13eafd42df49c20f62b0f9ad198ecf4c",
+      "size": 59607205
+    }
+  ],
+  "execution_audit": {
+    "accounts": 12,
+    "new_fits": 0,
+    "parent_controls": 2,
+    "scientific_neighbors": 4,
+    "fixed_controls": 6,
+    "ledger": "backtest/experiments/strategies/topk-dropout/market-exposure-20261125/docs/internal-jobs.jsonl"
+  }
+}

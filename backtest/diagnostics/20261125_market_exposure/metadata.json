@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "market-exposure-20261125",
+  "title": "趋势与市场广度、绝对收益零阈值的总仓位控制",
+  "historical": true,
+  "status": "active",
+  "version": 0,
+  "created_at": "2026-11-25",
+  "updated_at": "2026-11-25",
+  "tags": [
+    "回撤",
+    "市场广度",
+    "仓位控制"
+  ],
+  "related_experiments": [
+    "risk-control/market-risk-20261121",
+    "risk-control/absolute-threshold-20261122"
+  ],
+  "report_path": "REPORT.md",
+  "report_sha256": "6534e6e7706133e2ccd6f0e9a4c171fa08ffa8d43651899ec2e826581876f67f",
+  "code_files": [],
+  "attachments_missing": []
+}

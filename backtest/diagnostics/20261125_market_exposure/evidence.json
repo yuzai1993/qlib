@@ -1,0 +1,125 @@
+{
+  "risk_fixed090": {
+    "full": {
+      "n_days": 1528,
+      "annualized_return": 0.32822217961186184,
+      "annualized_return_arith": 0.323339708180592,
+      "sharpe_ratio": 1.1519560162353937,
+      "alpha": 0.25674323171535113,
+      "beta": 0.8451726632314243,
+      "calmar_ratio": 1.0708066980335127,
+      "annualized_volatility": 0.28068754676699387,
+      "max_drawdown": -0.3065186090212424,
+      "annualized_one_way_turnover": 76.99217023770869,
+      "cumulative_return": 4.668011076827201,
+      "benchmark_annualized_return": 0.05238123338956613,
+      "benchmark_annualized_return_arith": 0.07879629732771595,
+      "benchmark_cumulative_return": 0.3662241445911971
+    },
+    "mean_exposure": 0.8978827718110006,
+    "windows": {
+      "summer": -0.1432094294528521,
+      "autumn": -0.19153983547893905,
+      "november_subset": -0.1736420675206094
+    }
+  },
+  "risk_fixed060": {
+    "full": {
+      "n_days": 1528,
+      "annualized_return": 0.21135150646920908,
+      "annualized_return_arith": 0.2123004602046873,
+      "sharpe_ratio": 1.0474880782214344,
+      "alpha": 0.16771997192949759,
+      "beta": 0.5657688214685805,
+      "calmar_ratio": 0.9363133404439854,
+      "annualized_volatility": 0.2026757770505221,
+      "max_drawdown": -0.2257273258212784,
+      "annualized_one_way_turnover": 79.9063337533986,
+      "cumulative_return": 2.2281028485221483,
+      "benchmark_annualized_return": 0.05238123338956613,
+      "benchmark_annualized_return_arith": 0.07879629732771595,
+      "benchmark_cumulative_return": 0.3662241445911971
+    },
+    "mean_exposure": 0.5971369948236822,
+    "windows": {
+      "summer": -0.06842295268958098,
+      "autumn": -0.10653784976936231,
+      "november_subset": -0.11806007718061995
+    }
+  },
+  "risk_trend_breadth": {
+    "full": {
+      "n_days": 1528,
+      "annualized_return": 0.25482918838632074,
+      "annualized_return_arith": 0.2492266249548997,
+      "sharpe_ratio": 1.1826392360374025,
+      "alpha": 0.20548381181307748,
+      "beta": 0.5551379268481951,
+      "calmar_ratio": 1.2170119005232993,
+      "annualized_volatility": 0.21073765977016642,
+      "max_drawdown": -0.20938923298675016,
+      "annualized_one_way_turnover": 74.90217283760956,
+      "cumulative_return": 3.0045078538725507,
+      "benchmark_annualized_return": 0.05238123338956613,
+      "benchmark_annualized_return_arith": 0.07879629732771595,
+      "benchmark_cumulative_return": 0.3662241445911971
+    },
+    "mean_exposure": 0.7200880522026681,
+    "windows": {
+      "summer": -0.060990475043759984,
+      "autumn": -0.12047183514660387,
+      "november_subset": -0.09011149218844894
+    }
+  },
+  "risk_market_absolute": {
+    "full": {
+      "n_days": 1528,
+      "annualized_return": 0.3505521786373784,
+      "annualized_return_arith": 0.34010326170825583,
+      "sharpe_ratio": 1.2104433576544495,
+      "alpha": 0.2733577733685124,
+      "beta": 0.8470637657267968,
+      "calmar_ratio": 1.143657084170979,
+      "annualized_volatility": 0.28097412370232244,
+      "max_drawdown": -0.3065186090212424,
+      "annualized_one_way_turnover": 77.15665220844829,
+      "cumulative_return": 5.276036781951126,
+      "benchmark_annualized_return": 0.05238123338956613,
+      "benchmark_annualized_return_arith": 0.07879629732771595,
+      "benchmark_cumulative_return": 0.3662241445911971
+    },
+    "mean_exposure": 0.8849249550918111,
+    "windows": {
+      "summer": -0.1434673095436394,
+      "autumn": -0.1567237474923544,
+      "november_subset": -0.17348616884770562
+    }
+  },
+  "absolute_zero_matched_fixed": {
+    "full_period": {
+      "n_days": 1528,
+      "annualized_return": 0.317907237948978,
+      "annualized_return_arith": 0.3144713797727335,
+      "sharpe_ratio": 1.1358021471115793,
+      "alpha": 0.24905425053586458,
+      "beta": 0.830205624571384,
+      "calmar_ratio": 1.054947356085572,
+      "annualized_volatility": 0.27687161938587207,
+      "max_drawdown": -0.3013489119766001,
+      "annualized_one_way_turnover": 77.73010375466778,
+      "cumulative_return": 4.404259084294803,
+      "benchmark_annualized_return": 0.05238123338956613,
+      "benchmark_annualized_return_arith": 0.07879629732771595,
+      "benchmark_cumulative_return": 0.3662241445911971
+    },
+    "exposure": {
+      "average": 0.882412353348912,
+      "max": 0.8852824713733334,
+      "max_single": 0.37692849588262534,
+      "mean_holdings": 4.982984293193717,
+      "mean_target": 0.8849348209588979,
+      "days_above_target_1pct": 0,
+      "max_target_breach": 0.0003575162815221411
+    }
+  }
+}
